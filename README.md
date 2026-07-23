@@ -9,7 +9,7 @@ Host-neutral engineering workspace for reusable AI Powers, multiple product syst
 ```bash
 git clone --recurse-submodules https://github.com/nhatnguyenquang1838-coder/DW-SuperApps.git
 cd DW-SuperApps
-./bin/dw install --shell auto --init
+bash bin/dw install --shell auto --init
 ```
 
 Reload the shell, then verify:
@@ -48,7 +48,7 @@ Ollama is registered separately as an OpenAI-compatible model provider.
 ```bash
 dw host list
 dw host install all
-dw provider install ollama --model qwen2.5-coder:7b
+dw provider install ollama --model qwen3-coder:30b
 ```
 
 ## Daily commands
