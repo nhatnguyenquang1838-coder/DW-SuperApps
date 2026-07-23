@@ -6,6 +6,18 @@ metadata:
 hosts:
   - kiro
   - codex
+  - copilot
+  - cline
+  - kilo
+  - claude
+  - custom
+providers:
+  - id: ollama
+    type: openai-compatible
+    base_url: http://localhost:11434/v1
+    api_key: ollama
+    model_env: OLLAMA_MODEL
+    default_model: qwen2.5-coder:7b
 powers:
   - id: gwc
     path: powers/gwc
