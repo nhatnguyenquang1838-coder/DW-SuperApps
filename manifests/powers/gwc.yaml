@@ -1,16 +1,24 @@
-apiVersion: dw.superapps/v1
+apiVersion: dw.superapps/v2
 kind: Power
 metadata:
   id: gwc
   name: GWC
   version: main-pinned
+  description: Governance, delivery control, approval boundaries, validation, and repository lifecycle workflows.
 spec:
+  category: governance
   path: powers/gwc
   source: nhatnguyenquang1838-coder/gwc
   provides:
     - governance
     - delivery-control
     - approval-workflow
+    - validation-orchestration
+  consumes:
+    - project-context
+    - change-scope
+    - repository-state
+    - validation-evidence
   requires:
     - git
   optionalIntegrations:
@@ -21,3 +29,19 @@ spec:
     - kiro
     - codex
     - cli
+  entrypoints:
+    skillCandidates:
+      - skills/gwc-g1/SKILL.md
+      - AGENTS.md
+      - agents/chatgpt-agent/agent-instructions.md
+    cliCandidates:
+      - tools/validate_instructions.py
+      - tools/validate_g01.py
+  permissions:
+    read:
+      - "**"
+    write:
+      - ".gwc/**"
+    deny:
+      - ".env*"
+      - "**/secrets/**"
