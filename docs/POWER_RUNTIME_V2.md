@@ -1,4 +1,4 @@
-# DW SuperApps Power Runtime v2.2
+# DW SuperApps Power Runtime v2.3
 
 ## Install the global `dw` command
 
@@ -35,6 +35,22 @@ The installer creates a managed launcher at:
 ```
 
 It also adds one managed `PATH` block to the selected shell profile. Running the installer again is idempotent.
+
+### Python compatibility
+
+The Bash launcher and installer automatically resolve Python in this order:
+
+```text
+DW_PYTHON override → python3 → python → py -3
+```
+
+A computer with Python 3 available only as `python` needs no alias or redirect.
+
+Optional explicit override:
+
+```bash
+DW_PYTHON=/custom/path/python ./bin/dw doctor all
+```
 
 ### Uninstall
 
@@ -198,5 +214,6 @@ dw validate
 
 ```bash
 dw validate
+bash tests/test_python_resolver.sh
 python -m unittest discover -s tests -p "test_*.py"
 ```
