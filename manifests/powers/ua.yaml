@@ -1,16 +1,23 @@
-apiVersion: dw.superapps/v1
+apiVersion: dw.superapps/v2
 kind: Power
 metadata:
   id: ua
   name: Understand Anything
   version: main-pinned
+  description: Semantic codebase analysis, architecture discovery, dependency mapping, and project knowledge generation.
 spec:
+  category: knowledge
   path: powers/ua
   source: Egonex-AI/Understand-Anything
   provides:
     - semantic-analysis
     - codebase-graph
     - architecture-graph
+    - dependency-map
+  consumes:
+    - source-code
+    - project-documents
+    - repository-metadata
   requires:
     - filesystem
   optionalIntegrations:
@@ -21,3 +28,18 @@ spec:
     - kiro
     - codex
     - cli
+  entrypoints:
+    skillCandidates:
+      - understand-anything-plugin/skills/understand/SKILL.md
+      - README.md
+    cliCandidates:
+      - install.sh
+      - install.ps1
+  permissions:
+    read:
+      - "**"
+    write:
+      - ".ua/**"
+    deny:
+      - ".env*"
+      - "**/secrets/**"
