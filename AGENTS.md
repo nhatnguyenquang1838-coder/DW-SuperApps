@@ -23,3 +23,51 @@ Kiro and Codex are hosts. Host-specific folders may expose discovery metadata or
 ## Cross-repository work
 
 A change affecting multiple systems must identify every impacted repository explicitly. Do not assume one repository approval, branch, task, or validation result applies to another repository.
+
+## Slack Notification Behavior
+
+Slack is an optional notification channel for execution visibility.
+
+Slack is used for:
+
+- Gate transition updates
+- Blocker notifications
+- Important milestone notifications
+- Human visibility of agent execution
+
+Slack is NOT:
+
+- The governance source of truth
+- The task state store
+- The approval authority
+
+## Gate Event Rule
+
+After important execution events, the agent should:
+
+1. Confirm or update the current task state.
+2. Record evidence and audit information.
+3. Send Slack notification when Slack capability is available.
+4. Continue execution if Slack is unavailable.
+
+Important events include:
+
+- Task started
+- Gate started
+- Gate completed
+- Gate blocked
+- PR created
+- CI validation completed
+- Approval requested
+- Human override
+- Task completed
+
+## Slack Failure Handling
+
+Slack availability must never block work.
+
+If Slack is unavailable:
+
+- Continue the workflow.
+- Record or mention that notification was skipped.
+- Keep the execution result unchanged.
