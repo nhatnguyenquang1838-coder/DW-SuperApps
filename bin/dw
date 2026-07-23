@@ -17,4 +17,6 @@ case "${1:-}" in
     ;;
 esac
 
-exec python3 "$ROOT/scripts/dw_entry.py" "$@"
+# shellcheck source=../scripts/python-resolver.sh
+source "$ROOT/scripts/python-resolver.sh"
+dw_exec_python "$ROOT/scripts/dw_entry.py" "$@"
