@@ -113,6 +113,11 @@
             "enum": [
               "kiro",
               "codex",
+              "copilot",
+              "cline",
+              "kilo",
+              "claude",
+              "custom",
               "cli"
             ]
           },
