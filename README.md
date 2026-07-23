@@ -7,8 +7,34 @@ Host-neutral engineering workspace for Kiro, Codex, reusable AI Powers, and mult
 ```bash
 git clone --recurse-submodules https://github.com/nhatnguyenquang1838-coder/DW-SuperApps.git
 cd DW-SuperApps
-git submodule update --init --recursive
+python3 -m pip install -r requirements-dev.txt
+./bin/dw power init
+./bin/dw host install all
+./bin/dw validate
 ```
+
+Windows PowerShell:
+
+```powershell
+git clone --recurse-submodules https://github.com/nhatnguyenquang1838-coder/DW-SuperApps.git
+cd DW-SuperApps
+python -m pip install -r requirements-dev.txt
+.\dw.ps1 power init
+.\dw.ps1 host install all
+.\dw.ps1 validate
+```
+
+## Power Runtime v2
+
+```bash
+./bin/dw workspace info
+./bin/dw power list
+./bin/dw power info task-me
+./bin/dw system powers rental-home
+./bin/dw power prompt task-me --system rental-home --task "Create an implementation plan"
+```
+
+See `docs/POWER_RUNTIME_V2.md` for Kiro, Codex IDE, adapter, prompt, and submodule commands.
 
 ## Layout
 
