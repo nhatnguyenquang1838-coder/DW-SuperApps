@@ -27,10 +27,14 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Test Bash Python resolver
+        shell: bash
+        run: bash tests/test_python_resolver.sh
+
       - name: Test one-click CLI installer
         shell: bash
         run: |
-          bash -n bin/dw scripts/install-dw.sh
+          bash -n bin/dw scripts/install-dw.sh scripts/python-resolver.sh
           test_home="$(mktemp -d)"
           HOME="$test_home" SHELL=/bin/bash ./bin/dw install --shell bash
           HOME="$test_home" "$test_home/.local/bin/dw" --version
