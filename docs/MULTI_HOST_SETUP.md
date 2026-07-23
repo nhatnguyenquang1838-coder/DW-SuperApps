@@ -22,11 +22,11 @@ Bash, Zsh, Linux, macOS, or Git Bash:
 
 ```bash
 git pull
-./bin/dw install --shell auto --init
+bash bin/dw install --shell auto --init
 source ~/.bashrc 2>/dev/null || source ~/.zshrc
 ```
 
-The installer now:
+The installer:
 
 1. Registers the global `dw` command.
 2. Installs dependencies.
@@ -81,10 +81,16 @@ dw provider install ollama
 dw provider status ollama
 ```
 
-Select a local model explicitly:
+The default local coding model is:
+
+```text
+qwen3-coder:30b
+```
+
+Select a model explicitly:
 
 ```bash
-dw provider install ollama --model qwen2.5-coder:7b
+dw provider install ollama --model qwen3-coder:30b
 ```
 
 Or use an environment variable:
