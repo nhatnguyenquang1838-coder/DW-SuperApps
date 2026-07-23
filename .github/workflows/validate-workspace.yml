@@ -32,33 +32,11 @@ jobs:
         run: bash -n bin/dw scripts/install-dw.sh scripts/python-resolver.sh
 
       - name: Install global DW CLI in temporary home
-        id: install_dw
-        continue-on-error: true
         shell: bash
         run: |
           rm -rf /tmp/dw-cli-home
           mkdir -p /tmp/dw-cli-home
-          set +e
-          HOME=/tmp/dw-cli-home SHELL=/bin/bash ./bin/dw install --shell bash > /tmp/dw-install.log 2>&1
-          rc=$?
-          echo "$rc" > /tmp/dw-install.rc
-          cat /tmp/dw-install.log
-          exit "$rc"
-
-      - name: Upload installer diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: dw-installer-diagnostics
-          path: |
-            /tmp/dw-install.log
-            /tmp/dw-install.rc
-          if-no-files-found: warn
-
-      - name: Require installer success
-        if: always()
-        shell: bash
-        run: test "$(cat /tmp/dw-install.rc)" = "0"
+          HOME=/tmp/dw-cli-home SHELL=/bin/bash bash bin/dw install --shell bash
 
       - name: Verify global DW CLI
         shell: bash
