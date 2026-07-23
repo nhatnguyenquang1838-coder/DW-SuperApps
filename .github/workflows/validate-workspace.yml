@@ -30,7 +30,7 @@ jobs:
       - name: Test one-click CLI installer
         shell: bash
         run: |
-          bash -n bin/dw scripts/install-dw.sh scripts/resolve-python.sh
+          bash -n bin/dw scripts/install-dw.sh scripts/python-resolver.sh
           test_home="$(mktemp -d)"
           HOME="$test_home" SHELL=/bin/bash ./bin/dw install --shell bash
           HOME="$test_home" "$test_home/.local/bin/dw" --version
