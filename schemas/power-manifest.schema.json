@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw-superapps.local/schemas/power-manifest.schema.json",
+  "title": "DW SuperApps Power Manifest",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {"const": "dw.superapps/v1"},
+    "kind": {"const": "Power"},
+    "metadata": {
+      "type": "object",
+      "required": ["id", "name", "version"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+        "name": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "spec": {
+      "type": "object",
+      "required": ["path", "source", "provides", "runtimeDataRoot"],
+      "properties": {
+        "path": {"type": "string", "pattern": "^powers/"},
+        "source": {"type": "string", "minLength": 3},
+        "provides": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+        "requires": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "optionalIntegrations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "runtimeDataRoot": {"type": "string", "pattern": "^\\."},
+        "hosts": {"type": "array", "items": {"enum": ["kiro", "codex", "cli"]}, "minItems": 1, "uniqueItems": true}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
