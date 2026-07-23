@@ -8,6 +8,8 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    env:
+      DW_TEST_HOME: ${{ runner.temp }}/dw-cli-home
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,17 +29,29 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Test one-click CLI installer
+      - name: Validate Bash entrypoints
+        shell: bash
+        run: bash -n bin/dw scripts/install-dw.sh scripts/python-resolver.sh
+
+      - name: Install global DW CLI in temporary home
         shell: bash
         run: |
-          bash -n bin/dw scripts/install-dw.sh scripts/python-resolver.sh
-          test_home="$(mktemp -d)"
-          HOME="$test_home" SHELL=/bin/bash ./bin/dw install --shell bash
-          HOME="$test_home" "$test_home/.local/bin/dw" --version
-          grep -Fq "DW SuperApps CLI" "$test_home/.bashrc"
-          HOME="$test_home" SHELL=/bin/bash "$test_home/.local/bin/dw" uninstall --shell bash
-          test ! -e "$test_home/.local/bin/dw"
-          ! grep -Fq "DW SuperApps CLI" "$test_home/.bashrc"
+          rm -rf "$DW_TEST_HOME"
+          mkdir -p "$DW_TEST_HOME"
+          HOME="$DW_TEST_HOME" SHELL=/bin/bash ./bin/dw install --shell bash
+
+      - name: Verify global DW CLI
+        shell: bash
+        run: |
+          HOME="$DW_TEST_HOME" "$DW_TEST_HOME/.local/bin/dw" --version
+          grep -Fq "DW SuperApps CLI" "$DW_TEST_HOME/.bashrc"
+
+      - name: Uninstall global DW CLI
+        shell: bash
+        run: |
+          HOME="$DW_TEST_HOME" SHELL=/bin/bash "$DW_TEST_HOME/.local/bin/dw" uninstall --shell bash
+          test ! -e "$DW_TEST_HOME/.local/bin/dw"
+          ! grep -Fq "DW SuperApps CLI" "$DW_TEST_HOME/.bashrc"
 
       - run: python -m pip install -r requirements-dev.txt
 
