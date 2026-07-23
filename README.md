@@ -2,39 +2,36 @@
 
 Host-neutral engineering workspace for Kiro, Codex, reusable AI Powers, and multiple system repositories.
 
-## Bootstrap
+## One-click bootstrap
+
+### macOS / Linux / Git Bash
 
 ```bash
 git clone --recurse-submodules https://github.com/nhatnguyenquang1838-coder/DW-SuperApps.git
 cd DW-SuperApps
-python3 -m pip install -r requirements-dev.txt
-./bin/dw power init
-./bin/dw host install all
-./bin/dw validate
+./bin/dw init all
 ```
 
-Windows PowerShell:
+### Windows PowerShell
 
 ```powershell
 git clone --recurse-submodules https://github.com/nhatnguyenquang1838-coder/DW-SuperApps.git
 cd DW-SuperApps
-python -m pip install -r requirements-dev.txt
-.\dw.ps1 power init
-.\dw.ps1 host install all
-.\dw.ps1 validate
+.\dw.ps1 init all
 ```
 
-## Power Runtime v2
+## Daily commands
 
 ```bash
-./bin/dw workspace info
-./bin/dw power list
-./bin/dw power info task-me
-./bin/dw system powers rental-home
-./bin/dw power prompt task-me --system rental-home --task "Create an implementation plan"
+dw sync all
+dw status all
+dw doctor all
+dw clean all
 ```
 
-See `docs/POWER_RUNTIME_V2.md` for Kiro, Codex IDE, adapter, prompt, and submodule commands.
+`dw clean all` removes only generated adapters and caches. Runtime data under system repositories is preserved unless `--include-runtime --yes` is explicitly supplied.
+
+See [`docs/POWER_RUNTIME_V2.md`](docs/POWER_RUNTIME_V2.md) for all one-click, Kiro, Codex, and targeted commands.
 
 ## Layout
 
