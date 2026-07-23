@@ -27,14 +27,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Test Bash Python resolver
-        shell: bash
-        run: bash tests/test_python_resolver.sh
-
       - name: Test one-click CLI installer
         shell: bash
         run: |
-          bash -n bin/dw scripts/install-dw.sh scripts/python-resolver.sh
+          bash -n bin/dw scripts/install-dw.sh scripts/resolve-python.sh
           test_home="$(mktemp -d)"
           HOME="$test_home" SHELL=/bin/bash ./bin/dw install --shell bash
           HOME="$test_home" "$test_home/.local/bin/dw" --version
@@ -48,13 +44,19 @@ jobs:
       - name: Validate workspace contract
         run: python scripts/dw_cli.py validate
 
-      - name: Test Power Runtime v2
+      - name: Test Power Runtime
         run: python -m unittest discover -s tests -p "test_*.py"
 
-      - name: Validate host adapters
+      - name: Validate all host adapters
         run: |
+          python scripts/dw_cli.py host list
           python scripts/dw_cli.py host install all
           python scripts/dw_cli.py host status all
+
+      - name: Validate Ollama provider profile
+        run: |
+          python scripts/dw_cli.py provider install all
+          python scripts/dw_cli.py provider status all
 
       - name: Report submodule status
         run: python scripts/dw_cli.py power status all
