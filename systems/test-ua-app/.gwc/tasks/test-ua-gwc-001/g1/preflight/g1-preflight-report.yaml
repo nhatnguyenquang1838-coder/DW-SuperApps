@@ -1,0 +1,169 @@
+schema_version: "1.0"
+artifact_type: g1-preflight-report
+generated_at: "2026-07-23T17:44:00Z"
+
+trace:
+  project_id: test-ua-app
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: test-ua-gwc-001
+  base_sha: 6332c8f62614d581c45403cb5e3e0c4f528cbd70
+  g0_snapshot: ../../g0/context-snapshot.yaml
+
+repository_state:
+  base_ref: main
+  base_sha: 6332c8f62614d581c45403cb5e3e0c4f528cbd70
+  profile_path: projects/test-ua-app/project-profile.yaml
+  connector: cline
+
+checks:
+  - id: REPO_CONSISTENCY
+    status: PASS
+    code: REPO_CONSISTENCY_PASS
+    message: Repository identity and base SHA verified
+    evidence:
+      - "git status: clean"
+      - "base_sha: 6332c8f62614d581c45403cb5e3e0c4f528cbd70"
+  - id: EXECUTION_MODE
+    status: PASS
+    code: EXECUTION_MODE_PASS
+    message: local_agent mode with full shell, filesystem, git capabilities
+    evidence:
+      - "execution_mode: local_agent"
+      - "capabilities: shell, filesystem, git, local-checkout"
+  - id: DEPENDENCY_CHECK
+    status: PASS
+    code: DEPENDENCY_CHECK_PASS
+    message: All required dependencies are available
+    evidence:
+      - "Node.js: available"
+      - "pnpm: available"
+      - "Python 3: available"
+      - "Git: available"
+      - "GWC validator: available at powers/gwc/tools/validate_g01.py"
+      - "UA Power: available at powers/ua"
+  - id: RISK_CLASSIFICATION
+    status: PASS
+    code: RISK_CLASSIFICATION_PASS
+    message: Risk classified as R0 (lowest) - no production data, credentials, or destructive operations
+    evidence:
+      - "risk_class: R0"
+      - "No production data involved"
+      - "No credentials or secrets required"
+      - "Test system with no external dependencies"
+  - id: CONTRACT_AVAILABILITY
+    status: PASS
+    code: CONTRACT_AVAILABILITY_PASS
+    message: All required behavior contracts are available
+    evidence:
+      - "Coding_Project_Governance_v1.0.md: available"
+      - "GATE_LIFECYCLE_CONTRACT_v1.0.md: available"
+      - "E2E_DRAFT_PR_DELIVERY_RULE.md: available"
+      - "GATE_G0_G1_OPERATIONAL_RUNBOOK_v1.0.md: available"
+
+process_readback:
+  process_id: gwc-gate-lifecycle-v1
+  terminal_outcome: G5_DEPLOY_STATUS_VERIFY
+  required_sources:
+    - powers/gwc/core/GATE_LIFECYCLE_CONTRACT_v1.0.md
+    - powers/gwc/core/runbooks/GATE_G0_G1_OPERATIONAL_RUNBOOK_v1.0.md
+  status: VERIFIED
+
+execution_feasibility:
+  outcome: EXECUTABLE
+  route_steps:
+    - id: STEP-1
+      name: G0 Context Capture
+      gate: G0_CONTEXT
+      actor: agent
+      action_class: read_only_inspection
+      capability_required: filesystem_read
+      capability_status: VERIFIED
+      primary_route: local filesystem
+      fallback_routes: []
+      continuation: auto
+      expected_evidence: g0/context-snapshot.yaml
+      bypass_eligibility: FORBIDDEN
+    - id: STEP-2
+      name: G1 Artifact Creation and Validation
+      gate: G1_ALIGNMENT
+      actor: agent
+      action_class: read_only_analysis
+      capability_required: filesystem_write
+      capability_status: VERIFIED
+      primary_route: local filesystem
+      fallback_routes: []
+      continuation: auto
+      expected_evidence: g1/*/*.yaml + validator PASS
+      bypass_eligibility: FORBIDDEN
+    - id: STEP-3
+      name: G2 Branch and Execution
+      gate: G2_EXECUTION
+      actor: agent
+      action_class: guarded_branch_write
+      capability_required: git_write
+      capability_status: VERIFIED
+      primary_route: local git
+      fallback_routes: []
+      continuation: auto
+      expected_evidence: g2/execution-envelope.yaml + branch created
+      bypass_eligibility: FORBIDDEN
+    - id: STEP-4
+      name: G3 Draft PR
+      gate: G3_PR
+      actor: agent
+      action_class: draft_pr_create
+      capability_required: gh_cli
+      capability_status: VERIFIED
+      primary_route: gh CLI
+      fallback_routes: []
+      continuation: auto
+      expected_evidence: g3/delivery-record.yaml + Draft PR URL
+      bypass_eligibility: FORBIDDEN
+    - id: STEP-5
+      name: G4 Merge Approval
+      gate: G4_MERGE
+      actor: human
+      action_class: merge_approval
+      capability_required: human_decision
+      capability_status: VERIFIED
+      primary_route: human approval command
+      fallback_routes: []
+      continuation: manual
+      expected_evidence: g4/merge-approval.yaml
+      bypass_eligibility: FORBIDDEN
+    - id: STEP-6
+      name: G5 Status Verify
+      gate: G5_DEPLOY
+      actor: agent
+      action_class: read_only_status_check
+      capability_required: gh_cli
+      capability_status: VERIFIED
+      primary_route: gh CLI
+      fallback_routes: []
+      continuation: auto
+      expected_evidence: g5/deployment-approval.yaml
+      bypass_eligibility: FORBIDDEN
+  continuation_coverage: COMPLETE
+  human_bypass_required: false
+
+risk_class: R0
+required_gate: G2_AUTOMATIC_BOUNDED
+
+runtime_context:
+  agent_runtime_id: cline-20260723-2311
+  execution_mode: local_agent
+  selected_profile:
+    id: test-ua-app
+    path: systems/test-ua-app/project-profile.yaml
+  selected_connector: cline
+  connector_priority:
+    - cline
+  required_behavior_contracts:
+    - core/Coding_Project_Governance_v1.0.md
+    - core/GATE_LIFECYCLE_CONTRACT_v1.0.md
+    - core/E2E_DRAFT_PR_DELIVERY_RULE.md
+    - core/runbooks/GATE_G0_G1_OPERATIONAL_RUNBOOK_v1.0.md
+
+blockers: []
+
+outcome: PASS

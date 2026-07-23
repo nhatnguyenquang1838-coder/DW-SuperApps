@@ -1,0 +1,97 @@
+schema_version: "1.0"
+artifact_type: g1-decision-record
+generated_at: "2026-07-23T17:44:00Z"
+
+trace:
+  project_id: test-ua-app
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: test-ua-gwc-001
+  base_sha: 6332c8f62614d581c45403cb5e3e0c4f528cbd70
+  g0_snapshot: ../../g0/context-snapshot.yaml
+
+options_ref: ../brainstorming/g1-options.yaml
+preflight_ref: ../preflight/g1-preflight-report.yaml
+
+status: ACCEPTED
+selected_option_id: OPT-1
+
+user_decision:
+  actor: DW-SuperApps workspace operator
+  decided_at: "2026-07-23T17:43:00Z"
+  source: chat-conversation
+  explicit: true
+
+rationale: >
+  Option A (OPT-1: Full E2E GWC lifecycle + UA graph generation) is selected
+  because the task explicitly requires testing the workspace-managed GWC
+  workflow end to end. Only OPT-1 validates G0 through G5 gates, generates
+  the UA knowledge graph, and launches the dashboard. The risk is R0 and no
+  blockers exist.
+
+rejected_option_ids:
+  - OPT-2
+  - OPT-3
+
+acceptance_criteria_refs:
+  - AC-1
+  - AC-2
+  - AC-3
+  - AC-4
+  - AC-5
+  - AC-6
+  - AC-7
+  - AC-8
+  - AC-9
+
+scope_hash: sha256:95e657b557e8880f71cad4c8b8059d2f66851e666ec08aa9f4c7b2d834935f5c
+
+g1_gate_outcome: PASS
+
+authority_boundaries:
+  grants: []
+  excluded:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION
+
+subagent_distribution_plan:
+  task_decomposition:
+    - sub_task_id: SUB-TASK-1
+      description: Create G0 and G1 gate artifacts
+    - sub_task_id: SUB-TASK-2
+      description: Validate G0/G1 artifacts with GWC validator
+    - sub_task_id: SUB-TASK-3
+      description: Generate G2 execution envelope and create branch
+    - sub_task_id: SUB-TASK-4
+      description: Generate UA knowledge graph using UA Power
+    - sub_task_id: SUB-TASK-5
+      description: Create G3 delivery record and Draft PR
+    - sub_task_id: SUB-TASK-6
+      description: Execute G4 merge and G5 status verification
+  agent_allocation:
+    - sub_task_id: SUB-TASK-1
+      skill_id: gwc-g0-g1
+      agent_type: primary
+    - sub_task_id: SUB-TASK-2
+      skill_id: gwc-validator
+      agent_type: validator
+    - sub_task_id: SUB-TASK-3
+      skill_id: gwc-g2
+      agent_type: primary
+    - sub_task_id: SUB-TASK-4
+      skill_id: understand
+      agent_type: specialist
+    - sub_task_id: SUB-TASK-5
+      skill_id: gwc-g3
+      agent_type: primary
+    - sub_task_id: SUB-TASK-6
+      skill_id: gwc-g4-g5
+      agent_type: primary
+  execution_order:
+    - SUB-TASK-1
+    - SUB-TASK-2
+    - SUB-TASK-3
+    - SUB-TASK-4
+    - SUB-TASK-5
+    - SUB-TASK-6
+  summary: Single-agent sequential execution of all gates and UA graph generation

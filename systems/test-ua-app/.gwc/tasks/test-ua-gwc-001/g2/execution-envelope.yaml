@@ -1,0 +1,80 @@
+schema_version: "1.0"
+artifact_type: g2-execution-envelope
+generated_at: "2026-07-23T17:50:00Z"
+
+trace:
+  project_id: test-ua-app
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: test-ua-gwc-001
+  base_sha: 6332c8f62614d581c45403cb5e3e0c4f528cbd70
+
+task_id: test-ua-gwc-001
+run_id: g1-test-ua-gwc-20260723-2311
+gate: G2_EXECUTION
+
+repository:
+  owner: nhatnguyenquang1838-coder
+  name: DW-SuperApps
+  default_branch: main
+  protected_branches:
+    - main
+
+working_branch: test-ua-gwc-001
+
+scope_hash: sha256:95e657b557e8880f71cad4c8b8059d2f66851e666ec08aa9f4c7b2d834935f5c
+
+risk_class: R0
+
+file_scope:
+  modules:
+    - systems/test-ua-app
+  include_paths:
+    - systems/test-ua-app/.ua/**
+    - systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/**
+    - systems/test-ua-app/AGENTS.md
+  exclude_paths:
+    - .git/**
+    - node_modules/**
+    - dist/**
+    - build/**
+    - coverage/**
+    - test-results/**
+    - playwright-report/**
+    - .pnpm-store/**
+    - caches/**
+    - .env*
+    - credentials
+    - secrets
+
+authorized_actions:
+  - create
+  - update
+  - branch
+  - commit
+  - push
+
+excluded_actions:
+  - merge
+  - deploy
+  - publish
+  - release
+  - production-data
+  - credentials
+  - configuration-changes
+  - force-push
+  - branch-deletion
+
+validation_requirements:
+  - Graph JSON parses correctly
+  - Node and relationship counts are valid
+  - No unresolved references
+  - No secrets or environment-file content
+  - Excluded paths are respected
+
+continuation:
+  next: G3_PR
+  requirements:
+    - G2 validation evidence
+    - Branch pushed to remote
+    - Complete diff review
+    - No scope drift
