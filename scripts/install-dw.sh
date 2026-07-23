@@ -9,6 +9,9 @@ LAUNCHER_MARKER="# generated-by: DW-SuperApps installer"
 PROFILE_START="# >>> DW SuperApps CLI >>>"
 PROFILE_END="# <<< DW SuperApps CLI <<<"
 
+# shellcheck source=python-resolver.sh
+source "$ROOT/scripts/python-resolver.sh"
+
 usage() {
   cat <<'EOF'
 Usage:
@@ -94,7 +97,7 @@ write_profile_block() {
   local profile="$1"
   mkdir -p "$(dirname "$profile")"
   touch "$profile"
-  python3 - "$profile" "$PROFILE_START" "$PROFILE_END" <<'PY'
+  dw_python - "$profile" "$PROFILE_START" "$PROFILE_END" <<'PY'
 from pathlib import Path
 import sys
 
@@ -128,7 +131,7 @@ PY
 remove_profile_block() {
   local profile="$1"
   [[ -f "$profile" ]] || return 0
-  python3 - "$profile" "$PROFILE_START" "$PROFILE_END" <<'PY'
+  dw_python - "$profile" "$PROFILE_START" "$PROFILE_END" <<'PY'
 from pathlib import Path
 import sys
 
