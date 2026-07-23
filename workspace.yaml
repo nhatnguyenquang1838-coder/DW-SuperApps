@@ -1,0 +1,35 @@
+apiVersion: ai-workspace/v1
+kind: Workspace
+metadata:
+  id: dw-superapps
+  name: DW SuperApps
+hosts:
+  - kiro
+  - codex
+powers:
+  - id: gwc
+    path: powers/gwc
+    source: nhatnguyenquang1838-coder/gwc
+    enabled: true
+  - id: ua
+    path: powers/ua
+    source: Egonex-AI/Understand-Anything
+    enabled: true
+  - id: task-me
+    path: powers/task-me
+    source: nhatnguyenquang1838-coder/task-me
+    enabled: true
+systems:
+  - id: rental-home
+    path: systems/rental-home
+    source: nhatnguyenquang1838-coder/rental_home
+    enabled_powers:
+      - gwc
+      - ua
+      - task-me
+data_ownership:
+  policy: system-owned
+  roots:
+    ua: .ua
+    task_me: .task-me
+    gwc: .gwc
