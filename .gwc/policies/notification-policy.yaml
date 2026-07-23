@@ -1,0 +1,32 @@
+# GWC notification policy
+# Governance events are authoritative; delivery channels are optional projections.
+
+gate_notifications:
+  enabled: true
+
+  required_events:
+    - GATE_STARTED
+    - GATE_COMPLETED
+    - GATE_BLOCKED
+    - HUMAN_OVERRIDE
+
+  channels:
+    slack:
+      enabled: true
+      required: false
+      purpose: notification_only
+
+  failure_behavior:
+    continue_execution: true
+    audit_notification_failure: true
+
+  message_requirements:
+    include:
+      - project
+      - task_id
+      - gate
+      - status
+      - evidence
+      - actor
+      - timestamp_utc
+      - next_action
