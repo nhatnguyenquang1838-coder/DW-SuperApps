@@ -1,0 +1,23 @@
+# Python caches
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# DW generated host adapters
+.kiro/skills/gwc/
+.kiro/skills/ua/
+.kiro/skills/task-me/
+.codex/skills/gwc/
+.codex/skills/ua/
+.codex/skills/task-me/
+.claude/skills/gwc/
+.claude/skills/ua/
+.claude/skills/task-me/
+.clinerules/00-dw-superapps.md
+.kilo/rules/dw-superapps.md
+.github/instructions/dw-superapps.instructions.md
+CLAUDE.md
+kilo.jsonc
+.agents/

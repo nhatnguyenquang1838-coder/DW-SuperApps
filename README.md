@@ -1,31 +1,27 @@
 # DW SuperApps
 
-Host-neutral engineering workspace for Kiro, Codex, reusable AI Powers, and multiple system repositories.
+Host-neutral engineering workspace for reusable AI Powers, multiple product systems, local model providers, and agent hosts.
 
 ## One-click bootstrap
 
-### macOS / Linux / Git Bash
+### Bash / Zsh / Linux / macOS / Git Bash
 
 ```bash
 git clone --recurse-submodules https://github.com/nhatnguyenquang1838-coder/DW-SuperApps.git
 cd DW-SuperApps
-./bin/dw install --shell bash --init
-source ~/.bashrc
+bash bin/dw install --shell auto --init
 ```
 
-For Zsh/macOS:
-
-```bash
-./bin/dw install --shell zsh --init
-source ~/.zshrc
-```
-
-After installation, use `dw` from any directory:
+Reload the shell, then verify:
 
 ```bash
 dw --version
-dw status all
+dw host status all
+dw provider status all
+dw doctor all
 ```
+
+The Bash launcher automatically resolves `python3`, `python`, or `py -3`.
 
 ### Windows PowerShell
 
@@ -33,6 +29,26 @@ dw status all
 git clone --recurse-submodules https://github.com/nhatnguyenquang1838-coder/DW-SuperApps.git
 cd DW-SuperApps
 .\dw.ps1 init all
+```
+
+## Supported hosts
+
+```text
+Kiro
+Codex
+GitHub Copilot
+Cline
+Kilo Code
+Claude Code
+Custom/Bionics-style agents
+```
+
+Ollama is registered separately as an OpenAI-compatible model provider.
+
+```bash
+dw host list
+dw host install all
+dw provider install ollama --model qwen3-coder:30b
 ```
 
 ## Daily commands
@@ -44,15 +60,15 @@ dw doctor all
 dw clean all
 ```
 
-`dw clean all` removes only generated adapters and caches. Runtime data under system repositories is preserved unless `--include-runtime --yes` is explicitly supplied.
+`dw clean all` removes generated adapters and caches only. Runtime data under system repositories is preserved unless `--include-runtime --yes` is supplied.
 
-Uninstall the managed Bash/Zsh command with:
+## Power invocation
 
 ```bash
-dw uninstall --shell bash
+dw power prompt ua --system rental-home --task "Analyze architecture"
+dw power prompt task-me --system rental-home --task "Create an implementation plan"
+dw power prompt gwc --system rental-home --task "Review delivery scope"
 ```
-
-See [`docs/POWER_RUNTIME_V2.md`](docs/POWER_RUNTIME_V2.md) for all one-click, Kiro, Codex, and targeted commands.
 
 ## Layout
 
@@ -63,16 +79,17 @@ powers/
   task-me/      Implementation planning Power
 systems/
   rental-home/  First product system
-.kiro/          Kiro host adapter
-.codex/         Codex host adapter
 ```
 
-Power and system repositories are pinned as Git submodules. Develop each Power in its own repository, then deliberately update the pin in this workspace.
-
-Runtime data remains owned by the system repository:
+Power and system repositories are pinned Git submodules. Runtime data remains owned by the system repository:
 
 ```text
 systems/rental-home/.ua/
 systems/rental-home/.task-me/
 systems/rental-home/.gwc/
 ```
+
+See:
+
+- `docs/POWER_RUNTIME_V2.md`
+- `docs/MULTI_HOST_SETUP.md`

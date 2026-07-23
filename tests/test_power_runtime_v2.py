@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import unittest
 from pathlib import Path
@@ -16,11 +17,22 @@ class PowerRuntimeV2Tests(unittest.TestCase):
         self.assertEqual({"gwc", "ua", "task-me"}, set(dw_cli.manifests()))
 
     def test_manifests_use_v2_contract(self) -> None:
+        expected_hosts = {
+            "kiro",
+            "codex",
+            "copilot",
+            "cline",
+            "kilo",
+            "claude",
+            "custom",
+            "cli",
+        }
         for power_id, manifest in dw_cli.manifests().items():
             self.assertEqual("dw.superapps/v2", manifest["apiVersion"])
             self.assertEqual(power_id, manifest["metadata"]["id"])
             self.assertIn("description", manifest["metadata"])
             self.assertTrue(manifest["spec"]["entrypoints"]["skillCandidates"])
+            self.assertEqual(expected_hosts, set(manifest["spec"]["hosts"]))
             self.assertIn(
                 f"{manifest['spec']['runtimeDataRoot']}/**",
                 manifest["spec"]["permissions"]["write"],
@@ -49,8 +61,13 @@ class PowerRuntimeV2Tests(unittest.TestCase):
                 "Analyze architecture",
             ],
             ["power", "check", "all"],
-            ["host", "install", "kiro"],
+            ["host", "list"],
+            ["host", "install", "copilot"],
+            ["host", "install", "bionics"],
             ["host", "status", "all"],
+            ["provider", "install", "ollama", "--model", "test-model"],
+            ["provider", "status", "all"],
+            ["provider", "info", "ollama"],
             ["system", "list"],
             ["system", "powers", "rental-home"],
             ["validate"],
@@ -77,6 +94,16 @@ class PowerRuntimeV2Tests(unittest.TestCase):
         self.assertIn("workspace.yaml", content)
         self.assertIn(".task-me", content)
         self.assertIn("dw power prompt task-me", content)
+
+    def test_provider_config_uses_workspace_defaults(self) -> None:
+        provider = dw_cli.find_provider("ollama")
+        config = dw_cli.provider_config(
+            provider,
+            argparse.Namespace(model=None, base_url=None, api_key=None),
+        )
+        self.assertEqual("openai-compatible", config["protocol"])
+        self.assertEqual("http://localhost:11434/v1", config["baseUrl"])
+        self.assertTrue(config["model"])
 
 
 if __name__ == "__main__":

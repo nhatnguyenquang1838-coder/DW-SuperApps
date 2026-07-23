@@ -7,6 +7,9 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +26,25 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE_PATH = ROOT / "workspace.yaml"
 MANIFEST_DIR = ROOT / "manifests" / "powers"
 GENERATED_MARKER = "<!-- generated-by: dw host install -->"
+GENERATED_JSON_KEY = "generatedBy"
+
+HOST_SPECS: dict[str, dict[str, str]] = {
+    "kiro": {"kind": "skills", "root": ".kiro/skills"},
+    "codex": {"kind": "skills", "root": ".codex/skills"},
+    "claude": {"kind": "skills", "root": ".claude/skills", "index": "CLAUDE.md"},
+    "custom": {"kind": "skills", "root": ".agents/skills", "index": ".agents/DW_AGENT.md"},
+    "copilot": {
+        "kind": "instructions",
+        "file": ".github/instructions/dw-superapps.instructions.md",
+    },
+    "cline": {"kind": "instructions", "file": ".clinerules/00-dw-superapps.md"},
+    "kilo": {"kind": "instructions", "file": ".kilo/rules/dw-superapps.md"},
+}
+HOST_ALIASES = {
+    "bionics": "custom",
+    "biotic": "custom",
+    "ollama": "custom",
+}
 
 
 class DwError(RuntimeError):
@@ -85,11 +107,48 @@ def emit(data: Any, *, as_json: bool) -> None:
         print(json.dumps(data, indent=2, ensure_ascii=False))
 
 
+def atomic_write(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path: str | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            "w",
+            dir=path.parent,
+            delete=False,
+            encoding="utf-8",
+            newline="\n",
+        ) as handle:
+            handle.write(content)
+            temp_path = handle.name
+        os.replace(temp_path, path)
+        temp_path = None
+    finally:
+        if temp_path is not None:
+            try:
+                os.unlink(temp_path)
+            except FileNotFoundError:
+                pass
+
+
 def find_system(system_id: str) -> dict[str, Any]:
     for system in workspace().get("systems", []):
         if system.get("id") == system_id:
             return system
     raise DwError(f"unknown system: {system_id}")
+
+
+def provider_entries() -> list[dict[str, Any]]:
+    entries = workspace().get("providers", [])
+    if not isinstance(entries, list):
+        raise DwError("workspace providers must be a list")
+    return [item for item in entries if isinstance(item, dict)]
+
+
+def find_provider(provider_id: str) -> dict[str, Any]:
+    for provider in provider_entries():
+        if provider.get("id") == provider_id:
+            return provider
+    raise DwError(f"unknown provider: {provider_id}")
 
 
 def workspace_info(args: argparse.Namespace) -> int:
@@ -98,6 +157,7 @@ def workspace_info(args: argparse.Namespace) -> int:
         "id": ws["metadata"]["id"],
         "name": ws["metadata"]["name"],
         "hosts": ws.get("hosts", []),
+        "providers": [item["id"] for item in provider_entries()],
         "powers": [item["id"] for item in ws.get("powers", []) if item.get("enabled", True)],
         "systems": [item["id"] for item in ws.get("systems", [])],
     }
@@ -106,6 +166,7 @@ def workspace_info(args: argparse.Namespace) -> int:
         return 0
     print(f"Workspace: {data['name']} ({data['id']})")
     print(f"Hosts: {', '.join(data['hosts']) or '-'}")
+    print(f"Providers: {', '.join(data['providers']) or '-'}")
     print(f"Powers: {', '.join(data['powers']) or '-'}")
     print(f"Systems: {', '.join(data['systems']) or '-'}")
     return 0
@@ -337,6 +398,29 @@ def power_sync(args: argparse.Namespace) -> int:
     raise DwError(f"unknown sync mode: {mode}")
 
 
+def normalize_host(host: str) -> str:
+    normalized = HOST_ALIASES.get(host, host)
+    if normalized not in HOST_SPECS:
+        raise DwError(f"unknown host: {host}")
+    return normalized
+
+
+def configured_hosts() -> list[str]:
+    raw_hosts = workspace().get("hosts", [])
+    result: list[str] = []
+    for host in raw_hosts:
+        normalized = normalize_host(str(host))
+        if normalized not in result:
+            result.append(normalized)
+    return result
+
+
+def select_hosts(host: str) -> list[str]:
+    if host == "all":
+        return configured_hosts()
+    return [normalize_host(host)]
+
+
 def resolve_skill_source(power_id: str, manifest: dict[str, Any]) -> Path | None:
     power_root = ROOT / manifest["spec"]["path"]
     for candidate in manifest["spec"]["entrypoints"]["skillCandidates"]:
@@ -346,22 +430,44 @@ def resolve_skill_source(power_id: str, manifest: dict[str, Any]) -> Path | None
     return None
 
 
-def safe_remove_generated(destination: Path) -> None:
-    if destination.is_symlink():
-        destination.unlink()
-        return
-    if not destination.exists():
-        return
-    marker_file = destination / "SKILL.md" if destination.is_dir() else destination
-    if marker_file.is_file() and GENERATED_MARKER in marker_file.read_text(
+def is_generated_path(path: Path) -> bool:
+    if path.is_symlink():
+        return True
+    if not path.exists():
+        return False
+    if path.is_file():
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        if GENERATED_MARKER in text:
+            return True
+        if path.suffix == ".json":
+            try:
+                data = json.loads(text)
+            except json.JSONDecodeError:
+                return False
+            return data.get(GENERATED_JSON_KEY) == "dw"
+        return False
+    marker = path / "SKILL.md"
+    return marker.is_file() and GENERATED_MARKER in marker.read_text(
         encoding="utf-8", errors="ignore"
-    ):
-        if destination.is_dir():
-            shutil.rmtree(destination)
-        else:
-            destination.unlink()
-        return
-    raise DwError(f"refusing to replace non-generated adapter: {destination.relative_to(ROOT)}")
+    )
+
+
+def safe_remove_generated(path: Path) -> bool:
+    if not path.exists() and not path.is_symlink():
+        return False
+    if not is_generated_path(path):
+        raise DwError(f"refusing to replace non-generated adapter: {path.relative_to(ROOT)}")
+    if path.is_symlink() or path.is_file():
+        path.unlink()
+    else:
+        shutil.rmtree(path)
+    return True
+
+
+def write_generated_file(path: Path, content: str) -> None:
+    if path.exists() or path.is_symlink():
+        safe_remove_generated(path)
+    atomic_write(path, content)
 
 
 def wrapper_content(
@@ -381,70 +487,309 @@ description: {metadata['description']}
 
 # {metadata['name']} Power
 
-This is a thin `{host}` adapter. Canonical behavior remains in:
+Thin `{host}` adapter. Canonical behavior remains in:
 
-- Power source: `../../../{spec['path']}`
-- Power manifest: `../../../manifests/powers/{power_id}.yaml`
-- Preferred entrypoint: `../../../{relative_source}`
+- Power source: `{spec['path']}`
+- Power manifest: `manifests/powers/{power_id}.yaml`
+- Preferred entrypoint: `{relative_source}`
 
 ## Invocation
 
-1. Read `../../../workspace.yaml` and `../../../AGENTS.md`.
+1. Read `workspace.yaml` and `AGENTS.md`.
 2. Resolve one target system from the workspace registry.
 3. Read project-local instructions in that system.
 4. Read the canonical Power entrypoint above.
 5. Keep generated data under the target system's `{spec['runtimeDataRoot']}/`.
 6. Never store project runtime data in the Power submodule.
 
-Use `dw power prompt {power_id} --system <system> --task "<task>"` to generate a host-neutral invocation prompt.
+Generate a complete task prompt with:
+
+`dw power prompt {power_id} --system <system> --task "<task>"`
 """
 
 
-def install_host_adapters(args: argparse.Namespace) -> int:
-    selected_hosts = ["kiro", "codex"] if args.host == "all" else [args.host]
-    all_manifests = manifests()
-    for host in selected_hosts:
-        host_root = ROOT / f".{host}" / "skills"
-        host_root.mkdir(parents=True, exist_ok=True)
-        for power_id, manifest in sorted(all_manifests.items()):
-            if host not in manifest["spec"]["hosts"]:
-                continue
-            destination = host_root / power_id
-            source = resolve_skill_source(power_id, manifest)
+def host_instruction_content(host: str) -> str:
+    power_lines = []
+    for power_id, manifest in sorted(manifests().items()):
+        metadata = manifest["metadata"]
+        spec = manifest["spec"]
+        power_lines.append(
+            f"- `{power_id}` — {metadata['description']} "
+            f"Runtime data: `{spec['runtimeDataRoot']}/`."
+        )
+    prefix = ""
+    if host == "copilot":
+        prefix = '---\napplyTo: "**"\n---\n'
+    if host == "claude":
+        prefix = "@AGENTS.md\n\n"
+    return (
+        prefix
+        + f"""{GENERATED_MARKER}
+
+# DW SuperApps — {host} adapter
+
+Read `AGENTS.md` and `workspace.yaml` before acting.
+
+## Registered Powers
+
+{os.linesep.join(power_lines)}
+
+## Routing
+
+1. Resolve the target system from `workspace.yaml`.
+2. Use only Powers enabled for that system.
+3. Read the first existing `skillCandidates` entry from the Power manifest.
+4. Keep runtime data inside the system repository.
+5. Do not modify a Power submodule unless the task explicitly targets that Power repository.
+
+Generate a host-neutral prompt:
+
+`dw power prompt <power> --system <system> --task "<task>"`
+
+Validate the workspace:
+
+`dw doctor all`
+"""
+    )
+
+
+def kilo_config_content() -> str:
+    return f"""// {GENERATED_MARKER}
+{{
+  "$schema": "https://app.kilo.ai/config.json",
+  "instructions": [
+    "AGENTS.md",
+    ".kilo/rules/*.md"
+  ]
+}}
+"""
+
+
+def host_expected_paths(host: str) -> list[Path]:
+    host = normalize_host(host)
+    spec = HOST_SPECS[host]
+    paths: list[Path] = []
+    if spec["kind"] == "skills":
+        root = ROOT / spec["root"]
+        for power_id, manifest in sorted(manifests().items()):
+            if host in manifest["spec"]["hosts"]:
+                paths.append(root / power_id / "SKILL.md")
+        if "index" in spec:
+            paths.append(ROOT / spec["index"])
+    else:
+        paths.append(ROOT / spec["file"])
+        if host == "kilo":
+            paths.append(ROOT / "kilo.jsonc")
+    return paths
+
+
+def install_skill_host(host: str, mode: str) -> None:
+    spec = HOST_SPECS[host]
+    host_root = ROOT / spec["root"]
+    host_root.mkdir(parents=True, exist_ok=True)
+    for power_id, manifest in sorted(manifests().items()):
+        if host not in manifest["spec"]["hosts"]:
+            continue
+        destination = host_root / power_id
+        source = resolve_skill_source(power_id, manifest)
+        if destination.exists() or destination.is_symlink():
             safe_remove_generated(destination)
-            if args.mode == "link" and source is not None:
-                target = os.path.relpath(source, start=destination.parent)
-                destination.symlink_to(target, target_is_directory=True)
-                print(f"LINK: {destination.relative_to(ROOT)} -> {target}")
-            elif args.mode == "copy" and source is not None:
-                shutil.copytree(source, destination)
-                skill_file = destination / "SKILL.md"
-                skill_file.write_text(
-                    skill_file.read_text(encoding="utf-8") + f"\n\n{GENERATED_MARKER}\n",
-                    encoding="utf-8",
-                )
-                print(f"COPY: {destination.relative_to(ROOT)}")
-            else:
-                destination.mkdir(parents=True, exist_ok=True)
-                (destination / "SKILL.md").write_text(
-                    wrapper_content(host, power_id, manifest, source),
-                    encoding="utf-8",
-                )
-                print(f"WRAP: {destination.relative_to(ROOT)}")
+        if mode == "link" and source is not None:
+            target = os.path.relpath(source, start=destination.parent)
+            destination.symlink_to(target, target_is_directory=True)
+            print(f"LINK: {destination.relative_to(ROOT)} -> {target}")
+        elif mode == "copy" and source is not None:
+            shutil.copytree(source, destination)
+            skill_file = destination / "SKILL.md"
+            skill_file.write_text(
+                skill_file.read_text(encoding="utf-8") + f"\n\n{GENERATED_MARKER}\n",
+                encoding="utf-8",
+            )
+            print(f"COPY: {destination.relative_to(ROOT)}")
+        else:
+            destination.mkdir(parents=True, exist_ok=True)
+            atomic_write(destination / "SKILL.md", wrapper_content(host, power_id, manifest, source))
+            print(f"WRAP: {destination.relative_to(ROOT)}")
+    if "index" in spec:
+        index = ROOT / spec["index"]
+        write_generated_file(index, host_instruction_content(host))
+        print(f"INDEX: {index.relative_to(ROOT)}")
+
+
+def install_instruction_host(host: str) -> None:
+    spec = HOST_SPECS[host]
+    path = ROOT / spec["file"]
+    write_generated_file(path, host_instruction_content(host))
+    print(f"RULE: {path.relative_to(ROOT)}")
+    if host == "kilo":
+        config = ROOT / "kilo.jsonc"
+        write_generated_file(config, kilo_config_content())
+        print(f"CONFIG: {config.relative_to(ROOT)}")
+
+
+def install_host_adapters(args: argparse.Namespace) -> int:
+    selected = select_hosts(args.host)
+    for host in selected:
+        spec = HOST_SPECS[host]
+        if spec["kind"] == "skills":
+            install_skill_host(host, args.mode)
+        else:
+            install_instruction_host(host)
+    return 0
+
+
+def remove_host_adapters(host: str = "all") -> int:
+    removed = 0
+    for selected in select_hosts(host):
+        for path in sorted(host_expected_paths(selected), reverse=True):
+            target = path.parent if path.name == "SKILL.md" else path
+            if target.exists() or target.is_symlink():
+                if safe_remove_generated(target):
+                    removed += 1
+    return removed
+
+
+def host_list(args: argparse.Namespace) -> int:
+    rows = []
+    for host in configured_hosts():
+        spec = HOST_SPECS[host]
+        rows.append(
+            {
+                "host": host,
+                "kind": spec["kind"],
+                "path": spec.get("root") or spec.get("file"),
+            }
+        )
+    if args.json:
+        emit(rows, as_json=True)
+        return 0
+    print(f"{'HOST':<10} {'KIND':<14} PATH")
+    for row in rows:
+        print(f"{row['host']:<10} {row['kind']:<14} {row['path']}")
+    print("Aliases: bionics, biotic, ollama -> custom")
     return 0
 
 
 def host_status(args: argparse.Namespace) -> int:
-    selected_hosts = ["kiro", "codex"] if args.host == "all" else [args.host]
-    all_manifests = manifests()
     failed = False
-    for host in selected_hosts:
-        for power_id in sorted(all_manifests):
-            path = ROOT / f".{host}" / "skills" / power_id / "SKILL.md"
+    for host in select_hosts(args.host):
+        paths = host_expected_paths(host)
+        for path in paths:
             state = "ready" if path.exists() else "missing"
             failed = failed or state == "missing"
-            print(f"{host:<6} {power_id:<12} {state}")
+            print(f"{host:<10} {path.relative_to(ROOT).as_posix():<58} {state}")
     return 1 if failed else 0
+
+
+def provider_config_path(provider_id: str) -> Path:
+    return ROOT / ".agents" / "providers" / f"{provider_id}.json"
+
+
+def provider_env_path(provider_id: str) -> Path:
+    return ROOT / ".agents" / "providers" / f"{provider_id}.env.example"
+
+
+def provider_config(provider: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
+    model_env = str(provider.get("model_env", "OLLAMA_MODEL"))
+    model = args.model or os.environ.get(model_env) or provider.get("default_model")
+    if not model:
+        raise DwError(f"provider {provider['id']} requires --model or {model_env}")
+    base_url = args.base_url or provider.get("base_url")
+    api_key = args.api_key or provider.get("api_key", "ollama")
+    return {
+        GENERATED_JSON_KEY: "dw",
+        "provider": provider["id"],
+        "protocol": provider.get("type", "openai-compatible"),
+        "baseUrl": base_url,
+        "apiKey": api_key,
+        "model": model,
+        "systemPrompt": ".agents/DW_AGENT.md",
+    }
+
+
+def write_provider_files(provider: dict[str, Any], config: dict[str, Any]) -> None:
+    config_path = provider_config_path(provider["id"])
+    if config_path.exists() and not is_generated_path(config_path):
+        raise DwError(f"refusing to replace unmanaged provider config: {config_path.relative_to(ROOT)}")
+    atomic_write(config_path, json.dumps(config, indent=2) + "\n")
+    env_path = provider_env_path(provider["id"])
+    env_content = (
+        f"# {GENERATED_MARKER}\n"
+        f"OLLAMA_BASE_URL={config['baseUrl']}\n"
+        f"OLLAMA_API_KEY={config['apiKey']}\n"
+        f"OLLAMA_MODEL={config['model']}\n"
+    )
+    write_generated_file(env_path, env_content)
+
+
+def select_providers(provider_id: str) -> list[dict[str, Any]]:
+    if provider_id == "all":
+        return provider_entries()
+    return [find_provider(provider_id)]
+
+
+def provider_install(args: argparse.Namespace) -> int:
+    for provider in select_providers(args.provider_id):
+        config = provider_config(provider, args)
+        write_provider_files(provider, config)
+        print(
+            f"PROVIDER: {provider['id']} model={config['model']} "
+            f"base={config['baseUrl']}"
+        )
+    return 0
+
+
+def load_provider_config(provider_id: str) -> dict[str, Any]:
+    path = provider_config_path(provider_id)
+    if not path.is_file():
+        raise DwError(f"provider {provider_id} is not installed")
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise DwError(f"invalid provider config: {path.relative_to(ROOT)}")
+    return data
+
+
+def probe_openai_provider(config: dict[str, Any]) -> tuple[bool, str]:
+    url = str(config["baseUrl"]).rstrip("/") + "/models"
+    request = urllib.request.Request(
+        url,
+        headers={"Authorization": f"Bearer {config.get('apiKey', 'ollama')}"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=3) as response:
+            return response.status == 200, f"HTTP {response.status}"
+    except (urllib.error.URLError, TimeoutError) as exc:
+        return False, str(exc)
+
+
+def provider_status(args: argparse.Namespace) -> int:
+    failed = False
+    for provider in select_providers(args.provider_id):
+        path = provider_config_path(provider["id"])
+        if not path.is_file():
+            print(f"{provider['id']:<10} missing  {path.relative_to(ROOT)}")
+            failed = True
+            continue
+        config = load_provider_config(provider["id"])
+        state = "ready"
+        detail = f"model={config.get('model')} base={config.get('baseUrl')}"
+        if args.probe:
+            ok, probe_detail = probe_openai_provider(config)
+            state = "online" if ok else "offline"
+            detail += f" probe={probe_detail}"
+            failed = failed or not ok
+        print(f"{provider['id']:<10} {state:<8} {detail}")
+    return 1 if failed else 0
+
+
+def provider_info(args: argparse.Namespace) -> int:
+    config = load_provider_config(args.provider_id)
+    if args.json:
+        emit(config, as_json=True)
+        return 0
+    for key in ("provider", "protocol", "baseUrl", "model", "systemPrompt"):
+        print(f"{key}: {config.get(key)}")
+    return 0
 
 
 def system_list(args: argparse.Namespace) -> int:
@@ -482,7 +827,7 @@ def validate(_: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="dw", description="DW SuperApps Power Runtime v2")
-    parser.add_argument("--version", action="version", version="dw 2.0")
+    parser.add_argument("--version", action="version", version="dw 2.3")
     commands = parser.add_subparsers(dest="command", required=True)
 
     workspace_parser = commands.add_parser("workspace")
@@ -516,23 +861,45 @@ def build_parser() -> argparse.ArgumentParser:
 
     host_parser = commands.add_parser("host")
     host_commands = host_parser.add_subparsers(dest="host_command", required=True)
+
+    host_list_parser = host_commands.add_parser("list")
+    host_list_parser.add_argument("--json", action="store_true")
+    host_list_parser.set_defaults(handler=host_list)
+
+    host_choices = [*HOST_SPECS, *HOST_ALIASES, "all"]
     host_install_parser = host_commands.add_parser("install")
-    host_install_parser.add_argument(
-        "host", nargs="?", choices=["kiro", "codex", "all"], default="all"
-    )
+    host_install_parser.add_argument("host", nargs="?", choices=host_choices, default="all")
     host_install_parser.add_argument(
         "--mode",
         choices=["wrapper", "link", "copy"],
         default="wrapper",
-        help="wrapper is cross-platform and does not require symlink privileges",
+        help="used by skill-based hosts; wrapper is cross-platform",
     )
     host_install_parser.set_defaults(handler=install_host_adapters)
 
     host_status_parser = host_commands.add_parser("status")
-    host_status_parser.add_argument(
-        "host", nargs="?", choices=["kiro", "codex", "all"], default="all"
-    )
+    host_status_parser.add_argument("host", nargs="?", choices=host_choices, default="all")
     host_status_parser.set_defaults(handler=host_status)
+
+    provider_parser = commands.add_parser("provider")
+    provider_commands = provider_parser.add_subparsers(dest="provider_command", required=True)
+
+    provider_install_parser = provider_commands.add_parser("install")
+    provider_install_parser.add_argument("provider_id", nargs="?", default="all")
+    provider_install_parser.add_argument("--model")
+    provider_install_parser.add_argument("--base-url")
+    provider_install_parser.add_argument("--api-key")
+    provider_install_parser.set_defaults(handler=provider_install)
+
+    provider_status_parser = provider_commands.add_parser("status")
+    provider_status_parser.add_argument("provider_id", nargs="?", default="all")
+    provider_status_parser.add_argument("--probe", action="store_true")
+    provider_status_parser.set_defaults(handler=provider_status)
+
+    provider_info_parser = provider_commands.add_parser("info")
+    provider_info_parser.add_argument("provider_id")
+    provider_info_parser.add_argument("--json", action="store_true")
+    provider_info_parser.set_defaults(handler=provider_info)
 
     system_parser = commands.add_parser("system")
     system_commands = system_parser.add_subparsers(dest="system_command", required=True)
