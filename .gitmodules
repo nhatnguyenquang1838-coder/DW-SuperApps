@@ -14,3 +14,6 @@
 	path = systems/rental-home
 	url = https://github.com/nhatnguyenquang1838-coder/rental_home.git
 	branch = main
+[submodule "systems/dw-super-chatgpt-app-complete-v1"]
+	path = systems/dw-super-chatgpt-app-complete-v1
+	url = git@github.com:nhatnguyenquang1838-coder/dw-chatgpt-app.git
