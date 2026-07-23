@@ -1,6 +1,6 @@
 # DW SuperApps Agent Routing
 
-This repository is an orchestration workspace for multiple AI hosts, reusable Powers, and product systems.
+This repository is an orchestration workspace for multiple AI hosts, reusable Powers, model providers, and product systems.
 
 ## Discovery
 
@@ -18,7 +18,19 @@ This repository is an orchestration workspace for multiple AI hosts, reusable Po
 
 ## Host neutrality
 
-Kiro and Codex are hosts. Host-specific folders may expose discovery metadata or thin adapters, but must not duplicate Power logic, schemas, or runtime data.
+Supported hosts include Kiro, Codex, GitHub Copilot, Cline, Kilo Code, Claude Code, and generic/custom agents. Host-specific folders expose only thin discovery adapters. They must not duplicate Power logic, schemas, or runtime data.
+
+`bionics`, `biotic`, and `ollama` are accepted aliases for the generic `custom` host. Ollama itself is a model provider, not a host; its OpenAI-compatible endpoint is registered separately.
+
+## Model providers
+
+Local Ollama compatibility uses:
+
+- Base URL: `http://localhost:11434/v1`
+- API key placeholder: `ollama`
+- Model override: `OLLAMA_MODEL`
+
+Provider configuration must not contain real secrets.
 
 ## Cross-repository work
 
