@@ -1,0 +1,70 @@
+schema_version: "1.0"
+artifact_type: g1-options
+generated_at: "2026-07-23T17:44:00Z"
+
+trace:
+  project_id: test-ua-app
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: test-ua-gwc-001
+  base_sha: 6332c8f62614d581c45403cb5e3e0c4f528cbd70
+  g0_snapshot: ../../g0/context-snapshot.yaml
+
+options:
+  - id: OPT-1
+    title: Full E2E GWC lifecycle + UA graph generation
+    description: >
+      Execute the complete G0-G5 GWC lifecycle on test-ua-app, including branch
+      creation, UA knowledge graph generation, Draft PR, merge, and status
+      verification. This validates the workspace-managed GWC workflow end-to-end.
+    benefits:
+      - Fully validates GWC lifecycle for the new system
+      - Produces auditable evidence for all gates
+      - Demonstrates workspace-managed Power resolution
+      - Establishes baseline GWC artifacts for test-ua-app
+    tradeoffs:
+      - Requires more steps and time
+      - Creates a PR for a test application
+    risks:
+      - Low risk - no production impact
+    constraint_fit: FIT
+  - id: OPT-2
+    title: Minimal G0/G1 to UA graph only
+    description: >
+      Create G0/G1 artifacts, validate, then directly generate the UA knowledge
+      graph and launch the dashboard without going through the full PR lifecycle.
+    benefits:
+      - Faster execution
+      - Still validates G0/G1 gate workflow
+    tradeoffs:
+      - Does not test G2-G5 gates
+      - Missing full lifecycle validation
+      - No PR or merge evidence
+    risks:
+      - Low risk - no production impact
+    constraint_fit: PARTIAL
+  - id: OPT-3
+    title: G0/G1 validation only
+    description: >
+      Create and validate G0/G1 artifacts only. Do not proceed to UA graph
+      generation or later gates.
+    benefits:
+      - Quickest path
+      - Tests G0/G1 compliance
+    tradeoffs:
+      - Does not test any downstream gate
+      - Does not generate UA graph
+      - Does not meet task objective
+    risks:
+      - None
+    constraint_fit: NOT_FIT
+
+recommended_option_id: OPT-1
+recommendation_rationale: >
+  The task explicitly requires testing the workspace-managed GWC workflow end
+  to end. OPT-1 is the only option that validates the complete G0 to G5
+  lifecycle, including branch creation, execution, PR, merge, and deploy
+  verification. It also generates the UA knowledge graph and launches the
+  dashboard, fulfilling all stated objectives.
+
+decision_required: true
+status: READY

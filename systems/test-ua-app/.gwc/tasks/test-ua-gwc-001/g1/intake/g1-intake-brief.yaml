@@ -1,0 +1,127 @@
+schema_version: "1.0"
+artifact_type: g1-intake-brief
+generated_at: "2026-07-23T17:44:00Z"
+
+trace:
+  project_id: test-ua-app
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: test-ua-gwc-001
+  base_sha: 6332c8f62614d581c45403cb5e3e0c4f528cbd70
+  g0_snapshot: ../../g0/context-snapshot.yaml
+
+problem:
+  statement: >
+    The test-ua-app system exists as an untracked directory in the DW-SuperApps
+    workspace. It requires a full end-to-end validation of the workspace-managed
+    GWC workflow lifecycle, followed by UA Power knowledge graph generation and
+    dashboard launch. No GWC gate artifacts or UA runtime data currently exist
+    for this system.
+  why_now: >
+    This is a test validation to ensure the workspace-managed GWC workflow
+    functions correctly for new systems added to the DW-SuperApps workspace.
+    Successful validation will establish a repeatable pattern for onboarding
+    future systems.
+
+desired_outcome: >
+  Complete G0-G5 GWC lifecycle executed for test-ua-app, with UA knowledge
+  graph generated at systems/test-ua-app/.ua/knowledge-graph.json and UA
+  dashboard launched successfully.
+
+stakeholders:
+  requester: DW-SuperApps workspace operator
+  affected:
+    - GWC governance maintainer
+    - UA Power consumer
+    - test-ua-app system
+
+scope:
+  in_scope:
+    - Create systems/test-ua-app/AGENTS.md
+    - Execute GWC lifecycle G0 through G5 for test-ua-app
+    - Generate UA knowledge graph at systems/test-ua-app/.ua/knowledge-graph.json
+    - Generate UA meta.json at systems/test-ua-app/.ua/meta.json
+    - Launch UA dashboard to visualize the generated graph
+    - Record GWC evidence and audit artifacts
+  non_goals:
+    - Copying graph assets into systems/test-ua-app/public/ua
+    - Embedding a dashboard route into the test-ua-app application
+    - Modifying any other system (rental-home, etc.)
+    - Production deployment
+    - Credential or secret operations
+    - Modifying GWC or UA Power source code
+
+constraints:
+  - "UA outputs must live under systems/test-ua-app/.ua/"
+  - "GWC gate artifacts must live under systems/test-ua-app/.gwc/tasks/<task-id>/"
+  - "No secrets or environment-file content in generated graph"
+  - "Graph must exclude .git, node_modules, dist/build, coverage, test-results, playwright-report, .pnpm-store, caches, .env*, credentials, secrets"
+
+assumptions:
+  - "UA Power is correctly installed and available at powers/ua"
+  - "GWC Power is correctly installed and available at powers/gwc"
+  - "Node.js and pnpm are available for UA dashboard launch"
+  - "GitHub CLI (gh) is available for PR operations"
+
+risks:
+  - id: RISK-1
+    description: UA Power may not have all dependencies installed for graph generation
+    impact: low
+    mitigation: Verify dependencies in preflight; fall back to manual graph generation if needed
+  - id: RISK-2
+    description: UA dashboard may fail to launch due to port conflicts
+    impact: low
+    mitigation: Vite auto-selects next available port; report exact URL to user
+
+acceptance_criteria:
+  - id: AC-1
+    statement: G0 context-snapshot.yaml is valid and status is READY
+    verifiable: true
+  - id: AC-2
+    statement: All four G1 artifacts exist and pass tools/validate_g01.py
+    verifiable: true
+  - id: AC-3
+    statement: G2 execution envelope is generated and valid
+    verifiable: true
+  - id: AC-4
+    statement: Branch is created and UA knowledge graph is generated at .ua/knowledge-graph.json
+    verifiable: true
+  - id: AC-5
+    statement: Draft PR is created at G3
+    verifiable: true
+  - id: AC-6
+    statement: G4 merge approval is generated
+    verifiable: true
+  - id: AC-7
+    statement: G5 status verification is performed
+    verifiable: true
+  - id: AC-8
+    statement: UA dashboard launches successfully with exact local URL
+    verifiable: true
+  - id: AC-9
+    statement: GWC evidence and audit artifacts are recorded
+    verifiable: true
+
+delivery_lifecycle:
+  authorized_actions:
+    - create
+    - update
+    - branch
+    - commit
+    - push
+    - draft-pr
+  downstream_non_goals:
+    - merge
+    - deploy
+    - production-data
+    - credentials
+    - configuration-changes
+  g3_metadata_completion:
+    ready_for_review_after_g3_pass: true
+    required_evidence:
+      - delivery-record.yaml
+      - ci-validation
+      - diff-review
+
+unresolved_questions: []
+
+status: READY
