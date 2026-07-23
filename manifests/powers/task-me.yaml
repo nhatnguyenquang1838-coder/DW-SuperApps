@@ -1,0 +1,25 @@
+apiVersion: dw.superapps/v1
+kind: Power
+metadata:
+  id: task-me
+  name: Task Me
+  version: main-pinned
+spec:
+  path: powers/task-me
+  source: nhatnguyenquang1838-coder/task-me
+  provides:
+    - impact-analysis
+    - implementation-planning
+    - task-decomposition
+    - validation-planning
+  requires:
+    - filesystem
+  optionalIntegrations:
+    - ua
+    - gwc
+    - github
+  runtimeDataRoot: .task-me
+  hosts:
+    - kiro
+    - codex
+    - cli
