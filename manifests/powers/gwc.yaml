@@ -1,0 +1,23 @@
+apiVersion: dw.superapps/v1
+kind: Power
+metadata:
+  id: gwc
+  name: GWC
+  version: main-pinned
+spec:
+  path: powers/gwc
+  source: nhatnguyenquang1838-coder/gwc
+  provides:
+    - governance
+    - delivery-control
+    - approval-workflow
+  requires:
+    - git
+  optionalIntegrations:
+    - github
+    - jira
+  runtimeDataRoot: .gwc
+  hosts:
+    - kiro
+    - codex
+    - cli
