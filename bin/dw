@@ -1,4 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "$SOURCE" ]]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ "$SOURCE" != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+ROOT="$(cd -P "$(dirname "$SOURCE")/.." && pwd)"
+
+case "${1:-}" in
+  install|uninstall)
+    action="$1"
+    shift
+    exec bash "$ROOT/scripts/install-dw.sh" "$action" "$@"
+    ;;
+esac
+
 exec python3 "$ROOT/scripts/dw_entry.py" "$@"
