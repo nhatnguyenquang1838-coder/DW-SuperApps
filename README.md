@@ -9,7 +9,22 @@ Host-neutral engineering workspace for Kiro, Codex, reusable AI Powers, and mult
 ```bash
 git clone --recurse-submodules https://github.com/nhatnguyenquang1838-coder/DW-SuperApps.git
 cd DW-SuperApps
-./bin/dw init all
+./bin/dw install --shell bash --init
+source ~/.bashrc
+```
+
+For Zsh/macOS:
+
+```bash
+./bin/dw install --shell zsh --init
+source ~/.zshrc
+```
+
+After installation, use `dw` from any directory:
+
+```bash
+dw --version
+dw status all
 ```
 
 ### Windows PowerShell
@@ -30,6 +45,12 @@ dw clean all
 ```
 
 `dw clean all` removes only generated adapters and caches. Runtime data under system repositories is preserved unless `--include-runtime --yes` is explicitly supplied.
+
+Uninstall the managed Bash/Zsh command with:
+
+```bash
+dw uninstall --shell bash
+```
 
 See [`docs/POWER_RUNTIME_V2.md`](docs/POWER_RUNTIME_V2.md) for all one-click, Kiro, Codex, and targeted commands.
 
