@@ -1,0 +1,23 @@
+apiVersion: dw.superapps/v1
+kind: Power
+metadata:
+  id: ua
+  name: Understand Anything
+  version: main-pinned
+spec:
+  path: powers/ua
+  source: Egonex-AI/Understand-Anything
+  provides:
+    - semantic-analysis
+    - codebase-graph
+    - architecture-graph
+  requires:
+    - filesystem
+  optionalIntegrations:
+    - github
+    - task-me
+  runtimeDataRoot: .ua
+  hosts:
+    - kiro
+    - codex
+    - cli
