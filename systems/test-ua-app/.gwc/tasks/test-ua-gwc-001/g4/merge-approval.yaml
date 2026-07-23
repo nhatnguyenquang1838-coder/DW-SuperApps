@@ -1,0 +1,31 @@
+schema_version: "1.0"
+artifact_type: g4-merge-approval
+generated_at: "2026-07-23T17:50:00Z"
+
+task_id: test-ua-gwc-001
+run_id: g1-test-ua-gwc-20260723-2311
+gate: G4_MERGE
+
+repository:
+  owner: nhatnguyenquang1838-coder
+  name: DW-SuperApps
+  branch: test-ua-gwc-001
+  base_ref: main
+  pr_number: 5
+  head_sha: 4886f9a
+
+approval_id: APPROVE_G4_test-ua-gwc-001_20260723
+
+scope_hash: sha256:95e657b557e8880f71cad4c8b8059d2f66851e666ec08aa9f4c7b2d834935f5c
+
+authorized_actions:
+  - merge
+  - enable-auto-merge
+
+required_evidence:
+  - delivery-record.yaml
+  - ci-validation-passed
+  - diff-review-complete
+  - acceptance-criteria-met
+
+expires_at: "2026-07-24T17:50:00Z"

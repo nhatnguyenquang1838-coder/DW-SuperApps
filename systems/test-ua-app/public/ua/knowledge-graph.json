@@ -1,0 +1,1666 @@
+{
+  "version": "1.0.0-semantic",
+  "kind": "codebase",
+  "project": {
+    "name": "Rental Home",
+    "description": "Full-stack rental property management application with React frontend, Supabase backend, governed delivery via GWC, and tenant self-service surfaces including Telegram Mini App.",
+    "languages": [
+      "TypeScript",
+      "SQL",
+      "Markdown",
+      "YAML",
+      "JSON",
+      "CSS",
+      "HTML"
+    ],
+    "frameworks": [
+      "React 19",
+      "Vite 6",
+      "React Router 7",
+      "TanStack Query 5",
+      "Supabase",
+      "Zod",
+      "Vitest",
+      "Playwright",
+      "GWC",
+      "Kiro"
+    ],
+    "analyzedAt": "2026-07-23T16:00:00.000000Z",
+    "gitCommitHash": "7fe24ac90b7829136d6e211de336d4050b9823cb",
+    "analysisMode": "local-checkout",
+    "limitations": [
+      "Local checkout analysis at one point in time; working tree assumed clean.",
+      "Production database state and Supabase RLS policies not inspected at runtime.",
+      "GWC submodule state not fully validated."
+    ],
+    "evidencePaths": [
+      "AGENTS.md",
+      "README.md",
+      "TASK.md",
+      "package.json",
+      "src/app/router.tsx",
+      "src/app/dependencies.ts",
+      "src/core/domain/models.ts",
+      "src/core/domain/maintenance.ts",
+      "src/core/domain/billingReadiness.ts",
+      "src/core/domain/batchInvoicePayment.ts",
+      "src/core/domain/roomPublicListing.ts",
+      "src/core/ports/HomeRentalRepository.ts",
+      "src/core/ports/OperationsRepository.ts",
+      "src/core/ports/AuthRepository.ts",
+      "src/core/ports/TenantAuthRepository.ts",
+      "src/core/ports/TenantAccessRepository.ts",
+      "src/core/ports/FinanceReportRepository.ts",
+      "src/core/ports/FinancialReconciliationRepository.ts",
+      "src/core/ports/ServiceCatalogRepository.ts",
+      "src/core/ports/NotificationDeliveryRepository.ts",
+      "src/core/ports/AdminHomeRepository.ts",
+      "src/core/ports/AdminUserRepository.ts",
+      "src/core/ports/TenantTelegramLinkRepository.ts",
+      "src/adapters/ActiveHomeRentalRepository.ts",
+      "src/adapters/supabase/SupabaseHomeServiceLifecycleRepository.ts",
+      "src/adapters/supabase/client.ts",
+      "src/features/public/UAGraphPage.tsx",
+      "src/features/public/uaGraphTypes.ts",
+      "supabase/migrations",
+      ".github/workflows/ci.yml"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "document:AGENTS.md",
+      "type": "document",
+      "name": "Repository governance entry",
+      "summary": "Defines GWC-first execution, evidence provenance, boot order, intake card, gate lifecycle, and approval commands for Rental Home.",
+      "tags": ["governance"],
+      "complexity": "complex",
+      "filePath": "AGENTS.md"
+    },
+    {
+      "id": "document:README.md",
+      "type": "document",
+      "name": "Skill-routing README",
+      "summary": "Documents the repository's AI skill routing and onboarding guidance for delivery agents.",
+      "tags": ["documentation"],
+      "complexity": "moderate",
+      "filePath": "README.md"
+    },
+    {
+      "id": "document:TASK.md",
+      "type": "document",
+      "name": "Task control board",
+      "summary": "Tracks spec-backed delivery, active work, completed gates, and priority queue for Rental Home.",
+      "tags": ["delivery"],
+      "complexity": "complex",
+      "filePath": "TASK.md"
+    },
+    {
+      "id": "document:docs/codebase_graph.md",
+      "type": "document",
+      "name": "Codebase graph source of truth",
+      "summary": "Canonical guide for layered architecture, requirements traceability, and codebase map for Rental Home.",
+      "tags": ["architecture"],
+      "complexity": "complex",
+      "filePath": "docs/codebase_graph.md"
+    },
+    {
+      "id": "document:docs/architecture/rental-home-semantic-analysis.md",
+      "type": "document",
+      "name": "Semantic architecture baseline report",
+      "summary": "Published versioned semantic architecture baseline with 33 nodes, 54 edges, priority findings, and guided tour.",
+      "tags": ["architecture"],
+      "complexity": "complex",
+      "filePath": "docs/architecture/rental-home-semantic-analysis.md"
+    },
+    {
+      "id": "config:package.json",
+      "type": "config",
+      "name": "Application package contract",
+      "summary": "Defines the React/Vite/TypeScript stack, pnpm workspace, scripts for dev, build, test, migration, and delivery.",
+      "tags": ["typescript"],
+      "complexity": "moderate",
+      "filePath": "package.json"
+    },
+    {
+      "id": "config:tsconfig.json",
+      "type": "config",
+      "name": "TypeScript compiler configuration",
+      "summary": "Configures strict TypeScript compilation with path aliases for the Vite application.",
+      "tags": ["typescript"],
+      "complexity": "moderate",
+      "filePath": "tsconfig.json"
+    },
+    {
+      "id": "config:vite.config.ts",
+      "type": "config",
+      "name": "Vite build configuration",
+      "summary": "Configures React plugin, path aliases, dev server, and build output for the Vite application.",
+      "tags": ["build"],
+      "complexity": "moderate",
+      "filePath": "vite.config.ts"
+    },
+    {
+      "id": "pipeline:.github/workflows/ci.yml",
+      "type": "pipeline",
+      "name": "Build, test, and database delivery pipeline",
+      "summary": "Runs frozen dependency installation, typecheck, build, unit tests, Playwright E2E tests, and conditional Supabase migration delivery.",
+      "tags": ["ci"],
+      "complexity": "complex",
+      "filePath": ".github/workflows/ci.yml"
+    },
+    {
+      "id": "service:.gwc/gwc",
+      "type": "service",
+      "name": "GWC governance submodule",
+      "summary": "Pinned governance package used by Rental Home for gate lifecycle, runbooks, agent instructions, and project profiles.",
+      "tags": ["governance"],
+      "complexity": "complex",
+      "filePath": ".gwc/gwc"
+    },
+    {
+      "id": "file:src/app/router.tsx",
+      "type": "file",
+      "name": "Application router and route guards",
+      "summary": "Composes admin, tenant, public-room, Telegram, and UA-graph routes with ProtectedRoute, AdminRoute, and TenantAccessGate guards.",
+      "tags": ["routing"],
+      "complexity": "complex",
+      "filePath": "src/app/router.tsx"
+    },
+    {
+      "id": "file:src/app/dependencies.ts",
+      "type": "file",
+      "name": "Dependency composition root",
+      "summary": "Selects mock or Supabase implementations, exports repository singletons for homeRental, finance, auth, tenant, admin, notifications, and services.",
+      "tags": ["dependency-injection"],
+      "complexity": "complex",
+      "filePath": "src/app/dependencies.ts"
+    },
+    {
+      "id": "file:src/core/domain/models.ts",
+      "type": "file",
+      "name": "Shared domain model catalog",
+      "summary": "Defines homes, rooms, tenants, contracts, services, invoices, payments, expenses, meter readings, maintenance, and finance ledger models.",
+      "tags": ["domain-model"],
+      "complexity": "complex",
+      "filePath": "src/core/domain/models.ts"
+    },
+    {
+      "id": "file:src/core/domain/maintenance.ts",
+      "type": "file",
+      "name": "Maintenance domain types",
+      "summary": "Defines MaintenanceQueueQuery, CreateMaintenanceRequestCommand, TriageMaintenanceRequestCommand, TransitionMaintenanceRequestCommand.",
+      "tags": ["domain-model"],
+      "complexity": "moderate",
+      "filePath": "src/core/domain/maintenance.ts"
+    },
+    {
+      "id": "file:src/core/domain/billingReadiness.ts",
+      "type": "file",
+      "name": "Billing readiness domain types",
+      "summary": "Defines MonthlyBillingGenerationInput and MonthlyBillingGenerationResult for billing preparation.",
+      "tags": ["domain-model"],
+      "complexity": "moderate",
+      "filePath": "src/core/domain/billingReadiness.ts"
+    },
+    {
+      "id": "file:src/core/domain/batchInvoicePayment.ts",
+      "type": "file",
+      "name": "Batch invoice payment domain types",
+      "summary": "Defines PreviewRoomBillsInput, PreviewRoomBillsResult, MarkRoomBillsPaidBatchInput, BatchMarkPaidResult.",
+      "tags": ["domain-model"],
+      "complexity": "moderate",
+      "filePath": "src/core/domain/batchInvoicePayment.ts"
+    },
+    {
+      "id": "file:src/core/domain/roomPublicListing.ts",
+      "type": "file",
+      "name": "Room public listing domain types",
+      "summary": "Defines PublicRoomView and UpdateRoomPublicListingInput for public-facing room projections.",
+      "tags": ["domain-model"],
+      "complexity": "moderate",
+      "filePath": "src/core/domain/roomPublicListing.ts"
+    },
+    {
+      "id": "file:src/core/ports/HomeRentalRepository.ts",
+      "type": "file",
+      "name": "HomeRental repository port",
+      "summary": "A broad repository interface spanning dashboard, homes, rooms, tenants, contracts, services, invoices, payments, expenses, maintenance, meter readings, and public listings.",
+      "tags": ["port"],
+      "complexity": "complex",
+      "filePath": "src/core/ports/HomeRentalRepository.ts"
+    },
+    {
+      "id": "file:src/core/ports/OperationsRepository.ts",
+      "type": "file",
+      "name": "Operations repository port",
+      "summary": "Defines operations-specific data access interface for operational workflows.",
+      "tags": ["port"],
+      "complexity": "moderate",
+      "filePath": "src/core/ports/OperationsRepository.ts"
+    },
+    {
+      "id": "file:src/core/ports/AuthRepository.ts",
+      "type": "file",
+      "name": "Auth repository port",
+      "summary": "Defines authentication interface for admin user sessions.",
+      "tags": ["port"],
+      "complexity": "moderate",
+      "filePath": "src/core/ports/AuthRepository.ts"
+    },
+    {
+      "id": "file:src/core/ports/TenantAuthRepository.ts",
+      "type": "file",
+      "name": "Tenant auth repository port",
+      "summary": "Defines tenant-specific authentication and authorization interface.",
+      "tags": ["port"],
+      "complexity": "moderate",
+      "filePath": "src/core/ports/TenantAuthRepository.ts"
+    },
+    {
+      "id": "file:src/core/ports/TenantAccessRepository.ts",
+      "type": "file",
+      "name": "Tenant access repository port",
+      "summary": "Defines tenant access control, app access status, and tenant account management interface.",
+      "tags": ["port"],
+      "complexity": "moderate",
+      "filePath": "src/core/ports/TenantAccessRepository.ts"
+    },
+    {
+      "id": "file:src/core/ports/FinanceReportRepository.ts",
+      "type": "file",
+      "name": "Finance report repository port",
+      "summary": "Defines finance reporting interface for cashflow, ledger, and debt aging.",
+      "tags": ["port"],
+      "complexity": "moderate",
+      "filePath": "src/core/ports/FinanceReportRepository.ts"
+    },
+    {
+      "id": "file:src/core/ports/FinancialReconciliationRepository.ts",
+      "type": "file",
+      "name": "Financial reconciliation repository port",
+      "summary": "Defines financial reconciliation interface for matching payments and invoices.",
+      "tags": ["port"],
+      "complexity": "moderate",
+      "filePath": "src/core/ports/FinancialReconciliationRepository.ts"
+    },
+    {
+      "id": "file:src/core/ports/ServiceCatalogRepository.ts",
+      "type": "file",
+      "name": "Service catalog repository port",
+      "summary": "Defines CRUD interface for service catalog management.",
+      "tags": ["port"],
+      "complexity": "moderate",
+      "filePath": "src/core/ports/ServiceCatalogRepository.ts"
+    },
+    {
+      "id": "file:src/core/ports/NotificationDeliveryRepository.ts",
+      "type": "file",
+      "name": "Notification delivery repository port",
+      "summary": "Defines notification delivery interface for WhatsApp and other channels.",
+      "tags": ["port"],
+      "complexity": "moderate",
+      "filePath": "src/core/ports/NotificationDeliveryRepository.ts"
+    },
+    {
+      "id": "file:src/core/ports/AdminHomeRepository.ts",
+      "type": "file",
+      "name": "Admin home repository port",
+      "summary": "Defines admin-specific home management interface.",
+      "tags": ["port"],
+      "complexity": "moderate",
+      "filePath": "src/core/ports/AdminHomeRepository.ts"
+    },
+    {
+      "id": "file:src/core/ports/AdminUserRepository.ts",
+      "type": "file",
+      "name": "Admin user repository port",
+      "summary": "Defines admin user management interface for user CRUD and role assignment.",
+      "tags": ["port"],
+      "complexity": "moderate",
+      "filePath": "src/core/ports/AdminUserRepository.ts"
+    },
+    {
+      "id": "file:src/core/ports/TenantTelegramLinkRepository.ts",
+      "type": "file",
+      "name": "Tenant Telegram link repository port",
+      "summary": "Defines Telegram linking interface for tenant identity binding.",
+      "tags": ["port"],
+      "complexity": "moderate",
+      "filePath": "src/core/ports/TenantTelegramLinkRepository.ts"
+    },
+    {
+      "id": "file:src/adapters/ActiveHomeRentalRepository.ts",
+      "type": "file",
+      "name": "Active-home repository decorator",
+      "summary": "Uses a Proxy and method-handler map to filter home-scoped data, with explicit policy methods for active-home behavior.",
+      "tags": ["adapter"],
+      "complexity": "complex",
+      "filePath": "src/adapters/ActiveHomeRentalRepository.ts"
+    },
+    {
+      "id": "file:src/adapters/supabase/SupabaseHomeServiceLifecycleRepository.ts",
+      "type": "file",
+      "name": "Supabase lifecycle adapter",
+      "summary": "Maps contracts and service assignments, derives display status, and implements narrow schema compatibility fallback for legacy projections.",
+      "tags": ["supabase"],
+      "complexity": "complex",
+      "filePath": "src/adapters/supabase/SupabaseHomeServiceLifecycleRepository.ts"
+    },
+    {
+      "id": "file:src/adapters/supabase/client.ts",
+      "type": "file",
+      "name": "Supabase client singleton",
+      "summary": "Creates and exports the Supabase client instance configured from environment variables.",
+      "tags": ["supabase"],
+      "complexity": "moderate",
+      "filePath": "src/adapters/supabase/client.ts"
+    },
+    {
+      "id": "file:src/adapters/supabase/SupabaseAuthRepository.ts",
+      "type": "file",
+      "name": "Supabase auth adapter",
+      "summary": "Implements AuthRepository using Supabase Auth for admin session and user management.",
+      "tags": ["supabase"],
+      "complexity": "moderate",
+      "filePath": "src/adapters/supabase/SupabaseAuthRepository.ts"
+    },
+    {
+      "id": "file:src/adapters/supabase/SupabaseOperationsRepository.ts",
+      "type": "file",
+      "name": "Supabase operations adapter",
+      "summary": "Implements OperationsRepository for operational data access via Supabase.",
+      "tags": ["supabase"],
+      "complexity": "moderate",
+      "filePath": "src/adapters/supabase/SupabaseOperationsRepository.ts"
+    },
+    {
+      "id": "file:src/adapters/supabase/SupabaseFinanceReportRepository.ts",
+      "type": "file",
+      "name": "Supabase finance report adapter",
+      "summary": "Implements FinanceReportRepository for cashflow, ledger, and debt aging via Supabase queries.",
+      "tags": ["supabase"],
+      "complexity": "moderate",
+      "filePath": "src/adapters/supabase/SupabaseFinanceReportRepository.ts"
+    },
+    {
+      "id": "file:src/adapters/supabase/SupabaseTenantRepository.ts",
+      "type": "file",
+      "name": "Supabase tenant adapter",
+      "summary": "Implements tenant-specific data access for the Supabase backend.",
+      "tags": ["supabase"],
+      "complexity": "moderate",
+      "filePath": "src/adapters/supabase/SupabaseTenantRepository.ts"
+    },
+    {
+      "id": "file:src/adapters/supabase/SupabaseTenantAccessRepository.ts",
+      "type": "file",
+      "name": "Supabase tenant access adapter",
+      "summary": "Implements tenant access control, app status management, and identity verification via Supabase RPCs.",
+      "tags": ["supabase"],
+      "complexity": "complex",
+      "filePath": "src/adapters/supabase/SupabaseTenantAccessRepository.ts"
+    },
+    {
+      "id": "file:src/adapters/supabase/SupabaseTenantAuthRepository.ts",
+      "type": "file",
+      "name": "Supabase tenant auth adapter",
+      "summary": "Implements TenantAuthRepository for tenant login, session, and callback handling.",
+      "tags": ["supabase"],
+      "complexity": "moderate",
+      "filePath": "src/adapters/supabase/SupabaseTenantAuthRepository.ts"
+    },
+    {
+      "id": "file:src/adapters/supabase/SupabaseNotificationDeliveryRepository.ts",
+      "type": "file",
+      "name": "Supabase notification delivery adapter",
+      "summary": "Implements notification delivery via Supabase for WhatsApp and other notification channels.",
+      "tags": ["supabase"],
+      "complexity": "moderate",
+      "filePath": "src/adapters/supabase/SupabaseNotificationDeliveryRepository.ts"
+    },
+    {
+      "id": "file:src/features/public/UAGraphPage.tsx",
+      "type": "file",
+      "name": "UA graph visualization page",
+      "summary": "Public React route at /architecture/ua-graph that fetches and renders the semantic knowledge graph as an interactive SVG with search, layer grouping, and node inspection.",
+      "tags": ["public"],
+      "complexity": "complex",
+      "filePath": "src/features/public/UAGraphPage.tsx"
+    },
+    {
+      "id": "file:src/features/public/uaGraphTypes.ts",
+      "type": "file",
+      "name": "UA graph TypeScript types",
+      "summary": "Defines UAGraph, UAGraphNode, UAGraphEdge, UAGraphLayer, UAGraphTourStep, and UAGraphProject interfaces for the knowledge graph data structure.",
+      "tags": ["types"],
+      "complexity": "moderate",
+      "filePath": "src/features/public/uaGraphTypes.ts"
+    },
+    {
+      "id": "file:src/features/public/uaGraphPage.css",
+      "type": "file",
+      "name": "UA graph page styles",
+      "summary": "CSS styles for the UA graph visualization page including canvas, detail panel, layers, and responsive layout.",
+      "tags": ["css"],
+      "complexity": "moderate",
+      "filePath": "src/features/public/uaGraphPage.css"
+    },
+    {
+      "id": "file:src/features/debug/AuthDebugPanel.tsx",
+      "type": "file",
+      "name": "Authentication debug panel",
+      "summary": "Reads the Supabase client directly to expose auth state, user profile, and RLS diagnostics during development.",
+      "tags": ["debug"],
+      "complexity": "moderate",
+      "filePath": "src/features/debug/AuthDebugPanel.tsx"
+    },
+    {
+      "id": "file:src/lib/env.ts",
+      "type": "file",
+      "name": "Environment mode detection",
+      "summary": "Exports isMockMode flag to switch between mock and Supabase adapter implementations.",
+      "tags": ["config"],
+      "complexity": "simple",
+      "filePath": "src/lib/env.ts"
+    },
+    {
+      "id": "file:supabase/migrations",
+      "type": "file",
+      "name": "Database migration catalog",
+      "summary": "Collection of 60+ Supabase migration files covering schema setup, RLS policies, RPC functions, views, tenant access, notifications, and finance truth tables.",
+      "tags": ["database"],
+      "complexity": "complex",
+      "filePath": "supabase/migrations"
+    },
+    {
+      "id": "service:surface-admin-web",
+      "type": "service",
+      "name": "Landlord and admin web application",
+      "summary": "Protected operational interface for rooms, tenants, contracts, invoices, expenses, services, meter readings, reports, maintenance, operations, and admin user/home management.",
+      "tags": ["admin"],
+      "complexity": "complex"
+    },
+    {
+      "id": "service:surface-tenant-web",
+      "type": "service",
+      "name": "Tenant self-service web application",
+      "summary": "Tenant-gated interface for invoices, payments, meter submissions, maintenance requests, and profile management.",
+      "tags": ["tenant"],
+      "complexity": "complex"
+    },
+    {
+      "id": "service:surface-public-room",
+      "type": "service",
+      "name": "Public room listing projection",
+      "summary": "Unauthenticated route that exposes only a deliberate subset of room data for public viewing.",
+      "tags": ["public"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "service:surface-public-ua-graph",
+      "type": "service",
+      "name": "Public UA graph visualization",
+      "summary": "Unauthenticated route at /architecture/ua-graph rendering the semantic knowledge graph as an interactive SVG dashboard for architecture exploration.",
+      "tags": ["public"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "service:surface-telegram",
+      "type": "service",
+      "name": "Telegram Mini App surface",
+      "summary": "Alternative tenant-facing shell integrated in Telegram for invoice viewing and basic tenant operations.",
+      "tags": ["telegram"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "service:supabase",
+      "type": "service",
+      "name": "Supabase backend",
+      "summary": "Provides Postgres, Auth, RLS, RPC functions, Storage, and real-time subscriptions as the canonical backend authority boundary.",
+      "tags": ["postgres"],
+      "complexity": "complex"
+    },
+    {
+      "id": "service:vercel",
+      "type": "service",
+      "name": "Vercel frontend hosting",
+      "summary": "Builds and deploys the browser application from the GitHub CI pipeline.",
+      "tags": ["hosting"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "domain:property-operations",
+      "type": "domain",
+      "name": "Property operations",
+      "summary": "Homes, rooms, services, occupancy, meter readings, and room public listing.",
+      "tags": ["domain"],
+      "complexity": "complex"
+    },
+    {
+      "id": "domain:tenancy-leasing",
+      "type": "domain",
+      "name": "Tenancy and leasing",
+      "summary": "Tenant identity, contract lifecycle (create, move-in, notice, move-out, renew, terminate), and notice period management.",
+      "tags": ["domain"],
+      "complexity": "complex"
+    },
+    {
+      "id": "domain:billing-finance",
+      "type": "domain",
+      "name": "Billing and finance",
+      "summary": "Invoice generation, trusted payments, expense tracking, finance reconciliation, monthly cashflow, debt aging, and batch bill payment.",
+      "tags": ["domain"],
+      "complexity": "complex"
+    },
+    {
+      "id": "domain:maintenance",
+      "type": "domain",
+      "name": "Maintenance workflow",
+      "summary": "Tenant-safe request intake, admin triage, controlled status transitions (open, in-progress, done, cancelled), and priority management.",
+      "tags": ["domain"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "domain:tenant-access",
+      "type": "domain",
+      "name": "Tenant access and identity",
+      "summary": "Tenant accounts, app access gating, Telegram linking, auth callback, and review workflow.",
+      "tags": ["domain"],
+      "complexity": "complex"
+    },
+    {
+      "id": "concept:service-locator-coupling",
+      "type": "concept",
+      "name": "Global service-locator coupling",
+      "summary": "Feature modules import repository singletons from dependencies.ts rather than receiving them through injection at feature boundaries.",
+      "tags": ["risk"],
+      "complexity": "complex"
+    },
+    {
+      "id": "concept:god-repository-port",
+      "type": "concept",
+      "name": "Oversized repository port",
+      "summary": "HomeRentalRepository combines unrelated bounded contexts (property, tenancy, billing, maintenance, payments, public listing) into one interface.",
+      "tags": ["risk"],
+      "complexity": "complex"
+    },
+    {
+      "id": "concept:active-home-proxy-bypass",
+      "type": "concept",
+      "name": "Proxy policy bypass risk",
+      "summary": "Only methods explicitly overridden in the Proxy policy map are scoped; omitted methods pass through unmodified to the underlying repository.",
+      "tags": ["risk"],
+      "complexity": "complex"
+    },
+    {
+      "id": "concept:schema-deployment-skew",
+      "type": "concept",
+      "name": "Application and schema deployment skew",
+      "summary": "Frontend deployment and Supabase migration delivery are independently gated, creating potential schema compatibility gaps.",
+      "tags": ["risk"],
+      "complexity": "complex"
+    },
+    {
+      "id": "concept:documentation-runtime-drift",
+      "type": "concept",
+      "name": "Documentation and runtime drift",
+      "summary": "Hand-maintained architecture and route documentation can drift from package versions and actual router definitions.",
+      "tags": ["risk"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "concept:dual-center-repository",
+      "type": "concept",
+      "name": "Product and agent-platform dual center",
+      "summary": "The repository serves both as the Rental Home product codebase and as an AI agent platform with GWC governance, Kiro specs, and skill routing.",
+      "tags": ["risk"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "concept:debug-boundary-exception",
+      "type": "concept",
+      "name": "Debug feature boundary exception",
+      "summary": "AuthDebugPanel imports the Supabase adapter directly and can expose auth/database diagnostics if included in an unsafe surface.",
+      "tags": ["risk"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "concept:port-proliferation",
+      "type": "concept",
+      "name": "Growing port interface surface",
+      "summary": "Dependencies.ts now exports 12+ repository interfaces; port surface area is expanding as tenant access, notifications, Telegram, and admin management domains are added.",
+      "tags": ["observation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "concept:schema-compatibility-fallback",
+      "type": "concept",
+      "name": "Narrow schema compatibility fallback",
+      "summary": "Contract reads retry a legacy projection only for specific known schema-lag scenarios rather than using catch-all error suppression.",
+      "tags": ["strength"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "concept:spec-driven-traceability",
+      "type": "concept",
+      "name": "Spec-driven delivery traceability",
+      "summary": "Kiro specs, task state, PR evidence, CI, and GWC gates create end-to-end traceability from requirements to production.",
+      "tags": ["strength"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "concept:public-ua-graph-feature",
+      "type": "concept",
+      "name": "Public architecture evidence surface",
+      "summary": "PUB-UA-01 adds a read-only public route serving the semantic architecture graph, making architecture evidence accessible without authentication.",
+      "tags": ["strength"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "concept:mock-adapter-pattern",
+      "type": "concept",
+      "name": "Mock and Supabase adapter pairs",
+      "summary": "Every repository has a mock and Supabase implementation pair, switchable via isMockMode, enabling development without backend.",
+      "tags": ["strength"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "concept:tenant-access-gating",
+      "type": "concept",
+      "name": "Multi-surface tenant access gating",
+      "summary": "Tenants access web and Telegram surfaces through TenantAccessGate with app status, auth callback, and Telegram link identity binding.",
+      "tags": ["strength"],
+      "complexity": "complex"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:AGENTS.md",
+      "target": "service:.gwc/gwc",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "document:AGENTS.md",
+      "target": "concept:spec-driven-traceability",
+      "type": "documents",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "document:README.md",
+      "target": "concept:dual-center-repository",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/codebase_graph.md",
+      "target": "file:src/app/router.tsx",
+      "type": "documents",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/codebase_graph.md",
+      "target": "file:src/app/dependencies.ts",
+      "type": "documents",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/codebase_graph.md",
+      "target": "concept:documentation-runtime-drift",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/architecture/rental-home-semantic-analysis.md",
+      "target": "concept:god-repository-port",
+      "type": "documents",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/architecture/rental-home-semantic-analysis.md",
+      "target": "concept:service-locator-coupling",
+      "type": "documents",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "document:TASK.md",
+      "target": "concept:spec-driven-traceability",
+      "type": "documents",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "config:package.json",
+      "target": "pipeline:.github/workflows/ci.yml",
+      "type": "configures",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "config:tsconfig.json",
+      "target": "config:package.json",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "config:vite.config.ts",
+      "target": "config:tsconfig.json",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "pipeline:.github/workflows/ci.yml",
+      "target": "service:vercel",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "pipeline:.github/workflows/ci.yml",
+      "target": "service:supabase",
+      "type": "deploys",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "pipeline:.github/workflows/ci.yml",
+      "target": "concept:schema-deployment-skew",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "service:vercel",
+      "target": "concept:schema-deployment-skew",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "service:supabase",
+      "target": "concept:schema-deployment-skew",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/router.tsx",
+      "target": "service:surface-admin-web",
+      "type": "routes",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/router.tsx",
+      "target": "service:surface-tenant-web",
+      "type": "routes",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/router.tsx",
+      "target": "service:surface-public-room",
+      "type": "routes",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/router.tsx",
+      "target": "service:surface-public-ua-graph",
+      "type": "routes",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/router.tsx",
+      "target": "service:surface-telegram",
+      "type": "routes",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/router.tsx",
+      "target": "file:src/app/dependencies.ts",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "service:surface-admin-web",
+      "target": "domain:property-operations",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "service:surface-admin-web",
+      "target": "domain:tenancy-leasing",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "service:surface-admin-web",
+      "target": "domain:billing-finance",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "service:surface-admin-web",
+      "target": "domain:maintenance",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "service:surface-admin-web",
+      "target": "domain:tenant-access",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "service:surface-tenant-web",
+      "target": "domain:tenancy-leasing",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "service:surface-tenant-web",
+      "target": "domain:billing-finance",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "service:surface-tenant-web",
+      "target": "domain:maintenance",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "service:surface-tenant-web",
+      "target": "domain:tenant-access",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "service:surface-public-room",
+      "target": "domain:property-operations",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "service:surface-public-ua-graph",
+      "target": "file:src/features/public/UAGraphPage.tsx",
+      "type": "contains",
+      "weight": 1.0,
+      "direction": "forward"
+    },
+    {
+      "source": "service:surface-public-ua-graph",
+      "target": "concept:public-ua-graph-feature",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "service:surface-telegram",
+      "target": "domain:tenancy-leasing",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "service:surface-telegram",
+      "target": "domain:tenant-access",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "file:src/core/ports/HomeRentalRepository.ts",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "file:src/core/ports/OperationsRepository.ts",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "file:src/core/ports/AuthRepository.ts",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "file:src/core/ports/TenantAuthRepository.ts",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "file:src/core/ports/TenantAccessRepository.ts",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "file:src/core/ports/FinanceReportRepository.ts",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "file:src/core/ports/FinancialReconciliationRepository.ts",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "file:src/core/ports/ServiceCatalogRepository.ts",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "file:src/core/ports/NotificationDeliveryRepository.ts",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "file:src/core/ports/AdminHomeRepository.ts",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "file:src/core/ports/AdminUserRepository.ts",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "file:src/core/ports/TenantTelegramLinkRepository.ts",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "file:src/adapters/ActiveHomeRentalRepository.ts",
+      "type": "calls",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "service:supabase",
+      "type": "configures",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "concept:service-locator-coupling",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "concept:mock-adapter-pattern",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/dependencies.ts",
+      "target": "concept:port-proliferation",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/domain/models.ts",
+      "target": "domain:property-operations",
+      "type": "contains",
+      "weight": 1.0,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/domain/models.ts",
+      "target": "domain:tenancy-leasing",
+      "type": "contains",
+      "weight": 1.0,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/domain/models.ts",
+      "target": "domain:billing-finance",
+      "type": "contains",
+      "weight": 1.0,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/domain/models.ts",
+      "target": "domain:maintenance",
+      "type": "contains",
+      "weight": 1.0,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/domain/maintenance.ts",
+      "target": "domain:maintenance",
+      "type": "contains",
+      "weight": 1.0,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/domain/billingReadiness.ts",
+      "target": "domain:billing-finance",
+      "type": "contains",
+      "weight": 1.0,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/domain/batchInvoicePayment.ts",
+      "target": "domain:billing-finance",
+      "type": "contains",
+      "weight": 1.0,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/domain/roomPublicListing.ts",
+      "target": "domain:property-operations",
+      "type": "contains",
+      "weight": 1.0,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/ports/HomeRentalRepository.ts",
+      "target": "file:src/core/domain/models.ts",
+      "type": "imports",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/ports/HomeRentalRepository.ts",
+      "target": "file:src/core/domain/maintenance.ts",
+      "type": "imports",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/ports/HomeRentalRepository.ts",
+      "target": "file:src/core/domain/billingReadiness.ts",
+      "type": "imports",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/ports/HomeRentalRepository.ts",
+      "target": "file:src/core/domain/batchInvoicePayment.ts",
+      "type": "imports",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/ports/HomeRentalRepository.ts",
+      "target": "file:src/core/domain/roomPublicListing.ts",
+      "type": "imports",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/ports/HomeRentalRepository.ts",
+      "target": "domain:property-operations",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/ports/HomeRentalRepository.ts",
+      "target": "domain:tenancy-leasing",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/ports/HomeRentalRepository.ts",
+      "target": "domain:billing-finance",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/ports/HomeRentalRepository.ts",
+      "target": "domain:maintenance",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/core/ports/HomeRentalRepository.ts",
+      "target": "concept:god-repository-port",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/ActiveHomeRentalRepository.ts",
+      "target": "file:src/core/ports/HomeRentalRepository.ts",
+      "type": "implements",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/ActiveHomeRentalRepository.ts",
+      "target": "concept:active-home-proxy-bypass",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/ActiveHomeRentalRepository.ts",
+      "target": "domain:billing-finance",
+      "type": "transforms",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseHomeServiceLifecycleRepository.ts",
+      "target": "service:supabase",
+      "type": "reads_from",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseHomeServiceLifecycleRepository.ts",
+      "target": "service:supabase",
+      "type": "writes_to",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseHomeServiceLifecycleRepository.ts",
+      "target": "domain:tenancy-leasing",
+      "type": "transforms",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseHomeServiceLifecycleRepository.ts",
+      "target": "concept:schema-compatibility-fallback",
+      "type": "implements",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/client.ts",
+      "target": "service:supabase",
+      "type": "configures",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseAuthRepository.ts",
+      "target": "service:supabase",
+      "type": "reads_from",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseAuthRepository.ts",
+      "target": "file:src/core/ports/AuthRepository.ts",
+      "type": "implements",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseOperationsRepository.ts",
+      "target": "service:supabase",
+      "type": "reads_from",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseOperationsRepository.ts",
+      "target": "file:src/core/ports/OperationsRepository.ts",
+      "type": "implements",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseFinanceReportRepository.ts",
+      "target": "service:supabase",
+      "type": "reads_from",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseFinanceReportRepository.ts",
+      "target": "file:src/core/ports/FinanceReportRepository.ts",
+      "type": "implements",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseTenantRepository.ts",
+      "target": "service:supabase",
+      "type": "reads_from",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseTenantAccessRepository.ts",
+      "target": "service:supabase",
+      "type": "reads_from",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseTenantAccessRepository.ts",
+      "target": "service:supabase",
+      "type": "writes_to",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseTenantAccessRepository.ts",
+      "target": "domain:tenant-access",
+      "type": "contains",
+      "weight": 1.0,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseTenantAccessRepository.ts",
+      "target": "file:src/core/ports/TenantAccessRepository.ts",
+      "type": "implements",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseTenantAuthRepository.ts",
+      "target": "service:supabase",
+      "type": "reads_from",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseTenantAuthRepository.ts",
+      "target": "file:src/core/ports/TenantAuthRepository.ts",
+      "type": "implements",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseNotificationDeliveryRepository.ts",
+      "target": "service:supabase",
+      "type": "reads_from",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseNotificationDeliveryRepository.ts",
+      "target": "file:src/core/ports/NotificationDeliveryRepository.ts",
+      "type": "implements",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseTenantRepository.ts",
+      "target": "domain:tenant-access",
+      "type": "contains",
+      "weight": 1.0,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/adapters/supabase/SupabaseTenantAuthRepository.ts",
+      "target": "domain:tenant-access",
+      "type": "contains",
+      "weight": 1.0,
+      "direction": "forward"
+    },
+    {
+      "source": "concept:schema-compatibility-fallback",
+      "target": "concept:schema-deployment-skew",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/features/public/UAGraphPage.tsx",
+      "target": "file:src/features/public/uaGraphTypes.ts",
+      "type": "imports",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/features/public/UAGraphPage.tsx",
+      "target": "file:src/features/public/uaGraphPage.css",
+      "type": "imports",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/features/public/UAGraphPage.tsx",
+      "target": "concept:public-ua-graph-feature",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/features/debug/AuthDebugPanel.tsx",
+      "target": "service:supabase",
+      "type": "reads_from",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/features/debug/AuthDebugPanel.tsx",
+      "target": "concept:debug-boundary-exception",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/lib/env.ts",
+      "target": "file:src/app/dependencies.ts",
+      "type": "exports",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:supabase/migrations",
+      "target": "service:supabase",
+      "type": "migrates",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "concept:god-repository-port",
+      "target": "concept:active-home-proxy-bypass",
+      "type": "builds_on",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "concept:service-locator-coupling",
+      "target": "concept:god-repository-port",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "concept:dual-center-repository",
+      "target": "concept:documentation-runtime-drift",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "concept:port-proliferation",
+      "target": "concept:service-locator-coupling",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "concept:tenant-access-gating",
+      "target": "domain:tenant-access",
+      "type": "documents",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "concept:tenant-access-gating",
+      "target": "service:surface-tenant-web",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "concept:tenant-access-gating",
+      "target": "service:surface-telegram",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/app/router.tsx",
+      "target": "file:src/features/public/UAGraphPage.tsx",
+      "type": "imports",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "concept:public-ua-graph-feature",
+      "target": "service:surface-public-ua-graph",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:governance-and-knowledge",
+      "name": "Governance and Knowledge",
+      "description": "Repository rules, architectural documentation, task truth, and GWC governance submodule.",
+      "nodeIds": [
+        "document:AGENTS.md",
+        "document:README.md",
+        "document:docs/codebase_graph.md",
+        "document:docs/architecture/rental-home-semantic-analysis.md",
+        "document:TASK.md",
+        "service:.gwc/gwc"
+      ]
+    },
+    {
+      "id": "layer:delivery-surfaces",
+      "name": "Delivery Surfaces",
+      "description": "Browser-facing admin, tenant, public-room, public UA-graph, and Telegram experiences.",
+      "nodeIds": [
+        "service:surface-admin-web",
+        "service:surface-tenant-web",
+        "service:surface-public-room",
+        "service:surface-public-ua-graph",
+        "service:surface-telegram"
+      ]
+    },
+    {
+      "id": "layer:application-composition",
+      "name": "Application Composition",
+      "description": "Routing, guards, dependency selection, and global repository singletons.",
+      "nodeIds": [
+        "file:src/app/router.tsx",
+        "file:src/app/dependencies.ts",
+        "file:src/lib/env.ts"
+      ]
+    },
+    {
+      "id": "layer:domain-and-contracts",
+      "name": "Domain and Contracts",
+      "description": "Business entities, bounded contexts, repository interfaces, and specialized domain types.",
+      "nodeIds": [
+        "file:src/core/domain/models.ts",
+        "file:src/core/domain/maintenance.ts",
+        "file:src/core/domain/billingReadiness.ts",
+        "file:src/core/domain/batchInvoicePayment.ts",
+        "file:src/core/domain/roomPublicListing.ts",
+        "file:src/core/ports/HomeRentalRepository.ts",
+        "file:src/core/ports/OperationsRepository.ts",
+        "file:src/core/ports/AuthRepository.ts",
+        "file:src/core/ports/TenantAuthRepository.ts",
+        "file:src/core/ports/TenantAccessRepository.ts",
+        "file:src/core/ports/FinanceReportRepository.ts",
+        "file:src/core/ports/FinancialReconciliationRepository.ts",
+        "file:src/core/ports/ServiceCatalogRepository.ts",
+        "file:src/core/ports/NotificationDeliveryRepository.ts",
+        "file:src/core/ports/AdminHomeRepository.ts",
+        "file:src/core/ports/AdminUserRepository.ts",
+        "file:src/core/ports/TenantTelegramLinkRepository.ts"
+      ]
+    },
+    {
+      "id": "layer:adapters-and-data",
+      "name": "Adapters and Data",
+      "description": "Active-home policy, Supabase adapters, database migrations, and backend services.",
+      "nodeIds": [
+        "file:src/adapters/ActiveHomeRentalRepository.ts",
+        "file:src/adapters/supabase/SupabaseHomeServiceLifecycleRepository.ts",
+        "file:src/adapters/supabase/client.ts",
+        "file:src/adapters/supabase/SupabaseAuthRepository.ts",
+        "file:src/adapters/supabase/SupabaseOperationsRepository.ts",
+        "file:src/adapters/supabase/SupabaseFinanceReportRepository.ts",
+        "file:src/adapters/supabase/SupabaseTenantRepository.ts",
+        "file:src/adapters/supabase/SupabaseTenantAccessRepository.ts",
+        "file:src/adapters/supabase/SupabaseTenantAuthRepository.ts",
+        "file:src/adapters/supabase/SupabaseNotificationDeliveryRepository.ts",
+        "file:src/features/debug/AuthDebugPanel.tsx",
+        "service:supabase",
+        "file:supabase/migrations"
+      ]
+    },
+    {
+      "id": "layer:ua-graph-feature",
+      "name": "UA Graph Feature",
+      "description": "Public architecture graph visualization added in PUB-UA-01, routes, types, and styles.",
+      "nodeIds": [
+        "service:surface-public-ua-graph",
+        "file:src/features/public/UAGraphPage.tsx",
+        "file:src/features/public/uaGraphTypes.ts",
+        "file:src/features/public/uaGraphPage.css",
+        "concept:public-ua-graph-feature"
+      ]
+    },
+    {
+      "id": "layer:quality-and-delivery",
+      "name": "Quality and Delivery",
+      "description": "Package configuration, CI pipeline, frontend hosting, and database migration delivery.",
+      "nodeIds": [
+        "config:package.json",
+        "config:tsconfig.json",
+        "config:vite.config.ts",
+        "pipeline:.github/workflows/ci.yml",
+        "service:vercel"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "Start with authority and repository truth",
+      "description": "Read AGENTS.md, the GWC gitlink, TASK.md, and both codebase and semantic architecture docs before interpretation.",
+      "nodeIds": [
+        "document:AGENTS.md",
+        "service:.gwc/gwc",
+        "document:TASK.md",
+        "document:docs/codebase_graph.md",
+        "document:docs/architecture/rental-home-semantic-analysis.md"
+      ]
+    },
+    {
+      "order": 2,
+      "title": "Understand the five user surfaces",
+      "description": "Follow router.tsx through admin, tenant, public-room, public UA-graph, and Telegram routes (updated from the original 4 surfaces).",
+      "nodeIds": [
+        "file:src/app/router.tsx",
+        "service:surface-admin-web",
+        "service:surface-tenant-web",
+        "service:surface-public-room",
+        "service:surface-public-ua-graph",
+        "service:surface-telegram"
+      ]
+    },
+    {
+      "order": 3,
+      "title": "Inspect dependency composition",
+      "description": "Review how app/dependencies.ts selects mock versus Supabase implementations across 12+ repository ports.",
+      "nodeIds": [
+        "file:src/app/dependencies.ts",
+        "concept:mock-adapter-pattern",
+        "concept:port-proliferation"
+      ]
+    },
+    {
+      "order": 4,
+      "title": "Map the business core",
+      "description": "Read the shared domain model catalog and then separate property, tenancy, billing, maintenance, and tenant-access bounded contexts.",
+      "nodeIds": [
+        "file:src/core/domain/models.ts",
+        "file:src/core/domain/maintenance.ts",
+        "file:src/core/domain/billingReadiness.ts",
+        "file:src/core/domain/batchInvoicePayment.ts",
+        "file:src/core/domain/roomPublicListing.ts"
+      ]
+    },
+    {
+      "order": 5,
+      "title": "Find the main architectural pressure points",
+      "description": "HomeRentalRepository spans most business contexts, driving broad adapter surface and proxy bypass risk.",
+      "nodeIds": [
+        "file:src/core/ports/HomeRentalRepository.ts",
+        "file:src/adapters/ActiveHomeRentalRepository.ts",
+        "concept:god-repository-port",
+        "concept:active-home-proxy-bypass",
+        "concept:service-locator-coupling"
+      ]
+    },
+    {
+      "order": 6,
+      "title": "Trace schema compatibility and new feature patterns",
+      "description": "The lifecycle adapter uses a narrow legacy projection fallback. The new public UA-graph feature follows a dependency-free pattern without importing the service locator.",
+      "nodeIds": [
+        "file:src/adapters/supabase/SupabaseHomeServiceLifecycleRepository.ts",
+        "concept:schema-compatibility-fallback",
+        "concept:schema-deployment-skew",
+        "file:src/features/public/UAGraphPage.tsx",
+        "concept:public-ua-graph-feature"
+      ]
+    },
+    {
+      "order": 7,
+      "title": "Review delivery, verification boundaries, and new surfaces",
+      "description": "CI validates typecheck, build, unit tests, and E2E tests. Database migrations are conditionally delivered. The public UA graph is served as a static JSON asset.",
+      "nodeIds": [
+        "config:package.json",
+        "pipeline:.github/workflows/ci.yml",
+        "service:vercel",
+        "service:supabase",
+        "file:supabase/migrations"
+      ]
+    }
+  ]
+}
