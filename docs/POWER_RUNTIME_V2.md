@@ -1,17 +1,63 @@
-# DW SuperApps Power Runtime v2.1
+# DW SuperApps Power Runtime v2.2
 
-## One-click commands
+## Install the global `dw` command
 
-Run from the `DW-SuperApps` root.
+Run once from the `DW-SuperApps` root.
+
+### Bash / Linux / Git Bash
+
+```bash
+./bin/dw install --shell bash
+source ~/.bashrc
+dw --version
+```
+
+### Zsh / macOS
+
+```bash
+./bin/dw install --shell zsh
+source ~/.zshrc
+dw --version
+```
+
+### Install and initialize everything in one command
+
+```bash
+./bin/dw install --shell bash --init
+```
+
+Use `--shell auto` to detect Bash or Zsh automatically. Use `--shell all` to register both profile files, or `--shell none` when `~/.local/bin` is already on `PATH`.
+
+The installer creates a managed launcher at:
+
+```text
+~/.local/bin/dw
+```
+
+It also adds one managed `PATH` block to the selected shell profile. Running the installer again is idempotent.
+
+### Uninstall
+
+```bash
+dw uninstall --shell bash
+```
+
+When `dw` is not currently on `PATH`:
+
+```bash
+./bin/dw uninstall --shell bash
+```
+
+## One-click workspace commands
 
 ### macOS / Linux / Git Bash
 
 ```bash
-./bin/dw init all
-./bin/dw sync all
-./bin/dw status all
-./bin/dw doctor all
-./bin/dw clean all
+dw init all
+dw sync all
+dw status all
+dw doctor all
+dw clean all
 ```
 
 ### Windows PowerShell
@@ -38,6 +84,9 @@ dw.cmd clean all
 
 | Command | One-click behavior |
 |---|---|
+| `./bin/dw install` | Create `~/.local/bin/dw` and register that directory in the selected Bash/Zsh profile. |
+| `./bin/dw install --init` | Register the global command, then run the complete workspace initialization. |
+| `dw uninstall` | Remove the managed launcher and managed profile block. |
 | `dw init all` | Install development dependencies, initialize every Power and system submodule, install Kiro and Codex adapters, validate the workspace. |
 | `dw sync all` | Refuse dirty submodules, update every submodule to its configured remote branch, refresh adapters, validate. Does not stage or commit pins. |
 | `dw sync all --pin` | Run the normal sync and stage reviewed gitlink changes. Still does not commit. |
