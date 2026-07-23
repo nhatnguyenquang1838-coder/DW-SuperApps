@@ -1,10 +1,12 @@
-apiVersion: dw.superapps/v1
+apiVersion: dw.superapps/v2
 kind: Power
 metadata:
   id: task-me
   name: Task Me
   version: main-pinned
+  description: Impact analysis, implementation planning, task decomposition, coding guidance, and validation planning.
 spec:
+  category: implementation-planning
   path: powers/task-me
   source: nhatnguyenquang1838-coder/task-me
   provides:
@@ -12,6 +14,12 @@ spec:
     - implementation-planning
     - task-decomposition
     - validation-planning
+  consumes:
+    - requirements
+    - design
+    - architecture
+    - codebase-graph
+    - project-context
   requires:
     - filesystem
   optionalIntegrations:
@@ -23,3 +31,18 @@ spec:
     - kiro
     - codex
     - cli
+  entrypoints:
+    skillCandidates:
+      - .kiro/skills/implementation-task-architect/SKILL.md
+      - docs/runbooks/TASK-ARCHITECT-RUNBOOK.md
+      - README.md
+    cliCandidates:
+      - scripts/validate.sh
+  permissions:
+    read:
+      - "**"
+    write:
+      - ".task-me/**"
+    deny:
+      - ".env*"
+      - "**/secrets/**"
