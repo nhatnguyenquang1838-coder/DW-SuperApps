@@ -27,6 +27,11 @@ spec:
   hosts:
     - kiro
     - codex
+    - copilot
+    - cline
+    - kilo
+    - claude
+    - custom
     - cli
   entrypoints:
     skillCandidates:

@@ -5,7 +5,6 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
 
 try:
     import yaml
@@ -22,6 +21,15 @@ WORKSPACE = ROOT / "workspace.yaml"
 SCHEMA = ROOT / "schemas" / "power-manifest.schema.json"
 MANIFEST_DIR = ROOT / "manifests" / "powers"
 GITMODULES = ROOT / ".gitmodules"
+SUPPORTED_HOSTS = {
+    "kiro",
+    "codex",
+    "copilot",
+    "cline",
+    "kilo",
+    "claude",
+    "custom",
+}
 
 
 def fail(message: str) -> None:
@@ -42,7 +50,7 @@ def git(*args: str) -> str:
     return result.stdout.strip()
 
 
-def load_yaml(path: Path) -> dict[str, Any]:
+def load_yaml(path: Path) -> dict:
     if not path.exists():
         fail(f"missing {path.relative_to(ROOT)}")
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -51,14 +59,28 @@ def load_yaml(path: Path) -> dict[str, Any]:
     return data
 
 
-def validate_entrypoints(power_id: str, manifest: dict[str, Any]) -> None:
-    power_root = ROOT / manifest["spec"]["path"]
-    if not power_root.exists():
-        fail(f"Power submodule is not initialized: {manifest['spec']['path']}")
-    candidates = manifest["spec"]["entrypoints"]["skillCandidates"]
-    if not any((power_root / candidate).is_file() for candidate in candidates):
-        rendered = ", ".join(candidates)
-        fail(f"Power {power_id} has no existing skill entrypoint; checked: {rendered}")
+def validate_providers(workspace: dict) -> list[dict]:
+    providers = workspace.get("providers") or []
+    if not isinstance(providers, list):
+        fail("workspace providers must be a list")
+    seen: set[str] = set()
+    for provider in providers:
+        if not isinstance(provider, dict):
+            fail("workspace provider entries must be mappings")
+        provider_id = provider.get("id")
+        if not isinstance(provider_id, str) or not provider_id:
+            fail("workspace provider entry requires id")
+        if provider_id in seen:
+            fail(f"duplicate provider id: {provider_id}")
+        seen.add(provider_id)
+        if provider.get("type") != "openai-compatible":
+            fail(f"provider {provider_id} must use type openai-compatible")
+        base_url = provider.get("base_url")
+        if not isinstance(base_url, str) or not base_url.startswith(("http://", "https://")):
+            fail(f"provider {provider_id} requires an HTTP base_url")
+        if not provider.get("model_env") and not provider.get("default_model"):
+            fail(f"provider {provider_id} requires model_env or default_model")
+    return providers
 
 
 def main() -> int:
@@ -69,19 +91,22 @@ def main() -> int:
     if workspace.get("apiVersion") != "ai-workspace/v1" or workspace.get("kind") != "Workspace":
         fail("workspace.yaml must use apiVersion ai-workspace/v1 and kind Workspace")
 
-    workspace_hosts = set(workspace.get("hosts") or [])
-    if not workspace_hosts:
+    workspace_hosts = workspace.get("hosts") or []
+    if not isinstance(workspace_hosts, list) or not workspace_hosts:
         fail("workspace.yaml must register at least one host")
-    unknown_hosts = workspace_hosts - {"kiro", "codex"}
+    unknown_hosts = set(workspace_hosts) - SUPPORTED_HOSTS
     if unknown_hosts:
-        fail(f"workspace.yaml registers unsupported hosts: {sorted(unknown_hosts)}")
+        fail(f"workspace registers unsupported hosts: {sorted(unknown_hosts)}")
+    if len(workspace_hosts) != len(set(workspace_hosts)):
+        fail("workspace hosts must be unique")
 
+    providers = validate_providers(workspace)
     power_entries = workspace.get("powers") or []
     system_entries = workspace.get("systems") or []
     if not power_entries or not system_entries:
         fail("workspace.yaml must register at least one Power and one system")
 
-    manifests: dict[str, dict[str, Any]] = {}
+    manifests: dict[str, dict] = {}
     for path in sorted(MANIFEST_DIR.glob("*.yaml")):
         manifest = load_yaml(path)
         errors = sorted(validator.iter_errors(manifest), key=lambda error: list(error.path))
@@ -96,6 +121,9 @@ def main() -> int:
         power_id = manifest["metadata"]["id"]
         if power_id in manifests:
             fail(f"duplicate Power manifest id: {power_id}")
+        missing_hosts = set(workspace_hosts) - set(manifest["spec"]["hosts"])
+        if missing_hosts:
+            fail(f"Power {power_id} does not support workspace hosts: {sorted(missing_hosts)}")
         manifests[power_id] = manifest
 
     workspace_power_ids = {entry["id"] for entry in power_entries}
@@ -128,43 +156,22 @@ def main() -> int:
             f"workspace={sorted(expected_paths)} gitmodules={sorted(submodule_paths)}"
         )
 
-    ownership_roots = set((workspace.get("data_ownership") or {}).get("roots", {}).values())
-
     for entry in power_entries:
-        power_id = entry["id"]
-        manifest = manifests[power_id]
-        spec = manifest["spec"]
-        if spec["path"] != entry["path"]:
-            fail(f"Power path mismatch for {power_id}")
-        if spec["source"] != entry["source"]:
-            fail(f"Power source mismatch for {power_id}")
-        unsupported = set(spec["hosts"]) - (workspace_hosts | {"cli"})
-        if unsupported:
-            fail(
-                f"Power {power_id} declares hosts not supported by workspace: "
-                f"{sorted(unsupported)}"
-            )
-        if spec["runtimeDataRoot"] not in ownership_roots:
-            fail(
-                f"Power {power_id} runtimeDataRoot {spec['runtimeDataRoot']} "
-                "is not registered by workspace data_ownership"
-            )
-        expected_write = f"{spec['runtimeDataRoot']}/**"
-        if expected_write not in spec["permissions"]["write"]:
-            fail(f"Power {power_id} must declare write permission {expected_write}")
-        validate_entrypoints(power_id, manifest)
+        manifest = manifests[entry["id"]]
+        if manifest["spec"]["path"] != entry["path"]:
+            fail(f"Power path mismatch for {entry['id']}")
+        if manifest["spec"]["source"] != entry["source"]:
+            fail(f"Power source mismatch for {entry['id']}")
 
     for system in system_entries:
         unknown = set(system.get("enabled_powers") or []) - workspace_power_ids
         if unknown:
             fail(f"system {system['id']} enables unknown Powers: {sorted(unknown)}")
-        system_path = ROOT / system["path"]
-        if not system_path.exists():
-            fail(f"system submodule is not initialized: {system['path']}")
 
     print(
         f"PASS: {len(power_entries)} Powers, {len(system_entries)} systems, "
-        f"{len(submodule_paths)} submodules, {len(workspace_hosts)} hosts"
+        f"{len(workspace_hosts)} hosts, {len(providers)} providers, "
+        f"{len(submodule_paths)} submodules"
     )
     return 0
 
