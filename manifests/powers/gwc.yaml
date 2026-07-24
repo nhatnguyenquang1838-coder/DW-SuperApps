@@ -66,8 +66,8 @@ spec:
         repository: nhatnguyenquang1838-coder/gwc
         ref: power-dist
     providerState:
-      status: blocked-policy
+      status: ready-unpublished
       task: DW-PDIST-02
-      sourceCommit: null
-      sourceLock: null
-      note: Provider write requires formal GWC gate authority; no bypass is permitted.
+      sourceCommit: 62689ce35e279751a3bf17b5255ac258dafbe7d7
+      sourceLock: distribution/power-package.yaml
+      note: Provider implementation is merged on main; release and power-dist remain unpublished.
