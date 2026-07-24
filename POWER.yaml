@@ -1,0 +1,18 @@
+apiVersion: dw.superapps/v1
+kind: PowerPackage
+metadata:
+  id: bmad
+  name: BMAD Method
+  version: main-bb45db4aa449
+  description: Skills-only BMAD software-delivery lifecycle with a portable multi-host
+    bootstrap.
+spec:
+  entrypoints:
+  - distribution/skills/bmad/SKILL.md
+  managedPaths:
+  - distribution/skills/bmad
+  - src/core-skills
+  - src/bmm-skills
+  - tools/installer
+  runtimeDataRoot: .bmad
+  configRequired: false

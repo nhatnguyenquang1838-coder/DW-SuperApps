@@ -1,0 +1,8 @@
+schemaVersion: "1.0"
+module: bmm
+host: codex
+userName: BMad
+communicationLanguage: English
+documentOutputLanguage: English
+outputFolder: _bmad-output
+projectKnowledge: docs

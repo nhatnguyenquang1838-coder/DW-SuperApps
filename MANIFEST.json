@@ -1,0 +1,1902 @@
+{
+  "apiVersion": "dw.superapps/v1",
+  "files": [
+    {
+      "mode": "0644",
+      "path": "LICENSE",
+      "sha256": "0aa79baf6328b4a1e694ce10a12ffc36d7666554da128dff0e8fcda0fc536a66",
+      "size": 1572
+    },
+    {
+      "mode": "0600",
+      "path": "POWER.yaml",
+      "sha256": "31f1cd963743dbf4de75206555b87c6f46d3891ae05106604a0ba7cec9887cb7",
+      "size": 431
+    },
+    {
+      "mode": "0600",
+      "path": "SOURCE.json",
+      "sha256": "20ca98cd0805f0d80f42cbbf1010931ac203e5c80919796f2aa2c78dfdd8d2e6",
+      "size": 204
+    },
+    {
+      "mode": "0644",
+      "path": "TRADEMARK.md",
+      "sha256": "ce57ad749e43277c6021e5d5085980b33c9bf8f67a070bbbf07e041ccdddc58b",
+      "size": 2805
+    },
+    {
+      "mode": "0600",
+      "path": "VERSION",
+      "sha256": "25f1c52cf0142f0efa26efb48acd34da0735c2664d1d0b098fc1e28e5a41df40",
+      "size": 18
+    },
+    {
+      "mode": "0755",
+      "path": "bin/configure",
+      "sha256": "d6a3b625b1f547a59a72ff9d1a30a6db4db3b7aadba56fae26bf62005e447e40",
+      "size": 428
+    },
+    {
+      "mode": "0755",
+      "path": "bin/configure.ps1",
+      "sha256": "f8a37a0d550ac55e58b71c38918f0bdefec62025e239d2b71316775d242c172b",
+      "size": 274
+    },
+    {
+      "mode": "0755",
+      "path": "bin/doctor",
+      "sha256": "3d9e2a35c431bffa94f022e42fb54173842a1b26cf6e90e18710f36e887e0377",
+      "size": 425
+    },
+    {
+      "mode": "0755",
+      "path": "bin/doctor.ps1",
+      "sha256": "5b3c5f0157119c00949c07cf3e9724fcb033424fec4524f378accc4b00cd4ca3",
+      "size": 271
+    },
+    {
+      "mode": "0755",
+      "path": "bin/install",
+      "sha256": "b22793805c30387331c0001e394d4d044a3be009ecb6ad46319f0873110e1911",
+      "size": 426
+    },
+    {
+      "mode": "0755",
+      "path": "bin/install.ps1",
+      "sha256": "f9bf3f6959f82dfd13feeb584ffbcca2ad925612aa6d3dbcf1046d174ac1c7e8",
+      "size": 272
+    },
+    {
+      "mode": "0755",
+      "path": "bin/uninstall",
+      "sha256": "0bddd2eebd8b6c3644610cf03dc3ca2a49d7916f27433b22b0281920a60e892f",
+      "size": 428
+    },
+    {
+      "mode": "0755",
+      "path": "bin/uninstall.ps1",
+      "sha256": "4d68e727a10aa7ecda07a222da81bf44c67710a76abc65c06d4280f7d21f1619",
+      "size": 274
+    },
+    {
+      "mode": "0644",
+      "path": "bmad-modules.yaml",
+      "sha256": "875ecd4956047fcb226b917cb98ff453a2c4a7ffbd6121a12ee0a3a4d6c4e934",
+      "size": 5691
+    },
+    {
+      "mode": "0755",
+      "path": "distribution/bin/bootstrap-bmad",
+      "sha256": "2ada73a9dec73796fb83b3ac9ef06e606b1b04c7049af410da7b143b4d0ef781",
+      "size": 155
+    },
+    {
+      "mode": "0644",
+      "path": "distribution/bin/bootstrap-bmad.ps1",
+      "sha256": "9546a2fcf0cc66377d789067ca3a30e273a3d6fe96e503a8b3b05d17d76ba6bd",
+      "size": 452
+    },
+    {
+      "mode": "0644",
+      "path": "distribution/config/config.schema.json",
+      "sha256": "c2faa12b723d40e6be11fbde0eb6fabdeeef49f23e278baf567b00d3ff9d3cc6",
+      "size": 1148
+    },
+    {
+      "mode": "0644",
+      "path": "distribution/config/defaults.yaml",
+      "sha256": "b635e85d52d14fdc8100ecb948436ea5a4643f61eaf6e8e4c3b3dc06de6ac2d0",
+      "size": 173
+    },
+    {
+      "mode": "0644",
+      "path": "distribution/contracts/default-contract.yaml",
+      "sha256": "3ae6a7a1e99f3dfab69ec5b196060c42f217ea670cfae1bfcde0c8112f9b7cda",
+      "size": 445
+    },
+    {
+      "mode": "0644",
+      "path": "distribution/lib/bootstrap_bmad.py",
+      "sha256": "8c8aa8b9309d235ff68374f83906c8a9dd3d949268b04bc01e844d0f4c21954b",
+      "size": 8221
+    },
+    {
+      "mode": "0644",
+      "path": "distribution/power-package.yaml",
+      "sha256": "e0182d148590d22747734ceb941cf61856815eca19ec76100e68940fa4dc4bcd",
+      "size": 1251
+    },
+    {
+      "mode": "0644",
+      "path": "distribution/skills/bmad/SKILL.md",
+      "sha256": "4e9ef70f1513b269eca69c22dbf2f4e4c31fcf83609d16dd01165e7b0a673c7f",
+      "size": 1403
+    },
+    {
+      "mode": "0644",
+      "path": "lib/power_runtime.py",
+      "sha256": "28401ff39568ebfa801b74b98d1361ed27554ee94c6f98b4da750ec21c8fce94",
+      "size": 12638
+    },
+    {
+      "mode": "0644",
+      "path": "package-lock.json",
+      "sha256": "c1e0de1fe219b251097ac78f275c42250595c075f63fab39b47800fbd92e883d",
+      "size": 506748
+    },
+    {
+      "mode": "0644",
+      "path": "package.json",
+      "sha256": "7b4f67e25fb6ed90136d9e6214e9e67373c109bfa64b341a484ae6cc9dc09d83",
+      "size": 4144
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-agent-analyst/SKILL.md",
+      "sha256": "fca38a404e79508ebc39235d0162bcb475b02407a913e3e5bd8c5526b2b261a6",
+      "size": 4525
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-agent-analyst/customize.toml",
+      "sha256": "aecf5cc9f91545c743550fda94571d4508eedf1aff507ac5a7bef03e4cda9eac",
+      "size": 4463
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-agent-tech-writer/SKILL.md",
+      "sha256": "7544242ff68d0ddfd466274f40ae9f3b0ea06ee5f5f938f68f953e19b3598cd7",
+      "size": 4582
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-agent-tech-writer/customize.toml",
+      "sha256": "bb828f2d26a136870099226f07c61297ce88ddd335823b7549592932bbe14a2e",
+      "size": 3315
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-agent-tech-writer/explain-concept.md",
+      "sha256": "6ea82dbe4e41d4bb8880cbaa62d936e40cef18f8c038be73ae6e09c462abafc9",
+      "size": 687
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-agent-tech-writer/mermaid-gen.md",
+      "sha256": "1d83fcc5fa842bc31ecd9fd7e45fbf013fabcadf0022d3391fff5b53b48e4b5d",
+      "size": 684
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-agent-tech-writer/validate-doc.md",
+      "sha256": "3b8d25f60be191716266726393f2d44b77262301b785a801631083b610d6acc5",
+      "size": 659
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-agent-tech-writer/write-document.md",
+      "sha256": "c0ddfd981f765b82cba0921dad331cd1fa32bacdeea1f02320edfd60a0ae7e6f",
+      "size": 931
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-document-project/SKILL.md",
+      "sha256": "806d73f66a8f3f3e7b3cbd3b9a87ad4d8b9aabd3ff91f37c96edef36a17aa2b3",
+      "size": 2671
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-document-project/checklist.md",
+      "sha256": "581b0b034c25de17ac3678db2dbafedaeb113de37ddf15a4df6584cf2324a7d7",
+      "size": 10101
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-document-project/customize.toml",
+      "sha256": "3bbb5044fafdd865a5fe0863df116a479f30de7fb95c9cf4213f0b87ba1ba924",
+      "size": 1596
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-document-project/documentation-requirements.csv",
+      "sha256": "d1253b99e88250f2130516b56027ed706e643bfec3d99316727a4c6ec65c6c1d",
+      "size": 8076
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-document-project/instructions.md",
+      "sha256": "9f4bc3a46559ffd44289b0d61a0f8f26f829783aa1c0e2a09dfa807fa93eb12f",
+      "size": 5164
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-document-project/templates/deep-dive-template.md",
+      "sha256": "6198aa731d87d6a318b5b8d180fc29b9aa53ff0966e02391c17333818e94ffe9",
+      "size": 5854
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-document-project/templates/index-template.md",
+      "sha256": "42c8a14f53088e4fda82f26a3fe41dc8a89d4bcb7a9659dd696136378b64ee90",
+      "size": 4510
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-document-project/templates/project-overview-template.md",
+      "sha256": "a7c7325b75a5a678dca391b9b69b1e3409cfbe6da95e70443ed3ace164e287b2",
+      "size": 1951
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-document-project/templates/project-scan-report-schema.json",
+      "sha256": "8466965321f1db22f5013869636199f67e0113706283c285a7ffbbf5efeea321",
+      "size": 4836
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-document-project/templates/source-tree-template.md",
+      "sha256": "109bc335ebb22f932b37c24cdc777a351264191825444a4d147c9b82a1e2ad7a",
+      "size": 2160
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-document-project/workflows/deep-dive-instructions.md",
+      "sha256": "a79e24b93a25ab456062916a9dad7b6a16dc43ac0b4b555700d3c3751cff0d25",
+      "size": 12143
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-document-project/workflows/deep-dive-workflow.md",
+      "sha256": "a64d98dfa3b771df2853c4fa19a4e9c90d131e409e13b4c6f5e494d6ac715125",
+      "size": 979
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-document-project/workflows/full-scan-instructions.md",
+      "sha256": "2235945df2ae261265187447ce593238e132a026a9b88d3507a1f1d6808a0263",
+      "size": 43434
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-document-project/workflows/full-scan-workflow.md",
+      "sha256": "3bff88a392c16602bd44730f32483505e73e65e46e82768809c13a0a5f55608b",
+      "size": 970
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-prfaq/SKILL.md",
+      "sha256": "353da1cc8837e880c7f41b636a1bd38086c56a91d59798b13f5d6168f0021de4",
+      "size": 10802
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-prfaq/agents/artifact-analyzer.md",
+      "sha256": "7bdc44830f8d593346ec0ee15e36e1e431432fcc6c38b70bb861999315c9cfa4",
+      "size": 2646
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-prfaq/agents/web-researcher.md",
+      "sha256": "6e9127bb9bd3e4b15c701e4ced9eef328769262cd34eadc221bebe954c1f3aef",
+      "size": 1756
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-prfaq/assets/prfaq-template.md",
+      "sha256": "b27e6964f0437ab4e78c8c0ffbe5052c28e3b3ef2fc811726cbb394d5a5c7559",
+      "size": 1434
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-prfaq/bmad-manifest.json",
+      "sha256": "7908cab6f0cd66f1f3427b4cc659975b4737bdc44f789b23c6a895fcd084c4bc",
+      "size": 469
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-prfaq/customize.toml",
+      "sha256": "8994f925bab65bd310e5ab38781286b6137f3e0c9e89f3ab8a2f480eb05e0de5",
+      "size": 1618
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-prfaq/references/customer-faq.md",
+      "sha256": "96f8565197649c58908a1d61b6cd805fd01f57da7945ba889c18d087ad597aeb",
+      "size": 3697
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-prfaq/references/internal-faq.md",
+      "sha256": "26eb83f844cda1ed8efb50f4703d61713ada8a64bd27eb387f759f858b5748de",
+      "size": 3928
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-prfaq/references/press-release.md",
+      "sha256": "c406adb0e2d2cc326cbc45d0174f89d014523448ad82bc272293999d22aec596",
+      "size": 4308
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-prfaq/references/verdict.md",
+      "sha256": "1a1cbc34090114d3a2b928456edec1563b73d84fea66c58e98780bf680f172ec",
+      "size": 4494
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-product-brief/SKILL.md",
+      "sha256": "4c15a8ec688c998eeb71957f208b5953b1ac7a5641b008b3509f1f4fcdc8e6cd",
+      "size": 11625
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-product-brief/assets/brief-template.md",
+      "sha256": "bb28edf75d023067551c8d417b19b8803324e7acfb2ad0c80f882e9134f4c1f1",
+      "size": 1606
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/1-analysis/bmad-product-brief/customize.toml",
+      "sha256": "50abc46f7c2e7cc7b02e2edc4aa6a237a46ea49dcc6781da5b42bd8968de39ab",
+      "size": 5431
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-agent-pm/SKILL.md",
+      "sha256": "e2ebea0bf6ee158fcb9e62731a185983f2ac59f664940f4f4320cf10e1bbdf92",
+      "size": 4497
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-agent-pm/customize.toml",
+      "sha256": "afc2250de25241ac3577c9827e1ee62d8c7a1913de8eb23aadfffb0aadbadc37",
+      "size": 3040
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-agent-ux-designer/SKILL.md",
+      "sha256": "d780ae59b9fb7e3a94c5ffe4ec75f90942d4a9a3944af4b36c2d279fdd7801db",
+      "size": 4518
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-agent-ux-designer/customize.toml",
+      "sha256": "3df7da44945f9df34dbb3a64de086c756e6c298e73078e388e8f9a4f57cbf7ab",
+      "size": 2536
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-prd/SKILL.md",
+      "sha256": "5d7b4719a1fa9e4f7d4cbeeb4a412c79e141bc77e8e25ba442b85e1c5c587f3f",
+      "size": 14088
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-prd/assets/headless-schemas.md",
+      "sha256": "8d3621333a72400512bd62511bc4c73fc745711505e1f852c697ff8c5fa2de93",
+      "size": 2038
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-prd/assets/prd-template.md",
+      "sha256": "41e77bd5c4ee81c3f383b55d6f515147afc9c4bd1a3317ddf55a9282deae495c",
+      "size": 10034
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-prd/assets/prd-validation-checklist.md",
+      "sha256": "41d9f09064772a92ec908d970618e47ba63dc86b5c5a1a21d5a2c676d3ba8e3f",
+      "size": 7432
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-prd/assets/validation-report-template.html",
+      "sha256": "a80becdd8205d2d7c18738855830b096172a496b96b5ca8a0820ec55c9bb8bf9",
+      "size": 10893
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-prd/customize.toml",
+      "sha256": "7f9a3a3503a3f758003ce2f1de59c31cc53658223e355fc76055f3140ef34e90",
+      "size": 8111
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-prd/references/headless.md",
+      "sha256": "4dad58ebee63933a53179016513ff94d143ce9f68e226489d390e2c36bf1d848",
+      "size": 3314
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-prd/references/validate.md",
+      "sha256": "71f28774e85c673a5c48af607af541e6a08e10076a2d46d0763885fafc74f201",
+      "size": 5503
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-spec/SKILL.md",
+      "sha256": "5b5680dbf01dbfc5b4a5485e70f20ea48ac21a1d6137c4ea2ff704262dcc45d2",
+      "size": 17185
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-spec/assets/headless-schemas.md",
+      "sha256": "83afb3614716db2347d83586a67b9c524492dd50db5282436ccb35c99fb5f08a",
+      "size": 1187
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-spec/assets/spec-template.md",
+      "sha256": "4b3a032c045fdd0903933446fc07f93e879997f28a0294ed4344da71192b20ee",
+      "size": 2361
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-spec/assets/stories-schema.md",
+      "sha256": "4f8137c00e2710288354a4466d1cfb90704f4b2a04bd3b63924218fd589cc6a9",
+      "size": 3489
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-spec/customize.toml",
+      "sha256": "a89e0f53f9b6386c281dd0158a21801a6b16f122085fd68b0220cd403c18f830",
+      "size": 2121
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/SKILL.md",
+      "sha256": "250d2794f2b8e316bb1ba4666f0728970afd8a5d2707ac1cceac6c21e63730b6",
+      "size": 10700
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/assets/color-themes.md",
+      "sha256": "48fac7943e8584ccf7dd1bcdfdfd4513366a086a3a84965b6b302ccf6607c171",
+      "size": 1022
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/assets/design-directions.md",
+      "sha256": "eab73b948da76a27abc908e1e7d6b124e8ff0362e6dd1990f7e60b9541cbcb98",
+      "size": 1056
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/assets/design-example-editorial.md",
+      "sha256": "a659166845b1a4ed3f9aef942c5935537a97382b10303684fbb78ed86265870e",
+      "size": 7363
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/assets/design-example-mobile.md",
+      "sha256": "a93fb9f114f2e83af0c961c0d7909b3859fc80bcd713715517cd639a53a0372a",
+      "size": 4957
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/assets/design-example-shadcn.md",
+      "sha256": "25e0dfb2bb21483973a8f0a6ed650288b3dc2ae5ed02aa0f091bb9b6b0b39fc0",
+      "size": 6376
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/assets/excalidraw-wireframe.md",
+      "sha256": "660bbcdebff50cd044a3752eda43f3cb303aca4b0f521b55a270da93b89ddb18",
+      "size": 1901
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/assets/experience-example-mobile.md",
+      "sha256": "f8cd54c92193cd8c34a472df9c212ac7330976f6a115b729721dcb60034dc4f0",
+      "size": 5123
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/assets/experience-example-shadcn.md",
+      "sha256": "d6ca16e87b768e8b41f352c02ee08af21d7cdac04ca21e6ae1556864b4d27590",
+      "size": 9279
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/assets/headless-schemas.md",
+      "sha256": "e3a773dde85286f1a6f6dd8b26fc17e09ccea96f6257dfe7fb436353cd79242d",
+      "size": 2615
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/assets/key-screens.md",
+      "sha256": "ff1c5060673dd595edd61e76806bae876264ec6895c2eaadf8a6190785bf5f7b",
+      "size": 2186
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/assets/validation-report-template.html",
+      "sha256": "8656945636fabe96624f8ef8fce931b073b5aecbe42d490584c1d5c7f31e1353",
+      "size": 10945
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/customize.toml",
+      "sha256": "61f8bfbb020beb159b8da570ed416b02ec4a9ba3709aa0d08b417648d85328d8",
+      "size": 4606
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/references/creative-tools.md",
+      "sha256": "349b6b5e8353c2fa1efe7caa49cca50577900f55f32005ccd6f7b43e4daec558",
+      "size": 1825
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/references/design-md-spec.md",
+      "sha256": "d04d5f663607aba3f3181e818ae33856e6caf5e560dcb16fa64ed80b7cf3d590",
+      "size": 3298
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/references/headless.md",
+      "sha256": "8da7e23d269b1644f45b5104a243a6a27fd8d075aebb95d9b7752f0d143f0f5d",
+      "size": 2310
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/2-plan-workflows/bmad-ux/references/validate.md",
+      "sha256": "336d5be5ca860dc6948606b68b5a14fed593d41508ad83e123879bd466c984db",
+      "size": 6713
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-agent-architect/SKILL.md",
+      "sha256": "82bbf22ff3a4571741c9339ae6b7c35676a6e26a3237ceca487abe85369e91a0",
+      "size": 4499
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-agent-architect/customize.toml",
+      "sha256": "d9763009d7c20246119c24bcea5eacebd21ad60c22ab191b74c9a5fb6e5f57ad",
+      "size": 2723
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-architecture/SKILL.md",
+      "sha256": "89a316fd74d8490d1ceb2ec7c40ea503504fd4c7a2c1e31089bfc628c86c45bf",
+      "size": 14037
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-architecture/assets/spine-template.md",
+      "sha256": "ef4ff795624eb5439fae54a06edb389feb5a0cf79cb01ae007af51109335d198",
+      "size": 4357
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-architecture/customize.toml",
+      "sha256": "a6bb60a3adf976031f2870203285b1fc7a56e71e21232cd23bba544b178b5f15",
+      "size": 6275
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-architecture/references/headless.md",
+      "sha256": "4db2708f335c94cb024b5eba022b1e3d88b1ec61c94c4716626d9b89684f5833",
+      "size": 2660
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-architecture/references/reviewer-gate.md",
+      "sha256": "d32e32a3c1d59b5612b947004f3f6fef1117a13ce9f1ffa428d616e0b5d4db69",
+      "size": 3245
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-architecture/scripts/lint_spine.py",
+      "sha256": "040e0f1c13d31e6a21c518df943d1d7de7b75d8d98a07603b0983f3f3fb500db",
+      "size": 10472
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/SKILL.md",
+      "sha256": "a7e12eae2bdb5a95cc0534e6d5bf58e7ce4b947327a494d475ef98e67f03718a",
+      "size": 4890
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/customize.toml",
+      "sha256": "571d81087b7a6d914cf7c2f21aa26354eac385bb2f5cfeabc591892cbb98d036",
+      "size": 1631
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/steps/step-01-document-discovery.md",
+      "sha256": "c763b512d55906122433cb65c1bcd5b5b283e45eacdc07281c8ec7596b6b3980",
+      "size": 4939
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/steps/step-02-prd-analysis.md",
+      "sha256": "38be2bf4b924c0b5b395b57d68f685d790ade7b1a6c10993d3c550675f87d954",
+      "size": 4444
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/steps/step-03-epic-coverage-validation.md",
+      "sha256": "7b187f03a47cba0325fcfd10240410db9c59d93768342fc2dd3de2a01ec23356",
+      "size": 4058
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/steps/step-04-ux-alignment.md",
+      "sha256": "f71e5f0d77615e885ae40fdee6b04c1dd6e472c871f87b515fe869cb5f6966fb",
+      "size": 3306
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/steps/step-05-epic-quality-review.md",
+      "sha256": "d8a84e57f4e3a321734b5b5d093458ceb1e338744f18954c5a204f5ce3576185",
+      "size": 6716
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/steps/step-06-final-assessment.md",
+      "sha256": "1b9c8c2a21950f85e052e05309bfcb3bfe38157ba6fca402ccf37444e7f1cee3",
+      "size": 3552
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/templates/readiness-report-template.md",
+      "sha256": "0da97ab1e38818e642f36dc0ef24d2dae69fc6e0be59924dc2dbf44329738ff6",
+      "size": 95
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-create-epics-and-stories/SKILL.md",
+      "sha256": "4ec9ec255c2c0e97ae912342ae1445318e672aa1c2a9e412806b7d7ef7d5a6a7",
+      "size": 5087
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-create-epics-and-stories/customize.toml",
+      "sha256": "da9e43605bc6aec83173050b5d37ede6aebfa9a17c5959a5029681d73e744ba3",
+      "size": 1665
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-create-epics-and-stories/steps/step-01-validate-prerequisites.md",
+      "sha256": "7181608c1ee4e55c084c6627d68fc55a8a0b6917e489f8ac77531a0530428a30",
+      "size": 10960
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-create-epics-and-stories/steps/step-02-design-epics.md",
+      "sha256": "7c66987808c1f84e853fe54b7aff26d209196d450b5644704110f124a15179bc",
+      "size": 8809
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-create-epics-and-stories/steps/step-03-create-stories.md",
+      "sha256": "c5b787a82e4e49ed9cd9c028321ee1689f32b8cd69d89eea609b37cd3d481afc",
+      "size": 8351
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-create-epics-and-stories/steps/step-04-final-validation.md",
+      "sha256": "6b83fcf177c24c6b43c2eb0df2efc1430cb0f357b3ab20ee8a5c5483c3fee079",
+      "size": 5325
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-create-epics-and-stories/templates/epics-template.md",
+      "sha256": "a804f740155156d89661fa04e7a4264a8f712c4dc227c44fd8ae804a9b0f6b72",
+      "size": 1105
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-generate-project-context/SKILL.md",
+      "sha256": "f25e05d8c3923f331f96a73e6ba8bb8b055b5ca2aa548402a3b633141b8dea21",
+      "size": 3839
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-generate-project-context/customize.toml",
+      "sha256": "00b6e893b93a1be7c04408f1824dad72c2c43ee02ba29210725e34394bf8225e",
+      "size": 1643
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-generate-project-context/project-context-template.md",
+      "sha256": "54e351394ceceb0ac4b5b8135bb6295cf2c37f739c7fd11bb895ca16d79824a5",
+      "size": 543
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-generate-project-context/steps/step-01-discover.md",
+      "sha256": "8b2c8c7375f8a3c28411250675a28c0d0a9174e6c4e67b3d53619888439c4613",
+      "size": 6016
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-generate-project-context/steps/step-02-generate.md",
+      "sha256": "b1f063edae66a74026b67a79a245cec7ee85438bafcacfc70dcf6006b495e060",
+      "size": 9135
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/3-solutioning/bmad-generate-project-context/steps/step-03-complete.md",
+      "sha256": "e61463db76a8fa060411aa24127aee936d646b97564e9e2a883494ea50e68464",
+      "size": 8370
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-agent-dev/SKILL.md",
+      "sha256": "54ab6d9d60d7ed7e84d6510cf325734b66feb1b419131436672559584b4bf508",
+      "size": 4565
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-agent-dev/customize.toml",
+      "sha256": "939e97c290ffb9b65d7ff4c4454aebf2ed29f27261792c89a7693d19896f017e",
+      "size": 3654
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-checkpoint-preview/SKILL.md",
+      "sha256": "34613078dbea9c55e45df016399328d8360579fd381301a5de78bb52c3597591",
+      "size": 3161
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-checkpoint-preview/customize.toml",
+      "sha256": "1a1e0c3a8914adda3cec925eed51287e067c7f84120de64a8df53348e7b77de5",
+      "size": 1616
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-checkpoint-preview/generate-trail.md",
+      "sha256": "4a5936d86fbe5a85285b4535097b1e2edda8849da35586f4b588a982d7224459",
+      "size": 1992
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-checkpoint-preview/step-01-orientation.md",
+      "sha256": "d9e3b949c36d49a025f3535773af2b51888fe4ce616b6d6d69683a122716b1d2",
+      "size": 5004
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-checkpoint-preview/step-02-walkthrough.md",
+      "sha256": "66cf893f8f968ee81034e9ccd8c20415692c3a8c23a9a143c2245fe6c800acdc",
+      "size": 4172
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-checkpoint-preview/step-03-detail-pass.md",
+      "sha256": "d48163b9f305f15af57729a8443142e47beb6c3e977554afe12b39ee49cb9fc0",
+      "size": 4990
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-checkpoint-preview/step-04-testing.md",
+      "sha256": "28a56e868968ea2d18add0df8c4bccced0f94b698e218df3d45ddac072ce369c",
+      "size": 2698
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-checkpoint-preview/step-05-wrapup.md",
+      "sha256": "c2d4dbc17fed4f8ecbfcb09a2f9c77f0d4562bd27397270e2c27ba37cf4fe073",
+      "size": 1525
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-code-review/SKILL.md",
+      "sha256": "c303ef6d8cc507ef268e95978052250289bd0c76941441a023baebfd807c1efd",
+      "size": 4019
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-code-review/customize.toml",
+      "sha256": "3616a62c24992da4eea3657397e025f160cb558a700213c80339f66f8caf04da",
+      "size": 3418
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-code-review/steps/step-01-gather-context.md",
+      "sha256": "fd06fc9b5946a1cc1f5fa9cd21c33af5a65befd4cd2ce4abaf6a91d1b30ba701",
+      "size": 6480
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-code-review/steps/step-02-review.md",
+      "sha256": "2d261827b78c673ace9b81919de1bea6bbf70b4c9b5d6dcbb6910b431c601501",
+      "size": 1944
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-code-review/steps/step-03-triage.md",
+      "sha256": "46a9e661e8aed6a7347cd7bc0b3f7edd8e4bffcfc96b2e15895f7a8ce2517d70",
+      "size": 3224
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-code-review/steps/step-04-present.md",
+      "sha256": "1bded625413479aae5bb2e46a36d4e4156c31dc19f97b98812ecb8734870687c",
+      "size": 6328
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-correct-course/SKILL.md",
+      "sha256": "5064ef2e7aedfb094bef912d5e4d6680318a1904d9bcdc7875d3dc16bb253ea4",
+      "size": 13551
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-correct-course/checklist.md",
+      "sha256": "3e082b95def90ccb876e3101ce0bbaf797a0f03a9471e1347361897f27977327",
+      "size": 11634
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-correct-course/customize.toml",
+      "sha256": "78095d25afb5b2d4844956f61e9ac640a62d0245174fab9406e9c289f33fd84b",
+      "size": 1640
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-create-story/SKILL.md",
+      "sha256": "692ab872ebaa197931d849a8d01fa28e86a9b3ee2f4acf79318bb3797a91e9aa",
+      "size": 23519
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-create-story/checklist.md",
+      "sha256": "b94e28e774c3be0288f04ea163424bece4ddead5cd3f3680d1603ed07383323a",
+      "size": 14349
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-create-story/customize.toml",
+      "sha256": "1204f6de064436922f2813069778eb4eaa5f1f945aa8ea5a5ffb87897a2ba8fe",
+      "size": 1643
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-create-story/discover-inputs.md",
+      "sha256": "dfedba6a8ea05c9a91c6d202c4b29ee3ea793d8ef77575034787ae0fef280507",
+      "size": 3911
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-create-story/template.md",
+      "sha256": "29ba697368d77e88e88d0e7ac78caf7a78785a7dcfc291082aa96a62948afb67",
+      "size": 948
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-dev-auto/SKILL.md",
+      "sha256": "468d40aae3cf0bd606b986566a92b36706f45d5f8ce021328acba20d677195d0",
+      "size": 6858
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-dev-auto/compile-epic-context.md",
+      "sha256": "fa300a04e9b1f494314ddde443678affb2ac1965e2ac07dc4d6bb64316998466",
+      "size": 2990
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-dev-auto/customize.toml",
+      "sha256": "2875855521bdb160259745852097f7823cbd4a305f763877566ca93ea88a5237",
+      "size": 3874
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-dev-auto/spec-template.md",
+      "sha256": "6a7cce1006794485258ce2e6ed494a209071c56be650961013489858947f1bc3",
+      "size": 4076
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-dev-auto/step-01-clarify-and-route.md",
+      "sha256": "cfbf58ac4ba39b3d6a00dd122606a535341e60c77fd841b7aa5e1dad2fada887",
+      "size": 10372
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-dev-auto/step-02-plan.md",
+      "sha256": "9897dcc8675754e24b8f71fe69e33a44dbe086f30a765db23ca807496d8413b3",
+      "size": 2724
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-dev-auto/step-03-implement.md",
+      "sha256": "5ecd54fbb9ba892ba3a5e85e6fcba0c4fd26ef3b80e1cf10c3a0565c64cace3f",
+      "size": 3292
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-dev-auto/step-04-review.md",
+      "sha256": "dcd7f28c9f026c0e183e06e4ba6c36101e343abeeea342bb12a927f10fa8b39a",
+      "size": 8839
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-dev-story/SKILL.md",
+      "sha256": "f12801307b157f04d2bde7da104e1ebde3f2898bd3a60326da928d5b9fc793ac",
+      "size": 26709
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-dev-story/checklist.md",
+      "sha256": "630b68c6824a8785003a65553c1f335222b17be93b1bd80524c23b38bde1d8af",
+      "size": 4389
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-dev-story/customize.toml",
+      "sha256": "baba9f07f653063aa94981f1413d5dd4f604931077fbfb04d9c2e397f8d33237",
+      "size": 1926
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-qa-generate-e2e-tests/SKILL.md",
+      "sha256": "9e78729569b2dc8e24e5f8eb016a851c4efd5c1920e2c91e0e3175fc6899d98d",
+      "size": 5652
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-qa-generate-e2e-tests/checklist.md",
+      "sha256": "b58f810aeb1040c2f6758c88aa133afce72f8cc178d3d97ff0fbaa3d943057dc",
+      "size": 891
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-qa-generate-e2e-tests/customize.toml",
+      "sha256": "04a99926b2d79318b927434c7344dc666f143026ed99c7fcc0d6e3d68263ae66",
+      "size": 1639
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-quick-dev/SKILL.md",
+      "sha256": "b16f55bff0181e12edb1b5f0e2cec012507efe86c1013f926e50026a8df9e48f",
+      "size": 671
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-quick-dev/compile-epic-context.md",
+      "sha256": "5cfda02f252941e415b80c57b4528f46226b3cbf456ad45d78fcb5a7ef4816e2",
+      "size": 2922
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-quick-dev/customize.toml",
+      "sha256": "60d92d7386f5e2deb6b4e6e879afb9710c260912f9628c4c5204fde9af570201",
+      "size": 2393
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-quick-dev/render.py",
+      "sha256": "a906773660eee06999e18b561cbeb1f8c523c5827a55392438fa1e4d87a071db",
+      "size": 15226
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-quick-dev/spec-template.md",
+      "sha256": "68d0e3b9acaa0c22ab3b0dd1dbce9d8ef9b4d16637ed5e6fbd5244528732943e",
+      "size": 3481
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-quick-dev/step-01-clarify-and-route.md",
+      "sha256": "ae7e90b8286971d1e54500892be2e39d1e6160e9948591c72f7b7b379b1c6bef",
+      "size": 9981
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-quick-dev/step-02-plan.md",
+      "sha256": "e3ef2b68887188b698f3e63451a447e99ae778882abce942485cedf022843b13",
+      "size": 3252
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-quick-dev/step-03-implement.md",
+      "sha256": "83100146e2126ec45016ded0764679b884a4deee48af45468b7b5cd0d8d0e16d",
+      "size": 2669
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-quick-dev/step-04-review.md",
+      "sha256": "1d93e499b6c394bcdfa5c3cf924d084adcd29a00a23b4389b83095c79ba2079c",
+      "size": 5306
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-quick-dev/step-05-present.md",
+      "sha256": "adf8cc4c2f555d19bb49f8e89771d44755c0e850505746c69bae088be1f71b6c",
+      "size": 4275
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-quick-dev/step-oneshot.md",
+      "sha256": "8a4c190870832a6f43f30886c2646b407f8007a21f2a7d367a2cefea25b57deb",
+      "size": 4229
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-quick-dev/sync-sprint-status.md",
+      "sha256": "92b3eced6146a640f0b5a1755959241387aa7d80284feba2306cb8986a6341e8",
+      "size": 1397
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-quick-dev/workflow.md",
+      "sha256": "4c7d0a0f7e2aa2277a3298ebc6803bf81186e0a2b9b3895e8451fb969e32dd18",
+      "size": 3847
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-retrospective/SKILL.md",
+      "sha256": "af09b92e4928bbc9e01382497e733ecc9312bf8c1ad680e4f4cc0c4a0ea34253",
+      "size": 65521
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-retrospective/customize.toml",
+      "sha256": "4ad7e7e7154b480eac7592d0ecc18680b9567471812e9687550be10d547fa7ff",
+      "size": 1659
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-sprint-planning/SKILL.md",
+      "sha256": "aa828c5ceeb2aa875da324e358844700802c6ad8cb11a97cfb955f37209231de",
+      "size": 11960
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-sprint-planning/checklist.md",
+      "sha256": "11b0b1ff20657b8e7d1f3377a88f102446112f617f5d0e91ab1595a977714a97",
+      "size": 1383
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-sprint-planning/customize.toml",
+      "sha256": "f7bde2f792e8604f26122ee792c5493e270710296044b07680db7d90e886caf3",
+      "size": 1606
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-sprint-planning/sprint-status-template.yaml",
+      "sha256": "317b65e5fc0844a96b99ea923a1672e8b1f354269a8fd305691be32976a86614",
+      "size": 2266
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-sprint-status/SKILL.md",
+      "sha256": "a0dcb85d89cbbc6f20651412cf07ccc97f72f605915f03ee70208cc91fb705e9",
+      "size": 12992
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/4-implementation/bmad-sprint-status/customize.toml",
+      "sha256": "96261fd227befaa4685b0a5091d3e85299d4ae8e4404176b42f5ef2e2fb501bd",
+      "size": 1609
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/module-help.csv",
+      "sha256": "77f8c08d6230b291aa056d21a66566932ad374c944289eca6798e1bd5b6fd677",
+      "size": 6872
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/module.yaml",
+      "sha256": "de593a6656737302257b7f48207146ed0343ee816ca3642ed1f70980535a1659",
+      "size": 4469
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/v6-shims/README.md",
+      "sha256": "560ae509514329bdb1ae82ed42c569a0ca18b748d3941afc23d9dd4a56e8e57b",
+      "size": 1337
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/v6-shims/bmad-create-architecture/SKILL.md",
+      "sha256": "7c25243447767109706af5dc500d6d6ebd02fac2e1429226946627b12a7a1608",
+      "size": 2979
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/v6-shims/bmad-create-architecture/customize.toml",
+      "sha256": "618be49b0286f18dfb4b6bac3d96bf1cf062994fa5278cd327be9898e651b43c",
+      "size": 1671
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/v6-shims/bmad-create-prd/SKILL.md",
+      "sha256": "a4425a65fedf69578b941674087f787142fb69849ee6831072d351fa598c46dc",
+      "size": 2917
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/v6-shims/bmad-create-prd/customize.toml",
+      "sha256": "0c990af4c0a755402abbef893850bd542744a8b6f36c0587c9f3fb6dab6bf5e7",
+      "size": 1616
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/v6-shims/bmad-domain-research/SKILL.md",
+      "sha256": "6c873cdb44ed6444c2abfb335ad7af474fda56f4ba62c1c9c7cff42d9a243cd4",
+      "size": 1825
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/v6-shims/bmad-edit-prd/SKILL.md",
+      "sha256": "02c577a6a2592a65e6b583ade0022dccb6cd9b4baba7be094bc402415287e261",
+      "size": 2952
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/v6-shims/bmad-edit-prd/customize.toml",
+      "sha256": "35cc2dfb3eda73a0ae4dc987cac58867b25c43ce5c5a1bf552e215826ede6c22",
+      "size": 1701
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/v6-shims/bmad-market-research/SKILL.md",
+      "sha256": "b52667b85bee97ff23dd02532a2f286c72e63fd14b1afaedd6592de4d6112df6",
+      "size": 1825
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/v6-shims/bmad-technical-research/SKILL.md",
+      "sha256": "d8e6177fc03c3d815642bdf6b54b83ef37874e73118d89112f155dbda14afbfa",
+      "size": 1855
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/v6-shims/bmad-validate-prd/SKILL.md",
+      "sha256": "e2ff02eb454495ae1cb551724bfc28dff9714c01690c5a731f3963f2e3807944",
+      "size": 2965
+    },
+    {
+      "mode": "0644",
+      "path": "src/bmm-skills/v6-shims/bmad-validate-prd/customize.toml",
+      "sha256": "bfb3c8af5b81b2cdb9bb84f844f1b0dafc40d8c283effa6ad48db966b9446cef",
+      "size": 1731
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-advanced-elicitation/SKILL.md",
+      "sha256": "23a1f2903f6a19255e3ceae798afe48f6394694769b3b034502d174d683612b2",
+      "size": 5015
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-advanced-elicitation/assets/methods.csv",
+      "sha256": "d110ff5f076fb9421552b83692fde2c2d367734049169c7a55f7267a3dc7ef89",
+      "size": 14854
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-advanced-elicitation/customize.toml",
+      "sha256": "735a276edd51786ccfd2c3417d9a2b9dee4244a6102698981b3888f68d979ed9",
+      "size": 2640
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-advanced-elicitation/scripts/pick_methods.py",
+      "sha256": "60020ec4767894ea3d8707c4b61e78b679d434315be1dd29154bf64d88126fff",
+      "size": 9961
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-brainstorming/SKILL.md",
+      "sha256": "e9cb07fe86aa254f9fb7217720d77fd693bf66a0c01af8114ecdf7148159fdd1",
+      "size": 9736
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-brainstorming/assets/brain-icons.json",
+      "sha256": "a101c56e89f1d0f9e4131dfdfc19e10c746e3a61c3f92537d04a6f4897b7d331",
+      "size": 41231
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-brainstorming/assets/brain-methods.csv",
+      "sha256": "fff112eabca1a9cb8b190f8314bc47678becc5782a2372e11c83daa0e33b6dfd",
+      "size": 19519
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-brainstorming/assets/brain-selector.html",
+      "sha256": "c110919a3366bd96061f050f98503e3586185e3d1df5ff8b62a5a046c571a436",
+      "size": 244638
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-brainstorming/customize.toml",
+      "sha256": "21fcbc60c78db99ca0424da192ba0942dce2189f350f77838e4d3ecd501edd1c",
+      "size": 4313
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-brainstorming/references/converge.md",
+      "sha256": "1528c32ddc64f8061fec663306f7208d2fd4d4a90e660552b8138bda7e452dc0",
+      "size": 2961
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-brainstorming/references/finalize.md",
+      "sha256": "b6074e7fb4d86ffcf899abc50b9049b4a1f6fe550917f4be7a1c7a888477e07e",
+      "size": 4898
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-brainstorming/references/headless.md",
+      "sha256": "b8ea5951199cff7e4813e06aef35683ca0658230fa015e358cacc466b1138a42",
+      "size": 4989
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-brainstorming/references/in-chat-techniques.md",
+      "sha256": "18239464e3e4f00ea9063d015d26d6b0a696b72e7e3c5be92352da6db9a3f244",
+      "size": 2200
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-brainstorming/references/mode-autonomous.md",
+      "sha256": "d815d2c7f0f8cc0cdfa7c619eaf61f59fd78142f13c69365eda257da38b97bdf",
+      "size": 1895
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-brainstorming/references/mode-facilitator.md",
+      "sha256": "1b908498d285d190859aed00c3ba5b399d7f6aa8e94d54e95456d15cd6fe6073",
+      "size": 970
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-brainstorming/references/mode-partner.md",
+      "sha256": "caa0ed378c116def4de382f4e5a95173c6ae6cc5464f1792e7d8196360f79c8a",
+      "size": 1606
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-brainstorming/references/resume.md",
+      "sha256": "0f79535d72eefe6c55bd5ae47fe4753de8d27235cf129f10b2c596a124c26526",
+      "size": 737
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-brainstorming/scripts/brain.py",
+      "sha256": "1c75c667fc70a85055dd19d77fb21478e190874e4a61d070c3b0971dd1bd25cc",
+      "size": 37920
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-customize/SKILL.md",
+      "sha256": "a42086f90024013e2611503eb0224ac0e90b2aecac44a886ae0e38cfdda69511",
+      "size": 6701
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-customize/scripts/list_customizable_skills.py",
+      "sha256": "8787f542930b927789e7fdf12bc5a67ff08e19865903a5ad05ff2cc8fc426b66",
+      "size": 8061
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/SKILL.md",
+      "sha256": "dce5f7db03094a617cc3fcae1711b1dc7ccebe379376e67216544956d375f0d2",
+      "size": 9299
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/assets/research.template.md",
+      "sha256": "87d7cfa85fa5036b5a309b7bfb88f7934f50bb81f3cff02d2b49b4c7345cfc38",
+      "size": 460
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/customize.toml",
+      "sha256": "24d1383066034fd4fcf282279aaf0d29d21910fd1247dfe3dbad74a70e78814d",
+      "size": 9503
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/references/draft.md",
+      "sha256": "ac19b33a00ca529c3281df6076f87a833a3b11fc30915ca2c6e7590f7986b90e",
+      "size": 1909
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/references/finalize.md",
+      "sha256": "d2ba4bee615dfbca6e7725179fb5ebd856dd34a54ba3f306e25255dfd7b1d126",
+      "size": 1797
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/references/html-briefing.md",
+      "sha256": "cd3a88c1a5505fa7f1b715afc3adb34f3d64ade66f4c6b49a59f7e8cfcbe38d4",
+      "size": 2434
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/references/lifecycle.md",
+      "sha256": "2315fd9cb9223504639616b861ad593bfecb53d605efbd598ae2cf94fb6c4cdf",
+      "size": 1137
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/references/process.md",
+      "sha256": "9017d04774807a29103ea97331e555e2793f90098af65752b72f3ee09df85906",
+      "size": 1955
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/references/run.md",
+      "sha256": "8e259dc88820ac989c79620af5c37e24f00df21ac4af308ce3563c0e66c9406c",
+      "size": 9459
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/references/selection.md",
+      "sha256": "2b488c08f9550afe7fda32c2dc5d4591927afd7b9ad507fcce0ae8593c4b9d31",
+      "size": 2341
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/references/synthesis.md",
+      "sha256": "4d9ef1247ab45241f919010e94c99699abc0a6e18b5bd68fa93ae54afe59d172",
+      "size": 2788
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/references/verification.md",
+      "sha256": "0393ded4828fec69a4819d7236827910d641d09c3b61144c0211a9a78776fdd2",
+      "size": 4222
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/scripts/recon_kit.py",
+      "sha256": "8cb5187b5114b779532907383a013d40fdea1022bb9bed9a23bd8d0fdfa79e8c",
+      "size": 12417
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/types/academic-lit.md",
+      "sha256": "514b0b7b1184cb95363dedeb0c2298a9bf5c430c74146fe2114f31780fadb325",
+      "size": 1544
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/types/competitive.md",
+      "sha256": "39b53df87d295fdc4388719fcdf31ad2221e64afc136e669207f46d2727a3aec",
+      "size": 1512
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/types/domain.md",
+      "sha256": "3a34b2e62c3589f8c8d01158357ee9fba32648c9fdfe70035bb3ca971862896b",
+      "size": 1712
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/types/market.md",
+      "sha256": "81ac04499da441857672e29fcd7169436a7e239e67194288ac0d526ec514cb5e",
+      "size": 1337
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/types/technical.md",
+      "sha256": "55f71428c70547b89d67ef0c6cdad59caeb0ee21082cd1230c05618ba8d04707",
+      "size": 1654
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-deep-recon/types/user-voice.md",
+      "sha256": "1831ce46e53e8c68244d28e336c5ef9e53e64f21a00b74a817b9b2924c1e8e72",
+      "size": 1758
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-forge-idea/SKILL.md",
+      "sha256": "ed3777d2b30857c612ca3260101d0c6723306356a1a4c23e6a2f2a5883eb1e54",
+      "size": 10346
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-forge-idea/customize.toml",
+      "sha256": "ef5fadd1df3550cae00b1b442606bf84d187bfd55397563f143e1057430df45c",
+      "size": 1760
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-forge-idea/scripts/resolve_personas.py",
+      "sha256": "ec732bf4f64a78071a92884c64424680bb08f1a4d461f5a5f32e3ea29dd980b8",
+      "size": 10085
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-help/SKILL.md",
+      "sha256": "970c78ec4eb649c7eddd6de0cf83dfa9ab1e63d41f04d02423e62828cb1fb5b2",
+      "size": 4603
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-party-mode/SKILL.md",
+      "sha256": "de035b4e081fdd626a20114178f706ac222f519171d82b02139a7cec561a3487",
+      "size": 9599
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-party-mode/customize.toml",
+      "sha256": "fee7fe153c853f949dca6ad20a7c78270fc91e3e88486aefbc9956cfb4c14a84",
+      "size": 12380
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-party-mode/references/create-party.md",
+      "sha256": "2f810332c36c17d14eb55717aed48f3020acf0713bb9f932479be9fbc3856e9e",
+      "size": 9007
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-party-mode/references/mode-agent-team.md",
+      "sha256": "def759a17f4bb45463b68fb74c2b828b0a4241720b2b6cc1c9c611a1016ae9d7",
+      "size": 2052
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-party-mode/references/mode-auto.md",
+      "sha256": "a37fd24f76dfcde385890d5c5947bb6f40ca44bea86c805d267b6ae3aab39f70",
+      "size": 1095
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-party-mode/references/mode-subagent.md",
+      "sha256": "86161b24a0b13b8f9cb9309042e4249d8caefff8cc33728b084cd2ec22f9d2e1",
+      "size": 4191
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-party-mode/references/party-memory.md",
+      "sha256": "800b4b4b920bb881a7b32aaabca8559a98273799b2476d83a23e290e301fb315",
+      "size": 3903
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-party-mode/scripts/resolve_party.py",
+      "sha256": "f8e69aa130b60b8d935250c3fa0a0947fb141b78d6c3375906f5f933781b3711",
+      "size": 10985
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-review/SKILL.md",
+      "sha256": "bc46cdf66b37b4d49d414bdc5afc54747a9b19b3fecae471d451b36959343ec3",
+      "size": 7470
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-review/customize.toml",
+      "sha256": "38470c888a809ee030dc11d38868bb1ac5c1d547f06d218b711be5df53385c00",
+      "size": 5903
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-review/references/editorial-common.md",
+      "sha256": "f0cdc72ea345b2c5dc3001477b3dfcc909ca11b78f7db8865b6763d18ffc66c8",
+      "size": 5811
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-review/references/lens-adversarial.md",
+      "sha256": "b90f69ec58d15c43d286a60e0d4d36a49223ab466f351b34a309ddda449c99b2",
+      "size": 1357
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-review/references/lens-edge-case-hunter.md",
+      "sha256": "f2709e3adb40943ea0f19d0797be379caf0875eaef9a55081dc1e170e8288b68",
+      "size": 3845
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-review/references/lens-prose.md",
+      "sha256": "4cbcb1eaea8567d272f5db7c6cdfd74ed5a8aae6831053cb2f01cbfc2cb98b98",
+      "size": 1354
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-review/references/lens-structure.md",
+      "sha256": "98c08221f517133e57ef6325013935360c3365ebd7dcb8411b2050d7df507ee3",
+      "size": 1582
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-review/references/lens-verification-gap.md",
+      "sha256": "6a424589b2f95021467dd357874163c219158d5a0acdbeb0970ba9e61692f289",
+      "size": 8446
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-review/references/structure-models.md",
+      "sha256": "f84f85070e1af75f2482757aba9d37d69d805a20826d185527e598f2ba6b9292",
+      "size": 1972
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/bmad-review/scripts/word_metrics.py",
+      "sha256": "fb45007a7f3cfc18d13ee8bd4787facdaae297570193bc769456297dd33da78b",
+      "size": 3441
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/module-help.csv",
+      "sha256": "95cd2da33233264a6e14086eb5635352af0d8f9e240c2adb80e32020fa9794f3",
+      "size": 2878
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/module.yaml",
+      "sha256": "75cb5eccdd193b3282a948f57b27273112aabd619eb29fcca442d33003a914fb",
+      "size": 1104
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/v6-shims/README.md",
+      "sha256": "017900bb03baeddc0262041a6aa85bce744e8c45991dcde32ef042f9bc2a32b2",
+      "size": 1507
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/v6-shims/bmad-editorial-review/SKILL.md",
+      "sha256": "3b939876b4977bec7f2d3ee33a8871b266f25efc72768d72868ac26ff9158cd2",
+      "size": 1121
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/v6-shims/bmad-editorial-review/customize.toml",
+      "sha256": "a5c5fed539e6543121e57cc29bb65559bb6391efc806bf8759c8e29697a94a34",
+      "size": 1190
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/v6-shims/bmad-editorial-review-prose/SKILL.md",
+      "sha256": "153e7b0a240c3f5e49d6128ff1797aabc368618611d895f7f152e73fbcb12fab",
+      "size": 507
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/v6-shims/bmad-editorial-review-structure/SKILL.md",
+      "sha256": "5e45da216b00aad3955a7196df6cb8e52167f441d2dcd7c064983881691bf1e8",
+      "size": 741
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/v6-shims/bmad-review-adversarial-general/SKILL.md",
+      "sha256": "ca1d05a05eb41ec446abd862e9afe4a88b9188a3bb93bc3e70ca68ecb8740619",
+      "size": 370
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/v6-shims/bmad-review-edge-case-hunter/SKILL.md",
+      "sha256": "f9db1d7f58c5e3f7586c10c920d4dd9d6c6d6e2dff5cd49110ec1edb387937a1",
+      "size": 485
+    },
+    {
+      "mode": "0644",
+      "path": "src/core-skills/v6-shims/bmad-review-verification-gap/SKILL.md",
+      "sha256": "4ee67cc3d7355ba05d195797cb2d57d45f9046ee31781f2d133ff3484cfb53ae",
+      "size": 447
+    },
+    {
+      "mode": "0644",
+      "path": "src/scripts/memlog.py",
+      "sha256": "3b00f82ca33dc4227f715123b939514ee35c4f9c71150c894c3d8185df1b48df",
+      "size": 9187
+    },
+    {
+      "mode": "0644",
+      "path": "src/scripts/resolve_config.py",
+      "sha256": "f41149160898aea80a12861d149b10dc6b2d2b69d7d97eb65cad01f368adac03",
+      "size": 5722
+    },
+    {
+      "mode": "0755",
+      "path": "src/scripts/resolve_customization.py",
+      "sha256": "23fb9040b08c7eb975aeabc4245ef50e158516f5082eebc9ae41700641338498",
+      "size": 8310
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/README.md",
+      "sha256": "6f7e8d1d1eff02a70e0f20afbbe2be98e0348b9daaf9115fdf3cd7ad58000a73",
+      "size": 1815
+    },
+    {
+      "mode": "0755",
+      "path": "tools/installer/bmad-cli.js",
+      "sha256": "5f8f774004fc215d0450f5c01f7ff90493e96126fcbd59faaf3717a1dc74935b",
+      "size": 3392
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/cli-utils.js",
+      "sha256": "d6687074cfcdd0050d4915e74bf0b968de0315309f42dd0172179e5d5318e210",
+      "size": 3426
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/commands/install.js",
+      "sha256": "04717cbced337245c8ff5b7177263a5816645067dd74216928b74bfa27d054db",
+      "size": 6435
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/commands/status.js",
+      "sha256": "017a3d2aba56ad0a701aa4f9eeb9330fd646d851021eefadd307c0819698aac2",
+      "size": 2023
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/commands/uninstall.js",
+      "sha256": "d91d66d59b1e631e6edf5084d075b608954988a0ce6164a822d7eb7a28257eee",
+      "size": 6259
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/core/config.js",
+      "sha256": "196014af603f6bc9d0c67d9ea3b8c7abfd5fc5e2f936bff24801578dda1fb181",
+      "size": 2219
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/core/existing-install.js",
+      "sha256": "38ddf774514b814e5e50700b8d8ad5da9ed89d00dfac651173a5be21c5ee50b2",
+      "size": 3445
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/core/install-paths.js",
+      "sha256": "847659a390fe78ab260fe06c315ed8f202a947f0f8880665588ee41afbf7d486",
+      "size": 3713
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/core/installer.js",
+      "sha256": "c15625e8d418fb1774c67dd50c2acf5252cfa38f0527e9c1661331a4b15b2abc",
+      "size": 69037
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/core/legacy-warnings.js",
+      "sha256": "d8b186304f758555e6a449741322b1c15f886b6f8e50d125ed6bb11b939a4146",
+      "size": 4956
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/core/manifest-generator.js",
+      "sha256": "de0cc95648d656d36de979c5805d6d710c80e9639e7b64f6da0bf9f6344a14ad",
+      "size": 33574
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/core/manifest.js",
+      "sha256": "4a733b193a81d50f289b7a3ba17a93ac55864c3f17e23c4b476e2ad260d4d67b",
+      "size": 15629
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/core/uv-check.js",
+      "sha256": "c13732e639ead362aa08895ff5c4465ff4934e7b9a9814e7e603497ccbade79c",
+      "size": 3527
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/core/wsl-node-check.js",
+      "sha256": "486ad444fc4f6744ba646027cb071184bfd7ebcbc460975d0a4890ff6ff5d4cc",
+      "size": 3103
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/file-ops.js",
+      "sha256": "812ca93ee2923d7515d383da682a3d2f9483a2054aead54d74b8cd913c1b5138",
+      "size": 5587
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/fs-native.js",
+      "sha256": "3c8fdeff81ffe40dbd63573e4163e68067069bf8da13405835e9e5b1dab877f9",
+      "size": 2989
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/ide/_config-driven.js",
+      "sha256": "07f2b7841da46f6b8d3d55c705f08ffadf815de3aa0ee1653154a52ad4a81725",
+      "size": 37853
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/ide/manager.js",
+      "sha256": "e3f2e6a6ec1aef2249244203e826cd04f9ac6a57dd85fa64b212b649e4243690",
+      "size": 11009
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/ide/platform-codes.js",
+      "sha256": "907350974179b57096e3d690a78e9421b0b535ae77e35f306ed4d54e9cb70b20",
+      "size": 2502
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/ide/platform-codes.yaml",
+      "sha256": "9032f24bc107a3ef4deb642759c59e5a7f1b55dea79bd5ae1a2f091356101a3e",
+      "size": 8188
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/ide/shared/installed-skills.js",
+      "sha256": "8fa476c8a2ea460bd08c1c6ca13c6360dc13e85182203f135c56f957c0989077",
+      "size": 1867
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/ide/shared/path-utils.js",
+      "sha256": "f1a5c6935bcbd691dc31a49c18f8697b68604adc9356e8736a4d306ef63c1198",
+      "size": 8074
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/ide/shared/skill-manifest.js",
+      "sha256": "3d98fa1c6537496af50afca493280d70a306fef495cba3575ad2d3f5a37dd960",
+      "size": 2314
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/install-messages.yaml",
+      "sha256": "cfb09007371c134b9a3066bb51e91ae62014053eaa141e75cefda66962d7aa93",
+      "size": 1784
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/list-options.js",
+      "sha256": "02172990eb1fe59579f7a8b53f4967247a8eda3fac76212e3a47a75b4d4d85c8",
+      "size": 8273
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/message-loader.js",
+      "sha256": "93d84bfe9f53cdc3c787848086387698592be905b5f0743a04a4689ba1817cf1",
+      "size": 1956
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/modules/channel-plan.js",
+      "sha256": "5c4321ee0a2dbe96840b9fddde802c4a14282138e7426a87590c281b925e2ba2",
+      "size": 6844
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/modules/channel-resolver.js",
+      "sha256": "62527a08307550a84da32ddbd267870a4eae24179b943cf512809350f0f6bef6",
+      "size": 8419
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/modules/custom-module-manager.js",
+      "sha256": "e604e8cf42f04944be721a07556fd1109d70005a402dafe13ebffdac87c0e2f6",
+      "size": 36083
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/modules/external-manager.js",
+      "sha256": "b9ff55bfc2243a8a755ec30511d9e9921873fac0446195135cdd5801a5f12246",
+      "size": 28227
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/modules/git-env.js",
+      "sha256": "afef8cb24b7bdef94a34a9c694e1f858e0fbb3640d96a8213c8480831b3a87cc",
+      "size": 1765
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/modules/module-help-schema.js",
+      "sha256": "b1f818323ea14811f3972f2ed4012afcf8ab167e644ecce380f66cccc5687fb7",
+      "size": 650
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/modules/official-modules.js",
+      "sha256": "ae8d75a627d60fe817ea748290f6507d2d5936001b67d573648ec4efd4b3f60e",
+      "size": 86686
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/modules/plugin-resolver.js",
+      "sha256": "40bdea0ce7b71eae6036b3bbaf2c67ee14023c5f2681a1933bca75bc61803ff8",
+      "size": 13847
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/modules/version-resolver.js",
+      "sha256": "76235d71c25d5e26d99658c4e6cc867658e7a5aed98451175034b58e475e68c2",
+      "size": 9002
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/project-root.js",
+      "sha256": "92717ff98c581a6b1c10ea13c714ce1f49c895b6d406bd235652abb48d0d827d",
+      "size": 8612
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/prompts.js",
+      "sha256": "8078ece05968d124c69ab123862e837c8167b0ca9cd44a358923cef08741aa4a",
+      "size": 27719
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/set-overrides.js",
+      "sha256": "7cf33dda083ba6f9f5d2169746810fb1159a6bd4bb057e61ce0a11d7fbf8f4d4",
+      "size": 14194
+    },
+    {
+      "mode": "0644",
+      "path": "tools/installer/ui.js",
+      "sha256": "9ba37fe8528e23479bca0a733b945370bb8a64a8ea366aa7ab1e87703fb0d6d1",
+      "size": 82333
+    },
+    {
+      "mode": "0755",
+      "path": "tools/installer/yaml-format.js",
+      "sha256": "66aab12aca4e94d33eaa837d0e78fb47fd1d371ebd03113da6eb899bbe21c677",
+      "size": 7673
+    }
+  ],
+  "kind": "PowerPackageManifest",
+  "metadata": {
+    "powerId": "bmad",
+    "sourceRef": "main",
+    "sourceRepository": "nhatnguyenquang1838-coder/BMAD-METHOD",
+    "sourceSha": "bb45db4aa4496c69239f9c0629c290fd1b072fc9",
+    "version": "main-bb45db4aa449"
+  },
+  "spec": {
+    "entrypoints": [
+      "distribution/skills/bmad/SKILL.md"
+    ],
+    "generatedFiles": [
+      "POWER.yaml",
+      "SOURCE.json",
+      "VERSION"
+    ],
+    "managedPaths": [
+      "distribution/skills/bmad",
+      "src/core-skills",
+      "src/bmm-skills",
+      "tools/installer"
+    ],
+    "runtimeDataRoot": ".bmad"
+  }
+}
