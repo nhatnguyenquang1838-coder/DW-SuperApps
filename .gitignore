@@ -21,3 +21,4 @@ __pycache__/
 CLAUDE.md
 kilo.jsonc
 .agents/
+scripts/__pycache__/*
