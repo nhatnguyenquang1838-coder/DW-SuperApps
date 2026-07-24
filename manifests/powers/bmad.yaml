@@ -1,0 +1,82 @@
+apiVersion: dw.superapps/v2
+kind: Power
+metadata:
+  id: bmad
+  name: BMAD Method
+  version: 6.10.0-pinned
+  description: Structured software-delivery lifecycle covering analysis, planning, architecture, implementation, and review.
+spec:
+  category: software-delivery-method
+  path: powers/bmad
+  source: nhatnguyenquang1838-coder/BMAD-METHOD
+  provides:
+    - workflow-routing
+    - product-analysis
+    - product-planning
+    - architecture-design
+    - epic-story-decomposition
+    - implementation-guidance
+    - code-review
+  consumes:
+    - project-context
+    - requirements
+    - architecture
+    - implementation-evidence
+  requires:
+    - filesystem
+    - nodejs
+    - npm
+  optionalIntegrations:
+    - ua
+    - task-me
+    - github
+  runtimeDataRoot: .bmad
+  hosts:
+    - kiro
+    - codex
+    - copilot
+    - cline
+    - kilo
+    - claude
+    - custom
+    - cli
+  entrypoints:
+    skillCandidates:
+      - distribution/skills/bmad/SKILL.md
+      - src/core-skills/bmad-help/SKILL.md
+    cliCandidates:
+      - distribution/bin/bootstrap-bmad
+      - tools/installer/bmad-cli.js
+  permissions:
+    read:
+      - "**"
+    write:
+      - ".bmad/**"
+      - "_bmad/**"
+      - "_bmad-output/**"
+      - "docs/**"
+    deny:
+      - ".env*"
+      - "**/secrets/**"
+      - ".git/**"
+  distribution:
+    contract: dw.power-distribution/v1
+    defaultMode: release
+    modes:
+      submodule:
+        repository: nhatnguyenquang1838-coder/BMAD-METHOD
+        path: powers/bmad
+        ref: main
+      release:
+        repository: nhatnguyenquang1838-coder/DW-SuperApps
+        assetPattern: "bmad-{version}.zip"
+        checksumAssetPattern: "bmad-{version}.zip.sha256"
+      powerDist:
+        repository: nhatnguyenquang1838-coder/DW-SuperApps
+        ref: power-dist-bmad
+    providerState:
+      status: ready-unpublished
+      task: DW-PDIST-06
+      sourceCommit: bb45db4aa4496c69239f9c0629c290fd1b072fc9
+      sourceLock: plugins/bmad-method/SOURCE.lock.json
+      note: External-source wrapper is implemented on feat/bmad-power-plugin; no release or power-dist branch is published by this commit.
