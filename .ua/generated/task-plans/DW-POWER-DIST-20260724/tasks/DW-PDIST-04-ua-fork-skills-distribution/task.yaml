@@ -2,11 +2,11 @@ schema_version: "2.0"
 task_id: DW-PDIST-04
 jira: SCRUM-93
 title: Fork UA and build skills-only distribution
-repository: nhatnguyenquang1838-coder/Understand-Anything
+repository: nhatnguyenquang1838-coder/ua-power
 upstream_repository: Egonex-AI/Understand-Anything
 branch: feat/dw-power-distribution-v1
 wave: 2
-status: COMPLETED_FEATURE_BRANCH
+status: READY_WITH_PREREQUISITE
 gate_control: disabled
 objective: >-
   Establish a controlled UA fork or wrapper, lock exact upstream provenance,
@@ -14,7 +14,7 @@ objective: >-
 requirements: [R-DIST-001, R-DIST-002, R-DIST-003, R-DIST-004, R-DIST-005, R-DIST-006, R-DIST-007, R-DIST-008]
 dependencies: [DW-PDIST-01]
 blocks: [DW-PDIST-05]
-external_prerequisite: RESOLVED — user approved nhatnguyenquang1838-coder/Understand-Anything as the controlled fork.
+external_prerequisite: Create or approve nhatnguyenquang1838-coder/ua-power as a fork or wrapper repository.
 complexity: high
 risk: R2
 effort: {optimistic_hours: 9, likely_hours: 15, pessimistic_hours: 24}
