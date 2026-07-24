@@ -33,18 +33,16 @@ class PowerDistributionIntegrationTests(unittest.TestCase):
             power_id: manifest["spec"]["distribution"]["providerState"]
             for power_id, manifest in dw_cli.manifests().items()
         }
-        self.assertEqual("blocked-policy", states["gwc"]["status"])
-        self.assertEqual("ready-unpublished", states["task-me"]["status"])
-        self.assertEqual(
-            "711d6314f31a844253bb6719cd28986817768ebc",
-            states["task-me"]["sourceCommit"],
-        )
-        self.assertEqual("blocked-missing-repository", states["ua"]["status"])
-        self.assertEqual("ready-unpublished", states["bmad"]["status"])
-        self.assertEqual(
-            "bb45db4aa4496c69239f9c0629c290fd1b072fc9",
-            states["bmad"]["sourceCommit"],
-        )
+        expected_commits = {
+            "gwc": "62689ce35e279751a3bf17b5255ac258dafbe7d7",
+            "task-me": "ef0b890b1fb9140109c04cbb490b41d9aa94bfff",
+            "ua": "c0e4821c519f564d6c8b353537cf121eb52a1617",
+            "bmad": "bb45db4aa4496c69239f9c0629c290fd1b072fc9",
+        }
+        for power_id, source_commit in expected_commits.items():
+            with self.subTest(power_id=power_id):
+                self.assertEqual("ready-unpublished", states[power_id]["status"])
+                self.assertEqual(source_commit, states[power_id]["sourceCommit"])
 
     def test_submodule_source_contract_remains_canonical(self) -> None:
         for power_id, manifest in dw_cli.manifests().items():
