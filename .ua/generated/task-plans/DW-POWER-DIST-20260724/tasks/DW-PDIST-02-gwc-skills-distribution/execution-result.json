@@ -2,12 +2,19 @@
   "schemaVersion": "1.0",
   "task": "DW-PDIST-02",
   "jira": "SCRUM-91",
-  "status": "BLOCKED_POLICY",
+  "status": "COMPLETED_MERGED",
   "repository": "nhatnguyenquang1838-coder/gwc",
-  "baseCommit": "b3edbb102fb5b0e7e1532e221d89c16896f17755",
-  "writePerformed": false,
-  "gateControlUsed": false,
-  "blocker": "GWC AGENTS.md requires formal G0/G1/G2 and validated authority before repository mutation.",
-  "bypassAssessment": "HUMAN_BYPASS is forbidden for skipping G0/G1/G2 or granting repository-write authority.",
-  "nextAction": "Explicitly authorize formal GWC Gate Control for SCRUM-91, then execute the provider recipe on feat/dw-power-distribution-v1."
+  "mergeCommit": "62689ce35e279751a3bf17b5255ac258dafbe7d7",
+  "sourceLock": "distribution/power-package.yaml",
+  "g5WorkflowRun": 30110743098,
+  "validation": "PASS",
+  "releasePublished": false,
+  "powerDistPublished": false,
+  "audit": {
+    "mergeMethodDeviation": true,
+    "approvedMethod": "squash",
+    "observedMethod": "merge_commit",
+    "contentDrift": false
+  },
+  "definitionOfDoneMet": true
 }
