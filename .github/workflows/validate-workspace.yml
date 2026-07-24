@@ -81,8 +81,26 @@ jobs:
       - name: Test package consumer
         run: python -m unittest -v tests.test_power_package_consumer
 
-      - name: Test BMAD Power plugin
-        run: python -m unittest -v tests.test_bmad_power_plugin
+      - name: Test BMAD source lock and graph
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_source_lock_and_graph_use_same_commit
+
+      - name: Test BMAD graph closure
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_knowledge_graph_references_are_closed
+
+      - name: Test BMAD distribution recipe
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_distribution_recipe_is_valid_and_skills_only
+
+      - name: Test BMAD Power manifest
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_power_manifest_validates
+
+      - name: Test BMAD host mapping
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_bootstrap_host_mapping
+
+      - name: Test BMAD deterministic package
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_external_source_overlay_builds_a_deterministic_package
+
+      - name: Test BMAD workflow modes
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_workflow_has_manual_and_scheduled_modes
 
       - name: Validate all host adapters
         run: |
