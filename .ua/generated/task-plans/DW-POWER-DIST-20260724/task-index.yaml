@@ -5,7 +5,7 @@ status: IN_PROGRESS
 gate_control: disabled
 tasks:
   - {task_id: DW-PDIST-01, jira: SCRUM-90, status: IMPLEMENTED_STATIC_VALIDATED, wave: 1, folder: tasks/DW-PDIST-01-dw-app-distribution-foundation, repository: nhatnguyenquang1838-coder/DW-SuperApps, dependencies: []}
-  - {task_id: DW-PDIST-02, jira: SCRUM-91, status: READY, wave: 2, folder: tasks/DW-PDIST-02-gwc-skills-distribution, repository: nhatnguyenquang1838-coder/gwc, dependencies: [DW-PDIST-01]}
-  - {task_id: DW-PDIST-03, jira: SCRUM-92, status: READY, wave: 2, folder: tasks/DW-PDIST-03-task-me-skills-distribution, repository: nhatnguyenquang1838-coder/task-me, dependencies: [DW-PDIST-01]}
-  - {task_id: DW-PDIST-04, jira: SCRUM-93, status: READY_WITH_PREREQUISITE, wave: 2, folder: tasks/DW-PDIST-04-ua-fork-skills-distribution, repository: nhatnguyenquang1838-coder/ua-power, dependencies: [DW-PDIST-01]}
-  - {task_id: DW-PDIST-05, jira: SCRUM-94, status: READY_AFTER_DEPENDENCIES, wave: 3, folder: tasks/DW-PDIST-05-merge-integration-hygiene, repository: nhatnguyenquang1838-coder/DW-SuperApps, dependencies: [DW-PDIST-01, DW-PDIST-02, DW-PDIST-03, DW-PDIST-04]}
+  - {task_id: DW-PDIST-02, jira: SCRUM-91, status: BLOCKED_POLICY, wave: 2, folder: tasks/DW-PDIST-02-gwc-skills-distribution, repository: nhatnguyenquang1838-coder/gwc, dependencies: [DW-PDIST-01]}
+  - {task_id: DW-PDIST-03, jira: SCRUM-92, status: COMPLETED_FEATURE_BRANCH, wave: 2, folder: tasks/DW-PDIST-03-task-me-skills-distribution, repository: nhatnguyenquang1838-coder/task-me, dependencies: [DW-PDIST-01]}
+  - {task_id: DW-PDIST-04, jira: SCRUM-93, status: COMPLETED_FEATURE_BRANCH, wave: 2, folder: tasks/DW-PDIST-04-ua-fork-skills-distribution, repository: nhatnguyenquang1838-coder/Understand-Anything, dependencies: [DW-PDIST-01]}
+  - {task_id: DW-PDIST-05, jira: SCRUM-94, status: PARTIAL_BLOCKED, wave: 3, folder: tasks/DW-PDIST-05-merge-integration-hygiene, repository: nhatnguyenquang1838-coder/DW-SuperApps, dependencies: [DW-PDIST-01, DW-PDIST-02, DW-PDIST-03, DW-PDIST-04]}
