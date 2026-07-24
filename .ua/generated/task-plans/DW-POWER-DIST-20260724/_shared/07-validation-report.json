@@ -1,0 +1,6 @@
+{
+  "status":"PASS_WITH_EXTERNAL_PREREQUISITE",
+  "checks":{"task_count":"PASS","unique_folders":"PASS","dependency_dag":"PASS","jira_projection":"PASS","shared_branch":"PASS","gate_control_disabled":"PASS"},
+  "prerequisite":"DW-PDIST-04 must create or fork the controlled ua-power repository.",
+  "note":"Physical code changes span multiple Git repositories; the same logical branch name is reused and DW-SuperApps is the final integration branch."
+}
