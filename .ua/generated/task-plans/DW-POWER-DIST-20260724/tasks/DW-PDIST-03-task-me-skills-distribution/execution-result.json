@@ -2,18 +2,16 @@
   "schemaVersion": "1.0",
   "task": "DW-PDIST-03",
   "jira": "SCRUM-92",
-  "status": "COMPLETED_FEATURE_BRANCH",
+  "status": "COMPLETED_MERGED",
   "repository": "nhatnguyenquang1838-coder/task-me",
-  "branch": "feat/dw-power-distribution-v1",
-  "baseCommit": "9fb9ee932af4d1727c3ea67410d6ab7e57b4c8ab",
-  "head": "711d6314f31a844253bb6719cd28986817768ebc",
-  "filesAdded": 6,
+  "mergeCommit": "ef0b890b1fb9140109c04cbb490b41d9aa94bfff",
+  "sourceLock": "distribution/power-package.yaml",
   "releasePublished": false,
   "powerDistPublished": false,
   "validation": [
-    "Recipe parsed against DW distribution contract",
-    "All five skill reference files resolved",
-    "Provider diff is one commit ahead of main",
-    "Synthetic package lifecycle validation passed"
-  ]
+    "Provider recipe and dependency checks passed",
+    "Standalone package installation and doctor checks passed",
+    "Repository CI passed; Vercel deployment failures are separately classified as missing deployment configuration"
+  ],
+  "definitionOfDoneMet": true
 }
