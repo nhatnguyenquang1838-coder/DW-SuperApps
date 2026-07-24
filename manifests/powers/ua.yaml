@@ -48,3 +48,24 @@ spec:
     deny:
       - ".env*"
       - "**/secrets/**"
+  distribution:
+    contract: dw.power-distribution/v1
+    defaultMode: submodule
+    modes:
+      submodule:
+        repository: Egonex-AI/Understand-Anything
+        path: powers/ua
+        ref: main
+      release:
+        repository: nhatnguyenquang1838-coder/ua-power
+        assetPattern: "ua-{version}.zip"
+        checksumAssetPattern: "ua-{version}.zip.sha256"
+      powerDist:
+        repository: nhatnguyenquang1838-coder/ua-power
+        ref: power-dist
+    providerState:
+      status: blocked-missing-repository
+      task: DW-PDIST-04
+      sourceCommit: null
+      sourceLock: null
+      note: Controlled ua-power fork or wrapper repository must be created before provider implementation.

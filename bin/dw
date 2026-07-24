@@ -17,6 +17,18 @@ case "${1:-}" in
     ;;
 esac
 
+if [[ "${1:-}" == "power" ]]; then
+  case "${2:-}" in
+    install|configure|doctor|history|rollback|uninstall)
+      shift
+      # shellcheck source=../scripts/python-resolver.sh
+      source "$ROOT/scripts/python-resolver.sh"
+      dw_exec_python "$ROOT/scripts/dw_power_package.py" "$@"
+      exit $?
+      ;;
+  esac
+fi
+
 # shellcheck source=../scripts/python-resolver.sh
 source "$ROOT/scripts/python-resolver.sh"
 dw_exec_python "$ROOT/scripts/dw_entry.py" "$@"
