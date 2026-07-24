@@ -1,0 +1,16 @@
+apiVersion: dw.superapps/v1
+kind: PowerConsumerBinding
+metadata:
+  powerId: demo
+  consumerId: fixture
+spec:
+  hosts: [custom, cli]
+  permissions:
+    read: ["**"]
+    write: [".demo/**"]
+    deny: [".env*", "**/secrets/**"]
+  integrations:
+    github: false
+    jira: false
+  allowNetwork: false
+  allowExternalWrites: false
