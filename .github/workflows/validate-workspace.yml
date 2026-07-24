@@ -97,7 +97,27 @@ jobs:
         run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_bootstrap_host_mapping
 
       - name: Test BMAD deterministic package
-        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_external_source_overlay_builds_a_deterministic_package
+        id: bmad_deterministic
+        continue-on-error: true
+        run: >-
+          python -m unittest -v
+          tests.test_bmad_power_plugin.BmadPowerPluginTests.test_external_source_overlay_builds_a_deterministic_package
+          > bmad-deterministic.log 2>&1
+
+      - name: Upload BMAD deterministic test log
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bmad-deterministic-test-log
+          path: bmad-deterministic.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Fail on BMAD deterministic test
+        if: steps.bmad_deterministic.outcome == 'failure'
+        run: |
+          cat bmad-deterministic.log
+          exit 1
 
       - name: Test BMAD workflow modes
         run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_workflow_has_manual_and_scheduled_modes
