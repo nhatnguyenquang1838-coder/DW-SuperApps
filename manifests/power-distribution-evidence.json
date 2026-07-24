@@ -28,29 +28,15 @@
     "ua": {
       "task": "DW-PDIST-04",
       "jira": "SCRUM-93",
-      "repository": "nhatnguyenquang1838-coder/Understand-Anything",
-      "branch": "feat/dw-power-distribution-v1",
-      "head": "7797a0e6ecdf3c964e5fa723f9d19fb3637d4ea5",
-      "sourceLock": "SOURCE.lock.json",
+      "repository": "nhatnguyenquang1838-coder/ua-power",
       "upstreamRepository": "Egonex-AI/Understand-Anything",
       "upstreamCommit": "6ae71878beb50226a1e4b7e2f52ac6468c86f74b",
-      "status": "ready-unpublished",
-      "releasePublished": false,
-      "powerDistPublished": false,
-      "validation": [
-        "exact source lock",
-        "fail-closed upstream drift detection",
-        "headless allowlist recipe",
-        "runtime dependency path verification",
-        "config schema validation"
-      ]
+      "status": "blocked-missing-repository",
+      "reason": "Controlled fork or wrapper repository does not exist and repository creation is unavailable."
     }
   },
   "integration": {
     "status": "partial-blocked",
-    "remainingBlockers": [
-      "DW-PDIST-02 blocked by GWC policy"
-    ],
     "legacySubmoduleModePreserved": true,
     "consumerCommands": [
       "install",
