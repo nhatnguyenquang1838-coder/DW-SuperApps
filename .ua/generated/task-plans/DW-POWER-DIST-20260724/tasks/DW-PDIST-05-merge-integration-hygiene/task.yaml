@@ -1,0 +1,37 @@
+schema_version: "2.0"
+task_id: DW-PDIST-05
+jira: SCRUM-94
+title: Merge and hygiene Power distribution work
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+branch: feat/dw-power-distribution-v1
+wave: 3
+status: READY_AFTER_DEPENDENCIES
+gate_control: disabled
+objective: >-
+  Integrate Tasks 01-04, normalize all distribution contracts and outputs,
+  update DW consumption, and perform final repository/package hygiene.
+requirements: [R-DIST-001, R-DIST-002, R-DIST-003, R-DIST-004, R-DIST-005, R-DIST-006, R-DIST-007, R-DIST-008]
+dependencies: [DW-PDIST-01, DW-PDIST-02, DW-PDIST-03, DW-PDIST-04]
+blocks: []
+complexity: high
+risk: R2
+effort: {optimistic_hours: 10, likely_hours: 18, pessimistic_hours: 28}
+scope:
+  include:
+    - reconcile provider commits and release metadata
+    - extend DW Power manifests for release and power-dist sources
+    - add install/configure/doctor/history/rollback consumer commands
+    - cross-package compatibility and forbidden-content validation
+    - branch and package hygiene
+  exclude:
+    - merge to protected main
+    - stable production release or deployment
+    - credential changes
+    - GWC gate transitions or approval artifacts
+definition_of_done:
+  - GWC, Task Me, and UA conform to one distribution contract.
+  - Release ZIP and power-dist match for every Power.
+  - DW-SuperApps installs, configures, doctors, upgrades, and rolls back each Power.
+  - Legacy submodule mode remains usable during migration.
+  - No forbidden, temporary, generated plan/task, UI, secret, or populated runtime file remains.
+  - Branch is internally consistent and ready for later governed review.
