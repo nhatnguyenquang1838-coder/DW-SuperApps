@@ -1,0 +1,26 @@
+{
+  "branch": "feat/dw-power-distribution-v1",
+  "canonicalEvidencePreserved": [
+    "manifests/power-distribution-evidence.json",
+    "manifests/evidence/SCRUM-131/validation-evidence.json",
+    "manifests/evidence/SCRUM-131/SHA256SUMS.txt"
+  ],
+  "checks": {
+    "cacheDirectoriesAbsent": true,
+    "environmentFilesAbsent": true,
+    "generatedTaskPlanAbsent": true,
+    "secretCredentialDirectoriesAbsent": true,
+    "staleTemporaryWorkflowsAbsent": true
+  },
+  "classification": "PASS",
+  "cleanupSourceHead": "fb57cea56c92bb484b273c6f82c30e25423d0a78",
+  "generatedAt": "2026-07-24T19:11:06.640717Z",
+  "parent": "SCRUM-94",
+  "removedListSha256": "648e7a79c1caf1eb6ca05c678a9b3b4d8749b71fed0cf1535e10e83e1d3219d9",
+  "removedRoot": ".ua/generated/task-plans/DW-POWER-DIST-20260724",
+  "removedTrackedFileCount": 53,
+  "repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+  "schemaVersion": "1.0",
+  "task": "SCRUM-132",
+  "workflowRunId": 30119810596
+}
