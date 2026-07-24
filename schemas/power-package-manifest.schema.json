@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw.superapps/schemas/power-package-manifest.schema.json",
+  "title": "DW Power Package Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec", "files"],
+  "properties": {
+    "apiVersion": {"const": "dw.superapps/v1"},
+    "kind": {"const": "PowerPackageManifest"},
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["powerId", "version", "sourceSha"],
+      "properties": {
+        "powerId": {"type": "string"},
+        "version": {"type": "string", "minLength": 1},
+        "sourceSha": {"type": "string", "minLength": 7},
+        "sourceRepository": {"type": "string"},
+        "sourceRef": {"type": "string"}
+      }
+    },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entrypoints", "runtimeDataRoot", "generatedFiles"],
+      "properties": {
+        "entrypoints": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string"}
+        },
+        "runtimeDataRoot": {"type": "string"},
+        "managedPaths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string"}
+        },
+        "generatedFiles": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "size", "sha256", "mode"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "size": {"type": "integer", "minimum": 0},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "mode": {"type": "string", "pattern": "^[0-7]{4}$"}
+        }
+      }
+    }
+  }
+}
