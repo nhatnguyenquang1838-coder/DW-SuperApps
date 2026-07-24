@@ -13,7 +13,7 @@ permissions:
 jobs:
   setup:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 20
     steps:
       - name: Checkout exact branch
         uses: actions/checkout@v4
@@ -22,16 +22,13 @@ jobs:
           fetch-depth: 0
           submodules: false
 
-      - name: Initialize reviewed public Power submodules
-        run: |
-          set -euo pipefail
-          git submodule sync -- powers/gwc powers/task-me powers/ua
-          git submodule update --init powers/gwc powers/task-me powers/ua
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Install runtime dependencies
+        run: python -m pip install -r requirements-dev.txt
 
       - name: Install DW launcher without shell mutation
         run: |
@@ -39,27 +36,28 @@ jobs:
           bash bin/dw install --shell none 2>&1 | tee setup-install.log
           "$HOME/.local/bin/dw" --version 2>&1 | tee setup-version.log
 
-      - name: Initialize and verify Kiro adapter
+      - name: Initialize reviewed Power submodules
         run: |
           set -o pipefail
-          "$HOME/.local/bin/dw" init powers --host kiro 2>&1 | tee setup-kiro-init.log
+          "$HOME/.local/bin/dw" power init powers 2>&1 | tee setup-power-init.log
+          "$HOME/.local/bin/dw" power status powers 2>&1 | tee setup-power-status.log
+
+      - name: Install and verify Kiro wrappers
+        run: |
+          set -o pipefail
+          "$HOME/.local/bin/dw" host install kiro --mode wrapper 2>&1 | tee setup-kiro-init.log
           "$HOME/.local/bin/dw" host status kiro 2>&1 | tee setup-kiro-status.log
 
-      - name: Initialize and verify Codex adapter
+      - name: Install and verify Codex wrappers
         run: |
           set -o pipefail
-          "$HOME/.local/bin/dw" init powers --host codex 2>&1 | tee setup-codex-init.log
+          "$HOME/.local/bin/dw" host install codex --mode wrapper 2>&1 | tee setup-codex-init.log
           "$HOME/.local/bin/dw" host status codex 2>&1 | tee setup-codex-status.log
 
-      - name: Validate workspace status and doctor
+      - name: Validate workspace and generate prompts
         run: |
           set -o pipefail
-          "$HOME/.local/bin/dw" status powers 2>&1 | tee setup-status.log
-          "$HOME/.local/bin/dw" doctor powers --offline 2>&1 | tee setup-doctor.log
-
-      - name: Generate GWC UA and Task Me prompts
-        run: |
-          set -o pipefail
+          "$HOME/.local/bin/dw" validate 2>&1 | tee setup-validate.log
           "$HOME/.local/bin/dw" power prompt gwc --system rental-home --task "Recover the governed task state" 2>&1 | tee setup-prompt-gwc.log
           "$HOME/.local/bin/dw" power prompt ua --system rental-home --task "Refresh the architecture knowledge graph" 2>&1 | tee setup-prompt-ua.log
           "$HOME/.local/bin/dw" power prompt task-me --system rental-home --task "Create an impact-aware implementation plan" 2>&1 | tee setup-prompt-task-me.log
@@ -90,22 +88,20 @@ jobs:
               'branch': 'feat/dw-power-distribution-v1',
               'validatedHead': os.environ['VALIDATED_HEAD'],
               'workflowRunId': int(os.environ['GITHUB_RUN_ID']),
+              'workflowRunAttempt': int(os.environ['GITHUB_RUN_ATTEMPT']),
               'classification': 'PASS',
               'validatedFlows': [
                   'launcher install with shell=none',
-                  'Kiro Power initialization and host status',
-                  'Codex Power initialization and host status',
-                  'Power status and offline doctor',
-                  'GWC prompt generation',
-                  'UA prompt generation',
-                  'Task Me prompt generation',
+                  'reviewed Power submodule init and status',
+                  'Kiro wrapper install and status',
+                  'Codex wrapper install and status',
+                  'workspace validation',
+                  'GWC, UA and Task Me prompt generation',
               ],
               'vercel': {
                   'classification': 'OPTIONAL_DEPLOYMENT_CONFIGURATION',
                   'selectedStrategy': 'gate deploy jobs with vars.VERCEL_DEPLOY_ENABLED == true',
-                  'requiredSecretsWhenEnabled': [
-                      'VERCEL_TOKEN', 'VERCEL_ORG_ID', 'VERCEL_PROJECT_ID'
-                  ],
+                  'requiredSecretsWhenEnabled': ['VERCEL_TOKEN', 'VERCEL_ORG_ID', 'VERCEL_PROJECT_ID'],
                   'credentialsModified': False,
                   'deploymentPerformed': False,
               },
