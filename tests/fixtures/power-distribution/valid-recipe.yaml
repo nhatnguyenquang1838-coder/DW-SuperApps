@@ -1,0 +1,29 @@
+apiVersion: dw.superapps/v1
+kind: PowerDistribution
+metadata:
+  id: demo
+  name: Demo Power
+  description: Minimal fixture.
+spec:
+  source:
+    repository: example/demo
+    defaultRef: main
+  package:
+    entrypoints:
+      - skills/demo/SKILL.md
+    managedPaths:
+      - .agents/skills/demo
+    runtimeTemplates: true
+  include:
+    - skills/demo/**
+    - README.md
+  exclude:
+    - "**/*.tmp"
+  forbidden:
+    paths:
+      - docs/private/**
+    contentPatterns:
+      - "FIXTURE_SECRET_[A-Z0-9]+"
+  runtime:
+    dataRoot: .demo
+    configRequired: false

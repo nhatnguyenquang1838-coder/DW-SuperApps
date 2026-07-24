@@ -1,0 +1,238 @@
+name: Publish BMAD Power distribution
+
+on:
+  push:
+    branches:
+      - main
+      - feat/bmad-power-plugin
+    paths:
+      - .github/workflows/publish-bmad-power.yml
+      - plugins/bmad-method/**
+      - manifests/powers/bmad.yaml
+      - tests/test_bmad_power_plugin.py
+      - tests/test_power_*.py
+      - scripts/power_dist.py
+      - templates/power-runtime/**
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/publish-bmad-power.yml
+      - plugins/bmad-method/**
+      - manifests/powers/bmad.yaml
+      - tests/test_bmad_power_plugin.py
+      - tests/test_power_*.py
+      - scripts/power_dist.py
+      - templates/power-runtime/**
+  workflow_dispatch:
+    inputs:
+      bmad_ref:
+        description: BMAD branch, tag, or commit to package.
+        required: false
+        default: main
+        type: string
+      publish_release:
+        description: Publish the immutable GitHub Release and power-dist-bmad branch.
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bmad-power-publisher-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out DW distribution foundation
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - name: Resolve BMAD source ref
+        id: source_ref
+        shell: bash
+        env:
+          INPUT_REF: ${{ inputs.bmad_ref }}
+        run: |
+          set -euo pipefail
+          ref="${INPUT_REF:-main}"
+          echo "value=$ref" >> "$GITHUB_OUTPUT"
+
+      - name: Check out BMAD source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: nhatnguyenquang1838-coder/BMAD-METHOD
+          ref: ${{ steps.source_ref.outputs.value }}
+          path: .provider
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.12"
+
+      - name: Install distribution dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Run distribution contract tests
+        run: >-
+          python -m unittest -v
+          tests.test_power_distribution_contract
+          tests.test_power_dist_builder
+          tests.test_power_distribution_integration
+          tests.test_power_runtime_installer
+          tests.test_power_package_consumer
+          tests.test_bmad_power_plugin
+
+      - name: Overlay DW plugin files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .provider/distribution
+          cp -a plugins/bmad-method/overlay/distribution/. .provider/distribution/
+          cp plugins/bmad-method/distribution/power-package.yaml \
+            .provider/distribution/power-package.yaml
+
+      - name: Resolve immutable package identity
+        id: identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_sha="$(git -C .provider rev-parse HEAD)"
+          source_epoch="$(git -C .provider show -s --format=%ct HEAD)"
+          short_sha="${source_sha:0:12}"
+          version="main-${short_sha}"
+          tag="bmad-${version}"
+          echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
+          echo "source_epoch=$source_epoch" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Validate recipe
+        run: >-
+          python scripts/power_dist.py validate-recipe
+          --recipe .provider/distribution/power-package.yaml
+
+      - name: Build deterministic skills-only package
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/power_dist.py build \
+            --recipe .provider/distribution/power-package.yaml \
+            --source .provider \
+            --output .power-dist-output \
+            --version "${{ steps.identity.outputs.version }}" \
+            --source-repository "nhatnguyenquang1838-coder/BMAD-METHOD" \
+            --source-ref "${{ steps.source_ref.outputs.value }}" \
+            --source-sha "${{ steps.identity.outputs.source_sha }}" \
+            --source-date-epoch "${{ steps.identity.outputs.source_epoch }}" \
+            --templates-root templates/power-runtime \
+            > .power-dist-result.json
+          cat .power-dist-result.json
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          result = json.loads(Path(".power-dist-result.json").read_text(encoding="utf-8"))
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as handle:
+              for key in ("archive", "checksum", "staging_root", "sha256"):
+                  handle.write(f"{key}={result[key]}\n")
+          PY
+
+      - name: Verify, install, and preflight bootstrap
+        shell: bash
+        run: |
+          set -euo pipefail
+          staging="${{ steps.build.outputs.staging_root }}"
+          python scripts/power_dist.py verify --package-root "$staging"
+          consumer="$(mktemp -d)"
+          python "$staging/lib/power_runtime.py" install --target "$consumer"
+          python "$staging/lib/power_runtime.py" doctor --target "$consumer"
+          python "$staging/distribution/lib/bootstrap_bmad.py" \
+            --target "$consumer" --host codex --check
+          python "$staging/lib/power_runtime.py" uninstall --target "$consumer"
+
+      - name: Upload validated package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ steps.identity.outputs.tag }}
+          path: |
+            ${{ steps.build.outputs.archive }}
+            ${{ steps.build.outputs.checksum }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Resolve publication mode
+        id: publish
+        shell: bash
+        env:
+          REQUESTED: ${{ inputs.publish_release }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          value=false
+          if [[ "$EVENT_NAME" == "schedule" || "$REQUESTED" == "true" ]]; then
+            value=true
+          elif [[ "$EVENT_NAME" == "push" && "$REF_NAME" == "main" ]]; then
+            value=true
+          fi
+          echo "value=$value" >> "$GITHUB_OUTPUT"
+
+      - name: Publish immutable release
+        if: steps.publish.outputs.value == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.identity.outputs.tag }}
+          ARCHIVE: ${{ steps.build.outputs.archive }}
+          CHECKSUM: ${{ steps.build.outputs.checksum }}
+          SOURCE_SHA: ${{ steps.identity.outputs.source_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; source commit was already published."
+          else
+            gh release create "$TAG" "$ARCHIVE" "$CHECKSUM" \
+              --title "BMAD Power $TAG" \
+              --notes "BMAD source: nhatnguyenquang1838-coder/BMAD-METHOD@$SOURCE_SHA"
+          fi
+
+      - name: Synchronize power-dist-bmad
+        if: steps.publish.outputs.value == 'true'
+        env:
+          STAGING_ROOT: ${{ steps.build.outputs.staging_root }}
+          VERSION: ${{ steps.identity.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch="power-dist-bmad"
+          worktree="$(mktemp -d)"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            git fetch origin "$branch"
+            git worktree add "$worktree" "origin/$branch"
+            git -C "$worktree" switch -c "$branch"
+          else
+            git worktree add --detach "$worktree"
+            git -C "$worktree" switch --orphan "$branch"
+          fi
+          find "$worktree" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a "$STAGING_ROOT"/. "$worktree"/
+          git -C "$worktree" add -A
+          git -C "$worktree" config user.name "github-actions[bot]"
+          git -C "$worktree" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git -C "$worktree" diff --cached --quiet; then
+            echo "power-dist-bmad already matches the validated package"
+          else
+            git -C "$worktree" commit -m "dist(bmad): publish $VERSION"
+            git -C "$worktree" push origin "HEAD:$branch"
+          fi

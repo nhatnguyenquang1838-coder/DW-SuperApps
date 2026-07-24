@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "1.0",
+  "sourceRepository": "nhatnguyenquang1838-coder/BMAD-METHOD",
+  "sourceRef": "main",
+  "sourceCommit": "bb45db4aa4496c69239f9c0629c290fd1b072fc9",
+  "sourceVersion": "6.10.0",
+  "distributionContract": "dw.power-distribution/v1",
+  "analysisGraph": "plugins/bmad-method/knowledge/knowledge-graph.json"
+}

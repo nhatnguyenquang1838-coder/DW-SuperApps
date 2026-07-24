@@ -39,9 +39,11 @@ systems:
       - gwc
       - ua
       - task-me
+      - bmad
 data_ownership:
   policy: system-owned
   roots:
     ua: .ua
     task_me: .task-me
     gwc: .gwc
+    bmad: .bmad

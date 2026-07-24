@@ -15,6 +15,7 @@ This repository is an orchestration workspace for multiple AI hosts, reusable Po
 - `powers/gwc`: governance and delivery workflows.
 - `powers/ua`: semantic/codebase knowledge generation and query.
 - `powers/task-me`: impact analysis and implementation task planning.
+- `bmad` distribution: structured analysis-to-implementation delivery workflows packaged from pinned external BMAD source.
 
 ## Host neutrality
 

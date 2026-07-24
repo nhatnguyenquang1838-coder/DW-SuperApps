@@ -1,0 +1,15 @@
+apiVersion: dw.superapps/v1
+kind: PowerDistribution
+metadata:
+  id: demo
+  name: Demo Power
+spec:
+  source:
+    repository: example/demo
+  package:
+    entrypoints:
+      - skills/demo/SKILL.md
+  include:
+    - /etc/passwd
+  runtime:
+    dataRoot: .demo

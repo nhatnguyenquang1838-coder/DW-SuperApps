@@ -181,6 +181,142 @@
             }
           },
           "additionalProperties": false
+        },
+        "distribution": {
+          "type": "object",
+          "required": [
+            "contract",
+            "defaultMode",
+            "modes",
+            "providerState"
+          ],
+          "properties": {
+            "contract": {
+              "const": "dw.power-distribution/v1"
+            },
+            "defaultMode": {
+              "enum": [
+                "submodule",
+                "release",
+                "power-dist"
+              ]
+            },
+            "modes": {
+              "type": "object",
+              "required": [
+                "submodule",
+                "release",
+                "powerDist"
+              ],
+              "properties": {
+                "submodule": {
+                  "type": "object",
+                  "required": [
+                    "repository",
+                    "path",
+                    "ref"
+                  ],
+                  "properties": {
+                    "repository": {
+                      "type": "string",
+                      "pattern": "^[^/\\s]+/[^/\\s]+$"
+                    },
+                    "path": {
+                      "type": "string",
+                      "pattern": "^powers/[a-z0-9][a-z0-9-]*$"
+                    },
+                    "ref": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "release": {
+                  "type": "object",
+                  "required": [
+                    "repository",
+                    "assetPattern",
+                    "checksumAssetPattern"
+                  ],
+                  "properties": {
+                    "repository": {
+                      "type": "string",
+                      "pattern": "^[^/\\s]+/[^/\\s]+$"
+                    },
+                    "assetPattern": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "checksumAssetPattern": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "powerDist": {
+                  "type": "object",
+                  "required": [
+                    "repository",
+                    "ref"
+                  ],
+                  "properties": {
+                    "repository": {
+                      "type": "string",
+                      "pattern": "^[^/\\s]+/[^/\\s]+$"
+                    },
+                    "ref": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "providerState": {
+              "type": "object",
+              "required": [
+                "status",
+                "task"
+              ],
+              "properties": {
+                "status": {
+                  "enum": [
+                    "ready-unpublished",
+                    "published",
+                    "blocked-policy",
+                    "blocked-missing-repository"
+                  ]
+                },
+                "task": {
+                  "type": "string",
+                  "pattern": "^DW-PDIST-[0-9]{2}$"
+                },
+                "sourceCommit": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "pattern": "^[0-9a-f]{40}$"
+                },
+                "sourceLock": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "minLength": 1
+                },
+                "note": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

@@ -1,0 +1,13 @@
+{
+  "task_id":"DW-PDIST-02",
+  "jira":"SCRUM-91",
+  "repository":"nhatnguyenquang1838-coder/gwc",
+  "base_sha":"b3edbb102fb5b0e7e1532e221d89c16896f17755",
+  "verified_paths":["skills/gwc-g1/SKILL.md","AGENTS.md","agents/chatgpt-agent/agent-instructions.md","projects/gwc/package.yaml"],
+  "observations":[
+    "The current GWC project package is broad and includes a large governance catalog.",
+    "The DW manifest identifies the preferred skill and CLI candidates.",
+    "The distribution must be curated from skill dependencies rather than copying the project package wholesale."
+  ],
+  "confidence":0.9
+}
