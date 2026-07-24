@@ -81,6 +81,14 @@ class PowerDistributionContractTests(unittest.TestCase):
         with self.assertRaises(jsonschema.ValidationError):
             jsonschema.Draft202012Validator(schema).validate(manifest)
 
+    def test_reusable_publisher_stages_outside_provider_source(self) -> None:
+        workflow = (
+            ROOT / ".github" / "workflows" / "reusable-publish-power.yml"
+        ).read_text(encoding="utf-8")
+        self.assertIn('--output "${RUNNER_TEMP}/power-dist-output"', workflow)
+        self.assertIn('Path(os.environ["RUNNER_TEMP"]) / "power-dist-result.json"', workflow)
+        self.assertNotIn("--output .power-dist-output", workflow)
+
 
 if __name__ == "__main__":
     unittest.main()

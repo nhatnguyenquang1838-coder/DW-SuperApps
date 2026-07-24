@@ -96,15 +96,15 @@ jobs:
           python .dw-power-dist/scripts/power_dist.py build \
             --recipe "${{ inputs.recipe_path }}" \
             --source . \
-            --output .power-dist-output \
+            --output "${RUNNER_TEMP}/power-dist-output" \
             --version "${{ inputs.package_version }}" \
             --source-repository "${{ github.repository }}" \
             --source-ref "${{ github.ref_name }}" \
             --source-sha "${{ github.sha }}" \
             --source-date-epoch "${{ inputs.source_date_epoch }}" \
             --templates-root .dw-power-dist/templates/power-runtime \
-            > .power-dist-result.json
-          cat .power-dist-result.json
+            > "${RUNNER_TEMP}/power-dist-result.json"
+          cat "${RUNNER_TEMP}/power-dist-result.json"
 
       - name: Export build result
         id: result
@@ -115,7 +115,8 @@ jobs:
           import os
           from pathlib import Path
 
-          result = json.loads(Path(".power-dist-result.json").read_text())
+          result_path = Path(os.environ["RUNNER_TEMP"]) / "power-dist-result.json"
+          result = json.loads(result_path.read_text())
           with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as handle:
               handle.write(f"archive={result['archive']}\n")
               handle.write(f"checksum={result['checksum']}\n")

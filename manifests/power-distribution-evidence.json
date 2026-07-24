@@ -3,7 +3,7 @@
   "task": "DW-PDIST-05",
   "foundation": {
     "repository": "nhatnguyenquang1838-coder/DW-SuperApps",
-    "branch": "feat/dw-power-distribution-v1",
+    "integrationMergeCommit": "99c3881919ead2e209f5a6f73c31374d5f9e242b",
     "task1Head": "4e552ea3d915a4790814b08b3155c66e3c5736a1",
     "reconciliationCommit": "ae0f217625eeec01a008d39f6d3324f2e9617ed1"
   },
@@ -12,11 +12,16 @@
       "task": "DW-PDIST-02",
       "jira": "SCRUM-91",
       "repository": "nhatnguyenquang1838-coder/gwc",
-      "mergeCommit": "62689ce35e279751a3bf17b5255ac258dafbe7d7",
+      "sourceCommit": "62689ce35e279751a3bf17b5255ac258dafbe7d7",
       "sourceLock": "distribution/power-package.yaml",
-      "status": "ready-unpublished",
-      "releasePublished": false,
-      "powerDistPublished": false,
+      "status": "published",
+      "version": "main-20260725.1-62689ce",
+      "publicationRunId": 30123787605,
+      "artifactId": 8608415229,
+      "artifactDigest": "sha256:80980d6c0f7924f005dfb8a017ae9ed6082ed9f21ec49dc2f660bab086bf4ae0",
+      "releasePublished": true,
+      "powerDistPublished": true,
+      "powerDistSourceSha": "62689ce35e279751a3bf17b5255ac258dafbe7d7",
       "audit": {
         "mergeMethodDeviation": true,
         "approvedMethod": "squash",
@@ -28,27 +33,38 @@
       "task": "DW-PDIST-03",
       "jira": "SCRUM-92",
       "repository": "nhatnguyenquang1838-coder/task-me",
-      "mergeCommit": "ef0b890b1fb9140109c04cbb490b41d9aa94bfff",
+      "sourceCommit": "ef0b890b1fb9140109c04cbb490b41d9aa94bfff",
       "sourceLock": "distribution/power-package.yaml",
-      "status": "ready-unpublished",
-      "releasePublished": false,
-      "powerDistPublished": false
+      "status": "published",
+      "version": "main-20260725.1-ef0b890",
+      "publicationRunId": 30123645327,
+      "artifactId": 8608360175,
+      "artifactDigest": "sha256:787b046bb3c6965955b303f2df7977bf2126719fb5cf18561e46f476ec1404d0",
+      "releasePublished": true,
+      "powerDistPublished": true,
+      "powerDistSourceSha": "ef0b890b1fb9140109c04cbb490b41d9aa94bfff"
     },
     "ua": {
       "task": "DW-PDIST-04",
       "jira": "SCRUM-93",
       "repository": "nhatnguyenquang1838-coder/Understand-Anything",
-      "mergeCommit": "c0e4821c519f564d6c8b353537cf121eb52a1617",
+      "sourceCommit": "c0e4821c519f564d6c8b353537cf121eb52a1617",
       "sourceLock": "SOURCE.lock.json",
       "upstreamRepository": "Egonex-AI/Understand-Anything",
       "upstreamCommit": "6ae71878beb50226a1e4b7e2f52ac6468c86f74b",
-      "status": "ready-unpublished",
-      "releasePublished": false,
-      "powerDistPublished": false
+      "status": "published",
+      "version": "main-20260725.1-c0e4821",
+      "publicationRunId": 30123849723,
+      "artifactId": 8608439569,
+      "artifactDigest": "sha256:a0cc6e67565e6dcf80b7d146a40808084cc1ab966cd5c84943b901ee7704abbd",
+      "releasePublished": true,
+      "powerDistPublished": true,
+      "powerDistSourceSha": "c0e4821c519f564d6c8b353537cf121eb52a1617"
     }
   },
   "integration": {
-    "status": "ready-for-validation",
+    "status": "published-power-dist-default",
+    "defaultMode": "power-dist",
     "remainingBlockers": [],
     "legacySubmoduleModePreserved": true,
     "consumerCommands": [
@@ -59,7 +75,9 @@
       "rollback",
       "uninstall"
     ],
-    "releaseOrDeploymentPerformed": false,
+    "providerReleasesPublished": true,
+    "powerDistBranchesPublished": true,
+    "deploymentPerformed": false,
     "gateControlUsed": false
   }
 }

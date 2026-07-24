@@ -1,6 +1,6 @@
 # DW SuperApps Setup and Optional Deployment Lanes
 
-This guide sets up the governed DW SuperApps workspace for local AI hosts. Local Power use is independent from provider release publication and from the optional Task Me Vercel dashboard.
+This guide sets up the governed DW SuperApps workspace for local AI hosts. GWC, Task Me, and UA now default to their validated `power-dist` distributions. Reviewed git submodules remain available as a migration and recovery fallback.
 
 ## 1. Clone the workspace
 
@@ -18,12 +18,17 @@ git submodule sync --recursive
 git submodule update --init --recursive
 ```
 
-The reviewed Power pins for this integration are:
+The fallback submodule pins remain:
 
 - GWC: `62689ce35e279751a3bf17b5255ac258dafbe7d7`
 - Task Me: `ef0b890b1fb9140109c04cbb490b41d9aa94bfff`
-- UA legacy upstream submodule: `6ae71878beb50226a1e4b7e2f52ac6468c86f74b`
-- UA controlled distribution provider: `c0e4821c519f564d6c8b353537cf121eb52a1617`
+- UA upstream: `6ae71878beb50226a1e4b7e2f52ac6468c86f74b`
+
+The published distributions are:
+
+- GWC: `main-20260725.1-62689ce`
+- Task Me: `main-20260725.1-ef0b890`
+- UA: `main-20260725.1-c0e4821`
 
 ## 2. Install the `dw` launcher
 
@@ -46,57 +51,39 @@ dw --version
 ### Windows PowerShell
 
 ```powershell
-.\dw.ps1 init all
-.\dw.ps1 status all
-.\dw.ps1 doctor all
+.\dw.ps1 power init powers
+.\dw.ps1 power status powers
 ```
 
 The installer is idempotent. Runtime data remains system-owned under `.gwc`, `.task-me`, `.ua`, and `.bmad` in the target product repository.
 
-## 3. Validate the workspace
+## 3. Initialize and validate the workspace
 
 ```bash
-dw status all
-dw doctor all
+dw power init powers
+dw power status powers
+dw validate
 ```
 
-For offline validation without remote drift checks:
-
-```bash
-dw doctor all --offline
-```
-
-Daily flow:
-
-```bash
-dw status all
-dw sync all
-dw doctor all
-```
-
-`dw sync all` updates clean submodules but does not stage or commit gitlink changes. Use `dw sync all --pin` only when intentionally preparing reviewed pin changes.
+Submodules are not the default distribution source, but keeping them initialized provides an offline and rollback fallback during migration.
 
 ## 4. Initialize Kiro and Codex adapters
 
 ### Kiro
 
 ```bash
-dw init all --host kiro
+dw host install kiro --mode wrapper
 dw host status kiro
 ```
-
-Open the DW-SuperApps root in Kiro.
 
 ### Codex
 
 ```bash
-dw init all --host codex
+dw host install codex --mode wrapper
 dw host status codex
 ```
 
-Open the DW-SuperApps root in Codex.
-
-Host adapters are generated discovery layers. Canonical instructions and tools remain in the Power repositories.
+Host adapters are generated discovery layers. Canonical instructions and tools remain in the Power distributions or provider repositories.
 
 ## 5. Generate Power prompts
 
@@ -136,14 +123,14 @@ dw system powers rental-home
 
 ## 6. Distribution modes
 
-The migration default remains `submodule`.
+The default for GWC, Task Me, and UA is now `power-dist`.
 
-- `submodule`: uses the reviewed gitlink in DW-SuperApps.
+- `power-dist`: consumes the validated provider distribution branch.
+- `release`: downloads the immutable provider ZIP and checksum.
+- `submodule`: uses the reviewed gitlink as migration and recovery fallback.
 - `package`: installs a locally validated package or ZIP.
-- `release`: downloads an immutable provider release and checksum.
-- `power-dist`: consumes the provider distribution branch.
 
-Provider releases and `power-dist` branches are currently `ready-unpublished`. Local submodule setup does not publish packages and does not require release credentials.
+All three providers have published immutable releases and synchronized `power-dist` branches. Switching the default does not remove the gitlinks or prevent explicit submodule use.
 
 ## 7. Task Me Vercel dashboard is optional
 
@@ -162,9 +149,7 @@ Required GitHub Actions secrets when Vercel deployment is enabled:
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`
 
-### Selected operating strategy
-
-Vercel deploy jobs should be gated by an explicit repository variable:
+Vercel deploy jobs should be gated by:
 
 ```yaml
 if: vars.VERCEL_DEPLOY_ENABLED == 'true'
@@ -176,26 +161,15 @@ Default state:
 VERCEL_DEPLOY_ENABLED is absent or false
 ```
 
-In that state:
+In that state, Task Me CI and Power validation continue normally while preview and production deployment remain disabled.
 
-- Task Me CI and Power validation continue normally.
-- Preview and production deploy jobs are skipped rather than failed.
-- No Vercel credential is required for local DW SuperApps use.
-
-To enable deployment later:
-
-1. Create or import the Task Me project in Vercel.
-2. Add the three required secrets to the `task-me` GitHub repository.
-3. Set repository variable `VERCEL_DEPLOY_ENABLED=true`.
-4. Re-run or trigger the applicable deployment workflow.
-
-Credential creation and repository-secret changes are outside SCRUM-94 and require a separate authorized operational task.
+Credential creation and repository-secret changes are outside the Power distribution lifecycle and require a separate authorized operational task.
 
 ## 8. Safety boundaries
 
-Local setup does not authorize:
+Local setup and distribution consumption do not authorize:
 
-- merging the DW-SuperApps integration PR;
-- publishing provider releases or `power-dist` branches;
 - deploying the Task Me dashboard;
-- modifying credentials, secrets, production configuration, migrations, or production data.
+- modifying credentials or secrets;
+- production configuration or migration changes;
+- production-data operations.

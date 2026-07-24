@@ -52,7 +52,7 @@ spec:
       - "**/secrets/**"
   distribution:
     contract: dw.power-distribution/v1
-    defaultMode: submodule
+    defaultMode: power-dist
     modes:
       submodule:
         repository: nhatnguyenquang1838-coder/gwc
@@ -66,8 +66,8 @@ spec:
         repository: nhatnguyenquang1838-coder/gwc
         ref: power-dist
     providerState:
-      status: ready-unpublished
+      status: published
       task: DW-PDIST-02
       sourceCommit: 62689ce35e279751a3bf17b5255ac258dafbe7d7
       sourceLock: distribution/power-package.yaml
-      note: Provider implementation is merged on main; release and power-dist remain unpublished.
+      note: Published as main-20260725.1-62689ce; power-dist and immutable release validated by run 30123787605. Submodule remains available as migration fallback.
