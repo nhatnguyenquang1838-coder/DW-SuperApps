@@ -57,15 +57,15 @@ spec:
         path: powers/ua
         ref: main
       release:
-        repository: nhatnguyenquang1838-coder/ua-power
+        repository: nhatnguyenquang1838-coder/Understand-Anything
         assetPattern: "ua-{version}.zip"
         checksumAssetPattern: "ua-{version}.zip.sha256"
       powerDist:
-        repository: nhatnguyenquang1838-coder/ua-power
+        repository: nhatnguyenquang1838-coder/Understand-Anything
         ref: power-dist
     providerState:
-      status: blocked-missing-repository
+      status: ready-unpublished
       task: DW-PDIST-04
-      sourceCommit: null
-      sourceLock: null
-      note: Controlled ua-power fork or wrapper repository must be created before provider implementation.
+      sourceCommit: c0e4821c519f564d6c8b353537cf121eb52a1617
+      sourceLock: SOURCE.lock.json
+      note: Controlled fork implementation is merged on main; release and power-dist remain unpublished.
