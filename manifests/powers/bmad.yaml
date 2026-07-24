@@ -42,6 +42,7 @@ spec:
     - cli
   entrypoints:
     skillCandidates:
+      - SKILL.md
       - distribution/skills/bmad/SKILL.md
       - src/core-skills/bmad-help/SKILL.md
     cliCandidates:
@@ -79,4 +80,4 @@ spec:
       task: DW-PDIST-06
       sourceCommit: bb45db4aa4496c69239f9c0629c290fd1b072fc9
       sourceLock: plugins/bmad-method/SOURCE.lock.json
-      note: External-source wrapper is implemented on feat/bmad-power-plugin; no release or power-dist branch is published by this commit.
+      note: External-source wrapper is implemented on feat/bmad-power-plugin; release publication is performed only after exact-head CI and merge.
