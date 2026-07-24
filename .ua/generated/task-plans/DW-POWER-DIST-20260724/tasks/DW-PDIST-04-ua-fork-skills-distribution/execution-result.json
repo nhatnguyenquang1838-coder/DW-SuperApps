@@ -2,32 +2,13 @@
   "schemaVersion": "1.0",
   "task": "DW-PDIST-04",
   "jira": "SCRUM-93",
-  "status": "COMPLETED_FEATURE_BRANCH",
-  "repository": "nhatnguyenquang1838-coder/Understand-Anything",
-  "branch": "feat/dw-power-distribution-v1",
-  "head": "7797a0e6ecdf3c964e5fa723f9d19fb3637d4ea5",
+  "status": "BLOCKED_EXTERNAL_PREREQUISITE",
+  "repository": "nhatnguyenquang1838-coder/ua-power",
   "upstream": "Egonex-AI/Understand-Anything",
   "upstreamCommit": "6ae71878beb50226a1e4b7e2f52ac6468c86f74b",
-  "sourceLock": "SOURCE.lock.json",
-  "repositoryExists": true,
-  "writePerformed": true,
+  "repositoryExists": false,
+  "writePerformed": false,
   "upstreamModified": false,
-  "implemented": [
-    "Exact controlled-fork and upstream source lock",
-    "Manual-review upstream drift detector",
-    "Headless allowlist distribution recipe",
-    "Neutral runtime config and JSON Schema",
-    "Reusable publish workflow pinned to DW distribution foundation",
-    "Provider contract tests"
-  ],
-  "validation": [
-    "JSON and YAML parse",
-    "Python compilation",
-    "CURRENT and DRIFT_DETECTED checker paths",
-    "Connector verification of bundled helpers, agents, core, and WASM package paths",
-    "GitHub branch diff review"
-  ],
-  "releasePublished": false,
-  "powerDistPublished": false,
-  "definitionOfDoneMet": true
+  "blocker": "Controlled repository does not exist and the available GitHub connector has no create/fork repository action.",
+  "nextAction": "Create or fork nhatnguyenquang1838-coder/ua-power, then rerun DW-PDIST-04."
 }
