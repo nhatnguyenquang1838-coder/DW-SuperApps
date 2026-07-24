@@ -1,0 +1,13 @@
+{
+  "task_id":"DW-PDIST-03",
+  "jira":"SCRUM-92",
+  "repository":"nhatnguyenquang1838-coder/task-me",
+  "base_sha":"9fb9ee932af4d1727c3ea67410d6ab7e57b4c8ab",
+  "verified_paths":[".kiro/skills/implementation-task-architect/SKILL.md",".kiro/skills/implementation-task-architect/references/output-contract.md",".task-architect/config.json"],
+  "observations":[
+    "The skill forbids source edits, Git delivery, and external task-system publication.",
+    "The output contract requires one folder per generated task, but generated folders are runtime outputs and must not be distributed.",
+    "The active repository config contains repository-specific source paths and requires neutral consumer defaults."
+  ],
+  "confidence":0.95
+}

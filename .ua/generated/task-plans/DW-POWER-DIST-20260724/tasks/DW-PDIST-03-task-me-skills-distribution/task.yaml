@@ -1,0 +1,39 @@
+schema_version: "2.0"
+task_id: DW-PDIST-03
+jira: SCRUM-92
+title: Build Task Me skills-only distribution
+repository: nhatnguyenquang1838-coder/task-me
+branch: feat/dw-power-distribution-v1
+wave: 2
+status: READY
+gate_control: disabled
+objective: >-
+  Package the implementation-task-architect skill and its verified references
+  without shipping generated task plans, dashboards, or populated runtime data.
+requirements: [R-DIST-001, R-DIST-002, R-DIST-003, R-DIST-004, R-DIST-005, R-DIST-006, R-DIST-007]
+dependencies: [DW-PDIST-01]
+blocks: [DW-PDIST-05]
+complexity: medium_high
+risk: R2
+effort: {optimistic_hours: 7, likely_hours: 12, pessimistic_hours: 18}
+scope:
+  include:
+    - distribution/power-package.yaml
+    - distribution/config/**
+    - distribution/contracts/**
+    - .github/workflows/publish-power.yml
+    - .kiro/skills/implementation-task-architect/**
+    - verified schemas, scripts, and runbook dependencies
+  exclude:
+    - .task-me/**
+    - .ua/generated/**
+    - generated task folders and catalogs
+    - dashboards, Vercel assets, and previews
+    - .gwc/tasks/**
+    - secrets and caches
+definition_of_done:
+  - Skill and all references resolve inside the package.
+  - Installation creates no task, plan, dashboard, issue, branch, or PR.
+  - Empty .task-me runtime root is consumer-owned.
+  - Release ZIP and power-dist use one staging tree.
+  - Standalone install and doctor tests pass.
