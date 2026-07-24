@@ -4,23 +4,32 @@
   "foundation": {
     "repository": "nhatnguyenquang1838-coder/DW-SuperApps",
     "branch": "feat/dw-power-distribution-v1",
-    "task1Head": "4e552ea3d915a4790814b08b3155c66e3c5736a1"
+    "task1Head": "4e552ea3d915a4790814b08b3155c66e3c5736a1",
+    "reconciliationCommit": "ae0f217625eeec01a008d39f6d3324f2e9617ed1"
   },
   "providers": {
     "gwc": {
       "task": "DW-PDIST-02",
       "jira": "SCRUM-91",
       "repository": "nhatnguyenquang1838-coder/gwc",
-      "baseCommit": "b3edbb102fb5b0e7e1532e221d89c16896f17755",
-      "status": "blocked-policy",
-      "reason": "GWC repository writes require formal G0/G1/G2 authority; HUMAN_BYPASS cannot skip it."
+      "mergeCommit": "62689ce35e279751a3bf17b5255ac258dafbe7d7",
+      "sourceLock": "distribution/power-package.yaml",
+      "status": "ready-unpublished",
+      "releasePublished": false,
+      "powerDistPublished": false,
+      "audit": {
+        "mergeMethodDeviation": true,
+        "approvedMethod": "squash",
+        "observedMethod": "merge_commit",
+        "contentDrift": false
+      }
     },
     "task-me": {
       "task": "DW-PDIST-03",
       "jira": "SCRUM-92",
       "repository": "nhatnguyenquang1838-coder/task-me",
-      "branch": "feat/dw-power-distribution-v1",
-      "head": "711d6314f31a844253bb6719cd28986817768ebc",
+      "mergeCommit": "ef0b890b1fb9140109c04cbb490b41d9aa94bfff",
+      "sourceLock": "distribution/power-package.yaml",
       "status": "ready-unpublished",
       "releasePublished": false,
       "powerDistPublished": false
@@ -28,15 +37,19 @@
     "ua": {
       "task": "DW-PDIST-04",
       "jira": "SCRUM-93",
-      "repository": "nhatnguyenquang1838-coder/ua-power",
+      "repository": "nhatnguyenquang1838-coder/Understand-Anything",
+      "mergeCommit": "c0e4821c519f564d6c8b353537cf121eb52a1617",
+      "sourceLock": "SOURCE.lock.json",
       "upstreamRepository": "Egonex-AI/Understand-Anything",
       "upstreamCommit": "6ae71878beb50226a1e4b7e2f52ac6468c86f74b",
-      "status": "blocked-missing-repository",
-      "reason": "Controlled fork or wrapper repository does not exist and repository creation is unavailable."
+      "status": "ready-unpublished",
+      "releasePublished": false,
+      "powerDistPublished": false
     }
   },
   "integration": {
-    "status": "partial-blocked",
+    "status": "ready-for-validation",
+    "remainingBlockers": [],
     "legacySubmoduleModePreserved": true,
     "consumerCommands": [
       "install",
