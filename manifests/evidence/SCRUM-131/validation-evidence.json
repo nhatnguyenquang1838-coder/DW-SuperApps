@@ -1,0 +1,69 @@
+{
+  "branch": "feat/dw-power-distribution-v1",
+  "classification": "PASS",
+  "commands": [
+    "bash bin/dw validate",
+    "power distribution contract tests",
+    "cross-Power integration tests",
+    "package builder tests",
+    "consumer lifecycle tests",
+    "runtime installer tests",
+    "complete Python unit suite",
+    "portable Python resolver test",
+    "Python script compilation"
+  ],
+  "deploymentPerformed": false,
+  "generatedAt": "2026-07-24T19:08:15.158887Z",
+  "logs": {
+    "validation-builder.log": {
+      "sha256": "3c5ddb922c2682854428d2d361df598a13d9fea4cfe8d28fabb8993d5301d927",
+      "size_bytes": 1112
+    },
+    "validation-compile.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    "validation-consumer.log": {
+      "sha256": "c43c24ecd3c9201b09dad78a7aa78ff8022e4ebe805de3c6711e1fed98eb522d",
+      "size_bytes": 101
+    },
+    "validation-contract.log": {
+      "sha256": "120fcf1e1b1ef6883b716f1b33b4fbea79c7089f1d1ff950e98c9608d82abb42",
+      "size_bytes": 102
+    },
+    "validation-dw.log": {
+      "sha256": "64f632a1b6b6d8ae2784ff8372999f930ba94b6b07fc8573573af09d6587585d",
+      "size_bytes": 88
+    },
+    "validation-full-suite.log": {
+      "sha256": "922d99c633b00f961fe2d434c84494c4f91e545ba37590a00f12ee3c78603944",
+      "size_bytes": 1147
+    },
+    "validation-integration.log": {
+      "sha256": "edaea244b13bb4717b5b983ad9b89832b6e95a6eedf4961aefae3124c6d3892e",
+      "size_bytes": 101
+    },
+    "validation-python-resolver.log": {
+      "sha256": "2222c57e1472753780cc828b45deb9a0095ae0fea2b69cc3196f2a3fbca7096a",
+      "size_bytes": 22
+    },
+    "validation-runtime.log": {
+      "sha256": "de17c994225c1003144efa4e615559daed43bb3c18d99ba074aeda0398bc60c4",
+      "size_bytes": 101
+    }
+  },
+  "parent": "SCRUM-94",
+  "powerDistPublished": false,
+  "providerPins": {
+    "gwc": "62689ce35e279751a3bf17b5255ac258dafbe7d7",
+    "task-me": "ef0b890b1fb9140109c04cbb490b41d9aa94bfff",
+    "ua": "6ae71878beb50226a1e4b7e2f52ac6468c86f74b"
+  },
+  "releasePublished": false,
+  "repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+  "schemaVersion": "1.0",
+  "task": "SCRUM-131",
+  "validatedHead": "1edb9ca756e7b135b22c37a6dc7664040fada757",
+  "workflowRunAttempt": 1,
+  "workflowRunId": 30119618496
+}

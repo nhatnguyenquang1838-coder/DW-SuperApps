@@ -1,9 +1,0 @@
-{
-  "run_id": "DW-POWER-DIST-20260724",
-  "sources": [
-    {"repository":"nhatnguyenquang1838-coder/DW-SuperApps","sha":"90acc051f35de4d4e325a8def7d57ed296645703","paths":["AGENTS.md","workspace.yaml","manifests/powers/*.yaml","scripts/dw_cli.py","scripts/dw_entry.py","docs/POWER_RUNTIME_V2.md"]},
-    {"repository":"nhatnguyenquang1838-coder/gwc","sha":"b3edbb102fb5b0e7e1532e221d89c16896f17755","paths":["skills/gwc-g1/SKILL.md","projects/gwc/package.yaml","core/**","schemas/**","tools/**"]},
-    {"repository":"nhatnguyenquang1838-coder/task-me","sha":"9fb9ee932af4d1727c3ea67410d6ab7e57b4c8ab","paths":[".kiro/skills/implementation-task-architect/**",".task-architect/config.json","scripts/validate.sh"]},
-    {"repository":"Egonex-AI/Understand-Anything","sha":"6ae71878beb50226a1e4b7e2f52ac6468c86f74b","paths":["understand-anything-plugin/skills/understand/**","understand-anything-plugin/agents/**","understand-anything-plugin/scripts/**"]}
-  ]
-}
