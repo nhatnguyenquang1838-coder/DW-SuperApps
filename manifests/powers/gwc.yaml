@@ -50,3 +50,24 @@ spec:
     deny:
       - ".env*"
       - "**/secrets/**"
+  distribution:
+    contract: dw.power-distribution/v1
+    defaultMode: submodule
+    modes:
+      submodule:
+        repository: nhatnguyenquang1838-coder/gwc
+        path: powers/gwc
+        ref: main
+      release:
+        repository: nhatnguyenquang1838-coder/gwc
+        assetPattern: "gwc-{version}.zip"
+        checksumAssetPattern: "gwc-{version}.zip.sha256"
+      powerDist:
+        repository: nhatnguyenquang1838-coder/gwc
+        ref: power-dist
+    providerState:
+      status: blocked-policy
+      task: DW-PDIST-02
+      sourceCommit: null
+      sourceLock: null
+      note: Provider write requires formal GWC gate authority; no bypass is permitted.

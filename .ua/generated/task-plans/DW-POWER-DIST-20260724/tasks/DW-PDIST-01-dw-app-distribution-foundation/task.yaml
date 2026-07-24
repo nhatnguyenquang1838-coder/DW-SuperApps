@@ -1,0 +1,55 @@
+schema_version: "2.0"
+task_id: DW-PDIST-01
+jira: SCRUM-90
+title: Build shared DW Power distribution foundation
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+branch: feat/dw-power-distribution-v1
+wave: 1
+status: IMPLEMENTED_STATIC_VALIDATED
+gate_control: disabled
+objective: >-
+  Add the shared contracts, deterministic builder, portable runtime templates,
+  reusable publishing workflow, and validation needed by all Power packages.
+requirements: [R-DIST-001, R-DIST-002, R-DIST-003, R-DIST-004, R-DIST-005, R-DIST-006, R-DIST-007]
+dependencies: []
+blocks: [DW-PDIST-02, DW-PDIST-03, DW-PDIST-04, DW-PDIST-05]
+complexity: high
+risk: R2
+effort:
+  optimistic_hours: 10
+  likely_hours: 16
+  pessimistic_hours: 24
+scope:
+  include:
+    - schemas/power-distribution.schema.json
+    - schemas/power-consumer-binding.schema.json
+    - schemas/power-package-manifest.schema.json
+    - scripts/power_dist.py
+    - templates/power-runtime/**
+    - .github/workflows/reusable-publish-power.yml
+    - tests/test_power_distribution_*.py
+    - docs/POWER_DISTRIBUTION_V1.md
+  exclude:
+    - provider-specific package recipes
+    - dashboards and UI
+    - generated tasks or plans in packages
+    - release-consumer migration
+    - merge or production release
+definition_of_done:
+  - Contracts validate against positive and negative fixtures.
+  - Builder copies allowlisted paths only and produces deterministic archives.
+  - Forbidden paths, secrets, runtime data, dashboards, tasks, and plans are rejected.
+  - Install/configure/doctor/uninstall templates are idempotent and preserve unmanaged files.
+  - Reusable workflow can be called by provider repositories using a pinned SHA.
+  - Exact validation commands and evidence are recorded.
+completion:
+  implementation_head: ef50325f73a0a1f11a6b1d4055062768ae251131
+  commits: 5
+  files_added: 21
+  validation:
+    unit_tests: "13 passed"
+    python_compile: PASS
+    bash_syntax: PASS
+    workflow_yaml_parse: PASS
+    github_actions_run: NOT_RUN_NO_PR
+  next_task: DW-PDIST-02

@@ -1,0 +1,18 @@
+{
+  "status": "IN_PROGRESS",
+  "checks": {
+    "task_count": "PASS",
+    "unique_folders": "PASS",
+    "dependency_dag": "PASS",
+    "jira_projection": "PASS",
+    "shared_branch": "PASS",
+    "gate_control_disabled": "PASS",
+    "DW-PDIST-01_implementation": "PASS_STATIC_VALIDATION",
+    "DW-PDIST-01_github_actions": "NOT_RUN_NO_PR"
+  },
+  "task_heads": {
+    "DW-PDIST-01": "ef50325f73a0a1f11a6b1d4055062768ae251131"
+  },
+  "prerequisite": "DW-PDIST-04 must create or fork the controlled ua-power repository.",
+  "note": "Physical code changes span multiple Git repositories; the same logical branch name is reused and DW-SuperApps is the final integration branch."
+}

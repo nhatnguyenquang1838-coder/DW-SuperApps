@@ -1,0 +1,209 @@
+name: Reusable publish Power distribution
+
+on:
+  workflow_call:
+    inputs:
+      power_id:
+        description: Power identifier used in release and artifact names.
+        required: true
+        type: string
+      recipe_path:
+        description: Distribution recipe path in the caller repository.
+        required: true
+        type: string
+      package_version:
+        description: Immutable package version, for example power-main-20260724.12-abcdef0.
+        required: true
+        type: string
+      foundation_ref:
+        description: Immutable DW-SuperApps commit containing the distribution builder.
+        required: true
+        type: string
+      source_date_epoch:
+        description: Stable source timestamp used for deterministic archives.
+        required: false
+        default: 0
+        type: number
+      distribution_branch:
+        description: Generated skills-only branch.
+        required: false
+        default: power-dist
+        type: string
+      publish_release:
+        description: Publish or update the GitHub Release after validation.
+        required: false
+        default: true
+        type: boolean
+      publish_distribution_branch:
+        description: Synchronize the validated staging tree to the distribution branch.
+        required: false
+        default: true
+        type: boolean
+    outputs:
+      archive_sha256:
+        description: SHA-256 of the deterministic release ZIP.
+        value: ${{ jobs.package.outputs.archive_sha256 }}
+      source_sha:
+        description: Caller repository source SHA.
+        value: ${{ jobs.package.outputs.source_sha }}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: power-distribution-${{ github.repository }}-${{ inputs.power_id }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    outputs:
+      archive_sha256: ${{ steps.result.outputs.archive_sha256 }}
+      source_sha: ${{ steps.result.outputs.source_sha }}
+
+    steps:
+      - name: Check out provider source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - name: Check out pinned DW distribution foundation
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: nhatnguyenquang1838-coder/DW-SuperApps
+          ref: ${{ inputs.foundation_ref }}
+          path: .dw-power-dist
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.12"
+
+      - name: Install builder dependencies
+        run: python -m pip install -r .dw-power-dist/requirements-dev.txt
+
+      - name: Validate recipe
+        run: >-
+          python .dw-power-dist/scripts/power_dist.py validate-recipe
+          --recipe "${{ inputs.recipe_path }}"
+
+      - name: Build deterministic distribution
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          python .dw-power-dist/scripts/power_dist.py build \
+            --recipe "${{ inputs.recipe_path }}" \
+            --source . \
+            --output .power-dist-output \
+            --version "${{ inputs.package_version }}" \
+            --source-repository "${{ github.repository }}" \
+            --source-ref "${{ github.ref_name }}" \
+            --source-sha "${{ github.sha }}" \
+            --source-date-epoch "${{ inputs.source_date_epoch }}" \
+            --templates-root .dw-power-dist/templates/power-runtime \
+            > .power-dist-result.json
+          cat .power-dist-result.json
+
+      - name: Export build result
+        id: result
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          result = json.loads(Path(".power-dist-result.json").read_text())
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as handle:
+              handle.write(f"archive={result['archive']}\n")
+              handle.write(f"checksum={result['checksum']}\n")
+              handle.write(f"staging_root={result['staging_root']}\n")
+              handle.write(f"archive_sha256={result['sha256']}\n")
+              handle.write(f"source_sha={os.environ['GITHUB_SHA']}\n")
+          PY
+
+      - name: Verify staged package
+        run: >-
+          python .dw-power-dist/scripts/power_dist.py verify
+          --package-root "${{ steps.result.outputs.staging_root }}"
+
+      - name: Smoke install and doctor
+        shell: bash
+        run: |
+          set -euo pipefail
+          consumer="$(mktemp -d)"
+          runtime="${{ steps.result.outputs.staging_root }}/lib/power_runtime.py"
+          python "$runtime" install --target "$consumer"
+          python "$runtime" doctor --target "$consumer"
+          python "$runtime" uninstall --target "$consumer"
+          python - "$consumer" "${{ steps.result.outputs.staging_root }}" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          consumer = Path(sys.argv[1])
+          package_root = Path(sys.argv[2])
+          runtime_root = json.loads(
+              (package_root / "MANIFEST.json").read_text(encoding="utf-8")
+          )["spec"]["runtimeDataRoot"]
+          assert (consumer / runtime_root).is_dir(), "uninstall removed consumer runtime data"
+          PY
+
+      - name: Upload validated release assets
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ inputs.power_id }}-${{ inputs.package_version }}
+          path: |
+            ${{ steps.result.outputs.archive }}
+            ${{ steps.result.outputs.checksum }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release
+        if: inputs.publish_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.package_version }}
+          ARCHIVE: ${{ steps.result.outputs.archive }}
+          CHECKSUM: ${{ steps.result.outputs.checksum }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ARCHIVE" "$CHECKSUM" --clobber
+          else
+            gh release create "$TAG" "$ARCHIVE" "$CHECKSUM" \
+              --title "${{ inputs.power_id }} ${TAG}" \
+              --notes "Source: ${{ github.repository }}@${{ github.sha }}"
+          fi
+
+      - name: Synchronize validated power-dist branch
+        if: inputs.publish_distribution_branch
+        env:
+          BRANCH: ${{ inputs.distribution_branch }}
+          STAGING_ROOT: ${{ steps.result.outputs.staging_root }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          worktree="$(mktemp -d)"
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$BRANCH"
+            git worktree add "$worktree" "origin/$BRANCH"
+            git -C "$worktree" switch -c "$BRANCH"
+          else
+            git worktree add --detach "$worktree"
+            git -C "$worktree" switch --orphan "$BRANCH"
+          fi
+          find "$worktree" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a "$STAGING_ROOT"/. "$worktree"/
+          git -C "$worktree" add -A
+          git -C "$worktree" config user.name "github-actions[bot]"
+          git -C "$worktree" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git -C "$worktree" diff --cached --quiet; then
+            echo "power-dist already matches validated staging tree"
+          else
+            git -C "$worktree" commit -m "dist: publish ${{ inputs.package_version }}"
+            git -C "$worktree" push origin "HEAD:$BRANCH"
+          fi

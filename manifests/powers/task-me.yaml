@@ -51,3 +51,24 @@ spec:
     deny:
       - ".env*"
       - "**/secrets/**"
+  distribution:
+    contract: dw.power-distribution/v1
+    defaultMode: submodule
+    modes:
+      submodule:
+        repository: nhatnguyenquang1838-coder/task-me
+        path: powers/task-me
+        ref: main
+      release:
+        repository: nhatnguyenquang1838-coder/task-me
+        assetPattern: "task-me-{version}.zip"
+        checksumAssetPattern: "task-me-{version}.zip.sha256"
+      powerDist:
+        repository: nhatnguyenquang1838-coder/task-me
+        ref: power-dist
+    providerState:
+      status: ready-unpublished
+      task: DW-PDIST-03
+      sourceCommit: 711d6314f31a844253bb6719cd28986817768ebc
+      sourceLock: distribution/power-package.yaml
+      note: Provider recipe and publisher are implemented on feat/dw-power-distribution-v1; no release or power-dist publication was requested.
