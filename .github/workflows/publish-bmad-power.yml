@@ -1,6 +1,16 @@
 name: Publish BMAD Power distribution
 
 on:
+  push:
+    branches:
+      - feat/bmad-power-plugin
+    paths:
+      - .github/workflows/publish-bmad-power.yml
+      - plugins/bmad-method/**
+      - manifests/powers/bmad.yaml
+      - tests/test_bmad_power_plugin.py
+      - scripts/power_dist.py
+      - templates/power-runtime/**
   workflow_dispatch:
     inputs:
       bmad_ref:
