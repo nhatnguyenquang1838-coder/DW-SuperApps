@@ -2,27 +2,27 @@
   "schemaVersion": "1.0",
   "task": "DW-PDIST-05",
   "jira": "SCRUM-94",
-  "status": "PARTIAL_BLOCKED",
+  "status": "READY_FOR_VALIDATION",
   "repository": "nhatnguyenquang1838-coder/DW-SuperApps",
   "branch": "feat/dw-power-distribution-v1",
-  "head": "39926d40974d63873f923327cbba2a1aa64af932",
+  "reconciliationCommit": "ae0f217625eeec01a008d39f6d3324f2e9617ed1",
+  "providerCommits": {
+    "gwc": "62689ce35e279751a3bf17b5255ac258dafbe7d7",
+    "task-me": "ef0b890b1fb9140109c04cbb490b41d9aa94bfff",
+    "ua": "c0e4821c519f564d6c8b353537cf121eb52a1617"
+  },
   "implemented": [
     "Hybrid distribution manifest contract",
     "Submodule/release/power-dist/package source modes",
     "Install/configure/doctor/history/rollback/uninstall commands",
     "Checksum and ZIP safety",
+    "Exact provider merge bindings",
     "Provider evidence registry",
     "Legacy submodule compatibility"
   ],
-  "validation": [
-    "JSON Schema validation for all three Power manifests",
-    "Python compilation of consumer runtime",
-    "Synthetic install/upgrade/configure/doctor/history/rollback/uninstall",
-    "Malicious ZIP parent-traversal rejection"
-  ],
-  "remainingBlockers": [
-    "DW-PDIST-02 blocked by GWC policy",
-    "DW-PDIST-04 blocked by missing ua-power repository"
-  ],
+  "remainingBlockers": [],
+  "nextSubtask": "Pin reviewed Power submodules and preserve migration compatibility",
+  "releasePublished": false,
+  "powerDistPublished": false,
   "definitionOfDoneMet": false
 }
