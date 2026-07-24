@@ -1,0 +1,81 @@
+{
+  "branch": "feat/dw-power-distribution-v1",
+  "classification": "PASS",
+  "generatedAt": "2026-07-24T19:22:11.408811Z",
+  "logs": {
+    "setup-codex-init.log": {
+      "sha256": "92cff24a49141555ae58bd6a4ad2b0285f72017c4c5fabffbb461b1ccc7569c7",
+      "sizeBytes": 100
+    },
+    "setup-codex-status.log": {
+      "sha256": "fa7881c0c8cdc99be6963c4edc4b2350c40948903090542fd5e3fe9061810579",
+      "sizeBytes": 304
+    },
+    "setup-install.log": {
+      "sha256": "e67aceefe840131914cfe2ecd59d35d8c8937a14ec11d6f81c612c6ae076230a",
+      "sizeBytes": 180
+    },
+    "setup-kiro-init.log": {
+      "sha256": "6f381fa00c1803b1b77447ecb511c919196325208248f5c9bc5defba1eb13704",
+      "sizeBytes": 96
+    },
+    "setup-kiro-status.log": {
+      "sha256": "e0d6b498f0bbdfa19750268feaa0eb2e7190807a94d8d0dbec092798d5e99c5e",
+      "sizeBytes": 304
+    },
+    "setup-power-init.log": {
+      "sha256": "81b23a8fde3b653be62b11d0b2e10c8d64aec434a420c4d57344e2d28a34be19",
+      "sizeBytes": 820
+    },
+    "setup-power-status.log": {
+      "sha256": "3af04dbd33991a1a478edccd11197729b5137ddd964c125851eb72d00fba93e3",
+      "sizeBytes": 210
+    },
+    "setup-prompt-gwc.log": {
+      "sha256": "5b4dbc6e77fe27cf6958405760a307a119a0fae02583e736bcdfdb68234adf09",
+      "sizeBytes": 684
+    },
+    "setup-prompt-task-me.log": {
+      "sha256": "e080c96497f327d9d53e7a24f467db09be5dc277ac25ccfa489e29805f6ed5a9",
+      "sizeBytes": 757
+    },
+    "setup-prompt-ua.log": {
+      "sha256": "f5a2cab7505c2f54ed6781f1efb84d5c71b84ce4dd38beef04bd7c2cd6feb261",
+      "sizeBytes": 655
+    },
+    "setup-validate.log": {
+      "sha256": "64f632a1b6b6d8ae2784ff8372999f930ba94b6b07fc8573573af09d6587585d",
+      "sizeBytes": 88
+    },
+    "setup-version.log": {
+      "sha256": "c1a4bbfcf3790ef8e76ebaab1191fb38ce8decc3ade098077727fcc85777d82c",
+      "sizeBytes": 7
+    }
+  },
+  "parent": "SCRUM-94",
+  "repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+  "schemaVersion": "1.0",
+  "task": "SCRUM-134",
+  "validatedFlows": [
+    "launcher install with shell=none",
+    "reviewed Power submodule init and status",
+    "Kiro wrapper install and status",
+    "Codex wrapper install and status",
+    "workspace validation",
+    "GWC, UA and Task Me prompt generation"
+  ],
+  "validatedHead": "17e9e833746e91eb6eedd7a10a6d02cef8414138",
+  "vercel": {
+    "classification": "OPTIONAL_DEPLOYMENT_CONFIGURATION",
+    "credentialsModified": false,
+    "deploymentPerformed": false,
+    "requiredSecretsWhenEnabled": [
+      "VERCEL_TOKEN",
+      "VERCEL_ORG_ID",
+      "VERCEL_PROJECT_ID"
+    ],
+    "selectedStrategy": "gate deploy jobs with vars.VERCEL_DEPLOY_ENABLED == true"
+  },
+  "workflowRunAttempt": 1,
+  "workflowRunId": 30120434434
+}
