@@ -69,6 +69,6 @@ spec:
     providerState:
       status: ready-unpublished
       task: DW-PDIST-03
-      sourceCommit: 711d6314f31a844253bb6719cd28986817768ebc
+      sourceCommit: ef0b890b1fb9140109c04cbb490b41d9aa94bfff
       sourceLock: distribution/power-package.yaml
-      note: Provider recipe and publisher are implemented on feat/dw-power-distribution-v1; no release or power-dist publication was requested.
+      note: Provider implementation is merged on main; release and power-dist remain unpublished.
