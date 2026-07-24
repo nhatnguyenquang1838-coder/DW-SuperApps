@@ -15,6 +15,7 @@ This repository is an orchestration workspace for multiple AI hosts, reusable Po
 - `powers/gwc`: governance and delivery workflows.
 - `powers/ua`: semantic/codebase knowledge generation and query.
 - `powers/task-me`: impact analysis and implementation task planning.
+- `bmad` distribution: structured analysis-to-implementation delivery workflows packaged from pinned external BMAD source.
 
 ## Host neutrality
 
@@ -28,58 +29,21 @@ Local Ollama compatibility uses:
 
 - Base URL: `http://localhost:11434/v1`
 - API key placeholder: `ollama`
-- Model override: `OLLAMA_MODEL`
+- Model: `OLLAMA_MODEL`, default `qwen3-coder:30b`
 
-Provider configuration must not contain real secrets.
+## Source-of-truth boundaries
 
-## Cross-repository work
+- `DW-SuperApps` owns workspace registration, Power and system manifests, host-adapter generation, and orchestration commands.
+- Each Power repository owns its instructions, schemas, tools, and release lifecycle.
+- Each product repository owns application code and generated operational data.
+- Generated host adapters are installation artifacts; canonical logic remains in the owning Power.
+- Provider outputs, including `.gwc`, `.ua`, `.task-me`, and `.bmad`, remain system-owned runtime data.
 
-A change affecting multiple systems must identify every impacted repository explicitly. Do not assume one repository approval, branch, task, or validation result applies to another repository.
+## Safety
 
-## Slack Notification Behavior
-
-Slack is an optional notification channel for execution visibility.
-
-Slack is used for:
-
-- Gate transition updates
-- Blocker notifications
-- Important milestone notifications
-- Human visibility of agent execution
-
-Slack is NOT:
-
-- The governance source of truth
-- The task state store
-- The approval authority
-
-## Gate Event Rule
-
-After important execution events, the agent should:
-
-1. Confirm or update the current task state.
-2. Record evidence and audit information.
-3. Send Slack notification when Slack capability is available.
-4. Continue execution if Slack is unavailable.
-
-Important events include:
-
-- Task started
-- Gate started
-- Gate completed
-- Gate blocked
-- PR created
-- CI validation completed
-- Approval requested
-- Human override
-- Task completed
-
-## Slack Failure Handling
-
-Slack availability must never block work.
-
-If Slack is unavailable:
-
-- Continue the workflow.
-- Record or mention that notification was skipped.
-- Keep the execution result unchanged.
+- Never write directly to protected `main`.
+- Never overwrite unmanaged host files.
+- Refuse dirty submodule updates.
+- Never infer gate authority from Slack, Jira, or a generated adapter.
+- Never commit secrets, credentials, populated runtime roots, caches, or generated dashboards.
+- Preserve exact source SHAs and validation evidence for governed changes.
