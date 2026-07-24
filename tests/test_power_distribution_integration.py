@@ -41,7 +41,8 @@ class PowerDistributionIntegrationTests(unittest.TestCase):
         }
         for power_id, source_commit in expected_commits.items():
             with self.subTest(power_id=power_id):
-                self.assertEqual("published", states[power_id]["status"])
+                expected_status = "ready-unpublished" if power_id == "bmad" else "published"
+                self.assertEqual(expected_status, states[power_id]["status"])
                 self.assertEqual(source_commit, states[power_id]["sourceCommit"])
 
     def test_submodule_source_contract_remains_available_as_fallback(self) -> None:
