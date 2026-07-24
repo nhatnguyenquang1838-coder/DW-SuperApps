@@ -50,7 +50,7 @@ spec:
       - "**/secrets/**"
   distribution:
     contract: dw.power-distribution/v1
-    defaultMode: submodule
+    defaultMode: power-dist
     modes:
       submodule:
         repository: Egonex-AI/Understand-Anything
@@ -64,8 +64,8 @@ spec:
         repository: nhatnguyenquang1838-coder/Understand-Anything
         ref: power-dist
     providerState:
-      status: ready-unpublished
+      status: published
       task: DW-PDIST-04
       sourceCommit: c0e4821c519f564d6c8b353537cf121eb52a1617
       sourceLock: SOURCE.lock.json
-      note: Controlled fork implementation is merged on main; release and power-dist remain unpublished.
+      note: Published as main-20260725.1-c0e4821 from the reviewed controlled fork and upstream lock; power-dist and immutable release validated by run 30123849723. Upstream submodule remains available as migration fallback.
