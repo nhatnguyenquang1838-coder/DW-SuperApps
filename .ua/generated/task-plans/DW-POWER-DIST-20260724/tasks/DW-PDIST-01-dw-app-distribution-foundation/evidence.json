@@ -1,0 +1,13 @@
+{
+  "task_id":"DW-PDIST-01",
+  "jira":"SCRUM-90",
+  "repository":"nhatnguyenquang1838-coder/DW-SuperApps",
+  "base_sha":"90acc051f35de4d4e325a8def7d57ed296645703",
+  "verified_paths":["AGENTS.md","workspace.yaml","manifests/powers/gwc.yaml","manifests/powers/task-me.yaml","manifests/powers/ua.yaml","scripts/dw_cli.py","scripts/dw_entry.py","docs/POWER_RUNTIME_V2.md"],
+  "observations":[
+    "DW-SuperApps already routes independently versioned Powers and owns host-neutral adapters.",
+    "Current manifests use main-pinned source repositories and explicit runtime-data roots.",
+    "Existing runtime commands must remain backward compatible."
+  ],
+  "confidence":0.93
+}
