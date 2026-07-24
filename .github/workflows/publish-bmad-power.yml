@@ -3,12 +3,25 @@ name: Publish BMAD Power distribution
 on:
   push:
     branches:
+      - main
       - feat/bmad-power-plugin
     paths:
       - .github/workflows/publish-bmad-power.yml
       - plugins/bmad-method/**
       - manifests/powers/bmad.yaml
       - tests/test_bmad_power_plugin.py
+      - tests/test_power_*.py
+      - scripts/power_dist.py
+      - templates/power-runtime/**
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/publish-bmad-power.yml
+      - plugins/bmad-method/**
+      - manifests/powers/bmad.yaml
+      - tests/test_bmad_power_plugin.py
+      - tests/test_power_*.py
       - scripts/power_dist.py
       - templates/power-runtime/**
   workflow_dispatch:
@@ -30,7 +43,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: bmad-power-publisher
+  group: bmad-power-publisher-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -67,6 +80,16 @@ jobs:
 
       - name: Install distribution dependencies
         run: python -m pip install -r requirements-dev.txt
+
+      - name: Run distribution contract tests
+        run: >-
+          python -m unittest -v
+          tests.test_power_distribution_contract
+          tests.test_power_dist_builder
+          tests.test_power_distribution_integration
+          tests.test_power_runtime_installer
+          tests.test_power_package_consumer
+          tests.test_bmad_power_plugin
 
       - name: Overlay DW plugin files
         shell: bash
@@ -118,6 +141,7 @@ jobs:
           import json
           import os
           from pathlib import Path
+
           result = json.loads(Path(".power-dist-result.json").read_text(encoding="utf-8"))
           with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as handle:
               for key in ("archive", "checksum", "staging_root", "sha256"):
@@ -153,10 +177,13 @@ jobs:
         env:
           REQUESTED: ${{ inputs.publish_release }}
           EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
           value=false
           if [[ "$EVENT_NAME" == "schedule" || "$REQUESTED" == "true" ]]; then
+            value=true
+          elif [[ "$EVENT_NAME" == "push" && "$REF_NAME" == "main" ]]; then
             value=true
           fi
           echo "value=$value" >> "$GITHUB_OUTPUT"
