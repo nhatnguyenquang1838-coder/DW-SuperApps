@@ -17,7 +17,8 @@ class PowerDistributionIntegrationTests(unittest.TestCase):
             with self.subTest(power_id=power_id):
                 distribution = manifest["spec"]["distribution"]
                 self.assertEqual("dw.power-distribution/v1", distribution["contract"])
-                self.assertEqual("submodule", distribution["defaultMode"])
+                expected_default = "release" if power_id == "bmad" else "submodule"
+                self.assertEqual(expected_default, distribution["defaultMode"])
                 self.assertEqual(
                     {"submodule", "release", "powerDist"},
                     set(distribution["modes"]),
@@ -39,8 +40,13 @@ class PowerDistributionIntegrationTests(unittest.TestCase):
             states["task-me"]["sourceCommit"],
         )
         self.assertEqual("blocked-missing-repository", states["ua"]["status"])
+        self.assertEqual("ready-unpublished", states["bmad"]["status"])
+        self.assertEqual(
+            "bb45db4aa4496c69239f9c0629c290fd1b072fc9",
+            states["bmad"]["sourceCommit"],
+        )
 
-    def test_legacy_submodule_sources_remain_canonical(self) -> None:
+    def test_submodule_source_contract_remains_canonical(self) -> None:
         for power_id, manifest in dw_cli.manifests().items():
             with self.subTest(power_id=power_id):
                 submodule = manifest["spec"]["distribution"]["modes"]["submodule"]
