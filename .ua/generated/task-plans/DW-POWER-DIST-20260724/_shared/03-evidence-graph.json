@@ -1,0 +1,12 @@
+{
+  "task_edges": [
+    ["DW-PDIST-01","DW-PDIST-02","blocks"],
+    ["DW-PDIST-01","DW-PDIST-03","blocks"],
+    ["DW-PDIST-01","DW-PDIST-04","blocks"],
+    ["DW-PDIST-01","DW-PDIST-05","blocks"],
+    ["DW-PDIST-02","DW-PDIST-05","blocks"],
+    ["DW-PDIST-03","DW-PDIST-05","blocks"],
+    ["DW-PDIST-04","DW-PDIST-05","blocks"]
+  ],
+  "jira": {"DW-PDIST-01":"SCRUM-90","DW-PDIST-02":"SCRUM-91","DW-PDIST-03":"SCRUM-92","DW-PDIST-04":"SCRUM-93","DW-PDIST-05":"SCRUM-94"}
+}
