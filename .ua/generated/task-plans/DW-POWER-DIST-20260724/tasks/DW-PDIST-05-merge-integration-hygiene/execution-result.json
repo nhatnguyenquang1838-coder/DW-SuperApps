@@ -5,24 +5,34 @@
   "status": "PARTIAL_BLOCKED",
   "repository": "nhatnguyenquang1838-coder/DW-SuperApps",
   "branch": "feat/dw-power-distribution-v1",
-  "head": "39926d40974d63873f923327cbba2a1aa64af932",
+  "integrationHead": "6ae1ffa521b26b274c5424a258ac9120c1a1b7cb",
   "implemented": [
     "Hybrid distribution manifest contract",
     "Submodule/release/power-dist/package source modes",
     "Install/configure/doctor/history/rollback/uninstall commands",
     "Checksum and ZIP safety",
+    "Task Me provider integration",
+    "Controlled UA provider integration",
     "Provider evidence registry",
     "Legacy submodule compatibility"
   ],
+  "providerHeads": {
+    "task-me": "711d6314f31a844253bb6719cd28986817768ebc",
+    "ua": "7797a0e6ecdf3c964e5fa723f9d19fb3637d4ea5",
+    "gwc": null
+  },
   "validation": [
     "JSON Schema validation for all three Power manifests",
     "Python compilation of consumer runtime",
     "Synthetic install/upgrade/configure/doctor/history/rollback/uninstall",
-    "Malicious ZIP parent-traversal rejection"
+    "Malicious ZIP parent-traversal rejection",
+    "UA source lock and fail-closed drift detection",
+    "UA bundled dependency path verification"
   ],
   "remainingBlockers": [
-    "DW-PDIST-02 blocked by GWC policy",
-    "DW-PDIST-04 blocked by missing ua-power repository"
+    "DW-PDIST-02 blocked by GWC repository policy pending formal G0/G1/G2 authority"
   ],
+  "releasePublished": false,
+  "powerDistPublished": false,
   "definitionOfDoneMet": false
 }
