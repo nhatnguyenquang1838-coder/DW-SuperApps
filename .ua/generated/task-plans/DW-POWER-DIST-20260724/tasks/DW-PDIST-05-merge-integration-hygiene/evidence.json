@@ -1,0 +1,14 @@
+{
+  "task_id":"DW-PDIST-05",
+  "jira":"SCRUM-94",
+  "repository":"nhatnguyenquang1838-coder/DW-SuperApps",
+  "planning_base_sha":"90acc051f35de4d4e325a8def7d57ed296645703",
+  "dependencies":{"DW-PDIST-01":"SCRUM-90","DW-PDIST-02":"SCRUM-91","DW-PDIST-03":"SCRUM-92","DW-PDIST-04":"SCRUM-93"},
+  "verified_manifest_paths":["manifests/powers/gwc.yaml","manifests/powers/task-me.yaml","manifests/powers/ua.yaml"],
+  "observations":[
+    "DW-SuperApps currently uses main-pinned source repositories and submodule paths.",
+    "Provider outputs must be reconciled through exact SHAs because physical branches are repository-local.",
+    "The final task must preserve legacy submodule behavior while adding release consumption."
+  ],
+  "confidence":0.91
+}
