@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1.0",
+  "task": "DW-PDIST-05",
+  "foundation": {
+    "repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+    "branch": "feat/dw-power-distribution-v1",
+    "task1Head": "4e552ea3d915a4790814b08b3155c66e3c5736a1"
+  },
+  "providers": {
+    "gwc": {
+      "task": "DW-PDIST-02",
+      "jira": "SCRUM-91",
+      "repository": "nhatnguyenquang1838-coder/gwc",
+      "baseCommit": "b3edbb102fb5b0e7e1532e221d89c16896f17755",
+      "status": "blocked-policy",
+      "reason": "GWC repository writes require formal G0/G1/G2 authority; HUMAN_BYPASS cannot skip it."
+    },
+    "task-me": {
+      "task": "DW-PDIST-03",
+      "jira": "SCRUM-92",
+      "repository": "nhatnguyenquang1838-coder/task-me",
+      "branch": "feat/dw-power-distribution-v1",
+      "head": "711d6314f31a844253bb6719cd28986817768ebc",
+      "status": "ready-unpublished",
+      "releasePublished": false,
+      "powerDistPublished": false
+    },
+    "ua": {
+      "task": "DW-PDIST-04",
+      "jira": "SCRUM-93",
+      "repository": "nhatnguyenquang1838-coder/ua-power",
+      "upstreamRepository": "Egonex-AI/Understand-Anything",
+      "upstreamCommit": "6ae71878beb50226a1e4b7e2f52ac6468c86f74b",
+      "status": "blocked-missing-repository",
+      "reason": "Controlled fork or wrapper repository does not exist and repository creation is unavailable."
+    }
+  },
+  "integration": {
+    "status": "partial-blocked",
+    "legacySubmoduleModePreserved": true,
+    "consumerCommands": [
+      "install",
+      "configure",
+      "doctor",
+      "history",
+      "rollback",
+      "uninstall"
+    ],
+    "releaseOrDeploymentPerformed": false,
+    "gateControlUsed": false
+  }
+}
