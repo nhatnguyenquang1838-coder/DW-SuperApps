@@ -29,6 +29,8 @@ spec:
     - TRADEMARK.md
     - distribution/**
   exclude:
+    - "**/__pycache__/**"
+    - "**/*.pyc"
     - "**/__tests__/**"
     - "**/test/**"
     - "**/tests/**"
