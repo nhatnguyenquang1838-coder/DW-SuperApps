@@ -41,6 +41,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: bmad-power-publisher-${{ github.event_name }}-${{ github.ref }}
@@ -160,6 +161,7 @@ jobs:
           python "$staging/distribution/lib/bootstrap_bmad.py" \
             --target "$consumer" --host codex --check
           python "$staging/lib/power_runtime.py" uninstall --target "$consumer"
+          test -d "$consumer/.bmad"
 
       - name: Upload validated package
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -206,6 +208,133 @@ jobs:
               --title "BMAD Power $TAG" \
               --notes "BMAD source: nhatnguyenquang1838-coder/BMAD-METHOD@$SOURCE_SHA"
           fi
+
+      - name: Validate published release end to end
+        id: release_e2e
+        if: steps.publish.outputs.value == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.identity.outputs.tag }}
+          SOURCE_SHA: ${{ steps.identity.outputs.source_sha }}
+          VERSION: ${{ steps.identity.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_dir="$(mktemp -d)"
+          gh release download "$TAG" \
+            --pattern 'bmad-*.zip' \
+            --pattern 'bmad-*.zip.sha256' \
+            --dir "$release_dir"
+
+          checksum="$(find "$release_dir" -maxdepth 1 -type f -name '*.zip.sha256' -print -quit)"
+          test -n "$checksum"
+          archive="${checksum%.sha256}"
+          test -f "$archive"
+          (cd "$release_dir" && sha256sum -c "$(basename "$checksum")")
+
+          extract_dir="$(mktemp -d)"
+          python - "$archive" "$extract_dir" <<'PY'
+          import stat
+          import sys
+          import zipfile
+          from pathlib import Path, PurePosixPath
+
+          archive = Path(sys.argv[1])
+          destination = Path(sys.argv[2])
+          with zipfile.ZipFile(archive) as bundle:
+              for info in bundle.infolist():
+                  name = info.filename.replace('\\', '/')
+                  parts = PurePosixPath(name).parts
+                  mode = info.external_attr >> 16
+                  if name.startswith('/') or '..' in parts:
+                      raise SystemExit(f'unsafe release path: {name}')
+                  if stat.S_ISLNK(mode):
+                      raise SystemExit(f'release symlink rejected: {name}')
+              bundle.extractall(destination)
+          PY
+
+          package_root="$(find "$extract_dir" -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          test -n "$package_root"
+          python scripts/power_dist.py verify --package-root "$package_root"
+
+          consumer="$(mktemp -d)"
+          install_json="$(python "$package_root/lib/power_runtime.py" install --target "$consumer")"
+          doctor_json="$(python "$package_root/lib/power_runtime.py" doctor --target "$consumer")"
+          bootstrap_json="$(python "$package_root/distribution/lib/bootstrap_bmad.py" \
+            --target "$consumer" --host codex --check)"
+          uninstall_json="$(python "$package_root/lib/power_runtime.py" uninstall --target "$consumer")"
+          test -d "$consumer/.bmad"
+
+          archive_sha="$(sha256sum "$archive" | awk '{print $1}')"
+          export TAG SOURCE_SHA VERSION archive_sha install_json doctor_json bootstrap_json uninstall_json
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          evidence = {
+              'schemaVersion': '1.0',
+              'status': 'PASS',
+              'tag': os.environ['TAG'],
+              'version': os.environ['VERSION'],
+              'sourceSha': os.environ['SOURCE_SHA'],
+              'archiveSha256': os.environ['archive_sha'],
+              'checksumVerified': True,
+              'safeExtraction': True,
+              'manifestVerified': True,
+              'install': json.loads(os.environ['install_json']),
+              'doctor': json.loads(os.environ['doctor_json']),
+              'bootstrap': json.loads(os.environ['bootstrap_json']),
+              'uninstall': json.loads(os.environ['uninstall_json']),
+              'runtimeDataPreserved': True,
+          }
+          Path('bmad-release-e2e.json').write_text(
+              json.dumps(evidence, indent=2, sort_keys=True) + '\n',
+              encoding='utf-8',
+          )
+          PY
+          cat bmad-release-e2e.json
+
+      - name: Upload published-release E2E evidence
+        if: steps.publish.outputs.value == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ steps.identity.outputs.tag }}-release-e2e
+          path: bmad-release-e2e.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Record E2E result on merged PR
+        if: >-
+          steps.publish.outputs.value == 'true' &&
+          github.event_name == 'push' &&
+          github.ref_name == 'main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.identity.outputs.tag }}
+          SOURCE_SHA: ${{ steps.identity.outputs.source_sha }}
+          ARCHIVE_SHA: ${{ steps.build.outputs.sha256 }}
+        shell: bash
+        run: |
+          cat > /tmp/bmad-e2e-comment.md <<EOF
+          ## BMAD Power release E2E — PASS ✅
+
+          - Release: \\`$TAG\\`
+          - BMAD source: \\`$SOURCE_SHA\\`
+          - Archive SHA-256: \\`$ARCHIVE_SHA\\`
+          - Release ZIP downloaded from GitHub Release
+          - Release checksum verified
+          - Safe ZIP extraction verified
+          - Package manifest verified
+          - Clean consumer install passed
+          - Package doctor passed
+          - Codex bootstrap preflight passed
+          - Uninstall passed with \\`.bmad\\` runtime data preserved
+          - Distribution branch: \\`power-dist-bmad\\`
+
+          Evidence artifact: \\`$TAG-release-e2e\\`
+          EOF
+          gh pr comment 6 --body-file /tmp/bmad-e2e-comment.md
 
       - name: Synchronize power-dist-bmad
         if: steps.publish.outputs.value == 'true'
