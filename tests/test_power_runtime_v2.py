@@ -14,7 +14,7 @@ SPEC.loader.exec_module(dw_cli)
 
 class PowerRuntimeV2Tests(unittest.TestCase):
     def test_registered_power_ids(self) -> None:
-        self.assertEqual({"gwc", "ua", "task-me"}, set(dw_cli.manifests()))
+        self.assertEqual({"gwc", "ua", "task-me", "bmad"}, set(dw_cli.manifests()))
 
     def test_manifests_use_v2_contract(self) -> None:
         expected_hosts = {
@@ -38,12 +38,18 @@ class PowerRuntimeV2Tests(unittest.TestCase):
                 manifest["spec"]["permissions"]["write"],
             )
 
-    def test_dynamic_submodule_targets(self) -> None:
+    def test_dynamic_submodule_targets_exclude_external_power(self) -> None:
         powers = dw_cli.select_submodules("powers")
         systems = dw_cli.select_submodules("systems")
         self.assertEqual(3, len(powers))
+        self.assertEqual({"gwc", "ua", "task-me"}, {item["id"] for item in powers})
         self.assertEqual(1, len(systems))
         self.assertEqual("rental-home", systems[0]["id"])
+
+    def test_rental_home_enables_bmad(self) -> None:
+        system = dw_cli.find_system("rental-home")
+        self.assertIn("bmad", system["enabled_powers"])
+        self.assertTrue((ROOT / "powers" / "bmad" / "SKILL.md").is_file())
 
     def test_cli_parses_v2_commands(self) -> None:
         parser = dw_cli.build_parser()
@@ -59,6 +65,15 @@ class PowerRuntimeV2Tests(unittest.TestCase):
                 "rental-home",
                 "--task",
                 "Analyze architecture",
+            ],
+            [
+                "power",
+                "prompt",
+                "bmad",
+                "--system",
+                "rental-home",
+                "--task",
+                "Plan a product change",
             ],
             ["power", "check", "all"],
             ["host", "list"],

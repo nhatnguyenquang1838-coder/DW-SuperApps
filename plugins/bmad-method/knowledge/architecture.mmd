@@ -1,0 +1,46 @@
+flowchart LR
+  H["bmad-help<br/>workflow router"]:::primary
+  B["Brainstorming"]:::analysis
+  PB["Product Brief"]:::analysis
+  PRD["PRD"]:::planning
+  UX["UX Design"]:::planning
+  ARCH["Architecture"]:::solution
+  ES["Epics & Stories"]:::solution
+  SP["Sprint Planning"]:::implementation
+  CS["Create Story"]:::implementation
+  DEV["Dev Story"]:::implementation
+  CR["Code Review"]:::quality
+  QD["Quick Dev"]:::implementation
+  CLI["BMAD CLI / Installer"]:::installer
+  CORE["Core Skills"]:::module
+  BMM["BMM Skills"]:::module
+  DIST["DW BMAD Publisher"]:::primary
+  DOCS["Website / Docs / Evals<br/>excluded from package"]:::excluded
+
+  H --> B --> PB --> PRD
+  PRD -. optional .-> UX
+  PRD --> ARCH --> ES --> SP --> CS --> DEV --> CR
+  H -. bounded path .-> QD --> CR
+
+  CLI --> CORE
+  CLI --> BMM
+  CORE --> H
+  BMM --> PB
+  BMM --> PRD
+  BMM --> ARCH
+  BMM --> SP
+
+  DIST -->|allowlist| CORE
+  DIST -->|allowlist| BMM
+  DIST -->|bootstrap dependency| CLI
+  DIST -. rejects .-> DOCS
+
+  classDef primary fill:#dbeafe,stroke:#2563eb,color:#1e3a8a,stroke-width:2px;
+  classDef analysis fill:#dcfce7,stroke:#16a34a,color:#14532d;
+  classDef planning fill:#fef9c3,stroke:#ca8a04,color:#713f12;
+  classDef solution fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
+  classDef implementation fill:#ffedd5,stroke:#ea580c,color:#7c2d12;
+  classDef quality fill:#cffafe,stroke:#0891b2,color:#164e63;
+  classDef installer fill:#fce7f3,stroke:#db2777,color:#831843;
+  classDef module fill:#e0e7ff,stroke:#4f46e5,color:#312e81;
+  classDef excluded fill:#fee2e2,stroke:#dc2626,color:#7f1d1d,stroke-dasharray: 5 5;

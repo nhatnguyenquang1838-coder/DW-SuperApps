@@ -51,13 +51,76 @@ jobs:
           test ! -e /tmp/dw-cli-home/.local/bin/dw
           ! grep -Fq "DW SuperApps CLI" /tmp/dw-cli-home/.bashrc
 
-      - run: python -m pip install -r requirements-dev.txt
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements-dev.txt
 
       - name: Validate workspace contract
         run: python scripts/dw_cli.py validate
 
-      - name: Test Power Runtime
-        run: python -m unittest discover -s tests -p "test_*.py"
+      - name: Test one-click commands
+        run: python -m unittest -v tests.test_oneclick_commands
+
+      - name: Test multi-host runtime
+        run: python -m unittest -v tests.test_multi_host_runtime
+
+      - name: Test Power Runtime v2
+        run: python -m unittest -v tests.test_power_runtime_v2
+
+      - name: Test distribution contract
+        run: python -m unittest -v tests.test_power_distribution_contract
+
+      - name: Test deterministic builder
+        run: python -m unittest -v tests.test_power_dist_builder
+
+      - name: Test distribution integration
+        run: python -m unittest -v tests.test_power_distribution_integration
+
+      - name: Test portable runtime installer
+        run: python -m unittest -v tests.test_power_runtime_installer
+
+      - name: Test package consumer
+        run: python -m unittest -v tests.test_power_package_consumer
+
+      - name: Test BMAD source lock and graph
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_source_lock_and_graph_use_same_commit
+
+      - name: Test BMAD graph closure
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_knowledge_graph_references_are_closed
+
+      - name: Test BMAD distribution recipe
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_distribution_recipe_is_valid_and_skills_only
+
+      - name: Test BMAD Power manifest
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_power_manifest_validates
+
+      - name: Test BMAD host mapping
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_bootstrap_host_mapping
+
+      - name: Test BMAD deterministic package
+        id: bmad_deterministic
+        continue-on-error: true
+        run: >-
+          python -m unittest -v
+          tests.test_bmad_power_plugin.BmadPowerPluginTests.test_external_source_overlay_builds_a_deterministic_package
+          > bmad-deterministic.log 2>&1
+
+      - name: Upload BMAD deterministic test log
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bmad-deterministic-test-log
+          path: bmad-deterministic.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Fail on BMAD deterministic test
+        if: steps.bmad_deterministic.outcome == 'failure'
+        run: |
+          cat bmad-deterministic.log
+          exit 1
+
+      - name: Test BMAD workflow modes
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_workflow_has_manual_and_scheduled_modes
 
       - name: Validate all host adapters
         run: |
