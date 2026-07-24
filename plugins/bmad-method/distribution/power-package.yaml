@@ -1,0 +1,52 @@
+apiVersion: dw.superapps/v1
+kind: PowerDistribution
+metadata:
+  id: bmad
+  name: BMAD Method
+  description: Skills-only BMAD software-delivery lifecycle with a portable multi-host bootstrap.
+spec:
+  source:
+    repository: nhatnguyenquang1838-coder/BMAD-METHOD
+    defaultRef: main
+  package:
+    entrypoints:
+      - distribution/skills/bmad/SKILL.md
+    managedPaths:
+      - distribution/skills/bmad
+      - src/core-skills
+      - src/bmm-skills
+      - tools/installer
+    runtimeTemplates: true
+  include:
+    - src/core-skills/**
+    - src/bmm-skills/**
+    - src/scripts/**
+    - tools/installer/**
+    - bmad-modules.yaml
+    - package.json
+    - package-lock.json
+    - LICENSE
+    - TRADEMARK.md
+    - distribution/**
+  exclude:
+    - "**/__tests__/**"
+    - "**/test/**"
+    - "**/tests/**"
+    - "**/*.test.js"
+    - "**/*.spec.js"
+    - tools/installer/web-bundles/**
+    - tools/installer/test-fixtures/**
+  forbidden:
+    paths:
+      - website/**
+      - docs/**
+      - evals/**
+      - test/**
+      - .github/**
+      - _bmad/**
+      - _bmad-output/**
+    contentPatterns:
+      - "(?i)BEGIN (RSA|OPENSSH|EC|DSA|PGP) PRIVATE KEY"
+  runtime:
+    dataRoot: .bmad
+    configRequired: false
