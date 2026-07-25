@@ -1,0 +1,3520 @@
+{
+  "version": "1.0.0",
+  "gitCommitHash": "cab5c0835811a3380f3e8d0ed899af6b3eb2f728",
+  "generatedAt": "2026-07-25T14:38:53.453Z",
+  "files": {
+    ".claude/skills/bmad/SKILL.md": {
+      "filePath": ".claude/skills/bmad/SKILL.md",
+      "contentHash": "1ddaef1da4cd45b54c61409e1003c1d21e2af1adfae21a01bb77c601726d851a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 27,
+      "hasStructuralAnalysis": true
+    },
+    ".codex/README.md": {
+      "filePath": ".codex/README.md",
+      "contentHash": "ca678e298fbafb8f3a41e3661901f0d32b6b619756023557ad9c633847f3257c",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 13,
+      "hasStructuralAnalysis": true
+    },
+    ".codex/skills/bmad/SKILL.md": {
+      "filePath": ".codex/skills/bmad/SKILL.md",
+      "contentHash": "51dd1a68ada6e242c144a734668b58230b276a428ab137f14345334c0b27068c",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 27,
+      "hasStructuralAnalysis": true
+    },
+    ".codex/skills/gwc/SKILL.md": {
+      "filePath": ".codex/skills/gwc/SKILL.md",
+      "contentHash": "201f45ce4778c43afd2bfc27eeede6458b76e5a23d1d400f9f13e385ce98aefe",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 27,
+      "hasStructuralAnalysis": true
+    },
+    ".codex/skills/task-me/SKILL.md": {
+      "filePath": ".codex/skills/task-me/SKILL.md",
+      "contentHash": "e1871776be76eb016dd99e0649a04cffbf323284741a6ad64d1c45c2f8a4c819",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 27,
+      "hasStructuralAnalysis": true
+    },
+    ".codex/skills/ua/SKILL.md": {
+      "filePath": ".codex/skills/ua/SKILL.md",
+      "contentHash": "5acd046a881cf94ebbaeabd5c62428ba855982a6f43209eff4fb12d7ea560a2b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 27,
+      "hasStructuralAnalysis": true
+    },
+    ".github/workflows/publish-bmad-power.yml": {
+      "filePath": ".github/workflows/publish-bmad-power.yml",
+      "contentHash": "8a33d6dcf59bffe8e36d00ade3aafba4ce81b347604128c1ba32da3300b39bd0",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 368,
+      "hasStructuralAnalysis": true
+    },
+    ".github/workflows/reusable-publish-power.yml": {
+      "filePath": ".github/workflows/reusable-publish-power.yml",
+      "contentHash": "a42788a3abdb36b93ee19589abbca87820d64b122c3c89c55c3cfc9143527804",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 211,
+      "hasStructuralAnalysis": true
+    },
+    ".github/workflows/validate-workspace.yml": {
+      "filePath": ".github/workflows/validate-workspace.yml",
+      "contentHash": "2f583d92436d7b21c75a8e032edc63aec0eb1cbb6c011478d996a66707337773",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 138,
+      "hasStructuralAnalysis": true
+    },
+    ".gitmodules": {
+      "filePath": ".gitmodules",
+      "contentHash": "f5985fdeccd61eeb2feab9db9f86f10b140941db6db7f6efb75002e44bf3dcc3",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 17,
+      "hasStructuralAnalysis": false
+    },
+    ".gwc/policies/notification-policy.yaml": {
+      "filePath": ".gwc/policies/notification-policy.yaml",
+      "contentHash": "881b048c0f13205f79faf93b85ce15749970a90b3ba5599e77ffd6f16246df0e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": true
+    },
+    ".gwc/runbooks/SLACK_NOTIFICATION_RUNBOOK.md": {
+      "filePath": ".gwc/runbooks/SLACK_NOTIFICATION_RUNBOOK.md",
+      "contentHash": "ea81060282feba598bc5abe731f0f9c3b648ba62203aa2fae5e63c96fab94083",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": true
+    },
+    ".kilo/plans/1784987769805-ua-full-analysis-plan.md": {
+      "filePath": ".kilo/plans/1784987769805-ua-full-analysis-plan.md",
+      "contentHash": "9166927c771f472baf829fd37701f3fa6772dc34ae87db639b6abfd8957fe71d",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 75,
+      "hasStructuralAnalysis": true
+    },
+    ".kiro/skills/bmad/SKILL.md": {
+      "filePath": ".kiro/skills/bmad/SKILL.md",
+      "contentHash": "ea39e22c300544e18f54adfd2d4c88a230f1692893ac157843199b5cb8f2fd7f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 27,
+      "hasStructuralAnalysis": true
+    },
+    ".kiro/skills/gwc/SKILL.md": {
+      "filePath": ".kiro/skills/gwc/SKILL.md",
+      "contentHash": "4874c6c808210830912ac7548b0da706917cd9ec91727a78d482ed9502ef1f9f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 27,
+      "hasStructuralAnalysis": true
+    },
+    ".kiro/skills/task-me/SKILL.md": {
+      "filePath": ".kiro/skills/task-me/SKILL.md",
+      "contentHash": "a5ee1f2ec6e9ad87f4afdf1fae3774dfd97476ebb9e7c2db21f8f683741eff39",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 27,
+      "hasStructuralAnalysis": true
+    },
+    ".kiro/skills/ua/SKILL.md": {
+      "filePath": ".kiro/skills/ua/SKILL.md",
+      "contentHash": "3ccb5b4fa4d66adec3df4fe92865e9e05ca8a88e1012b2f089bdb5ddfb344a85",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 27,
+      "hasStructuralAnalysis": true
+    },
+    ".kiro/steering/workspace-powers.md": {
+      "filePath": ".kiro/steering/workspace-powers.md",
+      "contentHash": "402aea0ddc24b24a92060baddaf63435bbd04f1d9122f2d0ae015e44ee49d689",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 13,
+      "hasStructuralAnalysis": true
+    },
+    ".ua/.understandignore": {
+      "filePath": ".ua/.understandignore",
+      "contentHash": "9886ee51b1902e662b6ab8aab0ee2db9f23966259a59de2ae38433d1252646a8",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 92,
+      "hasStructuralAnalysis": false
+    },
+    "AGENTS.md": {
+      "filePath": "AGENTS.md",
+      "contentHash": "295a8dea8398f73917043d8e048a13f5509d15d99848d3c63eb08e95e0297cc1",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 87,
+      "hasStructuralAnalysis": true
+    },
+    "DW-SuperApps.code-workspace": {
+      "filePath": "DW-SuperApps.code-workspace",
+      "contentHash": "69e7b37e2ebdaf8fc313bf6cb74882fed65895e5f853736e65759bafb333bc6b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 8,
+      "hasStructuralAnalysis": false
+    },
+    "README.md": {
+      "filePath": "README.md",
+      "contentHash": "113aeb78047e101e540d3ae83ffc3998d6fecf22457c2822b85d7b550b14a6d7",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 191,
+      "hasStructuralAnalysis": true
+    },
+    "bin/dw": {
+      "filePath": "bin/dw",
+      "contentHash": "d35a4b5c002f87ed67011322d75a2ddd8614762933a6f7375e38f10e5c76d3d1",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 35,
+      "hasStructuralAnalysis": false
+    },
+    "bin/dw.ps1": {
+      "filePath": "bin/dw.ps1",
+      "contentHash": "cd88edfb46d2df3e9b6364fc5fba414e596207c21e462cd8381d0a83dd02677e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 5,
+      "hasStructuralAnalysis": false
+    },
+    "docs/DW_SUPER_SETUP.md": {
+      "filePath": "docs/DW_SUPER_SETUP.md",
+      "contentHash": "7db654e4bd4abc61b4bce81f385d49532a8562fa58ae0311fb2907c906837d85",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 176,
+      "hasStructuralAnalysis": true
+    },
+    "docs/DW_SUPER_SETUP_VERIFICATION.md": {
+      "filePath": "docs/DW_SUPER_SETUP_VERIFICATION.md",
+      "contentHash": "eab2a0ebfeed79dcbec7692ee1fc0a1965a29afbab88423dd343c40db2ab738d",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 40,
+      "hasStructuralAnalysis": true
+    },
+    "docs/MULTI_HOST_SETUP.md": {
+      "filePath": "docs/MULTI_HOST_SETUP.md",
+      "contentHash": "10a96f2560faee2f85232c84f2f7c8e67655c0f364fa36bb1c7f4dfd7e06175e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 201,
+      "hasStructuralAnalysis": true
+    },
+    "docs/POWER_CONSUMER_RUNTIME_V1.md": {
+      "filePath": "docs/POWER_CONSUMER_RUNTIME_V1.md",
+      "contentHash": "60075012d0ceff8864476bccab0664f9009477967faa70be0d3474db78818643",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 47,
+      "hasStructuralAnalysis": true
+    },
+    "docs/POWER_DISTRIBUTION_V1.md": {
+      "filePath": "docs/POWER_DISTRIBUTION_V1.md",
+      "contentHash": "e39e497dcf5e0c51a877168a25ed6b77c2ff97b44f9b0296012189eb123ff5bf",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 142,
+      "hasStructuralAnalysis": true
+    },
+    "docs/POWER_RUNTIME_V2.md": {
+      "filePath": "docs/POWER_RUNTIME_V2.md",
+      "contentHash": "d2b9477602024c4e16f31b0e415160afcf4f42e2f0485fefc72b1e036eadf4f2",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 220,
+      "hasStructuralAnalysis": true
+    },
+    "docs/WORKSPACE_OPERATIONS.md": {
+      "filePath": "docs/WORKSPACE_OPERATIONS.md",
+      "contentHash": "6ccdf32209ffef80ed9190d6a557291a820242bd8252cd5a3b335782088d2ec5",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 60,
+      "hasStructuralAnalysis": true
+    },
+    "docs/powers/BMAD_POWER.md": {
+      "filePath": "docs/powers/BMAD_POWER.md",
+      "contentHash": "84597a69dc27284e214bce91e54b0d099abc98b03e303c1fb1bb7e595bc0b284",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 56,
+      "hasStructuralAnalysis": true
+    },
+    "dw.cmd": {
+      "filePath": "dw.cmd",
+      "contentHash": "63380ed0605e37cc89d9674ee79116920ef987cbed1ea302e4beb2ec1e417d82",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 3,
+      "hasStructuralAnalysis": false
+    },
+    "dw.ps1": {
+      "filePath": "dw.ps1",
+      "contentHash": "827ebce4eecf38e9f6a80a074fa7a47952bef28efd92f38bb1fc9926a38baa8a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 5,
+      "hasStructuralAnalysis": false
+    },
+    "manifests/evidence/SCRUM-131/SHA256SUMS.txt": {
+      "filePath": "manifests/evidence/SCRUM-131/SHA256SUMS.txt",
+      "contentHash": "4dadd069a767bcd53645c9ef3be4770fcdac8f1b211f07105c8d49b025fd1e00",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 10,
+      "hasStructuralAnalysis": false
+    },
+    "manifests/evidence/SCRUM-131/validation-evidence.json": {
+      "filePath": "manifests/evidence/SCRUM-131/validation-evidence.json",
+      "contentHash": "3a5ca1a79fd91f61999118719a32c58928d507bda954467662110cd77acad69f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 70,
+      "hasStructuralAnalysis": true
+    },
+    "manifests/evidence/SCRUM-132/hygiene-evidence.json": {
+      "filePath": "manifests/evidence/SCRUM-132/hygiene-evidence.json",
+      "contentHash": "ec5953d9d6ddbc37246cc75e303367f091441fd1a3ae6bf7630da80a7e264b6b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 27,
+      "hasStructuralAnalysis": true
+    },
+    "manifests/evidence/SCRUM-132/removed-files.txt": {
+      "filePath": "manifests/evidence/SCRUM-132/removed-files.txt",
+      "contentHash": "648e7a79c1caf1eb6ca05c678a9b3b4d8749b71fed0cf1535e10e83e1d3219d9",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 54,
+      "hasStructuralAnalysis": false
+    },
+    "manifests/evidence/SCRUM-134/SHA256SUMS.txt": {
+      "filePath": "manifests/evidence/SCRUM-134/SHA256SUMS.txt",
+      "contentHash": "34a04e1ba0b221427b2f2ac432aa566e8eaaf327f0bda9f940c75cce7c6224e7",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 13,
+      "hasStructuralAnalysis": false
+    },
+    "manifests/evidence/SCRUM-134/setup-evidence.json": {
+      "filePath": "manifests/evidence/SCRUM-134/setup-evidence.json",
+      "contentHash": "d9d9aee100e5508e80c39a8d36c15237723d201e17076116ceb03127c66e4acf",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 82,
+      "hasStructuralAnalysis": true
+    },
+    "manifests/power-distribution-evidence.json": {
+      "filePath": "manifests/power-distribution-evidence.json",
+      "contentHash": "c08fe33348bf45e47ff6a061dc04f10a1a951b91c97fc48cc3a214dbdf87d873",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 84,
+      "hasStructuralAnalysis": true
+    },
+    "manifests/powers/bmad.yaml": {
+      "filePath": "manifests/powers/bmad.yaml",
+      "contentHash": "cc77cb2e805e3433846422f5ce99adeb019de979cc7a1a86135b74a61e0e39ba",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 84,
+      "hasStructuralAnalysis": true
+    },
+    "manifests/powers/gwc.yaml": {
+      "filePath": "manifests/powers/gwc.yaml",
+      "contentHash": "04e32cba57bd98732f9e968baf44abe286d0e14ee1e78268beec0e8c32d9b44a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 74,
+      "hasStructuralAnalysis": true
+    },
+    "manifests/powers/task-me.yaml": {
+      "filePath": "manifests/powers/task-me.yaml",
+      "contentHash": "fe20a38605cd331d1c30370cc468387216c5442460af7e3125a5b706e496b3fe",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 75,
+      "hasStructuralAnalysis": true
+    },
+    "manifests/powers/ua.yaml": {
+      "filePath": "manifests/powers/ua.yaml",
+      "contentHash": "f05f413c70d0c2a23d30b27cd84b15b4d2470eb1d9b16f140d60ffd49a3a2728",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 72,
+      "hasStructuralAnalysis": true
+    },
+    "plugins/bmad-method/README.md": {
+      "filePath": "plugins/bmad-method/README.md",
+      "contentHash": "22f9de793dc378406181952c18ae4f8c9541ecd835b0663fa0da3d7929f2d212",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 30,
+      "hasStructuralAnalysis": true
+    },
+    "plugins/bmad-method/SOURCE.lock.json": {
+      "filePath": "plugins/bmad-method/SOURCE.lock.json",
+      "contentHash": "3432327a29436ac38e440020bd9c4550f3dd4086882ef6c7cea48efcb6c33cdf",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 10,
+      "hasStructuralAnalysis": true
+    },
+    "plugins/bmad-method/distribution/power-package.yaml": {
+      "filePath": "plugins/bmad-method/distribution/power-package.yaml",
+      "contentHash": "e0182d148590d22747734ceb941cf61856815eca19ec76100e68940fa4dc4bcd",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 55,
+      "hasStructuralAnalysis": true
+    },
+    "plugins/bmad-method/knowledge/README.md": {
+      "filePath": "plugins/bmad-method/knowledge/README.md",
+      "contentHash": "0ff701b6b07fd451b12691021a07d525d2188f02098132f2aa6b77f3deef1127",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 26,
+      "hasStructuralAnalysis": true
+    },
+    "plugins/bmad-method/knowledge/architecture.mmd": {
+      "filePath": "plugins/bmad-method/knowledge/architecture.mmd",
+      "contentHash": "6b9ddc57ea18c91fe0114c0ca3a6c548b04e2a321c7a6eddb6e1023142311b6a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 47,
+      "hasStructuralAnalysis": false
+    },
+    "plugins/bmad-method/knowledge/knowledge-graph.json": {
+      "filePath": "plugins/bmad-method/knowledge/knowledge-graph.json",
+      "contentHash": "192150dcf8ca3088dae791816c7e0af4e9c78c368c8cfa95c955e0bc741a8a3f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 2,
+      "hasStructuralAnalysis": true
+    },
+    "plugins/bmad-method/overlay/distribution/bin/bootstrap-bmad": {
+      "filePath": "plugins/bmad-method/overlay/distribution/bin/bootstrap-bmad",
+      "contentHash": "2ada73a9dec73796fb83b3ac9ef06e606b1b04c7049af410da7b143b4d0ef781",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 5,
+      "hasStructuralAnalysis": false
+    },
+    "plugins/bmad-method/overlay/distribution/bin/bootstrap-bmad.ps1": {
+      "filePath": "plugins/bmad-method/overlay/distribution/bin/bootstrap-bmad.ps1",
+      "contentHash": "9546a2fcf0cc66377d789067ca3a30e273a3d6fe96e503a8b3b05d17d76ba6bd",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 10,
+      "hasStructuralAnalysis": false
+    },
+    "plugins/bmad-method/overlay/distribution/config/config.schema.json": {
+      "filePath": "plugins/bmad-method/overlay/distribution/config/config.schema.json",
+      "contentHash": "c2faa12b723d40e6be11fbde0eb6fabdeeef49f23e278baf567b00d3ff9d3cc6",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 62,
+      "hasStructuralAnalysis": true
+    },
+    "plugins/bmad-method/overlay/distribution/config/defaults.yaml": {
+      "filePath": "plugins/bmad-method/overlay/distribution/config/defaults.yaml",
+      "contentHash": "b635e85d52d14fdc8100ecb948436ea5a4643f61eaf6e8e4c3b3dc06de6ac2d0",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 9,
+      "hasStructuralAnalysis": true
+    },
+    "plugins/bmad-method/overlay/distribution/contracts/default-contract.yaml": {
+      "filePath": "plugins/bmad-method/overlay/distribution/contracts/default-contract.yaml",
+      "contentHash": "3ae6a7a1e99f3dfab69ec5b196060c42f217ea670cfae1bfcde0c8112f9b7cda",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 27,
+      "hasStructuralAnalysis": true
+    },
+    "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py": {
+      "filePath": "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "contentHash": "8c8aa8b9309d235ff68374f83906c8a9dd3d949268b04bc01e844d0f4c21954b",
+      "functions": [
+        {
+          "name": "package_root",
+          "params": [],
+          "returnType": "Path",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "sha256",
+          "params": [
+            "path"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "run",
+          "params": [
+            "command",
+            "cwd",
+            "env",
+            "capture"
+          ],
+          "returnType": "subprocess.CompletedProcess[str]",
+          "exported": true,
+          "lineCount": 19
+        },
+        {
+          "name": "executable",
+          "params": [
+            "name"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "node_version",
+          "params": [
+            "node"
+          ],
+          "returnType": "tuple[int, int, int]",
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "validate_package",
+          "params": [
+            "root"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 20
+        },
+        {
+          "name": "dependency_cache",
+          "params": [
+            "root",
+            "target",
+            "npm",
+            "refresh"
+          ],
+          "returnType": "Path",
+          "exported": true,
+          "lineCount": 34
+        },
+        {
+          "name": "safe_target",
+          "params": [
+            "root",
+            "target"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "bootstrap",
+          "params": [
+            "args"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 84
+        },
+        {
+          "name": "parser",
+          "params": [],
+          "returnType": "argparse.ArgumentParser",
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "main",
+          "params": [
+            "argv"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 8
+        }
+      ],
+      "classes": [
+        {
+          "name": "BootstrapError",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 2
+        }
+      ],
+      "imports": [
+        {
+          "source": "argparse",
+          "specifiers": [
+            "argparse"
+          ]
+        },
+        {
+          "source": "hashlib",
+          "specifiers": [
+            "hashlib"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "os",
+          "specifiers": [
+            "os"
+          ]
+        },
+        {
+          "source": "re",
+          "specifiers": [
+            "re"
+          ]
+        },
+        {
+          "source": "shutil",
+          "specifiers": [
+            "shutil"
+          ]
+        },
+        {
+          "source": "subprocess",
+          "specifiers": [
+            "subprocess"
+          ]
+        },
+        {
+          "source": "sys",
+          "specifiers": [
+            "sys"
+          ]
+        },
+        {
+          "source": "tempfile",
+          "specifiers": [
+            "tempfile"
+          ]
+        },
+        {
+          "source": "time",
+          "specifiers": [
+            "time"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "Any"
+          ]
+        }
+      ],
+      "exports": [
+        "BootstrapError",
+        "package_root",
+        "sha256",
+        "run",
+        "executable",
+        "node_version",
+        "validate_package",
+        "dependency_cache",
+        "safe_target",
+        "bootstrap",
+        "parser",
+        "main"
+      ],
+      "totalLines": 259,
+      "hasStructuralAnalysis": true
+    },
+    "plugins/bmad-method/overlay/distribution/skills/bmad/SKILL.md": {
+      "filePath": "plugins/bmad-method/overlay/distribution/skills/bmad/SKILL.md",
+      "contentHash": "4e9ef70f1513b269eca69c22dbf2f4e4c31fcf83609d16dd01165e7b0a673c7f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 39,
+      "hasStructuralAnalysis": true
+    },
+    "powers/bmad/SKILL.md": {
+      "filePath": "powers/bmad/SKILL.md",
+      "contentHash": "6549c325d625601db23e5912f25ef7f05704e2a1b601746c9e6029ac1cc0425c",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 39,
+      "hasStructuralAnalysis": true
+    },
+    "requirements-dev.txt": {
+      "filePath": "requirements-dev.txt",
+      "contentHash": "c16d522f6854b2f51ea3acbefd7d6b808eaecbd6757f37bc5adfa7d89f732682",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 3,
+      "hasStructuralAnalysis": false
+    },
+    "scan_output.json": {
+      "filePath": "scan_output.json",
+      "contentHash": "08e71bccf80353942861437a6a081a006a83e72be860936aa601246aa00a8d67",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 602,
+      "hasStructuralAnalysis": true
+    },
+    "schemas/power-consumer-binding.schema.json": {
+      "filePath": "schemas/power-consumer-binding.schema.json",
+      "contentHash": "e39856e64b4471d34f0df3652e6f492ba9733375904e025ac27deda7118cb8e5",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 53,
+      "hasStructuralAnalysis": true
+    },
+    "schemas/power-distribution.schema.json": {
+      "filePath": "schemas/power-distribution.schema.json",
+      "contentHash": "2eedf67968ec030333c93880d5f03a378e7bceef08e773dc36a385abf2700cc1",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 120,
+      "hasStructuralAnalysis": true
+    },
+    "schemas/power-manifest.schema.json": {
+      "filePath": "schemas/power-manifest.schema.json",
+      "contentHash": "f6967d56159eae97cdacb4af1428b20f06974bb9bf25e72ff459afb36c5416af",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 327,
+      "hasStructuralAnalysis": true
+    },
+    "schemas/power-package-manifest.schema.json": {
+      "filePath": "schemas/power-package-manifest.schema.json",
+      "contentHash": "61ec3cb2f4c126463e6bd1d6c6749c106839f13a1da9b1f2ed1f72c59732095d",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 63,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/dw_cli.py": {
+      "filePath": "scripts/dw_cli.py",
+      "contentHash": "21d7e0ea20497064f757ff337d0445543ab3b602ae1045ce5241466e555b0479",
+      "functions": [
+        {
+          "name": "load_yaml",
+          "params": [
+            "path"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "workspace",
+          "params": [],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "manifests",
+          "params": [],
+          "returnType": "dict[str, dict[str, Any]]",
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "run",
+          "params": [
+            "args",
+            "cwd",
+            "capture",
+            "check"
+          ],
+          "returnType": "subprocess.CompletedProcess[str]",
+          "exported": true,
+          "lineCount": 18
+        },
+        {
+          "name": "git",
+          "params": [
+            "cwd",
+            "capture"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "emit",
+          "params": [
+            "data",
+            "as_json"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "atomic_write",
+          "params": [
+            "path",
+            "content"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 21
+        },
+        {
+          "name": "find_system",
+          "params": [
+            "system_id"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "provider_entries",
+          "params": [],
+          "returnType": "list[dict[str, Any]]",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "find_provider",
+          "params": [
+            "provider_id"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "workspace_info",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 19
+        },
+        {
+          "name": "power_list",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 24
+        },
+        {
+          "name": "power_info",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 21
+        },
+        {
+          "name": "power_prompt",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 38
+        },
+        {
+          "name": "submodule_entries",
+          "params": [],
+          "returnType": "list[dict[str, str]]",
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "select_submodules",
+          "params": [
+            "target"
+          ],
+          "returnType": "list[dict[str, str]]",
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "require_initialized",
+          "params": [
+            "path"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "pinned_sha",
+          "params": [
+            "relative_path"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "submodule_branch",
+          "params": [
+            "relative_path"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "remote_sha",
+          "params": [
+            "path",
+            "branch"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "power_sync",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 71
+        },
+        {
+          "name": "normalize_host",
+          "params": [
+            "host"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "configured_hosts",
+          "params": [],
+          "returnType": "list[str]",
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "select_hosts",
+          "params": [
+            "host"
+          ],
+          "returnType": "list[str]",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "resolve_skill_source",
+          "params": [
+            "power_id",
+            "manifest"
+          ],
+          "returnType": "Path | None",
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "is_generated_path",
+          "params": [
+            "path"
+          ],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 20
+        },
+        {
+          "name": "safe_remove_generated",
+          "params": [
+            "path"
+          ],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "write_generated_file",
+          "params": [
+            "path",
+            "content"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "wrapper_content",
+          "params": [
+            "host",
+            "power_id",
+            "manifest",
+            "source"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 36
+        },
+        {
+          "name": "host_instruction_content",
+          "params": [
+            "host"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 41
+        },
+        {
+          "name": "kilo_config_content",
+          "params": [],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "host_expected_paths",
+          "params": [
+            "host"
+          ],
+          "returnType": "list[Path]",
+          "exported": true,
+          "lineCount": 16
+        },
+        {
+          "name": "install_skill_host",
+          "params": [
+            "host",
+            "mode"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 36
+        },
+        {
+          "name": "install_instruction_host",
+          "params": [
+            "host"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "install_host_adapters",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "remove_host_adapters",
+          "params": [
+            "host"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "host_list",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 19
+        },
+        {
+          "name": "host_status",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "provider_config_path",
+          "params": [
+            "provider_id"
+          ],
+          "returnType": "Path",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "provider_env_path",
+          "params": [
+            "provider_id"
+          ],
+          "returnType": "Path",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "provider_config",
+          "params": [
+            "provider",
+            "args"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 16
+        },
+        {
+          "name": "write_provider_files",
+          "params": [
+            "provider",
+            "config"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "select_providers",
+          "params": [
+            "provider_id"
+          ],
+          "returnType": "list[dict[str, Any]]",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "provider_install",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "load_provider_config",
+          "params": [
+            "provider_id"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "probe_openai_provider",
+          "params": [
+            "config"
+          ],
+          "returnType": "tuple[bool, str]",
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "provider_status",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 18
+        },
+        {
+          "name": "provider_info",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "system_list",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "system_powers",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "validate",
+          "params": [
+            "_"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "build_parser",
+          "params": [],
+          "returnType": "argparse.ArgumentParser",
+          "exported": true,
+          "lineCount": 89
+        },
+        {
+          "name": "main",
+          "params": [],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 9
+        }
+      ],
+      "classes": [
+        {
+          "name": "DwError",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 2
+        }
+      ],
+      "imports": [
+        {
+          "source": "argparse",
+          "specifiers": [
+            "argparse"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "os",
+          "specifiers": [
+            "os"
+          ]
+        },
+        {
+          "source": "shutil",
+          "specifiers": [
+            "shutil"
+          ]
+        },
+        {
+          "source": "subprocess",
+          "specifiers": [
+            "subprocess"
+          ]
+        },
+        {
+          "source": "sys",
+          "specifiers": [
+            "sys"
+          ]
+        },
+        {
+          "source": "tempfile",
+          "specifiers": [
+            "tempfile"
+          ]
+        },
+        {
+          "source": "urllib.error",
+          "specifiers": [
+            "urllib.error"
+          ]
+        },
+        {
+          "source": "urllib.request",
+          "specifiers": [
+            "urllib.request"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "Any"
+          ]
+        }
+      ],
+      "exports": [
+        "DwError",
+        "load_yaml",
+        "workspace",
+        "manifests",
+        "run",
+        "git",
+        "emit",
+        "atomic_write",
+        "find_system",
+        "provider_entries",
+        "find_provider",
+        "workspace_info",
+        "power_list",
+        "power_info",
+        "power_prompt",
+        "submodule_entries",
+        "select_submodules",
+        "require_initialized",
+        "pinned_sha",
+        "submodule_branch",
+        "remote_sha",
+        "power_sync",
+        "normalize_host",
+        "configured_hosts",
+        "select_hosts",
+        "resolve_skill_source",
+        "is_generated_path",
+        "safe_remove_generated",
+        "write_generated_file",
+        "wrapper_content",
+        "host_instruction_content",
+        "kilo_config_content",
+        "host_expected_paths",
+        "install_skill_host",
+        "install_instruction_host",
+        "install_host_adapters",
+        "remove_host_adapters",
+        "host_list",
+        "host_status",
+        "provider_config_path",
+        "provider_env_path",
+        "provider_config",
+        "write_provider_files",
+        "select_providers",
+        "provider_install",
+        "load_provider_config",
+        "probe_openai_provider",
+        "provider_status",
+        "provider_info",
+        "system_list",
+        "system_powers",
+        "validate",
+        "build_parser",
+        "main"
+      ],
+      "totalLines": 936,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/dw_entry.py": {
+      "filePath": "scripts/dw_entry.py",
+      "contentHash": "d51ba3811459879ec89a70809ef2ea81cdbf430af77f70bcc427ff11ede6504d",
+      "functions": [
+        {
+          "name": "run",
+          "params": [
+            "args",
+            "cwd",
+            "capture",
+            "check"
+          ],
+          "returnType": "subprocess.CompletedProcess[str]",
+          "exported": true,
+          "lineCount": 18
+        },
+        {
+          "name": "load_runtime",
+          "params": [],
+          "returnType": "Any",
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "ns",
+          "params": [],
+          "returnType": "argparse.Namespace",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "install_dependencies",
+          "params": [],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "init_all",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 36
+        },
+        {
+          "name": "sync_all",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 19
+        },
+        {
+          "name": "clean_adapters",
+          "params": [],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "clean_caches",
+          "params": [],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 19
+        },
+        {
+          "name": "runtime_paths",
+          "params": [
+            "runtime"
+          ],
+          "returnType": "list[Path]",
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "clean_runtime",
+          "params": [
+            "confirmed"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "clean_plan",
+          "params": [
+            "scope",
+            "include_runtime"
+          ],
+          "returnType": "set[str]",
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "clean_all",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "status_all",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "doctor_all",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 18
+        },
+        {
+          "name": "reset_all",
+          "params": [
+            "args"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 21
+        },
+        {
+          "name": "build_parser",
+          "params": [],
+          "returnType": "argparse.ArgumentParser",
+          "exported": true,
+          "lineCount": 70
+        },
+        {
+          "name": "main",
+          "params": [],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 16
+        }
+      ],
+      "classes": [
+        {
+          "name": "EntryError",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 2
+        }
+      ],
+      "imports": [
+        {
+          "source": "argparse",
+          "specifiers": [
+            "argparse"
+          ]
+        },
+        {
+          "source": "importlib",
+          "specifiers": [
+            "importlib"
+          ]
+        },
+        {
+          "source": "shutil",
+          "specifiers": [
+            "shutil"
+          ]
+        },
+        {
+          "source": "subprocess",
+          "specifiers": [
+            "subprocess"
+          ]
+        },
+        {
+          "source": "sys",
+          "specifiers": [
+            "sys"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "Any"
+          ]
+        }
+      ],
+      "exports": [
+        "EntryError",
+        "run",
+        "load_runtime",
+        "ns",
+        "install_dependencies",
+        "init_all",
+        "sync_all",
+        "clean_adapters",
+        "clean_caches",
+        "runtime_paths",
+        "clean_runtime",
+        "clean_plan",
+        "clean_all",
+        "status_all",
+        "doctor_all",
+        "reset_all",
+        "build_parser",
+        "main"
+      ],
+      "totalLines": 358,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/dw_power_package.py": {
+      "filePath": "scripts/dw_power_package.py",
+      "contentHash": "27fac9281e6df2f7835700b352cd0f73f534365adc87b8c62a00ced0d4a5d16b",
+      "functions": [
+        {
+          "name": "emit",
+          "params": [
+            "data"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "load_yaml",
+          "params": [
+            "path"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "manifest",
+          "params": [
+            "power_id"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "sha256_file",
+          "params": [
+            "path"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "safe_extract",
+          "params": [
+            "archive",
+            "destination"
+          ],
+          "returnType": "Path",
+          "exported": true,
+          "lineCount": 16
+        },
+        {
+          "name": "read_checksum",
+          "params": [
+            "path"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "download",
+          "params": [
+            "url",
+            "destination"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "source_urls",
+          "params": [
+            "data",
+            "source",
+            "version"
+          ],
+          "returnType": "tuple[str, str | None]",
+          "exported": true,
+          "lineCount": 20
+        },
+        {
+          "name": "verify_package",
+          "params": [
+            "package_root",
+            "power_id"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 21
+        },
+        {
+          "name": "run_runtime",
+          "params": [
+            "package_root",
+            "command",
+            "target",
+            "extra"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 23
+        },
+        {
+          "name": "installed_root",
+          "params": [
+            "target",
+            "power_id"
+          ],
+          "returnType": "Path",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "history_root",
+          "params": [
+            "target",
+            "power_id"
+          ],
+          "returnType": "Path",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "install",
+          "params": [
+            "args"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 67
+        },
+        {
+          "name": "configure",
+          "params": [
+            "args"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "doctor",
+          "params": [
+            "args"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 18
+        },
+        {
+          "name": "history_entries",
+          "params": [
+            "target",
+            "power_id"
+          ],
+          "returnType": "list[dict[str, Any]]",
+          "exported": true,
+          "lineCount": 18
+        },
+        {
+          "name": "history",
+          "params": [
+            "args"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "rollback",
+          "params": [
+            "args"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 30
+        },
+        {
+          "name": "uninstall",
+          "params": [
+            "args"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "parser",
+          "params": [],
+          "returnType": "argparse.ArgumentParser",
+          "exported": true,
+          "lineCount": 44
+        },
+        {
+          "name": "main",
+          "params": [
+            "argv"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 8
+        }
+      ],
+      "classes": [
+        {
+          "name": "ConsumerError",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 2
+        }
+      ],
+      "imports": [
+        {
+          "source": "argparse",
+          "specifiers": [
+            "argparse"
+          ]
+        },
+        {
+          "source": "hashlib",
+          "specifiers": [
+            "hashlib"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "os",
+          "specifiers": [
+            "os"
+          ]
+        },
+        {
+          "source": "shutil",
+          "specifiers": [
+            "shutil"
+          ]
+        },
+        {
+          "source": "subprocess",
+          "specifiers": [
+            "subprocess"
+          ]
+        },
+        {
+          "source": "sys",
+          "specifiers": [
+            "sys"
+          ]
+        },
+        {
+          "source": "tempfile",
+          "specifiers": [
+            "tempfile"
+          ]
+        },
+        {
+          "source": "time",
+          "specifiers": [
+            "time"
+          ]
+        },
+        {
+          "source": "urllib.error",
+          "specifiers": [
+            "urllib.error"
+          ]
+        },
+        {
+          "source": "urllib.request",
+          "specifiers": [
+            "urllib.request"
+          ]
+        },
+        {
+          "source": "zipfile",
+          "specifiers": [
+            "zipfile"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path",
+            "PurePosixPath"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "Any"
+          ]
+        }
+      ],
+      "exports": [
+        "ConsumerError",
+        "emit",
+        "load_yaml",
+        "manifest",
+        "sha256_file",
+        "safe_extract",
+        "read_checksum",
+        "download",
+        "source_urls",
+        "verify_package",
+        "run_runtime",
+        "installed_root",
+        "history_root",
+        "install",
+        "configure",
+        "doctor",
+        "history_entries",
+        "history",
+        "rollback",
+        "uninstall",
+        "parser",
+        "main"
+      ],
+      "totalLines": 407,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/install-dw.sh": {
+      "filePath": "scripts/install-dw.sh",
+      "contentHash": "eeccf83c9a0d79b0f37a7f604960293f8bc1a985424d2261ed48f6cc2e2d10bf",
+      "functions": [
+        {
+          "name": "usage",
+          "params": [],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "resolve_shell_mode",
+          "params": [],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "strip_profile_block",
+          "params": [],
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "write_profile_block",
+          "params": [],
+          "exported": false,
+          "lineCount": 16
+        },
+        {
+          "name": "remove_profile_block",
+          "params": [],
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "install_launcher",
+          "params": [],
+          "exported": false,
+          "lineCount": 21
+        },
+        {
+          "name": "uninstall_launcher",
+          "params": [],
+          "exported": false,
+          "lineCount": 12
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 165,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/install-host-adapters.sh": {
+      "filePath": "scripts/install-host-adapters.sh",
+      "contentHash": "52868de2dc53a61af70fb6f76c68badf20b2be0d2e2ad02215f24ac0dcfa3f13",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 7,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/power_dist.py": {
+      "filePath": "scripts/power_dist.py",
+      "contentHash": "f4526547496f5f1f171d2cb974890b4e60adb358a7cc9615976ffafe37bd4fd3",
+      "functions": [
+        {
+          "name": "load_structured",
+          "params": [
+            "path"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "validate_document",
+          "params": [
+            "document",
+            "schema_path"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "validate_recipe",
+          "params": [
+            "recipe",
+            "schema_path"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "ensure_relative",
+          "params": [
+            "value",
+            "label"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "is_within",
+          "params": [
+            "path",
+            "root"
+          ],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "matches",
+          "params": [
+            "path",
+            "pattern"
+          ],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "_iter_included",
+          "params": [
+            "source_root",
+            "patterns"
+          ],
+          "returnType": "Iterable[Path]",
+          "exported": true,
+          "lineCount": 17
+        },
+        {
+          "name": "_forbidden_patterns",
+          "params": [
+            "recipe"
+          ],
+          "returnType": "tuple[str, ...]",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "_scan_secret_content",
+          "params": [
+            "path",
+            "custom_patterns"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 16
+        },
+        {
+          "name": "collect_files",
+          "params": [
+            "recipe",
+            "source_root"
+          ],
+          "returnType": "list[Path]",
+          "exported": true,
+          "lineCount": 36
+        },
+        {
+          "name": "atomic_write",
+          "params": [
+            "path",
+            "content"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 17
+        },
+        {
+          "name": "sha256_file",
+          "params": [
+            "path"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "copy_runtime_templates",
+          "params": [
+            "staging_root",
+            "templates_root"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "package_metadata",
+          "params": [
+            "recipe",
+            "version",
+            "source_repository",
+            "source_ref",
+            "source_sha",
+            "source_date_epoch"
+          ],
+          "returnType": "tuple[dict[str, Any], dict[str, Any]]",
+          "exported": true,
+          "lineCount": 35
+        },
+        {
+          "name": "build_manifest",
+          "params": [
+            "recipe",
+            "staging_root",
+            "version",
+            "source_repository",
+            "source_ref",
+            "source_sha"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 40
+        },
+        {
+          "name": "build_staging_tree",
+          "params": [
+            "recipe",
+            "source_root",
+            "staging_root",
+            "version",
+            "source_repository",
+            "source_ref",
+            "source_sha",
+            "source_date_epoch",
+            "templates_root"
+          ],
+          "returnType": "Path",
+          "exported": true,
+          "lineCount": 55
+        },
+        {
+          "name": "zip_timestamp",
+          "params": [
+            "source_date_epoch"
+          ],
+          "returnType": "tuple[int, int, int, int, int, int]",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "create_deterministic_zip",
+          "params": [
+            "staging_root",
+            "archive_path",
+            "package_directory",
+            "source_date_epoch"
+          ],
+          "returnType": "Path",
+          "exported": true,
+          "lineCount": 32
+        },
+        {
+          "name": "verify_package",
+          "params": [
+            "package_root"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 29
+        },
+        {
+          "name": "build_command",
+          "params": [
+            "args"
+          ],
+          "returnType": "dict[str, str]",
+          "exported": true,
+          "lineCount": 41
+        },
+        {
+          "name": "verify_command",
+          "params": [
+            "args"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "build_parser",
+          "params": [],
+          "returnType": "argparse.ArgumentParser",
+          "exported": true,
+          "lineCount": 29
+        },
+        {
+          "name": "main",
+          "params": [
+            "argv"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 9
+        }
+      ],
+      "classes": [
+        {
+          "name": "DistributionError",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 2
+        }
+      ],
+      "imports": [
+        {
+          "source": "argparse",
+          "specifiers": [
+            "argparse"
+          ]
+        },
+        {
+          "source": "fnmatch",
+          "specifiers": [
+            "fnmatch"
+          ]
+        },
+        {
+          "source": "hashlib",
+          "specifiers": [
+            "hashlib"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "os",
+          "specifiers": [
+            "os"
+          ]
+        },
+        {
+          "source": "re",
+          "specifiers": [
+            "re"
+          ]
+        },
+        {
+          "source": "shutil",
+          "specifiers": [
+            "shutil"
+          ]
+        },
+        {
+          "source": "stat",
+          "specifiers": [
+            "stat"
+          ]
+        },
+        {
+          "source": "sys",
+          "specifiers": [
+            "sys"
+          ]
+        },
+        {
+          "source": "tempfile",
+          "specifiers": [
+            "tempfile"
+          ]
+        },
+        {
+          "source": "zipfile",
+          "specifiers": [
+            "zipfile"
+          ]
+        },
+        {
+          "source": "datetime",
+          "specifiers": [
+            "datetime",
+            "timezone"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path",
+            "PurePosixPath"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "Any",
+            "Iterable"
+          ]
+        },
+        {
+          "source": "jsonschema",
+          "specifiers": [
+            "jsonschema"
+          ]
+        },
+        {
+          "source": "yaml",
+          "specifiers": [
+            "yaml"
+          ]
+        }
+      ],
+      "exports": [
+        "DistributionError",
+        "load_structured",
+        "validate_document",
+        "validate_recipe",
+        "ensure_relative",
+        "is_within",
+        "matches",
+        "_iter_included",
+        "_forbidden_patterns",
+        "_scan_secret_content",
+        "collect_files",
+        "atomic_write",
+        "sha256_file",
+        "copy_runtime_templates",
+        "package_metadata",
+        "build_manifest",
+        "build_staging_tree",
+        "zip_timestamp",
+        "create_deterministic_zip",
+        "verify_package",
+        "build_command",
+        "verify_command",
+        "build_parser",
+        "main"
+      ],
+      "totalLines": 583,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/python-resolver.sh": {
+      "filePath": "scripts/python-resolver.sh",
+      "contentHash": "7bbe4593f2a34ea232d94a8d003dcf93b10d19fb7a01e4472ed6afc6bcc6a4ff",
+      "functions": [
+        {
+          "name": "dw_python_error",
+          "params": [],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "dw_python",
+          "params": [],
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "dw_exec_python",
+          "params": [],
+          "exported": false,
+          "lineCount": 14
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 40,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/sync-submodules.sh": {
+      "filePath": "scripts/sync-submodules.sh",
+      "contentHash": "b78f56aae0636899f5c1ef3bb44d375f2e3112d7bf98770024ca03e782596778",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 7,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/validate-workspace.py": {
+      "filePath": "scripts/validate-workspace.py",
+      "contentHash": "58b0d676263829bf7da19dc9a0f321f723eddcc012a3d0f54e28173fb0db4dee",
+      "functions": [
+        {
+          "name": "fail",
+          "params": [
+            "message"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "git",
+          "params": [],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "load_yaml",
+          "params": [
+            "path"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "validate_providers",
+          "params": [
+            "workspace"
+          ],
+          "returnType": "list[dict]",
+          "exported": true,
+          "lineCount": 22
+        },
+        {
+          "name": "main",
+          "params": [],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 95
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "subprocess",
+          "specifiers": [
+            "subprocess"
+          ]
+        },
+        {
+          "source": "sys",
+          "specifiers": [
+            "sys"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        }
+      ],
+      "exports": [
+        "fail",
+        "git",
+        "load_yaml",
+        "validate_providers",
+        "main"
+      ],
+      "totalLines": 185,
+      "hasStructuralAnalysis": true
+    },
+    "templates/power-runtime/bin/configure": {
+      "filePath": "templates/power-runtime/bin/configure",
+      "contentHash": "d6a3b625b1f547a59a72ff9d1a30a6db4db3b7aadba56fae26bf62005e447e40",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 16,
+      "hasStructuralAnalysis": false
+    },
+    "templates/power-runtime/bin/configure.ps1": {
+      "filePath": "templates/power-runtime/bin/configure.ps1",
+      "contentHash": "f8a37a0d550ac55e58b71c38918f0bdefec62025e239d2b71316775d242c172b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 7,
+      "hasStructuralAnalysis": false
+    },
+    "templates/power-runtime/bin/doctor": {
+      "filePath": "templates/power-runtime/bin/doctor",
+      "contentHash": "3d9e2a35c431bffa94f022e42fb54173842a1b26cf6e90e18710f36e887e0377",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 16,
+      "hasStructuralAnalysis": false
+    },
+    "templates/power-runtime/bin/doctor.ps1": {
+      "filePath": "templates/power-runtime/bin/doctor.ps1",
+      "contentHash": "5b3c5f0157119c00949c07cf3e9724fcb033424fec4524f378accc4b00cd4ca3",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 7,
+      "hasStructuralAnalysis": false
+    },
+    "templates/power-runtime/bin/install": {
+      "filePath": "templates/power-runtime/bin/install",
+      "contentHash": "b22793805c30387331c0001e394d4d044a3be009ecb6ad46319f0873110e1911",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 16,
+      "hasStructuralAnalysis": false
+    },
+    "templates/power-runtime/bin/install.ps1": {
+      "filePath": "templates/power-runtime/bin/install.ps1",
+      "contentHash": "f9bf3f6959f82dfd13feeb584ffbcca2ad925612aa6d3dbcf1046d174ac1c7e8",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 7,
+      "hasStructuralAnalysis": false
+    },
+    "templates/power-runtime/bin/uninstall": {
+      "filePath": "templates/power-runtime/bin/uninstall",
+      "contentHash": "0bddd2eebd8b6c3644610cf03dc3ca2a49d7916f27433b22b0281920a60e892f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 16,
+      "hasStructuralAnalysis": false
+    },
+    "templates/power-runtime/bin/uninstall.ps1": {
+      "filePath": "templates/power-runtime/bin/uninstall.ps1",
+      "contentHash": "4d68e727a10aa7ecda07a222da81bf44c67710a76abc65c06d4280f7d21f1619",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 7,
+      "hasStructuralAnalysis": false
+    },
+    "templates/power-runtime/lib/power_runtime.py": {
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "contentHash": "28401ff39568ebfa801b74b98d1361ed27554ee94c6f98b4da750ec21c8fce94",
+      "functions": [
+        {
+          "name": "package_root",
+          "params": [],
+          "returnType": "Path",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "load_json",
+          "params": [
+            "path"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "sha256_file",
+          "params": [
+            "path"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "is_within",
+          "params": [
+            "path",
+            "root"
+          ],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "metadata",
+          "params": [
+            "root"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "target_paths",
+          "params": [
+            "target",
+            "power_id"
+          ],
+          "returnType": "dict[str, Path]",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "marker",
+          "params": [
+            "path"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "atomic_json",
+          "params": [
+            "path",
+            "data"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 15
+        },
+        {
+          "name": "assert_safe_target",
+          "params": [
+            "package",
+            "target"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "install",
+          "params": [
+            "args"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 59
+        },
+        {
+          "name": "configure",
+          "params": [
+            "args"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 51
+        },
+        {
+          "name": "verify_manifest",
+          "params": [
+            "install_root",
+            "manifest"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "doctor",
+          "params": [
+            "args"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 38
+        },
+        {
+          "name": "uninstall",
+          "params": [
+            "args"
+          ],
+          "returnType": "dict[str, Any]",
+          "exported": true,
+          "lineCount": 32
+        },
+        {
+          "name": "parser",
+          "params": [],
+          "returnType": "argparse.ArgumentParser",
+          "exported": true,
+          "lineCount": 26
+        },
+        {
+          "name": "main",
+          "params": [
+            "argv"
+          ],
+          "returnType": "int",
+          "exported": true,
+          "lineCount": 9
+        }
+      ],
+      "classes": [
+        {
+          "name": "RuntimeError_",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 2
+        }
+      ],
+      "imports": [
+        {
+          "source": "argparse",
+          "specifiers": [
+            "argparse"
+          ]
+        },
+        {
+          "source": "hashlib",
+          "specifiers": [
+            "hashlib"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "os",
+          "specifiers": [
+            "os"
+          ]
+        },
+        {
+          "source": "shutil",
+          "specifiers": [
+            "shutil"
+          ]
+        },
+        {
+          "source": "sys",
+          "specifiers": [
+            "sys"
+          ]
+        },
+        {
+          "source": "tempfile",
+          "specifiers": [
+            "tempfile"
+          ]
+        },
+        {
+          "source": "time",
+          "specifiers": [
+            "time"
+          ]
+        },
+        {
+          "source": "uuid",
+          "specifiers": [
+            "uuid"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "Any"
+          ]
+        }
+      ],
+      "exports": [
+        "RuntimeError_",
+        "package_root",
+        "load_json",
+        "sha256_file",
+        "is_within",
+        "metadata",
+        "target_paths",
+        "marker",
+        "atomic_json",
+        "assert_safe_target",
+        "install",
+        "configure",
+        "verify_manifest",
+        "doctor",
+        "uninstall",
+        "parser",
+        "main"
+      ],
+      "totalLines": 344,
+      "hasStructuralAnalysis": true
+    },
+    "tests/fixtures/power-distribution/invalid-absolute-include.yaml": {
+      "filePath": "tests/fixtures/power-distribution/invalid-absolute-include.yaml",
+      "contentHash": "bac84acf53f44170fcc79b76805145608952d4f2975cf0cc811053194ac1fb7b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 16,
+      "hasStructuralAnalysis": true
+    },
+    "tests/fixtures/power-distribution/valid-consumer-binding.yaml": {
+      "filePath": "tests/fixtures/power-distribution/valid-consumer-binding.yaml",
+      "contentHash": "09b8e24dcc7eaaf91775e6f9c2d537f593d6397c272b5489568203115c80d94a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 17,
+      "hasStructuralAnalysis": true
+    },
+    "tests/fixtures/power-distribution/valid-recipe.yaml": {
+      "filePath": "tests/fixtures/power-distribution/valid-recipe.yaml",
+      "contentHash": "6f182dda3d42797bc276f9deb706daeb0aa81f6501b4af6ed2939d33cfa89cc4",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 30,
+      "hasStructuralAnalysis": true
+    },
+    "tests/test_bmad_power_plugin.py": {
+      "filePath": "tests/test_bmad_power_plugin.py",
+      "contentHash": "da1a949d62692eeb4820aaa40ba29612e9b1f5b2153e3638d51496f5b71a1345",
+      "functions": [],
+      "classes": [
+        {
+          "name": "BmadPowerPluginTests",
+          "methods": [
+            "setUp",
+            "test_source_lock_and_graph_use_same_commit",
+            "test_knowledge_graph_references_are_closed",
+            "test_distribution_recipe_is_valid_and_skills_only",
+            "test_power_manifest_validates",
+            "test_bootstrap_host_mapping",
+            "test_external_source_overlay_builds_a_deterministic_package",
+            "test_workflow_has_manual_and_scheduled_modes"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 137
+        }
+      ],
+      "imports": [
+        {
+          "source": "importlib.util",
+          "specifiers": [
+            "importlib.util"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "shutil",
+          "specifiers": [
+            "shutil"
+          ]
+        },
+        {
+          "source": "tempfile",
+          "specifiers": [
+            "tempfile"
+          ]
+        },
+        {
+          "source": "unittest",
+          "specifiers": [
+            "unittest"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "jsonschema",
+          "specifiers": [
+            "jsonschema"
+          ]
+        },
+        {
+          "source": "yaml",
+          "specifiers": [
+            "yaml"
+          ]
+        }
+      ],
+      "exports": [
+        "BmadPowerPluginTests"
+      ],
+      "totalLines": 172,
+      "hasStructuralAnalysis": true
+    },
+    "tests/test_multi_host_runtime.py": {
+      "filePath": "tests/test_multi_host_runtime.py",
+      "contentHash": "0f0162ee075a6a0c823b2f976f4d2fa61f746416806ba34c2ecf94b0078ddf68",
+      "functions": [],
+      "classes": [
+        {
+          "name": "MultiHostRuntimeTests",
+          "methods": [
+            "test_workspace_registers_supported_hosts",
+            "test_custom_agent_aliases",
+            "test_host_layouts_are_distinct",
+            "test_copilot_uses_native_skills_and_repository_index",
+            "test_instruction_hosts_include_canonical_routing"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 58
+        }
+      ],
+      "imports": [
+        {
+          "source": "importlib.util",
+          "specifiers": [
+            "importlib.util"
+          ]
+        },
+        {
+          "source": "unittest",
+          "specifiers": [
+            "unittest"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        }
+      ],
+      "exports": [
+        "MultiHostRuntimeTests"
+      ],
+      "totalLines": 76,
+      "hasStructuralAnalysis": true
+    },
+    "tests/test_oneclick_commands.py": {
+      "filePath": "tests/test_oneclick_commands.py",
+      "contentHash": "d16ecfa2876c6062c099354ac744388dd6b9dfa99ef664ac90146bab19382a95",
+      "functions": [],
+      "classes": [
+        {
+          "name": "OneClickCommandTests",
+          "methods": [
+            "test_oneclick_commands_parse",
+            "test_all_host_scope_is_expanded",
+            "test_clean_all_preserves_runtime_by_default"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 41
+        }
+      ],
+      "imports": [
+        {
+          "source": "importlib.util",
+          "specifiers": [
+            "importlib.util"
+          ]
+        },
+        {
+          "source": "unittest",
+          "specifiers": [
+            "unittest"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        }
+      ],
+      "exports": [
+        "OneClickCommandTests"
+      ],
+      "totalLines": 59,
+      "hasStructuralAnalysis": true
+    },
+    "tests/test_power_dist_builder.py": {
+      "filePath": "tests/test_power_dist_builder.py",
+      "contentHash": "3bbe60faed8a6e93d670b9482c42a689382a0c546f0f12924c4ecc828b26060f",
+      "functions": [],
+      "classes": [
+        {
+          "name": "PowerDistributionBuilderTests",
+          "methods": [
+            "setUp",
+            "tearDown",
+            "build",
+            "test_build_is_deterministic_and_verifiable",
+            "test_runtime_data_is_forbidden",
+            "test_dashboard_is_forbidden",
+            "test_secret_content_is_forbidden",
+            "test_external_symlink_is_rejected",
+            "test_manifest_detects_tampering"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 91
+        }
+      ],
+      "imports": [
+        {
+          "source": "importlib.util",
+          "specifiers": [
+            "importlib.util"
+          ]
+        },
+        {
+          "source": "os",
+          "specifiers": [
+            "os"
+          ]
+        },
+        {
+          "source": "tempfile",
+          "specifiers": [
+            "tempfile"
+          ]
+        },
+        {
+          "source": "unittest",
+          "specifiers": [
+            "unittest"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "yaml",
+          "specifiers": [
+            "yaml"
+          ]
+        }
+      ],
+      "exports": [
+        "PowerDistributionBuilderTests"
+      ],
+      "totalLines": 113,
+      "hasStructuralAnalysis": true
+    },
+    "tests/test_power_distribution_contract.py": {
+      "filePath": "tests/test_power_distribution_contract.py",
+      "contentHash": "aa164f5797260dcaf7b90f16878c999ad810a3d25d5b73689fec8086a18a9e4b",
+      "functions": [],
+      "classes": [
+        {
+          "name": "PowerDistributionContractTests",
+          "methods": [
+            "test_valid_recipe_fixture",
+            "test_absolute_include_is_rejected",
+            "test_consumer_binding_fixture",
+            "test_manifest_schema_rejects_bad_hash",
+            "test_reusable_publisher_stages_outside_provider_source"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 73
+        }
+      ],
+      "imports": [
+        {
+          "source": "importlib.util",
+          "specifiers": [
+            "importlib.util"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "unittest",
+          "specifiers": [
+            "unittest"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "jsonschema",
+          "specifiers": [
+            "jsonschema"
+          ]
+        },
+        {
+          "source": "yaml",
+          "specifiers": [
+            "yaml"
+          ]
+        }
+      ],
+      "exports": [
+        "PowerDistributionContractTests"
+      ],
+      "totalLines": 95,
+      "hasStructuralAnalysis": true
+    },
+    "tests/test_power_distribution_integration.py": {
+      "filePath": "tests/test_power_distribution_integration.py",
+      "contentHash": "9cc1fb079b82d832f5f2acbceacdca753bd0aed53ff0d86119c30dfb4c238c51",
+      "functions": [],
+      "classes": [
+        {
+          "name": "PowerDistributionIntegrationTests",
+          "methods": [
+            "test_all_manifests_share_distribution_contract",
+            "test_provider_evidence_is_explicit",
+            "test_submodule_source_contract_remains_available_as_fallback"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 39
+        }
+      ],
+      "imports": [
+        {
+          "source": "importlib.util",
+          "specifiers": [
+            "importlib.util"
+          ]
+        },
+        {
+          "source": "unittest",
+          "specifiers": [
+            "unittest"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        }
+      ],
+      "exports": [
+        "PowerDistributionIntegrationTests"
+      ],
+      "totalLines": 57,
+      "hasStructuralAnalysis": true
+    },
+    "tests/test_power_package_consumer.py": {
+      "filePath": "tests/test_power_package_consumer.py",
+      "contentHash": "778f5b99d02e2b5dc35836551c28798ac34a384e2656aac70cfb1856e6c8f27b",
+      "functions": [
+        {
+          "name": "file_record",
+          "params": [
+            "root",
+            "path"
+          ],
+          "returnType": "dict[str, object]",
+          "exported": true,
+          "lineCount": 6
+        }
+      ],
+      "classes": [
+        {
+          "name": "PowerPackageConsumerTests",
+          "methods": [
+            "package",
+            "args",
+            "test_install_upgrade_history_rollback_and_uninstall",
+            "test_archive_checksum_and_path_safety",
+            "test_parser_exposes_package_lifecycle"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 135
+        }
+      ],
+      "imports": [
+        {
+          "source": "argparse",
+          "specifiers": [
+            "argparse"
+          ]
+        },
+        {
+          "source": "hashlib",
+          "specifiers": [
+            "hashlib"
+          ]
+        },
+        {
+          "source": "importlib.util",
+          "specifiers": [
+            "importlib.util"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "shutil",
+          "specifiers": [
+            "shutil"
+          ]
+        },
+        {
+          "source": "tempfile",
+          "specifiers": [
+            "tempfile"
+          ]
+        },
+        {
+          "source": "unittest",
+          "specifiers": [
+            "unittest"
+          ]
+        },
+        {
+          "source": "zipfile",
+          "specifiers": [
+            "zipfile"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        }
+      ],
+      "exports": [
+        "file_record",
+        "PowerPackageConsumerTests"
+      ],
+      "totalLines": 169,
+      "hasStructuralAnalysis": true
+    },
+    "tests/test_power_runtime_installer.py": {
+      "filePath": "tests/test_power_runtime_installer.py",
+      "contentHash": "c3b4532e3256d8dd7e5a5fdbf6f6fe19779e7b095724a9e810e2c5f67bbbfeb4",
+      "functions": [],
+      "classes": [
+        {
+          "name": "PowerRuntimeInstallerTests",
+          "methods": [
+            "setUp",
+            "tearDown",
+            "run_runtime",
+            "test_install_configure_doctor_and_uninstall_preserve_runtime",
+            "test_unmanaged_install_is_not_overwritten",
+            "test_destructive_runtime_removal_requires_yes"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 99
+        }
+      ],
+      "imports": [
+        {
+          "source": "importlib.util",
+          "specifiers": [
+            "importlib.util"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "subprocess",
+          "specifiers": [
+            "subprocess"
+          ]
+        },
+        {
+          "source": "sys",
+          "specifiers": [
+            "sys"
+          ]
+        },
+        {
+          "source": "tempfile",
+          "specifiers": [
+            "tempfile"
+          ]
+        },
+        {
+          "source": "unittest",
+          "specifiers": [
+            "unittest"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        }
+      ],
+      "exports": [
+        "PowerRuntimeInstallerTests"
+      ],
+      "totalLines": 121,
+      "hasStructuralAnalysis": true
+    },
+    "tests/test_power_runtime_v2.py": {
+      "filePath": "tests/test_power_runtime_v2.py",
+      "contentHash": "47e412114d545e9c88e0c3a1495cd36a548d0ac5959c8982047b865fe7559502",
+      "functions": [],
+      "classes": [
+        {
+          "name": "PowerRuntimeV2Tests",
+          "methods": [
+            "test_registered_power_ids",
+            "test_manifests_use_v2_contract",
+            "test_dynamic_submodule_targets_exclude_external_power",
+            "test_rental_home_enables_bmad",
+            "test_cli_parses_v2_commands",
+            "test_wrapper_is_host_neutral",
+            "test_provider_config_uses_workspace_defaults"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 107
+        }
+      ],
+      "imports": [
+        {
+          "source": "argparse",
+          "specifiers": [
+            "argparse"
+          ]
+        },
+        {
+          "source": "importlib.util",
+          "specifiers": [
+            "importlib.util"
+          ]
+        },
+        {
+          "source": "unittest",
+          "specifiers": [
+            "unittest"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        }
+      ],
+      "exports": [
+        "PowerRuntimeV2Tests"
+      ],
+      "totalLines": 126,
+      "hasStructuralAnalysis": true
+    },
+    "tests/test_python_resolver.sh": {
+      "filePath": "tests/test_python_resolver.sh",
+      "contentHash": "805b9292c60cf258582187cd3f2c34f4a3c123922b7cf9f363e438c34d333bd4",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 36,
+      "hasStructuralAnalysis": true
+    },
+    "workspace.yaml": {
+      "filePath": "workspace.yaml",
+      "contentHash": "dd4734a5ec137a14f06e84726634981f5c65245da1c8531309777fbb81cb255c",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 50,
+      "hasStructuralAnalysis": true
+    }
+  }
+}
