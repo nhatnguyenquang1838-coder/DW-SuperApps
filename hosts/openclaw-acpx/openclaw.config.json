@@ -1,0 +1,51 @@
+{
+  "acp": {
+    "enabled": true,
+    "dispatch": {
+      "enabled": true
+    },
+    "backend": "acpx",
+    "defaultAgent": "codex",
+    "allowedAgents": [
+      "codex",
+      "claude",
+      "kiro",
+      "kilocode"
+    ],
+    "stream": {
+      "deliveryMode": "live"
+    }
+  },
+  "session": {
+    "threadBindings": {
+      "enabled": true,
+      "idleHours": 24,
+      "maxAgeHours": 0,
+      "spawnSessions": true
+    }
+  },
+  "plugins": {
+    "entries": {
+      "acpx": {
+        "enabled": true,
+        "config": {
+          "permissionMode": "approve-reads",
+          "nonInteractivePermissions": "fail",
+          "probeAgent": "codex",
+          "timeoutSeconds": 120,
+          "pluginToolsMcpBridge": false,
+          "openClawToolsMcpBridge": false
+        }
+      }
+    }
+  },
+  "skills": {
+    "load": {
+      "extraDirs": [
+        "<DW_SUPER_ROOT>/.agents/skills",
+        "<DW_SUPER_ROOT>/hosts/openclaw-acpx/skills"
+      ],
+      "watch": true
+    }
+  }
+}
