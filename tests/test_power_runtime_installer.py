@@ -39,81 +39,77 @@ class PowerRuntimeInstallerTests(unittest.TestCase):
             templates_root=ROOT / "templates" / "power-runtime",
         )
         self.runtime = self.package / "lib" / "power_runtime.py"
-        self.consumer = self.root / "consumer"
-        self.consumer.mkdir()
+        self.consumer = self.root / "systems" / "consumer"
+        self.consumer.mkdir(parents=True)
+        self.store = self.root / "workspace" / ".dw" / "powers"
 
     def tearDown(self) -> None:
         self.temp.cleanup()
 
-    def run_runtime(self, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+    def run_runtime(
+        self, command: str, *args: str, check: bool = True
+    ) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            [sys.executable, str(self.runtime), *args],
+            [
+                sys.executable,
+                str(self.runtime),
+                command,
+                "--store-root",
+                str(self.store),
+                "--target",
+                str(self.consumer),
+                *args,
+            ],
             check=check,
             text=True,
             capture_output=True,
         )
 
-    def test_install_configure_doctor_and_uninstall_preserve_runtime(self) -> None:
-        installed = self.run_runtime("install", "--target", str(self.consumer))
+    def test_install_configure_doctor_and_detach_preserve_shared_package(self) -> None:
+        installed = self.run_runtime("install")
         install_payload = json.loads(installed.stdout)
         install_root = Path(install_payload["install_root"])
+        self.assertEqual(self.store / "demo", install_root)
         self.assertTrue((install_root / ".dw-managed.json").is_file())
         self.assertTrue((self.consumer / ".demo").is_dir())
+        self.assertFalse((self.consumer / ".dw").exists())
 
         config = self.root / "config.yaml"
         contract = self.root / "contract.yaml"
         config.write_text("enabled: true\n", encoding="utf-8")
         contract.write_text("allowExternalWrites: false\n", encoding="utf-8")
-        self.run_runtime(
-            "configure",
-            "--target",
-            str(self.consumer),
-            "--config",
-            str(config),
-            "--contract",
-            str(contract),
-        )
-        doctor = self.run_runtime(
-            "doctor", "--target", str(self.consumer), "--require-config"
-        )
+        self.run_runtime("configure", "--config", str(config), "--contract", str(contract))
+        doctor = self.run_runtime("doctor", "--require-config")
         self.assertEqual("PASS", json.loads(doctor.stdout)["status"])
 
-        self.run_runtime("install", "--target", str(self.consumer))
-        history = self.consumer / ".dw" / "history" / "demo"
+        self.run_runtime("install")
+        history = self.store.parent / "history" / "powers" / "demo"
         self.assertTrue(any(history.iterdir()))
 
-        self.run_runtime("uninstall", "--target", str(self.consumer))
-        self.assertFalse((self.consumer / ".dw" / "powers" / "demo").exists())
+        detached = self.run_runtime("uninstall")
+        self.assertEqual("DETACHED", json.loads(detached.stdout)["status"])
+        self.assertTrue((self.store / "demo").exists())
         self.assertTrue((self.consumer / ".demo").exists())
+        self.assertFalse((self.consumer / ".dw").exists())
 
-    def test_unmanaged_install_is_not_overwritten(self) -> None:
-        unmanaged = self.consumer / ".dw" / "powers" / "demo"
+    def test_unmanaged_workspace_install_is_not_overwritten(self) -> None:
+        unmanaged = self.store / "demo"
         unmanaged.mkdir(parents=True)
         (unmanaged / "mine.txt").write_text("do not replace", encoding="utf-8")
-        result = self.run_runtime("install", "--target", str(self.consumer), check=False)
+        result = self.run_runtime("install", check=False)
         self.assertEqual(2, result.returncode)
         self.assertIn("unmanaged", result.stderr)
+        self.assertFalse((self.consumer / ".dw").exists())
 
     def test_destructive_runtime_removal_requires_yes(self) -> None:
-        self.run_runtime("install", "--target", str(self.consumer))
-        result = self.run_runtime(
-            "uninstall",
-            "--target",
-            str(self.consumer),
-            "--include-runtime",
-            check=False,
-        )
+        self.run_runtime("install")
+        result = self.run_runtime("uninstall", "--include-runtime", check=False)
         self.assertEqual(2, result.returncode)
         self.assertTrue((self.consumer / ".demo").exists())
 
-        self.run_runtime(
-            "uninstall",
-            "--target",
-            str(self.consumer),
-            "--include-runtime",
-            "--yes",
-        )
+        self.run_runtime("uninstall", "--include-runtime", "--yes")
         self.assertFalse((self.consumer / ".demo").exists())
+        self.assertTrue((self.store / "demo").exists())
 
 
 if __name__ == "__main__":
