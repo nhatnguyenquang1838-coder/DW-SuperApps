@@ -34,8 +34,9 @@ HOST_SPECS: dict[str, dict[str, str]] = {
     "claude": {"kind": "skills", "root": ".claude/skills", "index": "CLAUDE.md"},
     "custom": {"kind": "skills", "root": ".agents/skills", "index": ".agents/DW_AGENT.md"},
     "copilot": {
-        "kind": "instructions",
-        "file": ".github/instructions/dw-superapps.instructions.md",
+        "kind": "skills",
+        "root": ".github/skills",
+        "index": ".github/copilot-instructions.md",
     },
     "cline": {"kind": "instructions", "file": ".clinerules/00-dw-superapps.md"},
     "kilo": {"kind": "instructions", "file": ".kilo/rules/dw-superapps.md"},
@@ -518,8 +519,6 @@ def host_instruction_content(host: str) -> str:
             f"Runtime data: `{spec['runtimeDataRoot']}/`."
         )
     prefix = ""
-    if host == "copilot":
-        prefix = '---\napplyTo: "**"\n---\n'
     if host == "claude":
         prefix = "@AGENTS.md\n\n"
     return (
@@ -585,6 +584,11 @@ def host_expected_paths(host: str) -> list[Path]:
 
 def install_skill_host(host: str, mode: str) -> None:
     spec = HOST_SPECS[host]
+    if host == "copilot":
+        legacy = ROOT / ".github/instructions/dw-superapps.instructions.md"
+        if legacy.exists() or legacy.is_symlink():
+            safe_remove_generated(legacy)
+            print(f"REMOVE: {legacy.relative_to(ROOT)}")
     host_root = ROOT / spec["root"]
     host_root.mkdir(parents=True, exist_ok=True)
     for power_id, manifest in sorted(manifests().items()):
