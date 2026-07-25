@@ -11,6 +11,17 @@ hosts:
   - kilo
   - claude
   - custom
+orchestrators:
+  - id: openclaw-acpx
+    host: openclaw
+    backend: acpx
+    path: hosts/openclaw-acpx
+    enabled: true
+    workers:
+      - codex
+      - claude
+      - kiro
+      - kilocode
 providers:
   - id: ollama
     type: openai-compatible
