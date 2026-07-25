@@ -209,7 +209,7 @@ For every requested Power, the agent MUST:
 9. run package doctor, host activation, host doctor, and actual invocation validation;
 10. record the local package path and checksum in the completion evidence.
 
-If no valid local package exists, report `BLOCKED_LOCAL_PACKAGE_MISSING`. If multiple candidates exist and no exact package was named by the user, report `BLOCKED_LOCAL_PACKAGE_AMBIGUOUS`. If the sidecar is absent or invalid, report `BLOCKED_LOCAL_CHECKSUM_MISSING` or `BLOCKED_LOCAL_CHECKSUM_INVALID`.
+If no valid local package exists, report `BLOCKED_LOCAL_PACKAGE_MISSING`. If multiple candidates exist and no exact package was named by the user, report `BLOCKED_LOCAL_PACKAGE_AMIGUOUS`. If the sidecar is absent or invalid, report `BLOCKED_LOCAL_CHECKSUM_MISSING` or `BLOCKED_LOCAL_CHECKSUM_INVALID`.
 
 #### No-network rule
 
