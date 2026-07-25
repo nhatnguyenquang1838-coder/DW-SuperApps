@@ -1,0 +1,256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw-superapps.local/schemas/openclaw-acpx/work-order.schema.json",
+  "title": "DW SUPER ACPX Work Order",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "task",
+    "system",
+    "repository",
+    "governance",
+    "execution",
+    "permissions",
+    "validation",
+    "expectedOutputs"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "objective"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "objective": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "system": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fullName",
+        "baseBranch",
+        "baseSha"
+      ],
+      "properties": {
+        "fullName": {
+          "type": "string",
+          "pattern": "^[^/]+/[^/]+$"
+        },
+        "baseBranch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baseSha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "power",
+        "gate",
+        "risk",
+        "allowedScope",
+        "forbiddenScope"
+      ],
+      "properties": {
+        "power": {
+          "const": "gwc"
+        },
+        "gate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approvalEnvelope": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "risk": {
+          "enum": [
+            "R0",
+            "R1",
+            "R2",
+            "R3"
+          ]
+        },
+        "allowedScope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "forbiddenScope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "planning": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "knowledge": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preferredWorker",
+        "fallbackWorkers",
+        "worktree",
+        "branch",
+        "timeoutSeconds",
+        "maxRetries"
+      ],
+      "properties": {
+        "preferredWorker": {
+          "enum": [
+            "codex",
+            "claude",
+            "kiro",
+            "kilocode"
+          ]
+        },
+        "fallbackWorkers": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "codex",
+              "claude",
+              "kiro",
+              "kilocode"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "worktree": {
+          "type": "string",
+          "minLength": 1
+        },
+        "branch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "minimum": 60
+        },
+        "maxRetries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        }
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filesystem",
+        "network",
+        "gitPush",
+        "createPr",
+        "merge"
+      ],
+      "properties": {
+        "filesystem": {
+          "enum": [
+            "read-only",
+            "workspace-write"
+          ]
+        },
+        "network": {
+          "enum": [
+            "denied",
+            "allowlisted"
+          ]
+        },
+        "gitPush": {
+          "type": "boolean"
+        },
+        "createPr": {
+          "type": "boolean"
+        },
+        "merge": {
+          "const": false
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commands"
+      ],
+      "properties": {
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "expectedOutputs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    }
+  }
+}
