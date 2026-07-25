@@ -277,15 +277,14 @@ def uninstall(args: argparse.Namespace) -> dict[str, Any]:
         if paths["runtime"].exists():
             shutil.rmtree(paths["runtime"])
             removed.append(str(paths["runtime"]))
-    if paths["install"].exists():
-        if not (paths["install"] / MANAGED_MARKER).is_file():
-            raise RuntimeError_(f"refusing to remove unmanaged package: {paths['install']}")
-        shutil.rmtree(paths["install"])
-        removed.append(str(paths["install"]))
+    # Shared package deletion is coordinated by the workspace consumer, which
+    # can inspect every system binding. A package-local runtime may detach only.
     return {
-        "status": "UNINSTALLED",
+        "status": "DETACHED",
         "power_id": info["power_id"],
         "runtime_preserved": not args.include_runtime,
+        "package_preserved": True,
+        "install_root": str(paths["install"]),
         "removed": removed,
     }
 
