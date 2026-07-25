@@ -17,6 +17,12 @@ __pycache__/
 .claude/skills/task-me/
 .clinerules/00-dw-superapps.md
 .kilo/rules/dw-superapps.md
+.github/skills/gwc/
+.github/skills/ua/
+.github/skills/task-me/
+.github/skills/bmad/
+.github/copilot-instructions.md
+# Legacy generated Copilot aggregate adapter
 .github/instructions/dw-superapps.instructions.md
 CLAUDE.md
 kilo.jsonc

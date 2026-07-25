@@ -8,7 +8,7 @@ DW SuperApps exposes the same Power contracts to multiple AI hosts without copyi
 |---|---|
 | Kiro | `.kiro/skills/<power>/SKILL.md` |
 | Codex | `.codex/skills/<power>/SKILL.md` |
-| GitHub Copilot | `.github/instructions/dw-superapps.instructions.md` |
+| GitHub Copilot | `.github/copilot-instructions.md` + `.github/skills/<power>/SKILL.md` |
 | Cline | `.clinerules/00-dw-superapps.md` |
 | Kilo Code | `.kilo/rules/dw-superapps.md` + `kilo.jsonc` |
 | Claude Code | `CLAUDE.md` + `.claude/skills/<power>/SKILL.md` |
@@ -60,6 +60,7 @@ Skill-based hosts support adapter modes:
 ```bash
 dw host install kiro --mode wrapper
 dw host install codex --mode link
+dw host install copilot --mode wrapper
 dw host install claude --mode copy
 ```
 
@@ -143,7 +144,9 @@ Paste the generated prompt into any supported host. Custom agents may read `.age
 
 ### GitHub Copilot
 
-Open the DW-SuperApps repository root. Copilot loads `AGENTS.md` and the generated path-specific instructions.
+Open the DW-SuperApps repository root. Copilot loads `AGENTS.md`, `.github/copilot-instructions.md`, and the generated `.github/skills/<power>/SKILL.md` adapters.
+
+Copilot may select a Power automatically from its skill description. In supported Copilot surfaces, invoke one explicitly with `/dw-gwc`, `/dw-ua`, `/dw-task-me`, or `/dw-bmad`.
 
 ### Cline
 
