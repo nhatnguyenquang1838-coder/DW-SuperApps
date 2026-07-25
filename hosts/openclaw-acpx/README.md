@@ -7,6 +7,8 @@ This package makes OpenClaw the DW SUPER control plane and exposes Codex, Claude
 This first slice provides:
 
 - official `@openclaw/acpx` installation and configuration;
+- explicit OpenClaw profile targeting;
+- script-owned config validation and read-back;
 - a strict four-worker allowlist;
 - persistent thread-bound ACP sessions;
 - DW Power skill loading through the existing generic adapters;
@@ -16,42 +18,74 @@ This first slice provides:
 
 It does not implement automatic task routing, worktree creation, pull requests, CI remediation, or merge automation yet.
 
-## Install
+## Profile-aware install
+
+The installers never edit `openclaw.json` directly. They use `openclaw config set`, validate the selected profile, then read every governed ACPX setting back through `openclaw config get --json`.
 
 Linux, macOS, WSL, or Git Bash:
 
 ```bash
-bash hosts/openclaw-acpx/install.sh
-```
-
-Restart immediately when no OpenClaw work is active:
-
-```bash
-bash hosts/openclaw-acpx/install.sh --restart
+bash hosts/openclaw-acpx/install.sh --profile gwc --restart
 ```
 
 Windows PowerShell:
 
 ```powershell
-.\hosts\openclaw-acpx\install.ps1
+.\hosts\openclaw-acpx\install.ps1 -Profile gwc -Restart
 ```
 
-Or restart immediately:
+Omit the profile option only when the default OpenClaw profile is intentionally the target:
+
+```bash
+bash hosts/openclaw-acpx/install.sh --restart
+```
 
 ```powershell
 .\hosts\openclaw-acpx\install.ps1 -Restart
 ```
 
-The installer first generates the generic DW Power adapters under `.agents/skills`, then configures OpenClaw to load those adapters together with `hosts/openclaw-acpx/skills`.
+Every OpenClaw command, including plugin installation, configuration, validation, read-back, and gateway restart, is sent to the selected profile.
 
-## Verify
+## What the script performs
+
+1. Generates the generic DW Power adapters under `.agents/skills`.
+2. Installs the official `@openclaw/acpx` plugin in the selected profile.
+3. Writes only the governed ACPX, session-binding, and skill-loading paths.
+4. Prints the active profile config file with `config file`.
+5. Runs `config validate`.
+6. Reads back and compares all governed values.
+7. Restarts the selected profile gateway only when requested.
+
+Unrelated models, providers, authentication profiles, channels, and gateway settings are not replaced.
+
+## Read and verify config without writing
+
+Bash:
 
 ```bash
-openclaw skills list
-openclaw gateway restart
+bash hosts/openclaw-acpx/install.sh --profile gwc --verify-only
 ```
 
-In an OpenClaw conversation:
+PowerShell:
+
+```powershell
+.\hosts\openclaw-acpx\install.ps1 -Profile gwc -VerifyOnly
+```
+
+Verification-only mode does not generate adapters, install plugins, set config, or restart the gateway. It validates and reads the existing selected-profile configuration.
+
+Direct read-only commands:
+
+```bash
+openclaw --profile gwc config file
+openclaw --profile gwc config validate
+openclaw --profile gwc config get acp.allowedAgents --json
+openclaw --profile gwc config get plugins.entries.acpx.config.permissionMode --json
+```
+
+## Runtime verification
+
+In an OpenClaw conversation on the same profile:
 
 ```text
 /acp doctor
@@ -88,4 +122,4 @@ schemas/work-order.schema.json
 schemas/worker-result.schema.json
 ```
 
-`openclaw.config.json` is a reference profile. The installers resolve `<DW_SUPER_ROOT>` to the current repository path and write settings through `openclaw config set`.
+`openclaw.config.json` is a reference profile. The installers resolve `<DW_SUPER_ROOT>` to the current repository path and apply targeted values through the OpenClaw CLI.
