@@ -51,6 +51,24 @@ dw host install all
 dw provider install ollama --model qwen3-coder:30b
 ```
 
+## OpenClaw ACPX orchestrator
+
+OpenClaw can operate as the DW SUPER control plane and dispatch bounded work through ACPX to Codex, Claude Code, Kiro CLI, and Kilocode.
+
+```bash
+bash hosts/openclaw-acpx/install.sh
+openclaw gateway restart
+```
+
+Windows PowerShell:
+
+```powershell
+.\hosts\openclaw-acpx\install.ps1
+openclaw gateway restart
+```
+
+The baseline is fail-closed: reads are approved, write or exec prompts fail when non-interactive approval is unavailable, and both OpenClaw MCP bridges remain disabled. See [`docs/OPENCLAW_ACPX_SETUP.md`](docs/OPENCLAW_ACPX_SETUP.md).
+
 ## Included Powers
 
 | Power | Purpose | Default delivery |
@@ -165,6 +183,8 @@ powers/
   ua/           Semantic knowledge Power fallback
   task-me/      Implementation planning Power fallback
   bmad/         Local router for the release-first BMAD Power
+hosts/
+  openclaw-acpx/ OpenClaw control-plane profile and ACPX worker contracts
 plugins/
   bmad-method/  BMAD source lock, graph, package recipe, and DW overlay
 systems/
@@ -187,4 +207,5 @@ See:
 - [`docs/DW_SUPER_SETUP.md`](docs/DW_SUPER_SETUP.md)
 - [`docs/POWER_RUNTIME_V2.md`](docs/POWER_RUNTIME_V2.md)
 - [`docs/MULTI_HOST_SETUP.md`](docs/MULTI_HOST_SETUP.md)
+- [`docs/OPENCLAW_ACPX_SETUP.md`](docs/OPENCLAW_ACPX_SETUP.md)
 - [`docs/powers/BMAD_POWER.md`](docs/powers/BMAD_POWER.md)
