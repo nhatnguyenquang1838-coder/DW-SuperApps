@@ -1,0 +1,4785 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "DW-SuperApps",
+    "languages": [
+      "batch",
+      "code-workspace",
+      "json",
+      "markdown",
+      "mmd",
+      "powershell",
+      "python",
+      "shell",
+      "txt",
+      "unknown",
+      "yaml"
+    ],
+    "frameworks": [
+      "GitHub Actions"
+    ],
+    "description": "Host-neutral engineering workspace for reusable AI Powers, multiple product systems, local model providers, and agent hosts.",
+    "analyzedAt": "2026-07-25T14:35:16.268242+00:00",
+    "gitCommitHash": "cab5c0835811a3380f3e8d0ed899af6b3eb2f728"
+  },
+  "nodes": [
+    {
+      "id": "pipeline:.github/workflows/publish-bmad-power.yml",
+      "type": "pipeline",
+      "name": "publish-bmad-power.yml",
+      "filePath": ".github/workflows/publish-bmad-power.yml",
+      "summary": "GitHub Actions workflow for publishing the BMAD power package.",
+      "complexity": "complex",
+      "language": "yaml",
+      "tags": [
+        "ci-cd",
+        "bmad",
+        "power",
+        "yaml",
+        "config"
+      ]
+    },
+    {
+      "id": "pipeline:.github/workflows/reusable-publish-power.yml",
+      "type": "pipeline",
+      "name": "reusable-publish-power.yml",
+      "filePath": ".github/workflows/reusable-publish-power.yml",
+      "summary": "Reusable GitHub Actions workflow for publishing power packages.",
+      "complexity": "complex",
+      "language": "yaml",
+      "tags": [
+        "ci-cd",
+        "power",
+        "yaml",
+        "config"
+      ]
+    },
+    {
+      "id": "pipeline:.github/workflows/validate-workspace.yml",
+      "type": "pipeline",
+      "name": "validate-workspace.yml",
+      "filePath": ".github/workflows/validate-workspace.yml",
+      "summary": "GitHub Actions workflow for validating workspace configuration.",
+      "complexity": "moderate",
+      "language": "yaml",
+      "tags": [
+        "ci-cd",
+        "validation",
+        "yaml",
+        "config"
+      ]
+    },
+    {
+      "id": "document:AGENTS.md",
+      "type": "document",
+      "name": "AGENTS.md",
+      "filePath": "AGENTS.md",
+      "summary": "Agent routing and governance configuration for the DW SuperApps workspace.",
+      "complexity": "moderate",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "governance",
+        "routing",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "Project overview and setup instructions for the DW SuperApps workspace.",
+      "complexity": "complex",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "overview",
+        "markdown"
+      ]
+    },
+    {
+      "id": "config:scan_output.json",
+      "type": "config",
+      "name": "scan_output.json",
+      "filePath": "scan_output.json",
+      "summary": "Project scan output containing file inventory and metadata.",
+      "complexity": "complex",
+      "language": "json",
+      "tags": [
+        "config",
+        "json"
+      ]
+    },
+    {
+      "id": "config:workspace.yaml",
+      "type": "config",
+      "name": "workspace.yaml",
+      "filePath": "workspace.yaml",
+      "summary": "Workspace configuration defining hosts, providers, and power registrations.",
+      "complexity": "moderate",
+      "language": "yaml",
+      "tags": [
+        "config",
+        "workspace",
+        "yaml"
+      ]
+    },
+    {
+      "id": "file:requirements-dev.txt",
+      "type": "file",
+      "name": "requirements-dev.txt",
+      "filePath": "requirements-dev.txt",
+      "summary": "Skipped file: requirements-dev.txt. Analysis not performed.",
+      "complexity": "simple",
+      "language": "txt",
+      "tags": [
+        "docs"
+      ]
+    },
+    {
+      "id": "file:dw.cmd",
+      "type": "file",
+      "name": "dw.cmd",
+      "filePath": "dw.cmd",
+      "summary": "Skipped file: dw.cmd. Analysis not performed.",
+      "complexity": "simple",
+      "language": "batch",
+      "tags": [
+        "script",
+        "batch"
+      ]
+    },
+    {
+      "id": "file:dw.ps1",
+      "type": "file",
+      "name": "dw.ps1",
+      "filePath": "dw.ps1",
+      "summary": "Skipped file: dw.ps1. Analysis not performed.",
+      "complexity": "simple",
+      "language": "powershell",
+      "tags": [
+        "script",
+        "powershell"
+      ]
+    },
+    {
+      "id": "document:docs/DW_SUPER_SETUP.md",
+      "type": "document",
+      "name": "DW_SUPER_SETUP.md",
+      "filePath": "docs/DW_SUPER_SETUP.md",
+      "summary": "Detailed setup and deployment guide for the DW SuperApps platform.",
+      "complexity": "complex",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:docs/DW_SUPER_SETUP_VERIFICATION.md",
+      "type": "document",
+      "name": "DW_SUPER_SETUP_VERIFICATION.md",
+      "filePath": "docs/DW_SUPER_SETUP_VERIFICATION.md",
+      "summary": "Detailed setup and deployment guide for the DW SuperApps platform.",
+      "complexity": "moderate",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:docs/MULTI_HOST_SETUP.md",
+      "type": "document",
+      "name": "MULTI_HOST_SETUP.md",
+      "filePath": "docs/MULTI_HOST_SETUP.md",
+      "summary": "Multi-host setup guide covering Kiro, Codex, Claude, and custom agent configurations.",
+      "complexity": "complex",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:docs/POWER_CONSUMER_RUNTIME_V1.md",
+      "type": "document",
+      "name": "POWER_CONSUMER_RUNTIME_V1.md",
+      "filePath": "docs/POWER_CONSUMER_RUNTIME_V1.md",
+      "summary": "Power consumer runtime v1 documentation covering source modes and commands.",
+      "complexity": "moderate",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "power",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:docs/POWER_DISTRIBUTION_V1.md",
+      "type": "document",
+      "name": "POWER_DISTRIBUTION_V1.md",
+      "filePath": "docs/POWER_DISTRIBUTION_V1.md",
+      "summary": "Power distribution v1 documentation covering packaging and publishing workflows.",
+      "complexity": "moderate",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "power",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:docs/POWER_RUNTIME_V2.md",
+      "type": "document",
+      "name": "POWER_RUNTIME_V2.md",
+      "filePath": "docs/POWER_RUNTIME_V2.md",
+      "summary": "Power runtime v2 documentation covering installation, commands, and lifecycle.",
+      "complexity": "complex",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "power",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:docs/WORKSPACE_OPERATIONS.md",
+      "type": "document",
+      "name": "WORKSPACE_OPERATIONS.md",
+      "filePath": "docs/WORKSPACE_OPERATIONS.md",
+      "summary": "Workspace operations guide covering daily development workflows.",
+      "complexity": "moderate",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "markdown"
+      ]
+    },
+    {
+      "id": "config:manifests/powers/bmad.yaml",
+      "type": "config",
+      "name": "bmad.yaml",
+      "filePath": "manifests/powers/bmad.yaml",
+      "summary": "YAML configuration file: bmad.yaml.",
+      "complexity": "moderate",
+      "language": "yaml",
+      "tags": [
+        "config",
+        "governance",
+        "power-manifest",
+        "bmad",
+        "power",
+        "yaml"
+      ]
+    },
+    {
+      "id": "config:manifests/powers/gwc.yaml",
+      "type": "config",
+      "name": "gwc.yaml",
+      "filePath": "manifests/powers/gwc.yaml",
+      "summary": "YAML configuration file: gwc.yaml.",
+      "complexity": "moderate",
+      "language": "yaml",
+      "tags": [
+        "config",
+        "governance",
+        "power-manifest",
+        "power",
+        "yaml"
+      ]
+    },
+    {
+      "id": "config:manifests/powers/task-me.yaml",
+      "type": "config",
+      "name": "task-me.yaml",
+      "filePath": "manifests/powers/task-me.yaml",
+      "summary": "YAML configuration file: task-me.yaml.",
+      "complexity": "moderate",
+      "language": "yaml",
+      "tags": [
+        "config",
+        "governance",
+        "power-manifest",
+        "task-planning",
+        "power",
+        "yaml"
+      ]
+    },
+    {
+      "id": "config:manifests/powers/ua.yaml",
+      "type": "config",
+      "name": "ua.yaml",
+      "filePath": "manifests/powers/ua.yaml",
+      "summary": "YAML configuration file: ua.yaml.",
+      "complexity": "moderate",
+      "language": "yaml",
+      "tags": [
+        "config",
+        "governance",
+        "power-manifest",
+        "understand-anything",
+        "power",
+        "yaml"
+      ]
+    },
+    {
+      "id": "config:schemas/power-consumer-binding.schema.json",
+      "type": "config",
+      "name": "power-consumer-binding.schema.json",
+      "filePath": "schemas/power-consumer-binding.schema.json",
+      "summary": "Schema for consumer binding configuration.",
+      "complexity": "moderate",
+      "language": "json",
+      "tags": [
+        "config",
+        "schema",
+        "power",
+        "json"
+      ]
+    },
+    {
+      "id": "config:schemas/power-distribution.schema.json",
+      "type": "config",
+      "name": "power-distribution.schema.json",
+      "filePath": "schemas/power-distribution.schema.json",
+      "summary": "JSON schema for power distribution metadata and packaging.",
+      "complexity": "moderate",
+      "language": "json",
+      "tags": [
+        "config",
+        "schema",
+        "power",
+        "json"
+      ]
+    },
+    {
+      "id": "config:schemas/power-manifest.schema.json",
+      "type": "config",
+      "name": "power-manifest.schema.json",
+      "filePath": "schemas/power-manifest.schema.json",
+      "summary": "JSON schema defining power manifest structure and validation rules.",
+      "complexity": "complex",
+      "language": "json",
+      "tags": [
+        "config",
+        "schema",
+        "power",
+        "json"
+      ]
+    },
+    {
+      "id": "config:schemas/power-package-manifest.schema.json",
+      "type": "config",
+      "name": "power-package-manifest.schema.json",
+      "filePath": "schemas/power-package-manifest.schema.json",
+      "summary": "Schema for power package manifest structure.",
+      "complexity": "moderate",
+      "language": "json",
+      "tags": [
+        "config",
+        "schema",
+        "power",
+        "json"
+      ]
+    },
+    {
+      "id": "file:scripts/install-dw.sh",
+      "type": "file",
+      "name": "install-dw.sh",
+      "filePath": "scripts/install-dw.sh",
+      "summary": "Shell script to install the DW CLI launcher and configure shell profiles.",
+      "complexity": "complex",
+      "language": "shell",
+      "tags": [
+        "script",
+        "scripts",
+        "shell"
+      ]
+    },
+    {
+      "id": "function:scripts/install-dw.sh:usage",
+      "type": "function",
+      "name": "usage",
+      "filePath": "scripts/install-dw.sh",
+      "summary": "Function `usage` in install-dw.sh.",
+      "complexity": "simple",
+      "language": "shell",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/install-dw.sh:resolve_shell_mode",
+      "type": "function",
+      "name": "resolve_shell_mode",
+      "filePath": "scripts/install-dw.sh",
+      "summary": "Function `resolve_shell_mode` in install-dw.sh.",
+      "complexity": "simple",
+      "language": "shell",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/install-dw.sh:strip_profile_block",
+      "type": "function",
+      "name": "strip_profile_block",
+      "filePath": "scripts/install-dw.sh",
+      "summary": "Function `strip_profile_block` in install-dw.sh.",
+      "complexity": "simple",
+      "language": "shell",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/install-dw.sh:write_profile_block",
+      "type": "function",
+      "name": "write_profile_block",
+      "filePath": "scripts/install-dw.sh",
+      "summary": "Function `write_profile_block` in install-dw.sh.",
+      "complexity": "simple",
+      "language": "shell",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/install-dw.sh:remove_profile_block",
+      "type": "function",
+      "name": "remove_profile_block",
+      "filePath": "scripts/install-dw.sh",
+      "summary": "Function `remove_profile_block` in install-dw.sh.",
+      "complexity": "simple",
+      "language": "shell",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/install-dw.sh:install_launcher",
+      "type": "function",
+      "name": "install_launcher",
+      "filePath": "scripts/install-dw.sh",
+      "summary": "Function `install_launcher` in install-dw.sh.",
+      "complexity": "simple",
+      "language": "shell",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/install-dw.sh:uninstall_launcher",
+      "type": "function",
+      "name": "uninstall_launcher",
+      "filePath": "scripts/install-dw.sh",
+      "summary": "Function `uninstall_launcher` in install-dw.sh.",
+      "complexity": "simple",
+      "language": "shell",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "file:scripts/install-host-adapters.sh",
+      "type": "file",
+      "name": "install-host-adapters.sh",
+      "filePath": "scripts/install-host-adapters.sh",
+      "summary": "Shell script to install AI host adapters for the DW CLI.",
+      "complexity": "simple",
+      "language": "shell",
+      "tags": [
+        "script",
+        "scripts",
+        "shell"
+      ]
+    },
+    {
+      "id": "file:scripts/python-resolver.sh",
+      "type": "file",
+      "name": "python-resolver.sh",
+      "filePath": "scripts/python-resolver.sh",
+      "summary": "Shell script to resolve and launch Python for the DW CLI.",
+      "complexity": "moderate",
+      "language": "shell",
+      "tags": [
+        "script",
+        "scripts",
+        "shell"
+      ]
+    },
+    {
+      "id": "function:scripts/python-resolver.sh:dw_python_error",
+      "type": "function",
+      "name": "dw_python_error",
+      "filePath": "scripts/python-resolver.sh",
+      "summary": "Function `dw_python_error` in python-resolver.sh.",
+      "complexity": "simple",
+      "language": "shell",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/python-resolver.sh:dw_python",
+      "type": "function",
+      "name": "dw_python",
+      "filePath": "scripts/python-resolver.sh",
+      "summary": "Function `dw_python` in python-resolver.sh.",
+      "complexity": "simple",
+      "language": "shell",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/python-resolver.sh:dw_exec_python",
+      "type": "function",
+      "name": "dw_exec_python",
+      "filePath": "scripts/python-resolver.sh",
+      "summary": "Function `dw_exec_python` in python-resolver.sh.",
+      "complexity": "simple",
+      "language": "shell",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "file:scripts/sync-submodules.sh",
+      "type": "file",
+      "name": "sync-submodules.sh",
+      "filePath": "scripts/sync-submodules.sh",
+      "summary": "Shell script to synchronize git submodules in the workspace.",
+      "complexity": "simple",
+      "language": "shell",
+      "tags": [
+        "script",
+        "scripts",
+        "shell"
+      ]
+    },
+    {
+      "id": "file:templates/power-runtime/bin/uninstall.ps1",
+      "type": "file",
+      "name": "uninstall.ps1",
+      "filePath": "templates/power-runtime/bin/uninstall.ps1",
+      "summary": "Skipped file: uninstall.ps1. Analysis not performed.",
+      "complexity": "simple",
+      "language": "powershell",
+      "tags": [
+        "script",
+        "power",
+        "powershell"
+      ]
+    },
+    {
+      "id": "file:templates/power-runtime/bin/doctor.ps1",
+      "type": "file",
+      "name": "doctor.ps1",
+      "filePath": "templates/power-runtime/bin/doctor.ps1",
+      "summary": "Skipped file: doctor.ps1. Analysis not performed.",
+      "complexity": "simple",
+      "language": "powershell",
+      "tags": [
+        "script",
+        "power",
+        "powershell"
+      ]
+    },
+    {
+      "id": "file:templates/power-runtime/bin/install.ps1",
+      "type": "file",
+      "name": "install.ps1",
+      "filePath": "templates/power-runtime/bin/install.ps1",
+      "summary": "Skipped file: install.ps1. Analysis not performed.",
+      "complexity": "simple",
+      "language": "powershell",
+      "tags": [
+        "script",
+        "power",
+        "powershell"
+      ]
+    },
+    {
+      "id": "file:templates/power-runtime/bin/configure.ps1",
+      "type": "file",
+      "name": "configure.ps1",
+      "filePath": "templates/power-runtime/bin/configure.ps1",
+      "summary": "Skipped file: configure.ps1. Analysis not performed.",
+      "complexity": "simple",
+      "language": "powershell",
+      "tags": [
+        "script",
+        "power",
+        "powershell"
+      ]
+    },
+    {
+      "id": "config:tests/fixtures/power-distribution/invalid-absolute-include.yaml",
+      "type": "config",
+      "name": "invalid-absolute-include.yaml",
+      "filePath": "tests/fixtures/power-distribution/invalid-absolute-include.yaml",
+      "summary": "JSON schema for power distribution metadata and packaging.",
+      "complexity": "simple",
+      "language": "yaml",
+      "tags": [
+        "config",
+        "tests",
+        "power",
+        "yaml"
+      ]
+    },
+    {
+      "id": "config:tests/fixtures/power-distribution/valid-consumer-binding.yaml",
+      "type": "config",
+      "name": "valid-consumer-binding.yaml",
+      "filePath": "tests/fixtures/power-distribution/valid-consumer-binding.yaml",
+      "summary": "JSON schema for power distribution metadata and packaging.",
+      "complexity": "simple",
+      "language": "yaml",
+      "tags": [
+        "config",
+        "tests",
+        "power",
+        "yaml"
+      ]
+    },
+    {
+      "id": "config:tests/fixtures/power-distribution/valid-recipe.yaml",
+      "type": "config",
+      "name": "valid-recipe.yaml",
+      "filePath": "tests/fixtures/power-distribution/valid-recipe.yaml",
+      "summary": "JSON schema for power distribution metadata and packaging.",
+      "complexity": "simple",
+      "language": "yaml",
+      "tags": [
+        "config",
+        "tests",
+        "power",
+        "yaml"
+      ]
+    },
+    {
+      "id": "document:.claude/skills/bmad/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".claude/skills/bmad/SKILL.md",
+      "summary": "Documentation file: SKILL.md.",
+      "complexity": "simple",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "bmad",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:.codex/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": ".codex/README.md",
+      "summary": "Documentation file: README.md.",
+      "complexity": "simple",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:.codex/skills/bmad/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".codex/skills/bmad/SKILL.md",
+      "summary": "Documentation file: SKILL.md.",
+      "complexity": "simple",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "bmad",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:.codex/skills/gwc/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".codex/skills/gwc/SKILL.md",
+      "summary": "Documentation file: SKILL.md.",
+      "complexity": "simple",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "governance",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:.codex/skills/task-me/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".codex/skills/task-me/SKILL.md",
+      "summary": "Documentation file: SKILL.md.",
+      "complexity": "simple",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "task-planning",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:.codex/skills/ua/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".codex/skills/ua/SKILL.md",
+      "summary": "Documentation file: SKILL.md.",
+      "complexity": "simple",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "understand-anything",
+        "markdown"
+      ]
+    },
+    {
+      "id": "config:.gwc/policies/notification-policy.yaml",
+      "type": "config",
+      "name": "notification-policy.yaml",
+      "filePath": ".gwc/policies/notification-policy.yaml",
+      "summary": "YAML configuration file: notification-policy.yaml.",
+      "complexity": "moderate",
+      "language": "yaml",
+      "tags": [
+        "config",
+        "governance",
+        "yaml"
+      ]
+    },
+    {
+      "id": "document:.gwc/runbooks/SLACK_NOTIFICATION_RUNBOOK.md",
+      "type": "document",
+      "name": "SLACK_NOTIFICATION_RUNBOOK.md",
+      "filePath": ".gwc/runbooks/SLACK_NOTIFICATION_RUNBOOK.md",
+      "summary": "Documentation file: SLACK_NOTIFICATION_RUNBOOK.md.",
+      "complexity": "moderate",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "governance",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:.kilo/plans/1784987769805-ua-full-analysis-plan.md",
+      "type": "document",
+      "name": "1784987769805-ua-full-analysis-plan.md",
+      "filePath": ".kilo/plans/1784987769805-ua-full-analysis-plan.md",
+      "summary": "Documentation file: 1784987769805-ua-full-analysis-plan.md.",
+      "complexity": "moderate",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "understand-anything",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:.kiro/skills/bmad/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".kiro/skills/bmad/SKILL.md",
+      "summary": "Documentation file: SKILL.md.",
+      "complexity": "simple",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "bmad",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:.kiro/skills/gwc/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".kiro/skills/gwc/SKILL.md",
+      "summary": "Documentation file: SKILL.md.",
+      "complexity": "simple",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "governance",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:.kiro/skills/task-me/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".kiro/skills/task-me/SKILL.md",
+      "summary": "Documentation file: SKILL.md.",
+      "complexity": "simple",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "task-planning",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:.kiro/skills/ua/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".kiro/skills/ua/SKILL.md",
+      "summary": "Documentation file: SKILL.md.",
+      "complexity": "simple",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "understand-anything",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:.kiro/steering/workspace-powers.md",
+      "type": "document",
+      "name": "workspace-powers.md",
+      "filePath": ".kiro/steering/workspace-powers.md",
+      "summary": "Documentation file: workspace-powers.md.",
+      "complexity": "simple",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "power",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:docs/powers/BMAD_POWER.md",
+      "type": "document",
+      "name": "BMAD_POWER.md",
+      "filePath": "docs/powers/BMAD_POWER.md",
+      "summary": "BMAD method power documentation for the DW SuperApps workspace.",
+      "complexity": "moderate",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "bmad",
+        "power",
+        "markdown"
+      ]
+    },
+    {
+      "id": "config:manifests/evidence/SCRUM-131/validation-evidence.json",
+      "type": "config",
+      "name": "validation-evidence.json",
+      "filePath": "manifests/evidence/SCRUM-131/validation-evidence.json",
+      "summary": "Validation evidence artifact for workspace setup verification.",
+      "complexity": "moderate",
+      "language": "json",
+      "tags": [
+        "config",
+        "governance",
+        "json"
+      ]
+    },
+    {
+      "id": "config:manifests/evidence/SCRUM-132/hygiene-evidence.json",
+      "type": "config",
+      "name": "hygiene-evidence.json",
+      "filePath": "manifests/evidence/SCRUM-132/hygiene-evidence.json",
+      "summary": "Hygiene check evidence for workspace cleanup validation.",
+      "complexity": "simple",
+      "language": "json",
+      "tags": [
+        "config",
+        "governance",
+        "json"
+      ]
+    },
+    {
+      "id": "file:bin/dw",
+      "type": "file",
+      "name": "dw",
+      "filePath": "bin/dw",
+      "summary": "Skipped file: dw. Analysis not performed.",
+      "complexity": "moderate",
+      "language": "unknown",
+      "tags": [
+        "code",
+        "cli"
+      ]
+    },
+    {
+      "id": "file:manifests/evidence/SCRUM-131/SHA256SUMS.txt",
+      "type": "file",
+      "name": "SHA256SUMS.txt",
+      "filePath": "manifests/evidence/SCRUM-131/SHA256SUMS.txt",
+      "summary": "Skipped file: SHA256SUMS.txt. Analysis not performed.",
+      "complexity": "simple",
+      "language": "txt",
+      "tags": [
+        "docs",
+        "governance"
+      ]
+    },
+    {
+      "id": "file:.ua/.understandignore",
+      "type": "file",
+      "name": ".understandignore",
+      "filePath": ".ua/.understandignore",
+      "summary": "Skipped file: .understandignore. Analysis not performed.",
+      "complexity": "moderate",
+      "language": "unknown",
+      "tags": [
+        "code",
+        "understand-anything"
+      ]
+    },
+    {
+      "id": "file:DW-SuperApps.code-workspace",
+      "type": "file",
+      "name": "DW-SuperApps.code-workspace",
+      "filePath": "DW-SuperApps.code-workspace",
+      "summary": "Skipped file: DW-SuperApps.code-workspace. Analysis not performed.",
+      "complexity": "simple",
+      "language": "code-workspace",
+      "tags": [
+        "code"
+      ]
+    },
+    {
+      "id": "file:bin/dw.ps1",
+      "type": "file",
+      "name": "dw.ps1",
+      "filePath": "bin/dw.ps1",
+      "summary": "Skipped file: dw.ps1. Analysis not performed.",
+      "complexity": "simple",
+      "language": "powershell",
+      "tags": [
+        "script",
+        "cli",
+        "powershell"
+      ]
+    },
+    {
+      "id": "file:.gitmodules",
+      "type": "file",
+      "name": ".gitmodules",
+      "filePath": ".gitmodules",
+      "summary": "Skipped file: .gitmodules. Analysis not performed.",
+      "complexity": "simple",
+      "language": "unknown",
+      "tags": [
+        "code"
+      ]
+    },
+    {
+      "id": "file:manifests/evidence/SCRUM-132/removed-files.txt",
+      "type": "file",
+      "name": "removed-files.txt",
+      "filePath": "manifests/evidence/SCRUM-132/removed-files.txt",
+      "summary": "Skipped file: removed-files.txt. Analysis not performed.",
+      "complexity": "moderate",
+      "language": "txt",
+      "tags": [
+        "docs",
+        "governance"
+      ]
+    },
+    {
+      "id": "file:manifests/evidence/SCRUM-134/SHA256SUMS.txt",
+      "type": "file",
+      "name": "SHA256SUMS.txt",
+      "filePath": "manifests/evidence/SCRUM-134/SHA256SUMS.txt",
+      "summary": "Skipped file: SHA256SUMS.txt. Analysis not performed.",
+      "complexity": "simple",
+      "language": "txt",
+      "tags": [
+        "docs",
+        "governance"
+      ]
+    },
+    {
+      "id": "config:manifests/evidence/SCRUM-134/setup-evidence.json",
+      "type": "config",
+      "name": "setup-evidence.json",
+      "filePath": "manifests/evidence/SCRUM-134/setup-evidence.json",
+      "summary": "Setup evidence artifact documenting workspace initialization steps.",
+      "complexity": "moderate",
+      "language": "json",
+      "tags": [
+        "config",
+        "governance",
+        "json"
+      ]
+    },
+    {
+      "id": "config:manifests/power-distribution-evidence.json",
+      "type": "config",
+      "name": "power-distribution-evidence.json",
+      "filePath": "manifests/power-distribution-evidence.json",
+      "summary": "JSON schema for power distribution metadata and packaging.",
+      "complexity": "moderate",
+      "language": "json",
+      "tags": [
+        "config",
+        "governance",
+        "power",
+        "json"
+      ]
+    },
+    {
+      "id": "document:plugins/bmad-method/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "plugins/bmad-method/README.md",
+      "summary": "Documentation file: README.md.",
+      "complexity": "simple",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "bmad",
+        "markdown"
+      ]
+    },
+    {
+      "id": "config:plugins/bmad-method/SOURCE.lock.json",
+      "type": "config",
+      "name": "SOURCE.lock.json",
+      "filePath": "plugins/bmad-method/SOURCE.lock.json",
+      "summary": "Source lock file recording the exact commit of the BMAD method power.",
+      "complexity": "simple",
+      "language": "json",
+      "tags": [
+        "config",
+        "bmad",
+        "json"
+      ]
+    },
+    {
+      "id": "config:plugins/bmad-method/distribution/power-package.yaml",
+      "type": "config",
+      "name": "power-package.yaml",
+      "filePath": "plugins/bmad-method/distribution/power-package.yaml",
+      "summary": "YAML configuration file: power-package.yaml.",
+      "complexity": "moderate",
+      "language": "yaml",
+      "tags": [
+        "config",
+        "bmad",
+        "power",
+        "yaml"
+      ]
+    },
+    {
+      "id": "document:plugins/bmad-method/knowledge/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "plugins/bmad-method/knowledge/README.md",
+      "summary": "Documentation file: README.md.",
+      "complexity": "simple",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "bmad",
+        "markdown"
+      ]
+    },
+    {
+      "id": "config:plugins/bmad-method/knowledge/knowledge-graph.json",
+      "type": "config",
+      "name": "knowledge-graph.json",
+      "filePath": "plugins/bmad-method/knowledge/knowledge-graph.json",
+      "summary": "Knowledge graph data structure for BMAD method architecture.",
+      "complexity": "simple",
+      "language": "json",
+      "tags": [
+        "config",
+        "bmad",
+        "json"
+      ]
+    },
+    {
+      "id": "config:plugins/bmad-method/overlay/distribution/config/config.schema.json",
+      "type": "config",
+      "name": "config.schema.json",
+      "filePath": "plugins/bmad-method/overlay/distribution/config/config.schema.json",
+      "summary": "Configuration schema for BMAD distribution overlay.",
+      "complexity": "moderate",
+      "language": "json",
+      "tags": [
+        "config",
+        "bmad",
+        "json"
+      ]
+    },
+    {
+      "id": "config:plugins/bmad-method/overlay/distribution/config/defaults.yaml",
+      "type": "config",
+      "name": "defaults.yaml",
+      "filePath": "plugins/bmad-method/overlay/distribution/config/defaults.yaml",
+      "summary": "Default configuration for BMAD distribution overlay.",
+      "complexity": "simple",
+      "language": "yaml",
+      "tags": [
+        "config",
+        "bmad",
+        "yaml"
+      ]
+    },
+    {
+      "id": "config:plugins/bmad-method/overlay/distribution/contracts/default-contract.yaml",
+      "type": "config",
+      "name": "default-contract.yaml",
+      "filePath": "plugins/bmad-method/overlay/distribution/contracts/default-contract.yaml",
+      "summary": "Default consumer binding contract template.",
+      "complexity": "simple",
+      "language": "yaml",
+      "tags": [
+        "config",
+        "bmad",
+        "yaml"
+      ]
+    },
+    {
+      "id": "file:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "type": "file",
+      "name": "bootstrap_bmad.py",
+      "filePath": "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "summary": "Python bootstrap library for the BMAD method power distribution.",
+      "complexity": "complex",
+      "language": "python",
+      "tags": [
+        "code",
+        "bmad",
+        "python"
+      ],
+      "languageNotes": "11 functions defined; 1 class(es) defined; 12 exported symbols; call graph with 109 edges"
+    },
+    {
+      "id": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:package_root",
+      "type": "function",
+      "name": "package_root",
+      "filePath": "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "summary": "Function `package_root` in bootstrap_bmad.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:sha256",
+      "type": "function",
+      "name": "sha256",
+      "filePath": "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "summary": "Function `sha256` in bootstrap_bmad.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:run",
+      "type": "function",
+      "name": "run",
+      "filePath": "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "summary": "Function `run` in bootstrap_bmad.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:executable",
+      "type": "function",
+      "name": "executable",
+      "filePath": "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "summary": "Function `executable` in bootstrap_bmad.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:node_version",
+      "type": "function",
+      "name": "node_version",
+      "filePath": "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "summary": "Function `node_version` in bootstrap_bmad.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:validate_package",
+      "type": "function",
+      "name": "validate_package",
+      "filePath": "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "summary": "Function `validate_package` in bootstrap_bmad.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:dependency_cache",
+      "type": "function",
+      "name": "dependency_cache",
+      "filePath": "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "summary": "Function `dependency_cache` in bootstrap_bmad.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:safe_target",
+      "type": "function",
+      "name": "safe_target",
+      "filePath": "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "summary": "Function `safe_target` in bootstrap_bmad.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:bootstrap",
+      "type": "function",
+      "name": "bootstrap",
+      "filePath": "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "summary": "Function `bootstrap` in bootstrap_bmad.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:parser",
+      "type": "function",
+      "name": "parser",
+      "filePath": "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "summary": "Function `parser` in bootstrap_bmad.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "summary": "Function `main` in bootstrap_bmad.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "class:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:BootstrapError",
+      "type": "class",
+      "name": "BootstrapError",
+      "filePath": "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "summary": "Class `BootstrapError` in bootstrap_bmad.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "class"
+      ]
+    },
+    {
+      "id": "document:plugins/bmad-method/overlay/distribution/skills/bmad/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": "plugins/bmad-method/overlay/distribution/skills/bmad/SKILL.md",
+      "summary": "Documentation file: SKILL.md.",
+      "complexity": "moderate",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "bmad",
+        "markdown"
+      ]
+    },
+    {
+      "id": "document:powers/bmad/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": "powers/bmad/SKILL.md",
+      "summary": "Documentation file: SKILL.md.",
+      "complexity": "moderate",
+      "language": "markdown",
+      "tags": [
+        "docs",
+        "bmad",
+        "power",
+        "markdown"
+      ]
+    },
+    {
+      "id": "file:scripts/dw_cli.py",
+      "type": "file",
+      "name": "dw_cli.py",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Main CLI tool for the DW SuperApps workspace with commands for power lifecycle management.",
+      "complexity": "complex",
+      "language": "python",
+      "tags": [
+        "code",
+        "scripts",
+        "python",
+        "cli"
+      ],
+      "languageNotes": "53 functions defined; 1 class(es) defined; 54 exported symbols; call graph with 389 edges"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:load_yaml",
+      "type": "function",
+      "name": "load_yaml",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `load_yaml` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:workspace",
+      "type": "function",
+      "name": "workspace",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `workspace` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:manifests",
+      "type": "function",
+      "name": "manifests",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `manifests` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:run",
+      "type": "function",
+      "name": "run",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `run` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:git",
+      "type": "function",
+      "name": "git",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `git` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:emit",
+      "type": "function",
+      "name": "emit",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `emit` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:atomic_write",
+      "type": "function",
+      "name": "atomic_write",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `atomic_write` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:find_system",
+      "type": "function",
+      "name": "find_system",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `find_system` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:provider_entries",
+      "type": "function",
+      "name": "provider_entries",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `provider_entries` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:find_provider",
+      "type": "function",
+      "name": "find_provider",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `find_provider` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:workspace_info",
+      "type": "function",
+      "name": "workspace_info",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `workspace_info` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:power_list",
+      "type": "function",
+      "name": "power_list",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `power_list` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:power_info",
+      "type": "function",
+      "name": "power_info",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `power_info` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:power_prompt",
+      "type": "function",
+      "name": "power_prompt",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `power_prompt` in dw_cli.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:submodule_entries",
+      "type": "function",
+      "name": "submodule_entries",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `submodule_entries` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:select_submodules",
+      "type": "function",
+      "name": "select_submodules",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `select_submodules` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:require_initialized",
+      "type": "function",
+      "name": "require_initialized",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `require_initialized` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:pinned_sha",
+      "type": "function",
+      "name": "pinned_sha",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `pinned_sha` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:submodule_branch",
+      "type": "function",
+      "name": "submodule_branch",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `submodule_branch` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:remote_sha",
+      "type": "function",
+      "name": "remote_sha",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `remote_sha` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:power_sync",
+      "type": "function",
+      "name": "power_sync",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `power_sync` in dw_cli.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:normalize_host",
+      "type": "function",
+      "name": "normalize_host",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `normalize_host` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:configured_hosts",
+      "type": "function",
+      "name": "configured_hosts",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `configured_hosts` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:select_hosts",
+      "type": "function",
+      "name": "select_hosts",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `select_hosts` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:resolve_skill_source",
+      "type": "function",
+      "name": "resolve_skill_source",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `resolve_skill_source` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:is_generated_path",
+      "type": "function",
+      "name": "is_generated_path",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `is_generated_path` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:safe_remove_generated",
+      "type": "function",
+      "name": "safe_remove_generated",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `safe_remove_generated` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:write_generated_file",
+      "type": "function",
+      "name": "write_generated_file",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `write_generated_file` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:wrapper_content",
+      "type": "function",
+      "name": "wrapper_content",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `wrapper_content` in dw_cli.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:host_instruction_content",
+      "type": "function",
+      "name": "host_instruction_content",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `host_instruction_content` in dw_cli.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:kilo_config_content",
+      "type": "function",
+      "name": "kilo_config_content",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `kilo_config_content` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:host_expected_paths",
+      "type": "function",
+      "name": "host_expected_paths",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `host_expected_paths` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:install_skill_host",
+      "type": "function",
+      "name": "install_skill_host",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `install_skill_host` in dw_cli.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:install_instruction_host",
+      "type": "function",
+      "name": "install_instruction_host",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `install_instruction_host` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:install_host_adapters",
+      "type": "function",
+      "name": "install_host_adapters",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `install_host_adapters` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:remove_host_adapters",
+      "type": "function",
+      "name": "remove_host_adapters",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `remove_host_adapters` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:host_list",
+      "type": "function",
+      "name": "host_list",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `host_list` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:host_status",
+      "type": "function",
+      "name": "host_status",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `host_status` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:provider_config_path",
+      "type": "function",
+      "name": "provider_config_path",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `provider_config_path` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:provider_env_path",
+      "type": "function",
+      "name": "provider_env_path",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `provider_env_path` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:provider_config",
+      "type": "function",
+      "name": "provider_config",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `provider_config` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:write_provider_files",
+      "type": "function",
+      "name": "write_provider_files",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `write_provider_files` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:select_providers",
+      "type": "function",
+      "name": "select_providers",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `select_providers` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:provider_install",
+      "type": "function",
+      "name": "provider_install",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `provider_install` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:load_provider_config",
+      "type": "function",
+      "name": "load_provider_config",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `load_provider_config` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:probe_openai_provider",
+      "type": "function",
+      "name": "probe_openai_provider",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `probe_openai_provider` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:provider_status",
+      "type": "function",
+      "name": "provider_status",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `provider_status` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:provider_info",
+      "type": "function",
+      "name": "provider_info",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `provider_info` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:system_list",
+      "type": "function",
+      "name": "system_list",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `system_list` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:system_powers",
+      "type": "function",
+      "name": "system_powers",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `system_powers` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:validate",
+      "type": "function",
+      "name": "validate",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `validate` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:build_parser",
+      "type": "function",
+      "name": "build_parser",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `build_parser` in dw_cli.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_cli.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Function `main` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "class:scripts/dw_cli.py:DwError",
+      "type": "class",
+      "name": "DwError",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Class `DwError` in dw_cli.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "class"
+      ]
+    },
+    {
+      "id": "file:scripts/dw_entry.py",
+      "type": "file",
+      "name": "dw_entry.py",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Entry point script for the DW CLI with commands for init, sync, clean, doctor, and reset.",
+      "complexity": "complex",
+      "language": "python",
+      "tags": [
+        "code",
+        "scripts",
+        "python",
+        "cli"
+      ],
+      "languageNotes": "17 functions defined; 1 class(es) defined; 18 exported symbols; call graph with 192 edges"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:run",
+      "type": "function",
+      "name": "run",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `run` in dw_entry.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_entry.py:load_runtime",
+      "type": "function",
+      "name": "load_runtime",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `load_runtime` in dw_entry.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_entry.py:ns",
+      "type": "function",
+      "name": "ns",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `ns` in dw_entry.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_entry.py:install_dependencies",
+      "type": "function",
+      "name": "install_dependencies",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `install_dependencies` in dw_entry.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_entry.py:init_all",
+      "type": "function",
+      "name": "init_all",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `init_all` in dw_entry.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_entry.py:sync_all",
+      "type": "function",
+      "name": "sync_all",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `sync_all` in dw_entry.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_entry.py:clean_adapters",
+      "type": "function",
+      "name": "clean_adapters",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `clean_adapters` in dw_entry.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_entry.py:clean_caches",
+      "type": "function",
+      "name": "clean_caches",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `clean_caches` in dw_entry.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_entry.py:runtime_paths",
+      "type": "function",
+      "name": "runtime_paths",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `runtime_paths` in dw_entry.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_entry.py:clean_runtime",
+      "type": "function",
+      "name": "clean_runtime",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `clean_runtime` in dw_entry.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_entry.py:clean_plan",
+      "type": "function",
+      "name": "clean_plan",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `clean_plan` in dw_entry.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_entry.py:clean_all",
+      "type": "function",
+      "name": "clean_all",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `clean_all` in dw_entry.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_entry.py:status_all",
+      "type": "function",
+      "name": "status_all",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `status_all` in dw_entry.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_entry.py:doctor_all",
+      "type": "function",
+      "name": "doctor_all",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `doctor_all` in dw_entry.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_entry.py:reset_all",
+      "type": "function",
+      "name": "reset_all",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `reset_all` in dw_entry.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_entry.py:build_parser",
+      "type": "function",
+      "name": "build_parser",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `build_parser` in dw_entry.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_entry.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Function `main` in dw_entry.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "class:scripts/dw_entry.py:EntryError",
+      "type": "class",
+      "name": "EntryError",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Class `EntryError` in dw_entry.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "class"
+      ]
+    },
+    {
+      "id": "file:scripts/dw_power_package.py",
+      "type": "file",
+      "name": "dw_power_package.py",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Python module for building and managing DW power packages with install, configure, and uninstall support.",
+      "complexity": "complex",
+      "language": "python",
+      "tags": [
+        "code",
+        "scripts",
+        "python",
+        "power"
+      ],
+      "languageNotes": "21 functions defined; 1 class(es) defined; 22 exported symbols; call graph with 228 edges"
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:emit",
+      "type": "function",
+      "name": "emit",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `emit` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:load_yaml",
+      "type": "function",
+      "name": "load_yaml",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `load_yaml` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:manifest",
+      "type": "function",
+      "name": "manifest",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `manifest` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:sha256_file",
+      "type": "function",
+      "name": "sha256_file",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `sha256_file` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:safe_extract",
+      "type": "function",
+      "name": "safe_extract",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `safe_extract` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:read_checksum",
+      "type": "function",
+      "name": "read_checksum",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `read_checksum` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:download",
+      "type": "function",
+      "name": "download",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `download` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:source_urls",
+      "type": "function",
+      "name": "source_urls",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `source_urls` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:verify_package",
+      "type": "function",
+      "name": "verify_package",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `verify_package` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:run_runtime",
+      "type": "function",
+      "name": "run_runtime",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `run_runtime` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:installed_root",
+      "type": "function",
+      "name": "installed_root",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `installed_root` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:history_root",
+      "type": "function",
+      "name": "history_root",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `history_root` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:install",
+      "type": "function",
+      "name": "install",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `install` in dw_power_package.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:configure",
+      "type": "function",
+      "name": "configure",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `configure` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:doctor",
+      "type": "function",
+      "name": "doctor",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `doctor` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:history_entries",
+      "type": "function",
+      "name": "history_entries",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `history_entries` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:history",
+      "type": "function",
+      "name": "history",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `history` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:rollback",
+      "type": "function",
+      "name": "rollback",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `rollback` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:uninstall",
+      "type": "function",
+      "name": "uninstall",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `uninstall` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:parser",
+      "type": "function",
+      "name": "parser",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `parser` in dw_power_package.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/dw_power_package.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Function `main` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "class:scripts/dw_power_package.py:ConsumerError",
+      "type": "class",
+      "name": "ConsumerError",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Class `ConsumerError` in dw_power_package.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "class"
+      ]
+    },
+    {
+      "id": "file:scripts/power_dist.py",
+      "type": "file",
+      "name": "power_dist.py",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Python module for power distribution: building, validating, and packaging power distributions.",
+      "complexity": "complex",
+      "language": "python",
+      "tags": [
+        "code",
+        "scripts",
+        "python",
+        "power"
+      ],
+      "languageNotes": "23 functions defined; 1 class(es) defined; 24 exported symbols; call graph with 250 edges"
+    },
+    {
+      "id": "function:scripts/power_dist.py:load_structured",
+      "type": "function",
+      "name": "load_structured",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `load_structured` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:validate_document",
+      "type": "function",
+      "name": "validate_document",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `validate_document` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:validate_recipe",
+      "type": "function",
+      "name": "validate_recipe",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `validate_recipe` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:ensure_relative",
+      "type": "function",
+      "name": "ensure_relative",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `ensure_relative` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:is_within",
+      "type": "function",
+      "name": "is_within",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `is_within` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:matches",
+      "type": "function",
+      "name": "matches",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `matches` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:_iter_included",
+      "type": "function",
+      "name": "_iter_included",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `_iter_included` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:_forbidden_patterns",
+      "type": "function",
+      "name": "_forbidden_patterns",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `_forbidden_patterns` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:_scan_secret_content",
+      "type": "function",
+      "name": "_scan_secret_content",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `_scan_secret_content` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:collect_files",
+      "type": "function",
+      "name": "collect_files",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `collect_files` in power_dist.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:atomic_write",
+      "type": "function",
+      "name": "atomic_write",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `atomic_write` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:sha256_file",
+      "type": "function",
+      "name": "sha256_file",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `sha256_file` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:copy_runtime_templates",
+      "type": "function",
+      "name": "copy_runtime_templates",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `copy_runtime_templates` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:package_metadata",
+      "type": "function",
+      "name": "package_metadata",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `package_metadata` in power_dist.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:build_manifest",
+      "type": "function",
+      "name": "build_manifest",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `build_manifest` in power_dist.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:build_staging_tree",
+      "type": "function",
+      "name": "build_staging_tree",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `build_staging_tree` in power_dist.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:zip_timestamp",
+      "type": "function",
+      "name": "zip_timestamp",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `zip_timestamp` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:create_deterministic_zip",
+      "type": "function",
+      "name": "create_deterministic_zip",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `create_deterministic_zip` in power_dist.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:verify_package",
+      "type": "function",
+      "name": "verify_package",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `verify_package` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:build_command",
+      "type": "function",
+      "name": "build_command",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `build_command` in power_dist.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:verify_command",
+      "type": "function",
+      "name": "verify_command",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `verify_command` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:build_parser",
+      "type": "function",
+      "name": "build_parser",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `build_parser` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/power_dist.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Function `main` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "class:scripts/power_dist.py:DistributionError",
+      "type": "class",
+      "name": "DistributionError",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Class `DistributionError` in power_dist.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "class"
+      ]
+    },
+    {
+      "id": "file:scripts/validate-workspace.py",
+      "type": "file",
+      "name": "validate-workspace.py",
+      "filePath": "scripts/validate-workspace.py",
+      "summary": "Python script to validate workspace configuration and provider setup.",
+      "complexity": "complex",
+      "language": "python",
+      "tags": [
+        "code",
+        "scripts",
+        "python",
+        "validation"
+      ],
+      "languageNotes": "5 functions defined; 5 exported symbols; call graph with 103 edges"
+    },
+    {
+      "id": "function:scripts/validate-workspace.py:fail",
+      "type": "function",
+      "name": "fail",
+      "filePath": "scripts/validate-workspace.py",
+      "summary": "Function `fail` in validate-workspace.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/validate-workspace.py:git",
+      "type": "function",
+      "name": "git",
+      "filePath": "scripts/validate-workspace.py",
+      "summary": "Function `git` in validate-workspace.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/validate-workspace.py:load_yaml",
+      "type": "function",
+      "name": "load_yaml",
+      "filePath": "scripts/validate-workspace.py",
+      "summary": "Function `load_yaml` in validate-workspace.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/validate-workspace.py:validate_providers",
+      "type": "function",
+      "name": "validate_providers",
+      "filePath": "scripts/validate-workspace.py",
+      "summary": "Function `validate_providers` in validate-workspace.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:scripts/validate-workspace.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/validate-workspace.py",
+      "summary": "Function `main` in validate-workspace.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "file:templates/power-runtime/bin/configure",
+      "type": "file",
+      "name": "configure",
+      "filePath": "templates/power-runtime/bin/configure",
+      "summary": "Skipped file: configure. Analysis not performed.",
+      "complexity": "simple",
+      "language": "unknown",
+      "tags": [
+        "code",
+        "power"
+      ]
+    },
+    {
+      "id": "file:plugins/bmad-method/overlay/distribution/bin/bootstrap-bmad.ps1",
+      "type": "file",
+      "name": "bootstrap-bmad.ps1",
+      "filePath": "plugins/bmad-method/overlay/distribution/bin/bootstrap-bmad.ps1",
+      "summary": "Skipped file: bootstrap-bmad.ps1. Analysis not performed.",
+      "complexity": "simple",
+      "language": "powershell",
+      "tags": [
+        "script",
+        "bmad",
+        "powershell"
+      ]
+    },
+    {
+      "id": "file:plugins/bmad-method/overlay/distribution/bin/bootstrap-bmad",
+      "type": "file",
+      "name": "bootstrap-bmad",
+      "filePath": "plugins/bmad-method/overlay/distribution/bin/bootstrap-bmad",
+      "summary": "Skipped file: bootstrap-bmad. Analysis not performed.",
+      "complexity": "simple",
+      "language": "unknown",
+      "tags": [
+        "code",
+        "bmad"
+      ]
+    },
+    {
+      "id": "file:templates/power-runtime/bin/uninstall",
+      "type": "file",
+      "name": "uninstall",
+      "filePath": "templates/power-runtime/bin/uninstall",
+      "summary": "Skipped file: uninstall. Analysis not performed.",
+      "complexity": "simple",
+      "language": "unknown",
+      "tags": [
+        "code",
+        "power"
+      ]
+    },
+    {
+      "id": "file:templates/power-runtime/bin/install",
+      "type": "file",
+      "name": "install",
+      "filePath": "templates/power-runtime/bin/install",
+      "summary": "Skipped file: install. Analysis not performed.",
+      "complexity": "simple",
+      "language": "unknown",
+      "tags": [
+        "code",
+        "power"
+      ]
+    },
+    {
+      "id": "file:templates/power-runtime/bin/doctor",
+      "type": "file",
+      "name": "doctor",
+      "filePath": "templates/power-runtime/bin/doctor",
+      "summary": "Skipped file: doctor. Analysis not performed.",
+      "complexity": "simple",
+      "language": "unknown",
+      "tags": [
+        "code",
+        "power"
+      ]
+    },
+    {
+      "id": "file:plugins/bmad-method/knowledge/architecture.mmd",
+      "type": "file",
+      "name": "architecture.mmd",
+      "filePath": "plugins/bmad-method/knowledge/architecture.mmd",
+      "summary": "Skipped file: architecture.mmd. Analysis not performed.",
+      "complexity": "moderate",
+      "language": "mmd",
+      "tags": [
+        "code",
+        "bmad",
+        "mmd"
+      ]
+    },
+    {
+      "id": "file:templates/power-runtime/lib/power_runtime.py",
+      "type": "file",
+      "name": "power_runtime.py",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Python runtime library for power installation, configuration, verification, and lifecycle management.",
+      "complexity": "complex",
+      "language": "python",
+      "tags": [
+        "code",
+        "power",
+        "python",
+        "tested"
+      ],
+      "languageNotes": "16 functions defined; 1 class(es) defined; 17 exported symbols; call graph with 190 edges"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:package_root",
+      "type": "function",
+      "name": "package_root",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Function `package_root` in power_runtime.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:load_json",
+      "type": "function",
+      "name": "load_json",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Function `load_json` in power_runtime.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:sha256_file",
+      "type": "function",
+      "name": "sha256_file",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Function `sha256_file` in power_runtime.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:is_within",
+      "type": "function",
+      "name": "is_within",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Function `is_within` in power_runtime.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:metadata",
+      "type": "function",
+      "name": "metadata",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Function `metadata` in power_runtime.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:target_paths",
+      "type": "function",
+      "name": "target_paths",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Function `target_paths` in power_runtime.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:marker",
+      "type": "function",
+      "name": "marker",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Function `marker` in power_runtime.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:atomic_json",
+      "type": "function",
+      "name": "atomic_json",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Function `atomic_json` in power_runtime.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:assert_safe_target",
+      "type": "function",
+      "name": "assert_safe_target",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Function `assert_safe_target` in power_runtime.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:install",
+      "type": "function",
+      "name": "install",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Function `install` in power_runtime.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:configure",
+      "type": "function",
+      "name": "configure",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Function `configure` in power_runtime.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:verify_manifest",
+      "type": "function",
+      "name": "verify_manifest",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Function `verify_manifest` in power_runtime.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:doctor",
+      "type": "function",
+      "name": "doctor",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Function `doctor` in power_runtime.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:uninstall",
+      "type": "function",
+      "name": "uninstall",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Function `uninstall` in power_runtime.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:parser",
+      "type": "function",
+      "name": "parser",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Function `parser` in power_runtime.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Function `main` in power_runtime.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "class:templates/power-runtime/lib/power_runtime.py:RuntimeError_",
+      "type": "class",
+      "name": "RuntimeError_",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Class `RuntimeError_` in power_runtime.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "class"
+      ]
+    },
+    {
+      "id": "file:tests/test_bmad_power_plugin.py",
+      "type": "file",
+      "name": "test_bmad_power_plugin.py",
+      "filePath": "tests/test_bmad_power_plugin.py",
+      "summary": "Unit tests for the BMAD power plugin integration and distribution build.",
+      "complexity": "complex",
+      "language": "python",
+      "tags": [
+        "code",
+        "tests",
+        "bmad",
+        "power",
+        "python"
+      ],
+      "languageNotes": "1 class(es) defined; 1 exported symbols; call graph with 66 edges"
+    },
+    {
+      "id": "class:tests/test_bmad_power_plugin.py:BmadPowerPluginTests",
+      "type": "class",
+      "name": "BmadPowerPluginTests",
+      "filePath": "tests/test_bmad_power_plugin.py",
+      "summary": "Class `BmadPowerPluginTests` in test_bmad_power_plugin.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "class"
+      ]
+    },
+    {
+      "id": "file:tests/test_multi_host_runtime.py",
+      "type": "file",
+      "name": "test_multi_host_runtime.py",
+      "filePath": "tests/test_multi_host_runtime.py",
+      "summary": "Unit tests for multi-host runtime registration and layout configuration.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "code",
+        "tests",
+        "python"
+      ],
+      "languageNotes": "1 class(es) defined; 1 exported symbols; call graph with 30 edges"
+    },
+    {
+      "id": "class:tests/test_multi_host_runtime.py:MultiHostRuntimeTests",
+      "type": "class",
+      "name": "MultiHostRuntimeTests",
+      "filePath": "tests/test_multi_host_runtime.py",
+      "summary": "Class `MultiHostRuntimeTests` in test_multi_host_runtime.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "class"
+      ]
+    },
+    {
+      "id": "file:tests/test_oneclick_commands.py",
+      "type": "file",
+      "name": "test_oneclick_commands.py",
+      "filePath": "tests/test_oneclick_commands.py",
+      "summary": "Unit tests for one-click command parsing and host scope expansion.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "code",
+        "tests",
+        "python"
+      ],
+      "languageNotes": "1 class(es) defined; 1 exported symbols; call graph with 13 edges"
+    },
+    {
+      "id": "class:tests/test_oneclick_commands.py:OneClickCommandTests",
+      "type": "class",
+      "name": "OneClickCommandTests",
+      "filePath": "tests/test_oneclick_commands.py",
+      "summary": "Class `OneClickCommandTests` in test_oneclick_commands.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "class"
+      ]
+    },
+    {
+      "id": "file:tests/test_power_dist_builder.py",
+      "type": "file",
+      "name": "test_power_dist_builder.py",
+      "filePath": "tests/test_power_dist_builder.py",
+      "summary": "Python module for power distribution: building, validating, and packaging power distributions.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "code",
+        "tests",
+        "power",
+        "python"
+      ],
+      "languageNotes": "1 class(es) defined; 1 exported symbols; call graph with 46 edges"
+    },
+    {
+      "id": "class:tests/test_power_dist_builder.py:PowerDistributionBuilderTests",
+      "type": "class",
+      "name": "PowerDistributionBuilderTests",
+      "filePath": "tests/test_power_dist_builder.py",
+      "summary": "Class `PowerDistributionBuilderTests` in test_power_dist_builder.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "class"
+      ]
+    },
+    {
+      "id": "file:tests/test_power_distribution_contract.py",
+      "type": "file",
+      "name": "test_power_distribution_contract.py",
+      "filePath": "tests/test_power_distribution_contract.py",
+      "summary": "Python module for power distribution: building, validating, and packaging power distributions.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "code",
+        "tests",
+        "power",
+        "python"
+      ],
+      "languageNotes": "1 class(es) defined; 1 exported symbols; call graph with 20 edges"
+    },
+    {
+      "id": "class:tests/test_power_distribution_contract.py:PowerDistributionContractTests",
+      "type": "class",
+      "name": "PowerDistributionContractTests",
+      "filePath": "tests/test_power_distribution_contract.py",
+      "summary": "Class `PowerDistributionContractTests` in test_power_distribution_contract.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "class"
+      ]
+    },
+    {
+      "id": "file:tests/test_power_distribution_integration.py",
+      "type": "file",
+      "name": "test_power_distribution_integration.py",
+      "filePath": "tests/test_power_distribution_integration.py",
+      "summary": "Python module for power distribution: building, validating, and packaging power distributions.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "code",
+        "tests",
+        "power",
+        "python"
+      ],
+      "languageNotes": "1 class(es) defined; 1 exported symbols; call graph with 18 edges"
+    },
+    {
+      "id": "class:tests/test_power_distribution_integration.py:PowerDistributionIntegrationTests",
+      "type": "class",
+      "name": "PowerDistributionIntegrationTests",
+      "filePath": "tests/test_power_distribution_integration.py",
+      "summary": "Class `PowerDistributionIntegrationTests` in test_power_distribution_integration.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "class"
+      ]
+    },
+    {
+      "id": "file:tests/test_power_package_consumer.py",
+      "type": "file",
+      "name": "test_power_package_consumer.py",
+      "filePath": "tests/test_power_package_consumer.py",
+      "summary": "Unit tests for the power package consumer and file record handling.",
+      "complexity": "complex",
+      "language": "python",
+      "tags": [
+        "code",
+        "tests",
+        "power",
+        "python"
+      ],
+      "languageNotes": "1 functions defined; 1 class(es) defined; 2 exported symbols; call graph with 91 edges"
+    },
+    {
+      "id": "function:tests/test_power_package_consumer.py:file_record",
+      "type": "function",
+      "name": "file_record",
+      "filePath": "tests/test_power_package_consumer.py",
+      "summary": "Function `file_record` in test_power_package_consumer.py.",
+      "complexity": "simple",
+      "language": "python",
+      "tags": [
+        "function"
+      ]
+    },
+    {
+      "id": "class:tests/test_power_package_consumer.py:PowerPackageConsumerTests",
+      "type": "class",
+      "name": "PowerPackageConsumerTests",
+      "filePath": "tests/test_power_package_consumer.py",
+      "summary": "Class `PowerPackageConsumerTests` in test_power_package_consumer.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "class"
+      ]
+    },
+    {
+      "id": "file:tests/test_power_runtime_installer.py",
+      "type": "file",
+      "name": "test_power_runtime_installer.py",
+      "filePath": "tests/test_power_runtime_installer.py",
+      "summary": "Unit tests for the power runtime installer and manifest verification.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "code",
+        "tests",
+        "power",
+        "python"
+      ],
+      "languageNotes": "1 class(es) defined; 1 exported symbols; call graph with 57 edges"
+    },
+    {
+      "id": "class:tests/test_power_runtime_installer.py:PowerRuntimeInstallerTests",
+      "type": "class",
+      "name": "PowerRuntimeInstallerTests",
+      "filePath": "tests/test_power_runtime_installer.py",
+      "summary": "Class `PowerRuntimeInstallerTests` in test_power_runtime_installer.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "class"
+      ]
+    },
+    {
+      "id": "file:tests/test_power_runtime_v2.py",
+      "type": "file",
+      "name": "test_power_runtime_v2.py",
+      "filePath": "tests/test_power_runtime_v2.py",
+      "summary": "Unit tests for the DW SuperApps power runtime v2 commands and configuration.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "code",
+        "tests",
+        "power",
+        "python"
+      ],
+      "languageNotes": "1 class(es) defined; 1 exported symbols; call graph with 41 edges"
+    },
+    {
+      "id": "class:tests/test_power_runtime_v2.py:PowerRuntimeV2Tests",
+      "type": "class",
+      "name": "PowerRuntimeV2Tests",
+      "filePath": "tests/test_power_runtime_v2.py",
+      "summary": "Class `PowerRuntimeV2Tests` in test_power_runtime_v2.py.",
+      "complexity": "moderate",
+      "language": "python",
+      "tags": [
+        "class"
+      ]
+    },
+    {
+      "id": "file:tests/test_python_resolver.sh",
+      "type": "file",
+      "name": "test_python_resolver.sh",
+      "filePath": "tests/test_python_resolver.sh",
+      "summary": "Shell script: test_python_resolver.sh.",
+      "complexity": "moderate",
+      "language": "shell",
+      "tags": [
+        "script",
+        "tests",
+        "shell"
+      ]
+    },
+    {
+      "id": "document:.kilo/rules/dw-superapps.md",
+      "type": "document",
+      "name": "dw-superapps.md",
+      "filePath": ".kilo/rules/dw-superapps.md",
+      "summary": "Kilo Code host adapter providing routing instructions for registered Powers (bmad, gwc, task-me, ua) and workspace validation commands.",
+      "complexity": "simple",
+      "language": "markdown",
+      "tags": [
+        "host-adapter",
+        "kilo",
+        "routing"
+      ]
+    },
+    {
+      "id": "document:.github/copilot-instructions.md",
+      "type": "document",
+      "name": "copilot-instructions.md",
+      "filePath": ".github/copilot-instructions.md",
+      "summary": "GitHub Copilot host adapter with thin routing instructions for registered Powers and workspace validation.",
+      "complexity": "simple",
+      "language": "markdown",
+      "tags": [
+        "host-adapter",
+        "copilot",
+        "routing"
+      ]
+    },
+    {
+      "id": "document:.agents/DW_AGENT.md",
+      "type": "document",
+      "name": "DW_AGENT.md",
+      "filePath": ".agents/DW_AGENT.md",
+      "summary": "Custom host adapter providing routing instructions for the DW SuperApps workspace and its registered Powers.",
+      "complexity": "simple",
+      "language": "markdown",
+      "tags": [
+        "host-adapter",
+        "custom",
+        "routing"
+      ]
+    },
+    {
+      "id": "document:powers/gwc/skills/gwc-g1/SKILL.md",
+      "type": "document",
+      "name": "gwc-g1 SKILL.md",
+      "filePath": "powers/gwc/skills/gwc-g1/SKILL.md",
+      "summary": "GWC Power skill definition for governance and governed delivery workflows (G1 gate).",
+      "complexity": "moderate",
+      "language": "markdown",
+      "tags": [
+        "power",
+        "gwc",
+        "governance",
+        "skill"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "pipeline:.github/workflows/publish-bmad-power.yml",
+      "target": "pipeline:.github/workflows/reusable-publish-power.yml",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "pipeline:.github/workflows/publish-bmad-power.yml",
+      "target": "pipeline:.github/workflows/validate-workspace.yml",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "pipeline:.github/workflows/reusable-publish-power.yml",
+      "target": "pipeline:.github/workflows/validate-workspace.yml",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:AGENTS.md",
+      "target": "config:workspace.yaml",
+      "type": "documents",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "document:README.md",
+      "target": "config:workspace.yaml",
+      "type": "documents",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "document:README.md",
+      "target": "document:AGENTS.md",
+      "type": "documents",
+      "weight": 0.4,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/DW_SUPER_SETUP.md",
+      "target": "document:docs/DW_SUPER_SETUP_VERIFICATION.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/DW_SUPER_SETUP.md",
+      "target": "document:docs/MULTI_HOST_SETUP.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/DW_SUPER_SETUP.md",
+      "target": "document:docs/POWER_CONSUMER_RUNTIME_V1.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/DW_SUPER_SETUP.md",
+      "target": "document:docs/POWER_DISTRIBUTION_V1.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/DW_SUPER_SETUP.md",
+      "target": "document:docs/POWER_RUNTIME_V2.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/DW_SUPER_SETUP.md",
+      "target": "document:docs/WORKSPACE_OPERATIONS.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/DW_SUPER_SETUP_VERIFICATION.md",
+      "target": "document:docs/MULTI_HOST_SETUP.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/DW_SUPER_SETUP_VERIFICATION.md",
+      "target": "document:docs/POWER_CONSUMER_RUNTIME_V1.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/DW_SUPER_SETUP_VERIFICATION.md",
+      "target": "document:docs/POWER_DISTRIBUTION_V1.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/DW_SUPER_SETUP_VERIFICATION.md",
+      "target": "document:docs/POWER_RUNTIME_V2.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/DW_SUPER_SETUP_VERIFICATION.md",
+      "target": "document:docs/WORKSPACE_OPERATIONS.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/MULTI_HOST_SETUP.md",
+      "target": "document:docs/POWER_CONSUMER_RUNTIME_V1.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/MULTI_HOST_SETUP.md",
+      "target": "document:docs/POWER_DISTRIBUTION_V1.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/MULTI_HOST_SETUP.md",
+      "target": "document:docs/POWER_RUNTIME_V2.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/MULTI_HOST_SETUP.md",
+      "target": "document:docs/WORKSPACE_OPERATIONS.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/POWER_CONSUMER_RUNTIME_V1.md",
+      "target": "document:docs/POWER_DISTRIBUTION_V1.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/POWER_CONSUMER_RUNTIME_V1.md",
+      "target": "document:docs/POWER_RUNTIME_V2.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/POWER_CONSUMER_RUNTIME_V1.md",
+      "target": "document:docs/WORKSPACE_OPERATIONS.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/POWER_DISTRIBUTION_V1.md",
+      "target": "document:docs/POWER_RUNTIME_V2.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/POWER_DISTRIBUTION_V1.md",
+      "target": "document:docs/WORKSPACE_OPERATIONS.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/POWER_RUNTIME_V2.md",
+      "target": "document:docs/WORKSPACE_OPERATIONS.md",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:manifests/powers/bmad.yaml",
+      "target": "config:manifests/powers/gwc.yaml",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:manifests/powers/bmad.yaml",
+      "target": "config:manifests/powers/task-me.yaml",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:manifests/powers/bmad.yaml",
+      "target": "config:manifests/powers/ua.yaml",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:manifests/powers/gwc.yaml",
+      "target": "config:manifests/powers/task-me.yaml",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:manifests/powers/gwc.yaml",
+      "target": "config:manifests/powers/ua.yaml",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:manifests/powers/task-me.yaml",
+      "target": "config:manifests/powers/ua.yaml",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:schemas/power-consumer-binding.schema.json",
+      "target": "config:schemas/power-distribution.schema.json",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:schemas/power-consumer-binding.schema.json",
+      "target": "config:schemas/power-manifest.schema.json",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:schemas/power-consumer-binding.schema.json",
+      "target": "config:schemas/power-package-manifest.schema.json",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:schemas/power-distribution.schema.json",
+      "target": "config:schemas/power-manifest.schema.json",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:schemas/power-distribution.schema.json",
+      "target": "config:schemas/power-package-manifest.schema.json",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:schemas/power-manifest.schema.json",
+      "target": "config:schemas/power-package-manifest.schema.json",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/install-dw.sh",
+      "target": "file:scripts/install-host-adapters.sh",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/install-dw.sh",
+      "target": "file:scripts/python-resolver.sh",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/install-dw.sh",
+      "target": "file:scripts/sync-submodules.sh",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/install-host-adapters.sh",
+      "target": "file:scripts/python-resolver.sh",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/install-host-adapters.sh",
+      "target": "file:scripts/sync-submodules.sh",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/python-resolver.sh",
+      "target": "file:scripts/sync-submodules.sh",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:templates/power-runtime/bin/uninstall.ps1",
+      "target": "file:templates/power-runtime/bin/doctor.ps1",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:templates/power-runtime/bin/uninstall.ps1",
+      "target": "file:templates/power-runtime/bin/install.ps1",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:templates/power-runtime/bin/uninstall.ps1",
+      "target": "file:templates/power-runtime/bin/configure.ps1",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:templates/power-runtime/bin/doctor.ps1",
+      "target": "file:templates/power-runtime/bin/install.ps1",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:templates/power-runtime/bin/doctor.ps1",
+      "target": "file:templates/power-runtime/bin/configure.ps1",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:templates/power-runtime/bin/install.ps1",
+      "target": "file:templates/power-runtime/bin/configure.ps1",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:tests/fixtures/power-distribution/invalid-absolute-include.yaml",
+      "target": "config:tests/fixtures/power-distribution/valid-consumer-binding.yaml",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:tests/fixtures/power-distribution/invalid-absolute-include.yaml",
+      "target": "config:tests/fixtures/power-distribution/valid-recipe.yaml",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:tests/fixtures/power-distribution/valid-consumer-binding.yaml",
+      "target": "config:tests/fixtures/power-distribution/valid-recipe.yaml",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:manifests/evidence/SCRUM-131/validation-evidence.json",
+      "target": "file:manifests/evidence/SCRUM-131/SHA256SUMS.txt",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:manifests/evidence/SCRUM-132/hygiene-evidence.json",
+      "target": "file:manifests/evidence/SCRUM-132/removed-files.txt",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:bin/dw",
+      "target": "file:bin/dw.ps1",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:plugins/bmad-method/README.md",
+      "target": "config:plugins/bmad-method/SOURCE.lock.json",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:plugins/bmad-method/knowledge/README.md",
+      "target": "config:plugins/bmad-method/knowledge/knowledge-graph.json",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "document:plugins/bmad-method/knowledge/README.md",
+      "target": "file:plugins/bmad-method/knowledge/architecture.mmd",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:plugins/bmad-method/knowledge/knowledge-graph.json",
+      "target": "file:plugins/bmad-method/knowledge/architecture.mmd",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "config:plugins/bmad-method/overlay/distribution/config/config.schema.json",
+      "target": "config:plugins/bmad-method/overlay/distribution/config/defaults.yaml",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "file:scripts/dw_entry.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "file:scripts/dw_power_package.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "file:scripts/power_dist.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "file:scripts/validate-workspace.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "file:scripts/dw_power_package.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "file:scripts/power_dist.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "file:scripts/validate-workspace.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/dw_power_package.py",
+      "target": "file:scripts/power_dist.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/dw_power_package.py",
+      "target": "file:scripts/validate-workspace.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "file:scripts/validate-workspace.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:templates/power-runtime/bin/configure",
+      "target": "file:templates/power-runtime/bin/uninstall",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:templates/power-runtime/bin/configure",
+      "target": "file:templates/power-runtime/bin/install",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:templates/power-runtime/bin/configure",
+      "target": "file:templates/power-runtime/bin/doctor",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:templates/power-runtime/bin/uninstall",
+      "target": "file:templates/power-runtime/bin/install",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:templates/power-runtime/bin/uninstall",
+      "target": "file:templates/power-runtime/bin/doctor",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:templates/power-runtime/bin/install",
+      "target": "file:templates/power-runtime/bin/doctor",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:plugins/bmad-method/overlay/distribution/bin/bootstrap-bmad.ps1",
+      "target": "file:plugins/bmad-method/overlay/distribution/bin/bootstrap-bmad",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "file:scripts/dw_entry.py",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "file:scripts/dw_power_package.py",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "file:scripts/power_dist.py",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "file:scripts/dw_cli.py",
+      "type": "depends_on",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_bmad_power_plugin.py",
+      "target": "file:tests/test_multi_host_runtime.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_bmad_power_plugin.py",
+      "target": "file:tests/test_oneclick_commands.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_bmad_power_plugin.py",
+      "target": "file:tests/test_power_dist_builder.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_bmad_power_plugin.py",
+      "target": "file:tests/test_power_distribution_contract.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_bmad_power_plugin.py",
+      "target": "file:tests/test_power_distribution_integration.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_bmad_power_plugin.py",
+      "target": "file:tests/test_power_package_consumer.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_bmad_power_plugin.py",
+      "target": "file:tests/test_power_runtime_installer.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_bmad_power_plugin.py",
+      "target": "file:tests/test_power_runtime_v2.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_bmad_power_plugin.py",
+      "target": "file:tests/test_python_resolver.sh",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_multi_host_runtime.py",
+      "target": "file:tests/test_oneclick_commands.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_multi_host_runtime.py",
+      "target": "file:tests/test_power_dist_builder.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_multi_host_runtime.py",
+      "target": "file:tests/test_power_distribution_contract.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_multi_host_runtime.py",
+      "target": "file:tests/test_power_distribution_integration.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_multi_host_runtime.py",
+      "target": "file:tests/test_power_package_consumer.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_multi_host_runtime.py",
+      "target": "file:tests/test_power_runtime_installer.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_multi_host_runtime.py",
+      "target": "file:tests/test_power_runtime_v2.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_multi_host_runtime.py",
+      "target": "file:tests/test_python_resolver.sh",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_oneclick_commands.py",
+      "target": "file:tests/test_power_dist_builder.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_oneclick_commands.py",
+      "target": "file:tests/test_power_distribution_contract.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_oneclick_commands.py",
+      "target": "file:tests/test_power_distribution_integration.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_oneclick_commands.py",
+      "target": "file:tests/test_power_package_consumer.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_oneclick_commands.py",
+      "target": "file:tests/test_power_runtime_installer.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_oneclick_commands.py",
+      "target": "file:tests/test_power_runtime_v2.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_oneclick_commands.py",
+      "target": "file:tests/test_python_resolver.sh",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_dist_builder.py",
+      "target": "file:tests/test_power_distribution_contract.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_dist_builder.py",
+      "target": "file:tests/test_power_distribution_integration.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_dist_builder.py",
+      "target": "file:tests/test_power_package_consumer.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_dist_builder.py",
+      "target": "file:tests/test_power_runtime_installer.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_dist_builder.py",
+      "target": "file:tests/test_power_runtime_v2.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_dist_builder.py",
+      "target": "file:tests/test_python_resolver.sh",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_distribution_contract.py",
+      "target": "file:tests/test_power_distribution_integration.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_distribution_contract.py",
+      "target": "file:tests/test_power_package_consumer.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_distribution_contract.py",
+      "target": "file:tests/test_power_runtime_installer.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_distribution_contract.py",
+      "target": "file:tests/test_power_runtime_v2.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_distribution_contract.py",
+      "target": "file:tests/test_python_resolver.sh",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_distribution_integration.py",
+      "target": "file:tests/test_power_package_consumer.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_distribution_integration.py",
+      "target": "file:tests/test_power_runtime_installer.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_distribution_integration.py",
+      "target": "file:tests/test_power_runtime_v2.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_distribution_integration.py",
+      "target": "file:tests/test_python_resolver.sh",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_package_consumer.py",
+      "target": "file:tests/test_power_runtime_installer.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_package_consumer.py",
+      "target": "file:tests/test_power_runtime_v2.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_package_consumer.py",
+      "target": "file:tests/test_python_resolver.sh",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_runtime_installer.py",
+      "target": "file:tests/test_power_runtime_v2.py",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_runtime_installer.py",
+      "target": "file:tests/test_python_resolver.sh",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:tests/test_power_runtime_v2.py",
+      "target": "file:tests/test_python_resolver.sh",
+      "type": "contains",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "file:tests/test_multi_host_runtime.py",
+      "type": "tested_by",
+      "weight": 0.7,
+      "direction": "forward",
+      "description": "Direction corrected (was test \u2192 production)"
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "file:tests/test_oneclick_commands.py",
+      "type": "tested_by",
+      "weight": 0.7,
+      "direction": "forward",
+      "description": "Direction corrected (was test \u2192 production)"
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "file:tests/test_power_runtime_installer.py",
+      "type": "tested_by",
+      "weight": 0.8,
+      "direction": "forward",
+      "description": "Direction corrected (was test \u2192 production)"
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "file:tests/test_power_runtime_v2.py",
+      "type": "tested_by",
+      "weight": 0.7,
+      "direction": "forward",
+      "description": "Direction corrected (was test \u2192 production)"
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:workspace-config",
+      "name": "Workspace Configuration",
+      "description": "Core workspace registry and agent routing configuration files.",
+      "nodeIds": [
+        "document:AGENTS.md",
+        "config:scan_output.json",
+        "config:workspace.yaml",
+        "file:requirements-dev.txt",
+        "file:.ua/.understandignore",
+        "file:DW-SuperApps.code-workspace",
+        "file:.gitmodules"
+      ]
+    },
+    {
+      "id": "layer:cli-entrypoints",
+      "name": "CLI Entrypoints",
+      "description": "Platform-specific launchers for the dw CLI.",
+      "nodeIds": [
+        "file:dw.cmd",
+        "file:dw.ps1",
+        "file:bin/dw",
+        "file:bin/dw.ps1"
+      ]
+    },
+    {
+      "id": "layer:power-runtime",
+      "name": "Power Runtime",
+      "description": "Python CLI modules and helper scripts implementing Power Runtime v2.",
+      "nodeIds": [
+        "file:scripts/install-dw.sh",
+        "file:scripts/install-host-adapters.sh",
+        "file:scripts/python-resolver.sh",
+        "file:scripts/sync-submodules.sh",
+        "file:scripts/dw_cli.py",
+        "file:scripts/dw_entry.py",
+        "file:scripts/dw_power_package.py",
+        "file:scripts/power_dist.py",
+        "file:scripts/validate-workspace.py"
+      ]
+    },
+    {
+      "id": "layer:host-adapters",
+      "name": "Host Adapters",
+      "description": "Thin generated adapters routing each AI host to registered Powers.",
+      "nodeIds": [
+        "document:.claude/skills/bmad/SKILL.md",
+        "document:.codex/README.md",
+        "document:.codex/skills/bmad/SKILL.md",
+        "document:.codex/skills/gwc/SKILL.md",
+        "document:.codex/skills/task-me/SKILL.md",
+        "document:.codex/skills/ua/SKILL.md",
+        "document:.kilo/plans/1784987769805-ua-full-analysis-plan.md",
+        "document:.kiro/skills/bmad/SKILL.md",
+        "document:.kiro/skills/gwc/SKILL.md",
+        "document:.kiro/skills/task-me/SKILL.md",
+        "document:.kiro/skills/ua/SKILL.md",
+        "document:.kiro/steering/workspace-powers.md",
+        "document:.kilo/rules/dw-superapps.md",
+        "document:.github/copilot-instructions.md",
+        "document:.agents/DW_AGENT.md"
+      ]
+    },
+    {
+      "id": "layer:powers",
+      "name": "Powers",
+      "description": "Reusable AI capability modules (GWC, UA, Task Me, BMAD).",
+      "nodeIds": [
+        "document:powers/bmad/SKILL.md",
+        "document:powers/gwc/skills/gwc-g1/SKILL.md"
+      ]
+    },
+    {
+      "id": "layer:systems",
+      "name": "Systems",
+      "description": "Product system repositories that consume Powers.",
+      "nodeIds": []
+    },
+    {
+      "id": "layer:plugins",
+      "name": "Plugins",
+      "description": "External Power plugin overlays and distribution recipes.",
+      "nodeIds": [
+        "document:plugins/bmad-method/README.md",
+        "config:plugins/bmad-method/SOURCE.lock.json",
+        "config:plugins/bmad-method/distribution/power-package.yaml",
+        "document:plugins/bmad-method/knowledge/README.md",
+        "config:plugins/bmad-method/knowledge/knowledge-graph.json",
+        "config:plugins/bmad-method/overlay/distribution/config/config.schema.json",
+        "config:plugins/bmad-method/overlay/distribution/config/defaults.yaml",
+        "config:plugins/bmad-method/overlay/distribution/contracts/default-contract.yaml",
+        "file:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+        "document:plugins/bmad-method/overlay/distribution/skills/bmad/SKILL.md",
+        "file:plugins/bmad-method/overlay/distribution/bin/bootstrap-bmad.ps1",
+        "file:plugins/bmad-method/overlay/distribution/bin/bootstrap-bmad",
+        "file:plugins/bmad-method/knowledge/architecture.mmd"
+      ]
+    },
+    {
+      "id": "layer:schemas-templates",
+      "name": "Schemas and Templates",
+      "description": "JSON Schema definitions and portable runtime templates.",
+      "nodeIds": [
+        "config:schemas/power-consumer-binding.schema.json",
+        "config:schemas/power-distribution.schema.json",
+        "config:schemas/power-manifest.schema.json",
+        "config:schemas/power-package-manifest.schema.json",
+        "file:templates/power-runtime/bin/uninstall.ps1",
+        "file:templates/power-runtime/bin/doctor.ps1",
+        "file:templates/power-runtime/bin/install.ps1",
+        "file:templates/power-runtime/bin/configure.ps1",
+        "file:templates/power-runtime/bin/configure",
+        "file:templates/power-runtime/bin/uninstall",
+        "file:templates/power-runtime/bin/install",
+        "file:templates/power-runtime/bin/doctor",
+        "file:templates/power-runtime/lib/power_runtime.py"
+      ]
+    },
+    {
+      "id": "layer:manifests",
+      "name": "Manifests and Evidence",
+      "description": "Power manifests and per-SCRUM validation evidence.",
+      "nodeIds": [
+        "config:manifests/powers/bmad.yaml",
+        "config:manifests/powers/gwc.yaml",
+        "config:manifests/powers/task-me.yaml",
+        "config:manifests/powers/ua.yaml",
+        "config:manifests/evidence/SCRUM-131/validation-evidence.json",
+        "config:manifests/evidence/SCRUM-132/hygiene-evidence.json",
+        "file:manifests/evidence/SCRUM-131/SHA256SUMS.txt",
+        "file:manifests/evidence/SCRUM-132/removed-files.txt",
+        "file:manifests/evidence/SCRUM-134/SHA256SUMS.txt",
+        "config:manifests/evidence/SCRUM-134/setup-evidence.json",
+        "config:manifests/power-distribution-evidence.json"
+      ]
+    },
+    {
+      "id": "layer:ci-cd",
+      "name": "CI/CD Pipelines",
+      "description": "GitHub Actions workflows for validation and publishing.",
+      "nodeIds": [
+        "pipeline:.github/workflows/publish-bmad-power.yml",
+        "pipeline:.github/workflows/reusable-publish-power.yml",
+        "pipeline:.github/workflows/validate-workspace.yml"
+      ]
+    },
+    {
+      "id": "layer:docs",
+      "name": "Documentation",
+      "description": "User guides, developer docs, and Power documentation.",
+      "nodeIds": [
+        "document:README.md",
+        "document:docs/DW_SUPER_SETUP.md",
+        "document:docs/DW_SUPER_SETUP_VERIFICATION.md",
+        "document:docs/MULTI_HOST_SETUP.md",
+        "document:docs/POWER_CONSUMER_RUNTIME_V1.md",
+        "document:docs/POWER_DISTRIBUTION_V1.md",
+        "document:docs/POWER_RUNTIME_V2.md",
+        "document:docs/WORKSPACE_OPERATIONS.md",
+        "document:docs/powers/BMAD_POWER.md"
+      ]
+    },
+    {
+      "id": "layer:tests",
+      "name": "Tests",
+      "description": "Unit tests and test scripts for power distribution and runtime.",
+      "nodeIds": [
+        "config:tests/fixtures/power-distribution/invalid-absolute-include.yaml",
+        "config:tests/fixtures/power-distribution/valid-consumer-binding.yaml",
+        "config:tests/fixtures/power-distribution/valid-recipe.yaml",
+        "file:tests/test_bmad_power_plugin.py",
+        "file:tests/test_multi_host_runtime.py",
+        "file:tests/test_oneclick_commands.py",
+        "file:tests/test_power_dist_builder.py",
+        "file:tests/test_power_distribution_contract.py",
+        "file:tests/test_power_distribution_integration.py",
+        "file:tests/test_power_package_consumer.py",
+        "file:tests/test_power_runtime_installer.py",
+        "file:tests/test_power_runtime_v2.py",
+        "file:tests/test_python_resolver.sh"
+      ]
+    },
+    {
+      "id": "layer:governance",
+      "name": "Governance",
+      "description": "GWC policies, runbooks, and workspace governance configs.",
+      "nodeIds": [
+        "config:.gwc/policies/notification-policy.yaml",
+        "document:.gwc/runbooks/SLACK_NOTIFICATION_RUNBOOK.md"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "Project Overview",
+      "description": "Start with the README to understand the project's purpose as a host-neutral orchestration workspace for reusable AI Powers, multiple product systems, local model providers, and agent hosts.",
+      "nodeIds": [
+        "document:README.md",
+        "config:workspace.yaml"
+      ]
+    },
+    {
+      "order": 2,
+      "title": "Agent Routing Bible",
+      "description": "Read AGENTS.md to understand the central routing instructions that define Power roles, host neutrality rules, provider configuration, and gate event behavior for all agents.",
+      "nodeIds": [
+        "document:AGENTS.md"
+      ]
+    },
+    {
+      "order": 3,
+      "title": "CLI Entrypoints",
+      "description": "Explore how the dw CLI is launched across platforms. bin/dw is the Bash entrypoint that delegates to Python scripts based on subcommand.",
+      "nodeIds": [
+        "file:bin/dw",
+        "file:bin/dw.ps1",
+        "file:dw.cmd",
+        "file:dw.ps1"
+      ]
+    },
+    {
+      "order": 4,
+      "title": "Power Runtime v2",
+      "description": "Dive into the Python CLI modules that implement workspace, power, host, provider, and system commands. dw_cli.py is the main runtime (~935 lines), dw_entry.py handles one-click bootstrap commands.",
+      "nodeIds": [
+        "file:scripts/dw_cli.py",
+        "file:scripts/dw_entry.py",
+        "file:scripts/dw_power_package.py"
+      ]
+    },
+    {
+      "order": 5,
+      "title": "Power Manifests",
+      "description": "Examine the Power manifests that declare capabilities, distribution modes, host support, and permissions for each registered Power (gwc, ua, task-me, bmad).",
+      "nodeIds": [
+        "config:manifests/powers/gwc.yaml",
+        "config:manifests/powers/ua.yaml",
+        "config:manifests/powers/task-me.yaml",
+        "config:manifests/powers/bmad.yaml",
+        "config:manifests/power-distribution-evidence.json"
+      ]
+    },
+    {
+      "order": 6,
+      "title": "Host Adapters",
+      "description": "See how each AI host gets thin generated adapters that contain only routing instructions. The adapters in .kilo/, .github/, .agents/, .claude/, .codex/, .kiro/, and .clinerules/ all point to the same canonical Power logic.",
+      "nodeIds": [
+        "document:.kilo/rules/dw-superapps.md",
+        "document:.github/copilot-instructions.md",
+        "document:.agents/DW_AGENT.md",
+        "document:.claude/skills/bmad/SKILL.md",
+        "document:.codex/skills/gwc/SKILL.md"
+      ]
+    },
+    {
+      "order": 7,
+      "title": "Powers",
+      "description": "Tour the reusable AI capability modules. powers/gwc provides governance, powers/ua provides semantic analysis, powers/task-me provides implementation planning, and powers/bmad is the release-first BMAD Method router.",
+      "nodeIds": [
+        "document:powers/bmad/SKILL.md",
+        "document:powers/gwc/skills/gwc-g1/SKILL.md"
+      ]
+    },
+    {
+      "order": 8,
+      "title": "Distribution System",
+      "description": "Understand how Powers are packaged and distributed. power_dist.py builds deterministic ZIPs with SHA-256 manifests. schemas/ defines JSON contracts. templates/ provides portable runtime templates injected into every distributed package.",
+      "nodeIds": [
+        "file:scripts/power_dist.py",
+        "config:schemas/power-manifest.schema.json",
+        "config:schemas/power-distribution.schema.json",
+        "file:templates/power-runtime/lib/power_runtime.py"
+      ]
+    },
+    {
+      "order": 9,
+      "title": "BMAD Plugin",
+      "description": "Explore the BMAD Method Power plugin, which overlays DW-specific files (bootstrap scripts, configs, contracts) onto the upstream BMAD-METHOD repository without forking it.",
+      "nodeIds": [
+        "config:plugins/bmad-method/SOURCE.lock.json",
+        "config:plugins/bmad-method/distribution/power-package.yaml",
+        "document:plugins/bmad-method/README.md"
+      ]
+    },
+    {
+      "order": 10,
+      "title": "Governance",
+      "description": "Review the GWC policies and runbooks that govern delivery control, approval boundaries, and notification behavior for the workspace itself.",
+      "nodeIds": [
+        "config:.gwc/policies/notification-policy.yaml",
+        "document:.gwc/runbooks/SLACK_NOTIFICATION_RUNBOOK.md"
+      ]
+    },
+    {
+      "order": 11,
+      "title": "CI/CD Pipelines",
+      "description": "Walk through the GitHub Actions workflows that validate the workspace, publish Powers, and perform BMAD-specific release validation with overlay and E2E tests.",
+      "nodeIds": [
+        "pipeline:.github/workflows/validate-workspace.yml",
+        "pipeline:.github/workflows/reusable-publish-power.yml",
+        "pipeline:.github/workflows/publish-bmad-power.yml"
+      ]
+    },
+    {
+      "order": 12,
+      "title": "Tests",
+      "description": "Examine the Python unit tests and shell scripts that validate power distribution contracts, runtime installers, multi-host setup, and workspace commands.",
+      "nodeIds": [
+        "file:tests/test_power_distribution_contract.py",
+        "file:tests/test_power_runtime_v2.py",
+        "file:tests/test_multi_host_runtime.py"
+      ]
+    }
+  ]
+}

@@ -28,3 +28,6 @@ CLAUDE.md
 kilo.jsonc
 .agents/
 scripts/__pycache__/*
+
+# UA scratch/trash directories
+.ua/.trash-*

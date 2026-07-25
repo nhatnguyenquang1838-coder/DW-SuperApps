@@ -1,0 +1,706 @@
+{
+  "name": "DW-SuperApps",
+  "description": "Host-neutral engineering workspace for reusable AI Powers, multiple product systems, local model providers, and agent hosts.",
+  "languages": [
+    "batch",
+    "code-workspace",
+    "json",
+    "markdown",
+    "mmd",
+    "powershell",
+    "python",
+    "shell",
+    "txt",
+    "unknown",
+    "yaml"
+  ],
+  "frameworks": [
+    "GitHub Actions"
+  ],
+  "files": [
+    {
+      "path": ".claude/skills/bmad/SKILL.md",
+      "language": "markdown",
+      "sizeLines": 26,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".codex/README.md",
+      "language": "markdown",
+      "sizeLines": 12,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".codex/skills/bmad/SKILL.md",
+      "language": "markdown",
+      "sizeLines": 26,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".codex/skills/gwc/SKILL.md",
+      "language": "markdown",
+      "sizeLines": 26,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".codex/skills/task-me/SKILL.md",
+      "language": "markdown",
+      "sizeLines": 26,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".codex/skills/ua/SKILL.md",
+      "language": "markdown",
+      "sizeLines": 26,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".github/workflows/publish-bmad-power.yml",
+      "language": "yaml",
+      "sizeLines": 367,
+      "fileCategory": "infra"
+    },
+    {
+      "path": ".github/workflows/reusable-publish-power.yml",
+      "language": "yaml",
+      "sizeLines": 210,
+      "fileCategory": "infra"
+    },
+    {
+      "path": ".github/workflows/validate-workspace.yml",
+      "language": "yaml",
+      "sizeLines": 137,
+      "fileCategory": "infra"
+    },
+    {
+      "path": ".gitmodules",
+      "language": "unknown",
+      "sizeLines": 16,
+      "fileCategory": "code"
+    },
+    {
+      "path": ".gwc/policies/notification-policy.yaml",
+      "language": "yaml",
+      "sizeLines": 32,
+      "fileCategory": "config"
+    },
+    {
+      "path": ".gwc/runbooks/SLACK_NOTIFICATION_RUNBOOK.md",
+      "language": "markdown",
+      "sizeLines": 32,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".kilo/plans/1784987769805-ua-full-analysis-plan.md",
+      "language": "markdown",
+      "sizeLines": 74,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".kiro/skills/bmad/SKILL.md",
+      "language": "markdown",
+      "sizeLines": 26,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".kiro/skills/gwc/SKILL.md",
+      "language": "markdown",
+      "sizeLines": 26,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".kiro/skills/task-me/SKILL.md",
+      "language": "markdown",
+      "sizeLines": 26,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".kiro/skills/ua/SKILL.md",
+      "language": "markdown",
+      "sizeLines": 26,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".kiro/steering/workspace-powers.md",
+      "language": "markdown",
+      "sizeLines": 12,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".ua/.understandignore",
+      "language": "unknown",
+      "sizeLines": 91,
+      "fileCategory": "code"
+    },
+    {
+      "path": "AGENTS.md",
+      "language": "markdown",
+      "sizeLines": 86,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "DW-SuperApps.code-workspace",
+      "language": "code-workspace",
+      "sizeLines": 7,
+      "fileCategory": "code"
+    },
+    {
+      "path": "README.md",
+      "language": "markdown",
+      "sizeLines": 190,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "bin/dw",
+      "language": "unknown",
+      "sizeLines": 34,
+      "fileCategory": "code"
+    },
+    {
+      "path": "bin/dw.ps1",
+      "language": "powershell",
+      "sizeLines": 4,
+      "fileCategory": "script"
+    },
+    {
+      "path": "docs/DW_SUPER_SETUP.md",
+      "language": "markdown",
+      "sizeLines": 175,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/DW_SUPER_SETUP_VERIFICATION.md",
+      "language": "markdown",
+      "sizeLines": 39,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/MULTI_HOST_SETUP.md",
+      "language": "markdown",
+      "sizeLines": 200,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/POWER_CONSUMER_RUNTIME_V1.md",
+      "language": "markdown",
+      "sizeLines": 46,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/POWER_DISTRIBUTION_V1.md",
+      "language": "markdown",
+      "sizeLines": 141,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/POWER_RUNTIME_V2.md",
+      "language": "markdown",
+      "sizeLines": 219,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/WORKSPACE_OPERATIONS.md",
+      "language": "markdown",
+      "sizeLines": 59,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/powers/BMAD_POWER.md",
+      "language": "markdown",
+      "sizeLines": 55,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "dw.cmd",
+      "language": "batch",
+      "sizeLines": 2,
+      "fileCategory": "script"
+    },
+    {
+      "path": "dw.ps1",
+      "language": "powershell",
+      "sizeLines": 4,
+      "fileCategory": "script"
+    },
+    {
+      "path": "manifests/evidence/SCRUM-131/SHA256SUMS.txt",
+      "language": "txt",
+      "sizeLines": 9,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "manifests/evidence/SCRUM-131/validation-evidence.json",
+      "language": "json",
+      "sizeLines": 69,
+      "fileCategory": "config"
+    },
+    {
+      "path": "manifests/evidence/SCRUM-132/hygiene-evidence.json",
+      "language": "json",
+      "sizeLines": 26,
+      "fileCategory": "config"
+    },
+    {
+      "path": "manifests/evidence/SCRUM-132/removed-files.txt",
+      "language": "txt",
+      "sizeLines": 53,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "manifests/evidence/SCRUM-134/SHA256SUMS.txt",
+      "language": "txt",
+      "sizeLines": 12,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "manifests/evidence/SCRUM-134/setup-evidence.json",
+      "language": "json",
+      "sizeLines": 81,
+      "fileCategory": "config"
+    },
+    {
+      "path": "manifests/power-distribution-evidence.json",
+      "language": "json",
+      "sizeLines": 83,
+      "fileCategory": "config"
+    },
+    {
+      "path": "manifests/powers/bmad.yaml",
+      "language": "yaml",
+      "sizeLines": 83,
+      "fileCategory": "config"
+    },
+    {
+      "path": "manifests/powers/gwc.yaml",
+      "language": "yaml",
+      "sizeLines": 73,
+      "fileCategory": "config"
+    },
+    {
+      "path": "manifests/powers/task-me.yaml",
+      "language": "yaml",
+      "sizeLines": 74,
+      "fileCategory": "config"
+    },
+    {
+      "path": "manifests/powers/ua.yaml",
+      "language": "yaml",
+      "sizeLines": 71,
+      "fileCategory": "config"
+    },
+    {
+      "path": "plugins/bmad-method/README.md",
+      "language": "markdown",
+      "sizeLines": 29,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "plugins/bmad-method/SOURCE.lock.json",
+      "language": "json",
+      "sizeLines": 9,
+      "fileCategory": "config"
+    },
+    {
+      "path": "plugins/bmad-method/distribution/power-package.yaml",
+      "language": "yaml",
+      "sizeLines": 54,
+      "fileCategory": "config"
+    },
+    {
+      "path": "plugins/bmad-method/knowledge/README.md",
+      "language": "markdown",
+      "sizeLines": 25,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "plugins/bmad-method/knowledge/architecture.mmd",
+      "language": "mmd",
+      "sizeLines": 46,
+      "fileCategory": "code"
+    },
+    {
+      "path": "plugins/bmad-method/knowledge/knowledge-graph.json",
+      "language": "json",
+      "sizeLines": 1,
+      "fileCategory": "config"
+    },
+    {
+      "path": "plugins/bmad-method/overlay/distribution/bin/bootstrap-bmad",
+      "language": "unknown",
+      "sizeLines": 4,
+      "fileCategory": "code"
+    },
+    {
+      "path": "plugins/bmad-method/overlay/distribution/bin/bootstrap-bmad.ps1",
+      "language": "powershell",
+      "sizeLines": 9,
+      "fileCategory": "script"
+    },
+    {
+      "path": "plugins/bmad-method/overlay/distribution/config/config.schema.json",
+      "language": "json",
+      "sizeLines": 61,
+      "fileCategory": "config"
+    },
+    {
+      "path": "plugins/bmad-method/overlay/distribution/config/defaults.yaml",
+      "language": "yaml",
+      "sizeLines": 8,
+      "fileCategory": "config"
+    },
+    {
+      "path": "plugins/bmad-method/overlay/distribution/contracts/default-contract.yaml",
+      "language": "yaml",
+      "sizeLines": 26,
+      "fileCategory": "config"
+    },
+    {
+      "path": "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "language": "python",
+      "sizeLines": 258,
+      "fileCategory": "code"
+    },
+    {
+      "path": "plugins/bmad-method/overlay/distribution/skills/bmad/SKILL.md",
+      "language": "markdown",
+      "sizeLines": 38,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "powers/bmad/SKILL.md",
+      "language": "markdown",
+      "sizeLines": 38,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "requirements-dev.txt",
+      "language": "txt",
+      "sizeLines": 2,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "scan_output.json",
+      "language": "json",
+      "sizeLines": 601,
+      "fileCategory": "config"
+    },
+    {
+      "path": "schemas/power-consumer-binding.schema.json",
+      "language": "json",
+      "sizeLines": 52,
+      "fileCategory": "config"
+    },
+    {
+      "path": "schemas/power-distribution.schema.json",
+      "language": "json",
+      "sizeLines": 119,
+      "fileCategory": "config"
+    },
+    {
+      "path": "schemas/power-manifest.schema.json",
+      "language": "json",
+      "sizeLines": 326,
+      "fileCategory": "config"
+    },
+    {
+      "path": "schemas/power-package-manifest.schema.json",
+      "language": "json",
+      "sizeLines": 62,
+      "fileCategory": "config"
+    },
+    {
+      "path": "scripts/dw_cli.py",
+      "language": "python",
+      "sizeLines": 935,
+      "fileCategory": "code"
+    },
+    {
+      "path": "scripts/dw_entry.py",
+      "language": "python",
+      "sizeLines": 357,
+      "fileCategory": "code"
+    },
+    {
+      "path": "scripts/dw_power_package.py",
+      "language": "python",
+      "sizeLines": 406,
+      "fileCategory": "code"
+    },
+    {
+      "path": "scripts/install-dw.sh",
+      "language": "shell",
+      "sizeLines": 164,
+      "fileCategory": "script"
+    },
+    {
+      "path": "scripts/install-host-adapters.sh",
+      "language": "shell",
+      "sizeLines": 6,
+      "fileCategory": "script"
+    },
+    {
+      "path": "scripts/power_dist.py",
+      "language": "python",
+      "sizeLines": 582,
+      "fileCategory": "code"
+    },
+    {
+      "path": "scripts/python-resolver.sh",
+      "language": "shell",
+      "sizeLines": 39,
+      "fileCategory": "script"
+    },
+    {
+      "path": "scripts/sync-submodules.sh",
+      "language": "shell",
+      "sizeLines": 6,
+      "fileCategory": "script"
+    },
+    {
+      "path": "scripts/validate-workspace.py",
+      "language": "python",
+      "sizeLines": 184,
+      "fileCategory": "code"
+    },
+    {
+      "path": "templates/power-runtime/bin/configure",
+      "language": "unknown",
+      "sizeLines": 15,
+      "fileCategory": "code"
+    },
+    {
+      "path": "templates/power-runtime/bin/configure.ps1",
+      "language": "powershell",
+      "sizeLines": 6,
+      "fileCategory": "script"
+    },
+    {
+      "path": "templates/power-runtime/bin/doctor",
+      "language": "unknown",
+      "sizeLines": 15,
+      "fileCategory": "code"
+    },
+    {
+      "path": "templates/power-runtime/bin/doctor.ps1",
+      "language": "powershell",
+      "sizeLines": 6,
+      "fileCategory": "script"
+    },
+    {
+      "path": "templates/power-runtime/bin/install",
+      "language": "unknown",
+      "sizeLines": 15,
+      "fileCategory": "code"
+    },
+    {
+      "path": "templates/power-runtime/bin/install.ps1",
+      "language": "powershell",
+      "sizeLines": 6,
+      "fileCategory": "script"
+    },
+    {
+      "path": "templates/power-runtime/bin/uninstall",
+      "language": "unknown",
+      "sizeLines": 15,
+      "fileCategory": "code"
+    },
+    {
+      "path": "templates/power-runtime/bin/uninstall.ps1",
+      "language": "powershell",
+      "sizeLines": 6,
+      "fileCategory": "script"
+    },
+    {
+      "path": "templates/power-runtime/lib/power_runtime.py",
+      "language": "python",
+      "sizeLines": 343,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/fixtures/power-distribution/invalid-absolute-include.yaml",
+      "language": "yaml",
+      "sizeLines": 15,
+      "fileCategory": "config"
+    },
+    {
+      "path": "tests/fixtures/power-distribution/valid-consumer-binding.yaml",
+      "language": "yaml",
+      "sizeLines": 16,
+      "fileCategory": "config"
+    },
+    {
+      "path": "tests/fixtures/power-distribution/valid-recipe.yaml",
+      "language": "yaml",
+      "sizeLines": 29,
+      "fileCategory": "config"
+    },
+    {
+      "path": "tests/test_bmad_power_plugin.py",
+      "language": "python",
+      "sizeLines": 171,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/test_multi_host_runtime.py",
+      "language": "python",
+      "sizeLines": 75,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/test_oneclick_commands.py",
+      "language": "python",
+      "sizeLines": 58,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/test_power_dist_builder.py",
+      "language": "python",
+      "sizeLines": 112,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/test_power_distribution_contract.py",
+      "language": "python",
+      "sizeLines": 94,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/test_power_distribution_integration.py",
+      "language": "python",
+      "sizeLines": 56,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/test_power_package_consumer.py",
+      "language": "python",
+      "sizeLines": 168,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/test_power_runtime_installer.py",
+      "language": "python",
+      "sizeLines": 120,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/test_power_runtime_v2.py",
+      "language": "python",
+      "sizeLines": 125,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/test_python_resolver.sh",
+      "language": "shell",
+      "sizeLines": 35,
+      "fileCategory": "script"
+    },
+    {
+      "path": "workspace.yaml",
+      "language": "yaml",
+      "sizeLines": 49,
+      "fileCategory": "config"
+    }
+  ],
+  "totalFiles": 97,
+  "filteredByIgnore": 0,
+  "estimatedComplexity": "moderate",
+  "importMap": {
+    ".claude/skills/bmad/SKILL.md": [],
+    ".codex/README.md": [],
+    ".codex/skills/bmad/SKILL.md": [],
+    ".codex/skills/gwc/SKILL.md": [],
+    ".codex/skills/task-me/SKILL.md": [],
+    ".codex/skills/ua/SKILL.md": [],
+    ".github/workflows/publish-bmad-power.yml": [],
+    ".github/workflows/reusable-publish-power.yml": [],
+    ".github/workflows/validate-workspace.yml": [],
+    ".gitmodules": [],
+    ".gwc/policies/notification-policy.yaml": [],
+    ".gwc/runbooks/SLACK_NOTIFICATION_RUNBOOK.md": [],
+    ".kilo/plans/1784987769805-ua-full-analysis-plan.md": [],
+    ".kiro/skills/bmad/SKILL.md": [],
+    ".kiro/skills/gwc/SKILL.md": [],
+    ".kiro/skills/task-me/SKILL.md": [],
+    ".kiro/skills/ua/SKILL.md": [],
+    ".kiro/steering/workspace-powers.md": [],
+    ".ua/.understandignore": [],
+    "AGENTS.md": [],
+    "DW-SuperApps.code-workspace": [],
+    "README.md": [],
+    "bin/dw": [],
+    "bin/dw.ps1": [],
+    "docs/DW_SUPER_SETUP.md": [],
+    "docs/DW_SUPER_SETUP_VERIFICATION.md": [],
+    "docs/MULTI_HOST_SETUP.md": [],
+    "docs/POWER_CONSUMER_RUNTIME_V1.md": [],
+    "docs/POWER_DISTRIBUTION_V1.md": [],
+    "docs/POWER_RUNTIME_V2.md": [],
+    "docs/WORKSPACE_OPERATIONS.md": [],
+    "docs/powers/BMAD_POWER.md": [],
+    "dw.cmd": [],
+    "dw.ps1": [],
+    "manifests/evidence/SCRUM-131/SHA256SUMS.txt": [],
+    "manifests/evidence/SCRUM-131/validation-evidence.json": [],
+    "manifests/evidence/SCRUM-132/hygiene-evidence.json": [],
+    "manifests/evidence/SCRUM-132/removed-files.txt": [],
+    "manifests/evidence/SCRUM-134/SHA256SUMS.txt": [],
+    "manifests/evidence/SCRUM-134/setup-evidence.json": [],
+    "manifests/power-distribution-evidence.json": [],
+    "manifests/powers/bmad.yaml": [],
+    "manifests/powers/gwc.yaml": [],
+    "manifests/powers/task-me.yaml": [],
+    "manifests/powers/ua.yaml": [],
+    "plugins/bmad-method/README.md": [],
+    "plugins/bmad-method/SOURCE.lock.json": [],
+    "plugins/bmad-method/distribution/power-package.yaml": [],
+    "plugins/bmad-method/knowledge/README.md": [],
+    "plugins/bmad-method/knowledge/architecture.mmd": [],
+    "plugins/bmad-method/knowledge/knowledge-graph.json": [],
+    "plugins/bmad-method/overlay/distribution/bin/bootstrap-bmad": [],
+    "plugins/bmad-method/overlay/distribution/bin/bootstrap-bmad.ps1": [],
+    "plugins/bmad-method/overlay/distribution/config/config.schema.json": [],
+    "plugins/bmad-method/overlay/distribution/config/defaults.yaml": [],
+    "plugins/bmad-method/overlay/distribution/contracts/default-contract.yaml": [],
+    "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py": [],
+    "plugins/bmad-method/overlay/distribution/skills/bmad/SKILL.md": [],
+    "powers/bmad/SKILL.md": [],
+    "requirements-dev.txt": [],
+    "scan_output.json": [],
+    "schemas/power-consumer-binding.schema.json": [],
+    "schemas/power-distribution.schema.json": [],
+    "schemas/power-manifest.schema.json": [],
+    "schemas/power-package-manifest.schema.json": [],
+    "scripts/dw_cli.py": [],
+    "scripts/dw_entry.py": [],
+    "scripts/dw_power_package.py": [],
+    "scripts/install-dw.sh": [],
+    "scripts/install-host-adapters.sh": [],
+    "scripts/power_dist.py": [],
+    "scripts/python-resolver.sh": [],
+    "scripts/sync-submodules.sh": [],
+    "scripts/validate-workspace.py": [],
+    "templates/power-runtime/bin/configure": [],
+    "templates/power-runtime/bin/configure.ps1": [],
+    "templates/power-runtime/bin/doctor": [],
+    "templates/power-runtime/bin/doctor.ps1": [],
+    "templates/power-runtime/bin/install": [],
+    "templates/power-runtime/bin/install.ps1": [],
+    "templates/power-runtime/bin/uninstall": [],
+    "templates/power-runtime/bin/uninstall.ps1": [],
+    "templates/power-runtime/lib/power_runtime.py": [],
+    "tests/fixtures/power-distribution/invalid-absolute-include.yaml": [],
+    "tests/fixtures/power-distribution/valid-consumer-binding.yaml": [],
+    "tests/fixtures/power-distribution/valid-recipe.yaml": [],
+    "tests/test_bmad_power_plugin.py": [],
+    "tests/test_multi_host_runtime.py": [],
+    "tests/test_oneclick_commands.py": [],
+    "tests/test_power_dist_builder.py": [],
+    "tests/test_power_distribution_contract.py": [],
+    "tests/test_power_distribution_integration.py": [],
+    "tests/test_power_package_consumer.py": [],
+    "tests/test_power_runtime_installer.py": [],
+    "tests/test_power_runtime_v2.py": [],
+    "tests/test_python_resolver.sh": [],
+    "workspace.yaml": []
+  }
+}
