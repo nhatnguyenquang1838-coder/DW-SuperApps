@@ -8,12 +8,18 @@ SCRIPTS = Path(__file__).resolve().parent
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+import dw_cli  # noqa: E402
 import dw_entry  # noqa: E402
+import dw_workspace_dist  # noqa: E402
 from dw_power_store.cli import main as power_main  # noqa: E402
 from dw_workspace_dist import main as distribution_main  # noqa: E402
 
 
 def main() -> int:
+    # One-click init/sync/doctor paths load dw_cli internally; patch their host
+    # operations to use the workspace distribution store resolver as well.
+    dw_cli.install_host_adapters = dw_workspace_dist.host_install
+    dw_cli.host_status = dw_workspace_dist.host_status
     argv = sys.argv[1:]
     if len(argv) >= 2 and argv[0] == "power":
         if argv[1] in {"install", "configure", "doctor", "history", "rollback", "uninstall"}:
