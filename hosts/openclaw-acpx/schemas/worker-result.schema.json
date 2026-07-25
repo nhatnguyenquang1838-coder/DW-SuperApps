@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw-superapps.local/schemas/openclaw-acpx/worker-result.schema.json",
+  "title": "DW SUPER ACPX Worker Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "taskId",
+    "worker",
+    "runtime",
+    "status",
+    "startedAt",
+    "endedAt",
+    "changedFiles",
+    "commandsExecuted",
+    "validation",
+    "blockers",
+    "residualRisks",
+    "summary"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "taskId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "worker": {
+      "enum": [
+        "codex",
+        "claude",
+        "kiro",
+        "kilocode"
+      ]
+    },
+    "runtime": {
+      "const": "acp"
+    },
+    "status": {
+      "enum": [
+        "completed",
+        "blocked",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "sessionId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "endedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "changedFiles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "commandsExecuted": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "command",
+          "exitCode"
+        ],
+        "properties": {
+          "command": {
+            "type": "string",
+            "minLength": 1
+          },
+          "exitCode": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "validation": {
+      "type": "object"
+    },
+    "headSha": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "residualRisks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "completed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "blockers": {
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ]
+}

@@ -29,7 +29,7 @@ jobs:
 
       - name: Validate Bash entrypoints
         shell: bash
-        run: bash -n bin/dw scripts/install-dw.sh scripts/python-resolver.sh
+        run: bash -n bin/dw scripts/install-dw.sh scripts/python-resolver.sh hosts/openclaw-acpx/install.sh
 
       - name: Install global DW CLI in temporary home
         shell: bash
@@ -62,6 +62,9 @@ jobs:
 
       - name: Test multi-host runtime
         run: python -m unittest -v tests.test_multi_host_runtime
+
+      - name: Test OpenClaw ACPX runtime
+        run: python -m unittest -v tests.test_openclaw_acpx_runtime
 
       - name: Test Power Runtime v2
         run: python -m unittest -v tests.test_power_runtime_v2
