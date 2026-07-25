@@ -33,7 +33,7 @@ class MultiHostRuntimeTests(unittest.TestCase):
         expected_fragments = {
             "kiro": ".kiro/skills",
             "codex": ".codex/skills",
-            "copilot": ".github/instructions",
+            "copilot": ".github/skills",
             "cline": ".clinerules",
             "kilo": ".kilo/rules",
             "claude": ".claude/skills",
@@ -43,6 +43,24 @@ class MultiHostRuntimeTests(unittest.TestCase):
             with self.subTest(host=host):
                 paths = [path.as_posix() for path in dw_cli.host_expected_paths(host)]
                 self.assertTrue(any(fragment in path for path in paths))
+
+    def test_copilot_uses_native_skills_and_repository_index(self) -> None:
+        paths = {
+            path.relative_to(ROOT).as_posix()
+            for path in dw_cli.host_expected_paths("copilot")
+        }
+        expected_skills = {
+            f".github/skills/{power_id}/SKILL.md"
+            for power_id, manifest in dw_cli.manifests().items()
+            if "copilot" in manifest["spec"]["hosts"]
+        }
+        self.assertTrue(expected_skills)
+        self.assertTrue(expected_skills.issubset(paths))
+        self.assertIn(".github/copilot-instructions.md", paths)
+        self.assertNotIn(
+            ".github/instructions/dw-superapps.instructions.md",
+            paths,
+        )
 
     def test_instruction_hosts_include_canonical_routing(self) -> None:
         for host in ("copilot", "cline", "kilo", "claude", "custom"):
