@@ -53,6 +53,83 @@ Slack is NOT:
 - The task state store
 - The approval authority
 
+## TTS Tiếng Việt
+
+OpenClaw đã được tích hợp TTS tiếng Việt thông qua Edge TTS.
+
+### Cài đặt
+
+```powershell
+pip install edge-tts
+```
+
+### Sử dụng
+
+**Command Line:**
+
+```powershell
+python tools\tts-vietnamese.py --text "Xin chào!" --voice hoai
+```
+
+**Giọng có sẵn:**
+
+- `nam`: Giọng nam ấm áp (tin tức, báo cáo)
+- `hoai`: Giọng nữ trong trẻo (truyện kể, hướng dẫn) [Mặc định]
+- `huy`: Giọng nam rõ ràng (thông báo)
+- `lan`: Giọng nữ dịu dàng (thơ ca, truyện)
+- `minh`: Giọng nam trầm ấm (thuyết trình)
+- `phuong`: Giọng nữ tươi tắn (quảng cáo)
+
+### Ví dụ
+
+```python
+await tts_vietnamese("Xin chào!", voice="hoai", output="greeting.mp3")
+```
+
+**Tài liệu chi tiết:** Xem `README-TTS.md`
+
+## Slack Agent
+
+Slack Agent đã được tích hợp sẵn qua plugin `slack`.
+
+### Cấu hình (đã có trong openclaw\.json)
+
+```json
+"channels": {
+  "slack": {
+    "enabled": true,
+    "botToken": "xoxb-...",
+    "appToken": "xapp-...",
+    "channels": {
+      "C01CKGYJHRS": {"enabled": true}
+    }
+  }
+}
+```
+
+### Khả năng
+
+- sendMessage, readMessage, editMessage, deleteMessage
+- react, listChannels, listMembers
+- command handling
+
+### Location
+
+Chi tiết: `agents/slack-agent/AGENTS.md`
+
+### Sử dụng
+
+Gọi các tools từ `agents/slack-agent/` để tương tác với Slack.
+
+**Ví dụ:**
+
+```python
+await slack.sendMessage(
+    channel="C01CKGYJHRS",
+    text="Xin chào mọi người!"
+)
+```
+
 ## Gate Event Rule
 
 After important execution events, the agent should:
