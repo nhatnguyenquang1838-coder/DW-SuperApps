@@ -95,26 +95,28 @@ def rollback(args: Any) -> dict[str, Any]:
 
 def uninstall(args: Any) -> dict[str, Any]:
     roots, target, package_manifest, install = configured_install(args)
-    removed: list[str] = []
     binding = binding_path(roots, target, args.power_id)
-    if binding.exists():
-        binding.unlink()
-        removed.append(str(binding))
-        if binding.parent.is_dir() and not any(binding.parent.iterdir()):
-            binding.parent.rmdir()
+    if not binding.is_file():
+        raise ConsumerError(f"workspace binding missing: {binding}")
     config = runtime_config_root(target, package_manifest)
+    if config.exists() and not (config / MANAGED_MARKER).is_file():
+        raise ConsumerError(f"refusing to remove unmanaged configuration: {config}")
+    if args.include_runtime and not args.yes:
+        raise ConsumerError("--include-runtime requires --yes")
+
+    removed: list[str] = []
+    binding.unlink()
+    removed.append(str(binding))
+    if binding.parent.is_dir() and not any(binding.parent.iterdir()):
+        binding.parent.rmdir()
     if config.exists():
-        if not (config / MANAGED_MARKER).is_file():
-            raise ConsumerError(f"refusing to remove unmanaged configuration: {config}")
         shutil.rmtree(config)
         removed.append(str(config))
     runtime = runtime_root_for(target, package_manifest)
-    if args.include_runtime:
-        if not args.yes:
-            raise ConsumerError("--include-runtime requires --yes")
-        if runtime.exists():
-            shutil.rmtree(runtime)
-            removed.append(str(runtime))
+    if args.include_runtime and runtime.exists():
+        shutil.rmtree(runtime)
+        removed.append(str(runtime))
+
     remaining = binding_records(roots, args.power_id)
     package_removed = False
     if not remaining:
