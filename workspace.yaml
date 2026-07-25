@@ -29,6 +29,14 @@ providers:
     api_key: ollama
     model_env: OLLAMA_MODEL
     default_model: qwen3-coder:30b
+distribution:
+  ownership: workspace
+  storeRoot: .dw/powers
+  inboxRoot: .dw/inbox/powers
+  cacheRoot: .dw/cache
+  historyRoot: .dw/history/powers
+  bindingsRoot: .dw/bindings
+  hostAdaptersRoot: .
 powers:
   - id: gwc
     path: powers/gwc
