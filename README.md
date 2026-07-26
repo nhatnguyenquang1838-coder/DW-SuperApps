@@ -1,211 +1,147 @@
 # DW SuperApps
 
-Host-neutral engineering workspace for reusable AI Powers, multiple product systems, local model providers, and agent hosts.
+DW SuperApps is a host-neutral control workspace for reusable AI Powers, editable projects, product systems, model providers, and agent hosts.
 
-## One-click bootstrap
+## Choose your starting point
 
-### Bash / Zsh / Linux / macOS / Git Bash
+### Use this workspace
 
 ```bash
 git clone --recurse-submodules https://github.com/nhatnguyenquang1838-coder/DW-SuperApps.git
 cd DW-SuperApps
 bash bin/dw install --shell auto --init
-```
 
-Reload the shell, then verify:
-
-```bash
-dw --version
-dw host status all
-dw provider status all
+dw project list
+dw power list
+dw system list
 dw doctor all
 ```
 
-The Bash launcher automatically resolves `python3`, `python`, or `py -3`.
+### Create another Super Project
 
-### Windows PowerShell
+Run from an initialized DW-SuperApps checkout:
 
-```powershell
-git clone --recurse-submodules https://github.com/nhatnguyenquang1838-coder/DW-SuperApps.git
-cd DW-SuperApps
-.\dw.ps1 init all
+```bash
+dw workspace init ../my-super-project \
+  --id my-super-project \
+  --name "My Super Project"
+
+cd ../my-super-project
+bash bin/dw install --shell auto
 ```
 
-## Supported hosts
+The initializer copies the governed DW runtime and manifests, creates an empty generic project registry, prepares the workspace-owned package inbox, and initializes Git. It does not copy product repositories, installed Power packages, runtime data, credentials, or generated host adapters.
+
+Add the first product project:
+
+```bash
+dw project add rental-home \
+  --repo nhatnguyenquang1838-coder/rental_home \
+  --role product \
+  --role system \
+  --system \
+  --enable-powers gwc,ua,task-me,bmad
+```
+
+Review and validate:
+
+```bash
+git diff -- .gitmodules workspace.yaml
+dw project list
+dw validate
+dw doctor all --offline
+```
+
+### Initialize an existing management repository
+
+```bash
+cd existing-super-project
+dw workspace init . \
+  --id existing-super-project \
+  --name "Existing Super Project" \
+  --in-place
+```
+
+Initialization is non-destructive and refuses to replace an existing `workspace.yaml` or managed runtime path.
+
+## Core model
 
 ```text
-Kiro
-Codex
-GitHub Copilot
-Cline
-Kilo Code
-Claude Code
-Custom/Bionics-style agents
+projects/*                    editable Git project repositories
+manifests/powers/*            logical Power contracts and routing metadata
+.dw/powers/*                  installed validated Power packages
+.dw/bindings/*                project/system-to-package bindings
+<project>/.gwc                GWC runtime and configuration
+<project>/.ua                 UA runtime and knowledge
+<project>/.task-me            Task Me runtime and plans
+<project>/.bmad               BMAD project configuration
+host adapter roots            thin workspace-owned routing only
 ```
 
-Ollama is registered separately as an OpenAI-compatible model provider.
+The current checkout keeps compatibility paths under `powers/*` and `systems/*`. They are registered as projects now and will move physically into `projects/*` in a later reviewed change.
+
+## Project commands
 
 ```bash
-dw host list
-dw host install all
-dw provider install ollama --model qwen3-coder:30b
+dw project list
+dw project info rental-home
+dw project add <project-id> --repo <owner/repository> --role product
 ```
 
-## OpenClaw ACPX orchestrator
+`dw project add` creates a Git submodule and updates `workspace.yaml`. It never installs a Power package or writes project runtime data.
 
-OpenClaw can operate as the DW SUPER control plane and dispatch bounded work through ACPX to Codex, Claude Code, Kiro CLI, and Kilocode.
-
-```bash
-bash hosts/openclaw-acpx/install.sh
-openclaw gateway restart
-```
-
-Windows PowerShell:
-
-```powershell
-.\hosts\openclaw-acpx\install.ps1
-openclaw gateway restart
-```
-
-The baseline is fail-closed: reads are approved, write or exec prompts fail when non-interactive approval is unavailable, and both OpenClaw MCP bridges remain disabled. See [`docs/OPENCLAW_ACPX_SETUP.md`](docs/OPENCLAW_ACPX_SETUP.md).
-
-## Included Powers
-
-| Power | Purpose | Default delivery |
-|---|---|---|
-| GWC | Governance and governed delivery | Validated Power distribution with submodule fallback |
-| Understand Anything | Architecture and codebase knowledge graphs | Validated Power distribution with submodule fallback |
-| Task Me | Impact analysis and implementation task planning | Validated Power distribution with submodule fallback |
-| BMAD Method | Product analysis, planning, architecture, implementation, and review lifecycle | Release-first external Power |
-
-Discover the registered Powers:
+## Power commands
 
 ```bash
 dw power list
 dw power info gwc
-dw power info ua
-dw power info task-me
-dw power info bmad
-dw system powers rental-home
+dw power install gwc --source auto --target systems/rental-home
+dw power doctor gwc --target systems/rental-home
+dw power prompt gwc --system rental-home --task "Review delivery scope"
 ```
 
-## BMAD Method Power
+Power packages belong to the Super Project package store. Runtime and project configuration belong to the selected project/system.
 
-BMAD is packaged as a deterministic, skills-only Power from an exact commit of [`nhatnguyenquang1838-coder/BMAD-METHOD`](https://github.com/nhatnguyenquang1838-coder/BMAD-METHOD). The DW wrapper does not modify the BMAD source repository.
+## Supported hosts
 
-The distribution includes:
-
-- BMAD core skills;
-- the BMM software-delivery lifecycle;
-- shared scripts and the official installer;
-- a portable multi-host bootstrap;
-- DW configuration and consumer contracts.
-
-It excludes the BMAD website, dashboard/UI, evals, repository tests, generated web bundles, and consumer project data.
-
-### Install BMAD into a project
-
-Current published package:
-
-```text
-Release: bmad-main-bb45db4aa449
-Version: main-bb45db4aa449
-Source:  bb45db4aa4496c69239f9c0629c290fd1b072fc9
-```
-
-Install the immutable release into a consumer project:
+Kiro, Codex, GitHub Copilot, Cline, Kilo Code, Claude Code, and custom agents are supported through thin adapters. Ollama is registered separately as an OpenAI-compatible model provider.
 
 ```bash
-dw power install bmad \
-  --source release \
-  --version main-bb45db4aa449 \
-  --target /path/to/project
+dw host install all --mode wrapper
+dw host status all
+dw provider status all
 ```
 
-Bootstrap BMAD for Codex:
+## Installation guides
+
+- [Installation index](docs/installation/README.md)
+- [Create a Super Project](docs/installation/CREATE_SUPER_PROJECT.md)
+- [Add a project or system](docs/installation/ADD_PROJECT.md)
+- [Install Powers](docs/installation/INSTALL_POWERS.md)
+- [Offline installation](docs/installation/OFFLINE_INSTALL.md)
+- [Migrate an existing workspace](docs/installation/MIGRATION.md)
+- [Troubleshooting](docs/installation/TROUBLESHOOTING.md)
+
+## Daily operations
 
 ```bash
-python /path/to/project/.dw/powers/bmad/distribution/lib/bootstrap_bmad.py \
-  --target /path/to/project \
-  --host codex
-```
-
-For Kiro, replace `codex` with `kiro`. Supported bootstrap hosts are `kiro`, `codex`, `copilot`, `cline`, `kilo`, `claude`, and `custom`.
-
-Validate the installed package:
-
-```bash
-python /path/to/project/.dw/powers/bmad/lib/power_runtime.py \
-  doctor --target /path/to/project
-```
-
-Generate a host-neutral BMAD instruction prompt:
-
-```bash
-dw power prompt bmad \
-  --system rental-home \
-  --task "Plan and deliver the next product change using the BMAD lifecycle"
-```
-
-Then use the installed `bmad-help` skill to identify the current lifecycle state and route to the appropriate BMAD skill.
-
-BMAD distribution references:
-
-- Release: [`bmad-main-bb45db4aa449`](https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/releases/tag/bmad-main-bb45db4aa449)
-- Distribution branch: [`power-dist-bmad`](https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/tree/power-dist-bmad)
-- Detailed guide: [`docs/powers/BMAD_POWER.md`](docs/powers/BMAD_POWER.md)
-
-## Daily commands
-
-```bash
-dw sync all
 dw status all
+dw sync all
 dw doctor all
 dw clean all
 ```
 
-`dw clean all` removes generated adapters and caches only. Runtime data under system repositories is preserved unless `--include-runtime --yes` is supplied.
+`dw clean all` removes generated adapters and caches only. Runtime data is preserved unless destructive runtime cleanup is explicitly authorized with `--include-runtime --yes`.
 
-## Power invocation
+## Current Powers
 
-```bash
-dw power prompt ua --system rental-home --task "Analyze architecture"
-dw power prompt task-me --system rental-home --task "Create an implementation plan"
-dw power prompt gwc --system rental-home --task "Review delivery scope"
-dw power prompt bmad --system rental-home --task "Route this change through the BMAD lifecycle"
-```
+| Power | Purpose | Default delivery |
+|---|---|---|
+| GWC | Governance and governed delivery | Validated distribution; source project available for development |
+| Understand Anything | Architecture and semantic codebase knowledge | Validated distribution; controlled source project planned |
+| Task Me | Impact analysis and implementation planning | Validated distribution; source project available for development |
+| BMAD Method | Product and delivery lifecycle workflows | Release-first external Power |
 
-## Layout
+## Child-project independence
 
-```text
-powers/
-  gwc/          Governance and delivery Power fallback
-  ua/           Semantic knowledge Power fallback
-  task-me/      Implementation planning Power fallback
-  bmad/         Local router for the release-first BMAD Power
-hosts/
-  openclaw-acpx/ OpenClaw control-plane profile and ACPX worker contracts
-plugins/
-  bmad-method/  BMAD source lock, graph, package recipe, and DW overlay
-systems/
-  rental-home/  First product system
-```
-
-GWC, UA, and Task Me retain reviewed git submodules as migration and recovery fallbacks. BMAD is an external release-first Power and is not required to be a workspace submodule.
-
-Runtime data remains owned by the consumer system repository:
-
-```text
-systems/rental-home/.ua/
-systems/rental-home/.task-me/
-systems/rental-home/.gwc/
-systems/rental-home/.bmad/
-```
-
-See:
-
-- [`docs/DW_SUPER_SETUP.md`](docs/DW_SUPER_SETUP.md)
-- [`docs/POWER_RUNTIME_V2.md`](docs/POWER_RUNTIME_V2.md)
-- [`docs/MULTI_HOST_SETUP.md`](docs/MULTI_HOST_SETUP.md)
-- [`docs/OPENCLAW_ACPX_SETUP.md`](docs/OPENCLAW_ACPX_SETUP.md)
-- [`docs/powers/BMAD_POWER.md`](docs/powers/BMAD_POWER.md)
+Standalone project contracts and direct Power injection without a parent Super Project are tracked separately in GitHub Issue #15. The current Super Project bootstrap does not move package-store ownership into child projects.
