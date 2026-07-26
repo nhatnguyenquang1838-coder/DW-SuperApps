@@ -147,6 +147,11 @@ jobs:
     needs: validate
     if: github.event_name == 'pull_request' && github.head_ref == 'feat/projects-physical-migration'
     runs-on: ubuntu-24.04
+    env:
+      EXPECTED_GWC: 62689ce35e279751a3bf17b5255ac258dafbe7d7
+      EXPECTED_UA: 6ae71878beb50226a1e4b7e2f52ac6468c86f74b
+      EXPECTED_TASK_ME: ef0b890b1fb9140109c04cbb490b41d9aa94bfff
+      EXPECTED_RENTAL_HOME: 26b9ba643e5e216213489506daf5f2af2db09f1e
     steps:
       - name: Checkout exact PR head without submodules
         uses: actions/checkout@v4
@@ -160,27 +165,30 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Build and validate atomic migration candidate
+      - name: Verify exact source pins
         shell: bash
-        env:
-          EXPECTED_GWC: 62689ce35e279751a3bf17b5255ac258dafbe7d7
-          EXPECTED_UA: 6ae71878beb50226a1e4b7e2f52ac6468c86f74b
-          EXPECTED_TASK_ME: ef0b890b1fb9140109c04cbb490b41d9aa94bfff
-          EXPECTED_RENTAL_HOME: 26b9ba643e5e216213489506daf5f2af2db09f1e
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
           test "$(git ls-tree HEAD powers/gwc | awk '{print $3}')" = "$EXPECTED_GWC"
           test "$(git ls-tree HEAD powers/ua | awk '{print $3}')" = "$EXPECTED_UA"
           test "$(git ls-tree HEAD powers/task-me | awk '{print $3}')" = "$EXPECTED_TASK_ME"
           test "$(git ls-tree HEAD systems/rental-home | awk '{print $3}')" = "$EXPECTED_RENTAL_HOME"
 
+      - name: Move gitlinks in index
+        shell: bash
+        run: |
+          set -euxo pipefail
           git rm --cached powers/gwc powers/ua powers/task-me systems/rental-home
           git update-index --add --cacheinfo 160000,"$EXPECTED_GWC",projects/gwc
           git update-index --add --cacheinfo 160000,"$EXPECTED_UA",projects/ua
           git update-index --add --cacheinfo 160000,"$EXPECTED_TASK_ME",projects/task-me
           git update-index --add --cacheinfo 160000,"$EXPECTED_RENTAL_HOME",projects/rental-home
 
+      - name: Rewrite workspace metadata
+        shell: bash
+        run: |
+          set -euxo pipefail
           cat > .gitmodules <<'EOF'
           [submodule "projects/gwc"]
           	path = projects/gwc
@@ -199,24 +207,41 @@ jobs:
           	url = https://github.com/nhatnguyenquang1838-coder/rental_home.git
           	branch = main
           EOF
-
           python scripts/phase2_migrate_projects.py
+
+      - name: Remove temporary migration machinery
+        shell: bash
+        run: |
+          set -euxo pipefail
           git show origin/main:.github/workflows/validate-workspace.yml > .github/workflows/validate-workspace.yml
-          git rm .github/workflows/phase2-capture-gitlinks.yml scripts/phase2_migrate_projects.py
+          git rm -f .github/workflows/phase2-capture-gitlinks.yml scripts/phase2_migrate_projects.py
           git add -A
 
+      - name: Verify final candidate tree
+        shell: bash
+        run: |
+          set -euxo pipefail
           test "$(git ls-files -s projects/gwc | awk '{print $2}')" = "$EXPECTED_GWC"
           test "$(git ls-files -s projects/ua | awk '{print $2}')" = "$EXPECTED_UA"
           test "$(git ls-files -s projects/task-me | awk '{print $2}')" = "$EXPECTED_TASK_ME"
           test "$(git ls-files -s projects/rental-home | awk '{print $2}')" = "$EXPECTED_RENTAL_HOME"
           test -z "$(git ls-files -s powers/gwc powers/ua powers/task-me systems/rental-home)"
+          git diff --cached --stat
 
+      - name: Validate candidate locally
+        shell: bash
+        run: |
+          set -euxo pipefail
           git submodule sync --recursive
           git submodule update --init --recursive
           python -m pip install -r requirements-dev.txt
           python scripts/dw_cli.py validate
           python -m unittest -v tests.test_project_registry tests.test_workspace_distribution_routing
 
+      - name: Publish candidate branch
+        shell: bash
+        run: |
+          set -euxo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "refactor(projects): move source gitlinks into projects"
