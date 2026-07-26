@@ -21,14 +21,14 @@ WORKSPACE = ROOT / "workspace.yaml"
 SCHEMA = ROOT / "schemas" / "power-manifest.schema.json"
 MANIFEST_DIR = ROOT / "manifests" / "powers"
 GITMODULES = ROOT / ".gitmodules"
-SUPPORTED_HOSTS = {
-    "kiro",
-    "codex",
-    "copilot",
-    "cline",
-    "kilo",
-    "claude",
-    "custom",
+SUPPORTED_HOSTS = {"kiro", "codex", "copilot", "cline", "kilo", "claude", "custom"}
+DISTRIBUTION_ROOTS = {
+    "storeRoot": ".dw/powers",
+    "inboxRoot": ".dw/inbox/powers",
+    "cacheRoot": ".dw/cache",
+    "historyRoot": ".dw/history/powers",
+    "bindingsRoot": ".dw/bindings",
+    "hostAdaptersRoot": ".",
 }
 
 
@@ -39,11 +39,7 @@ def fail(message: str) -> None:
 
 def git(*args: str) -> str:
     result = subprocess.run(
-        ["git", *args],
-        cwd=ROOT,
-        text=True,
-        capture_output=True,
-        check=False,
+        ["git", *args], cwd=ROOT, text=True, capture_output=True, check=False
     )
     if result.returncode != 0:
         fail(result.stderr.strip() or f"git {' '.join(args)} failed")
@@ -57,6 +53,48 @@ def load_yaml(path: Path) -> dict:
     if not isinstance(data, dict):
         fail(f"{path.relative_to(ROOT)} must contain a YAML mapping")
     return data
+
+
+def resolve_workspace_path(value: str) -> Path:
+    path = Path(value).expanduser()
+    if not path.is_absolute():
+        path = ROOT / path
+    return path.resolve()
+
+
+def is_within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def validate_distribution(workspace: dict, systems: list[dict]) -> dict[str, Path]:
+    distribution = workspace.get("distribution")
+    if not isinstance(distribution, dict):
+        fail("workspace distribution must be a mapping")
+    if distribution.get("ownership") != "workspace":
+        fail("workspace distribution.ownership must be workspace")
+    resolved: dict[str, Path] = {}
+    for name, default in DISTRIBUTION_ROOTS.items():
+        value = distribution.get(name, default)
+        if not isinstance(value, str) or not value.strip():
+            fail(f"workspace distribution.{name} must be a path string")
+        path = resolve_workspace_path(value)
+        if not is_within(path, ROOT.resolve()):
+            fail(f"workspace distribution.{name} escapes DW-SuperApps: {path}")
+        resolved[name] = path
+    if resolved["storeRoot"] == ROOT.resolve():
+        fail("workspace distribution.storeRoot cannot be the workspace root")
+    if resolved["hostAdaptersRoot"] != ROOT.resolve():
+        fail("workspace distribution.hostAdaptersRoot must resolve to DW-SuperApps root")
+    for system in systems:
+        system_path = resolve_workspace_path(system["path"])
+        for name, path in resolved.items():
+            if name != "hostAdaptersRoot" and (path == system_path or is_within(path, system_path)):
+                fail(f"workspace distribution.{name} resolves inside system {system['id']}: {path}")
+    return resolved
 
 
 def validate_providers(workspace: dict) -> list[dict]:
@@ -85,12 +123,9 @@ def validate_providers(workspace: dict) -> list[dict]:
 
 def main() -> int:
     workspace = load_yaml(WORKSPACE)
-    schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
-    validator = Draft202012Validator(schema)
-
+    validator = Draft202012Validator(json.loads(SCHEMA.read_text(encoding="utf-8")))
     if workspace.get("apiVersion") != "ai-workspace/v1" or workspace.get("kind") != "Workspace":
         fail("workspace.yaml must use apiVersion ai-workspace/v1 and kind Workspace")
-
     workspace_hosts = workspace.get("hosts") or []
     if not isinstance(workspace_hosts, list) or not workspace_hosts:
         fail("workspace.yaml must register at least one host")
@@ -101,10 +136,13 @@ def main() -> int:
         fail("workspace hosts must be unique")
 
     providers = validate_providers(workspace)
-    submodule_power_entries = workspace.get("powers") or []
+    power_entries = workspace.get("powers") or []
     system_entries = workspace.get("systems") or []
-    if not submodule_power_entries or not system_entries:
+    if not power_entries or not system_entries:
         fail("workspace.yaml must register at least one submodule Power and one system")
+    if not all(isinstance(item, dict) for item in system_entries):
+        fail("workspace system entries must be mappings")
+    distribution = validate_distribution(workspace, system_entries)
 
     manifests: dict[str, dict] = {}
     for path in sorted(MANIFEST_DIR.glob("*.yaml")):
@@ -113,10 +151,7 @@ def main() -> int:
         if errors:
             for error in errors:
                 location = ".".join(str(part) for part in error.path) or "<root>"
-                print(
-                    f"ERROR: {path.relative_to(ROOT)}:{location}: {error.message}",
-                    file=sys.stderr,
-                )
+                print(f"ERROR: {path.relative_to(ROOT)}:{location}: {error.message}", file=sys.stderr)
             return 1
         power_id = manifest["metadata"]["id"]
         if power_id in manifests:
@@ -126,25 +161,18 @@ def main() -> int:
             fail(f"Power {power_id} does not support workspace hosts: {sorted(missing_hosts)}")
         manifests[power_id] = manifest
 
-    submodule_power_ids = {entry["id"] for entry in submodule_power_entries}
-    unknown_submodule_powers = submodule_power_ids - set(manifests)
-    if unknown_submodule_powers:
-        fail(f"workspace references missing Power manifests: {sorted(unknown_submodule_powers)}")
-
+    power_ids = {entry["id"] for entry in power_entries}
+    unknown_powers = power_ids - set(manifests)
+    if unknown_powers:
+        fail(f"workspace references missing Power manifests: {sorted(unknown_powers)}")
     configured_paths = set(
         filter(
             None,
-            git(
-                "config",
-                "-f",
-                str(GITMODULES),
-                "--get-regexp",
-                r"^submodule\..*\.path$",
-            ).splitlines(),
+            git("config", "-f", str(GITMODULES), "--get-regexp", r"^submodule\..*\.path$").splitlines(),
         )
     )
     submodule_paths = {line.split(maxsplit=1)[1] for line in configured_paths}
-    expected_paths = {entry["path"] for entry in submodule_power_entries} | {
+    expected_paths = {entry["path"] for entry in power_entries} | {
         entry["path"] for entry in system_entries
     }
     if expected_paths != submodule_paths:
@@ -152,30 +180,33 @@ def main() -> int:
             "workspace paths do not match .gitmodules: "
             f"workspace={sorted(expected_paths)} gitmodules={sorted(submodule_paths)}"
         )
-
-    for entry in submodule_power_entries:
-        manifest = manifests[entry["id"]]
-        if manifest["spec"]["path"] != entry["path"]:
+    for entry in power_entries:
+        current = manifests[entry["id"]]
+        if current["spec"]["path"] != entry["path"]:
             fail(f"Power path mismatch for {entry['id']}")
-        if manifest["spec"]["source"] != entry["source"]:
+        if current["spec"]["source"] != entry["source"]:
             fail(f"Power source mismatch for {entry['id']}")
 
-    external_power_ids = set(manifests) - submodule_power_ids
-    for power_id in sorted(external_power_ids):
+    external_ids = set(manifests) - power_ids
+    for power_id in sorted(external_ids):
         source_path = ROOT / manifests[power_id]["spec"]["path"]
         if not source_path.exists():
             fail(f"external Power {power_id} local routing path is missing: {source_path.relative_to(ROOT)}")
-
     for system in system_entries:
         unknown = set(system.get("enabled_powers") or []) - set(manifests)
         if unknown:
             fail(f"system {system['id']} enables unknown Powers: {sorted(unknown)}")
+        system_root = resolve_workspace_path(system["path"])
+        for runtime_name in (workspace.get("data_ownership") or {}).get("roots", {}).values():
+            runtime = (system_root / str(runtime_name)).resolve()
+            if not is_within(runtime, system_root):
+                fail(f"unsafe runtime root for system {system['id']}: {runtime}")
 
     print(
-        f"PASS: {len(manifests)} Powers ({len(submodule_power_entries)} submodule, "
-        f"{len(external_power_ids)} external), {len(system_entries)} systems, "
+        f"PASS: {len(manifests)} Powers ({len(power_entries)} submodule, "
+        f"{len(external_ids)} external), {len(system_entries)} systems, "
         f"{len(workspace_hosts)} hosts, {len(providers)} providers, "
-        f"{len(submodule_paths)} submodules"
+        f"{len(submodule_paths)} submodules, store={distribution['storeRoot'].relative_to(ROOT)}"
     )
     return 0
 

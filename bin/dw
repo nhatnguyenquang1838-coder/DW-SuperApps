@@ -26,6 +26,23 @@ if [[ "${1:-}" == "power" ]]; then
       dw_exec_python "$ROOT/scripts/dw_power_package.py" "$@"
       exit $?
       ;;
+    prompt)
+      # shellcheck source=../scripts/python-resolver.sh
+      source "$ROOT/scripts/python-resolver.sh"
+      dw_exec_python "$ROOT/scripts/dw_workspace_dist.py" "$@"
+      exit $?
+      ;;
+  esac
+fi
+
+if [[ "${1:-}" == "host" ]]; then
+  case "${2:-}" in
+    install|status)
+      # shellcheck source=../scripts/python-resolver.sh
+      source "$ROOT/scripts/python-resolver.sh"
+      dw_exec_python "$ROOT/scripts/dw_workspace_dist.py" "$@"
+      exit $?
+      ;;
   esac
 fi
 

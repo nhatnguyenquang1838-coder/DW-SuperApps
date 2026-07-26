@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw.superapps/schemas/power-binding.schema.json",
+  "title": "DW SUPER Power Binding",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "apiVersion",
+    "systemId",
+    "targetPath",
+    "powerId",
+    "packageVersion",
+    "packageManifestSha256",
+    "storePath",
+    "runtimePath",
+    "updatedAtEpoch"
+  ],
+  "properties": {
+    "apiVersion": {"const": "dw.superapps/power-binding/v1"},
+    "systemId": {"type": "string", "minLength": 1},
+    "targetPath": {"type": "string", "minLength": 1},
+    "powerId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+    "packageVersion": {"type": ["string", "null"]},
+    "packageManifestSha256": {
+      "type": ["string", "null"],
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "storePath": {"type": "string", "minLength": 1},
+    "runtimePath": {"type": "string", "minLength": 1},
+    "configured": {"type": "boolean"},
+    "configPath": {"type": "string"},
+    "updatedAtEpoch": {"type": "integer", "minimum": 0}
+  }
+}

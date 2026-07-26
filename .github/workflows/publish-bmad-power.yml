@@ -155,13 +155,20 @@ jobs:
           set -euo pipefail
           staging="${{ steps.build.outputs.staging_root }}"
           python scripts/power_dist.py verify --package-root "$staging"
+          workspace="$(mktemp -d)"
+          store="$workspace/.dw/powers"
           consumer="$(mktemp -d)"
-          python "$staging/lib/power_runtime.py" install --target "$consumer"
-          python "$staging/lib/power_runtime.py" doctor --target "$consumer"
+          python "$staging/lib/power_runtime.py" install \
+            --store-root "$store" --target "$consumer"
+          python "$staging/lib/power_runtime.py" doctor \
+            --store-root "$store" --target "$consumer"
           python "$staging/distribution/lib/bootstrap_bmad.py" \
             --target "$consumer" --host codex --check
-          python "$staging/lib/power_runtime.py" uninstall --target "$consumer"
+          python "$staging/lib/power_runtime.py" uninstall \
+            --store-root "$store" --target "$consumer"
           test -d "$consumer/.bmad"
+          test ! -e "$consumer/.dw"
+          test -d "$store/bmad"
 
       - name: Upload validated package
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -257,13 +264,20 @@ jobs:
           test -n "$package_root"
           python scripts/power_dist.py verify --package-root "$package_root"
 
+          workspace="$(mktemp -d)"
+          store="$workspace/.dw/powers"
           consumer="$(mktemp -d)"
-          install_json="$(python "$package_root/lib/power_runtime.py" install --target "$consumer")"
-          doctor_json="$(python "$package_root/lib/power_runtime.py" doctor --target "$consumer")"
+          install_json="$(python "$package_root/lib/power_runtime.py" install \
+            --store-root "$store" --target "$consumer")"
+          doctor_json="$(python "$package_root/lib/power_runtime.py" doctor \
+            --store-root "$store" --target "$consumer")"
           bootstrap_json="$(python "$package_root/distribution/lib/bootstrap_bmad.py" \
             --target "$consumer" --host codex --check)"
-          uninstall_json="$(python "$package_root/lib/power_runtime.py" uninstall --target "$consumer")"
+          uninstall_json="$(python "$package_root/lib/power_runtime.py" uninstall \
+            --store-root "$store" --target "$consumer")"
           test -d "$consumer/.bmad"
+          test ! -e "$consumer/.dw"
+          test -d "$store/bmad"
 
           archive_sha="$(sha256sum "$archive" | awk '{print $1}')"
           export TAG SOURCE_SHA VERSION archive_sha install_json doctor_json bootstrap_json uninstall_json
@@ -287,6 +301,8 @@ jobs:
               'bootstrap': json.loads(os.environ['bootstrap_json']),
               'uninstall': json.loads(os.environ['uninstall_json']),
               'runtimeDataPreserved': True,
+              'sharedPackagePreserved': True,
+              'targetDistributionRootAbsent': True,
           }
           Path('bmad-release-e2e.json').write_text(
               json.dumps(evidence, indent=2, sort_keys=True) + '\n',
@@ -319,20 +335,21 @@ jobs:
           cat > /tmp/bmad-e2e-comment.md <<EOF
           ## BMAD Power release E2E — PASS ✅
 
-          - Release: \\`$TAG\\`
-          - BMAD source: \\`$SOURCE_SHA\\`
-          - Archive SHA-256: \\`$ARCHIVE_SHA\\`
+          - Release: \`$TAG\`
+          - BMAD source: \`$SOURCE_SHA\`
+          - Archive SHA-256: \`$ARCHIVE_SHA\`
           - Release ZIP downloaded from GitHub Release
           - Release checksum verified
           - Safe ZIP extraction verified
           - Package manifest verified
-          - Clean consumer install passed
+          - Workspace-store install passed
           - Package doctor passed
           - Codex bootstrap preflight passed
-          - Uninstall passed with \\`.bmad\\` runtime data preserved
-          - Distribution branch: \\`power-dist-bmad\\`
+          - Target system received no \`.dw\` distribution root
+          - Detach preserved \`.bmad\` runtime data and the shared package
+          - Distribution branch: \`power-dist-bmad\`
 
-          Evidence artifact: \\`$TAG-release-e2e\\`
+          Evidence artifact: \`$TAG-release-e2e\`
           EOF
           gh pr comment 6 --body-file /tmp/bmad-e2e-comment.md
 
