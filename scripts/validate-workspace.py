@@ -16,6 +16,8 @@ except ImportError as exc:
     )
     raise SystemExit(2) from exc
 
+from dw_project_registry import ProjectRegistryError, validate_registry
+
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE = ROOT / "workspace.yaml"
 SCHEMA = ROOT / "schemas" / "power-manifest.schema.json"
@@ -37,13 +39,13 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
-def git(*args: str) -> str:
+def git(*args: str, check: bool = True) -> str:
     result = subprocess.run(
         ["git", *args], cwd=ROOT, text=True, capture_output=True, check=False
     )
-    if result.returncode != 0:
+    if check and result.returncode != 0:
         fail(result.stderr.strip() or f"git {' '.join(args)} failed")
-    return result.stdout.strip()
+    return result.stdout.strip() if result.returncode == 0 else ""
 
 
 def load_yaml(path: Path) -> dict:
@@ -121,6 +123,27 @@ def validate_providers(workspace: dict) -> list[dict]:
     return providers
 
 
+def gitmodule_map() -> dict[str, str]:
+    if not GITMODULES.is_file():
+        return {}
+    paths_output = git(
+        "config", "-f", str(GITMODULES), "--get-regexp", r"^submodule\..*\.path$", check=False
+    )
+    result: dict[str, str] = {}
+    for line in paths_output.splitlines():
+        key, path = line.split(maxsplit=1)
+        name = key[len("submodule.") : -len(".path")]
+        url = git("config", "-f", str(GITMODULES), "--get", f"submodule.{name}.url", check=False)
+        result[path] = url
+    return result
+
+
+def source_fallback_required(manifest: dict) -> bool:
+    distribution = manifest.get("spec", {}).get("distribution") or {}
+    provider = distribution.get("providerState") or {}
+    return provider.get("status") != "published"
+
+
 def main() -> int:
     workspace = load_yaml(WORKSPACE)
     validator = Draft202012Validator(json.loads(SCHEMA.read_text(encoding="utf-8")))
@@ -138,10 +161,21 @@ def main() -> int:
     providers = validate_providers(workspace)
     power_entries = workspace.get("powers") or []
     system_entries = workspace.get("systems") or []
-    if not power_entries or not system_entries:
-        fail("workspace.yaml must register at least one submodule Power and one system")
-    if not all(isinstance(item, dict) for item in system_entries):
+    if not isinstance(power_entries, list) or not all(isinstance(item, dict) for item in power_entries):
+        fail("workspace power entries must be mappings")
+    if not isinstance(system_entries, list) or not all(isinstance(item, dict) for item in system_entries):
         fail("workspace system entries must be mappings")
+
+    configured_submodules = gitmodule_map()
+    try:
+        projects = validate_registry(
+            workspace,
+            root=ROOT,
+            gitmodules=configured_submodules if configured_submodules else None,
+        )
+    except ProjectRegistryError as exc:
+        fail(str(exc))
+
     distribution = validate_distribution(workspace, system_entries)
 
     manifests: dict[str, dict] = {}
@@ -165,33 +199,41 @@ def main() -> int:
     unknown_powers = power_ids - set(manifests)
     if unknown_powers:
         fail(f"workspace references missing Power manifests: {sorted(unknown_powers)}")
-    configured_paths = set(
-        filter(
-            None,
-            git("config", "-f", str(GITMODULES), "--get-regexp", r"^submodule\..*\.path$").splitlines(),
-        )
-    )
-    submodule_paths = {line.split(maxsplit=1)[1] for line in configured_paths}
-    expected_paths = {entry["path"] for entry in power_entries} | {
-        entry["path"] for entry in system_entries
-    }
+
+    submodule_paths = set(configured_submodules)
+    if projects:
+        expected_paths = {project["path"] for project in projects.values()}
+    else:
+        expected_paths = {entry["path"] for entry in power_entries if entry.get("path")} | {
+            entry["path"] for entry in system_entries if entry.get("path")
+        }
     if expected_paths != submodule_paths:
         fail(
-            "workspace paths do not match .gitmodules: "
+            "workspace project paths do not match .gitmodules: "
             f"workspace={sorted(expected_paths)} gitmodules={sorted(submodule_paths)}"
         )
+
     for entry in power_entries:
         current = manifests[entry["id"]]
-        if current["spec"]["path"] != entry["path"]:
+        project_id = entry.get("project")
+        if project_id:
+            project = projects[str(project_id)]
+            expected_path = project["path"]
+            expected_source = project["source"]
+        else:
+            expected_path = entry.get("path")
+            expected_source = entry.get("source")
+        if current["spec"]["path"] != expected_path:
             fail(f"Power path mismatch for {entry['id']}")
-        if current["spec"]["source"] != entry["source"]:
+        if current["spec"]["source"] != expected_source:
             fail(f"Power source mismatch for {entry['id']}")
 
     external_ids = set(manifests) - power_ids
     for power_id in sorted(external_ids):
         source_path = ROOT / manifests[power_id]["spec"]["path"]
-        if not source_path.exists():
+        if not source_path.exists() and source_fallback_required(manifests[power_id]):
             fail(f"external Power {power_id} local routing path is missing: {source_path.relative_to(ROOT)}")
+
     for system in system_entries:
         unknown = set(system.get("enabled_powers") or []) - set(manifests)
         if unknown:
@@ -203,9 +245,9 @@ def main() -> int:
                 fail(f"unsafe runtime root for system {system['id']}: {runtime}")
 
     print(
-        f"PASS: {len(manifests)} Powers ({len(power_entries)} submodule, "
-        f"{len(external_ids)} external), {len(system_entries)} systems, "
-        f"{len(workspace_hosts)} hosts, {len(providers)} providers, "
+        f"PASS: {len(projects)} projects, {len(manifests)} Powers "
+        f"({len(power_entries)} source-project, {len(external_ids)} package-only), "
+        f"{len(system_entries)} systems, {len(workspace_hosts)} hosts, {len(providers)} providers, "
         f"{len(submodule_paths)} submodules, store={distribution['storeRoot'].relative_to(ROOT)}"
     )
     return 0
