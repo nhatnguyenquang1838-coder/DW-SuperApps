@@ -10,8 +10,8 @@ Thin `kiro` adapter owned by DW-SuperApps.
 
 - Workspace package store: `.dw/powers`
 - Installed package: `.dw/powers/task-me`
-- Resolved entrypoint: `.dw/powers/task-me/.kiro/skills/implementation-task-architect`
-- Resolution mode: `workspace-store`
+- Resolved entrypoint: `missing`
+- Resolution mode: `missing`
 - Source fallback: `projects/task-me`
 - Power manifest: `manifests/powers/task-me.yaml`
 

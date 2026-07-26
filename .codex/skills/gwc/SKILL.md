@@ -10,8 +10,8 @@ Thin `codex` adapter owned by DW-SuperApps.
 
 - Workspace package store: `.dw/powers`
 - Installed package: `.dw/powers/gwc`
-- Resolved entrypoint: `.dw/powers/gwc/skills/gwc-g0`
-- Resolution mode: `workspace-store`
+- Resolved entrypoint: `projects/gwc/skills/gwc-g1`
+- Resolution mode: `source-submodule-fallback`
 - Source fallback: `projects/gwc`
 - Power manifest: `manifests/powers/gwc.yaml`
 

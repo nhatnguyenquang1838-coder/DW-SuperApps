@@ -10,8 +10,8 @@ Thin `kiro` adapter owned by DW-SuperApps.
 
 - Workspace package store: `.dw/powers`
 - Installed package: `.dw/powers/bmad`
-- Resolved entrypoint: `.dw/powers/bmad/distribution/skills/bmad`
-- Resolution mode: `workspace-store`
+- Resolved entrypoint: `projects/bmad/src/core-skills/bmad-help`
+- Resolution mode: `source-submodule-fallback`
 - Source fallback: `projects/bmad`
 - Power manifest: `manifests/powers/bmad.yaml`
 

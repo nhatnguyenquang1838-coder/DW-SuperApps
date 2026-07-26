@@ -10,8 +10,8 @@ Thin `codex` adapter owned by DW-SuperApps.
 
 - Workspace package store: `.dw/powers`
 - Installed package: `.dw/powers/ua`
-- Resolved entrypoint: `.dw/powers/ua/understand-anything-plugin/skills/understand`
-- Resolution mode: `workspace-store`
+- Resolved entrypoint: `missing`
+- Resolution mode: `missing`
 - Source fallback: `projects/ua`
 - Power manifest: `manifests/powers/ua.yaml`
 
