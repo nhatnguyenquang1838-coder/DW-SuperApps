@@ -5,17 +5,17 @@
 - Repository: `nhatnguyenquang1838-coder/DW-SuperApps`
 - PR: [#20](https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/pull/20)
 - Base ref: `main`
-- Approved base SHA: `8cf13d7d6bef535bff77e36815b737aff9d7f709`
-- Verified current `origin/main`: `158223c14b530c2676391f071c93b5549397aa45`
+- Base SHA: `158223c14b530c2676391f071c93b5549397aa45`
+- Verified origin/main: `158223c14b530c2676391f071c93b5549397aa45`
 - PR head branch: `marmalade-beanie`
-- Exact PR head: `89dc599323b627649b1d42c89bf06419a6e2654d`
-- GitHub compare: `diverged`, ahead by 8, behind by 17
-- Scope hash: `18658eaaca1f7a29`
-- Base binding: **BLOCKED — current default branch advanced beyond approved base**
+- Exact PR head: `e20d99211457836816d898d617a0937feefea0a1`
+- GitHub compare: `ahead`, ahead by 10, behind by 0
+- Scope hash: `e413903c967d960d`
+- Base binding: **VERIFIED**
 
 ## Changed paths
 
-All 20 paths are inside the approved G3 scope:
+The PR diff against the refreshed `origin/main` contains exactly these 20 approved paths:
 
 - `.gwc/g0/context-snapshot.yaml`
 - `.gwc/g1/brainstorming/g1-options.yaml`
@@ -40,7 +40,7 @@ All 20 paths are inside the approved G3 scope:
 
 ## CI and local validation
 
-- GitHub Actions: `Validate workspace`, run `30196135859`, exact head `89dc599`, conclusion `success`
+- GitHub Actions: `Validate workspace`, run `30196370896`, exact head `e20d992`, conclusion `success`
 - Workspace validator: PASS
 - Four JSON schemas: parse and Draft 2020-12 meta-schema PASS
 - Nine YAML artifacts: parse PASS
@@ -64,10 +64,7 @@ All 20 paths are inside the approved G3 scope:
 
 ## Delivery verdict
 
-Content and CI are green, but G3 is **BLOCKED** by base drift. The current
-`origin/main` SHA is not the approved base in the G3 scope. Do not generate a G4
-approval until a fresh base-refresh/rebase scope is explicitly approved and the
-resulting exact head and CI are re-read.
-
-No merge, deploy, production data/configuration, credentials, Jira, or Notion action
-was performed.
+G3 content and delivery evidence pass for the refreshed base/head. This record is
+committed as evidence and will change the PR head; G4 must use a fresh final-head
+readback after the closure commit. No merge, deploy, production data/configuration,
+credentials, Jira or Notion action was performed.
