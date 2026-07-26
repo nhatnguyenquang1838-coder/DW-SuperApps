@@ -240,8 +240,6 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          git submodule sync --recursive
-          git submodule update --init --recursive
           python -m pip install -r requirements-dev.txt
           python scripts/dw_cli.py validate
           python -m unittest -v tests.test_project_registry tests.test_workspace_distribution_routing
