@@ -13,7 +13,7 @@ import dw_entry  # noqa: E402
 import dw_project_add  # noqa: E402
 import dw_project_registry  # noqa: E402
 import dw_workspace_dist  # noqa: E402
-import dw_workspace_init  # noqa: E402,F401
+import dw_workspace_init  # noqa: E402
 from dw_power_store.cli import main as power_main  # noqa: E402
 from dw_workspace_dist import main as distribution_main  # noqa: E402
 
@@ -34,7 +34,7 @@ def main() -> int:
     dw_cli.host_status = dw_workspace_dist.host_status
     argv = sys.argv[1:]
     if len(argv) >= 2 and argv[0] == "workspace" and argv[1] == "init":
-        return int(dw_project_registry.main(argv))
+        return int(dw_workspace_init.main(argv))
     if len(argv) >= 2 and argv[0] == "project":
         if argv[1] in {"list", "info"}:
             return int(dw_project_registry.main(argv))
