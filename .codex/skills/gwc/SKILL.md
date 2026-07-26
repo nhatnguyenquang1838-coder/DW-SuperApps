@@ -8,9 +8,9 @@ description: Governance, delivery control, approval boundaries, validation, and 
 
 This is a thin `codex` adapter. Canonical behavior remains in:
 
-- Power source: `../../../powers/gwc`
+- Power source: `../../../projects/gwc`
 - Power manifest: `../../../manifests/powers/gwc.yaml`
-- Preferred entrypoint: `../../../powers/gwc/skills/gwc-g1`
+- Preferred entrypoint: `../../../projects/gwc/skills/gwc-g1`
 
 ## Invocation
 

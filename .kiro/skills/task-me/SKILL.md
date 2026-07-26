@@ -8,9 +8,9 @@ description: Impact analysis, implementation planning, task decomposition, codin
 
 This is a thin `kiro` adapter. Canonical behavior remains in:
 
-- Power source: `../../../powers/task-me`
+- Power source: `../../../projects/task-me`
 - Power manifest: `../../../manifests/powers/task-me.yaml`
-- Preferred entrypoint: `../../../powers/task-me/.kiro/skills/implementation-task-architect`
+- Preferred entrypoint: `../../../projects/task-me/.kiro/skills/implementation-task-architect`
 
 ## Invocation
 

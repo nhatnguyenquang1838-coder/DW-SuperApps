@@ -7,7 +7,7 @@ metadata:
   description: Governance, delivery control, approval boundaries, validation, and repository lifecycle workflows.
 spec:
   category: governance
-  path: powers/gwc
+  path: projects/gwc
   source: nhatnguyenquang1838-coder/gwc
   provides:
     - governance
@@ -56,7 +56,7 @@ spec:
     modes:
       submodule:
         repository: nhatnguyenquang1838-coder/gwc
-        path: powers/gwc
+        path: projects/gwc
         ref: main
       release:
         repository: nhatnguyenquang1838-coder/gwc
