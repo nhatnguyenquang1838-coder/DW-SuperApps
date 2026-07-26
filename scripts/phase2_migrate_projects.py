@@ -84,7 +84,7 @@ spec = schema['properties']['spec']['properties']
 spec['path']['pattern'] = '^(projects|powers)/[a-z0-9][a-z0-9-]*$'
 spec['upstream'] = {'type': 'string', 'pattern': '^[^/\\s]+/[^/\\s]+$'}
 submodule = spec['distribution']['properties']['modes']['properties']['submodule']['properties']
-submodule['upath']['pattern'] = '^(projects|powers)/[a-z0-9][a-z0-9-]*$'
+submodule['path']['pattern'] = '^(projects|powers)/[a-z0-9][a-z0-9-]*$'
 submodule['upstreamRepository'] = {
     'type': 'string',
     'pattern': '^[^/\\s]+/[^/\\s]+$',
@@ -97,7 +97,7 @@ updates = {
     '.codex/skills/task-me/SKILL.md': [('../../../powers/task-me', '../../../projects/task-me')],
     '.codex/skills/ua/SKILL.md': [('../../../powers/ua', '../../../projects/ua')],
     '.kiro/skills/gwc/SKILL.md': [('../../../powers/gwc', '../../../projects/gwc')],
-   '.kiro/skills/task-me/SKILL.md': [('../.././powers/task-me', '../../../projects/task-me')],
+    '.kiro/skills/task-me/SKILL.md': [('../../../powers/task-me', '../../../projects/task-me')],
     '.kiro/skills/ua/SKILL.md': [('../../../powers/ua', '../../../projects/ua')],
     '.kiro/steering/workspace-powers.md': [
         ('systems/rental-home', 'projects/rental-home'),
