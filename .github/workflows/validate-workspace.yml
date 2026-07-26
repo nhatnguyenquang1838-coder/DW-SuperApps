@@ -175,11 +175,11 @@ jobs:
           test "$(git ls-tree HEAD powers/task-me | awk '{print $3}')" = "$EXPECTED_TASK_ME"
           test "$(git ls-tree HEAD systems/rental-home | awk '{print $3}')" = "$EXPECTED_RENTAL_HOME"
 
-          mkdir -p projects
-          git mv powers/gwc projects/gwc
-          git mv powers/ua projects/ua
-          git mv powers/task-me projects/task-me
-          git mv systems/rental-home projects/rental-home
+          git rm --cached powers/gwc powers/ua powers/task-me systems/rental-home
+          git update-index --add --cacheinfo 160000,"$EXPECTED_GWC",projects/gwc
+          git update-index --add --cacheinfo 160000,"$EXPECTED_UA",projects/ua
+          git update-index --add --cacheinfo 160000,"$EXPECTED_TASK_ME",projects/task-me
+          git update-index --add --cacheinfo 160000,"$EXPECTED_RENTAL_HOME",projects/rental-home
 
           cat > .gitmodules <<'EOF'
           [submodule "projects/gwc"]
@@ -223,4 +223,3 @@ jobs:
           git push --force origin HEAD:refs/heads/phase2-migration-candidate
           echo "PHASE2_CANDIDATE_SHA=$(git rev-parse HEAD)"
           echo "PHASE2_CANDIDATE_TREE=$(git rev-parse HEAD^{tree})"
-
