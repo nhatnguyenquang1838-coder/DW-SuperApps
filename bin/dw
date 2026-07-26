@@ -26,10 +26,17 @@ fi
 
 if [[ "${1:-}" == "project" ]]; then
   case "${2:-}" in
-    list|info|add)
+    list|info)
       # shellcheck source=../scripts/python-resolver.sh
       source "$ROOT/scripts/python-resolver.sh"
       dw_exec_python "$ROOT/scripts/dw_project_registry.py" "$@"
+      exit $?
+      ;;
+    add)
+      shift 2
+      # shellcheck source=../scripts/python-resolver.sh
+      source "$ROOT/scripts/python-resolver.sh"
+      dw_exec_python "$ROOT/scripts/dw_project_add.py" "$@"
       exit $?
       ;;
   esac
