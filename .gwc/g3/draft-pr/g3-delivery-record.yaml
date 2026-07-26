@@ -1,77 +1,120 @@
 apiVersion: gwc/v1
 kind: G3DeliveryRecord
 metadata:
-  runId: g3-SCRUM-105-20260726-1520
-  status: SUPERSEDED_BY_G2_REPAIR
+  runId: g3-SCRUM-105-revalidation-20260726-0917
+  status: BLOCKED
   workspaceMode: canonical
   workspaceRoot: .gwc
   repositoryArtifactWritten: YES
   conflictPolicy: no-shared-active-writes
   verificationMode: TOOL_VERIFIED
-  timestamp: "2026-07-26T15:20:00+07:00"
+  timestamp: "2026-07-26T09:17:45Z"
+
+approval:
+  gate: G3_PR
+  approvalId: APPROVE_G3_SCRUM105_REVALIDATION_20260726
+  scopeHash16: 18658eaaca1f7a29
+  expiresAt: "2026-07-26T10:10:37Z"
+  status: VERIFIED
 
 trace:
   projectId: dw-superapps
   taskId: SCRUM-105
-  baseSha: 8cf13d7d6bef535bff77e36815b737aff9d7f709
-  g0SnapshotRef: g0-SCRUM-105
-  g1DecisionRef: g1-SCRUM-105-20260726-1500/decision
-  g2ExecutionRef: g2-SCRUM-105-20260726-1510/execution
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  pr: 20
+  branch: marmalade-beanie
+  baseRef: main
+  approvedBaseSha: 8cf13d7d6bef535bff77e36815b737aff9d7f709
+  verifiedOriginMainSha: 158223c14b530c2676391f071c93b5549397aa45
+  reviewedHeadSha: 89dc599323b627649b1d42c89bf06419a6e2654d
+  mergeBaseSha: 8cf13d7d6bef535bff77e36815b737aff9d7f709
+  compareStatus: diverged
+  aheadBy: 8
+  behindBy: 17
 
 g2Evidence:
-  reviewedHeadSha: c3418e85388e2a24c2730e1bea43be9c0db99383
-  evidenceStatus: INVALIDATED_BY_G2_REPAIR
-  scopeHash: 839f04638ba15dca6a1b4d901cae5ee2b6b6f1c4
+  exactHeadReadback: true
+  headSha: 89dc599323b627649b1d42c89bf06419a6e2654d
+  sourceHeadStatus: VERIFIED
+  changedFiles: 20
   changedPaths:
     - .gwc/g0/context-snapshot.yaml
-    - .gwc/g1/intake/g1-intake-brief.yaml
     - .gwc/g1/brainstorming/g1-options.yaml
-    - .gwc/g1/preflight/g1-preflight-report.yaml
     - .gwc/g1/decision/g1-decision-record.yaml
+    - .gwc/g1/intake/g1-intake-brief.yaml
+    - .gwc/g1/preflight/g1-preflight-report.yaml
     - .gwc/g2/execution/g2-execution-record.yaml
-    - .gwc/scrums/SCRUM-105/ (9 files, design + schemas + contracts + migration)
-  ciStatus: REVALIDATION_REQUIRED after G2 repair
-  acceptanceCriteriaMet: false
+    - .gwc/g2/execution/scrum-105-fix-record.yaml
+    - .gwc/g3/draft-pr/g3-delivery-record.yaml
+    - .gwc/g3/draft-pr/g3-independent-review.md
+    - .gwc/g3/draft-pr/g3-pr-assembly.md
+    - .gwc/g3/draft-pr/g3-review-closure.md
+    - .gwc/scrums/SCRUM-105/contracts/cas-lease-fencing.md
+    - .gwc/scrums/SCRUM-105/contracts/node-adapter.md
+    - .gwc/scrums/SCRUM-105/contracts/store-api.md
+    - .gwc/scrums/SCRUM-105/design.md
+    - .gwc/scrums/SCRUM-105/migration/README.md
+    - .gwc/scrums/SCRUM-105/schemas/checkpoint.schema.json
+    - .gwc/scrums/SCRUM-105/schemas/pending-action-readback.schema.json
+    - .gwc/scrums/SCRUM-105/schemas/runtime-event.schema.json
+    - .gwc/scrums/SCRUM-105/schemas/store-api.schema.json
+  scopeHash16: 18658eaaca1f7a29
+
+ciEvidence:
+  workflow: Validate workspace
+  runId: 30196135859
+  status: completed
+  conclusion: success
+  exactHeadSha: 89dc599323b627649b1d42c89bf06419a6e2654d
+  combinedStatus: no_commit_statuses_reported
+
+validation:
+  local:
+    workspaceValidator: PASS
+    jsonSchemaParseAndDraft202012Meta: PASS
+    yamlParse: PASS
+    crossContractOperationCoverage: PASS
+    diffCheck: PASS
+    secretScan: PASS
+  contentReview:
+    schemaAndDesignChecks: PASS
+    migrationLeaseEpochConsistency: PASS
+  deliveryBinding:
+    status: BLOCKED
+    reason: >
+      Verified origin/main advanced to 158223c while the approved G3 scope and PR
+      merge-base remain bound to 8cf13d7. GitHub compare reports diverged, ahead_by 8,
+      behind_by 17. Rebase or base refresh is outside this approval.
 
 g3Review:
-  outcome: REVALIDATION_REQUIRED
+  outcome: BLOCKED
   findings:
-    - severity: MINOR
-      lane: DESIGN
-      description: Pending-action state machine documentation consistency (CLAIMED → EXECUTING transition explicitly documented)
-      resolution: Fixed in design.md state machine section with explicit transition table
-    - severity: NONE
-      lane: REQUIREMENT
-    - severity: NONE
-      lane: CODE
-    - severity: NONE
-      lane: TEST
-    - severity: NONE
-      lane: GOVERNANCE
-    - severity: NONE
+    - severity: BLOCKER
       lane: DELIVERY
-    - severity: NONE
-      lane: CI
-
-g3Validation:
-  toolsAvailable: false
-  toolsChecked: tools/validate_g3_delivery.py (not present in worktree)
-  manualValidation: SUPERSEDED
-  schemaValidation: INVALIDATED
-  acceptanceCriteriaVerification: REVALIDATION_REQUIRED
+      description: PR base binding is stale relative to the verified origin/main SHA
+      resolution: >
+        Do not merge or generate G4 approval. Obtain fresh scope approval for a
+        base refresh/rebase or an explicit current-base decision, then repeat exact-head G3 readback.
+    - severity: INFO
+      lane: DELIVERY
+      description: PR body retains historical G3/G4 claims
+      resolution: >
+        Treat GWC artifacts, current GitHub state, and CI as authoritative; no merge
+        authority is inferred from the PR body.
 
 authorityBoundary:
-  grants: []
+  grants:
+    - G3_PR_REVALIDATION
   excludes:
     - G4_MERGE
     - G5_DEPLOY
     - G6_PRODUCTION_DATA
-  note: G3 does not grant merge authority. G4 approval request must be generated by human operator.
+  note: G3 is blocked by base drift and grants no merge authority.
 
 g4ApprovalRequest:
   gate: G4_MERGE
-  status: INVALIDATED
-  reason: G3 evidence was bound to a superseded head and design findings required repair.
+  status: BLOCKED
+  reason: Current origin/main is not the approved base; G4 cannot be requested.
 
-g3Outcome: REVALIDATION_REQUIRED → G2_REPAIR
+g3Outcome: BLOCKED
 g4MergeNotGranted: true
