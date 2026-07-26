@@ -1,61 +1,73 @@
 # G3.1 PR Assembly — SCRUM-105
 
-> SUPERSEDED: this assembly predates the G2 repair and must not be used for G3/G4 approval.
+## Repository and exact-head evidence
 
-## Repository
-- Repository: DW-SuperApps
-- Base ref: main
-- Base SHA (origin/main): 8cf13d7d6bef535bff77e36815b737aff9d7f709
-- Guarded branch: marmalade-beanie (protected: no direct push to main)
-- Superseded review head SHA: c3418e85388e2a24c2730e1bea43be9c0db99383
-- Scope hash: 839f04638ba15dca6a1b4d901cae5ee2b6b6f1c4 (from G1 decision)
+- Repository: `nhatnguyenquang1838-coder/DW-SuperApps`
+- PR: [#20](https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/pull/20)
+- Base ref: `main`
+- Approved base SHA: `8cf13d7d6bef535bff77e36815b737aff9d7f709`
+- Verified current `origin/main`: `158223c14b530c2676391f071c93b5549397aa45`
+- PR head branch: `marmalade-beanie`
+- Exact PR head: `89dc599323b627649b1d42c89bf06419a6e2654d`
+- GitHub compare: `diverged`, ahead by 8, behind by 17
+- Scope hash: `18658eaaca1f7a29`
+- Base binding: **BLOCKED — current default branch advanced beyond approved base**
 
-## Changed Paths
-All changes are additive, under `.gwc/`:
-- `.gwc/g0/context-snapshot.yaml` — G0 context
-- `.gwc/g1/intake/g1-intake-brief.yaml` — G1 intake
-- `.gwc/g1/brainstorming/g1-options.yaml` — G1 options
-- `.gwc/g1/preflight/g1-preflight-report.yaml` — G1 preflight
-- `.gwc/g1/decision/g1-decision-record.yaml` — G1 decision
-- `.gwc/g2/execution/g2-execution-record.yaml` — G2 execution record
-- `.gwc/g3/draft-pr/g3-delivery-record.yaml` — superseded G3 delivery record
-- `.gwc/g3/draft-pr/g3-independent-review.md` — superseded independent review
-- `.gwc/g3/draft-pr/g3-pr-assembly.md` — superseded assembly
-- `.gwc/g3/draft-pr/g3-review-closure.md` — superseded review closure
-- `.gwc/scrums/SCRUM-105/design.md` — Design document
-- `.gwc/scrums/SCRUM-105/schemas/runtime-event.schema.json`
-- `.gwc/scrums/SCRUM-105/schemas/checkpoint.schema.json`
-- `.gwc/scrums/SCRUM-105/schemas/store-api.schema.json`
-- `.gwc/scrums/SCRUM-105/schemas/pending-action-readback.schema.json`
-- `.gwc/scrums/SCRUM-105/contracts/store-api.md`
+## Changed paths
+
+All 20 paths are inside the approved G3 scope:
+
+- `.gwc/g0/context-snapshot.yaml`
+- `.gwc/g1/brainstorming/g1-options.yaml`
+- `.gwc/g1/decision/g1-decision-record.yaml`
+- `.gwc/g1/intake/g1-intake-brief.yaml`
+- `.gwc/g1/preflight/g1-preflight-report.yaml`
+- `.gwc/g2/execution/g2-execution-record.yaml`
+- `.gwc/g2/execution/scrum-105-fix-record.yaml`
+- `.gwc/g3/draft-pr/g3-delivery-record.yaml`
+- `.gwc/g3/draft-pr/g3-independent-review.md`
+- `.gwc/g3/draft-pr/g3-pr-assembly.md`
+- `.gwc/g3/draft-pr/g3-review-closure.md`
 - `.gwc/scrums/SCRUM-105/contracts/cas-lease-fencing.md`
 - `.gwc/scrums/SCRUM-105/contracts/node-adapter.md`
+- `.gwc/scrums/SCRUM-105/contracts/store-api.md`
+- `.gwc/scrums/SCRUM-105/design.md`
 - `.gwc/scrums/SCRUM-105/migration/README.md`
+- `.gwc/scrums/SCRUM-105/schemas/checkpoint.schema.json`
+- `.gwc/scrums/SCRUM-105/schemas/pending-action-readback.schema.json`
+- `.gwc/scrums/SCRUM-105/schemas/runtime-event.schema.json`
+- `.gwc/scrums/SCRUM-105/schemas/store-api.schema.json`
 
-## Validation
-CI status: REVALIDATION_REQUIRED after G2 repair
-G3 delivery validation tool: `tools/validate_g3_delivery.py` not present in worktree — manual validation applied.
+## CI and local validation
 
-## Acceptance Criteria Verification (per G1 intake AC-1 through AC-9)
-| AC | Criterion | Status |
-|----|-----------|--------|
-| AC-1 | All schemas validate against JSON Schema draft 2020-12 | PASS — schema files use `$schema` draft 2020-12, `additionalProperties: false`, and proper `required` arrays |
-| AC-2 | Store API operations satisfy success/error/timeout contract | PASS — store-api.md documents all 11 operations with request/response envelopes and error codes |
-| AC-3 | CAS rejects stale writes with 409 Conflict | PASS — cas-lease-fencing.md and store-api.md specify 409 for CAS mismatch |
-| AC-4 | Leases expire after TTL and release exclusive access | PASS — lease lifecycle documented with EXPIRED transition |
-| AC-5 | Fencing tokens monotonically increase and reject stale writes | PASS — fencing doc specifies monotonically increasing tokens and 403 for stale |
-| AC-6 | Pending actions follow defined state machine | PASS — pending-action-readback.schema.json defines PENDING→CLAIMED→EXECUTING→COMPLETED|FAILED |
-| AC-7 | Adapter contract handshake completes before store operations | PASS — node-adapter.md mandates handshake first, with rules and retry policy |
-| AC-8 | Migration design defines extract, transform, load, verify, cutover and rollback invariants | DESIGN-ONLY — execution is a separate implementation task |
-| AC-9 | Verification design defines row counts and checksums readback | DESIGN-ONLY — execution is a separate implementation task |
+- GitHub Actions: `Validate workspace`, run `30196135859`, exact head `89dc599`, conclusion `success`
+- Workspace validator: PASS
+- Four JSON schemas: parse and Draft 2020-12 meta-schema PASS
+- Nine YAML artifacts: parse PASS
+- Cross-contract operation and lease-epoch consistency: PASS
+- `git diff --check`: PASS
+- Secret scan: PASS
 
-## Exclusions
-- No G4_MERGE authority (GWC governance boundary)
-- No G5_DEPLOY authority
-- No G6_PRODUCTION_DATA authority
-- No production configuration changes
-- No database provisioning
-- No migration execution (design only)
+## Acceptance criteria
 
-## Head SHA Stability
-This record is superseded. A fresh G3 review must bind to the exact post-repair PR head and current CI readback.
+| AC | Status |
+|---|---|
+| AC-1 schemas validate against Draft 2020-12 | PASS |
+| AC-2 store API covers success/error/timeout design | PASS |
+| AC-3 CAS stale-write behavior is defined | PASS |
+| AC-4 lease expiry/release behavior is defined | PASS |
+| AC-5 fencing epoch behavior is defined | PASS |
+| AC-6 pending-action state machine is defined | PASS |
+| AC-7 adapter handshake precedes store operations | PASS |
+| AC-8 migration extract/transform/load/verify/cutover/rollback design | DESIGN-ONLY PASS |
+| AC-9 row-count/checksum readback design | DESIGN-ONLY PASS |
+
+## Delivery verdict
+
+Content and CI are green, but G3 is **BLOCKED** by base drift. The current
+`origin/main` SHA is not the approved base in the G3 scope. Do not generate a G4
+approval until a fresh base-refresh/rebase scope is explicitly approved and the
+resulting exact head and CI are re-read.
+
+No merge, deploy, production data/configuration, credentials, Jira, or Notion action
+was performed.

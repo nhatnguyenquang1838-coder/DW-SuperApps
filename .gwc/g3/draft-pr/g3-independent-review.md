@@ -1,88 +1,76 @@
 # G3.2 Independent Review — SCRUM-105
 
-> SUPERSEDED: this self-authored review was bound to an earlier head. It is not evidence for the repaired PR.
+## Review binding
 
-## Reviewer
-- Role: Independent GWC reviewer (read-only)
-- Independence: Reviewer is not the implementer (G1-G2 artifacts were created by the same agent; this review operates as an independent read-only check)
-- Scope: Full SCRUM-105 Draft PR head at `c3418e85388e2a24c2730e1bea43be9c0db99383`
+- Reviewer: independent read-only reviewer
+- PR: `nhatnguyenquang1838-coder/DW-SuperApps#20`
+- Reviewed head: `89dc599323b627649b1d42c89bf06419a6e2654d`
+- Approved scope hash: `18658eaaca1f7a29`
+- Approved base: `8cf13d7d6bef535bff77e36815b737aff9d7f709`
+- Verified `origin/main`: `158223c14b530c2676391f071c93b5549397aa45`
+- GitHub compare: `diverged`, `ahead_by=8`, `behind_by=17`, merge base `8cf13d7d6bef535bff77e36815b737aff9d7f709`
 
-## Review Lanes
+The implementation/design content and CI are revalidated at the exact PR head. The
+delivery gate is blocked because the approved base binding is stale relative to the
+current default branch. This review does not authorize rebase, merge, or force-push.
 
-### Requirement Lane
+## Review lanes
+
+### Requirement lane
+
 | Check | Finding | Severity |
 |---|---|---|
-| Design document addresses all 6 SCRUM-105 items | PASS — run/event/checkpoint schemas, store API, CAS/lease/fencing, pending-action/readback, node adapter contract, migration path all covered | N/A |
-| Scope boundaries respected (no implementation, no infrastructure, no UI) | PASS — design documents only; out-of-scope items explicitly listed | N/A |
-| Dependencies documented (SCRUM-104, SCRUM-106) | PASS — design.md lists dependencies and their relevance | N/A |
+| All SCRUM-105 design items covered | PASS — event/checkpoint schemas, store API, CAS/lease/fencing, pending readback, node adapter, and migration design are present | N/A |
+| Scope boundaries respected | PASS — no runtime implementation, infrastructure, UI, migration execution, or production operation | N/A |
+| Dependencies documented | PASS — SCRUM-104 and SCRUM-106 are identified with bounded relevance | N/A |
 
-### Design Lane
+### Design lane
+
 | Check | Finding | Severity |
 |---|---|---|
-| JSON Schemas use draft 2020-12 with proper `required`, `additionalProperties`, `properties` | PASS — all 4 schema files conform | N/A |
-| Schema references are consistent (checkpoint references runtime-event) | PASS — checkpoint.schema.json uses `$ref` to runtime-event.schema.json | N/A |
-| State machine in pending-action/readback is complete and acyclic | HISTORICAL REVIEW — superseded by the G2 repair | N/A |
-| Lease lifecycle covers all transitions (ACQUIRED, ACTIVE, RENEWED, RELEASED, EXPIRED) | PASS — documented in cas-lease-fencing.md | N/A |
-| Migration path is phased and includes rollback | PASS — 6 phases with verification and rollback plan | N/A |
+| JSON Schema draft and structural validity | PASS — four schemas parse and pass Draft 2020-12 meta-schema checks | N/A |
+| Checkpoint model | PASS — durable cursor is standalone and separate from the runtime event log | N/A |
+| Store operation coverage | PASS — schema, design, and adapter contract contain the same 11 canonical operations | N/A |
+| CAS, lease, and fencing semantics | PASS — version precondition, idempotency, exact lease epoch and holder checks are documented | N/A |
+| Migration terminology | PASS — lease and fencing tables use the per-resource `lease_epoch` model | N/A |
 
-### Code Lane
+### Code and test lanes
+
 | Check | Finding | Severity |
 |---|---|---|
-| No code implementation in this PR | N/A — knowledge lane design task | N/A |
-| Schema files are valid JSON | PASS — all `.json` files parse correctly | N/A |
+| Runtime implementation introduced | N/A — SCRUM-105 is design-only | N/A |
+| Local workspace validator | PASS — `python3 scripts/validate-workspace.py` | N/A |
+| JSON/YAML and cross-contract checks | PASS | N/A |
+| GitHub Actions | PASS — `Validate workspace`, run `30196135859`, exact head, conclusion `success` | N/A |
 
-### Test Lane
+### Governance and delivery lanes
+
 | Check | Finding | Severity |
 |---|---|---|
-| Acceptance criteria are verifiable (not subjective) | PASS — all 9 ACs specify objective conditions | N/A |
-| No test files generated (design task) | N/A — by design | N/A |
+| Approved G3 scope and exact PR head read back | PASS — head `89dc599` and 20 allowlisted paths verified | N/A |
+| No GitHub reviews, threads, or comments pending | PASS — none reported | N/A |
+| Base is current verified origin/main | BLOCKED — approved base `8cf13d7` differs from current `origin/main` `158223c` | BLOCKER |
+| Merge/deploy/production authority | PASS — not granted | N/A |
 
-### Governance Lane
-| Check | Finding | Severity |
-|---|---|---|
-| G0 → G1 → G2 gate sequence followed | PASS — artifacts exist in `.gwc/g0/`, `.gwc/g1/`, `.gwc/g2/` | N/A |
-| Authority boundaries respected (no G4/G5/G6) | PASS — G2 execution record explicitly excludes merge/deploy/production authority | N/A |
-| No secrets, credentials, or production data in artifacts | PASS — all artifacts contain only design schemas and documentation | N/A |
-| G1 decision has explicit actor, source, time, rationale | PASS — g1-decision-record.yaml has all required fields | N/A |
+## Findings summary
 
-### Delivery Lane
-| Check | Finding | Severity |
-|---|---|---|
-| G3.1 PR Assembly complete with head SHA, scope hash, changed paths | PASS — all documented | N/A |
-| G2 execution record exists and references G1 decision | PASS — g2-execution-record.yaml references g1-decision-record.yaml | N/A |
-| No merge, auto-merge, or branch manipulation commands issued | PASS — only `git add` and `git commit` performed | N/A |
-
-### CI Lane
-| Check | Finding | Severity |
-|---|---|---|
-| CI configured for branch | N/A — worktree branch, no CI pipeline | N/A |
-| Schema files pass `json` validation | PASS — all JSON files parse without error | N/A |
-
-## Findings Summary
-
-| Lane | BLOCKER | MAJOR | MINOR | NIT |
-|---|---|---|---|---|
+| Lane | BLOCKER | MAJOR | MINOR | INFO |
+|---|---:|---:|---:|---:|
 | Requirement | 0 | 0 | 0 | 0 |
-| Design | 0 | 0 | 0 | 1 |
+| Design | 0 | 0 | 0 | 0 |
 | Code | 0 | 0 | 0 | 0 |
 | Test | 0 | 0 | 0 | 0 |
 | Governance | 0 | 0 | 0 | 0 |
-| Delivery | 0 | 0 | 0 | 0 |
-| CI | 0 | 0 | 0 | 0 |
+| Delivery | 1 | 0 | 0 | 1 |
 
-### Finding Details
-1. Historical finding: pending-action documentation was repaired, but the review containing this finding is superseded and cannot serve as current G3 evidence.
-
-## Superseded Review Outcome
+## Outcome
 
 ```
-G3_REVIEW_INVALIDATED
-The review was not independent evidence for the repaired PR head.
-Fresh exact-head review is required after G2 repair.
+G3_REVALIDATION_BLOCKED
+BASE_DRIFT_REQUIRES_FRESH_SCOPE
+G4_MERGE_NOT_GRANTED
 ```
 
-Reviewer: independent-read-only
-Review mode: read-only
-Artifacts inspected: `.gwc/g3/draft-pr/g3-pr-assembly.md` (self), `.gwc/scrums/SCRUM-105/` (design + schemas + contracts + migration)
-G3 outcome: REVALIDATION_REQUIRED → G2_REPAIR
-EOF
+The content review passes, but G3 cannot close while the PR is bound to an old
+merge-base and the current default branch has advanced. A fresh base-refresh/rebase
+decision and exact-head readback are required before G4.
