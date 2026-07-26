@@ -24,12 +24,38 @@ def parser() -> argparse.ArgumentParser:
 
 def preflight(args: argparse.Namespace) -> None:
     data = registry.workspace(ROOT)
+    projects = registry.validate_registry(data, root=ROOT)
+    if not registry.PROJECT_ID.fullmatch(args.project_id):
+        raise registry.ProjectRegistryError(f"invalid project id: {args.project_id!r}")
+    if args.project_id in projects:
+        raise registry.ProjectRegistryError(f"project already exists: {args.project_id}")
+
+    relative = registry.safe_relative_path(
+        ROOT, args.path or f"projects/{args.project_id}"
+    ).as_posix()
+    registered_paths = {str(project["path"]) for project in projects.values()}
+    if relative in registered_paths:
+        raise registry.ProjectRegistryError(f"project path already registered: {relative}")
+    if (ROOT / relative).exists():
+        raise registry.ProjectRegistryError(f"project path already exists: {relative}")
+
+    source = registry.normalize_repo(args.repository)
+    if not registry.REPOSITORY.fullmatch(source):
+        raise registry.ProjectRegistryError("repository must use owner/name")
+
     roles = list(dict.fromkeys(args.role or ["product"]))
     if args.system and not ({"product", "system"} & set(roles)):
         raise registry.ProjectRegistryError(
             "a registered system requires product or system role"
         )
+    if not args.system and (args.system_id or args.enable_powers):
+        raise registry.ProjectRegistryError(
+            "--system-id and --enable-powers require --system"
+        )
+
     system_id = args.system_id or args.project_id
+    if args.system and not registry.PROJECT_ID.fullmatch(system_id):
+        raise registry.ProjectRegistryError(f"invalid system id: {system_id!r}")
     existing_system_ids = {
         str(item.get("id"))
         for item in data.get("systems") or []
@@ -37,6 +63,7 @@ def preflight(args: argparse.Namespace) -> None:
     }
     if args.system and system_id in existing_system_ids:
         raise registry.ProjectRegistryError(f"system already exists: {system_id}")
+
     enabled = {
         item.strip()
         for item in (args.enable_powers or "").split(",")
