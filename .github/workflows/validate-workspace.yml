@@ -216,11 +216,19 @@ jobs:
           git show origin/main:.github/workflows/validate-workspace.yml > .github/workflows/validate-workspace.yml
           git rm -f .github/workflows/phase2-capture-gitlinks.yml scripts/phase2_migrate_projects.py
           git add -A
+          # Reinsert gitlinks after git add -A because the target submodule worktrees
+          # are intentionally not checked out in this candidate builder.
+          git update-index --add --cacheinfo 160000,"$EXPECTED_GWC",projects/gwc
+          git update-index --add --cacheinfo 160000,"$EXPECTED_UA",projects/ua
+          git update-index --add --cacheinfo 160000,"$EXPECTED_TASK_ME",projects/task-me
+          git update-index --add --cacheinfo 160000,"$EXPECTED_RENTAL_HOME",projects/rental-home
 
       - name: Verify final candidate tree
         shell: bash
         run: |
           set -euxo pipefail
+          git ls-files -s projects/gwc projects/ua projects/task-me projects/rental-home
+          git ls-files -s powers/gwc powers/ua powers/task-me systems/rental-home
           test "$(git ls-files -s projects/gwc | awk '{print $2}')" = "$EXPECTED_GWC"
           test "$(git ls-files -s projects/ua | awk '{print $2}')" = "$EXPECTED_UA"
           test "$(git ls-files -s projects/task-me | awk '{print $2}')" = "$EXPECTED_TASK_ME"
