@@ -31,3 +31,4 @@ scripts/__pycache__/*
 
 # UA scratch/trash directories
 .ua/.trash-*
+state/sessions/*
