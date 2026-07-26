@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw.superapps/schemas/checkpoint.schema.json",
+  "title": "GWC Checkpoint Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["eventId", "streamId", "streamVersion", "eventType", "timestamp", "payload"],
+  "allOf": [
+    { "$ref": "runtime-event.schema.json" },
+    {
+      "properties": {
+        "eventType": { "const": "checkpoint" },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["snapshot", "sequenceNumber", "checkpointType"],
+          "properties": {
+            "snapshot": { "type": "object", "description": "Durable state snapshot" },
+            "sequenceNumber": { "type": "integer", "minimum": 0 },
+            "checkpointType": { "type": "string", "enum": ["manual", "auto", "recovery"] }
+          }
+        }
+      }
+    }
+  ]
+}
