@@ -17,6 +17,24 @@ case "${1:-}" in
     ;;
 esac
 
+if [[ "${1:-}" == "workspace" && "${2:-}" == "init" ]]; then
+  # shellcheck source=../scripts/python-resolver.sh
+  source "$ROOT/scripts/python-resolver.sh"
+  dw_exec_python "$ROOT/scripts/dw_project_registry.py" "$@"
+  exit $?
+fi
+
+if [[ "${1:-}" == "project" ]]; then
+  case "${2:-}" in
+    list|info|add)
+      # shellcheck source=../scripts/python-resolver.sh
+      source "$ROOT/scripts/python-resolver.sh"
+      dw_exec_python "$ROOT/scripts/dw_project_registry.py" "$@"
+      exit $?
+      ;;
+  esac
+fi
+
 if [[ "${1:-}" == "power" ]]; then
   case "${2:-}" in
     install|configure|doctor|history|rollback|uninstall)
