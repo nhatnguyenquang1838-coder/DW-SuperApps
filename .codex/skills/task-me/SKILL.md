@@ -6,19 +6,24 @@ description: Impact analysis, implementation planning, task decomposition, codin
 
 # Task Me Power
 
-This is a thin `codex` adapter. Canonical behavior remains in:
+Thin `codex` adapter owned by DW-SuperApps.
 
-- Power source: `../../../projects/task-me`
-- Power manifest: `../../../manifests/powers/task-me.yaml`
-- Preferred entrypoint: `../../../projects/task-me/.kiro/skills/implementation-task-architect`
+- Workspace package store: `.dw/powers`
+- Installed package: `.dw/powers/task-me`
+- Resolved entrypoint: `.dw/powers/task-me/.kiro/skills/implementation-task-architect`
+- Resolution mode: `workspace-store`
+- Source fallback: `projects/task-me`
+- Power manifest: `manifests/powers/task-me.yaml`
 
 ## Invocation
 
-1. Read `../../../workspace.yaml` and `../../../AGENTS.md`.
+1. Read `workspace.yaml` and `AGENTS.md` from DW-SuperApps.
 2. Resolve one target system from the workspace registry.
 3. Read project-local instructions in that system.
-4. Read the canonical Power entrypoint above.
-5. Keep generated data under the target system's `.task-me/`.
-6. Never store project runtime data in the Power submodule.
+4. Prefer the installed package entrypoint above; use source fallback only when no managed package exists.
+5. Keep runtime and project configuration under the target system's `.task-me/`.
+6. Never create `.dw/powers`, host skill payloads, or distribution history inside the target system.
 
-Use `dw power prompt task-me --system <system> --task "<task>"` to generate a host-neutral invocation prompt.
+Generate a complete task prompt with:
+
+`dw power prompt task-me --system <system> --task "<task>"`

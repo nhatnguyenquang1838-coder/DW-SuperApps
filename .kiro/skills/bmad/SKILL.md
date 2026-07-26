@@ -1,19 +1,19 @@
 ---
-name: dw-gwc
-description: Governance, delivery control, approval boundaries, validation, and repository lifecycle workflows.
+name: dw-bmad
+description: Structured software-delivery lifecycle covering analysis, planning, architecture, implementation, and review.
 ---
 <!-- generated-by: dw host install -->
 
-# GWC Power
+# BMAD Method Power
 
 Thin `kiro` adapter owned by DW-SuperApps.
 
 - Workspace package store: `.dw/powers`
-- Installed package: `.dw/powers/gwc`
-- Resolved entrypoint: `.dw/powers/gwc/skills/gwc-g0`
+- Installed package: `.dw/powers/bmad`
+- Resolved entrypoint: `.dw/powers/bmad/distribution/skills/bmad`
 - Resolution mode: `workspace-store`
-- Source fallback: `projects/gwc`
-- Power manifest: `manifests/powers/gwc.yaml`
+- Source fallback: `projects/bmad`
+- Power manifest: `manifests/powers/bmad.yaml`
 
 ## Invocation
 
@@ -21,9 +21,9 @@ Thin `kiro` adapter owned by DW-SuperApps.
 2. Resolve one target system from the workspace registry.
 3. Read project-local instructions in that system.
 4. Prefer the installed package entrypoint above; use source fallback only when no managed package exists.
-5. Keep runtime and project configuration under the target system's `.gwc/`.
+5. Keep runtime and project configuration under the target system's `.bmad/`.
 6. Never create `.dw/powers`, host skill payloads, or distribution history inside the target system.
 
 Generate a complete task prompt with:
 
-`dw power prompt gwc --system <system> --task "<task>"`
+`dw power prompt bmad --system <system> --task "<task>"`

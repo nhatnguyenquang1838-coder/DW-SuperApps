@@ -41,15 +41,16 @@ class PowerRuntimeV2Tests(unittest.TestCase):
     def test_dynamic_submodule_targets_exclude_external_power(self) -> None:
         powers = dw_cli.select_submodules("powers")
         systems = dw_cli.select_submodules("systems")
-        self.assertEqual(3, len(powers))
-        self.assertEqual({"gwc", "ua", "task-me"}, {item["id"] for item in powers})
+        self.assertEqual(4, len(powers))
+        self.assertEqual({"gwc", "ua", "task-me", "bmad"}, {item["id"] for item in powers})
         self.assertEqual(1, len(systems))
         self.assertEqual("rental-home", systems[0]["id"])
 
     def test_rental_home_enables_bmad(self) -> None:
         system = dw_cli.find_system("rental-home")
         self.assertIn("bmad", system["enabled_powers"])
-        self.assertTrue((ROOT / "powers" / "bmad" / "SKILL.md").is_file())
+        manifest = dw_cli.manifests()["bmad"]
+        self.assertEqual("projects/bmad", manifest["spec"]["path"])
 
     def test_cli_parses_v2_commands(self) -> None:
         parser = dw_cli.build_parser()
@@ -104,6 +105,7 @@ class PowerRuntimeV2Tests(unittest.TestCase):
             / ".kiro"
             / "skills"
             / "implementation-task-architect",
+            "source-submodule-fallback",
         )
         self.assertIn(dw_cli.GENERATED_MARKER, content)
         self.assertIn("workspace.yaml", content)
