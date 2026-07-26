@@ -9,12 +9,15 @@ __pycache__/
 .kiro/skills/gwc/
 .kiro/skills/ua/
 .kiro/skills/task-me/
+.kiro/skills/bmad/
 .codex/skills/gwc/
 .codex/skills/ua/
 .codex/skills/task-me/
+.codex/skills/bmad/
 .claude/skills/gwc/
 .claude/skills/ua/
 .claude/skills/task-me/
+.claude/skills/bmad/
 .clinerules/00-dw-superapps.md
 .kilo/rules/dw-superapps.md
 .github/skills/gwc/
@@ -32,3 +35,11 @@ scripts/__pycache__/*
 # UA scratch/trash directories
 .ua/.trash-*
 state/sessions/*
+
+# DW SuperApps distribution and runtime artifacts
+.dw/
+systems/
+projects/*/.gwc/
+projects/*/.ua/
+projects/*/.task-me/
+projects/*/.bmad/
