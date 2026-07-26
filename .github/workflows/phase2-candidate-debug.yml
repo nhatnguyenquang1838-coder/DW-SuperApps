@@ -1,0 +1,116 @@
+name: Phase 2 candidate debug
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/phase2-candidate-debug.yml
+      - .github/workflows/validate-workspace.yml
+      - scripts/phase2_migrate_projects.py
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    if: github.head_ref == 'feat/projects-physical-migration'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact PR head without submodules
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          submodules: false
+          token: ${{ secrets.DW_SUBMODULE_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact head and source pins
+        shell: bash
+        env:
+          EXPECTED_GWC: 62689ce35e279751a3bf17b5255ac258dafbe7d7
+          EXPECTED_UA: 6ae71878beb50226a1e4b7e2f52ac6468c86f74b
+          EXPECTED_TASK_ME: ef0b890b1fb9140109c04cbb490b41d9aa94bfff
+          EXPECTED_RENTAL_HOME: 26b9ba643e5e216213489506daf5f2af2db09f1e
+        run: |
+          set -euxo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          test "$(git ls-tree HEAD powers/gwc | awk '{print $3}')" = "$EXPECTED_GWC"
+          test "$(git ls-tree HEAD powers/ua | awk '{print $3}')" = "$EXPECTED_UA"
+          test "$(git ls-tree HEAD powers/task-me | awk '{print $3}')" = "$EXPECTED_TASK_ME"
+          test "$(git ls-tree HEAD systems/rental-home | awk '{print $3}')" = "$EXPECTED_RENTAL_HOME"
+
+      - name: Move gitlinks in index
+        shell: bash
+        env:
+          EXPECTED_GWC: 62689ce35e279751a3bf17b5255ac258dafbe7d7
+          EXPECTED_UA: 6ae71878beb50226a1e4b7e2f52ac6468c86f74b
+          EXPECTED_TASK_ME: ef0b890b1fb9140109c04cbb490b41d9aa94bfff
+          EXPECTED_RENTAL_HOME: 26b9ba643e5e216213489506daf5f2af2db09f1e
+        run: |
+          set -euxo pipefail
+          git rm --cached powers/gwc powers/ua powers/task-me systems/rental-home
+          git update-index --add --cacheinfo 160000,$EXPECTED_GWC,projects/gwc
+          git update-index --add --cacheinfo 160000,$EXPECTED_UA,projects/ua
+          git update-index --add --cacheinfo 160000,$EXPECTED_TASK_ME,projects/task-me
+          git update-index --add --cacheinfo 160000,$EXPECTED_RENTAL_HOME,projects/rental-home
+
+      - name: Write migrated submodule registry
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cat > .gitmodules <<'EOF'
+          [submodule "projects/gwc"]
+          	path = projects/gwc
+          	url = https://github.com/nhatnguyenquang1838-coder/gwc.git
+          	branch = main
+          [submodule "projects/ua"]
+          	path = projects/ua
+          	url = https://github.com/nhatnguyenquang1838-coder/Understand-Anything.git
+          	branch = main
+          [submodule "projects/task-me"]
+          	path = projects/task-me
+          	url = https://github.com/nhatnguyenquang1838-coder/task-me.git
+          	branch = main
+          [submodule "projects/rental-home"]
+          	path = projects/rental-home
+          	url = https://github.com/nhatnguyenquang1838-coder/rental_home.git
+          	branch = main
+          EOF
+
+      - name: Rewrite coupled files
+        run: python scripts/phase2_migrate_projects.py
+
+      - name: Verify migrated index
+        shell: bash
+        env:
+          EXPECTED_GWC: 62689ce35e279751a3bf17b5255ac258dafbe7d7
+          EXPECTED_UA: 6ae71878beb50226a1e4b7e2f52ac6468c86f74b
+          EXPECTED_TASK_ME: ef0b890b1fb9140109c04cbb490b41d9aa94bfff
+          EXPECTED_RENTAL_HOME: 26b9ba643e5e216213489506daf5f2af2db09f1e
+        run: |
+          set -euxo pipefail
+          git add -A
+          test "$(git ls-files -s projects/gwc | awk '{print $2}')" = "$EXPECTED_GWC"
+          test "$(git ls-files -s projects/ua | awk '{print $2}')" = "$EXPECTED_UA"
+          test "$(git ls-files -s projects/task-me | awk '{print $2}')" = "$EXPECTED_TASK_ME"
+          test "$(git ls-files -s projects/rental-home | awk '{print $2}')" = "$EXPECTED_RENTAL_HOME"
+          test -z "$(git ls-files -s powers/gwc powers/ua powers/task-me systems/rental-home)"
+
+      - name: Initialize migrated submodules
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git submodule sync --recursive
+          git submodule update --init --recursive
+
+      - name: Validate migrated candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python -m pip install -r requirements-dev.txt
+          python scripts/dw_cli.py validate
+          python -m unittest -v tests.test_project_registry tests.test_workspace_distribution_routing
