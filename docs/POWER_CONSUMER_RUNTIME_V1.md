@@ -1,46 +1,76 @@
 # DW Power Consumer Runtime v1
 
-The consumer runtime adds package-based Power lifecycle commands while preserving the existing submodule workflow.
+The consumer runtime separates the shared DW-SuperApps package store from system-owned runtime and project configuration.
+
+## Ownership
+
+```text
+Workspace distribution store: DW-SuperApps/.dw/powers/<power-id>/
+Workspace inbox:             DW-SuperApps/.dw/inbox/powers/<power-id>/
+Workspace history:           DW-SuperApps/.dw/history/powers/<power-id>/
+Workspace bindings:          DW-SuperApps/.dw/bindings/<system>/<power-id>.json
+System runtime:              <system>/.gwc | .ua | .task-me | .bmad
+System configuration:        <system>/<runtime-root>/config/
+```
+
+`--target` selects the system runtime target. `--store-root` overrides the workspace package store for tests or explicit external layouts.
 
 ## Source modes
 
 | Mode | Behavior |
 |---|---|
-| `submodule` | Uses the pinned legacy submodule and creates only the consumer runtime-data root. |
-| `release` | Downloads a provider release ZIP and checksum using the manifest templates. |
-| `power-dist` | Downloads the provider `power-dist` branch archive. |
+| `release` | Downloads a provider release ZIP and checksum using manifest templates. |
+| `power-dist` | Downloads the provider distribution branch archive. |
 | `package` | Installs a local validated package directory or ZIP. |
-| `auto` | Uses `spec.distribution.defaultMode`; migration defaults remain `submodule`. |
-
-Provider availability is explicit in each Power manifest under `spec.distribution.providerState`. A blocked provider is never silently substituted with another repository.
+| `auto` | Uses `spec.distribution.defaultMode`. |
+| `submodule` | Explicit compatibility/development source only; never a silent fallback. |
 
 ## Commands
 
 ```bash
-dw power install task-me --source package --package ./task-me.zip --checksum ./task-me.zip.sha256 --target ./consumer
-dw power configure task-me --config ./task-me-config.yaml --contract ./consumer-contract.yaml --target ./consumer
-dw power doctor task-me --target ./consumer
-dw power history task-me --target ./consumer
-dw power rollback task-me --version <version> --target ./consumer
-dw power uninstall task-me --target ./consumer
+dw power install task-me \
+  --source package \
+  --package .dw/inbox/powers/task-me/task-me.zip \
+  --checksum .dw/inbox/powers/task-me/task-me.zip.sha256 \
+  --target systems/rental-home
+
+dw power configure task-me --config ./config.yaml --contract ./contract.yaml --target systems/rental-home
+dw power doctor task-me --target systems/rental-home
+dw power history task-me
+dw power rollback task-me --version <version>
+dw power uninstall task-me --target systems/rental-home
 ```
 
-Runtime data such as `.task-me`, `.gwc`, and `.ua` is consumer-owned. Uninstall preserves it unless the package runtime receives `--include-runtime --yes`.
+Expected result:
+
+```text
+DW-SuperApps/.dw/powers/task-me/
+systems/rental-home/.task-me/
+DW-SuperApps/.dw/bindings/rental-home/task-me.json
+```
+
+Normal lifecycle commands must not create `systems/rental-home/.dw/`.
+
+## Split lifecycle behavior
+
+- **Install:** writes package code to the workspace store and creates only the declared runtime root in the system.
+- **Configure:** writes managed configuration below the system runtime root and updates the workspace binding.
+- **Doctor:** validates store, package integrity, binding, runtime, configuration, and legacy detection separately.
+- **History:** lists workspace package history and does not require a target.
+- **Rollback:** replaces the shared managed package from workspace history and refreshes bindings.
+- **Uninstall:** detaches the selected system; preserves runtime by default; removes the shared package only when no bindings remain.
+
+## Legacy detection
+
+Existing `<system>/.dw/powers/<power-id>` paths are reported as `LEGACY_TARGET_INSTALL`. They are never overwritten, deleted, migrated, or used as an execution fallback by normal onboarding.
 
 ## Safety rules
 
-- Release checksums are mandatory when the configured checksum asset is available.
 - ZIP extraction rejects absolute paths, parent traversal, and symlinks.
-- Package identity must match the requested Power manifest.
-- Every file listed in `MANIFEST.json` is size- and SHA-256-verified before installation.
-- Unmanaged `.dw/powers/<power>` and history entries are never overwritten or removed.
-- Rollback uses only managed history and runs `doctor` before completing.
-- Existing submodule commands remain unchanged during migration.
-
-## Current provider state
-
-- **Task Me:** provider recipe and publisher implemented at `711d6314f31a844253bb6719cd28986817768ebc`; release and `power-dist` remain unpublished.
-- **GWC:** blocked because repository policy requires formal G0/G1/G2 authority for provider writes.
-- **UA:** blocked because `nhatnguyenquang1838-coder/ua-power` does not exist and the connector cannot create or fork repositories.
-
-No provider release, protected-branch merge, deployment, or Gate Control transition is performed by this runtime.
+- Package identity must match the requested manifest.
+- Every declared file is size- and SHA-256-verified.
+- Store and runtime target must not overlap.
+- Distribution roots must not resolve inside the system.
+- Unmanaged packages and runtime configuration are never overwritten or removed.
+- Shared package removal is blocked by remaining bindings.
+- Runtime removal requires `--include-runtime --yes`.
