@@ -7,8 +7,9 @@ metadata:
   description: Semantic codebase analysis, architecture discovery, dependency mapping, and project knowledge generation.
 spec:
   category: knowledge
-  path: powers/ua
-  source: Egonex-AI/Understand-Anything
+  path: projects/ua
+  source: nhatnguyenquang1838-coder/Understand-Anything
+  upstream: Egonex-AI/Understand-Anything
   provides:
     - semantic-analysis
     - codebase-graph
@@ -53,8 +54,9 @@ spec:
     defaultMode: power-dist
     modes:
       submodule:
-        repository: Egonex-AI/Understand-Anything
-        path: powers/ua
+        repository: nhatnguyenquang1838-coder/Understand-Anything
+        upstreamRepository: Egonex-AI/Understand-Anything
+        path: projects/ua
         ref: main
       release:
         repository: nhatnguyenquang1838-coder/Understand-Anything
@@ -68,4 +70,4 @@ spec:
       task: DW-PDIST-04
       sourceCommit: c0e4821c519f564d6c8b353537cf121eb52a1617
       sourceLock: SOURCE.lock.json
-      note: Published as main-20260725.1-c0e4821 from the reviewed controlled fork and upstream lock; power-dist and immutable release validated by run 30123849723. Upstream submodule remains available as migration fallback.
+      note: Published as main-20260725.1-c0e4821 from the reviewed controlled fork and upstream lock; power-dist and immutable release validated by run 30123849723. The controlled fork is the active source submodule; Egonex-AI/Understand-Anything remains recorded as upstream provenance.

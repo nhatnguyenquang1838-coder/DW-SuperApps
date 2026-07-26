@@ -21,7 +21,7 @@ SPEC.loader.exec_module(routing)
 class WorkspaceDistributionRoutingTests(unittest.TestCase):
     def fixture(self, root: Path) -> None:
         (root / "manifests" / "powers").mkdir(parents=True)
-        (root / "systems" / "rental-home").mkdir(parents=True)
+        (root / "projects" / "rental-home").mkdir(parents=True)
         (root / "workspace.yaml").write_text(
             """apiVersion: ai-workspace/v1
 kind: Workspace
@@ -39,7 +39,7 @@ distribution:
   bindingsRoot: .dw/bindings
 systems:
   - id: rental-home
-    path: systems/rental-home
+    path: projects/rental-home
     enabled_powers:
       - bmad
 """,
@@ -108,9 +108,9 @@ spec:
                 text = adapter.read_text(encoding="utf-8")
                 self.assertIn("Resolution mode: `workspace-store`", text)
                 self.assertIn(".dw/powers/bmad", text)
-                self.assertFalse((root / "systems" / "rental-home" / ".codex").exists())
-                self.assertFalse((root / "systems" / "rental-home" / ".dw").exists())
-                self.assertFalse((root / "systems" / "rental-home" / "SKILL.md").exists())
+                self.assertFalse((root / "projects" / "rental-home" / ".codex").exists())
+                self.assertFalse((root / "projects" / "rental-home" / ".dw").exists())
+                self.assertFalse((root / "projects" / "rental-home" / "SKILL.md").exists())
 
     def test_prompt_displays_store_runtime_and_legacy_probe(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -128,7 +128,7 @@ spec:
                     )
                 text = output.getvalue()
                 self.assertIn(str(root / ".dw" / "powers"), text)
-                self.assertIn(str(root / "systems" / "rental-home" / ".bmad"), text)
+                self.assertIn(str(root / "projects" / "rental-home" / ".bmad"), text)
                 self.assertIn("LEGACY_TARGET_INSTALL", text)
                 self.assertIn("Resolution mode: `workspace-store`", text)
 

@@ -1,16 +1,16 @@
-[submodule "powers/gwc"]
-	path = powers/gwc
+[submodule "projects/gwc"]
+	path = projects/gwc
 	url = https://github.com/nhatnguyenquang1838-coder/gwc.git
 	branch = main
-[submodule "powers/ua"]
-	path = powers/ua
-	url = https://github.com/Egonex-AI/Understand-Anything.git
+[submodule "projects/ua"]
+	path = projects/ua
+	url = https://github.com/nhatnguyenquang1838-coder/Understand-Anything.git
 	branch = main
-[submodule "powers/task-me"]
-	path = powers/task-me
+[submodule "projects/task-me"]
+	path = projects/task-me
 	url = https://github.com/nhatnguyenquang1838-coder/task-me.git
 	branch = main
-[submodule "systems/rental-home"]
-	path = systems/rental-home
+[submodule "projects/rental-home"]
+	path = projects/rental-home
 	url = https://github.com/nhatnguyenquang1838-coder/rental_home.git
 	branch = main

@@ -13,17 +13,17 @@ DW-SuperApps/.github/...
 DW-SuperApps/.kilo/...
 DW-SuperApps/.clinerules/...
 DW-SuperApps/.agents/...
-systems/rental-home/.gwc | .ua | .task-me | .bmad | _bmad*
+projects/rental-home/.gwc | .ua | .task-me | .bmad | _bmad*
 ```
 
-Do not generate Power packages or host adapters inside `systems/rental-home`.
+Do not generate Power packages or host adapters inside `projects/rental-home`.
 
 ## Install packages for a system
 
 ```bash
-./bin/dw power install gwc --source auto --target systems/rental-home
-./bin/dw power install ua --source auto --target systems/rental-home
-./bin/dw power install task-me --source auto --target systems/rental-home
+./bin/dw power install gwc --source auto --target projects/rental-home
+./bin/dw power install ua --source auto --target projects/rental-home
+./bin/dw power install task-me --source auto --target projects/rental-home
 ```
 
 `--target` selects the runtime target. The package store comes from `workspace.yaml > distribution.storeRoot`.
@@ -68,7 +68,7 @@ Prompt output displays:
 
 ## Legacy installations
 
-If `systems/rental-home/.dw/powers/<power-id>` exists, commands report `LEGACY_TARGET_INSTALL`. The path is not executed, overwritten, migrated, or deleted.
+If `projects/rental-home/.dw/powers/<power-id>` exists, commands report `LEGACY_TARGET_INSTALL`. The path is not executed, overwritten, migrated, or deleted.
 
 ## BMAD split
 
