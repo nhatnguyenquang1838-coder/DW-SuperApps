@@ -97,6 +97,31 @@ systems:
       - ua
       - task-me
       - bmad
+    orchestration:
+      primary: gwc
+      workers:
+        - task-me
+        - bmad
+        - ua
+      hooks:
+        - gate: g1
+          intents:
+            - task-decomposition
+            - validation-planning
+          worker: task-me
+          output_into: g1-options
+        - gate: g1
+          intents:
+            - architecture-design
+            - data-modeling
+          worker: bmad
+          output_into: g1-options
+        - gate: g1
+          intents:
+            - dependency-mapping
+            - impact-analysis
+          worker: ua
+          output_into: g1-preflight
 data_ownership:
   policy: system-owned
   roots:

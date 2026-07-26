@@ -42,6 +42,14 @@ if [[ "${1:-}" == "project" ]]; then
   esac
 fi
 
+if [[ "${1:-}" == "orchestrator" ]]; then
+  shift
+  # shellcheck source=../scripts/python-resolver.sh
+  source "$ROOT/scripts/python-resolver.sh"
+  dw_exec_python "$ROOT/scripts/dw_orchestrator.py" "$@"
+  exit $?
+fi
+
 if [[ "${1:-}" == "power" ]]; then
   case "${2:-}" in
     install|configure|doctor|history|rollback|uninstall)
