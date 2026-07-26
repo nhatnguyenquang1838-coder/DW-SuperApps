@@ -54,6 +54,11 @@ projects:
     source: nhatnguyenquang1838-coder/task-me
     roles:
       - power-source
+  - id: bmad
+    path: projects/bmad
+    source: nhatnguyenquang1838-coder/BMAD-METHOD
+    roles:
+      - power-source
   - id: rental-home
     path: projects/rental-home
     source: nhatnguyenquang1838-coder/rental_home
@@ -76,6 +81,11 @@ powers:
     project: task-me
     path: projects/task-me
     source: nhatnguyenquang1838-coder/task-me
+    enabled: true
+  - id: bmad
+    project: bmad
+    path: projects/bmad
+    source: nhatnguyenquang1838-coder/BMAD-METHOD
     enabled: true
 systems:
   - id: rental-home

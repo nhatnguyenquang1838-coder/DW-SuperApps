@@ -7,7 +7,7 @@ metadata:
   description: Structured software-delivery lifecycle covering analysis, planning, architecture, implementation, and review.
 spec:
   category: software-delivery-method
-  path: powers/bmad
+  path: projects/bmad
   source: nhatnguyenquang1838-coder/BMAD-METHOD
   provides:
     - workflow-routing
@@ -62,11 +62,11 @@ spec:
       - ".git/**"
   distribution:
     contract: dw.power-distribution/v1
-    defaultMode: release
+    defaultMode: power-dist
     modes:
       submodule:
         repository: nhatnguyenquang1838-coder/BMAD-METHOD
-        path: powers/bmad
+        path: projects/bmad
         ref: main
       release:
         repository: nhatnguyenquang1838-coder/DW-SuperApps
