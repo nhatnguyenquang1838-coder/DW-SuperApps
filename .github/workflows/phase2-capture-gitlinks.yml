@@ -19,44 +19,47 @@ jobs:
   capture:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-          ref: ${{ github.event.pull_request.head.sha }}
       - name: Capture exact head tree and gitlinks
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         shell: bash
         run: |
           set -euo pipefail
+          api="https://api.github.com/repos/${REPOSITORY}/git/trees/${HEAD_SHA}?recursive=1"
+          curl -fsSL \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "$api" > tree.json
           python - <<'PY'
           import json
-          import subprocess
+          import os
           from pathlib import Path
 
-          def git(*args: str) -> str:
-              return subprocess.check_output(["git", *args], text=True).strip()
-
-          paths = [
+          payload = json.loads(Path("tree.json").read_text(encoding="utf-8"))
+          required = [
               "powers/gwc",
               "powers/ua",
               "powers/task-me",
               "systems/rental-home",
           ]
+          entries = {item["path"]: item for item in payload.get("tree", [])}
           gitlinks = {}
-          for path in paths:
-              fields = git("ls-tree", "HEAD", "--", path).split()
-              if len(fields) < 4 or fields[0] != "160000":
+          for path in required:
+              item = entries.get(path)
+              if not item or item.get("mode") != "160000" or item.get("type") != "commit":
                   raise SystemExit(f"missing gitlink: {path}")
-              gitlinks[path] = fields[2]
+              gitlinks[path] = item["sha"]
           evidence = {
-              "head": git("rev-parse", "HEAD"),
-              "tree": git("rev-parse", "HEAD^{tree}"),
+              "head": os.environ["HEAD_SHA"],
+              "tree": payload["sha"],
               "gitlinks": gitlinks,
           }
-          Path("phase2-gitlinks.json").write_text(
-              json.dumps(evidence, indent=2, sort_keys=True) + "\n",
-              encoding="utf-8",
-          )
-          print(json.dumps(evidence, sort_keys=True))
+          text = json.dumps(evidence, indent=2, sort_keys=True) + "\n"
+          Path("phase2-gitlinks.json").write_text(text, encoding="utf-8")
+          print("PHASE2_GITLINK_EVIDENCE=" + json.dumps(evidence, sort_keys=True))
           PY
       - name: Upload exact-head evidence
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
