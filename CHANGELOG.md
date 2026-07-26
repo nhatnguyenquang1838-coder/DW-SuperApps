@@ -2,6 +2,23 @@
 
 All notable changes to the DW SuperApps workspace control plane are documented here.
 
+## 2026-07-27 — G1 user-facing report generator
+
+### Added
+
+- `scripts/dw_report.py` — new report generator for GWC gate artifacts.
+- `dw report g1 --workspace <path>` — produces a Markdown alignment report from G1 artifacts (`g1-intake-brief.yaml`, `g1-options.yaml`, `g1-preflight-report.yaml`, `g1-decision-record.yaml`).
+- Report sections include intake summary, options with recommendation, preflight checks, decision record, authority boundaries, subagent distribution plan, and next steps.
+
+### Changed
+
+- `bin/dw` now routes `report g1` to the new report runtime.
+
+### Safety
+
+- Report generator is read-only; it does not modify artifacts or runtime state.
+- No generated or installed package files were hand-edited.
+
 ## 2026-07-27 — GWC-core orchestration
 
 ### Added

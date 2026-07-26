@@ -146,6 +146,17 @@ dw orchestrator run --system rental-home --task "Design service boundaries for n
 - `prompt` returns a composed human-readable prompt.
 - `run` returns a structured JSON execution plan with ordered phases.
 
+## Reports
+
+Generate user-facing Markdown reports from GWC gate artifacts.
+
+```bash
+dw report g1 --workspace .gwc/tasks/<task-id>
+```
+
+Currently supported:
+- `g1` — alignment report from `g1-intake-brief.yaml`, `g1-options.yaml`, `g1-preflight-report.yaml`, and `g1-decision-record.yaml`
+
 ## Current Powers
 
 | Power | Purpose | Default delivery |
