@@ -20,7 +20,7 @@ esac
 if [[ "${1:-}" == "workspace" && "${2:-}" == "init" ]]; then
   # shellcheck source=../scripts/python-resolver.sh
   source "$ROOT/scripts/python-resolver.sh"
-  dw_exec_python "$ROOT/scripts/dw_project_registry.py" "$@"
+  dw_exec_python "$ROOT/scripts/dw_workspace_init.py" "$@"
   exit $?
 fi
 
