@@ -230,6 +230,39 @@ def wrapper_content(
     metadata = manifest["metadata"]
     spec = manifest["spec"]
     package = store_root() / power_id
+    orchestration_section = ""
+    try:
+        system = find_system("rental-home")
+        block = system.get("orchestration")
+        if isinstance(block, dict):
+            primary = block.get("primary", "")
+            workers = block.get("workers", [])
+            hooks = block.get("hooks", [])
+            lines = [
+                "## Orchestration",
+                "",
+                "This adapter is part of a GWC-core orchestrated workspace.",
+            ]
+            if primary:
+                lines.append(f"- Primary governance workflow: `{primary}`")
+            if workers:
+                lines.append("- Worker powers: " + ", ".join(f"`{w}`" for w in workers))
+            if hooks:
+                lines.append("- Delegation hooks:")
+                for hook in hooks:
+                    gate = hook.get("gate", "")
+                    worker = hook.get("worker", "")
+                    intents = hook.get("intents", [])
+                    output_into = hook.get("output_into", "")
+                    lines.append(
+                        f"  - Gate `{gate}` → `{worker}` for intents {', '.join(intents)}; feed into `{output_into}`"
+                    )
+            lines.append(
+                f"- Use `dw orchestrator prompt --system rental-home --task \"<task>\"` for composed orchestrated prompts."
+            )
+            orchestration_section = "\n" + "\n".join(lines) + "\n"
+    except DistError:
+        orchestration_section = ""
     return f"""---
 name: dw-{power_id}
 description: {metadata['description']}
@@ -246,7 +279,7 @@ Thin `{host}` adapter owned by DW-SuperApps.
 - Resolution mode: `{source_mode}`
 - Source fallback: `{spec['path']}`
 - Power manifest: `manifests/powers/{power_id}.yaml`
-
+{orchestration_section}
 ## Invocation
 
 1. Read `workspace.yaml` and `AGENTS.md` from DW-SuperApps.
@@ -271,8 +304,39 @@ def host_instruction_content(host: str) -> str:
             f"entrypoint `{display_path(source)}`; resolution `{mode}`; "
             f"runtime `{manifest['spec']['runtimeDataRoot']}/`."
         )
+    orchestration_section = ""
+    try:
+        system = find_system("rental-home")
+        block = system.get("orchestration")
+        if isinstance(block, dict):
+            primary = block.get("primary", "")
+            workers = block.get("workers", [])
+            hooks = block.get("hooks", [])
+            orchestration_section = "\n## Orchestration for rental-home\n\n"
+            if primary:
+                orchestration_section += f"- Primary: `{primary}`\n"
+            if workers:
+                orchestration_section += "- Workers: " + ", ".join(f"`{w}`" for w in workers) + "\n"
+            if hooks:
+                orchestration_section += "- Delegation hooks:\n"
+                for hook in hooks:
+                    gate = hook.get("gate", "")
+                    worker = hook.get("worker", "")
+                    intents = hook.get("intents", [])
+                    output_into = hook.get("output_into", "")
+                    orchestration_section += (
+                        f"  - Gate `{gate}` → `{worker}` for intents "
+                        f"{', '.join(intents)}; feed into `{output_into}`\n"
+                    )
+            orchestration_section += (
+                "\nUse `dw orchestrator prompt --system rental-home --task \"<task>\"` for composed prompts.\n"
+            )
+    except DistError:
+        orchestration_section = ""
     prefix = "@AGENTS.md\n\n" if host == "claude" else ""
-    return prefix + f"""{GENERATED_MARKER}
+    return (
+        prefix
+        + f"""{GENERATED_MARKER}
 
 # DW SuperApps — {host} adapter
 
@@ -290,11 +354,12 @@ Read `AGENTS.md` and `workspace.yaml` before acting.
 4. Keep runtime and project configuration inside the selected system repository.
 5. Keep packages, inbox, history, bindings, router, and all host adapters in DW-SuperApps.
 6. Never install Power skill payloads into a registered system.
-
+{orchestration_section}
 Generate a host-neutral prompt:
 
 `dw power prompt <power> --system <system> --task \"<task>\"`
 """
+    )
 
 
 def kilo_config_content() -> str:

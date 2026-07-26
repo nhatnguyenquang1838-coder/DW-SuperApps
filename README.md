@@ -133,6 +133,19 @@ dw clean all
 
 `dw clean all` removes generated adapters and caches only. Runtime data is preserved unless destructive runtime cleanup is explicitly authorized with `--include-runtime --yes`.
 
+## Orchestration
+
+GWC is the primary governance workflow. DW SuperApps can orchestrate worker
+powers when G1 hooks match task intents.
+
+```bash
+dw orchestrator prompt --system rental-home --task "Plan implementation tasks for user authentication"
+dw orchestrator run --system rental-home --task "Design service boundaries for notification system"
+```
+
+- `prompt` returns a composed human-readable prompt.
+- `run` returns a structured JSON execution plan with ordered phases.
+
 ## Current Powers
 
 | Power | Purpose | Default delivery |
