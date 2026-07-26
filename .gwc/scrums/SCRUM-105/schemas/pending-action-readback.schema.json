@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw.superapps/schemas/pending-action-readback.schema.json",
+  "title": "GWC Pending Action / Readback Model",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["actionId", "streamId", "state", "actionType", "payload", "createdAt"],
+  "properties": {
+    "actionId": { "type": "string", "format": "uuid" },
+    "streamId": { "type": "string", "minLength": 1 },
+    "state": {
+      "type": "string",
+      "enum": ["pending", "claimed", "executing", "completed", "failed"]
+    },
+    "actionType": { "type": "string", "minLength": 1 },
+    "payload": { "type": "object" },
+    "result": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "success": { "type": "boolean" },
+        "data": { "type": ["object", "null"] },
+        "error": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" }
+          }
+        }
+      }
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "claimedAt": { "type": ["string", "null"], "format": "date-time" },
+    "completedAt": { "type": ["string", "null"], "format": "date-time" },
+    "claimedBy": { "type": ["string", "null"], "description": "Node ID that claimed the action" }
+  }
+}
