@@ -78,7 +78,7 @@ manifests/powers/*            logical Power contracts and routing metadata
 host adapter roots            thin workspace-owned routing only
 ```
 
-The current checkout keeps compatibility paths under `powers/*` and `systems/*`. They are registered as projects now and will move physically into `projects/*` in a later reviewed change.
+All editable source repositories live below `projects/*`. Root `powers/` contains only non-submodule routing assets, while installed packages remain under `.dw/powers/*`.
 
 ## Project commands
 
@@ -95,8 +95,8 @@ dw project add <project-id> --repo <owner/repository> --role product
 ```bash
 dw power list
 dw power info gwc
-dw power install gwc --source auto --target systems/rental-home
-dw power doctor gwc --target systems/rental-home
+dw power install gwc --source auto --target projects/rental-home
+dw power doctor gwc --target projects/rental-home
 dw power prompt gwc --system rental-home --task "Review delivery scope"
 ```
 
@@ -138,7 +138,7 @@ dw clean all
 | Power | Purpose | Default delivery |
 |---|---|---|
 | GWC | Governance and governed delivery | Validated distribution; source project available for development |
-| Understand Anything | Architecture and semantic codebase knowledge | Validated distribution; controlled source project planned |
+| Understand Anything | Architecture and semantic codebase knowledge | Validated distribution; controlled source project under `projects/ua` |
 | Task Me | Impact analysis and implementation planning | Validated distribution; source project available for development |
 | BMAD Method | Product and delivery lifecycle workflows | Release-first external Power |
 

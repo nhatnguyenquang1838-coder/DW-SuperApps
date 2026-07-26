@@ -32,24 +32,24 @@ dw power install task-me \
   --source package \
   --package .dw/inbox/powers/task-me/task-me.zip \
   --checksum .dw/inbox/powers/task-me/task-me.zip.sha256 \
-  --target systems/rental-home
+  --target projects/rental-home
 
-dw power configure task-me --config ./config.yaml --contract ./contract.yaml --target systems/rental-home
-dw power doctor task-me --target systems/rental-home
+dw power configure task-me --config ./config.yaml --contract ./contract.yaml --target projects/rental-home
+dw power doctor task-me --target projects/rental-home
 dw power history task-me
 dw power rollback task-me --version <version>
-dw power uninstall task-me --target systems/rental-home
+dw power uninstall task-me --target projects/rental-home
 ```
 
 Expected result:
 
 ```text
 DW-SuperApps/.dw/powers/task-me/
-systems/rental-home/.task-me/
+projects/rental-home/.task-me/
 DW-SuperApps/.dw/bindings/rental-home/task-me.json
 ```
 
-Normal lifecycle commands must not create `systems/rental-home/.dw/`.
+Normal lifecycle commands must not create `projects/rental-home/.dw/`.
 
 ## Split lifecycle behavior
 
