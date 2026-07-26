@@ -1,0 +1,80 @@
+apiVersion: gwc/v1
+kind: G1PreflightReport
+metadata:
+  runId: g1-SCRUM-105-20260726-1500
+  workspaceMode: canonical
+  workspaceRoot: .gwc
+  repositoryArtifactWritten: YES
+  conflictPolicy: no-shared-active-writes
+  verificationMode: TOOL_VERIFIED
+  timestamp: "2026-07-26T15:00:00+07:00"
+
+trace:
+  projectId: dw-superapps
+  taskId: SCRUM-105
+  baseSha: 8cf13d7d6bef535bff77e36815b737aff9d7f709
+  decisionRef: g1-SCRUM-105-20260726-1500/decision
+
+g0Evidence:
+  project: dw-superapps
+  targetSystem: rental-home
+  baseRef: main
+  baseSha: 8cf13d7d6bef535bff77e36815b737aff9d7f709
+  headSha: 839f04638ba15dca6a1b4d901cae5ee2b6b6f1c4
+  connector: git
+  writeEnabled: true
+  protectedBranches:
+    - main
+  status: READY
+
+g1Intake:
+  status: READY
+  problemStatement: >
+    The GWC governance engine lacks a durable runtime store with event-sourced
+    state management, checkpointing, CAS-based concurrency control, lease and
+    fencing semantics, pending-action/readback messaging, and a node
+    request/result adapter contract.
+  desiredOutcome: >
+    Complete set of design documents and JSON schemas for the runtime store.
+  acceptanceCriteriaMet: true
+  unresolvedQuestions: none
+
+existingMechanisms:
+  - currentMechanism: GWC .gwc/ directory with policies, runbooks, and tasks
+    purpose: Stores governance artifacts for the workspace
+    limitation: No schema design support or runtime store patterns
+    improvement: Add SCRUM-105 design artifacts under .gwc/scrums/
+    compatibility: No impact on existing policies/runbooks
+    impact: Low — additive artifacts only
+
+  - currentMechanism: JSON Schema draft 2020-12 (existing schemas in /schemas/)
+    purpose: Validates power distribution and manifest schemas
+    limitation: No runtime event/store schemas exist yet
+    improvement: New schemas follow existing JSON Schema conventions
+    compatibility: Compatible — extends existing schema ecosystem
+    impact: Low — additive schemas only
+
+selectedOption: OPT-1
+optionRationale: >
+  JSON Schema + Markdown design document approach uses existing .gwc/
+  workflow, targets rental-home specifically, has the lowest blast radius,
+  and satisfies all acceptance criteria without requiring G4/G5/G6 authority.
+
+riskClass: MEDIUM
+humanDirectionPresent: false
+risks:
+  - Submodule not initialized in worktree limits GWC core source access
+  - Migration risk for SQLite-to-PostgreSQL cutover
+  - Potential conflict with SCRUM-104 registry validators
+
+validationEvidence: null
+requiredNextGate: G2_EXECUTION
+excludedActions:
+  - G4_MERGE
+  - G5_DEPLOY
+  - G6_PRODUCTION_DATA
+  - production-configuration
+  - migration-execution
+  - credential-operation
+
+g1Outcome: PASS → G2_PLANNING_READY
