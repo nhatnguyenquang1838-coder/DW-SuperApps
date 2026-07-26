@@ -161,8 +161,18 @@ A pending action represents an asynchronous operation requested by a node:
 ### 6.2 State Machine
 
 ```
-PENDING -> CLAIMED -> EXECUTING -> COMPLETED | FAILED
+PENDING → CLAIMED → EXECUTING → COMPLETED
+                               → FAILED
 ```
+
+**Transitions:**
+
+| From | To | Trigger | Actor |
+|---|---|---|---|
+| PENDING | CLAIMED | Worker node claims the action | Worker node |
+| CLAIMED | EXECUTING | Worker begins execution | Worker node |
+| EXECUTING | COMPLETED | Action succeeds | Worker node |
+| EXECUTING | FAILED | Action raises error | Worker node |
 
 ### 6.3 Schema
 
