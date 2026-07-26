@@ -1,0 +1,35 @@
+name: Phase 2 capture gitlinks
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/phase2-capture-gitlinks.yml
+      - .gitmodules
+      - workspace.yaml
+      - projects/**
+      - powers/**
+      - systems/**
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Capture exact tree and gitlinks
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "HEAD=$(git rev-parse HEAD)"
+          echo "TREE=$(git rev-parse 'HEAD^{tree}')"
+          git ls-tree HEAD -- \
+            powers/gwc \
+            powers/ua \
+            powers/task-me \
+            systems/rental-home
