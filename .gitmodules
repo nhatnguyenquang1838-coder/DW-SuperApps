@@ -14,3 +14,6 @@
 	path = projects/rental-home
 	url = https://github.com/nhatnguyenquang1838-coder/rental_home.git
 	branch = main
+[submodule "projects/bmad"]
+	path = projects/bmad
+	url = https://github.com/nhatnguyenquang1838-coder/BMAD-METHOD.git
