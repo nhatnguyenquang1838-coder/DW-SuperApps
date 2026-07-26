@@ -84,7 +84,7 @@ spec = schema['properties']['spec']['properties']
 spec['path']['pattern'] = '^(projects|powers)/[a-z0-9][a-z0-9-]*$'
 spec['upstream'] = {'type': 'string', 'pattern': '^[^/\\s]+/[^/\\s]+$'}
 submodule = spec['distribution']['properties']['modes']['properties']['submodule']['properties']
-submodule['upath']['pattern'] = '^(projects|powers)/[a-z0-9][a-z0-9-]**$'
+submodule['upath']['pattern'] = '^(projects|powers)/[a-z0-9][a-z0-9-]*$'
 submodule['upstreamRepository'] = {
     'type': 'string',
     'pattern': '^[^/\\s]+/[^/\\s]+$',
