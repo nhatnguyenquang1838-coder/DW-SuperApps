@@ -21,7 +21,7 @@ Events are stored in a single SQLite database file at `.gwc/runtime-store.db`. S
 | `events` | Same logical columns; `payload_json` and `metadata_json` become `JSONB` |
 | `checkpoints` | Durable execution cursor; cursor and binding fields are normalized separately from event history |
 | `pending_actions` | New table for the readback model |
-| `leases` | New table for lease management (`key`, `holder_id`, `expires_at`, `fencing_token`) |
+| `leases` | New table for lease management (`key`, `holder_id`, `expires_at`, `lease_epoch`) |
 | `fencing_tokens` | New table tracking per-resource lease epoch (`resource_key`, `lease_epoch`, `holder_id`, `updated_at`) |
 
 ### Indexes
