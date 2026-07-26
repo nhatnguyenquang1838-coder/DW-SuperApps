@@ -39,22 +39,23 @@ distribution:
   hostAdaptersRoot: .
 projects:
   - id: gwc
-    path: powers/gwc
+    path: projects/gwc
     source: nhatnguyenquang1838-coder/gwc
     roles:
       - power-source
   - id: ua
-    path: powers/ua
-    source: Egonex-AI/Understand-Anything
+    path: projects/ua
+    source: nhatnguyenquang1838-coder/Understand-Anything
+    upstream: Egonex-AI/Understand-Anything
     roles:
       - power-source
   - id: task-me
-    path: powers/task-me
+    path: projects/task-me
     source: nhatnguyenquang1838-coder/task-me
     roles:
       - power-source
   - id: rental-home
-    path: systems/rental-home
+    path: projects/rental-home
     source: nhatnguyenquang1838-coder/rental_home
     roles:
       - product
@@ -62,23 +63,24 @@ projects:
 powers:
   - id: gwc
     project: gwc
-    path: powers/gwc
+    path: projects/gwc
     source: nhatnguyenquang1838-coder/gwc
     enabled: true
   - id: ua
     project: ua
-    path: powers/ua
-    source: Egonex-AI/Understand-Anything
+    path: projects/ua
+    source: nhatnguyenquang1838-coder/Understand-Anything
+    upstream: Egonex-AI/Understand-Anything
     enabled: true
   - id: task-me
     project: task-me
-    path: powers/task-me
+    path: projects/task-me
     source: nhatnguyenquang1838-coder/task-me
     enabled: true
 systems:
   - id: rental-home
     project: rental-home
-    path: systems/rental-home
+    path: projects/rental-home
     source: nhatnguyenquang1838-coder/rental_home
     enabled_powers:
       - gwc
