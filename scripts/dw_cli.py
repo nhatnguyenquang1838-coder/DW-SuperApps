@@ -78,6 +78,62 @@ def manifests() -> dict[str, dict[str, Any]]:
     return result
 
 
+def load_json(path: Path) -> dict[str, Any]:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def resolve_workspace_path(value: str) -> Path:
+    path = Path(value).expanduser()
+    if not path.is_absolute():
+        path = ROOT / path
+    return path.resolve()
+
+
+def store_root() -> Path:
+    distribution = workspace().get("distribution", {}) or {}
+    if not isinstance(distribution, dict):
+        raise DwError("workspace distribution must be a mapping")
+    value = distribution.get("storeRoot", ".dw/powers")
+    if not isinstance(value, str) or not value:
+        raise DwError("workspace distribution.storeRoot must be a path string")
+    return resolve_workspace_path(value)
+
+
+def installed_entrypoints(power_id: str) -> list[Path]:
+    package = store_root() / power_id
+    package_manifest = package / "MANIFEST.json"
+    if not package_manifest.is_file():
+        return []
+    data = load_json(package_manifest)
+    if data.get("metadata", {}).get("powerId") != power_id:
+        raise DwError(f"installed package identity mismatch: {package_manifest}")
+    result: list[Path] = []
+    for relative in data.get("spec", {}).get("entrypoints", []):
+        candidate = package / str(relative)
+        if candidate.is_file():
+            result.append(candidate)
+    return result
+
+
+def source_entrypoints(power_id: str, manifest: dict[str, Any]) -> list[Path]:
+    root = ROOT / manifest["spec"]["path"]
+    result: list[Path] = []
+    for relative in manifest["spec"]["entrypoints"]["skillCandidates"]:
+        candidate = root / relative
+        if candidate.is_file():
+            result.append(candidate)
+    return result
+
+
+def display_path(path: Path | None) -> str:
+    if path is None:
+        return "missing"
+    try:
+        return path.resolve().relative_to(ROOT.resolve()).as_posix()
+    except ValueError:
+        return str(path.resolve())
+
+
 def run(
     args: list[str],
     *,
@@ -422,13 +478,14 @@ def select_hosts(host: str) -> list[str]:
     return [normalize_host(host)]
 
 
-def resolve_skill_source(power_id: str, manifest: dict[str, Any]) -> Path | None:
-    power_root = ROOT / manifest["spec"]["path"]
-    for candidate in manifest["spec"]["entrypoints"]["skillCandidates"]:
-        skill_file = power_root / candidate
-        if skill_file.is_file():
-            return skill_file.parent
-    return None
+def resolve_skill_source(power_id: str, manifest: dict[str, Any]) -> tuple[Path | None, str]:
+    installed = installed_entrypoints(power_id)
+    if installed:
+        return installed[0].parent, "workspace-store"
+    source = source_entrypoints(power_id, manifest)
+    if source:
+        return source[0].parent, "source-submodule-fallback"
+    return None, "missing"
 
 
 def is_generated_path(path: Path) -> bool:
@@ -457,7 +514,7 @@ def safe_remove_generated(path: Path) -> bool:
     if not path.exists() and not path.is_symlink():
         return False
     if not is_generated_path(path):
-        raise DwError(f"refusing to replace non-generated adapter: {path.relative_to(ROOT)}")
+        raise DwError(f"refusing to replace non-generated adapter: {display_path(path)}")
     if path.is_symlink() or path.is_file():
         path.unlink()
     else:
@@ -476,9 +533,11 @@ def wrapper_content(
     power_id: str,
     manifest: dict[str, Any],
     source: Path | None,
+    source_mode: str,
 ) -> str:
     metadata = manifest["metadata"]
     spec = manifest["spec"]
+    package = store_root() / power_id
     relative_source = source.relative_to(ROOT).as_posix() if source is not None else spec["path"]
     return f"""---
 name: dw-{power_id}
@@ -488,42 +547,41 @@ description: {metadata['description']}
 
 # {metadata['name']} Power
 
-Thin `{host}` adapter. Canonical behavior remains in:
+Thin `{host}` adapter owned by DW-SuperApps.
 
-- Power source: `{spec['path']}`
+- Workspace package store: `{display_path(store_root())}`
+- Installed package: `{display_path(package)}`
+- Resolved entrypoint: `{display_path(source)}`
+- Resolution mode: `{source_mode}`
+- Source fallback: `{spec['path']}`
 - Power manifest: `manifests/powers/{power_id}.yaml`
-- Preferred entrypoint: `{relative_source}`
 
 ## Invocation
 
-1. Read `workspace.yaml` and `AGENTS.md`.
+1. Read `workspace.yaml` and `AGENTS.md` from DW-SuperApps.
 2. Resolve one target system from the workspace registry.
 3. Read project-local instructions in that system.
-4. Read the canonical Power entrypoint above.
-5. Keep generated data under the target system's `{spec['runtimeDataRoot']}/`.
-6. Never store project runtime data in the Power submodule.
+4. Prefer the installed package entrypoint above; use source fallback only when no managed package exists.
+5. Keep runtime and project configuration under the target system's `{spec['runtimeDataRoot']}/`.
+6. Never create `.dw/powers`, host skill payloads, or distribution history inside the target system.
 
 Generate a complete task prompt with:
 
-`dw power prompt {power_id} --system <system> --task "<task>"`
+`dw power prompt {power_id} --system <system> --task \"<task>\"`
 """
 
 
 def host_instruction_content(host: str) -> str:
-    power_lines = []
+    lines = []
     for power_id, manifest in sorted(manifests().items()):
-        metadata = manifest["metadata"]
-        spec = manifest["spec"]
-        power_lines.append(
-            f"- `{power_id}` — {metadata['description']} "
-            f"Runtime data: `{spec['runtimeDataRoot']}/`."
+        source, mode = resolve_skill_source(power_id, manifest)
+        lines.append(
+            f"- `{power_id}` — store `{display_path(store_root() / power_id)}`; "
+            f"entrypoint `{display_path(source)}`; resolution `{mode}`; "
+            f"runtime `{manifest['spec']['runtimeDataRoot']}/`."
         )
-    prefix = ""
-    if host == "claude":
-        prefix = "@AGENTS.md\n\n"
-    return (
-        prefix
-        + f"""{GENERATED_MARKER}
+    prefix = "@AGENTS.md\n\n" if host == "claude" else ""
+    return prefix + f"""{GENERATED_MARKER}
 
 # DW SuperApps — {host} adapter
 
@@ -531,25 +589,21 @@ Read `AGENTS.md` and `workspace.yaml` before acting.
 
 ## Registered Powers
 
-{os.linesep.join(power_lines)}
+{os.linesep.join(lines)}
 
 ## Routing
 
 1. Resolve the target system from `workspace.yaml`.
-2. Use only Powers enabled for that system.
-3. Read the first existing `skillCandidates` entry from the Power manifest.
-4. Keep runtime data inside the system repository.
-5. Do not modify a Power submodule unless the task explicitly targets that Power repository.
+2. Load Power code from the workspace distribution store first.
+3. Use source submodules only as an explicit compatibility fallback.
+4. Keep runtime and project configuration inside the selected system repository.
+5. Keep packages, inbox, history, bindings, router, and all host adapters in DW-SuperApps.
+6. Never install Power skill payloads into a registered system.
 
 Generate a host-neutral prompt:
 
-`dw power prompt <power> --system <system> --task "<task>"`
-
-Validate the workspace:
-
-`dw doctor all`
+`dw power prompt <power> --system <system> --task \"<task>\"`
 """
-    )
 
 
 def kilo_config_content() -> str:
@@ -595,25 +649,29 @@ def install_skill_host(host: str, mode: str) -> None:
         if host not in manifest["spec"]["hosts"]:
             continue
         destination = host_root / power_id
-        source = resolve_skill_source(power_id, manifest)
+        source, source_mode = resolve_skill_source(power_id, manifest)
         if destination.exists() or destination.is_symlink():
             safe_remove_generated(destination)
         if mode == "link" and source is not None:
             target = os.path.relpath(source, start=destination.parent)
             destination.symlink_to(target, target_is_directory=True)
-            print(f"LINK: {destination.relative_to(ROOT)} -> {target}")
+            print(f"LINK: {destination.relative_to(ROOT)} -> {target} [{source_mode}]")
         elif mode == "copy" and source is not None:
             shutil.copytree(source, destination)
             skill_file = destination / "SKILL.md"
-            skill_file.write_text(
-                skill_file.read_text(encoding="utf-8") + f"\n\n{GENERATED_MARKER}\n",
-                encoding="utf-8",
-            )
-            print(f"COPY: {destination.relative_to(ROOT)}")
+            if skill_file.is_file():
+                skill_file.write_text(
+                    skill_file.read_text(encoding="utf-8") + f"\n\n{GENERATED_MARKER}\n",
+                    encoding="utf-8",
+                )
+            print(f"COPY: {destination.relative_to(ROOT)} [{source_mode}]")
         else:
             destination.mkdir(parents=True, exist_ok=True)
-            atomic_write(destination / "SKILL.md", wrapper_content(host, power_id, manifest, source))
-            print(f"WRAP: {destination.relative_to(ROOT)}")
+            atomic_write(
+                destination / "SKILL.md",
+                wrapper_content(host, power_id, manifest, source, source_mode),
+            )
+            print(f"WRAP: {destination.relative_to(ROOT)} [{source_mode}]")
     if "index" in spec:
         index = ROOT / spec["index"]
         write_generated_file(index, host_instruction_content(host))

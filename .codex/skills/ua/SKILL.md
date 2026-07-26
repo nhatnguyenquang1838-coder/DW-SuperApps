@@ -6,19 +6,24 @@ description: Semantic codebase analysis, architecture discovery, dependency mapp
 
 # Understand Anything Power
 
-This is a thin `codex` adapter. Canonical behavior remains in:
+Thin `codex` adapter owned by DW-SuperApps.
 
-- Power source: `../../../projects/ua`
-- Power manifest: `../../../manifests/powers/ua.yaml`
-- Preferred entrypoint: `../../../projects/ua/understand-anything-plugin/skills/understand`
+- Workspace package store: `.dw/powers`
+- Installed package: `.dw/powers/ua`
+- Resolved entrypoint: `missing`
+- Resolution mode: `missing`
+- Source fallback: `projects/ua`
+- Power manifest: `manifests/powers/ua.yaml`
 
 ## Invocation
 
-1. Read `../../../workspace.yaml` and `../../../AGENTS.md`.
+1. Read `workspace.yaml` and `AGENTS.md` from DW-SuperApps.
 2. Resolve one target system from the workspace registry.
 3. Read project-local instructions in that system.
-4. Read the canonical Power entrypoint above.
-5. Keep generated data under the target system's `.ua/`.
-6. Never store project runtime data in the Power submodule.
+4. Prefer the installed package entrypoint above; use source fallback only when no managed package exists.
+5. Keep runtime and project configuration under the target system's `.ua/`.
+6. Never create `.dw/powers`, host skill payloads, or distribution history inside the target system.
 
-Use `dw power prompt ua --system <system> --task "<task>"` to generate a host-neutral invocation prompt.
+Generate a complete task prompt with:
+
+`dw power prompt ua --system <system> --task "<task>"`
