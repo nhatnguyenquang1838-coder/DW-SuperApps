@@ -22,14 +22,46 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: Capture exact tree and gitlinks
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Capture exact head tree and gitlinks
         shell: bash
         run: |
           set -euo pipefail
-          echo "HEAD=$(git rev-parse HEAD)"
-          echo "TREE=$(git rev-parse 'HEAD^{tree}')"
-          git ls-tree HEAD -- \
-            powers/gwc \
-            powers/ua \
-            powers/task-me \
-            systems/rental-home
+          python - <<'PY'
+          import json
+          import subprocess
+          from pathlib import Path
+
+          def git(*args: str) -> str:
+              return subprocess.check_output(["git", *args], text=True).strip()
+
+          paths = [
+              "powers/gwc",
+              "powers/ua",
+              "powers/task-me",
+              "systems/rental-home",
+          ]
+          gitlinks = {}
+          for path in paths:
+              fields = git("ls-tree", "HEAD", "--", path).split()
+              if len(fields) < 4 or fields[0] != "160000":
+                  raise SystemExit(f"missing gitlink: {path}")
+              gitlinks[path] = fields[2]
+          evidence = {
+              "head": git("rev-parse", "HEAD"),
+              "tree": git("rev-parse", "HEAD^{tree}"),
+              "gitlinks": gitlinks,
+          }
+          Path("phase2-gitlinks.json").write_text(
+              json.dumps(evidence, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(evidence, sort_keys=True))
+          PY
+      - name: Upload exact-head evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: phase2-gitlinks-${{ github.event.pull_request.head.sha }}
+          path: phase2-gitlinks.json
+          if-no-files-found: error
+          retention-days: 7
