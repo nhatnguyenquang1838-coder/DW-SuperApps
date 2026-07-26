@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -138,3 +141,86 @@ jobs:
 
       - name: Report submodule status
         run: python scripts/dw_cli.py power status all
+
+  phase2_candidate:
+    name: Build Phase 2 candidate
+    needs: validate
+    if: github.event_name == 'pull_request' && github.head_ref == 'feat/projects-physical-migration'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact PR head without submodules
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          submodules: false
+          token: ${{ secrets.DW_SUBMODULE_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build and validate atomic migration candidate
+        shell: bash
+        env:
+          EXPECTED_GWC: 62689ce35e279751a3bf17b5255ac258dafbe7d7
+          EXPECTED_UA: 6ae71878beb50226a1e4b7e2f52ac6468c86f74b
+          EXPECTED_TASK_ME: ef0b890b1fb9140109c04cbb490b41d9aa94bfff
+          EXPECTED_RENTAL_HOME: 26b9ba643e5e216213489506daf5f2af2db09f1e
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          test "$(git ls-tree HEAD powers/gwc | awk '{print $3}')" = "$EXPECTED_GWC"
+          test "$(git ls-tree HEAD powers/ua | awk '{print $3}')" = "$EXPECTED_UA"
+          test "$(git ls-tree HEAD powers/task-me | awk '{print $3}')" = "$EXPECTED_TASK_ME"
+          test "$(git ls-tree HEAD systems/rental-home | awk '{print $3}')" = "$EXPECTED_RENTAL_HOME"
+
+          mkdir -p projects
+          git mv powers/gwc projects/gwc
+          git mv powers/ua projects/ua
+          git mv powers/task-me projects/task-me
+          git mv systems/rental-home projects/rental-home
+
+          cat > .gitmodules <<'EOF'
+          [submodule "projects/gwc"]
+          	path = projects/gwc
+          	url = https://github.com/nhatnguyenquang1838-coder/gwc.git
+          	branch = main
+          [submodule "projects/ua"]
+          	path = projects/ua
+          	url = https://github.com/nhatnguyenquang1838-coder/Understand-Anything.git
+          	branch = main
+          [submodule "projects/task-me"]
+          	path = projects/task-me
+          	url = https://github.com/nhatnguyenquang1838-coder/task-me.git
+          	branch = main
+          [submodule "projects/rental-home"]
+          	path = projects/rental-home
+          	url = https://github.com/nhatnguyenquang1838-coder/rental_home.git
+          	branch = main
+          EOF
+
+          python scripts/phase2_migrate_projects.py
+          git show origin/main:.github/workflows/validate-workspace.yml > .github/workflows/validate-workspace.yml
+          git rm .github/workflows/phase2-capture-gitlinks.yml scripts/phase2_migrate_projects.py
+          git add -A
+
+          test "$(git ls-files -s projects/gwc | awk '{print $2}')" = "$EXPECTED_GWC"
+          test "$(git ls-files -s projects/ua | awk '{print $2}')" = "$EXPECTED_UA"
+          test "$(git ls-files -s projects/task-me | awk '{print $2}')" = "$EXPECTED_TASK_ME"
+          test "$(git ls-files -s projects/rental-home | awk '{print $2}')" = "$EXPECTED_RENTAL_HOME"
+          test -z "$(git ls-files -s powers/gwc powers/ua powers/task-me systems/rental-home)"
+
+          git submodule sync --recursive
+          git submodule update --init --recursive
+          python -m pip install -r requirements-dev.txt
+          python scripts/dw_cli.py validate
+          python -m unittest -v tests.test_project_registry tests.test_workspace_distribution_routing
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "refactor(projects): move source gitlinks into projects"
+          git push --force origin HEAD:refs/heads/phase2-migration-candidate
+          echo "PHASE2_CANDIDATE_SHA=$(git rev-parse HEAD)"
+          echo "PHASE2_CANDIDATE_TREE=$(git rev-parse HEAD^{tree})"
+

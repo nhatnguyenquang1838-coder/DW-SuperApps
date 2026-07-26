@@ -1,4 +1,4 @@
-name: Phase 2 migrate projects
+name: Phase 2 capture gitlinks
 
 on:
   pull_request:
@@ -6,149 +6,62 @@ on:
       - main
     paths:
       - .github/workflows/phase2-capture-gitlinks.yml
+      - .gitmodules
+      - workspace.yaml
+      - projects/**
+      - powers/**
+      - systems/**
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  migrate:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+  capture:
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout migration branch without submodules
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          ref: feat/projects-physical-migration
-          submodules: false
-      - name: Verify pins, migrate, validate, and push
+          fetch-depth: 1
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Capture exact head tree and gitlinks
         shell: bash
-        env:
-          EXPECTED_GWC: 62689ce35e279751a3bf17b5255ac258dafbe7d7
-          EXPECTED_UA: 6ae71878beb50226a1e4b7e2f52ac6468c86f74b
-          EXPECTED_TASK_ME: ef0b890b1fb9140109c04cbb490b41d9aa94bfff
-          EXPECTED_RENTAL_HOME: 26b9ba643e5e216213489506daf5f2af2db09f1e
         run: |
           set -euo pipefail
-          test "$(git rev-parse --abbrev-ref HEAD)" = "feat/projects-physical-migration"
-          test "$(git ls-tree HEAD powers/gwc | awk '{print $3}')" = "$EXPECTED_GWC"
-          test "$(git ls-tree HEAD powers/ua | awk '{print $3}')" = "$EXPECTED_UA"
-          test "$(git ls-tree HEAD powers/task-me | awk '{print $3}')" = "$EXPECTED_TASK_ME"
-          test "$(git ls-tree HEAD systems/rental-home | awk '{print $3}')" = "$EXPECTED_RENTAL_HOME"
-
-          mkdir -p projects
-          git mv powers/gwc projects/gwc
-          git mv powers/ua projects/ua
-          git mv powers/task-me projects/task-me
-          git mv systems/rental-home projects/rental-home
-
           python - <<'PY'
+          import json
           import subprocess
           from pathlib import Path
 
-          replacements = {
-              "powers/gwc": "projects/gwc",
-              "powers/ua": "projects/ua",
-              "powers/task-me": "projects/task-me",
-              "systems/rental-home": "projects/rental-home",
-              "https://github.com/Egonex-AI/Understand-Anything.git": "https://github.com/nhatnguyenquang1838-coder/Understand-Anything.git",
-              "Egonex-AI/Understand-Anything": "nhatnguyenquang1838-coder/Understand-Anything",
-          }
-          gitlinks = {
-              "projects/gwc", "projects/ua", "projects/task-me", "projects/rental-home"
-          }
-          names = subprocess.check_output(["git", "ls-files", "-z"]).decode().split("\0")
-          for name in names:
-              if not name or name in gitlinks or name == ".github/workflows/phase2-capture-gitlinks.yml":
-                  continue
-              path = Path(name)
-              if not path.is_file():
-                  continue
-              try:
-                  text = path.read_text(encoding="utf-8")
-              except (UnicodeDecodeError, OSError):
-                  continue
-              updated = text
-              for old, new in replacements.items():
-                  updated = updated.replace(old, new)
-              if updated != text:
-                  path.write_text(updated, encoding="utf-8")
+          def git(*args: str) -> str:
+              return subprocess.check_output(["git", *args], text=True).strip()
 
-          workspace = Path("workspace.yaml")
-          text = workspace.read_text(encoding="utf-8")
-          needle = "    source: nhatnguyenquang1838-coder/Understand-Anything\n"
-          replacement = needle + "    upstream: Egonex-AI/Understand-Anything\n"
-          first = text.find(needle)
-          if first < 0:
-              raise SystemExit("UA controlled source missing from workspace")
-          text = text[:first] + replacement + text[first + len(needle):]
-          second = text.find(needle, first + len(replacement))
-          if second >= 0:
-              text = text[:second] + replacement + text[second + len(needle):]
-          workspace.write_text(text, encoding="utf-8")
-
-          readme = Path("README.md")
-          text = readme.read_text(encoding="utf-8")
-          text = text.replace(
-              "The current checkout keeps compatibility paths under `powers/*` and `systems/*`. They are registered as projects now and will move physically into `projects/*` in a later reviewed change.",
-              "All editable source repositories live below `projects/*`. Root `powers/` contains only non-submodule routing assets, while installed packages remain under `.dw/powers/*`."
+          paths = [
+              "powers/gwc",
+              "powers/ua",
+              "powers/task-me",
+              "systems/rental-home",
+          ]
+          gitlinks = {}
+          for path in paths:
+              fields = git("ls-tree", "HEAD", "--", path).split()
+              if len(fields) < 4 or fields[0] != "160000":
+                  raise SystemExit(f"missing gitlink: {path}")
+              gitlinks[path] = fields[2]
+          evidence = {
+              "head": git("rev-parse", "HEAD"),
+              "tree": git("rev-parse", "HEAD^{tree}"),
+              "gitlinks": gitlinks,
+          }
+          Path("phase2-gitlinks.json").write_text(
+              json.dumps(evidence, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
           )
-          text = text.replace("controlled source project planned", "controlled source project under `projects/ua`")
-          readme.write_text(text, encoding="utf-8")
-
-          migration = Path("docs/installation/MIGRATION.md")
-          if migration.is_file():
-              text = migration.read_text(encoding="utf-8")
-              appendix = '''
-
-## Phase 2 source-project path migration
-
-After pulling the migration commit:
-
-```bash
-git submodule deinit -f -- powers/gwc powers/ua powers/task-me systems/rental-home || true
-git submodule sync --recursive
-git submodule update --init --recursive
-./bin/dw project list
-./bin/dw validate
-```
-
-Do not delete dirty legacy submodule worktrees automatically. Preserve or commit child-repository changes before deinitializing. UA now uses `nhatnguyenquang1838-coder/Understand-Anything` as the active origin; `Egonex-AI/Understand-Anything` remains its documented upstream provenance.
-'''
-              if "Phase 2 source-project path migration" not in text:
-                  migration.write_text(text.rstrip() + appendix + "\n", encoding="utf-8")
+          print(json.dumps(evidence, sort_keys=True))
           PY
-
-          cat > .gitmodules <<'EOF'
-          [submodule "projects/gwc"]
-          	path = projects/gwc
-          	url = https://github.com/nhatnguyenquang1838-coder/gwc.git
-          	branch = main
-          [submodule "projects/ua"]
-          	path = projects/ua
-          	url = https://github.com/nhatnguyenquang1838-coder/Understand-Anything.git
-          	branch = main
-          [submodule "projects/task-me"]
-          	path = projects/task-me
-          	url = https://github.com/nhatnguyenquang1838-coder/task-me.git
-          	branch = main
-          [submodule "projects/rental-home"]
-          	path = projects/rental-home
-          	url = https://github.com/nhatnguyenquang1838-coder/rental_home.git
-          	branch = main
-          EOF
-
-          git rm .github/workflows/phase2-capture-gitlinks.yml
-
-          test "$(git ls-files -s projects/gwc | awk '{print $2}')" = "$EXPECTED_GWC"
-          test "$(git ls-files -s projects/ua | awk '{print $2}')" = "$EXPECTED_UA"
-          test "$(git ls-files -s projects/task-me | awk '{print $2}')" = "$EXPECTED_TASK_ME"
-          test "$(git ls-files -s projects/rental-home | awk '{print $2}')" = "$EXPECTED_RENTAL_HOME"
-          test -z "$(git ls-files -s powers/gwc powers/ua powers/task-me systems/rental-home)"
-          ! grep -RIn --exclude-dir=.git --exclude='.gitmodules' -E 'powers/(gwc|ua|task-me)|systems/rental-home' .
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "refactor(projects): move source gitlinks into projects"
-          git push origin HEAD:feat/projects-physical-migration
+      - name: Upload exact-head evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: phase2-gitlinks-${{ github.event.pull_request.head.sha }}
+          path: phase2-gitlinks.json
+          if-no-files-found: error
+          retention-days: 7
