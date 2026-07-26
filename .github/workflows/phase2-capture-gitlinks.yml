@@ -11,6 +11,11 @@ on:
       - projects/**
       - powers/**
       - systems/**
+      - scripts/**
+      - schemas/**
+      - tests/**
+      - docs/**
+      - README.md
 
 permissions:
   contents: read
@@ -61,10 +66,75 @@ jobs:
           Path("phase2-gitlinks.json").write_text(text, encoding="utf-8")
           print("PHASE2_GITLINK_EVIDENCE=" + json.dumps(evidence, sort_keys=True))
           PY
+      - name: Checkout exact head without submodules
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          ref: ${{ github.event.pull_request.head.sha }}
+          submodules: false
+      - name: Capture tracked source and path coupling
+        shell: bash
+        run: |
+          set -euo pipefail
+          git archive --format=tar.gz --output=phase2-source.tar.gz HEAD
+          python - <<'PY'
+          import json
+          import subprocess
+          from pathlib import Path
+
+          patterns = (
+              "powers/gwc",
+              "powers/ua",
+              "powers/task-me",
+              "systems/rental-home",
+              "Egonex-AI/Understand-Anything",
+          )
+          gitlinks = {
+              "powers/gwc",
+              "powers/ua",
+              "powers/task-me",
+              "systems/rental-home",
+          }
+          files = subprocess.check_output(["git", "ls-files", "-z"]).decode().split("\0")
+          matches = []
+          for name in files:
+              if not name or name in gitlinks:
+                  continue
+              path = Path(name)
+              if not path.is_file():
+                  continue
+              try:
+                  text = path.read_text(encoding="utf-8")
+              except (UnicodeDecodeError, OSError):
+                  continue
+              for number, line in enumerate(text.splitlines(), start=1):
+                  found = [pattern for pattern in patterns if pattern in line]
+                  if found:
+                      matches.append({
+                          "file": name,
+                          "line": number,
+                          "patterns": found,
+                          "text": line,
+                      })
+          Path("phase2-path-coupling.json").write_text(
+              json.dumps(matches, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(f"path coupling matches: {len(matches)}")
+          PY
       - name: Upload exact-head evidence
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: phase2-gitlinks-${{ github.event.pull_request.head.sha }}
           path: phase2-gitlinks.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload tracked source snapshot
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: phase2-source-${{ github.event.pull_request.head.sha }}
+          path: |
+            phase2-source.tar.gz
+            phase2-path-coupling.json
           if-no-files-found: error
           retention-days: 7
