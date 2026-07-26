@@ -1,20 +1,20 @@
 apiVersion: gwc/v1
 kind: G3DeliveryRecord
 metadata:
-  runId: g3-SCRUM-105-revalidation-20260726-0917
-  status: BLOCKED
+  runId: g3-SCRUM-105-revalidation-20260726-0924
+  status: VERIFIED
   workspaceMode: canonical
   workspaceRoot: .gwc
   repositoryArtifactWritten: YES
   conflictPolicy: no-shared-active-writes
   verificationMode: TOOL_VERIFIED
-  timestamp: "2026-07-26T09:17:45Z"
+  timestamp: "2026-07-26T09:24:10Z"
 
 approval:
   gate: G3_PR
-  approvalId: APPROVE_G3_SCRUM105_REVALIDATION_20260726
-  scopeHash16: 18658eaaca1f7a29
-  expiresAt: "2026-07-26T10:10:37Z"
+  approvalId: APPROVE_G3_SCRUM105_BASE_REFRESH_20260726
+  scopeHash16: e413903c967d960d
+  expiresAt: "2026-07-26T10:24:10Z"
   status: VERIFIED
 
 trace:
@@ -24,17 +24,17 @@ trace:
   pr: 20
   branch: marmalade-beanie
   baseRef: main
-  approvedBaseSha: 8cf13d7d6bef535bff77e36815b737aff9d7f709
+  approvedBaseSha: 158223c14b530c2676391f071c93b5549397aa45
   verifiedOriginMainSha: 158223c14b530c2676391f071c93b5549397aa45
-  reviewedHeadSha: 89dc599323b627649b1d42c89bf06419a6e2654d
-  mergeBaseSha: 8cf13d7d6bef535bff77e36815b737aff9d7f709
-  compareStatus: diverged
-  aheadBy: 8
-  behindBy: 17
+  reviewedHeadSha: e20d99211457836816d898d617a0937feefea0a1
+  mergeBaseSha: 158223c14b530c2676391f071c93b5549397aa45
+  compareStatus: ahead
+  aheadBy: 10
+  behindBy: 0
 
 g2Evidence:
   exactHeadReadback: true
-  headSha: 89dc599323b627649b1d42c89bf06419a6e2654d
+  headSha: e20d99211457836816d898d617a0937feefea0a1
   sourceHeadStatus: VERIFIED
   changedFiles: 20
   changedPaths:
@@ -58,14 +58,14 @@ g2Evidence:
     - .gwc/scrums/SCRUM-105/schemas/pending-action-readback.schema.json
     - .gwc/scrums/SCRUM-105/schemas/runtime-event.schema.json
     - .gwc/scrums/SCRUM-105/schemas/store-api.schema.json
-  scopeHash16: 18658eaaca1f7a29
+  scopeHash16: e413903c967d960d
 
 ciEvidence:
   workflow: Validate workspace
-  runId: 30196135859
+  runId: 30196370896
   status: completed
   conclusion: success
-  exactHeadSha: 89dc599323b627649b1d42c89bf06419a6e2654d
+  exactHeadSha: e20d99211457836816d898d617a0937feefea0a1
   combinedStatus: no_commit_statuses_reported
 
 validation:
@@ -80,26 +80,19 @@ validation:
     schemaAndDesignChecks: PASS
     migrationLeaseEpochConsistency: PASS
   deliveryBinding:
-    status: BLOCKED
+    status: VERIFIED
     reason: >
-      Verified origin/main advanced to 158223c while the approved G3 scope and PR
-      merge-base remain bound to 8cf13d7. GitHub compare reports diverged, ahead_by 8,
-      behind_by 17. Rebase or base refresh is outside this approval.
+      Current origin/main, PR base, merge base and approved base all resolve to
+      158223c. GitHub compare is ahead by 10 and behind by 0.
 
 g3Review:
-  outcome: BLOCKED
+  outcome: PASS
   findings:
-    - severity: BLOCKER
-      lane: DELIVERY
-      description: PR base binding is stale relative to the verified origin/main SHA
-      resolution: >
-        Do not merge or generate G4 approval. Obtain fresh scope approval for a
-        base refresh/rebase or an explicit current-base decision, then repeat exact-head G3 readback.
     - severity: INFO
       lane: DELIVERY
       description: PR body retains historical G3/G4 claims
       resolution: >
-        Treat GWC artifacts, current GitHub state, and CI as authoritative; no merge
+        Treat GWC artifacts, current GitHub state and CI as authoritative; no merge
         authority is inferred from the PR body.
 
 authorityBoundary:
@@ -109,12 +102,14 @@ authorityBoundary:
     - G4_MERGE
     - G5_DEPLOY
     - G6_PRODUCTION_DATA
-  note: G3 is blocked by base drift and grants no merge authority.
+  note: G3 pass does not grant merge authority.
 
 g4ApprovalRequest:
   gate: G4_MERGE
-  status: BLOCKED
-  reason: Current origin/main is not the approved base; G4 cannot be requested.
+  status: PENDING_FINAL_HEAD_READBACK
+  reason: >
+    This G3 evidence commit changes the PR head; generate G4 only after the final
+    pushed head and CI are read back.
 
-g3Outcome: BLOCKED
+g3Outcome: PASS
 g4MergeNotGranted: true
