@@ -10,9 +10,21 @@ if str(SCRIPTS) not in sys.path:
 
 import dw_cli  # noqa: E402
 import dw_entry  # noqa: E402
+import dw_project_add  # noqa: E402
+import dw_project_registry  # noqa: E402
 import dw_workspace_dist  # noqa: E402
+import dw_workspace_init  # noqa: E402,F401
 from dw_power_store.cli import main as power_main  # noqa: E402
 from dw_workspace_dist import main as distribution_main  # noqa: E402
+
+
+def project_add_main(argv: list[str]) -> int:
+    original = sys.argv
+    try:
+        sys.argv = [original[0], *argv[2:]]
+        return int(dw_project_add.main())
+    finally:
+        sys.argv = original
 
 
 def main() -> int:
@@ -21,6 +33,13 @@ def main() -> int:
     dw_cli.install_host_adapters = dw_workspace_dist.host_install
     dw_cli.host_status = dw_workspace_dist.host_status
     argv = sys.argv[1:]
+    if len(argv) >= 2 and argv[0] == "workspace" and argv[1] == "init":
+        return int(dw_project_registry.main(argv))
+    if len(argv) >= 2 and argv[0] == "project":
+        if argv[1] in {"list", "info"}:
+            return int(dw_project_registry.main(argv))
+        if argv[1] == "add":
+            return project_add_main(argv)
     if len(argv) >= 2 and argv[0] == "power":
         if argv[1] in {"install", "configure", "doctor", "history", "rollback", "uninstall"}:
             return power_main(argv[1:])
