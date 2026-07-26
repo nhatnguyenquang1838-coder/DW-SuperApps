@@ -7,7 +7,7 @@ metadata:
   description: Impact analysis, implementation planning, task decomposition, coding guidance, and validation planning.
 spec:
   category: implementation-planning
-  path: powers/task-me
+  path: projects/task-me
   source: nhatnguyenquang1838-coder/task-me
   provides:
     - impact-analysis
@@ -57,7 +57,7 @@ spec:
     modes:
       submodule:
         repository: nhatnguyenquang1838-coder/task-me
-        path: powers/task-me
+        path: projects/task-me
         ref: main
       release:
         repository: nhatnguyenquang1838-coder/task-me

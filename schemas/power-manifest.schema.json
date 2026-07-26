@@ -64,7 +64,7 @@
         },
         "path": {
           "type": "string",
-          "pattern": "^powers/[a-z0-9][a-z0-9-]*$"
+          "pattern": "^(projects|powers)/[a-z0-9][a-z0-9-]*$"
         },
         "source": {
           "type": "string",
@@ -223,11 +223,15 @@
                     },
                     "path": {
                       "type": "string",
-                      "pattern": "^powers/[a-z0-9][a-z0-9-]*$"
+                      "pattern": "^(projects|powers)/[a-z0-9][a-z0-9-]*$"
                     },
                     "ref": {
                       "type": "string",
                       "minLength": 1
+                    },
+                    "upstreamRepository": {
+                      "type": "string",
+                      "pattern": "^[^/\\s]+/[^/\\s]+$"
                     }
                   },
                   "additionalProperties": false
@@ -317,6 +321,10 @@
             }
           },
           "additionalProperties": false
+        },
+        "upstream": {
+          "type": "string",
+          "pattern": "^[^/\\s]+/[^/\\s]+$"
         }
       },
       "additionalProperties": false
