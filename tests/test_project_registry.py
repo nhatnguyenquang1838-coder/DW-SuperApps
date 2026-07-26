@@ -49,7 +49,7 @@ class ProjectRegistryTests(unittest.TestCase):
                 },
                 {
                     "id": "gwc",
-                    "path": "powers/gwc",
+                    "path": "projects/gwc",
                     "source": "example/gwc",
                     "roles": ["power-source"],
                 },
@@ -58,7 +58,7 @@ class ProjectRegistryTests(unittest.TestCase):
                 {
                     "id": "gwc",
                     "project": "gwc",
-                    "path": "powers/gwc",
+                    "path": "projects/gwc",
                     "source": "example/gwc",
                 }
             ],
@@ -80,11 +80,21 @@ class ProjectRegistryTests(unittest.TestCase):
                 root=root,
                 gitmodules={
                     "projects/alpha": "https://github.com/example/alpha.git",
-                    "powers/gwc": "https://github.com/example/gwc.git",
+                    "projects/gwc": "https://github.com/example/gwc.git",
                 },
             )
             self.assertEqual("example/alpha", projects["alpha"]["source"])
             self.assertIn("system", projects["alpha"]["roles"])
+
+    def test_current_workspace_rejects_legacy_source_roots(self) -> None:
+        current_root = Path(__file__).resolve().parents[1]
+        current = registry.load_yaml(current_root / "workspace.yaml")
+        for project in current["projects"]:
+            if set(project["roles"]) & {"power-source", "product", "system"}:
+                self.assertTrue(project["path"].startswith("projects/"))
+        gitmodules = (current_root / ".gitmodules").read_text(encoding="utf-8")
+        for legacy in ("powers/gwc", "powers/ua", "powers/task-me", "systems/rental-home"):
+            self.assertNotIn(f"path = {legacy}", gitmodules)
 
     def test_unknown_project_reference_fails_closed(self) -> None:
         data = self.workspace()

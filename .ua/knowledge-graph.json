@@ -3521,10 +3521,10 @@
       ]
     },
     {
-      "id": "document:powers/gwc/skills/gwc-g1/SKILL.md",
+      "id": "document:projects/gwc/skills/gwc-g1/SKILL.md",
       "type": "document",
       "name": "gwc-g1 SKILL.md",
-      "filePath": "powers/gwc/skills/gwc-g1/SKILL.md",
+      "filePath": "projects/gwc/skills/gwc-g1/SKILL.md",
       "summary": "GWC Power skill definition for governance and governed delivery workflows (G1 gate).",
       "complexity": "moderate",
       "language": "markdown",
@@ -4536,7 +4536,7 @@
       "description": "Reusable AI capability modules (GWC, UA, Task Me, BMAD).",
       "nodeIds": [
         "document:powers/bmad/SKILL.md",
-        "document:powers/gwc/skills/gwc-g1/SKILL.md"
+        "document:projects/gwc/skills/gwc-g1/SKILL.md"
       ]
     },
     {
@@ -4725,10 +4725,10 @@
     {
       "order": 7,
       "title": "Powers",
-      "description": "Tour the reusable AI capability modules. powers/gwc provides governance, powers/ua provides semantic analysis, powers/task-me provides implementation planning, and powers/bmad is the release-first BMAD Method router.",
+      "description": "Tour the reusable AI capability modules. projects/gwc provides governance, projects/ua provides semantic analysis, projects/task-me provides implementation planning, and powers/bmad is the release-first BMAD Method router.",
       "nodeIds": [
         "document:powers/bmad/SKILL.md",
-        "document:powers/gwc/skills/gwc-g1/SKILL.md"
+        "document:projects/gwc/skills/gwc-g1/SKILL.md"
       ]
     },
     {

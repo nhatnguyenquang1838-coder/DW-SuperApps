@@ -8,9 +8,9 @@ description: Semantic codebase analysis, architecture discovery, dependency mapp
 
 This is a thin `codex` adapter. Canonical behavior remains in:
 
-- Power source: `../../../powers/ua`
+- Power source: `../../../projects/ua`
 - Power manifest: `../../../manifests/powers/ua.yaml`
-- Preferred entrypoint: `../../../powers/ua/understand-anything-plugin/skills/understand`
+- Preferred entrypoint: `../../../projects/ua/understand-anything-plugin/skills/understand`
 
 ## Invocation
 

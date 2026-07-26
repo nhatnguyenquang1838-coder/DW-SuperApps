@@ -51,8 +51,8 @@ spec:
     workOrder: schemas/work-order.schema.json
     workerResult: schemas/worker-result.schema.json
   governance:
-    authority: powers/gwc
-    planning: powers/task-me
-    knowledge: powers/ua
+    authority: projects/gwc
+    planning: projects/task-me
+    knowledge: projects/ua
     repositoryTruth: github
     communicationProjection: slack

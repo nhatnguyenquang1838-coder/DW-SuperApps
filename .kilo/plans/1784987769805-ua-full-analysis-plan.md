@@ -6,7 +6,7 @@ Run the Understand Anything (UA) power in full mode against the DW SuperApps wor
 ## Current State
 - `.ua/` does not exist.
 - All four Powers are registered and host adapters are ready.
-- `powers/ua` submodule is checked out at commit `6ae71878beb50226a1e4b7e2f52ac6468c86f74b` (tag `v1.3.0-555-g6ae7187`).
+- `projects/ua` submodule is checked out at commit `6ae71878beb50226a1e4b7e2f52ac6468c86f74b` (tag `v1.3.0-555-g6ae7187`).
 
 ## Artifacts to Generate
 Run `dw power prompt ua --system dw-superapps --task "Full UA analysis"` or invoke the UA skill directly to produce:
@@ -26,7 +26,7 @@ Run `dw power prompt ua --system dw-superapps --task "Full UA analysis"` or invo
 Use this to validate the final graph:
 
 - **Hub:** `workspace.yaml` (hosts, providers, powers, systems, data ownership)
-- **Spokes:** `powers/*` (gwc, ua, task-me, bmad), `systems/rental-home`, `plugins/bmad-method`
+- **Spokes:** `projects/*` (gwc, ua, task-me, rental-home), `powers/bmad`, `plugins/bmad-method`
 - **CLI surface:** `bin/dw` → `scripts/dw_entry.py` / `scripts/dw_cli.py` / `scripts/dw_power_package.py`
 - **Host adapters:** `.kilo/`, `.github/`, `.agents/`, `.claude/`, `.codex/`, `.kiro/`, `.clinerules/`
 - **Distribution:** `scripts/power_dist.py` + `schemas/` + `templates/` + `plugins/bmad-method/`
@@ -51,7 +51,7 @@ Use this to validate the final graph:
 
 ## Steps to Execute
 1. Ensure Node.js >= 22 and pnpm >= 10 are installed (required by UA plugin).
-2. Build the UA plugin if needed: `cd powers/ua/understand-anything-plugin && pnpm install && pnpm --filter @understand-anything/core build`
+2. Build the UA plugin if needed: `cd projects/ua/understand-anything-plugin && pnpm install && pnpm --filter @understand-anything/core build`
 3. Run full analysis:
    ```bash
    cd /Users/mac/prj/DW-SuperApps
@@ -70,5 +70,5 @@ Use this to validate the final graph:
 ## Risks / Notes
 - The UA plugin requires a Node.js build step. If `pnpm` is missing, the skill will prompt for installation.
 - Running with `--full` forces rebuild; incremental runs require `scan-result.json` to be preserved.
-- The `powers/ua` submodule is large; Phase 1 scan may take a while.
+- The `projects/ua` submodule is large; Phase 1 scan may take a while.
 - If any Phase 2 subagent dispatch fails, the skill retries once then continues with partial results.
