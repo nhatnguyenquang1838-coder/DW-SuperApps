@@ -58,7 +58,7 @@ options:
       - Departs from .gwc/ convention for this task
     risks:
       - Additional tooling complexity
-      - May conflict with SCRUM-104 implementation lane patterns
+      - May conflict with SCRUM-104 validator lane patterns
     constraintFit: PARTIAL
     skillsDistribution:
       - skillId: bmad
@@ -96,14 +96,14 @@ options:
     recommendationRationale: >
       Extending the shared GWC power package creates unnecessary coupling. The
       design should target the rental-home system specifically, not the GWC power
-      infrastructure itself. SCRUM-104 implementation will consume these schemas
+      infrastructure itself. The SCRUM-104 validator lane will consume these schemas
       via the canonical registries, not directly.
 
 recommendedOption: OPT-1
 decisionRequired: true
 selectionRule:
   1. Prefer the option that reuses current mechanisms (OPT-1 uses existing .gwc/ workflow)
-  2. Prefer lower blast radius (OPT-1 targets rental-home only)
+  2. Prefer lower blast radius (OPT-1 adds workspace-owned design artifacts only)
   3. Prefer instruction-level guidance over tool-level change (OPT-1 uses existing JSON Schema and Markdown)
   4. Prefer schema/tool changes only when instruction-only cannot satisfy acceptance criteria (OPT-1 satisfies all ACs)
   5. Reject options that imply G4/G5/G6 or production authority (OPT-1 requires no G4/G5/G6)

@@ -12,7 +12,7 @@
     "eventType": {
       "type": "string",
       "description": "Fully qualified event type name",
-      "pattern": "^(run|checkpoint|store|lease|fence|pending|adapter)\\.[a-zA-Z]+(\\.[a-zA-Z]+)*$"
+      "pattern": "^(run|store|lease|fence|pending|adapter)\\.[a-zA-Z]+(\\.[a-zA-Z]+)*$"
     },
     "timestamp": { "type": "string", "format": "date-time", "description": "ISO-8601 with timezone" },
     "traceId": { "type": ["string", "null"], "format": "uuid", "description": "Distributed trace identifier" },
@@ -22,8 +22,8 @@
       "additionalProperties": false,
       "required": ["actor", "source"],
       "properties": {
-        "actor": { "type": "string", "description": "Node or user that produced the event" },
-        "source": { "type": "string", "description": "Originating system or service" },
+        "actor": { "type": "string", "minLength": 1, "description": "Node or user that produced the event" },
+        "source": { "type": "string", "minLength": 1, "description": "Originating system or service" },
         "correlationId": { "type": ["string", "null"], "format": "uuid" }
       }
     }

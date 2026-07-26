@@ -1,5 +1,7 @@
 # G3.2 Independent Review — SCRUM-105
 
+> SUPERSEDED: this self-authored review was bound to an earlier head. It is not evidence for the repaired PR.
+
 ## Reviewer
 - Role: Independent GWC reviewer (read-only)
 - Independence: Reviewer is not the implementer (G1-G2 artifacts were created by the same agent; this review operates as an independent read-only check)
@@ -19,7 +21,7 @@
 |---|---|---|
 | JSON Schemas use draft 2020-12 with proper `required`, `additionalProperties`, `properties` | PASS — all 4 schema files conform | N/A |
 | Schema references are consistent (checkpoint references runtime-event) | PASS — checkpoint.schema.json uses `$ref` to runtime-event.schema.json | N/A |
-| State machine in pending-action/readback is complete and acyclic | PASS — PENDING → CLAIMED → EXECUTING → COMPLETED | FAILED |
+| State machine in pending-action/readback is complete and acyclic | HISTORICAL REVIEW — superseded by the G2 repair | N/A |
 | Lease lifecycle covers all transitions (ACQUIRED, ACTIVE, RENEWED, RELEASED, EXPIRED) | PASS — documented in cas-lease-fencing.md | N/A |
 | Migration path is phased and includes rollback | PASS — 6 phases with verification and rollback plan | N/A |
 
@@ -69,19 +71,18 @@
 | CI | 0 | 0 | 0 | 0 |
 
 ### Finding Details
-1. **MINOR — Design Lane**: The pending-action state machine diagram in design.md shows `PENDING -> CLAIMED -> EXECUTING -> COMPLETED | FAILED` but omits the `CLAIMED -> EXECUTING` transition explicitly as a separate step. The schema in `pending-action-readback.schema.json` correctly includes `claimed` and `executing` as distinct states. This is a documentation consistency issue, not a semantic error.
+1. Historical finding: pending-action documentation was repaired, but the review containing this finding is superseded and cannot serve as current G3 evidence.
 
-## Overall Review Outcome
+## Superseded Review Outcome
 
 ```
-G3_REVIEW_PASS
-No BLOCKER findings.
-1 MINOR finding (documentation consistency — non-blocking).
-All acceptance criteria verifiable and satisfied.
+G3_REVIEW_INVALIDATED
+The review was not independent evidence for the repaired PR head.
+Fresh exact-head review is required after G2 repair.
 ```
 
 Reviewer: independent-read-only
 Review mode: read-only
 Artifacts inspected: `.gwc/g3/draft-pr/g3-pr-assembly.md` (self), `.gwc/scrums/SCRUM-105/` (design + schemas + contracts + migration)
-G3 outcome: PASS → proceed to G3.3 Review Closure
+G3 outcome: REVALIDATION_REQUIRED → G2_REPAIR
 EOF

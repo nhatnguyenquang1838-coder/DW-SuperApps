@@ -2,6 +2,7 @@ apiVersion: gwc/v1
 kind: G2ExecutionRecord
 metadata:
   runId: g2-SCRUM-105-20260726-1510
+  status: SUPERSEDED_BY_G2_REPAIR
   workspaceMode: canonical
   workspaceRoot: .gwc
   repositoryArtifactWritten: YES
@@ -63,12 +64,13 @@ executionSummary:
   mode: canonical
   branch: marmalade-beanie
   baseSha: 8cf13d7d6bef535bff77e36815b737aff9d7f709
-  headSha: c5f7abe40c8a6e0e9e0c0e0e0e0e0e0e0e0e0e0e
+  headSha: null
+  headShaStatus: INVALID_HISTORICAL_VALUE
   commits: 1
   filesChanged: 9
   linesAdded: 905
   validation: TOOL_VERIFIED
 
-g2ExecutionOutcome: PASS
-g3DraftPrReady: true
-nextGate: G3_REVIEW
+g2ExecutionOutcome: SUPERSEDED
+g3DraftPrReady: false
+nextGate: G2_REPAIR_REVALIDATION
