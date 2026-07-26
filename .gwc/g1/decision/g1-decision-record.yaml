@@ -1,0 +1,106 @@
+apiVersion: gwc/v1
+kind: G1DecisionRecord
+metadata:
+  runId: g1-SCRUM-105-20260726-1500
+  workspaceMode: canonical
+  workspaceRoot: .gwc
+  repositoryArtifactWritten: YES
+  conflictPolicy: no-shared-active-writes
+  verificationMode: TOOL_VERIFIED
+  timestamp: "2026-07-26T15:00:00+07:00"
+
+trace:
+  projectId: dw-superapps
+  taskId: SCRUM-105
+  baseSha: 8cf13d7d6bef535bff77e36815b737aff9d7f709
+  g0SnapshotRef: g0-SCRUM-105
+  intakeRef: g1-SCRUM-105-20260726-1500/intake
+  optionsRef: g1-SCRUM-105-20260726-1500/options
+  preflightRef: g1-SCRUM-105-20260726-1500/preflight
+
+status: ACCEPTED
+selectedOptionId: OPT-1
+explicitDecision: >
+  Proceed with JSON Schema + Markdown design document approach.
+  Create SCRUM-105 design artifacts under .gwc/scrums/SCRUM-105/.
+  Artifacts include: design.md, runtime-event.schema.json, checkpoint.schema.json,
+  store-api.schema.json, pending-action-readback.schema.json, store-api.md,
+  cas-lease-fencing.md, node-adapter.md, and migration/README.md.
+
+actor: nhatdear
+source: GWC gate decision
+time: "2026-07-26T15:00:00+07:00"
+
+rationale: >
+  OPT-1 reuses existing .gwc/ workflow, has lowest blast radius,
+  satisfies all acceptance criteria, and stays within G2 design scope
+  without requiring G4/G5/G6 authority. SCRUM-105 is a knowledge lane
+  design task — design artifacts only, no implementation.
+
+rejectedOptionIds:
+  - OPT-2
+  - OPT-3
+rejectionRationale:
+  OPT-2: BMAD template approach introduces unnecessary tooling complexity
+  for a knowledge lane design task.
+  OPT-3: Extending the shared GWC power package creates coupling and
+  higher blast radius than needed.
+
+acceptanceCriteriaRefs:
+  - AC-1
+  - AC-2
+  - AC-3
+  - AC-4
+  - AC-5
+  - AC-6
+  - AC-7
+  - AC-8
+  - AC-9
+
+scopeHash: 839f04638ba15dca6a1b4d901cae5ee2b6b6f1c4
+
+g1_gate_outcome: PASS
+g2_handoff_ready: true
+
+authorityBoundaries:
+  grants:
+    - G2_EXECUTION
+  excludes:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION_DATA
+
+subagentDistributionPlan:
+  taskDecomposition:
+    - task: design.md (runtime store design document)
+      agent: core-coder
+    - task: runtime-event.schema.json + checkpoint.schema.json
+      agent: core-coder
+    - task: store-api.schema.json + store-api.md
+      agent: core-coder
+    - task: cas-lease-fencing.md
+      agent: core-coder
+    - task: pending-action-readback.schema.json
+      agent: core-coder
+    - task: node-adapter.md
+      agent: core-coder
+    - task: migration/README.md
+      agent: core-coder
+  agentAllocation:
+    - agent: core-coder
+      taskCount: 7
+      role: design-artifact-author
+  executionOrder:
+    - design.md (foundation)
+    - schemas (runtime-event, checkpoint, store-api, pending-action-readback)
+    - contracts (store-api, cas-lease-fencing, node-adapter)
+    - migration (README.md)
+  summary: >
+    Single-agent design task. Sequential artifact creation follows the
+    dependency order: design doc first, then schemas, then contracts,
+    then migration path.
+
+g1DecisionMarker: >
+  DECISION_ACCEPTED_FOR_G2_PLANNING
+  G2_PLANNING_READY
+  G2_EXECUTION_NOT_GRANTED

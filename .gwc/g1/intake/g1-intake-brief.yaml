@@ -1,0 +1,123 @@
+apiVersion: gwc/v1
+kind: G1IntakeBrief
+metadata:
+  runId: g1-SCRUM-105-20260726-1500
+  workspaceMode: canonical
+  workspaceRoot: .gwc
+  repositoryArtifactWritten: YES
+  conflictPolicy: no-shared-active-writes
+  verificationMode: TOOL_VERIFIED
+  timestamp: "2026-07-26T15:00:00+07:00"
+
+trace:
+  projectId: dw-superapps
+  repository: DW-SuperApps
+  taskId: SCRUM-105
+  baseSha: 8cf13d7d6bef535bff77e36815b737aff9d7f709
+  baseRef: main
+  g0SnapshotRef: g0-SCRUM-105
+
+problem:
+  statement: >
+    The GWC governance engine lacks a durable runtime store with event-sourced
+    state management, checkpointing, CAS-based concurrency control, lease and
+    fencing semantics, pending-action/readback messaging, and a node
+    request/result adapter contract. The current SCRUM-104 implementation lane
+    (canonical registries and validators) depends on this knowledge foundation.
+  whyNow: >
+    SCRUM-104 (P1-I2, In Progress) builds canonical registries and validators
+    that require the runtime store infrastructure designed by SCRUM-105. The
+    knowledge lane must complete before the implementation lane can proceed with
+    store-dependent features.
+
+desiredOutcome: >
+  A complete set of design documents and JSON schemas defining: run/event/checkpoint
+  event envelopes, store API surface with CAS/lease/fencing semantics, pending-action/readback
+  model, node request/result adapter contract, and SQLite-to-PostgreSQL/Supabase migration path.
+
+stakeholders:
+  - id: nhatnguyenquang1838
+    role: assignee
+    taskOwner: true
+  - id: gwc-engine
+    role: consumer
+    description: GWC governance engine consumes runtime store schemas
+  - id: rental-home-system
+    role: targetSystem
+    description: Rental Home system is the deployment target
+
+scope:
+  inScope:
+    - Run/event/checkpoint JSON schema definitions
+    - Store API surface and semantics
+    - CAS, lease, and fencing semantics
+    - Pending-action/readback model
+    - Node request/result adapter contract
+    - SQLite-to-PostgreSQL/Supabase migration path
+  nonGoals:
+    - Runtime store implementation (SCRUM-104)
+    - Database provisioning or infrastructure provisioning
+    - User-facing UI for store inspection
+    - GWC governance workflow changes
+    - Power distribution changes
+
+constraints:
+  - Must follow GWC G0 -> G1 -> G2 gate sequence
+  - Schemas must validate against JSON Schema draft 2020-12
+  - All design must be system-owned under rental-home/.gwc/
+  - Must not grant G4_MERGE, G5_DEPLOY, or G6_PRODUCTION authority
+  - Must be compatible with SCRUM-104 P1 registries and validators
+
+assumptions:
+  - PostgreSQL/Supabase target database is provisioned separately
+  - SQLite pilot schema serves as the extraction source
+  - GWC submodule is available as governance reference source
+  - rental-home submodule is available as the target system
+  - Node identifiers are unique and stable per deployment
+
+risks:
+  - id: RISK-1
+    description: Submodule not initialized in worktree limits access to GWC core governance sources
+    severity: MEDIUM
+    mitigation: Use available policy and runbook sources; mark missing sources explicitly
+  - id: RISK-2
+    description: Migration from SQLite to PostgreSQL may introduce data loss if transformation is not validated
+    severity: HIGH
+    mitigation: Phase migration with verification script and 30-day SQLite retention
+  - id: RISK-3
+    description: CAS/lease/fencing semantics may conflict with SCRUM-104 registry validators
+    severity: MEDIUM
+    mitigation: Coordinate design with SCRUM-104 implementation
+
+acceptanceCriteria:
+  - id: AC-1
+    description: All schemas validate against JSON Schema draft 2020-12
+    status: VERIFIABLE
+  - id: AC-2
+    description: Store API operations satisfy contract for success, error, and timeout cases
+    status: VERIFIABLE
+  - id: AC-3
+    description: CAS rejects stale writes with 409 Conflict
+    status: VERIFIABLE
+  - id: AC-4
+    description: Leases expire after TTL and release exclusive access
+    status: VERIFIABLE
+  - id: AC-5
+    description: Fencing tokens monotonically increase and reject stale writes
+    status: VERIFIABLE
+  - id: AC-6
+    description: Pending actions follow the defined state machine
+    status: VERIFIABLE
+  - id: AC-7
+    description: Adapter contract handshake completes before any store operation
+    status: VERIFIABLE
+  - id: AC-8
+    description: Migration script extracts, transforms, and loads without data loss
+    status: VERIFIABLE
+  - id: AC-9
+    description: Verification script confirms row counts and checksums match
+    status: VERIFIABLE
+
+unresolvedQuestions: []
+
+g1Outcome: READY
