@@ -18,7 +18,7 @@ The adapter contract defines how GWC runtime nodes interact with the durable run
   "requestId": "uuid-v7",
   "payload": {
     "nodeId": "string",
-    "capabilities": ["store.load", "store.append", "store.lease", "store.pending", "store.readback"],
+    "capabilities": ["store.load", "store.append", "store.read", "store.checkpoint.read", "store.put", "store.delete", "store.lease.acquire", "store.lease.renew", "store.lease.release", "store.pending.submit", "store.pending.readback"],
     "supportedSchemas": ["runtime-event/v1", "checkpoint/v1", "store-api/v1", "pending-action/v1"]
   }
 }
@@ -33,6 +33,7 @@ The adapter contract defines how GWC runtime nodes interact with the durable run
   "payload": {
     "nodeId": "string",
     "fencingToken": 1,
+    "leaseEpoch": 1,
     "leaseDurationMs": 30000
   }
 }
@@ -62,10 +63,10 @@ The adapter contract defines how GWC runtime nodes interact with the durable run
 
 ### Synchronous (Store Operations)
 
-1. Node constructs request with current fencing token and CAS token (if write).
+1. Node constructs request with `operationId`, `Idempotency-Key`, current fencing token and CAS token (if conditional write).
 2. Node sends request to store adapter.
 3. Adapter forwards to store API, returns response.
-4. If `409 Conflict` or `412 Fenced`, adapter retries after re-reading the latest state.
+4. If `409 Conflict`, adapter re-reads the latest state before retrying. If the result is ambiguous after a side effect, it performs idempotency/readback first; it never blindly replays the operation. A `403 Fenced Out` stops the node and requires lease re-acquisition/re-handshake.
 5. Adapter returns result to calling node.
 
 ### Asynchronous (Pending Actions)
@@ -88,8 +89,8 @@ The adapter contract defines how GWC runtime nodes interact with the durable run
 ## Fencing Integration
 
 - On `403 Fenced Out`, the adapter must stop the node and raise an alert.
-- The node must re-handshake before resuming operations.
-- Fencing tokens are monotonically increasing; a stale token always indicates the node has been superseded.
+- The node must re-acquire the resource lease and re-handshake before resuming operations.
+- Fencing tokens are monotonically increasing per resource lease epoch; equality is valid only for the current lease holder.
 
 ## Error Handling
 

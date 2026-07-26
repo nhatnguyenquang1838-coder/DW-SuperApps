@@ -4,6 +4,7 @@ metadata:
   id: g0-SCRUM-105
   project: dw-superapps
   repository: DW-SuperApps
+  status: SUPERSEDED_BY_G2_REPAIR
   baseRef: main
   baseSha: 8cf13d7d6bef535bff77e36815b737aff9d7f709
   baseShaOriginMain: 8cf13d7d6bef535bff77e36815b737aff9d7f709
@@ -140,8 +141,10 @@ authority-boundary:
     - production-data-access
     - migration
 
-g0-outcome: READY
-unresolved-blockers: []
+g0-outcome: PARTIAL
+unresolved-blockers:
+  - required GWC and target-system instruction sources were unavailable in the worktree
+  - exact-head evidence must be re-read after the G2 repair commit
 unverified-sources:
   - gwc-g0-skill (submodule not initialized)
   - gwc-g1-skill (submodule not initialized)

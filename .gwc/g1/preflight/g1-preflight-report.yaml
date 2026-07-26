@@ -2,6 +2,7 @@ apiVersion: gwc/v1
 kind: G1PreflightReport
 metadata:
   runId: g1-SCRUM-105-20260726-1500
+  status: SUPERSEDED_BY_G2_REPAIR
   workspaceMode: canonical
   workspaceRoot: .gwc
   repositoryArtifactWritten: YES
@@ -25,7 +26,7 @@ g0Evidence:
   writeEnabled: true
   protectedBranches:
     - main
-  status: READY
+  status: PARTIAL
 
 g1Intake:
   status: READY
@@ -68,7 +69,7 @@ risks:
   - Potential conflict with SCRUM-104 registry validators
 
 validationEvidence: null
-requiredNextGate: G2_EXECUTION
+requiredNextGate: G0_RECONCILIATION
 excludedActions:
   - G4_MERGE
   - G5_DEPLOY
@@ -77,4 +78,4 @@ excludedActions:
   - migration-execution
   - credential-operation
 
-g1Outcome: PASS → G2_PLANNING_READY
+g1Outcome: REVALIDATION_REQUIRED

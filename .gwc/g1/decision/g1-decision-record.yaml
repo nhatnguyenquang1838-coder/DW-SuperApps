@@ -2,6 +2,7 @@ apiVersion: gwc/v1
 kind: G1DecisionRecord
 metadata:
   runId: g1-SCRUM-105-20260726-1500
+  status: SUPERSEDED_BY_G2_REPAIR
   workspaceMode: canonical
   workspaceRoot: .gwc
   repositoryArtifactWritten: YES
@@ -41,10 +42,12 @@ rejectedOptionIds:
   - OPT-2
   - OPT-3
 rejectionRationale:
-  OPT-2: BMAD template approach introduces unnecessary tooling complexity
-  for a knowledge lane design task.
-  OPT-3: Extending the shared GWC power package creates coupling and
-  higher blast radius than needed.
+  OPT-2: >
+    BMAD template approach introduces unnecessary tooling complexity
+    for a knowledge lane design task.
+  OPT-3: >
+    Extending the shared GWC power package creates coupling and
+    higher blast radius than needed.
 
 acceptanceCriteriaRefs:
   - AC-1
@@ -59,7 +62,7 @@ acceptanceCriteriaRefs:
 
 scopeHash: 839f04638ba15dca6a1b4d901cae5ee2b6b6f1c4
 
-g1_gate_outcome: PASS
+g1_gate_outcome: SUPERSEDED
 g2_handoff_ready: true
 
 authorityBoundaries:

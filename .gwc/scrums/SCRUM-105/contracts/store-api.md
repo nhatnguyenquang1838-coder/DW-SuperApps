@@ -17,7 +17,9 @@ https://{store-host}/api/v1
 | `Content-Type` | Yes | `application/json` |
 | `Authorization` | Yes | `Bearer <token>` |
 | `If-Match` | Conditional | CAS token for conditional writes |
-| `X-Fencing-Token` | Yes | Current fencing token for the node |
+| `Idempotency-Key` | Required for side effects | Stable key for safe retry/readback |
+| `X-Operation-Id` | Required for side effects | Stable operation identity |
+| `X-Fencing-Token` | Yes for writes | Current fencing token for the resource lease epoch |
 | `X-Node-Id` | Yes | Unique node identifier |
 
 ## Endpoints
@@ -28,7 +30,7 @@ https://{store-host}/api/v1
 POST /streams/{streamId}/events
 ```
 
-Request body: array of event objects (without `eventId` and `streamVersion`).
+Request body: `{ "operationId": "string", "idempotencyKey": "string", "events": [ ... ] }`; event objects omit server-assigned `eventId` and `streamVersion`.
 
 Response `201`:
 ```json
@@ -41,7 +43,7 @@ Response `201`:
 ```
 
 Response `409`: CAS conflict (stream version mismatch).
-Response `412`: Fencing token mismatch.
+Response `403`: Fencing token is stale, expired, or belongs to another holder.
 
 ### Read Events
 
@@ -71,9 +73,16 @@ GET /streams/{streamId}/checkpoint
 Response `200`:
 ```json
 {
-  "streamId": "string",
-  "streamVersion": 42,
-  "checkpoint": { "snapshot": {}, "sequenceNumber": 42, "checkpointType": "auto", "timestamp": "..." }
+  "checkpointId": "uuid-v7",
+  "runId": "string",
+  "projectId": "string",
+  "repository": "owner/repository",
+  "taskId": "string",
+  "cursor": { "gate": "G2_EXECUTION", "status": "STABLE", "attempt": 0 },
+  "bindings": { "baseSha": "40-hex-sha", "headSha": "40-hex-sha", "scopeHash": "string" },
+  "pendingAction": { "operationId": null, "idempotencyKey": null, "resultState": null },
+  "continuation": { "mechanism": null, "nextCheckAtUtc": null, "active": false },
+  "ownership": { "revision": 1, "leaseOwner": null, "leaseExpiresAtUtc": null }
 }
 ```
 
@@ -85,12 +94,12 @@ Response `404`: No checkpoint exists.
 PUT /store/{key}
 ```
 
-Request body: `{ "value": { ... }, "casToken": <integer> }`
+Request body: `{ "value": { ... }, "operationId": "string", "idempotencyKey": "string" }`; pass the expected version in `If-Match`.
 
 Response `200`: `{ "key": "...", "version": <casToken>, "fencingToken": <uint64> }`
 Response `409`: CAS conflict.
 Response `403`: Fencing rejection.
-Response `412`: Fencing token mismatch.
+Response `403`: Fencing token is stale, expired, or belongs to another holder.
 
 ### Store Load
 
@@ -100,7 +109,7 @@ GET /store/{key}
 
 Response `200`:
 ```json
-{ "key": "...", "value": { ... }, "version": 42, "fencingToken": 7 }
+{ "key": "...", "value": { ... }, "version": 42, "fencingToken": 7, "leaseEpoch": 7 }
 ```
 
 Response `404`: Key not found.
@@ -111,7 +120,7 @@ Response `404`: Key not found.
 DELETE /store/{key}
 ```
 
-Request body: `{ "casToken": <integer> }`
+Request body: `{ "operationId": "string", "idempotencyKey": "string" }`; pass the expected version in `If-Match`.
 
 Response `200`: `{ "key": "...", "deleted": true }`
 Response `409`: CAS conflict.
@@ -122,9 +131,9 @@ Response `409`: CAS conflict.
 POST /store/{key}/lease
 ```
 
-Request body: `{ "holderId": "string", "ttlSeconds": <integer> }`
+Request body: `{ "holderId": "string", "ttlSeconds": <integer>, "operationId": "string", "idempotencyKey": "string" }`
 
-Response `200`: `{ "key": "...", "holderId": "...", "expiresAt": "ISO-8601", "fencingToken": <uint64> }`
+Response `200`: `{ "key": "...", "holderId": "...", "expiresAt": "ISO-8601", "fencingToken": <uint64>, "leaseEpoch": <uint64> }`
 Response `409`: Lease already held by another node.
 
 ### Lease Renew
@@ -133,9 +142,9 @@ Response `409`: Lease already held by another node.
 POST /store/{key}/lease/renew
 ```
 
-Request body: `{ "holderId": "string", "ttlSeconds": <integer> }`
+Request body: `{ "holderId": "string", "ttlSeconds": <integer>, "operationId": "string", "idempotencyKey": "string" }`
 
-Response `200`: `{ "key": "...", "expiresAt": "ISO-8601", "fencingToken": <uint64> }`
+Response `200`: `{ "key": "...", "expiresAt": "ISO-8601", "fencingToken": <uint64>, "leaseEpoch": <uint64> }`
 Response `403`: Not the current lease holder.
 
 ### Lease Release
@@ -144,7 +153,7 @@ Response `403`: Not the current lease holder.
 POST /store/{key}/lease/release
 ```
 
-Request body: `{ "holderId": "string" }`
+Request body: `{ "holderId": "string", "operationId": "string", "idempotencyKey": "string" }`
 
 Response `200`: `{ "key": "...", "released": true }`
 
@@ -157,6 +166,8 @@ POST /store/{key}/pending
 Request body:
 ```json
 {
+  "operationId": "string",
+  "idempotencyKey": "string",
   "actionType": "string",
   "payload": {},
   "fencingToken": <uint64>
@@ -196,7 +207,7 @@ All error responses follow this structure:
 
 Common error codes:
 - `CAS_MISMATCH` — 409 — Stream version does not match `If-Match` token.
-- `FENCED_OUT` — 403 — Fencing token is stale; node is fenced.
+- `FENCED_OUT` — 403 — Fencing token is stale, expired, or does not belong to the current lease holder.
 - `LEASE_HELD_BY_OTHER` — 409 — Another node holds the lease.
 - `NOT_FOUND` — 404 — Resource does not exist.
 - `INVALID_REQUEST` — 400 — Request body does not conform to schema.

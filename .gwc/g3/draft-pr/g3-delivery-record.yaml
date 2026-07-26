@@ -2,6 +2,7 @@ apiVersion: gwc/v1
 kind: G3DeliveryRecord
 metadata:
   runId: g3-SCRUM-105-20260726-1520
+  status: SUPERSEDED_BY_G2_REPAIR
   workspaceMode: canonical
   workspaceRoot: .gwc
   repositoryArtifactWritten: YES
@@ -18,7 +19,8 @@ trace:
   g2ExecutionRef: g2-SCRUM-105-20260726-1510/execution
 
 g2Evidence:
-  headSha: c3418e85388e2a24c2730e1bea43be9c0db99383
+  reviewedHeadSha: c3418e85388e2a24c2730e1bea43be9c0db99383
+  evidenceStatus: INVALIDATED_BY_G2_REPAIR
   scopeHash: 839f04638ba15dca6a1b4d901cae5ee2b6b6f1c4
   changedPaths:
     - .gwc/g0/context-snapshot.yaml
@@ -28,11 +30,11 @@ g2Evidence:
     - .gwc/g1/decision/g1-decision-record.yaml
     - .gwc/g2/execution/g2-execution-record.yaml
     - .gwc/scrums/SCRUM-105/ (9 files, design + schemas + contracts + migration)
-  ciStatus: N/A (worktree branch, no CI pipeline)
-  acceptanceCriteriaMet: true
+  ciStatus: REVALIDATION_REQUIRED after G2 repair
+  acceptanceCriteriaMet: false
 
 g3Review:
-  outcome: PASS
+  outcome: REVALIDATION_REQUIRED
   findings:
     - severity: MINOR
       lane: DESIGN
@@ -54,9 +56,9 @@ g3Review:
 g3Validation:
   toolsAvailable: false
   toolsChecked: tools/validate_g3_delivery.py (not present in worktree)
-  manualValidation: PASS
-  schemaValidation: PASS (all JSON schemas parse correctly)
-  acceptanceCriteriaVerification: PASS (all 9 ACs satisfied)
+  manualValidation: SUPERSEDED
+  schemaValidation: INVALIDATED
+  acceptanceCriteriaVerification: REVALIDATION_REQUIRED
 
 authorityBoundary:
   grants: []
@@ -68,10 +70,8 @@ authorityBoundary:
 
 g4ApprovalRequest:
   gate: G4_MERGE
-  status: READY
-  scopeHash16: 839f04638ba15dc
-  expiresAt: "2026-07-26T16:20:00+07:00"
-  command: "APPROVE G4 g3-SCRUM-105-20260726-1520 839f04638ba15dc 2026-07-26T16:20:00+07:00"
+  status: INVALIDATED
+  reason: G3 evidence was bound to a superseded head and design findings required repair.
 
-g3Outcome: G3_PASS → G4_APPROVAL_REQUEST_READY
+g3Outcome: REVALIDATION_REQUIRED → G2_REPAIR
 g4MergeNotGranted: true

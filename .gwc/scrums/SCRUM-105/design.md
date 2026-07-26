@@ -24,7 +24,7 @@ Design a durable runtime store for the GWC governance engine that provides event
 - SQLite-to-PostgreSQL/Supabase migration path
 
 ### Out of scope
-- Runtime store implementation (SCRUM-104 covers the implementation lane)
+- Runtime store implementation and runtime nodes (separate P2 implementation tasks SCRUM-107, SCRUM-108, and SCRUM-109)
 - Database provisioning or infrastructure provisioning
 - User-facing UI for store inspection
 
@@ -51,23 +51,50 @@ Every event admitted to the store follows this envelope:
 }
 ```
 
-### 3.2 Checkpoint Event
+### 3.2 Durable Execution Checkpoint
 
-Checkpoints are a special event type that marks a durable snapshot of stream state:
+A checkpoint is a durable execution cursor, separate from the append-only event log. It records the last proven runtime position, live bindings, pending action state, continuation and ownership needed for safe resume:
 
 ```json
 {
-  "eventId": "uuid-v7",
-  "streamId": "string",
-  "streamVersion": "uint64",
-  "eventType": "checkpoint",
-  "timestamp": "ISO-8601",
-  "payload": {
-    "snapshot": { },
-    "sequenceNumber": "uint64",
-    "checkpointType": "manual | auto | recovery"
+  "checkpointId": "uuid-v7",
+  "runId": "string",
+  "projectId": "string",
+  "repository": "owner/repository",
+  "taskId": "string",
+  "cursor": {
+    "gate": "G2_EXECUTION",
+    "lastCompletedNode": "string | null",
+    "activeNode": "string | null",
+    "nextNode": "string | null",
+    "status": "STABLE | RUNNING | PREPARED | AWAITING_READBACK | AWAITING_HUMAN | SUSPENDED | RECONCILING | BLOCKED | COMPLETED | SUPERSEDED",
+    "attempt": 0
   },
-  "metadata": {}
+  "bindings": {
+    "baseSha": "40-hex-sha",
+    "workingBranch": "string",
+    "headSha": "40-hex-sha",
+    "scopeHash": "string",
+    "riskClass": "string"
+  },
+  "pendingAction": {
+    "operationId": "string | null",
+    "idempotencyKey": "string | null",
+    "expectedPrestate": {},
+    "expectedPoststate": {},
+    "resultState": {},
+    "readbackNode": "string | null"
+  },
+  "continuation": {
+    "mechanism": "string | null",
+    "nextCheckAtUtc": "ISO-8601 | null",
+    "active": false
+  },
+  "ownership": {
+    "revision": 0,
+    "leaseOwner": "string | null",
+    "leaseExpiresAtUtc": "ISO-8601 | null"
+  }
 }
 ```
 
@@ -94,7 +121,11 @@ A run event represents a single execution unit within the GWC runtime:
       "stackTrace": "string (optional)"
     }
   },
-  "metadata": {}
+  "metadata": {
+    "actor": "string",
+    "source": "string",
+    "correlationId": "uuid (optional)"
+  }
 }
 ```
 
@@ -105,21 +136,22 @@ A run event represents a single execution unit within the GWC runtime:
 | Operation | Method | Path | Semantics |
 |---|---|---|---|
 | Append | POST | `/streams/{streamId}/events` | Append one or more events; server assigns sequence numbers |
-| Read | GET | `/streams/{streamId}/events?from={seq}&limit={n}` | Read events from a sequence number forward |
-| Snapshot | GET | `/streams/{streamId}/checkpoint` | Read the latest checkpoint for a stream |
-| Store | PUT | `/store/{key}` | Conditional put with CAS token |
-| Load | GET | `/store/{key}` | Read current value for a key |
-| Delete | DELETE | `/store/{key}` | Conditional delete with CAS token |
-| Lease | POST | `/store/{key}/lease` | Acquire a lease on a key |
-| Renew | POST | `/store/{key}/lease/renew` | Renew an existing lease |
-| Release | POST | `/store/{key}/lease/release` | Release a lease |
-| Pending | POST | `/store/{key}/pending` | Submit a pending action |
-| Readback | GET | `/store/{key}/pending/{actionId}` | Read back a pending action result |
+| Read | GET | `/streams/{streamId}/events?from={seq}&limit={n}` | Read events from a sequence number forward (`store.read`) |
+| Checkpoint read | GET | `/streams/{streamId}/checkpoint` | Read the durable execution cursor (`store.checkpoint.read`) |
+| Store put | PUT | `/store/{key}` | Conditional put with CAS token (`store.put`) |
+| Store load | GET | `/store/{key}` | Read current value for a key (`store.load`) |
+| Store delete | DELETE | `/store/{key}` | Conditional delete with CAS token (`store.delete`) |
+| Lease acquire | POST | `/store/{key}/lease` | Acquire a lease on a key (`store.lease.acquire`) |
+| Lease renew | POST | `/store/{key}/lease/renew` | Renew an existing lease (`store.lease.renew`) |
+| Lease release | POST | `/store/{key}/lease/release` | Release a lease (`store.lease.release`) |
+| Pending submit | POST | `/store/{key}/pending` | Submit a pending action (`store.pending.submit`) |
+| Pending readback | GET | `/store/{key}/pending/{actionId}` | Read back a pending action result (`store.pending.readback`) |
 
 ### 4.2 API Conventions
 
 - All responses include `X-Event-Stream-Version` header indicating the current stream version.
-- All write operations are idempotent when the `If-Match` header carries a valid CAS token.
+- All write operations carry an `operationId` and `Idempotency-Key`; the store persists the first result and returns it for an ambiguous retry.
+- `If-Match` is a version precondition only. Reusing a CAS token is not an idempotency mechanism.
 - Pagination uses `from` (inclusive) and `limit` query parameters; max limit is 100.
 - Errors return a structured envelope: `{ "code": "string", "message": "string", "details": {} }`.
 
@@ -142,10 +174,11 @@ A run event represents a single execution unit within the GWC runtime:
 
 ### 5.3 Fencing
 
-- Fencing tokens are monotonic integers assigned by the store per node.
-- Every write must carry the current fencing token.
+- Fencing tokens are monotonically increasing lease-epoch integers assigned by the store per fenced key/resource, not independently per node.
+- Every write must carry the current fencing token and holder identity.
+- A write is accepted only when the token equals the current lease epoch and the holder is the current lease owner; `>=` is not sufficient.
 - A node with a stale fencing token is fenced out; writes are rejected with `403 Forbidden`.
-- Fencing tokens are published via the lease renewal response and checkpoint events.
+- Fencing tokens are published via lease responses and checkpoint bindings.
 
 ## 6. Pending-Action / Readback Model
 
@@ -153,7 +186,7 @@ A run event represents a single execution unit within the GWC runtime:
 
 A pending action represents an asynchronous operation requested by a node:
 
-1. Node submits a pending action via `POST /store/{key}/pending` with the action payload.
+1. Node submits a pending action via `POST /store/{key}/pending` with an `operationId`, `Idempotency-Key`, expected prestate and action payload.
 2. The store assigns an `actionId` and persists the action in `PENDING` state.
 3. A worker node picks up the action, executes it, and records the result.
 4. The requesting node reads back the result via `GET /store/{key}/pending/{actionId}`.
@@ -179,6 +212,8 @@ PENDING → CLAIMED → EXECUTING → COMPLETED
 ```json
 {
   "actionId": "uuid-v7",
+  "operationId": "string",
+  "idempotencyKey": "string",
   "streamId": "string",
   "state": "pending | claimed | executing | completed | failed",
   "actionType": "string",
@@ -213,15 +248,20 @@ adapterContract:
   supportedOperations:
     - store.load
     - store.append
-    - store.lease
-    - store.pending
-    - store.readback
+    - store.read
+    - store.checkpoint.read
+    - store.put
+    - store.delete
+    - store.lease.acquire
+    - store.lease.renew
+    - store.lease.release
+    - store.pending.submit
+    - store.pending.readback
   handshake:
     request:
       type: "adapter.handshake"
       payload:
         capabilities: "string[]"
-        fencingToken: "uint64"
     response:
       type: "adapter.handshake.ack"
       payload:
@@ -242,12 +282,12 @@ adapterContract:
 
 - Events are stored in a single SQLite database file.
 - Schema uses a single `events` table with columns: `id`, `stream_id`, `sequence`, `type`, `timestamp`, `payload_json`, `metadata_json`.
-- Checkpoints stored in a `checkpoints` table.
+- Durable checkpoints are stored in a `checkpoints` table as execution cursors, not as event-log rows.
 
 ### 8.2 Target State: PostgreSQL / Supabase
 
 - Events table with same logical columns but using PostgreSQL JSONB for payload and metadata.
-- Checkpoints table normalized separately.
+- Checkpoints table stores cursor fields, SHA bindings, pending action state, continuation and ownership separately from the event log.
 - Pending actions table for the readback model.
 - Row-level security enabled for tenant isolation.
 - Indexes on `(stream_id, sequence)` and `(event_type, timestamp)`.
@@ -261,7 +301,9 @@ adapterContract:
 5. **Cutover** — Switch store adapter to PostgreSQL; deprecate SQLite reads.
 6. **Retain** — Keep SQLite file as read-only archive for 30 days post-cutover.
 
-### 8.4 Migration Artifacts
+### 8.4 Migration Artifacts (planned follow-up)
+
+The following are implementation follow-ups, not files delivered by this design-only task:
 
 | Artifact | Location |
 |---|---|
@@ -281,19 +323,19 @@ During migration, a dual-write adapter writes to both SQLite and PostgreSQL simu
 
 ## 9. Acceptance Criteria
 
-1. All schemas validate against their JSON Schema definitions.
+1. All schemas validate against their JSON Schema definitions, including composed checkpoint/cursor semantics.
 2. Store API operations satisfy the contract for success, error, and timeout cases.
 3. CAS rejects stale writes with `409 Conflict`.
 4. Leases expire after TTL and release exclusive access.
 5. Fencing tokens monotonically increase and reject stale writes.
 6. Pending actions follow the defined state machine.
 7. Adapter contract handshake completes before any store operation.
-8. Migration script extracts, transforms, and loads without data loss.
-9. Verification script confirms row counts and checksums match.
+8. The migration design defines extract, transform, load, verify, cutover and rollback invariants; execution is a separate implementation task.
+9. The verification design defines row-count and checksum readback; execution is a separate implementation task.
 
 ## 10. Dependencies
 
-- P1-I2 (SCRUM-104) — canonical registries and validators supply schema validation infrastructure.
+- SCRUM-104 — canonical registries and validators are a related consumer/validator lane; SCRUM-104 is not the runtime-store implementation task.
 - P2-K2 (SCRUM-106) — vertical-slice scenarios and crash/recovery test matrix inform checkpoint design.
 
 ## 11. References

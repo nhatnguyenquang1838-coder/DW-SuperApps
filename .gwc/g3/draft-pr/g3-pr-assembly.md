@@ -1,11 +1,13 @@
 # G3.1 PR Assembly — SCRUM-105
 
+> SUPERSEDED: this assembly predates the G2 repair and must not be used for G3/G4 approval.
+
 ## Repository
 - Repository: DW-SuperApps
 - Base ref: main
 - Base SHA (origin/main): 8cf13d7d6bef535bff77e36815b737aff9d7f709
 - Guarded branch: marmalade-beanie (protected: no direct push to main)
-- Exact head SHA: c3418e85388e2a24c2730e1bea43be9c0db99383
+- Superseded review head SHA: c3418e85388e2a24c2730e1bea43be9c0db99383
 - Scope hash: 839f04638ba15dca6a1b4d901cae5ee2b6b6f1c4 (from G1 decision)
 
 ## Changed Paths
@@ -16,6 +18,10 @@ All changes are additive, under `.gwc/`:
 - `.gwc/g1/preflight/g1-preflight-report.yaml` — G1 preflight
 - `.gwc/g1/decision/g1-decision-record.yaml` — G1 decision
 - `.gwc/g2/execution/g2-execution-record.yaml` — G2 execution record
+- `.gwc/g3/draft-pr/g3-delivery-record.yaml` — superseded G3 delivery record
+- `.gwc/g3/draft-pr/g3-independent-review.md` — superseded independent review
+- `.gwc/g3/draft-pr/g3-pr-assembly.md` — superseded assembly
+- `.gwc/g3/draft-pr/g3-review-closure.md` — superseded review closure
 - `.gwc/scrums/SCRUM-105/design.md` — Design document
 - `.gwc/scrums/SCRUM-105/schemas/runtime-event.schema.json`
 - `.gwc/scrums/SCRUM-105/schemas/checkpoint.schema.json`
@@ -27,7 +33,7 @@ All changes are additive, under `.gwc/`:
 - `.gwc/scrums/SCRUM-105/migration/README.md`
 
 ## Validation
-CI status: N/A (no CI pipeline configured for worktree branch)
+CI status: REVALIDATION_REQUIRED after G2 repair
 G3 delivery validation tool: `tools/validate_g3_delivery.py` not present in worktree — manual validation applied.
 
 ## Acceptance Criteria Verification (per G1 intake AC-1 through AC-9)
@@ -40,8 +46,8 @@ G3 delivery validation tool: `tools/validate_g3_delivery.py` not present in work
 | AC-5 | Fencing tokens monotonically increase and reject stale writes | PASS — fencing doc specifies monotonically increasing tokens and 403 for stale |
 | AC-6 | Pending actions follow defined state machine | PASS — pending-action-readback.schema.json defines PENDING→CLAIMED→EXECUTING→COMPLETED|FAILED |
 | AC-7 | Adapter contract handshake completes before store operations | PASS — node-adapter.md mandates handshake first, with rules and retry policy |
-| AC-8 | Migration script extracts, transforms, loads without data loss | PASS — migration/README.md defines 6-phase extraction, transformation, loading, verification, cutover, archive |
-| AC-9 | Verification script confirms row counts and checksums match | PASS — migration/README.md references `tools/verify-migration.py` and checksum verification |
+| AC-8 | Migration design defines extract, transform, load, verify, cutover and rollback invariants | DESIGN-ONLY — execution is a separate implementation task |
+| AC-9 | Verification design defines row counts and checksums readback | DESIGN-ONLY — execution is a separate implementation task |
 
 ## Exclusions
 - No G4_MERGE authority (GWC governance boundary)
@@ -52,4 +58,4 @@ G3 delivery validation tool: `tools/validate_g3_delivery.py` not present in work
 - No migration execution (design only)
 
 ## Head SHA Stability
-Head SHA `c3418e85388e2a24c2730e1bea43be9c0db99383` is the current exact head. No subsequent commits have been made. Validation is not stale.
+This record is superseded. A fresh G3 review must bind to the exact post-repair PR head and current CI readback.

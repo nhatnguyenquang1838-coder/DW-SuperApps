@@ -1,42 +1,42 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dw.superapps/schemas/store-api.schema.json",
-  "title": "GWC Store API Request/Response Envelope",
+  "title": "GWC Store API Request Envelope",
   "type": "object",
   "additionalProperties": false,
   "required": ["requestId", "operation", "timestamp"],
   "properties": {
     "requestId": { "type": "string", "format": "uuid" },
+    "operationId": { "type": "string", "minLength": 1 },
+    "idempotencyKey": { "type": "string", "minLength": 1 },
     "operation": {
       "type": "string",
-      "enum": ["store.load", "store.append", "store.lease", "store.pending", "store.readback"]
+      "enum": [
+        "store.append",
+        "store.read",
+        "store.checkpoint.read",
+        "store.put",
+        "store.load",
+        "store.delete",
+        "store.lease.acquire",
+        "store.lease.renew",
+        "store.lease.release",
+        "store.pending.submit",
+        "store.pending.readback"
+      ]
     },
     "timestamp": { "type": "string", "format": "date-time" },
-    "key": { "type": "string", "minLength": 1, "description": "Store key" },
-    "casToken": {
-      "type": ["integer", "null"],
-      "description": "CAS token from a prior read for conditional writes"
-    },
-    "payload": { "type": "object", "description": "Operation-specific payload" },
-    "holderId": {
-      "type": ["string", "null"],
-      "description": "Lease holder node identifier"
-    },
-    "ttlSeconds": {
-      "type": ["integer", "null"],
-      "minimum": 1,
-      "maximum": 300,
-      "description": "Lease time-to-live in seconds"
-    },
-    "actionId": {
-      "type": ["string", "null"],
-      "format": "uuid",
-      "description": "Pending action identifier"
-    },
-    "fencingToken": {
-      "type": ["integer", "null"],
-      "minimum": 0,
-      "description": "Current fencing token for the node"
-    }
+    "key": { "type": "string", "minLength": 1 },
+    "streamId": { "type": "string", "minLength": 1 },
+    "from": { "type": "integer", "minimum": 0 },
+    "limit": { "type": "integer", "minimum": 1, "maximum": 100 },
+    "casToken": { "type": ["integer", "null"], "minimum": 0 },
+    "value": { "type": ["object", "null"] },
+    "payload": { "type": ["object", "null"] },
+    "events": { "type": ["array", "null"] },
+    "holderId": { "type": ["string", "null"] },
+    "ttlSeconds": { "type": ["integer", "null"], "minimum": 1, "maximum": 300 },
+    "actionId": { "type": ["string", "null"], "format": "uuid" },
+    "fencingToken": { "type": ["integer", "null"], "minimum": 0 }
   }
 }

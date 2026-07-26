@@ -20,8 +20,10 @@
 
 ### Idempotency
 
-- CAS operations are idempotent when the same CAS token is reused.
-- The store detects duplicate CAS tokens and returns the current state without side effects.
+- The CAS token is a version precondition, not an idempotency key.
+- Every side-effecting request carries an `operationId` and `Idempotency-Key`.
+- The store persists the first result for that key and returns the same result for an ambiguous retry without repeating the side effect.
+- Reusing a CAS token after a successful write is a stale-version conflict, not proof of a duplicate request.
 
 ## Leases
 
@@ -29,7 +31,7 @@
 
 - A lease grants **exclusive write access** to a specific key for a bounded duration.
 - Lease requests include `holderId` (node identifier) and `ttlSeconds` (1–300).
-- The store tracks active leases in a `leases` table: `(key, holder_id, expires_at, fencing_token)`.
+- The store tracks active leases in a `leases` table: `(key, holder_id, expires_at, lease_epoch)`.
 - Only one lease per key at a time.
 
 ### Lease Lifecycle
@@ -48,26 +50,26 @@ ACQUIRED -> ACTIVE -> EXPIRED | RENEWED | RELEASED -> EXPIRED
 
 ### Lease and Fencing
 
-- When a lease is acquired or renewed, the store publishes a new fencing token.
+- When a lease is acquired or renewed, the store atomically publishes a new fencing token for the fenced key/resource.
 - The fencing token is included in the lease response and must be used in subsequent writes.
-- Fencing tokens are **monotonically increasing** per node.
+- Fencing tokens are **monotonically increasing per fenced key/resource lease epoch**, not independently per node.
 
 ## Fencing
 
 ### Mechanism
 
-- Each node has a **fencing token** — a monotonically increasing integer assigned by the store.
+- Each lease epoch has a **fencing token** — a monotonically increasing integer assigned by the store for the fenced key/resource.
 - Every write operation must carry the current fencing token via `X-Fencing-Token` header.
-- The store compares the incoming token against the node's latest token on record.
-- If the incoming token is greater than or equal to the latest: write proceeds.
-- If the incoming token is stale (less than the latest): write is rejected with `403 Forbidden`.
+- The store compares the incoming token and holder identity against the current lease record for the resource.
+- A write proceeds only when the incoming token equals the current lease epoch and the holder is the current lease owner.
+- Any stale token, equal token from a non-owner, or expired lease is rejected with `403 Forbidden`.
 
 ### When Fencing Occurs
 
 1. **Lease acquisition** — New token assigned.
 2. **Lease renewal** — Token increments and is published.
-3. **Checkpoint** — Token is included in checkpoint event.
-4. **Node re-handshake** — New token from handshake response.
+3. **Checkpoint** — Token is included in checkpoint bindings.
+4. **Node re-handshake** — The node receives the current lease epoch after it has acquired or renewed the resource lease.
 
 ### Fencing Recovery
 
@@ -82,10 +84,10 @@ ACQUIRED -> ACTIVE -> EXPIRED | RENEWED | RELEASED -> EXPIRED
 |---|---|---|---|
 | **CAS** | Prevent lost updates | Per-key | Per-operation |
 | **Lease** | Exclusive write access | Per-key | Bounded (TTL) |
-| **Fencing** | Prevent stale node writes | Per-node | Until re-handshake |
+| **Fencing** | Prevent stale lease-epoch writes | Per-resource lease epoch | Until a newer epoch supersedes it |
 
 ### Combined Usage
 
-- Lease + Fencing: When a node holds a lease, it uses the lease's fencing token for writes.
-- CAS without Lease: Any node with a valid CAS token can write; fencing prevents stale nodes.
-- Lease + CAS: Lease holder has exclusive access; CAS still protects against concurrent writes from the same holder (e.g., after lease expiry).
+- Lease + Fencing: When a node holds a lease, it uses the lease epoch token and holder identity for writes.
+- CAS without Lease: A caller may use CAS-only operations where explicitly allowed; no stale lease holder may bypass fencing.
+- Lease + CAS: The lease owner must satisfy both the current lease epoch and the expected CAS version.

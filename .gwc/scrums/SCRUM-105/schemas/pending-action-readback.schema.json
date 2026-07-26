@@ -4,9 +4,11 @@
   "title": "GWC Pending Action / Readback Model",
   "type": "object",
   "additionalProperties": false,
-  "required": ["actionId", "streamId", "state", "actionType", "payload", "createdAt"],
+  "required": ["actionId", "operationId", "idempotencyKey", "streamId", "state", "actionType", "payload", "createdAt"],
   "properties": {
     "actionId": { "type": "string", "format": "uuid" },
+    "operationId": { "type": "string", "minLength": 1 },
+    "idempotencyKey": { "type": "string", "minLength": 1 },
     "streamId": { "type": "string", "minLength": 1 },
     "state": {
       "type": "string",
