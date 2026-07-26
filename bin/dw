@@ -50,6 +50,14 @@ if [[ "${1:-}" == "orchestrator" ]]; then
   exit $?
 fi
 
+if [[ "${1:-}" == "report" ]]; then
+  shift
+  # shellcheck source=../scripts/python-resolver.sh
+  source "$ROOT/scripts/python-resolver.sh"
+  dw_exec_python "$ROOT/scripts/dw_report.py" "$@"
+  exit $?
+fi
+
 if [[ "${1:-}" == "power" ]]; then
   case "${2:-}" in
     install|configure|doctor|history|rollback|uninstall)
