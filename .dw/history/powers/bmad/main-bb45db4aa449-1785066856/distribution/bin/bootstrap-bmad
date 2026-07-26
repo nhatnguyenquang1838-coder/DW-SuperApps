@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+DIST_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+exec python3 "$DIST_ROOT/lib/bootstrap_bmad.py" "$@"

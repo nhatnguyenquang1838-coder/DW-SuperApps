@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "provider": "ua",
+  "controlledRepository": "nhatnguyenquang1838-coder/Understand-Anything",
+  "controlledRef": "main",
+  "controlledSha": "6ae71878beb50226a1e4b7e2f52ac6468c86f74b",
+  "upstreamRepository": "Egonex-AI/Understand-Anything",
+  "upstreamRef": "main",
+  "upstreamSha": "6ae71878beb50226a1e4b7e2f52ac6468c86f74b",
+  "lockPolicy": "manual-review-required",
+  "distributionContract": "dw.superapps/v1",
+  "notes": "The controlled fork and upstream were identical when this lock was recorded. Scheduled checks may detect drift but must not move this lock automatically."
+}

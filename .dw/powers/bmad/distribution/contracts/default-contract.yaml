@@ -1,0 +1,26 @@
+apiVersion: dw.superapps/v1
+kind: PowerBinding
+metadata:
+  powerId: bmad
+  consumerId: replace-me
+spec:
+  hosts:
+    - codex
+  permissions:
+    read:
+      - "**"
+    write:
+      - "_bmad/**"
+      - "_bmad-output/**"
+      - "docs/**"
+      - ".bmad/**"
+    deny:
+      - ".env*"
+      - "**/secrets/**"
+      - ".git/**"
+  network:
+    allowed: true
+    purposes:
+      - install pinned Node dependencies
+  externalWrites:
+    allowed: false

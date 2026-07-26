@@ -1,0 +1,16 @@
+apiVersion: dw.superapps/v1
+kind: PowerPackage
+metadata:
+  id: task-me
+  name: Task Me
+  version: main-20260725.1-ef0b890
+  description: Skills-only Implementation Task Architect distribution.
+spec:
+  entrypoints:
+  - .kiro/skills/implementation-task-architect/SKILL.md
+  managedPaths:
+  - .kiro/skills/implementation-task-architect
+  - distribution/config
+  - distribution/contracts
+  runtimeDataRoot: .task-me
+  configRequired: false

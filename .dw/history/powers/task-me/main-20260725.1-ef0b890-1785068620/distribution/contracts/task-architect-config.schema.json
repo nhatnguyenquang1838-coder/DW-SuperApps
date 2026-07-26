@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw.superapps/contracts/task-me/task-architect-config.schema.json",
+  "title": "Task Me consumer configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "folderMode", "repositoryRoot", "knowledgeRoot", "outputRoot", "runtimeRoot", "inputs", "output"],
+  "properties": {
+    "schemaVersion": {"const": "1.0"},
+    "folderMode": {"const": "per_task"},
+    "repositoryRoot": {"type": "string", "minLength": 1},
+    "knowledgeRoot": {"type": "string", "minLength": 1},
+    "outputRoot": {"type": "string", "minLength": 1},
+    "runtimeRoot": {"const": ".task-me"},
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requirements", "designs", "systemGraphs", "sourceRoots", "testRoots"],
+      "properties": {
+        "requirements": {"type": "array", "items": {"type": "string"}},
+        "designs": {"type": "array", "items": {"type": "string"}},
+        "systemGraphs": {"type": "array", "items": {"type": "string"}},
+        "sourceRoots": {"type": "array", "items": {"type": "string"}},
+        "testRoots": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["taskFolderPattern", "taskFiles"],
+      "properties": {
+        "taskFolderPattern": {"type": "string", "minLength": 1},
+        "taskFiles": {
+          "type": "array",
+          "minItems": 8,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "notes": {"type": "array", "items": {"type": "string"}}
+  }
+}

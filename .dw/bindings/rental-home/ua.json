@@ -1,0 +1,11 @@
+{
+  "apiVersion": "dw.superapps/power-binding/v1",
+  "packageManifestSha256": "e88367a2e2849e63b389cb8676759990d5d9b8bfda2b1eaa91cc2070fbb1df13",
+  "packageVersion": "main-20260725.1-c0e4821",
+  "powerId": "ua",
+  "runtimePath": "/Users/mac/prj/DW-SuperApps/.kilo/worktrees/boiterplate/projects/rental-home/.ua",
+  "storePath": "/Users/mac/prj/DW-SuperApps/.kilo/worktrees/boiterplate/.dw/powers/ua",
+  "systemId": "rental-home",
+  "targetPath": "/Users/mac/prj/DW-SuperApps/.kilo/worktrees/boiterplate/projects/rental-home",
+  "updatedAtEpoch": 1785068619
+}

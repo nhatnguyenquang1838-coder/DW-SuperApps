@@ -1,0 +1,11 @@
+{
+  "apiVersion": "dw.superapps/power-binding/v1",
+  "packageManifestSha256": "c30ea12a1598f6e4e4c3b52df38a92206753d4073e443162ce17a0f8dfe2f7e8",
+  "packageVersion": "task-me-main-1-187586fb124a2687fef70c1c4a3a3b8b2cd02b09",
+  "powerId": "task-me",
+  "runtimePath": "/Users/mac/prj/DW-SuperApps/.kilo/worktrees/boiterplate/projects/rental-home/.task-me",
+  "storePath": "/Users/mac/prj/DW-SuperApps/.kilo/worktrees/boiterplate/.dw/powers/task-me",
+  "systemId": "rental-home",
+  "targetPath": "/Users/mac/prj/DW-SuperApps/.kilo/worktrees/boiterplate/projects/rental-home",
+  "updatedAtEpoch": 1785068620
+}

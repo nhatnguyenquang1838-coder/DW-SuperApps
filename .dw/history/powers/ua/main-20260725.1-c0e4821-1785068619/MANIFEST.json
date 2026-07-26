@@ -1,0 +1,1530 @@
+{
+  "apiVersion": "dw.superapps/v1",
+  "files": [
+    {
+      "mode": "0644",
+      "path": "LICENSE",
+      "sha256": "24c4b35344840f1abaf3a3a4a44f5e29ee0e73b6bf25e42ef108e0afebd402bc",
+      "size": 1111
+    },
+    {
+      "mode": "0600",
+      "path": "POWER.yaml",
+      "sha256": "042ca2f2305dcfb8319674d0fa17de0d1404fa47f1543bcbd2ef5ba99c30741a",
+      "size": 802
+    },
+    {
+      "mode": "0600",
+      "path": "SOURCE.json",
+      "sha256": "3dd41e1eb5d4ad58e5c17d421707d5638b241ddb04845ddde08037dd1e53c386",
+      "size": 203
+    },
+    {
+      "mode": "0644",
+      "path": "SOURCE.lock.json",
+      "sha256": "27385a849b5955cfcb93c5b0abb58ac2feb193e6638fa4ca2e967ada6a969d29",
+      "size": 608
+    },
+    {
+      "mode": "0600",
+      "path": "VERSION",
+      "sha256": "36fb4beae86ae5c23c17aae944310e19b09dee3d02ac0c7455c6c2e1efb99265",
+      "size": 24
+    },
+    {
+      "mode": "0755",
+      "path": "bin/configure",
+      "sha256": "d6a3b625b1f547a59a72ff9d1a30a6db4db3b7aadba56fae26bf62005e447e40",
+      "size": 428
+    },
+    {
+      "mode": "0755",
+      "path": "bin/configure.ps1",
+      "sha256": "f8a37a0d550ac55e58b71c38918f0bdefec62025e239d2b71316775d242c172b",
+      "size": 274
+    },
+    {
+      "mode": "0755",
+      "path": "bin/doctor",
+      "sha256": "3d9e2a35c431bffa94f022e42fb54173842a1b26cf6e90e18710f36e887e0377",
+      "size": 425
+    },
+    {
+      "mode": "0755",
+      "path": "bin/doctor.ps1",
+      "sha256": "5b3c5f0157119c00949c07cf3e9724fcb033424fec4524f378accc4b00cd4ca3",
+      "size": 271
+    },
+    {
+      "mode": "0755",
+      "path": "bin/install",
+      "sha256": "b22793805c30387331c0001e394d4d044a3be009ecb6ad46319f0873110e1911",
+      "size": 426
+    },
+    {
+      "mode": "0755",
+      "path": "bin/install.ps1",
+      "sha256": "f9bf3f6959f82dfd13feeb584ffbcca2ad925612aa6d3dbcf1046d174ac1c7e8",
+      "size": 272
+    },
+    {
+      "mode": "0755",
+      "path": "bin/uninstall",
+      "sha256": "0bddd2eebd8b6c3644610cf03dc3ca2a49d7916f27433b22b0281920a60e892f",
+      "size": 428
+    },
+    {
+      "mode": "0755",
+      "path": "bin/uninstall.ps1",
+      "sha256": "4d68e727a10aa7ecda07a222da81bf44c67710a76abc65c06d4280f7d21f1619",
+      "size": 274
+    },
+    {
+      "mode": "0644",
+      "path": "lib/power_runtime.py",
+      "sha256": "28401ff39568ebfa801b74b98d1361ed27554ee94c6f98b4da750ec21c8fce94",
+      "size": 12638
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/agents/architecture-analyzer.md",
+      "sha256": "f16802354106730a8307380f858873178bf8b5db9d0de3530aacee6b6b929425",
+      "size": 22601
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/agents/article-analyzer.md",
+      "sha256": "322609af02f9b2ab8dfd5e22d2062857c23006a31df9545b5fa5ac96b08de6ae",
+      "size": 4023
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/agents/assemble-reviewer.md",
+      "sha256": "6b5c4ad7526dd373a2a9734ecac1e811a99f6257300e5db57d806eb9e2b05667",
+      "size": 5033
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/agents/design-analyzer.md",
+      "sha256": "568bc73c7d54877d9dfff2c37acefbdadc4d859d710da8e7fad7fb3199842c32",
+      "size": 2527
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/agents/domain-analyzer.md",
+      "sha256": "d9a7fa7b1fc2ec4ef410b4c592a34b54a5dc0fc46699b38b77e9179f4732feba",
+      "size": 5805
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/agents/file-analyzer.md",
+      "sha256": "913a605380ece2668f555f641db301c10dbf1424186dd7c284132bda3f6303ff",
+      "size": 33707
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/agents/graph-reviewer.md",
+      "sha256": "aecfb1869a191eff9699346888d5ea629a9993278a2d4bd4633df3478f223993",
+      "size": 12064
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/agents/knowledge-graph-guide.md",
+      "sha256": "42b5c7ae961aed2b8e1991341b8c8172a215dc69142c0f717f6fd7173beaed95",
+      "size": 5130
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/agents/project-scanner.md",
+      "sha256": "8041ad83a642b52b295a33db9ed910be23db920d46140cdcb25af0a36d2ef56c",
+      "size": 17455
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/agents/tour-builder.md",
+      "sha256": "05f23cc3c156c37c9f20ca312d8dd5fce8145b35243463ac671248e95f1df65c",
+      "size": 21336
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/package.json",
+      "sha256": "b2cb631c4388a6886dc10cfb6ded234edfa2a749e3e45d736560caaf9e695223",
+      "size": 1001
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/package.json",
+      "sha256": "00c8c100bc2e8a266699a1076dbb77c1f2a16ed63bb00c5dbacf90117844e805",
+      "size": 1714
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/change-classifier.test.ts",
+      "sha256": "e9901bc0fd7d09a54d1b50f6366957c7741f761ae3efc58ab8026edafa99c61f",
+      "size": 6296
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/config-schema.test.ts",
+      "sha256": "ba3d9c1ca5f2bf3e3cf30fdff09e2b4645d7f4a4b1b6a71a84381a740ec74807",
+      "size": 16107
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/domain-normalize.test.ts",
+      "sha256": "67401881c292ac8a8c078f18ea49499e286ce353733dbc0c3a1688972bef73cf",
+      "size": 1395
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/domain-persistence.test.ts",
+      "sha256": "ae6a63b70de2870958aa4d5867db07ea4d177682a6ff546fb8e94bfee6c3f5e2",
+      "size": 1870
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/domain-types.test.ts",
+      "sha256": "802633ac5c17200e8ccb5dcb7ea83a12feef4650f8548a1bb5ab895823bf0134",
+      "size": 4170
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/embedding-search.test.ts",
+      "sha256": "50286dec2bcec9013655b6796ca4ee040435d9bc4adea98b4ac03f5e056265ee",
+      "size": 3450
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/fingerprint.test.ts",
+      "sha256": "4372804f5cf79dc44e1e265b3cebca1b8ba5a2f0e4a319c1918f88426585de71",
+      "size": 13883
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/framework-registry.test.ts",
+      "sha256": "2f238ce7494de8750bc58c020f141111397737ca4bc3fdb67063d0209758365b",
+      "size": 4796
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/graph-freshness-timeout.test.ts",
+      "sha256": "31758c2c57b57755ac77b10c3e2058d9586520b83e2ebbad2ed7d9af7928c8e9",
+      "size": 1353
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/graph-freshness.integration.test.ts",
+      "sha256": "fdf478b99813b7a2b1eceab61d493d4a863993401242f874de123c2a6864a66e",
+      "size": 14507
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/ignore-filter.test.ts",
+      "sha256": "d91809da429b1bfee3ccd03f0bbaf272148bae74f364519551038130d31e61ba",
+      "size": 8048
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/ignore-generator.test.ts",
+      "sha256": "b91b499979b64db5fefce5ff480a74cf9e085cddf3dd8ae56f7d391336b39a87",
+      "size": 16928
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/language-lesson.test.ts",
+      "sha256": "7a56445185c79e7aebbc829b87ac724d0142356d9efaca8598b145cfc2d7931e",
+      "size": 4737
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/language-registry.test.ts",
+      "sha256": "b9135327b42d6c8b07ff031a4a16c088a697efb65d31962ec43cd10c1d7141be",
+      "size": 8380
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/layer-detector.test.ts",
+      "sha256": "20a1da6af3ee477f1fe4a19813780cdd90a60b0931e50b2168bd45c232228147",
+      "size": 6725
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/normalize-graph.test.ts",
+      "sha256": "9ebaab628ae7607056ff17e964967f2fcc7dff9c8ecf38c38388527ee3df3ce4",
+      "size": 14751
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/parsers.test.ts",
+      "sha256": "d1a34539d56867d2cc3c83e16a3955af50ae2d9863985dcaaa8a58d06cd78c09",
+      "size": 25445
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/plugin-discovery.test.ts",
+      "sha256": "ff67e53e363e183f95407e07428d89302a1916d1ec03edf4dccdbf142ae7c315",
+      "size": 3894
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/plugin-registry.test.ts",
+      "sha256": "1d4b2094dcba71d194806e8db63481ebd8bf5f03869d6cb75392556b9fb3cfac",
+      "size": 9773
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/schema.test.ts",
+      "sha256": "cf2e99aad42949a7ee15a6a1ab0e3c461fce4680b3ce1d6d8d69023dc3dd1423",
+      "size": 30361
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/search.test.ts",
+      "sha256": "362b87f5b49ca7ed8a72f06806c81d9eeb562dece9f0aaa2a91745cf1336b002",
+      "size": 5173
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/staleness.test.ts",
+      "sha256": "61d6aaab3981e27fa8a21df878d954370e22020d64b5c7e9fac83e0fce67a267",
+      "size": 6567
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/__tests__/tour-generator.test.ts",
+      "sha256": "8e7bf331d659c05742271af104f31f95203257f1ecd2a21d58e83a7b3aed4629",
+      "size": 10135
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/analyzer/graph-builder.test.ts",
+      "sha256": "5243f94d7eaa97affab2a03d3f8b83a0b41efaf6bde1eb84f55714789aa85867",
+      "size": 14475
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/analyzer/graph-builder.ts",
+      "sha256": "e08369943951d65e31cce36da4c34333e6c622690c2651f4ccf3c497b3a8f240",
+      "size": 9112
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/analyzer/language-lesson.ts",
+      "sha256": "a6c053e101db795b83fdd07585383a17ef397cf60d0f2e64824ea513151a5d87",
+      "size": 6288
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/analyzer/layer-detector.ts",
+      "sha256": "1a0d045d9b0b8485335c5417abc9c39339b4572b693db65624a0a7aff5b84c49",
+      "size": 8821
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/analyzer/llm-analyzer.test.ts",
+      "sha256": "5f4fe5ac5629606ef293f08443bd4a5a2955adfe128b75540214915c8a753b24",
+      "size": 7886
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/analyzer/llm-analyzer.ts",
+      "sha256": "2c27b6183b8fa2857df989f25086205d6f885df805a3cd1c91cfd091aa237270",
+      "size": 5855
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/analyzer/normalize-graph.ts",
+      "sha256": "5149ce3855c1b29147798b5c98ece156f7e7d94c63d1dfc1ecf85f9b88d59d9b",
+      "size": 10981
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/analyzer/tour-generator.ts",
+      "sha256": "97c3682b686c87b888e11e4a57541ceda2549d47a31b367693d09ab0e0ad1961",
+      "size": 9302
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/change-classifier.ts",
+      "sha256": "7458aa39d5de1f7dad64f149ec8fb31384226c87af24c2cd80d668987dccf5ce",
+      "size": 4700
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/embedding-search.ts",
+      "sha256": "f3eb18476cc71b7668133612c31be5a0d3cd47cca9494997b465116b373552f8",
+      "size": 3168
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/figma/__tests__/api-source.test.ts",
+      "sha256": "0ebe615e9cab231de7efaf59bf30a7fc2c446355dbdb12b6e66a4bab6334e47b",
+      "size": 1967
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/figma/__tests__/merge.test.ts",
+      "sha256": "b0c9903847913cbcec207b19315fb63d61ed7be01015fcb4fd2788019bc56763",
+      "size": 2379
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/figma/__tests__/parse-document.test.ts",
+      "sha256": "4f36b01bd56c546f89918fea2b3b367059f4ffd1e4be91753d4bb4b70e610e9e",
+      "size": 2892
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/figma/__tests__/thumbnails.test.ts",
+      "sha256": "b22050060a167e361e406b50ba2a5d134bcdab32c1ae5735b831c912bfdb3954",
+      "size": 1409
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/figma/__tests__/tokens.test.ts",
+      "sha256": "e5198bb25e3ccf7f20a0265383daa34fe89dff49b89aba146743a2277f9ac76a",
+      "size": 4357
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/figma/index.ts",
+      "sha256": "e304861c78df96344d46b2740da79f72ec460a7fd9dbb8c41840d319e2f17d1a",
+      "size": 399
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/figma/merge.ts",
+      "sha256": "03c2499f53df51d5ea86c7df4f482fd09db1298c8b2213df565bd349cf4361f5",
+      "size": 3375
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/figma/parse/parse-document.ts",
+      "sha256": "884cb38f0abf8b9a078a3fcf5509c8016035b697b543694547947b347ca63915",
+      "size": 3873
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/figma/parse/tokens.ts",
+      "sha256": "e70c9b27f34f9791a8909ce698cd6b17f7e62b89f1c4cdb8e9de66a6c012530e",
+      "size": 2982
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/figma/source/api-source.ts",
+      "sha256": "202e2f580aa671098444ef30eb1eba5941881074bff450390b4d2465598011d1",
+      "size": 1794
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/figma/source/types.ts",
+      "sha256": "1937a7a7ddda59fd1a231a4811f915fbd9b996ad40e93ba376dca5215d2e7f07",
+      "size": 1391
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/figma/thumbnails.ts",
+      "sha256": "be40e693817d6a17452c29107949789ed756df2363469dc949fc61350a30bc29",
+      "size": 972
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/fingerprint.ts",
+      "sha256": "1bdac3ca76e50b3c4cd814222d4d45118b5cc36db9482324896eec71f67e0efb",
+      "size": 10861
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/ignore-filter.ts",
+      "sha256": "5b2490b26d0284524502294cdeccdbff9807150104942f4b8e99d8580bb4a36f",
+      "size": 2721
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/ignore-generator.ts",
+      "sha256": "80bbf34f0fe0772889907aba0acfa1107dc64243bf8a11df8eb44dbc36df7c66",
+      "size": 8472
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/index.ts",
+      "sha256": "6234738f001a2a236ae498befe8ebda856163ce89718906452365a843a972925",
+      "size": 3358
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/batch.ts",
+      "sha256": "0435e12e73c604a4eebd5b323f94fcb080d4c92582b5618e5c1bfdd9f0dd10cb",
+      "size": 389
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/c.ts",
+      "sha256": "33b63954469b7058fdec280109f5e193a7892cf677656645277ceff88389e6c2",
+      "size": 639
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/cpp.ts",
+      "sha256": "ae356e83bd6a6f95e1d1eb7c47fca19db1cdce8e0583efe5ebfda4ab3544d845",
+      "size": 720
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/csharp.ts",
+      "sha256": "a990cad08e6ba7198cf3604a278fbb2a599470b7fe6449b45b8b89e2a6bd9943",
+      "size": 665
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/css.ts",
+      "sha256": "827e5b582ed404174afd832b2fb6a347930e16ed91870300b97816e4b67293a0",
+      "size": 395
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/csv.ts",
+      "sha256": "48cd43241ff9c13b8ab5f4e89200ace18e7f50708d051a05d62f1ae999ff51a0",
+      "size": 336
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/dart.ts",
+      "sha256": "7bb6412a801c173d80b2cb0b03d3920ec78782ab4c1c719bed208bed134f1a96",
+      "size": 697
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/docker-compose.ts",
+      "sha256": "d29301580b7349b9bc43b9774bc64d670e81d29b4c85067dbc03154cef2dfebe",
+      "size": 530
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/dockerfile.ts",
+      "sha256": "73290f6cd4099f1bdbeda82d81786df77bdfd831d093822ef31ee097fd542b52",
+      "size": 488
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/env.ts",
+      "sha256": "7c4dfcd9dfb26963ce87e9b26f61bb48e31452cebd4a8beb8e502e43ab3aaba2",
+      "size": 498
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/github-actions.ts",
+      "sha256": "0aaf0265574abf3c5fcbc18f8db1b4e8949385db9cf27aa93369bdceeb5352af",
+      "size": 419
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/go.ts",
+      "sha256": "e8987c5521eeab47f608608cc09c46657e31df0afaff9a98be037b0221c70aee",
+      "size": 613
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/graphql.ts",
+      "sha256": "6bbcd6a5556218a3b86ba5d2d2a46fa5a25ee52304d9fcda5b7af1a5a29b6124",
+      "size": 412
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/html.ts",
+      "sha256": "c0f78e0ee4502d5fe8aa855cf2ec74b095cd6716e2dc14ccf960f1716ccce2ca",
+      "size": 404
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/index.ts",
+      "sha256": "90c5cf743514a0a4ed1f299332605d601c30f5bee25026b6016961e942d6535d",
+      "size": 3519
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/java.ts",
+      "sha256": "35cd4ddcd8730073230150a17c0b3a245f50698666142dbad79da080ad85e354",
+      "size": 755
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/javascript.ts",
+      "sha256": "dedb9e3ab9e2b1c21c102212e8489382ccb078e5554453ca514b53e4b914029a",
+      "size": 721
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/jenkinsfile.ts",
+      "sha256": "7bde6a64bdf481aab8b0d2163f58c2a4eb1c6f5d6a687f9165e5d20f1dd14dd3",
+      "size": 447
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/json-config.ts",
+      "sha256": "42fb52fbc7d8de4bc70bc2fa034395c300cee49b61b4f0e35af421c9576241fa",
+      "size": 428
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/json-schema.ts",
+      "sha256": "722b955d13beb90b5493357fc661f78758b9f59b23392b7817c8f666497d97aa",
+      "size": 726
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/kotlin.ts",
+      "sha256": "2410031b05d8b60ee86f9b0a8d13c41a443ffe9d72aa69fd5da423d0b2ffaa43",
+      "size": 711
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/kubernetes.ts",
+      "sha256": "fa2d8cdd699d3d973900de5df6c00e5b581eb23a6803bbb92be1dddbb587ef88",
+      "size": 834
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/lua.ts",
+      "sha256": "6bb85a8462b878ab84c62adff8a50db1e25e33909458110565e84147b88cd7f0",
+      "size": 515
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/makefile.ts",
+      "sha256": "b8bc272b88bd078062086ef4f6c41e5d0ef1560f4ce9adfb4c2dd042b4f0b32b",
+      "size": 447
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/markdown.ts",
+      "sha256": "945b87846fb2c8a7319fc3cc304979d1bb0552c6922298a10b883ea1df06b75c",
+      "size": 386
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/openapi.ts",
+      "sha256": "750284c9f704c63e52f9ff290a4a6399296d3ee0d536138219c2ab773e7133c7",
+      "size": 487
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/php.ts",
+      "sha256": "9a7102d3c7d8dabf69671cca3cd26c7e55adf3a5fcf40e27826d26ea4ac9d51a",
+      "size": 654
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/plaintext.ts",
+      "sha256": "1ce9ad20c964816480ad6e43cb3551b455c46094da6d846241f90826d8202b5e",
+      "size": 335
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/powershell.ts",
+      "sha256": "9f9b84449b52089ac5306b0bfafff944431f6ae19aed3912f38f51e81e311555",
+      "size": 404
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/protobuf.ts",
+      "sha256": "936e343669a7f40925bf25c92e68c511c56bd44a8653f940ec5ce3a5cad2c729",
+      "size": 389
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/python.ts",
+      "sha256": "f55c580979f5d3bf62ccbc9d33cd4a15ad13570cdbae09738b1128507c60cd71",
+      "size": 903
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/restructuredtext.ts",
+      "sha256": "e9519f888a1f7383aa0c999d698cb9482d76fb1a4cc5c183971c87f0ea5f27a5",
+      "size": 418
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/ruby.ts",
+      "sha256": "0a787bc700925cad605c6b6cf4f0673412be1a3d18390cadf54a3527efd599ef",
+      "size": 641
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/rust.ts",
+      "sha256": "dec8c7699cb11e95162b1a59c3b6d1526d46bb9a1490073b866c6fa0b78398c2",
+      "size": 681
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/scala.ts",
+      "sha256": "5ad8899bc2dfa213a164ebe09a08819e2b3f1a27c4a5aa2af471ef300739b88e",
+      "size": 865
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/shell.ts",
+      "sha256": "a5ff9ffc87ed0694e7697f45b9d7fff4ef67c25b672a818cf5d8d280405f0a7c",
+      "size": 434
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/sql.ts",
+      "sha256": "6fd9e9461c81f6823258cca8fbdecd4b14ec8f17d2ee53f9c1e3a117af5d75a7",
+      "size": 376
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/swift.ts",
+      "sha256": "2f28f9081865ebce5dfa2b3a9f3defe614d31979da7216914611c863aba9065f",
+      "size": 729
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/terraform.ts",
+      "sha256": "dfea8da2a2896b36d0cd8603109a49acdf5430a4591ce217ebd6a844fae1a3e9",
+      "size": 443
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/toml.ts",
+      "sha256": "f8d90748d1ddff207014df536e76587a7c386e10431fc6840a04e1667ec0225c",
+      "size": 403
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/typescript.ts",
+      "sha256": "5827d48f5343d189a3a817d2fe15e878aaa2f2443a03d2db2de160baeaaf7d44",
+      "size": 763
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/xml.ts",
+      "sha256": "e65473160317f50701c340a7c876cd020dc6625904132ae4a0e365e258645131",
+      "size": 424
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/configs/yaml.ts",
+      "sha256": "09996d9b5b2d2fd634000cb25df2902020a216afbc8425d611bf36fccfc99e84",
+      "size": 374
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/framework-registry.ts",
+      "sha256": "fbeefabd8a3558a8464449391ba2d09096d10ca66734612b7e753f27a115fc6c",
+      "size": 2570
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/frameworks/django.ts",
+      "sha256": "64a1cd0a763e7f30bcea6e5d70c336458eaeacb856d194123ae3bc1590b2cc9c",
+      "size": 803
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/frameworks/express.ts",
+      "sha256": "3bd8de6da6783b42141286835f4d1568521ed30a16df39f9ff413f07db17adb9",
+      "size": 649
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/frameworks/fastapi.ts",
+      "sha256": "95d22224c4dba40d6b547954683eb9f57f10573452ca515565552528e9a03be1",
+      "size": 592
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/frameworks/flask.ts",
+      "sha256": "4b8d7fd31e36a581038a6b3012a9eb4b1b1e15132d9d2406b3f10ceaa1da0041",
+      "size": 661
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/frameworks/gin.ts",
+      "sha256": "b32a5db961993874117e929963acc51051686de6765419a64838414eca17f318",
+      "size": 499
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/frameworks/index.ts",
+      "sha256": "db476e809116e7f458c814699bc5590799fa5c99eb0215b5ecf463ff01d45e3e",
+      "size": 862
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/frameworks/nextjs.ts",
+      "sha256": "1154549de6b8273db301cc0fde1234d43567a6565944e453d28c5c62599b4723",
+      "size": 581
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/frameworks/rails.ts",
+      "sha256": "5657fe0b210b310ed05013b04b11c3b0fd38b8d215289d02f8d0d4724a5cc621",
+      "size": 639
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/frameworks/react.ts",
+      "sha256": "39b6d264f8cc35185529b9f6ee2906082f4642f3dde94acc54ab2f1b25bfa3f9",
+      "size": 564
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/frameworks/spring.ts",
+      "sha256": "91168e119937dd2d6db85e83bf613ffe9a6f1aa602f0212d113ff7735da4e131",
+      "size": 696
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/frameworks/vue.ts",
+      "sha256": "82cab979c5a60c436603ce3a4633c57057f23f328ee47b478b788b431f9e9c53",
+      "size": 560
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/index.ts",
+      "sha256": "8385b2fc6a90935eb18a79b32836bf6c110fcce8cc070197bcfd3818304d332c",
+      "size": 537
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/language-registry.ts",
+      "sha256": "7f736d509ba4aabb67f4de1f23d07545a9e76ad25c6aac3d08ef448d4220aeb5",
+      "size": 2201
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/languages/types.ts",
+      "sha256": "1f107c0e099ab6b29710f8f81d2e4dbe8116378d3be5fc1568f71d4dfd81c05b",
+      "size": 2399
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/persistence/index.ts",
+      "sha256": "64e9deb49b9948022f74e8193954dd3934cf9f2586a7750e0db89dc6a6f9e83c",
+      "size": 6381
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/persistence/persistence.test.ts",
+      "sha256": "305980f4c220a982568b25e55440b7703f71b51322359264b68cd1d51be44da0",
+      "size": 7540
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/discovery.ts",
+      "sha256": "b3c88c1fcc6009ad16a3b8270072dbb2e03a21aff4443e635d6d0626d07327c0",
+      "size": 1849
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/__tests__/cpp-extractor.test.ts",
+      "sha256": "147eeb1e07f3d30fc1323047a71492ee0d526f08065a8916ac55a16d48bdb6da",
+      "size": 19113
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/__tests__/csharp-extractor.test.ts",
+      "sha256": "27385361fd5b1936fce66f1ae6f1d9add69e3b94e3e271b7b66c5d744a6ad3fe",
+      "size": 19716
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/__tests__/dart-extractor.test.ts",
+      "sha256": "7f0dea1e9c0f6e53a8393b256cdfb5a11ec11a558f7cf7c840b6e4ffca799bd3",
+      "size": 21509
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/__tests__/go-extractor.test.ts",
+      "sha256": "4bbe6a0f0f7fa6b311fc8f3a95b74aaff39f7c7b4e91c3f8d8219f212ee88203",
+      "size": 15451
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/__tests__/java-extractor.test.ts",
+      "sha256": "df02c424705247d0903e138a4041be0dea21e1172ac859c4d34a7fd24f9abd99",
+      "size": 17470
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/__tests__/kotlin-extractor.test.ts",
+      "sha256": "3e5c19226783a3a89f4b437ea4af0a89e6b1e4dec98d723feab199b6f8baf5f3",
+      "size": 11145
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/__tests__/php-extractor.test.ts",
+      "sha256": "10184b66e2cc34d27b712a83439b4f46d8f592606c34d58ff03f256a38008919",
+      "size": 19425
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/__tests__/python-extractor.test.ts",
+      "sha256": "ec0d013e15b17a905d2348a76597d297c8793a715ab749ba51d94bf66f96363b",
+      "size": 18040
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/__tests__/ruby-extractor.test.ts",
+      "sha256": "2c950847b766b01b6a6e9806fefbd8eb2a2db4a8898e1a623d0caa695b189794",
+      "size": 17984
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/__tests__/rust-extractor.test.ts",
+      "sha256": "464ff733ab38c0f472a8c1eef13bbc58784388ab1477f1214bf0c54d2ebef58e",
+      "size": 20665
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/__tests__/scala-extractor.test.ts",
+      "sha256": "b0312da123d321a78962b93b39351a18c6093d8bcdc828d57f9e96ae002618d8",
+      "size": 16720
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/__tests__/swift-extractor.test.ts",
+      "sha256": "206d649e0121184e5825e54829842405bf5a9ac807f02d1ff4b1ea8fe27fe967",
+      "size": 17075
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/__tests__/typescript-extractor.test.ts",
+      "sha256": "cb1971f6b290c14ce8c5592fd43034a0167502a66d59a4b8f89635cec174751a",
+      "size": 2563
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/base-extractor.ts",
+      "sha256": "8eafac3b46058365ef317b7427f09befc570ed420fc3629f0ae6bdba7725d689",
+      "size": 1655
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/cpp-extractor.ts",
+      "sha256": "02d01bf5713a8b6e494346cd220efc0ac80b25550605cc412810bc9e7b0b9e15",
+      "size": 16285
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/csharp-extractor.ts",
+      "sha256": "d87df95af2bb689325ea7903fc015ac766f48a41714f5365fb1a92ddebc3da7d",
+      "size": 15747
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/dart-extractor.ts",
+      "sha256": "661d56f616e45a1fbb2b9c74fffe7233c8f21a7f9190f03ba6eb4d1f2a0295e4",
+      "size": 27929
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/go-extractor.ts",
+      "sha256": "71da081b3c434a7a783c3422205f5eb1146725ec423608f52d51b5a2ee93bc42",
+      "size": 12002
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/index.ts",
+      "sha256": "9c7e751fe589724e6d2ba3d89e753ebd55a90a29803f3b8ddc32b58c1fea506d",
+      "size": 2015
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/java-extractor.ts",
+      "sha256": "0e70be932d01a6ebf6111056ec55fcf57b3050dd82a0837f998255f9582c0c89",
+      "size": 13275
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/kotlin-extractor.ts",
+      "sha256": "719805f7f60afc178580cab3e6e4f549ff4bb74cbd1c71a29789faa80a12ce24",
+      "size": 14308
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/php-extractor.ts",
+      "sha256": "822b4832fbe17216e3792c055cf9b146ab68b1a9f177674805484d685e600057",
+      "size": 14997
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/python-extractor.ts",
+      "sha256": "22509ab258465bc1b2b54a9dec9f6a928586710ad1d285fc86416028215d5a6a",
+      "size": 10364
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/ruby-extractor.ts",
+      "sha256": "9ca10f3dabc58c259f2011337c5404bd83433d500185c91ffda2088aa3457d9d",
+      "size": 12386
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/rust-extractor.ts",
+      "sha256": "0480a8803b5ec396d6f2025fe1869d26145588043064fa45aeb55637675d070a",
+      "size": 14797
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/scala-extractor.ts",
+      "sha256": "edbab1566036ee75a0a766e460002adb2ebffb1a5f3cd7eb71a1bcb74b370af7",
+      "size": 20667
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/swift-extractor.ts",
+      "sha256": "69519c2c3c1ca6e6673d3fb5aaa14848ca58b64f10c8c88e5f0384cf5b0b57d6",
+      "size": 21634
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/types.ts",
+      "sha256": "9af707a4643eaec7f8986184033df852130dbf8cf632cfd415c00d1cce3f29a7",
+      "size": 744
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/extractors/typescript-extractor.ts",
+      "sha256": "88c129d2b6473cf1ec68e1bd9801d087c024f32268fccdd89f732c2fbcb4ca7f",
+      "size": 14439
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/parsers/dockerfile-parser.ts",
+      "sha256": "94e7e7f81504eb483e3a3b82bf80e1feff543c00f2cc90331748958c872f9f2b",
+      "size": 2803
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/parsers/env-parser.ts",
+      "sha256": "de9167776cc01bfa553564dc23f4f3db778b0316ad08cd8afb3dee4ea0b6b19c",
+      "size": 1208
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/parsers/graphql-parser.ts",
+      "sha256": "548542e064326e22d2c15f4267951bc95213c6d38d1a673953301353f29a9855",
+      "size": 3868
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/parsers/index.ts",
+      "sha256": "0482fcb938491100e513300040a462cd24fc314a113f2790f0d79fe64759669d",
+      "size": 1957
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/parsers/json-parser.ts",
+      "sha256": "7fad80e12b8869bd2eae585f3ceef5686c75fb3e697c35bd045c686c3bebcbc8",
+      "size": 4301
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/parsers/makefile-parser.ts",
+      "sha256": "c8343dbfc6f7fa73619195927e531aae35630a95f49f92d64053f59ac0bb0cd2",
+      "size": 1708
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/parsers/markdown-parser.ts",
+      "sha256": "7042fb277894f3d02decd25ef7d1dbce02b47318ac935312c9835022ec94d836",
+      "size": 2588
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/parsers/protobuf-parser.ts",
+      "sha256": "5c55a55cbf284134c10d016570eed28dcca0929b477f4bae68bfbcae9b859b66",
+      "size": 4690
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/parsers/shell-parser.ts",
+      "sha256": "adee0b999e96d8d0f44985ab35b645a9746f5210b3f58037e294edc5b43a6b6a",
+      "size": 3085
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/parsers/sql-parser.ts",
+      "sha256": "52b24eb14aa42684cb50f48d8e3172f11a0f298f4a3603c539da33f4bfd95cf0",
+      "size": 3350
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/parsers/terraform-parser.ts",
+      "sha256": "d6f2811b50dd49b147e53a173f67d1bb3aebbce0604a243029797afb549a6896",
+      "size": 4479
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/parsers/toml-parser.ts",
+      "sha256": "0ac3fc6fdf41dc61a5715118a70dd2bed818721f395c20bb47228682995adce0",
+      "size": 1476
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/parsers/yaml-parser.ts",
+      "sha256": "ac4defd986696ca6d1ac0e8e714e815b2edcb37b7a43591a391fd1322eda6b2a",
+      "size": 3807
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/registry.ts",
+      "sha256": "5cd5e47924b4c98dc6b878773163b549ebbd4e185f4951f22008e5f7936f4bd1",
+      "size": 3196
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/tree-sitter-plugin.test.ts",
+      "sha256": "ba8cf7b2d9c550adc07872c6ce67f3195753ce176381ed720c817516643611d1",
+      "size": 11347
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/plugins/tree-sitter-plugin.ts",
+      "sha256": "db740e481aee496b558c47e2e54b78ef236619dbfd25d2455b1dfa62c2aef100",
+      "size": 11480
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/schema.ts",
+      "sha256": "e043d70c2d4485fe717ccee9eb54ad4e36256fdafc0713999e7b9b345bbc7c97",
+      "size": 23835
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/search.ts",
+      "sha256": "62a9313587879a2ca396eb1c749b8f963cc9dd7bc29663b18b015526fe1774ef",
+      "size": 1715
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/staleness.ts",
+      "sha256": "5ae93f046a4023fc563f4ac09bb740ecaf9c75eb36ecdfad26525699b4f6cba7",
+      "size": 13024
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/types.test.ts",
+      "sha256": "115a2c521250c631b3a0277210bbbd03847273800d0e592f94b3da7e69a7d24f",
+      "size": 7062
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/src/types.ts",
+      "sha256": "34ed1953e3fb688301457b2f240cddd7572e4e822c67230517e8d6c2b7290733",
+      "size": 7082
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/tsconfig.json",
+      "sha256": "e883e3117f39afcf9e2cf7d612094ac51421a3bc0c29bd6a4c1a543147a6144b",
+      "size": 430
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/core/vitest.config.ts",
+      "sha256": "991fbc1dac3e595024391b3055fd169171cabf59c10c69b55d18ddcf5dc8b093",
+      "size": 141
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/tree-sitter-dart-wasm/BUILD.md",
+      "sha256": "d124dac9e36dee5a7439aec4045a08114cb195b95d7c062938b435d3129590c0",
+      "size": 1548
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/tree-sitter-dart-wasm/package.json",
+      "sha256": "fae52ec2a947c41e80c554ca4268713961d04ffa744c826c844d7cbbc403c921",
+      "size": 336
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/tree-sitter-dart-wasm/tree-sitter-dart.wasm",
+      "sha256": "3706261fc734e7eddd1a33cf1b031571eba4b017fe55d3b8910af31a1399f9a4",
+      "size": 765060
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/tree-sitter-swift-wasm/.swift-grammar-pin",
+      "sha256": "14032c01cd40d15966c3f8727ca1b764bab1dce3e51bccd018eb1871ebf3e062",
+      "size": 41
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/tree-sitter-swift-wasm/BUILD.md",
+      "sha256": "7f3763767db3fd5af0adc4269a29d6adfaeacbc7a2fed27b8694efd626ad938e",
+      "size": 1893
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/tree-sitter-swift-wasm/LICENSE",
+      "sha256": "3533cec129bb4bba015c0d61d86dd7c3b7e82110e4d2ff7837a01eff5bad5ccc",
+      "size": 1068
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/tree-sitter-swift-wasm/package.json",
+      "sha256": "58a0007014dd4e7d422edb543b9e06d0402b30512dae414cb416bb0c09023636",
+      "size": 373
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/packages/tree-sitter-swift-wasm/tree-sitter-swift.wasm",
+      "sha256": "0bbf7a0668f8f155addbcd8284880447dbe393b67b5eb09c7b042b02080d9498",
+      "size": 3825127
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/pnpm-lock.yaml",
+      "sha256": "f620712abd8bd3592fad3f1011dd64eee8ecaf036a8810ebbd0a1afc3214247e",
+      "size": 129192
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/pnpm-workspace.yaml",
+      "sha256": "a32e6d17f7c34326fa8685d3ae7854ae8999f8adb7ca4059c9d8153d5b63480c",
+      "size": 418
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/SKILL.md",
+      "sha256": "b09dcea9aa162902e291ef65123d056c5b77b1ca24a038ab57ab404de13422cb",
+      "size": 46663
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/build-fingerprints.mjs",
+      "sha256": "9b1d0589f0ed1827301edd3585fc7da0340dd29434a5ab3ab54aed1a0a6baca3",
+      "size": 3436
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/compute-batches.mjs",
+      "sha256": "1fe822bb14df9d4ddc97521a9803eb1b3216300a70c0cb3ea60763429ba7e588",
+      "size": 26128
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/extract-import-map.mjs",
+      "sha256": "308b1f0b22a9cba437bb10e197f520cd2f554e7bdd82b510001a6bbabe5113aa",
+      "size": 76993
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/extract-structure-result.mjs",
+      "sha256": "637287452487b1ecbcf4ac3c91de19ee901f9bc84084bce5f6b7c6695e92566d",
+      "size": 10038
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/extract-structure.mjs",
+      "sha256": "8112caee53f94f1e1ff1da4842eef01efc3bd7218f759518dcea88eba97a2149",
+      "size": 5946
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/frameworks/django.md",
+      "sha256": "a2257a849cf64d09cf2869a3106991264d7f50acd03c93e76284ed288cba7051",
+      "size": 4807
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/frameworks/express.md",
+      "sha256": "0a7b0d4ddc72fca3d1cbf5d7c63739f4cbbb924b86625907df03656b6734898c",
+      "size": 4394
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/frameworks/fastapi.md",
+      "sha256": "54f971f48dd74a6138d9cd03a3c4e7f4b06ab803403a663ebcc4a6422c0671b1",
+      "size": 4381
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/frameworks/flask.md",
+      "sha256": "645844e41c9a09ab47233c4ed68febfb7e15d8cc6bb354bb029b4218b0d6141c",
+      "size": 3486
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/frameworks/gin.md",
+      "sha256": "6621187a9fe0023d7d36ffe51680571ee58a7a77ebe915db4d35b6fb26eadb77",
+      "size": 4639
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/frameworks/nextjs.md",
+      "sha256": "99ae673ecaf27381e18483b12a6dc66ce7bbc37f3bf8f2f66344a160a882f2ea",
+      "size": 4374
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/frameworks/rails.md",
+      "sha256": "f5fb1fb05a32c9e71ba44e93d205252fd4e58b71a6cce9d62cd4ee20d14adc36",
+      "size": 5474
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/frameworks/react.md",
+      "sha256": "eaaf30363244b89a6bad91971f3d476ec809a8892f387a8bf33c04638a04af20",
+      "size": 3836
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/frameworks/spring.md",
+      "sha256": "296c10395b794c8c0741cd2faaa61f9e171933003f39cbe45f462237ed1066c6",
+      "size": 4972
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/frameworks/vue.md",
+      "sha256": "49a432fe59c8b0759632bd1745b4acc7ddcaef4343a270d97698d9bede69e5db",
+      "size": 4487
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/generate-ignore.mjs",
+      "sha256": "253bb28abb00dfdd2e40d3e816a200a576c7419ef90b700e267e27890dcb0a8c",
+      "size": 2544
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/cpp.md",
+      "sha256": "2a658bb677944fa58e6a244430d120cb0657d09e4e50fe28a9cdfbdd554f46f9",
+      "size": 2590
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/csharp.md",
+      "sha256": "507cb86fb5c494d9d5e8ab947015ac6f4e7a2c280c0509ffdbab812a0472c467",
+      "size": 2672
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/css.md",
+      "sha256": "ed3a8dcd96e9921d8d85cfcf0ea07d7a15838cd076180017a80162b1b7166131",
+      "size": 2096
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/dockerfile.md",
+      "sha256": "bb548a778970cb234ea805ee35dde488274eb077d2b671aa4b55297985f88bb6",
+      "size": 1978
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/go.md",
+      "sha256": "359f808ba97c79726598fe92478ee5680c1bd22a6065db9d374e403f5e19f0e1",
+      "size": 2484
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/graphql.md",
+      "sha256": "735b28063ee40ad7b07fc76a4268f96fa59f9fd5d38f185f4914275a1fa430e3",
+      "size": 1979
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/html.md",
+      "sha256": "059b74d8ca82efa09c273afc00aa96796202f637f147242990ebe2c90897ce3f",
+      "size": 1913
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/java.md",
+      "sha256": "fd8584d68da5d11e2b8b4e1c8a3d737175bfe77abe55ba49ca5750359571f55d",
+      "size": 2463
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/javascript.md",
+      "sha256": "4e2bc5e4c4139c86baf2a0e48587a4130d337d06929a323d8b2ab302c3355352",
+      "size": 2356
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/json.md",
+      "sha256": "6a420be6610ed2c5f2950f72b1e3f9c6c15a2377f23d70e066a9bd4ae860cf4a",
+      "size": 1786
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/kotlin.md",
+      "sha256": "fe3d5eff0f190027ce6e9686bc80e7dce4313aced194a014febb3e93cd091977",
+      "size": 2517
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/markdown.md",
+      "sha256": "32203c73af64c9f38768199887a25f5e58c166957b82b8b8934fb926d614f944",
+      "size": 1919
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/php.md",
+      "sha256": "043635d64c89b6293936085f2cd341f055d61b71132b0d09ed599e608023c772",
+      "size": 2515
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/protobuf.md",
+      "sha256": "7db34b5f2085ab14ac888c4c817caa6f1045a7405e14f7c30000bec93139b3dd",
+      "size": 1881
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/python.md",
+      "sha256": "bb6553846c7ddb63ab4c156caf183fa64f59c63a56c3b0aaa42f764f9332ba94",
+      "size": 2645
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/ruby.md",
+      "sha256": "f5942f0e7136e48723c7d70ef49358cc9d12d4e3b3144e65607c947137382788",
+      "size": 2438
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/rust.md",
+      "sha256": "32cb3c3fcd1a560821ed09dd9a0da184dfa5c79c85f1e03034945ef4d14208d4",
+      "size": 2475
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/scala.md",
+      "sha256": "95b9f2c45f473e02226031b6998f2a2c6201d33304d0d885f5cc578ca3e3855c",
+      "size": 3251
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/shell.md",
+      "sha256": "f9992d17799065cef318c6906ad6cdad646cb3bbbe9ff1d07234a0634f587bd9",
+      "size": 1820
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/sql.md",
+      "sha256": "d0345797e637e91ae8e98f1f9fc37b62b881a6691e2801a60139fc422341c4a4",
+      "size": 2097
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/swift.md",
+      "sha256": "4c866204fffe114a4e27f11b162829257cd687020cb69b30bce88dbfff334775",
+      "size": 2519
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/terraform.md",
+      "sha256": "862d02b31ebc9de6d03d2112cf17084fcc15b4952bed08fa39e69260d642748e",
+      "size": 2123
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/typescript.md",
+      "sha256": "20d6d1ae757d806b8a4aeb0aa6e9fb5c3307ad4e3c83715d2e8532924e8afda6",
+      "size": 2545
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/languages/yaml.md",
+      "sha256": "0cda6694a866ca53715a23cafcc00d5e8995437916a49e40eb77a50114e55d7f",
+      "size": 1970
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/locales/en.md",
+      "sha256": "bfbecb6e2e902bf92ee0476a35ea8c267fd7040ba8ffa2621da183fe767dc3b2",
+      "size": 1521
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/locales/ja.md",
+      "sha256": "97c8462f64dd6fd8400861eb49871b27640b144d532e4be7f866689eefc7b7c6",
+      "size": 2150
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/locales/ko.md",
+      "sha256": "2a7cbed153d563221516858160b073e33b1080881b13a652f60667e98f0a3e6f",
+      "size": 1914
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/locales/ru.md",
+      "sha256": "02a9cfb7894ffd6e68a24d1dfd050ccc06bd66cac10b0b35d75acf72cedf12de",
+      "size": 3202
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/locales/zh-TW.md",
+      "sha256": "727f14f80a4edb73dfe53025686d5d3afe865eaa554ec1c6c787f3a9a070621f",
+      "size": 1726
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/locales/zh.md",
+      "sha256": "06cbd26979a3383f6177b3d37995bef44f104ebe2de43704b8b1d1b5031ad98b",
+      "size": 1695
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/merge-batch-graphs.py",
+      "sha256": "1e7b6612f09d8e440f1aa3b9fd97bb7bd4c557f39e1e3cf33d116e66cdfaae94",
+      "size": 53826
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/merge-subdomain-graphs.py",
+      "sha256": "b984a478a18eb7a0186f5374dd733fc001bc77806215bd067f404107911fa059",
+      "size": 16481
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/skills/understand/scan-project.mjs",
+      "sha256": "8a3cc5b1a25c11aa28699c16ab9451c8ba824f35ee0bc956a0d4547e66337d40",
+      "size": 32002
+    },
+    {
+      "mode": "0644",
+      "path": "understand-anything-plugin/tsconfig.json",
+      "sha256": "e883e3117f39afcf9e2cf7d612094ac51421a3bc0c29bd6a4c1a543147a6144b",
+      "size": 430
+    }
+  ],
+  "kind": "PowerPackageManifest",
+  "metadata": {
+    "powerId": "ua",
+    "sourceRef": "main",
+    "sourceRepository": "nhatnguyenquang1838-coder/Understand-Anything",
+    "sourceSha": "c0e4821c519f564d6c8b353537cf121eb52a1617",
+    "version": "main-20260725.1-c0e4821"
+  },
+  "spec": {
+    "entrypoints": [
+      "understand-anything-plugin/skills/understand/SKILL.md"
+    ],
+    "generatedFiles": [
+      "POWER.yaml",
+      "SOURCE.json",
+      "VERSION"
+    ],
+    "managedPaths": [
+      "LICENSE",
+      "SOURCE.lock.json",
+      "understand-anything-plugin/package.json",
+      "understand-anything-plugin/pnpm-workspace.yaml",
+      "understand-anything-plugin/pnpm-lock.yaml",
+      "understand-anything-plugin/agents",
+      "understand-anything-plugin/skills/understand",
+      "understand-anything-plugin/packages/core",
+      "understand-anything-plugin/packages/tree-sitter-dart-wasm",
+      "understand-anything-plugin/packages/tree-sitter-swift-wasm"
+    ],
+    "runtimeDataRoot": ".ua"
+  }
+}
