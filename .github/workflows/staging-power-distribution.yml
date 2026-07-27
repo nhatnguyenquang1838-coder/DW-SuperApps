@@ -1,0 +1,139 @@
+name: Staging power distribution
+
+on:
+  workflow_call:
+    inputs:
+      powers:
+        description: "Comma-separated power IDs to build."
+        required: false
+        type: string
+        default: ""
+      foundation_ref:
+        description: "DW-SuperApps commit containing the distribution builder."
+        required: true
+        type: string
+      publish_staging_branch:
+        description: "Push validated staging tree to staging branch."
+        required: false
+        type: boolean
+        default: true
+  workflow_dispatch:
+    inputs:
+      powers:
+        description: "Power IDs to build (comma-separated). Empty means all."
+        required: false
+        type: string
+        default: ""
+      foundation_ref:
+        description: "DW-SuperApps commit containing the distribution builder."
+        required: true
+        type: string
+        default: "main"
+      publish_staging_branch:
+        description: "Push validated staging tree to staging branch."
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: staging-power-distribution-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out workspace
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.DW_SUBMODULE_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.12"
+
+      - name: Install builder dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Build distributions
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          FOUNDATION_REF="${{ inputs.foundation_ref }}"
+          EXTRA=()
+          if [[ -n "${{ inputs.powers }}" ]]; then
+            IFS=',' read -ra EXTRA <<< "${{ inputs.powers }}"
+          fi
+          python scripts/distribution_builder.py \
+            --foundation-ref "$FOUNDATION_REF" \
+            ${
+              for p in "${EXTRA[@]}"; do printf -- "--power %q " "$p"; done
+            } \
+            > .staging-build-result.json
+          cat .staging-build-result.json
+
+      - name: Validate staged distributions
+        id: validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if [[ -n "${{ inputs.powers }}" ]]; then
+            IFS=',' read -ra EXTRA <<< "${{ inputs.powers }}"
+          fi
+          python scripts/distribution_installer.py \
+            --staging .kilo/staging/power-dist \
+            --store-root .kilo/staging/power-dist/.store \
+            --target .kilo/staging/power-dist/.consumer \
+            ${
+              for p in "${EXTRA[@]}"; do printf -- "--power %q " "$p"; done
+            }
+
+      - name: Upload staging artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: staging-power-distributions
+          path: |
+            .kilo/staging/power-dist/**/*.zip
+            .kilo/staging/power-dist/**/*.zip.sha256
+            .kilo/staging/power-dist/build-summary.json
+            .kilo/staging/power-dist/validation-report.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Update staging branch
+        if: ${{ inputs.publish_staging_branch }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch="staging"
+          worktree="$(mktemp -d)"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            git fetch origin "$branch"
+            git worktree add "$worktree" "origin/$branch"
+            git -C "$worktree" switch -c "$branch"
+          else
+            git worktree add --detach "$worktree"
+            git -C "$worktree" switch --orphan "$branch"
+          fi
+          find "$worktree" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a .kilo/staging/power-dist/. "$worktree"/
+          git -C "$worktree" add -A
+          git -C "$worktree" config user.name "github-actions[bot]"
+          git -C "$worktree" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git -C "$worktree" diff --cached --quiet; then
+            echo "staging branch already up to date"
+          else
+            git -C "$worktree" commit -m "dist: stage ${{ github.sha }}"
+            git -C "$worktree" push origin "HEAD:$branch"
+          fi

@@ -1,0 +1,200 @@
+name: Power source update
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - manifests/powers/gwc.yaml
+      - manifests/powers/task-me.yaml
+      - manifests/powers/bmad.yaml
+      - manifests/powers/ua.yaml
+      - projects/gwc/**
+      - projects/task-me/**
+      - projects/bmad/**
+      - projects/ua/**
+      - scripts/distribution_builder.py
+      - scripts/distribution_installer.py
+      - scripts/power_dist.py
+      - schemas/power-distribution.schema.json
+      - templates/power-runtime/**
+  pull_request:
+    branches: [main]
+    paths:
+      - manifests/powers/gwc.yaml
+      - manifests/powers/task-me.yaml
+      - manifests/powers/bmad.yaml
+      - manifests/powers/ua.yaml
+      - projects/gwc/**
+      - projects/task-me/**
+      - projects/bmad/**
+      - projects/ua/**
+      - scripts/distribution_builder.py
+      - scripts/distribution_installer.py
+      - scripts/power_dist.py
+      - schemas/power-distribution.schema.json
+      - templates/power-runtime/**
+  workflow_dispatch:
+    inputs:
+      powers:
+        description: "Power IDs to build (comma-separated). Empty means all."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: power-source-update-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
+      powers: ${{ steps.diff.outputs.powers }}
+    steps:
+      - name: Check out workspace
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.DW_SUBMODULE_TOKEN }}
+
+      - name: Detect changed power sources
+        id: diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE_REF="${{ github.event.before }}"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE_REF="origin/main"
+          fi
+          if ! git rev-parse --verify "$BASE_REF" >/dev/null 2>&1; then
+            BASE_REF="origin/main~1"
+          fi
+          mapfile -t changed < <(git diff --name-only "$BASE_REF"...HEAD || true)
+          powers=()
+          for path in "${changed[@]}"; do
+            case "$path" in
+              manifests/powers/gwc.yaml|projects/gwc/*) powers+=("gwc") ;;
+              manifests/powers/task-me.yaml|projects/task-me/*) powers+=("task-me") ;;
+              manifests/powers/bmad.yaml|projects/bmad/*) powers+=("bmad") ;;
+              manifests/powers/ua.yaml|projects/ua/*) powers+=("ua") ;;
+              scripts/distribution_builder.py|scripts/distribution_installer.py|scripts/power_dist.py|schemas/power-distribution.schema.json|templates/power-runtime/*)
+                powers+=("gwc" "task-me" "bmad" "ua")
+                ;;
+            esac
+          done
+          unique=$(printf "%s\n" "${powers[@]}" | sort -u | tr '\n' ',' | sed 's/,$//')
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "powers=${unique}" >> "$GITHUB_OUTPUT"
+          echo "Detected power changes: ${unique:-none}"
+
+  stage:
+    needs: detect
+    if: ${{ needs.detect.outputs.changed == 'true' && needs.detect.outputs.powers != '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Check out workspace
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.DW_SUBMODULE_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.12"
+
+      - name: Install builder dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Build distributions
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          FOUNDATION_REF="${{ github.sha }}"
+          python scripts/distribution_builder.py \
+            --foundation-ref "$FOUNDATION_REF" \
+            ${{ needs.detect.outputs.powers != '' && format('--power {0}', join(needs.detect.outputs.powers, ' --power ')) || '' }} \
+            > .staging-build-result.json
+          cat .staging-build-result.json
+
+      - name: Validate staged distributions
+        id: validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/distribution_installer.py \
+            --staging .kilo/staging/power-dist \
+            --store-root .kilo/staging/power-dist/.store \
+            --target .kilo/staging/power-dist/.consumer \
+            ${{ needs.detect.outputs.powers != '' && format('--power {0}', join(needs.detect.outputs.powers, ' --power ')) || '' }}
+
+      - name: Upload staging artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: staging-power-distributions
+          path: |
+            .kilo/staging/power-dist/**/*.zip
+            .kilo/staging/power-dist/**/*.zip.sha256
+            .kilo/staging/power-dist/build-summary.json
+            .kilo/staging/power-dist/validation-report.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Update staging branch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          branch="staging"
+          worktree="$(mktemp -d)"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            git fetch origin "$branch"
+            git worktree add "$worktree" "origin/$branch"
+            git -C "$worktree" switch -c "$branch"
+          else
+            git worktree add --detach "$worktree"
+            git -C "$worktree" switch --orphan "$branch"
+          fi
+          find "$worktree" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a .kilo/staging/power-dist/. "$worktree"/
+          git -C "$worktree" add -A
+          git -C "$worktree" config user.name "github-actions[bot]"
+          git -C "$worktree" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git -C "$worktree" diff --cached --quiet; then
+            echo "staging branch already up to date"
+          else
+            git -C "$worktree" commit -m "dist: stage ${{ github.sha }}"
+            git -C "$worktree" push origin "HEAD:$branch"
+          fi
+
+      - name: Comment on commit
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cat > /tmp/staging-comment.md <<EOF
+          ## Power distribution staging updated
+
+          - Commit: \`${{ github.sha }}\`
+          - Powers: \`${{ needs.detect.outputs.powers }}\`
+          - Branch: \`staging\`
+
+          Artifacts:
+          - \`build-summary.json\`
+          - \`validation-report.json\`
+          - Per-power ZIP + SHA256
+
+          EOF
+          gh pr comment ${{ github.event.pull_request.number || '0' }} --body-file /tmp/staging-comment.md || true
+          gh run list --branch staging --limit 1 || true
