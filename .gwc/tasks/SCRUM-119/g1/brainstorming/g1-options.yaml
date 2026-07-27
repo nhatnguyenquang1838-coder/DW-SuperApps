@@ -1,0 +1,23 @@
+schema_version: '1.0'
+artifact_type: g1-options
+task_id: SCRUM-119
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_sha: b5d0b118713ebfd5cbc1ebaafa8d1fe807294f49
+options:
+  - option_id: OPT-1
+    title: Bounded contract package
+    summary: Create the task-scoped GWC evidence chain and keep BMAD bounded to declared outputs.
+    pros:
+      - honors GWC authority boundaries
+      - preserves exact-SHA provenance
+      - keeps merge/deploy out of scope
+    cons:
+      - does not grant later-gate authority
+  - option_id: OPT-2
+    title: Expand BMAD authority
+    summary: Let BMAD self-approve or mutate canonical state.
+    pros: []
+    cons:
+      - violates GWC gate ownership
+      - violates SCRUM-119 objective
+selected_option_id: OPT-1

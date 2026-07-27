@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw.superapps/schemas/bmad-procedure-request.schema.json",
+  "title": "BMAD Procedure Request",
+  "description": "Request schema for invoking a BMAD procedure adapter. Every invocation must bind to exact task, repository, base/head SHA, procedure version and GWC scope hash.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "apiVersion",
+    "kind",
+    "procedureId",
+    "procedureVersion",
+    "targetSha",
+    "permissionEnvelope"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "dw.superapps/v1"
+    },
+    "kind": {
+      "const": "BmadProcedureRequest"
+    },
+    "procedureId": {
+      "type": "string",
+      "description": "Which BMAD procedure to execute (e.g., architecture-analysis, story-preparation, tdd-implementation)."
+    },
+    "procedureVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Pinned version of the procedure to execute. No implicit latest."
+    },
+    "targetSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Exact target repository HEAD SHA for the operation."
+    },
+    "baseSha": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Base SHA for diff-bound operations. Null for full-scope procedures."
+    },
+    "gwcScopeHash": {
+      "type": "string",
+      "minLength": 1,
+      "description": "GWC authorized scope hash defining the boundary of allowed actions."
+    },
+    "snapshotId": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "description": "UA snapshot ID from SCRUM-117. Required when procedure depends on structural/domain graphs."
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Procedure-specific input data. Structure varies by procedureId."
+    },
+    "permissionEnvelope": {
+      "$ref": "#/$defs/permissionEnvelope"
+    },
+    "timeoutSeconds": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "Override default procedure timeout. Null uses the registry default."
+    },
+    "retryPolicy": {
+      "$ref": "#/$defs/retryPolicy"
+    },
+    "idempotencyKey": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "description": "Prevents duplicate side effects. Scoped to (procedureId, targetSha, gwcScopeHash)."
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenanceContext"
+    }
+  },
+  "$defs": {
+    "permissionEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowedPaths", "actions"],
+      "properties": {
+        "allowedPaths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string" },
+          "description": "File/glob paths the procedure is allowed to read or write."
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "read",
+              "analyze",
+              "report",
+              "write",
+              "create",
+              "update",
+              "delete"
+            ]
+          },
+          "description": "Actions permitted within allowedPaths."
+        }
+      }
+    },
+    "retryPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxRetries": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "backoffType": {
+          "enum": ["exponential", "fixed", "none"],
+          "default": "none"
+        },
+        "initialDelaySeconds": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 1
+        }
+      }
+    },
+    "provenanceContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parentArtifactId",
+        "sourceRepo",
+        "sourceRef",
+        "sourceCommit"
+      ],
+      "properties": {
+        "parentArtifactId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceRepo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceRef": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceCommit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "schemaVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ownerRoot": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
