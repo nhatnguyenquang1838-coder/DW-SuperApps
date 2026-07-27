@@ -1,0 +1,52 @@
+name: Offline distribution release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version"
+        required: true
+        default: "0.1.0"
+      source_ref:
+        description: "Source ref label"
+        required: false
+        default: "manual"
+  push:
+    tags:
+      - "dw-super-offline-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.DW_SUBMODULE_TOKEN }}
+
+      - name: Run offline distribution tests
+        run: python -m unittest tests/test_offline_distribution_release.py
+
+      - name: Build release assets
+        run: |
+          set -euo pipefail
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          VERSION="${VERSION#dw-super-offline-v}"
+          python scripts/release_builder.py \
+            --version "$VERSION" \
+            --source-root . \
+            --output dist/offline-release \
+            --source-ref "${{ github.ref_name }}" \
+            --source-sha "${{ github.sha }}"
+
+      - name: Upload release assets
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: dw-super-offline-release
+          path: dist/offline-release/**
+          if-no-files-found: error
