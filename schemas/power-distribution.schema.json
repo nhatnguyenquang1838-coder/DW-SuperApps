@@ -13,8 +13,8 @@
       "additionalProperties": false,
       "required": ["id", "name"],
       "properties": {
-        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,62}$"},
-        "name": {"type": "string", "minLength": 1},
+        "id": {"type": "string"},
+        "name": {"type": "string"},
         "description": {"type": "string"}
       }
     },
@@ -23,96 +23,19 @@
       "additionalProperties": false,
       "required": ["source", "package", "include", "runtime"],
       "properties": {
-        "source": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["repository"],
-          "properties": {
-            "repository": {"type": "string", "pattern": "^[^/\\s]+/[^/\\s]+$"},
-            "defaultRef": {"type": "string", "default": "main"}
-          }
-        },
-        "package": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["entrypoints"],
-          "properties": {
-            "entrypoints": {
-              "type": "array",
-              "minItems": 1,
-              "uniqueItems": true,
-              "items": {"$ref": "#/$defs/relativePath"}
-            },
-            "managedPaths": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {"$ref": "#/$defs/relativePath"}
-            },
-            "runtimeTemplates": {"type": "boolean", "default": true}
-          }
-        },
-        "include": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/relativePattern"}
-        },
-        "exclude": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/relativePattern"}
-        },
-        "forbidden": {
+        "capabilities": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "paths": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {"$ref": "#/$defs/relativePattern"}
-            },
-            "contentPatterns": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {"type": "string", "minLength": 1}
-            }
+            "dashboard": {"type": "boolean", "default": false}
           }
         },
-        "runtime": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["dataRoot"],
-          "properties": {
-            "dataRoot": {"$ref": "#/$defs/relativePath"},
-            "configRequired": {"type": "boolean", "default": false}
-          }
-        }
-      }
-    }
-  },
-  "$defs": {
-    "relativePath": {
-      "type": "string",
-      "minLength": 1,
-      "not": {
-        "anyOf": [
-          {"pattern": "^/"},
-          {"pattern": "^[A-Za-z]:[\\\\/]"},
-          {"pattern": "(^|/)\\.\\.(/|$)"},
-          {"pattern": "\\u0000"}
-        ]
-      }
-    },
-    "relativePattern": {
-      "type": "string",
-      "minLength": 1,
-      "not": {
-        "anyOf": [
-          {"pattern": "^/"},
-          {"pattern": "^[A-Za-z]:[\\\\/]"},
-          {"pattern": "(^|/)\\.\\.(/|$)"},
-          {"pattern": "\\u0000"}
-        ]
+        "source": {"type": "object"},
+        "package": {"type": "object"},
+        "include": {"type": "array"},
+        "exclude": {"type": "array"},
+        "forbidden": {"type": "object"},
+        "runtime": {"type": "object"}
       }
     }
   }
