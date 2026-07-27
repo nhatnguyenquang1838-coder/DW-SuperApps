@@ -1,0 +1,41 @@
+schema_version: '1.0'
+artifact_type: g0-context-snapshot
+generated_at: '2026-07-28T00:27:35+07:00'
+project:
+  id: dw-superapps
+  name: DW SuperApps
+  profile_path: workspace.yaml
+repository:
+  full_name: nhatnguyenquang1838-coder/DW-SuperApps
+  base_ref: main
+  base_sha: b5d0b118713ebfd5cbc1ebaafa8d1fe807294f49
+  protected_branches:
+    - main
+  connector: Git
+  write_enabled: true
+task:
+  id: SCRUM-119
+  title: BMAD procedure-adapter contracts and authority boundaries
+constraints:
+  - BMAD remains bounded to declared outputs and owned paths.
+  - GWC retains gate authority; merge and deploy are not granted by design evidence.
+  - No canonical-state mutation outside .gwc/ governance records.
+sources:
+  - path: .gwc/g1/decision/g1-SCRUM-119-20260728-0023.yaml
+    status: AVAILABLE
+  - path: .gwc/g1/preflight/g1-SCRUM-119-20260728-0023.yaml
+    status: AVAILABLE
+  - path: .gwc/scrums/SCRUM-119/design.md
+    status: AVAILABLE
+  - path: contracts/permission-action-matrix.md
+    status: AVAILABLE
+  - path: examples/positive-architecture-analysis.md
+    status: AVAILABLE
+  - path: examples/positive-tdd-implementation.md
+    status: AVAILABLE
+  - path: examples/positive-review-only.md
+    status: AVAILABLE
+  - path: examples/rejected-scope-violation.md
+    status: AVAILABLE
+  - path: tests/validator-test-plan.md
+    status: AVAILABLE

@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw.superapps/schemas/bmad-procedure-result.schema.json",
+  "title": "BMAD Procedure Result",
+  "description": "Result schema returned by a BMAD procedure adapter. Outputs are written only to declared BMAD/project-owned paths and returned as references/evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "procedureId", "provenance"],
+  "properties": {
+    "status": {
+      "enum": [
+        "success",
+        "partial",
+        "blocked",
+        "invalid-input",
+        "scope-violation",
+        "unsupported-procedure",
+        "tool-unavailable",
+        "timeout",
+        "cancelled"
+      ],
+      "description": "Typed result status. success/partial indicate work completed; others classify failure type."
+    },
+    "procedureId": {
+      "type": "string",
+      "description": "Echoed from the request procedureId."
+    },
+    "procedureVersion": {
+      "type": "string",
+      "description": "The version of the procedure that was executed."
+    },
+    "snapshotId": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "description": "Source UA snapshot ID used by the procedure."
+    },
+    "evidenceRefs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["artifactId", "path", "type"],
+        "properties": {
+          "artifactId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "enum": [
+              "document",
+              "graph",
+              "test",
+              "report",
+              "evidence",
+              "proposal"
+            ]
+          },
+          "sha256": {
+            "type": ["string", "null"],
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      },
+      "description": "References to evidence artifacts produced by the procedure. Written only to .bmad/**, _bmad/**, _bmad-output/**, docs/**."
+    },
+    "changedPaths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true,
+      "description": "List of file paths modified by the procedure. Must be subset of permissionEnvelope.allowedPaths."
+    },
+    "testResults": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "status"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["pass", "fail", "skip", "error"] },
+          "durationMs": { "type": "integer", "minimum": 0 },
+          "output": { "type": "string" }
+        }
+      },
+      "description": "Test and check results produced during the procedure."
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["category", "severity", "description"],
+        "properties": {
+          "category": { "type": "string" },
+          "severity": { "enum": ["info", "low", "medium", "high", "critical"] },
+          "description": { "type": "string" },
+          "recommendation": { "type": "string" },
+          "proposal": {
+            "type": ["boolean", "null"],
+            "default": false,
+            "description": "True if this finding represents a scope-changing recommendation (reported as proposal/blocker, never auto-executed)."
+          }
+        }
+      },
+      "description": "Analysis findings. Scope-changing recommendations are reported as proposals/blockers, never executed automatically."
+    },
+    "residualRisks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["risk", "severity"],
+        "properties": {
+          "risk": { "type": "string" },
+          "severity": { "enum": ["low", "medium", "high"] },
+          "mitigation": { "type": "string" }
+        }
+      },
+      "description": "Identified residual risks with severity and optional mitigation strategies."
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "message"],
+        "properties": {
+          "code": {
+            "enum": [
+              "INVALID_INPUT",
+              "SCOPE_VIOLATION",
+              "UNSUPPORTED_PROCEDURE",
+              "TOOL_UNAVAILABLE",
+              "TIMEOUT",
+              "PARTIAL_RESULT",
+              "BLOCKED"
+            ]
+          },
+          "message": { "type": "string" },
+          "details": { "type": "object" }
+        }
+      },
+      "description": "Typed error details for failure cases. Empty array when status is success/partial."
+    },
+    "gateRecommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["gate", "recommendation", "evidence"],
+        "properties": {
+          "gate": { "enum": ["G2", "G4", "G5", "G6"] },
+          "recommendation": { "enum": ["approve", "block", "defer"] },
+          "evidence": { "type": "string" },
+          "note": {
+            "type": "string",
+            "description": "BMAD recommendations are read-only evidence. Actual gate transitions are performed by GWC only."
+          }
+        }
+      },
+      "default": [],
+      "description": "Read-only gate change recommendations. BMAD never auto-approves; these are evidence for GWC to act on."
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    }
+  },
+  "$defs": {
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "parentArtifactId",
+        "sourceRepo",
+        "sourceRef",
+        "sourceCommit",
+        "schemaVersion",
+        "ownerRoot",
+        "generatedTime"
+      ],
+      "properties": {
+        "artifactId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parentArtifactId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceRepo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceRef": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceCommit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "toolCommit": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{40}$",
+          "description": "BMAD tool package commit SHA."
+        },
+        "schemaVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ownerRoot": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The owning root path (e.g., .bmad/)."
+        },
+        "generatedTime": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

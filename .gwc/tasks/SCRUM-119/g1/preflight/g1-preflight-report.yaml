@@ -1,0 +1,28 @@
+schema_version: '1.0'
+artifact_type: g1-preflight-report
+task_id: SCRUM-119
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: main
+base_sha: b5d0b118713ebfd5cbc1ebaafa8d1fe807294f49
+intake_status: READY
+existing_mechanisms:
+  - current_mechanism: repo-root BMAD contract artifacts
+    purpose: Store the schema, matrix, examples, and test plan
+    limitation: No explicit GWC gate-control record
+    improvement: Add task-scoped gate evidence under .gwc/tasks/SCRUM-119/
+  - current_mechanism: .gwc/scrums/SCRUM-119/design.md
+    purpose: Canonical governance design for the SCRUM-119 evidence package
+    limitation: Needs task-scoped GWC sequence records
+    improvement: Add G0-G5 task-root artifacts
+selected_option: OPT-1
+risk_class: LOW
+validation_evidence:
+  - JSON schemas parse successfully
+  - repo-root contract files exist
+  - GWC gate posture is explicit and bounded
+required_next_gate: G2_EXECUTION
+excluded_actions:
+  - G4_MERGE
+  - G5_DEPLOY
+  - G6_PRODUCTION_DATA
+outcome: PASS
