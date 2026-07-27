@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "BMAD-METHOD",
+    "gitCommitHash": "bb45db4aa4496c69239f9c0629c290fd1b072fc9"
+  },
+  "nodes": [
+    {"id": "module:core-skills", "type": "module", "name": "Core Skills"},
+    {"id": "module:bmm-skills", "type": "module", "name": "BMM Lifecycle"},
+    {"id": "module:installer", "type": "module", "name": "Universal Installer"},
+    {"id": "pipeline:dw-dist", "type": "pipeline", "name": "DW BMAD Publisher"}
+  ],
+  "edges": [
+    {"source": "pipeline:dw-dist", "target": "module:core-skills", "type": "transforms"},
+    {"source": "pipeline:dw-dist", "target": "module:bmm-skills", "type": "transforms"},
+    {"source": "pipeline:dw-dist", "target": "module:installer", "type": "depends_on"}
+  ],
+  "layers": [
+    {
+      "id": "layer:distribution",
+      "name": "Distribution",
+      "nodeIds": ["module:core-skills", "module:bmm-skills", "module:installer", "pipeline:dw-dist"]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "Package for DW",
+      "nodeIds": ["pipeline:dw-dist", "module:installer"]
+    }
+  ]
+}
