@@ -77,7 +77,7 @@ class BmadPowerPluginTests(unittest.TestCase):
             (ROOT / "schemas" / "power-manifest.schema.json").read_text(encoding="utf-8")
         )
         jsonschema.Draft202012Validator(schema).validate(manifest)
-        self.assertEqual("release", manifest["spec"]["distribution"]["defaultMode"])
+        self.assertEqual("power-dist", manifest["spec"]["distribution"]["defaultMode"])
         self.assertEqual(
             "power-dist-bmad",
             manifest["spec"]["distribution"]["modes"]["powerDist"]["ref"],
