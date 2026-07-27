@@ -10,13 +10,13 @@
     {
       "mode": "0600",
       "path": "POWER.yaml",
-      "sha256": "31f1cd963743dbf4de75206555b87c6f46d3891ae05106604a0ba7cec9887cb7",
+      "sha256": "05c0b5ed192be8c69d02df99d03d1d0e59497ef3cf090188d0d302cff5f98ee6",
       "size": 431
     },
     {
       "mode": "0600",
       "path": "SOURCE.json",
-      "sha256": "20ca98cd0805f0d80f42cbbf1010931ac203e5c80919796f2aa2c78dfdd8d2e6",
+      "sha256": "d85d2c5441fea480bfb4a1417ff6edadff59df281ac9572a97356fd000896011",
       "size": 204
     },
     {
@@ -28,7 +28,7 @@
     {
       "mode": "0600",
       "path": "VERSION",
-      "sha256": "25f1c52cf0142f0efa26efb48acd34da0735c2664d1d0b098fc1e28e5a41df40",
+      "sha256": "591988973fe6d88d5620f8ad26e7bf48a11826094620302e3cfc167a402047ad",
       "size": 18
     },
     {
@@ -86,40 +86,10 @@
       "size": 5691
     },
     {
-      "mode": "0755",
-      "path": "distribution/bin/bootstrap-bmad",
-      "sha256": "2ada73a9dec73796fb83b3ac9ef06e606b1b04c7049af410da7b143b4d0ef781",
-      "size": 155
-    },
-    {
-      "mode": "0644",
-      "path": "distribution/bin/bootstrap-bmad.ps1",
-      "sha256": "9546a2fcf0cc66377d789067ca3a30e273a3d6fe96e503a8b3b05d17d76ba6bd",
-      "size": 452
-    },
-    {
-      "mode": "0644",
-      "path": "distribution/config/config.schema.json",
-      "sha256": "c2faa12b723d40e6be11fbde0eb6fabdeeef49f23e278baf567b00d3ff9d3cc6",
-      "size": 1148
-    },
-    {
-      "mode": "0644",
-      "path": "distribution/config/defaults.yaml",
-      "sha256": "b635e85d52d14fdc8100ecb948436ea5a4643f61eaf6e8e4c3b3dc06de6ac2d0",
-      "size": 173
-    },
-    {
-      "mode": "0644",
-      "path": "distribution/contracts/default-contract.yaml",
-      "sha256": "3ae6a7a1e99f3dfab69ec5b196060c42f217ea670cfae1bfcde0c8112f9b7cda",
-      "size": 445
-    },
-    {
       "mode": "0644",
       "path": "distribution/lib/bootstrap_bmad.py",
-      "sha256": "8c8aa8b9309d235ff68374f83906c8a9dd3d949268b04bc01e844d0f4c21954b",
-      "size": 8221
+      "sha256": "4f0e803df980a35580af6d2a7101309bfb062e9987e1ff2dae11159e2124b8ce",
+      "size": 7874
     },
     {
       "mode": "0644",
@@ -136,8 +106,8 @@
     {
       "mode": "0644",
       "path": "lib/power_runtime.py",
-      "sha256": "28401ff39568ebfa801b74b98d1361ed27554ee94c6f98b4da750ec21c8fce94",
-      "size": 12638
+      "sha256": "86c79aae09910426afc68caa66d3c3dadb60e49140297d078cee3c1dfb870290",
+      "size": 12517
     },
     {
       "mode": "0644",
@@ -1879,8 +1849,8 @@
     "powerId": "bmad",
     "sourceRef": "main",
     "sourceRepository": "nhatnguyenquang1838-coder/BMAD-METHOD",
-    "sourceSha": "bb45db4aa4496c69239f9c0629c290fd1b072fc9",
-    "version": "main-bb45db4aa449"
+    "sourceSha": "744227169addadb50d8b946777939a73207970f3",
+    "version": "main-744227169add"
   },
   "spec": {
     "entrypoints": [

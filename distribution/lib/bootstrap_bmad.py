@@ -42,21 +42,8 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def run(
-    command: list[str],
-    *,
-    cwd: Path | None = None,
-    env: dict[str, str] | None = None,
-    capture: bool = False,
-) -> subprocess.CompletedProcess[str]:
-    result = subprocess.run(
-        command,
-        cwd=cwd,
-        env=env,
-        text=True,
-        capture_output=capture,
-        check=False,
-    )
+def run(command: list[str], *, cwd: Path | None = None, env: dict[str, str] | None = None, capture: bool = False) -> subprocess.CompletedProcess[str]:
+    result = subprocess.run(command, cwd=cwd, env=env, text=True, capture_output=capture, check=False)
     if result.returncode != 0:
         detail = (result.stderr or result.stdout or "").strip()
         raise BootstrapError(detail or f"command failed: {' '.join(command)}")
@@ -93,11 +80,7 @@ def validate_package(root: Path) -> dict[str, Any]:
     if missing:
         raise BootstrapError("package is incomplete: " + ", ".join(missing))
     package = json.loads((root / "package.json").read_text(encoding="utf-8"))
-    return {
-        "name": package.get("name"),
-        "version": package.get("version"),
-        "requiredFiles": len(required),
-    }
+    return {"name": package.get("name"), "version": package.get("version"), "requiredFiles": len(required)}
 
 
 def dependency_cache(root: Path, target: Path, npm: str, *, refresh: bool) -> Path:
@@ -110,17 +93,7 @@ def dependency_cache(root: Path, target: Path, npm: str, *, refresh: bool) -> Pa
         try:
             shutil.copyfile(root / "package.json", temporary / "package.json")
             shutil.copyfile(root / "package-lock.json", temporary / "package-lock.json")
-            run(
-                [
-                    npm,
-                    "ci",
-                    "--omit=dev",
-                    "--ignore-scripts",
-                    "--no-audit",
-                    "--no-fund",
-                ],
-                cwd=temporary,
-            )
+            run([npm, "ci", "--omit=dev", "--ignore-scripts", "--no-audit", "--no-fund"], cwd=temporary)
             (temporary / ".lock-sha256").write_text(package_hash + "\n", encoding="utf-8")
             old = cache.parent / f".npm-old-{int(time.time())}"
             if cache.exists():
@@ -152,18 +125,14 @@ def bootstrap(args: argparse.Namespace) -> dict[str, Any]:
     npm = executable("npm")
     version = node_version(node)
     if version < MIN_NODE:
-        raise BootstrapError(
-            f"Node.js >= {'.'.join(map(str, MIN_NODE))} is required; found {'.'.join(map(str, version))}"
-        )
+        raise BootstrapError(f"Node.js >= {'.'.join(map(str, MIN_NODE))} is required; found {'.'.join(map(str, version))}")
     target.mkdir(parents=True, exist_ok=True)
     platform = HOST_MAP[args.host]
 
     result: dict[str, Any] = {
         "status": "READY" if args.check else "BOOTSTRAPPED",
         "package": package,
-        "source": json.loads((root / "SOURCE.json").read_text(encoding="utf-8"))
-        if (root / "SOURCE.json").is_file()
-        else None,
+        "source": json.loads((root / "SOURCE.json").read_text(encoding="utf-8")) if (root / "SOURCE.json").is_file() else None,
         "target": str(target),
         "host": args.host,
         "platform": platform,
@@ -200,9 +169,7 @@ def bootstrap(args: argparse.Namespace) -> dict[str, Any]:
 
     env = dict(os.environ)
     node_path = cache / "node_modules"
-    env["NODE_PATH"] = str(node_path) + (
-        os.pathsep + env["NODE_PATH"] if env.get("NODE_PATH") else ""
-    )
+    env["NODE_PATH"] = str(node_path) + (os.pathsep + env["NODE_PATH"] if env.get("NODE_PATH") else "")
     env["NO_UPDATE_NOTIFIER"] = "1"
     run(command, cwd=root, env=env)
 
