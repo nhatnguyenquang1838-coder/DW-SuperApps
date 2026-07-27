@@ -17,8 +17,7 @@ class PowerDistributionIntegrationTests(unittest.TestCase):
             with self.subTest(power_id=power_id):
                 distribution = manifest["spec"]["distribution"]
                 self.assertEqual("dw.power-distribution/v1", distribution["contract"])
-                expected_default = "release" if power_id == "bmad" else "power-dist"
-                self.assertEqual(expected_default, distribution["defaultMode"])
+                self.assertEqual("power-dist", distribution["defaultMode"])
                 self.assertEqual(
                     {"submodule", "release", "powerDist"},
                     set(distribution["modes"]),

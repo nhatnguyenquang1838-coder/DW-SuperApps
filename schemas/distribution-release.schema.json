@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw.superapps/schemas/distribution-release.schema.json",
+  "title": "DW SUPER Offline Distribution Release",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "dw.superapps.distribution/v1"
+    },
+    "kind": {
+      "const": "OfflineDistributionRelease"
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "name",
+        "version",
+        "builtAt"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "builtAt": {
+          "type": "string"
+        }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "required": [
+        "artifactOnly",
+        "generatedZipsInRepository",
+        "delivery",
+        "components"
+      ],
+      "properties": {
+        "artifactOnly": {
+          "const": true
+        },
+        "generatedZipsInRepository": {
+          "const": false
+        },
+        "delivery": {
+          "enum": [
+            "tag-or-release-download"
+          ]
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "package",
+              "sha256",
+              "size",
+              "files"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "package": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "size": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "files": {
+                "type": "array"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
