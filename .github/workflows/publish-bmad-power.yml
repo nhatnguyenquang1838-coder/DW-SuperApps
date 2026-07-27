@@ -12,6 +12,7 @@ on:
       - tests/test_bmad_power_plugin.py
       - tests/test_power_*.py
       - scripts/power_dist.py
+      - scripts/power_dist_capability.py
       - templates/power-runtime/**
   pull_request:
     branches:
@@ -23,6 +24,7 @@ on:
       - tests/test_bmad_power_plugin.py
       - tests/test_power_*.py
       - scripts/power_dist.py
+      - scripts/power_dist_capability.py
       - templates/power-runtime/**
   workflow_dispatch:
     inputs:
@@ -209,7 +211,8 @@ jobs:
         run: |
           set -euo pipefail
           if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG already exists; source commit was already published."
+            echo "Release $TAG already exists; refreshing validated assets."
+            gh release upload "$TAG" "$ARCHIVE" "$CHECKSUM" --clobber
           else
             gh release create "$TAG" "$ARCHIVE" "$CHECKSUM" \
               --title "BMAD Power $TAG" \
@@ -228,16 +231,18 @@ jobs:
         run: |
           set -euo pipefail
           release_dir="$(mktemp -d)"
+          archive_name="bmad-${VERSION}.zip"
+          checksum_name="${archive_name}.sha256"
           gh release download "$TAG" \
-            --pattern 'bmad-*.zip' \
-            --pattern 'bmad-*.zip.sha256' \
+            --pattern "$archive_name" \
+            --pattern "$checksum_name" \
             --dir "$release_dir"
 
-          checksum="$(find "$release_dir" -maxdepth 1 -type f -name '*.zip.sha256' -print -quit)"
-          test -n "$checksum"
-          archive="${checksum%.sha256}"
+          checksum="$release_dir/$checksum_name"
+          archive="$release_dir/$archive_name"
+          test -f "$checksum"
           test -f "$archive"
-          (cd "$release_dir" && sha256sum -c "$(basename "$checksum")")
+          (cd "$release_dir" && sha256sum -c "$checksum_name")
 
           extract_dir="$(mktemp -d)"
           python - "$archive" "$extract_dir" <<'PY'
