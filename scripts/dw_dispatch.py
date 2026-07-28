@@ -43,8 +43,6 @@ def main() -> int:
     if len(argv) >= 2 and argv[0] == "power":
         if argv[1] in {"install", "configure", "doctor", "history", "rollback", "uninstall"}:
             return power_main(argv[1:])
-        if argv[1] == "prompt":
-            return distribution_main(argv)
     if len(argv) >= 2 and argv[0] == "host" and argv[1] in {"install", "status"}:
         return distribution_main(argv)
     return int(dw_entry.main())

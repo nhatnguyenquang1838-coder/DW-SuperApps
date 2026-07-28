@@ -280,18 +280,18 @@ Thin `{host}` adapter owned by DW-SuperApps.
 - Source fallback: `{spec['path']}`
 - Power manifest: `manifests/powers/{power_id}.yaml`
 {orchestration_section}
-## Invocation
+## Activation
 
-1. Read `workspace.yaml` and `AGENTS.md` from DW-SuperApps.
-2. Resolve one target system from the workspace registry.
-3. Read project-local instructions in that system.
-4. Prefer the installed package entrypoint above; use source fallback only when no managed package exists.
-5. Keep runtime and project configuration under the target system's `{spec['runtimeDataRoot']}/`.
-6. Never create `.dw/powers`, host skill payloads, or distribution history inside the target system.
+This Power is already active when this skill is selected or invoked through its native host alias.
 
-Generate a complete task prompt with:
+1. Resolve one target system from `workspace.yaml`.
+2. Read the resolved canonical installed Power entrypoint directly.
+3. Apply that Power to the user's task in the current conversation.
+4. Continue until the task reaches a real capability, evidence, or authority boundary.
 
-`dw power prompt {power_id} --system <system> --task \"<task>\"`
+Do not generate or execute a command to activate this Power.
+Do not tell the user to run a slash command or terminal command.
+Do not describe the Power instead of applying it.
 """
 
 
@@ -355,9 +355,11 @@ Read `AGENTS.md` and `workspace.yaml` before acting.
 5. Keep packages, inbox, history, bindings, router, and all host adapters in DW-SuperApps.
 6. Never install Power skill payloads into a registered system.
 {orchestration_section}
-Generate a host-neutral prompt:
+## Power activation routing
 
-`dw power prompt <power> --system <system> --task \"<task>\"`
+When a registered Power skill or native alias is selected, load its canonical installed entrypoint and apply it directly to the user's request.
+
+Do not generate a shell command, exported prompt, or copy-and-paste handoff to activate a Power.
 """
     )
 
@@ -460,51 +462,6 @@ def host_status(args: argparse.Namespace) -> int:
     return 1 if failed else 0
 
 
-def power_prompt(args: argparse.Namespace) -> int:
-    all_manifests = manifests()
-    if args.power_id not in all_manifests:
-        raise DistError(f"unknown Power: {args.power_id}")
-    manifest = all_manifests[args.power_id]
-    system = find_system(args.system_id)
-    if args.power_id not in system.get("enabled_powers", []):
-        raise DistError(f"Power {args.power_id} is not enabled for system {args.system_id}")
-    source, mode = resolve_skill_source(args.power_id, manifest)
-    system_path = resolve_workspace_path(system["path"])
-    runtime = system_path / manifest["spec"]["runtimeDataRoot"]
-    legacy = system_path / ".dw" / "powers" / args.power_id
-    task = args.task.strip() if args.task else "<describe the task>"
-    print(
-        f"""Use the `{args.power_id}` Power for system `{args.system_id}`.
-
-Workspace root: `{ROOT}`
-Workspace package store: `{store_root()}`
-Installed package: `{store_root() / args.power_id}`
-Resolved Power entrypoint: `{source if source else 'missing'}`
-Resolution mode: `{mode}`
-Source fallback: `{ROOT / manifest['spec']['path']}`
-System repository: `{system_path}`
-System runtime root: `{runtime}`
-Legacy target package probe: `{legacy}`
-
-Read in this order:
-1. `{ROOT / 'workspace.yaml'}`
-2. `{ROOT / 'AGENTS.md'}`
-3. `{system_path / 'AGENTS.md'}` when present
-4. The resolved installed Power entrypoint above
-5. Source fallback only when the managed package is absent
-
-Task:
-{task}
-
-Keep generated runtime and configuration inside `{runtime}`.
-Keep packages, inbox, cache, history, bindings, router, and host adapters inside `{ROOT}`.
-Do not create Power skill payloads or `.dw/powers` inside `{system_path}`.
-If `{legacy}` exists, report `LEGACY_TARGET_INSTALL` and leave it untouched.
-"""
-    )
-    return 0
-
-
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(prog="dw", description="DW workspace distribution routing")
     commands = result.add_subparsers(dest="command", required=True)
@@ -520,13 +477,6 @@ def parser() -> argparse.ArgumentParser:
     status.add_argument("host", nargs="?", choices=choices, default="all")
     status.set_defaults(handler=host_status)
 
-    power = commands.add_parser("power")
-    power_commands = power.add_subparsers(dest="power_command", required=True)
-    prompt = power_commands.add_parser("prompt")
-    prompt.add_argument("power_id")
-    prompt.add_argument("--system", dest="system_id", required=True)
-    prompt.add_argument("--task", default="")
-    prompt.set_defaults(handler=power_prompt)
     return result
 
 
