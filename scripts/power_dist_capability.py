@@ -31,7 +31,9 @@ DASHBOARD_PATTERNS = (
     "web-ui/**",
     "**/web-ui/**",
 )
-CSS_CUSTOM_PROPERTY_REFERENCE = re.compile(r"^var\(--[A-Za-z0-9_-]+\)$")
+CSS_STYLE_REFERENCE = re.compile(
+    r"^(?:var\(--[A-Za-z0-9_-]+\)|(?:text|bg|border|ring|shadow|fill|stroke)-[A-Za-z0-9_./%-]+)$"
+)
 TRAILING_QUOTED_LITERAL = re.compile(r"['\"]([^'\"]+)['\"]\s*$")
 
 
@@ -49,16 +51,17 @@ def dashboard_enabled(recipe: dict[str, Any]) -> bool:
     return bool(isinstance(capabilities, dict) and capabilities.get("dashboard") is True)
 
 
-def is_css_custom_property_reference(match_text: str) -> bool:
-    """Return true only for an assigned CSS var(--name) literal.
+def is_css_style_reference(match_text: str) -> bool:
+    """Return true only for assigned CSS references or utility identifiers.
 
-    Source files may legitimately contain mappings such as
-    ``token: "var(--color-node-config)"``. That is a style reference, not a
-    credential. No other token-like literal is exempted.
+    Dashboard source may legitimately contain mappings such as
+    ``token: "var(--color-node-config)"`` and ``token: "text-node-config"``.
+    Those values are style references, not credentials. Arbitrary token-like
+    literals remain subject to the configured secret patterns.
     """
 
     literal = TRAILING_QUOTED_LITERAL.search(match_text)
-    return bool(literal and CSS_CUSTOM_PROPERTY_REFERENCE.fullmatch(literal.group(1)))
+    return bool(literal and CSS_STYLE_REFERENCE.fullmatch(literal.group(1)))
 
 
 def patch_power_dist_module(power_dist_module):
@@ -89,7 +92,7 @@ def patch_power_dist_module(power_dist_module):
 
         for pattern in patterns:
             for match in pattern.finditer(text):
-                if is_css_custom_property_reference(match.group(0)):
+                if is_css_style_reference(match.group(0)):
                     continue
                 raise power_dist_module.DistributionError(
                     f"forbidden secret-like content in {path}: {pattern.pattern}"
