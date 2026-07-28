@@ -1,4 +1,46 @@
-node_modules
-dist
-.vite
-*.local
+# Python caches
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# DW generated host adapters
+.kiro/skills/gwc/
+.kiro/skills/ua/
+.kiro/skills/task-me/
+.kiro/skills/bmad/
+.codex/skills/gwc/
+.codex/skills/ua/
+.codex/skills/task-me/
+.codex/skills/bmad/
+.claude/skills/gwc/
+.claude/skills/ua/
+.claude/skills/task-me/
+.claude/skills/bmad/
+.clinerules/00-dw-superapps.md
+.kilo/rules/dw-superapps.md
+.github/skills/gwc/
+.github/skills/ua/
+.github/skills/task-me/
+.github/skills/bmad/
+.github/copilot-instructions.md
+# Legacy generated Copilot aggregate adapter
+.github/instructions/dw-superapps.instructions.md
+CLAUDE.md
+kilo.jsonc
+.agents/
+scripts/__pycache__/*
+
+# UA scratch/trash directories
+.ua/.trash-*
+state/sessions/*
+
+# DW SuperApps distribution and runtime artifacts
+.dw/
+systems/
+projects/*/.gwc/
+projects/*/.ua/
+projects/*/.task-me/
+projects/*/.bmad/
+.kilo/staging/power-dist/
