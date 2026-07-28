@@ -1,0 +1,57 @@
+{
+  "nodes": [
+    {
+      "id": "document:examples/positive-architecture-analysis.md",
+      "type": "document",
+      "name": "positive-architecture-analysis.md",
+      "filePath": "examples/positive-architecture-analysis.md",
+      "summary": "Documentation file with 6 section(s) covering installation guidance.",
+      "tags": [
+        "documentation",
+        "installation",
+        "reference"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:examples/positive-review-only.md",
+      "type": "document",
+      "name": "positive-review-only.md",
+      "filePath": "examples/positive-review-only.md",
+      "summary": "Documentation file with 6 section(s) covering installation guidance.",
+      "tags": [
+        "documentation",
+        "installation",
+        "reference"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:examples/positive-tdd-implementation.md",
+      "type": "document",
+      "name": "positive-tdd-implementation.md",
+      "filePath": "examples/positive-tdd-implementation.md",
+      "summary": "Documentation file with 6 section(s) covering installation guidance.",
+      "tags": [
+        "documentation",
+        "installation",
+        "reference"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:examples/rejected-scope-violation.md",
+      "type": "document",
+      "name": "rejected-scope-violation.md",
+      "filePath": "examples/rejected-scope-violation.md",
+      "summary": "Documentation file with 5 section(s) covering installation guidance.",
+      "tags": [
+        "documentation",
+        "installation",
+        "reference"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": []
+}

@@ -1,0 +1,197 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 4,
+  "filesSkipped": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 4,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 0,
+      "failed": 0,
+      "skipped": 4
+    }
+  },
+  "results": [
+    {
+      "path": "examples/positive-architecture-analysis.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 106,
+      "nonEmptyLines": 96,
+      "sections": [
+        {
+          "heading": "Positive Example: Architecture Analysis",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Scenario",
+          "level": 2,
+          "line": 3
+        },
+        {
+          "heading": "Request",
+          "level": 2,
+          "line": 7
+        },
+        {
+          "heading": "Execution Flow",
+          "level": 2,
+          "line": 40
+        },
+        {
+          "heading": "Result",
+          "level": 2,
+          "line": 48
+        },
+        {
+          "heading": "Validation",
+          "level": 2,
+          "line": 99
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 6
+      }
+    },
+    {
+      "path": "examples/positive-review-only.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 107,
+      "nonEmptyLines": 97,
+      "sections": [
+        {
+          "heading": "Positive Example: Review-Only Procedure",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Scenario",
+          "level": 2,
+          "line": 3
+        },
+        {
+          "heading": "Request",
+          "level": 2,
+          "line": 7
+        },
+        {
+          "heading": "Execution Flow",
+          "level": 2,
+          "line": 39
+        },
+        {
+          "heading": "Result",
+          "level": 2,
+          "line": 47
+        },
+        {
+          "heading": "Validation",
+          "level": 2,
+          "line": 99
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 6
+      }
+    },
+    {
+      "path": "examples/positive-tdd-implementation.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 100,
+      "nonEmptyLines": 90,
+      "sections": [
+        {
+          "heading": "Positive Example: TDD Implementation",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Scenario",
+          "level": 2,
+          "line": 3
+        },
+        {
+          "heading": "Request",
+          "level": 2,
+          "line": 7
+        },
+        {
+          "heading": "Execution Flow",
+          "level": 2,
+          "line": 39
+        },
+        {
+          "heading": "Result",
+          "level": 2,
+          "line": 48
+        },
+        {
+          "heading": "Validation",
+          "level": 2,
+          "line": 93
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 6
+      }
+    },
+    {
+      "path": "examples/rejected-scope-violation.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 93,
+      "nonEmptyLines": 84,
+      "sections": [
+        {
+          "heading": "Rejected Example: Scope Violation (Self-Approval Attempt)",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Scenario",
+          "level": 2,
+          "line": 3
+        },
+        {
+          "heading": "Request",
+          "level": 2,
+          "line": 7
+        },
+        {
+          "heading": "Rejection",
+          "level": 2,
+          "line": 37
+        },
+        {
+          "heading": "Validation",
+          "level": 2,
+          "line": 86
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 5
+      }
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "config:.gwc/g3/draft-pr/g3-delivery-record.yaml",
+      "type": "config",
+      "name": "g3-delivery-record.yaml",
+      "filePath": ".gwc/g3/draft-pr/g3-delivery-record.yaml",
+      "summary": "YAML configuration file 'g3-delivery-record.yaml' with 13 sections.",
+      "tags": [
+        "configuration",
+        "yaml"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.gwc/g3/draft-pr/g3-independent-review.md",
+      "type": "document",
+      "name": "g3-independent-review.md",
+      "filePath": ".gwc/g3/draft-pr/g3-independent-review.md",
+      "summary": "Documentation file 'g3-independent-review.md' containing 9 sections.",
+      "tags": [
+        "documentation"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Markdown documentation with structured sections"
+    },
+    {
+      "id": "document:.gwc/g3/draft-pr/g3-pr-assembly.md",
+      "type": "document",
+      "name": "g3-pr-assembly.md",
+      "filePath": ".gwc/g3/draft-pr/g3-pr-assembly.md",
+      "summary": "Documentation file 'g3-pr-assembly.md' containing 6 sections.",
+      "tags": [
+        "documentation"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Markdown documentation with structured sections"
+    },
+    {
+      "id": "document:.gwc/g3/draft-pr/g3-review-closure.md",
+      "type": "document",
+      "name": "g3-review-closure.md",
+      "filePath": ".gwc/g3/draft-pr/g3-review-closure.md",
+      "summary": "Documentation file 'g3-review-closure.md' containing 5 sections.",
+      "tags": [
+        "documentation"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Markdown documentation with structured sections"
+    }
+  ],
+  "edges": []
+}

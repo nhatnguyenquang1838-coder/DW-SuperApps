@@ -1,0 +1,1248 @@
+{
+  "nodes": [
+    {
+      "id": "file:scripts/dw_entry.py",
+      "type": "file",
+      "name": "dw_entry.py",
+      "filePath": "scripts/dw_entry.py",
+      "summary": "Implements 1 class(es) and 17 function(s) in the dw_entry module.",
+      "tags": [
+        "code",
+        "complex",
+        "entry-point"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:run",
+      "type": "function",
+      "name": "run",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        23,
+        40
+      ],
+      "summary": "Function 'run' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:load_runtime",
+      "type": "function",
+      "name": "load_runtime",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        43,
+        52
+      ],
+      "summary": "Function 'load_runtime' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:ns",
+      "type": "function",
+      "name": "ns",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        55,
+        56
+      ],
+      "summary": "Function 'ns' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:install_dependencies",
+      "type": "function",
+      "name": "install_dependencies",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        59,
+        63
+      ],
+      "summary": "Function 'install_dependencies' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:init_all",
+      "type": "function",
+      "name": "init_all",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        66,
+        101
+      ],
+      "summary": "Function 'init_all' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:sync_all",
+      "type": "function",
+      "name": "sync_all",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        104,
+        122
+      ],
+      "summary": "Function 'sync_all' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:clean_adapters",
+      "type": "function",
+      "name": "clean_adapters",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        125,
+        129
+      ],
+      "summary": "Function 'clean_adapters' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:clean_caches",
+      "type": "function",
+      "name": "clean_caches",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        132,
+        150
+      ],
+      "summary": "Function 'clean_caches' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:runtime_paths",
+      "type": "function",
+      "name": "runtime_paths",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        153,
+        166
+      ],
+      "summary": "Function 'runtime_paths' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:clean_runtime",
+      "type": "function",
+      "name": "clean_runtime",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        169,
+        182
+      ],
+      "summary": "Function 'clean_runtime' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:clean_plan",
+      "type": "function",
+      "name": "clean_plan",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        185,
+        194
+      ],
+      "summary": "Function 'clean_plan' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:clean_all",
+      "type": "function",
+      "name": "clean_all",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        197,
+        208
+      ],
+      "summary": "Function 'clean_all' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:status_all",
+      "type": "function",
+      "name": "status_all",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        211,
+        220
+      ],
+      "summary": "Function 'status_all' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:doctor_all",
+      "type": "function",
+      "name": "doctor_all",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        223,
+        240
+      ],
+      "summary": "Function 'doctor_all' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:reset_all",
+      "type": "function",
+      "name": "reset_all",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        243,
+        263
+      ],
+      "summary": "Function 'reset_all' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:build_parser",
+      "type": "function",
+      "name": "build_parser",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        266,
+        335
+      ],
+      "summary": "Function 'build_parser' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/dw_entry.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        338,
+        353
+      ],
+      "summary": "Function 'main' in dw_entry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:scripts/dw_entry.py:EntryError",
+      "type": "class",
+      "name": "EntryError",
+      "filePath": "scripts/dw_entry.py",
+      "lineRange": [
+        19,
+        20
+      ],
+      "summary": "Class 'EntryError' in dw_entry.py (exported)",
+      "tags": [
+        "class",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/dw_orchestrator.py",
+      "type": "file",
+      "name": "dw_orchestrator.py",
+      "filePath": "scripts/dw_orchestrator.py",
+      "summary": "Implements 1 class(es) and 13 function(s) in the dw_orchestrator module.",
+      "tags": [
+        "code",
+        "complex",
+        "orchestration"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:scripts/dw_orchestrator.py:load_yaml",
+      "type": "function",
+      "name": "load_yaml",
+      "filePath": "scripts/dw_orchestrator.py",
+      "lineRange": [
+        21,
+        32
+      ],
+      "summary": "Function 'load_yaml' in dw_orchestrator.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_orchestrator.py:find_system",
+      "type": "function",
+      "name": "find_system",
+      "filePath": "scripts/dw_orchestrator.py",
+      "lineRange": [
+        35,
+        40
+      ],
+      "summary": "Function 'find_system' in dw_orchestrator.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_orchestrator.py:load_intents",
+      "type": "function",
+      "name": "load_intents",
+      "filePath": "scripts/dw_orchestrator.py",
+      "lineRange": [
+        43,
+        46
+      ],
+      "summary": "Function 'load_intents' in dw_orchestrator.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_orchestrator.py:resolve_workspace_path",
+      "type": "function",
+      "name": "resolve_workspace_path",
+      "filePath": "scripts/dw_orchestrator.py",
+      "lineRange": [
+        49,
+        53
+      ],
+      "summary": "Function 'resolve_workspace_path' in dw_orchestrator.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_orchestrator.py:exact_intent_matches",
+      "type": "function",
+      "name": "exact_intent_matches",
+      "filePath": "scripts/dw_orchestrator.py",
+      "lineRange": [
+        56,
+        63
+      ],
+      "summary": "Function 'exact_intent_matches' in dw_orchestrator.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_orchestrator.py:orchestration_block",
+      "type": "function",
+      "name": "orchestration_block",
+      "filePath": "scripts/dw_orchestrator.py",
+      "lineRange": [
+        66,
+        70
+      ],
+      "summary": "Function 'orchestration_block' in dw_orchestrator.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_orchestrator.py:applicable_hooks",
+      "type": "function",
+      "name": "applicable_hooks",
+      "filePath": "scripts/dw_orchestrator.py",
+      "lineRange": [
+        73,
+        96
+      ],
+      "summary": "Function 'applicable_hooks' in dw_orchestrator.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_orchestrator.py:build_primary_prompt",
+      "type": "function",
+      "name": "build_primary_prompt",
+      "filePath": "scripts/dw_orchestrator.py",
+      "lineRange": [
+        99,
+        126
+      ],
+      "summary": "Function 'build_primary_prompt' in dw_orchestrator.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_orchestrator.py:build_worker_prompts",
+      "type": "function",
+      "name": "build_worker_prompts",
+      "filePath": "scripts/dw_orchestrator.py",
+      "lineRange": [
+        129,
+        143
+      ],
+      "summary": "Function 'build_worker_prompts' in dw_orchestrator.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_orchestrator.py:cmd_prompt",
+      "type": "function",
+      "name": "cmd_prompt",
+      "filePath": "scripts/dw_orchestrator.py",
+      "lineRange": [
+        146,
+        172
+      ],
+      "summary": "Function 'cmd_prompt' in dw_orchestrator.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_orchestrator.py:cmd_run",
+      "type": "function",
+      "name": "cmd_run",
+      "filePath": "scripts/dw_orchestrator.py",
+      "lineRange": [
+        175,
+        218
+      ],
+      "summary": "Function 'cmd_run' in dw_orchestrator.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_orchestrator.py:parser",
+      "type": "function",
+      "name": "parser",
+      "filePath": "scripts/dw_orchestrator.py",
+      "lineRange": [
+        221,
+        235
+      ],
+      "summary": "Function 'parser' in dw_orchestrator.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_orchestrator.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/dw_orchestrator.py",
+      "lineRange": [
+        238,
+        244
+      ],
+      "summary": "Function 'main' in dw_orchestrator.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:scripts/dw_orchestrator.py:OrchestratorError",
+      "type": "class",
+      "name": "OrchestratorError",
+      "filePath": "scripts/dw_orchestrator.py",
+      "lineRange": [
+        17,
+        18
+      ],
+      "summary": "Class 'OrchestratorError' in dw_orchestrator.py (exported)",
+      "tags": [
+        "class",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/dw_power_package.py",
+      "type": "file",
+      "name": "dw_power_package.py",
+      "filePath": "scripts/dw_power_package.py",
+      "summary": "Contains 0 function(s) and 0 class(es) in the dw_power_package module.",
+      "tags": [
+        "code",
+        "module"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/dw_power_store/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "scripts/dw_power_store/__init__.py",
+      "summary": "Contains 0 function(s) and 0 class(es) in the __init__ module.",
+      "tags": [
+        "code",
+        "entry-point",
+        "storage"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:run",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:run",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:load_runtime",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:load_runtime",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:ns",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:ns",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:install_dependencies",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:install_dependencies",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:init_all",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:init_all",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:sync_all",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:sync_all",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:clean_adapters",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:clean_adapters",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:clean_caches",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:clean_caches",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:runtime_paths",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:runtime_paths",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:clean_runtime",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:clean_runtime",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:clean_plan",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:clean_plan",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:clean_all",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:clean_all",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:status_all",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:status_all",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:doctor_all",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:doctor_all",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:reset_all",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:reset_all",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:build_parser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:build_parser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "function:scripts/dw_entry.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "class:scripts/dw_entry.py:EntryError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_entry.py",
+      "target": "class:scripts/dw_entry.py:EntryError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:load_yaml",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:load_yaml",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:find_system",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:find_system",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:load_intents",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:load_intents",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:resolve_workspace_path",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:resolve_workspace_path",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:exact_intent_matches",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:exact_intent_matches",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:orchestration_block",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:orchestration_block",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:applicable_hooks",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:applicable_hooks",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:build_primary_prompt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:build_primary_prompt",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:build_worker_prompts",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:build_worker_prompts",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:cmd_prompt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:cmd_prompt",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:cmd_run",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:cmd_run",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:parser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:parser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "function:scripts/dw_orchestrator.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "class:scripts/dw_orchestrator.py:OrchestratorError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_orchestrator.py",
+      "target": "class:scripts/dw_orchestrator.py:OrchestratorError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_entry.py:install_dependencies",
+      "target": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_entry.py:install_dependencies",
+      "target": "function:scripts/distribution_installer.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_entry.py:install_dependencies",
+      "target": "function:scripts/dw_cli.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_entry.py:reset_all",
+      "target": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_entry.py:reset_all",
+      "target": "function:scripts/distribution_installer.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_entry.py:reset_all",
+      "target": "function:scripts/dw_cli.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_entry.py:main",
+      "target": "function:scripts/dw_cli.py:build_parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:find_system",
+      "target": "function:scripts/dw_cli.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:find_system",
+      "target": "function:scripts/dw_power_store/common.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:find_system",
+      "target": "function:scripts/dw_project_registry.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:find_system",
+      "target": "function:scripts/dw_report.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:find_system",
+      "target": "function:scripts/dw_workspace_dist.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:load_intents",
+      "target": "function:scripts/dw_cli.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:load_intents",
+      "target": "function:scripts/dw_power_store/common.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:load_intents",
+      "target": "function:scripts/dw_project_registry.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:load_intents",
+      "target": "function:scripts/dw_report.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:load_intents",
+      "target": "function:scripts/dw_workspace_dist.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:build_primary_prompt",
+      "target": "function:scripts/dw_cli.py:resolve_workspace_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:build_primary_prompt",
+      "target": "function:scripts/dw_power_store/common.py:resolve_workspace_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:build_primary_prompt",
+      "target": "function:scripts/dw_report.py:resolve_workspace_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:build_primary_prompt",
+      "target": "function:scripts/dw_workspace_dist.py:resolve_workspace_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:cmd_prompt",
+      "target": "function:scripts/dw_cli.py:find_system",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:cmd_prompt",
+      "target": "function:scripts/dw_report.py:find_system",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:cmd_prompt",
+      "target": "function:scripts/dw_workspace_dist.py:find_system",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:cmd_run",
+      "target": "function:scripts/dw_cli.py:find_system",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:cmd_run",
+      "target": "function:scripts/dw_report.py:find_system",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:cmd_run",
+      "target": "function:scripts/dw_workspace_dist.py:find_system",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:main",
+      "target": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:main",
+      "target": "function:scripts/dw_power_store/cli.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:main",
+      "target": "function:scripts/dw_project_add.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:main",
+      "target": "function:scripts/dw_project_registry.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:main",
+      "target": "function:scripts/dw_report.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_orchestrator.py:main",
+      "target": "function:scripts/dw_workspace_dist.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

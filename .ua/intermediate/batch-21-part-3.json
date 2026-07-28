@@ -1,0 +1,3231 @@
+{
+  "nodes": [
+    {
+      "id": "file:scripts/distribution_builder.py",
+      "type": "file",
+      "name": "distribution_builder.py",
+      "filePath": "scripts/distribution_builder.py",
+      "summary": "Provides 8 utility functions in the distribution_builder module used across the project.",
+      "tags": [
+        "build-system",
+        "code",
+        "module"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/distribution_builder.py:load_manifest",
+      "type": "function",
+      "name": "load_manifest",
+      "filePath": "scripts/distribution_builder.py",
+      "lineRange": [
+        34,
+        40
+      ],
+      "summary": "Function 'load_manifest' in distribution_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/distribution_builder.py:resolve_recipe",
+      "type": "function",
+      "name": "resolve_recipe",
+      "filePath": "scripts/distribution_builder.py",
+      "lineRange": [
+        43,
+        47
+      ],
+      "summary": "Function 'resolve_recipe' in distribution_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/distribution_builder.py:prepare_source",
+      "type": "function",
+      "name": "prepare_source",
+      "filePath": "scripts/distribution_builder.py",
+      "lineRange": [
+        50,
+        78
+      ],
+      "summary": "Function 'prepare_source' in distribution_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/distribution_builder.py:git_rev_parse",
+      "type": "function",
+      "name": "git_rev_parse",
+      "filePath": "scripts/distribution_builder.py",
+      "lineRange": [
+        81,
+        85
+      ],
+      "summary": "Function 'git_rev_parse' in distribution_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/distribution_builder.py:git_source_date_epoch",
+      "type": "function",
+      "name": "git_source_date_epoch",
+      "filePath": "scripts/distribution_builder.py",
+      "lineRange": [
+        88,
+        94
+      ],
+      "summary": "Function 'git_source_date_epoch' in distribution_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/distribution_builder.py:build_power",
+      "type": "function",
+      "name": "build_power",
+      "filePath": "scripts/distribution_builder.py",
+      "lineRange": [
+        97,
+        149
+      ],
+      "summary": "Function 'build_power' in distribution_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/distribution_builder.py:build_all",
+      "type": "function",
+      "name": "build_all",
+      "filePath": "scripts/distribution_builder.py",
+      "lineRange": [
+        152,
+        185
+      ],
+      "summary": "Function 'build_all' in distribution_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/distribution_builder.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/distribution_builder.py",
+      "lineRange": [
+        188,
+        203
+      ],
+      "summary": "Function 'main' in distribution_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/distribution_installer.py",
+      "type": "file",
+      "name": "distribution_installer.py",
+      "filePath": "scripts/distribution_installer.py",
+      "summary": "Provides 8 utility functions in the distribution_installer module used across the project.",
+      "tags": [
+        "code",
+        "installation",
+        "module"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/distribution_installer.py:run",
+      "type": "function",
+      "name": "run",
+      "filePath": "scripts/distribution_installer.py",
+      "lineRange": [
+        18,
+        20
+      ],
+      "summary": "Function 'run' in distribution_installer.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/distribution_installer.py:install_power",
+      "type": "function",
+      "name": "install_power",
+      "filePath": "scripts/distribution_installer.py",
+      "lineRange": [
+        23,
+        41
+      ],
+      "summary": "Function 'install_power' in distribution_installer.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/distribution_installer.py:doctor_power",
+      "type": "function",
+      "name": "doctor_power",
+      "filePath": "scripts/distribution_installer.py",
+      "lineRange": [
+        44,
+        56
+      ],
+      "summary": "Function 'doctor_power' in distribution_installer.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/distribution_installer.py:uninstall_power",
+      "type": "function",
+      "name": "uninstall_power",
+      "filePath": "scripts/distribution_installer.py",
+      "lineRange": [
+        59,
+        71
+      ],
+      "summary": "Function 'uninstall_power' in distribution_installer.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/distribution_installer.py:verify_package",
+      "type": "function",
+      "name": "verify_package",
+      "filePath": "scripts/distribution_installer.py",
+      "lineRange": [
+        74,
+        79
+      ],
+      "summary": "Function 'verify_package' in distribution_installer.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/distribution_installer.py:validate_power",
+      "type": "function",
+      "name": "validate_power",
+      "filePath": "scripts/distribution_installer.py",
+      "lineRange": [
+        82,
+        106
+      ],
+      "summary": "Function 'validate_power' in distribution_installer.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/distribution_installer.py:validate_staging",
+      "type": "function",
+      "name": "validate_staging",
+      "filePath": "scripts/distribution_installer.py",
+      "lineRange": [
+        109,
+        138
+      ],
+      "summary": "Function 'validate_staging' in distribution_installer.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/distribution_installer.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/distribution_installer.py",
+      "lineRange": [
+        141,
+        155
+      ],
+      "summary": "Function 'main' in distribution_installer.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/dw_cli.py",
+      "type": "file",
+      "name": "dw_cli.py",
+      "filePath": "scripts/dw_cli.py",
+      "summary": "Implements 1 class(es) and 59 function(s) in the dw_cli module.",
+      "tags": [
+        "code",
+        "complex",
+        "entry-point"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:load_yaml",
+      "type": "function",
+      "name": "load_yaml",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        55,
+        61
+      ],
+      "summary": "Function 'load_yaml' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:workspace",
+      "type": "function",
+      "name": "workspace",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        64,
+        65
+      ],
+      "summary": "Function 'workspace' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:manifests",
+      "type": "function",
+      "name": "manifests",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        68,
+        78
+      ],
+      "summary": "Function 'manifests' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:load_json",
+      "type": "function",
+      "name": "load_json",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        81,
+        82
+      ],
+      "summary": "Function 'load_json' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:resolve_workspace_path",
+      "type": "function",
+      "name": "resolve_workspace_path",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        85,
+        89
+      ],
+      "summary": "Function 'resolve_workspace_path' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:store_root",
+      "type": "function",
+      "name": "store_root",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        92,
+        99
+      ],
+      "summary": "Function 'store_root' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:installed_entrypoints",
+      "type": "function",
+      "name": "installed_entrypoints",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        102,
+        115
+      ],
+      "summary": "Function 'installed_entrypoints' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:source_entrypoints",
+      "type": "function",
+      "name": "source_entrypoints",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        118,
+        125
+      ],
+      "summary": "Function 'source_entrypoints' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:display_path",
+      "type": "function",
+      "name": "display_path",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        128,
+        134
+      ],
+      "summary": "Function 'display_path' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:run",
+      "type": "function",
+      "name": "run",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        137,
+        154
+      ],
+      "summary": "Function 'run' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:git",
+      "type": "function",
+      "name": "git",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        157,
+        159
+      ],
+      "summary": "Function 'git' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:emit",
+      "type": "function",
+      "name": "emit",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        162,
+        164
+      ],
+      "summary": "Function 'emit' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:atomic_write",
+      "type": "function",
+      "name": "atomic_write",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        167,
+        187
+      ],
+      "summary": "Function 'atomic_write' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:find_system",
+      "type": "function",
+      "name": "find_system",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        190,
+        194
+      ],
+      "summary": "Function 'find_system' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:provider_entries",
+      "type": "function",
+      "name": "provider_entries",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        197,
+        201
+      ],
+      "summary": "Function 'provider_entries' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:find_provider",
+      "type": "function",
+      "name": "find_provider",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        204,
+        208
+      ],
+      "summary": "Function 'find_provider' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:workspace_info",
+      "type": "function",
+      "name": "workspace_info",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        211,
+        229
+      ],
+      "summary": "Function 'workspace_info' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:power_list",
+      "type": "function",
+      "name": "power_list",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        232,
+        255
+      ],
+      "summary": "Function 'power_list' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:power_info",
+      "type": "function",
+      "name": "power_info",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        258,
+        278
+      ],
+      "summary": "Function 'power_info' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:power_prompt",
+      "type": "function",
+      "name": "power_prompt",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        281,
+        318
+      ],
+      "summary": "Function 'power_prompt' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:submodule_entries",
+      "type": "function",
+      "name": "submodule_entries",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        321,
+        328
+      ],
+      "summary": "Function 'submodule_entries' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:select_submodules",
+      "type": "function",
+      "name": "select_submodules",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        331,
+        342
+      ],
+      "summary": "Function 'select_submodules' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:require_initialized",
+      "type": "function",
+      "name": "require_initialized",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        345,
+        347
+      ],
+      "summary": "Function 'require_initialized' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:pinned_sha",
+      "type": "function",
+      "name": "pinned_sha",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        350,
+        354
+      ],
+      "summary": "Function 'pinned_sha' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:submodule_branch",
+      "type": "function",
+      "name": "submodule_branch",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        357,
+        370
+      ],
+      "summary": "Function 'submodule_branch' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:remote_sha",
+      "type": "function",
+      "name": "remote_sha",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        373,
+        382
+      ],
+      "summary": "Function 'remote_sha' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:power_sync",
+      "type": "function",
+      "name": "power_sync",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        385,
+        455
+      ],
+      "summary": "Function 'power_sync' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:normalize_host",
+      "type": "function",
+      "name": "normalize_host",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        458,
+        462
+      ],
+      "summary": "Function 'normalize_host' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:configured_hosts",
+      "type": "function",
+      "name": "configured_hosts",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        465,
+        472
+      ],
+      "summary": "Function 'configured_hosts' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:select_hosts",
+      "type": "function",
+      "name": "select_hosts",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        475,
+        478
+      ],
+      "summary": "Function 'select_hosts' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:resolve_skill_source",
+      "type": "function",
+      "name": "resolve_skill_source",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        481,
+        488
+      ],
+      "summary": "Function 'resolve_skill_source' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:is_generated_path",
+      "type": "function",
+      "name": "is_generated_path",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        491,
+        510
+      ],
+      "summary": "Function 'is_generated_path' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:safe_remove_generated",
+      "type": "function",
+      "name": "safe_remove_generated",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        513,
+        522
+      ],
+      "summary": "Function 'safe_remove_generated' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:write_generated_file",
+      "type": "function",
+      "name": "write_generated_file",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        525,
+        528
+      ],
+      "summary": "Function 'write_generated_file' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:wrapper_content",
+      "type": "function",
+      "name": "wrapper_content",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        531,
+        571
+      ],
+      "summary": "Function 'wrapper_content' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:host_instruction_content",
+      "type": "function",
+      "name": "host_instruction_content",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        574,
+        606
+      ],
+      "summary": "Function 'host_instruction_content' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:kilo_config_content",
+      "type": "function",
+      "name": "kilo_config_content",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        609,
+        618
+      ],
+      "summary": "Function 'kilo_config_content' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:host_expected_paths",
+      "type": "function",
+      "name": "host_expected_paths",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        621,
+        636
+      ],
+      "summary": "Function 'host_expected_paths' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:install_skill_host",
+      "type": "function",
+      "name": "install_skill_host",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        639,
+        678
+      ],
+      "summary": "Function 'install_skill_host' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:install_instruction_host",
+      "type": "function",
+      "name": "install_instruction_host",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        681,
+        689
+      ],
+      "summary": "Function 'install_instruction_host' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:install_host_adapters",
+      "type": "function",
+      "name": "install_host_adapters",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        692,
+        700
+      ],
+      "summary": "Function 'install_host_adapters' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:remove_host_adapters",
+      "type": "function",
+      "name": "remove_host_adapters",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        703,
+        711
+      ],
+      "summary": "Function 'remove_host_adapters' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:host_list",
+      "type": "function",
+      "name": "host_list",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        714,
+        732
+      ],
+      "summary": "Function 'host_list' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:host_status",
+      "type": "function",
+      "name": "host_status",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        735,
+        743
+      ],
+      "summary": "Function 'host_status' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:provider_config_path",
+      "type": "function",
+      "name": "provider_config_path",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        746,
+        747
+      ],
+      "summary": "Function 'provider_config_path' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:provider_env_path",
+      "type": "function",
+      "name": "provider_env_path",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        750,
+        751
+      ],
+      "summary": "Function 'provider_env_path' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:provider_config",
+      "type": "function",
+      "name": "provider_config",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        754,
+        769
+      ],
+      "summary": "Function 'provider_config' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:write_provider_files",
+      "type": "function",
+      "name": "write_provider_files",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        772,
+        784
+      ],
+      "summary": "Function 'write_provider_files' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:select_providers",
+      "type": "function",
+      "name": "select_providers",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        787,
+        790
+      ],
+      "summary": "Function 'select_providers' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:provider_install",
+      "type": "function",
+      "name": "provider_install",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        793,
+        801
+      ],
+      "summary": "Function 'provider_install' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:load_provider_config",
+      "type": "function",
+      "name": "load_provider_config",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        804,
+        811
+      ],
+      "summary": "Function 'load_provider_config' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:probe_openai_provider",
+      "type": "function",
+      "name": "probe_openai_provider",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        814,
+        824
+      ],
+      "summary": "Function 'probe_openai_provider' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:provider_status",
+      "type": "function",
+      "name": "provider_status",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        827,
+        844
+      ],
+      "summary": "Function 'provider_status' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:provider_info",
+      "type": "function",
+      "name": "provider_info",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        847,
+        854
+      ],
+      "summary": "Function 'provider_info' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:system_list",
+      "type": "function",
+      "name": "system_list",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        857,
+        865
+      ],
+      "summary": "Function 'system_list' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:system_powers",
+      "type": "function",
+      "name": "system_powers",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        868,
+        880
+      ],
+      "summary": "Function 'system_powers' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:validate",
+      "type": "function",
+      "name": "validate",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        883,
+        887
+      ],
+      "summary": "Function 'validate' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:build_parser",
+      "type": "function",
+      "name": "build_parser",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        890,
+        978
+      ],
+      "summary": "Function 'build_parser' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/dw_cli.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        981,
+        989
+      ],
+      "summary": "Function 'main' in dw_cli.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:scripts/dw_cli.py:DwError",
+      "type": "class",
+      "name": "DwError",
+      "filePath": "scripts/dw_cli.py",
+      "lineRange": [
+        51,
+        52
+      ],
+      "summary": "Class 'DwError' in dw_cli.py (exported)",
+      "tags": [
+        "class",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/dw_dispatch.py",
+      "type": "file",
+      "name": "dw_dispatch.py",
+      "filePath": "scripts/dw_dispatch.py",
+      "summary": "Exports 2 symbol(s) from the dw_dispatch module for use by other components.",
+      "tags": [
+        "code",
+        "entry-point",
+        "orchestration"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_dispatch.py:project_add_main",
+      "type": "function",
+      "name": "project_add_main",
+      "filePath": "scripts/dw_dispatch.py",
+      "lineRange": [
+        21,
+        27
+      ],
+      "summary": "Function 'project_add_main' in dw_dispatch.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_dispatch.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/dw_dispatch.py",
+      "lineRange": [
+        30,
+        50
+      ],
+      "summary": "Function 'main' in dw_dispatch.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:scripts/distribution_builder.py",
+      "target": "function:scripts/distribution_builder.py:load_manifest",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_builder.py",
+      "target": "function:scripts/distribution_builder.py:load_manifest",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/distribution_builder.py",
+      "target": "function:scripts/distribution_builder.py:resolve_recipe",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_builder.py",
+      "target": "function:scripts/distribution_builder.py:resolve_recipe",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/distribution_builder.py",
+      "target": "function:scripts/distribution_builder.py:prepare_source",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_builder.py",
+      "target": "function:scripts/distribution_builder.py:prepare_source",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/distribution_builder.py",
+      "target": "function:scripts/distribution_builder.py:git_rev_parse",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_builder.py",
+      "target": "function:scripts/distribution_builder.py:git_rev_parse",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/distribution_builder.py",
+      "target": "function:scripts/distribution_builder.py:git_source_date_epoch",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_builder.py",
+      "target": "function:scripts/distribution_builder.py:git_source_date_epoch",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/distribution_builder.py",
+      "target": "function:scripts/distribution_builder.py:build_power",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_builder.py",
+      "target": "function:scripts/distribution_builder.py:build_power",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/distribution_builder.py",
+      "target": "function:scripts/distribution_builder.py:build_all",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_builder.py",
+      "target": "function:scripts/distribution_builder.py:build_all",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/distribution_builder.py",
+      "target": "function:scripts/distribution_builder.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_builder.py",
+      "target": "function:scripts/distribution_builder.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/distribution_installer.py",
+      "target": "function:scripts/distribution_installer.py:run",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_installer.py",
+      "target": "function:scripts/distribution_installer.py:run",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/distribution_installer.py",
+      "target": "function:scripts/distribution_installer.py:install_power",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_installer.py",
+      "target": "function:scripts/distribution_installer.py:install_power",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/distribution_installer.py",
+      "target": "function:scripts/distribution_installer.py:doctor_power",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_installer.py",
+      "target": "function:scripts/distribution_installer.py:doctor_power",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/distribution_installer.py",
+      "target": "function:scripts/distribution_installer.py:uninstall_power",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_installer.py",
+      "target": "function:scripts/distribution_installer.py:uninstall_power",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/distribution_installer.py",
+      "target": "function:scripts/distribution_installer.py:verify_package",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_installer.py",
+      "target": "function:scripts/distribution_installer.py:verify_package",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/distribution_installer.py",
+      "target": "function:scripts/distribution_installer.py:validate_power",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_installer.py",
+      "target": "function:scripts/distribution_installer.py:validate_power",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/distribution_installer.py",
+      "target": "function:scripts/distribution_installer.py:validate_staging",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_installer.py",
+      "target": "function:scripts/distribution_installer.py:validate_staging",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/distribution_installer.py",
+      "target": "function:scripts/distribution_installer.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_installer.py",
+      "target": "function:scripts/distribution_installer.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:load_yaml",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:load_yaml",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:workspace",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:workspace",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:manifests",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:manifests",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:load_json",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:load_json",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:resolve_workspace_path",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:resolve_workspace_path",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:store_root",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:store_root",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:installed_entrypoints",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:installed_entrypoints",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:source_entrypoints",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:source_entrypoints",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:display_path",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:display_path",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:run",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:run",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:git",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:git",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:emit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:emit",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:atomic_write",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:atomic_write",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:find_system",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:find_system",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:provider_entries",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:provider_entries",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:find_provider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:find_provider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:workspace_info",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:workspace_info",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:power_list",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:power_list",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:power_info",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:power_info",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:power_prompt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:power_prompt",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:submodule_entries",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:submodule_entries",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:select_submodules",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:select_submodules",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:require_initialized",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:require_initialized",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:pinned_sha",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:pinned_sha",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:submodule_branch",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:submodule_branch",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:remote_sha",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:remote_sha",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:power_sync",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:power_sync",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:normalize_host",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:normalize_host",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:configured_hosts",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:configured_hosts",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:select_hosts",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:select_hosts",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:resolve_skill_source",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:resolve_skill_source",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:is_generated_path",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:is_generated_path",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:safe_remove_generated",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:safe_remove_generated",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:write_generated_file",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:write_generated_file",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:wrapper_content",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:wrapper_content",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:host_instruction_content",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:host_instruction_content",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:kilo_config_content",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:kilo_config_content",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:host_expected_paths",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:host_expected_paths",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:install_skill_host",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:install_skill_host",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:install_instruction_host",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:install_instruction_host",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:install_host_adapters",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:install_host_adapters",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:remove_host_adapters",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:remove_host_adapters",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:host_list",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:host_list",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:host_status",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:host_status",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:provider_config_path",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:provider_config_path",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:provider_env_path",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:provider_env_path",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:provider_config",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:provider_config",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:write_provider_files",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:write_provider_files",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:select_providers",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:select_providers",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:provider_install",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:provider_install",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:load_provider_config",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:load_provider_config",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:probe_openai_provider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:probe_openai_provider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:provider_status",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:provider_status",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:provider_info",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:provider_info",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:system_list",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:system_list",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:system_powers",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:system_powers",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:validate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:validate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:build_parser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:build_parser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "function:scripts/dw_cli.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "class:scripts/dw_cli.py:DwError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_cli.py",
+      "target": "class:scripts/dw_cli.py:DwError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_dispatch.py",
+      "target": "function:scripts/dw_dispatch.py:project_add_main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_dispatch.py",
+      "target": "function:scripts/dw_dispatch.py:project_add_main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_dispatch.py",
+      "target": "function:scripts/dw_dispatch.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_dispatch.py",
+      "target": "function:scripts/dw_dispatch.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/distribution_installer.py:install_power",
+      "target": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/distribution_installer.py:install_power",
+      "target": "function:scripts/dw_cli.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/distribution_installer.py:install_power",
+      "target": "function:scripts/dw_entry.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/distribution_installer.py:doctor_power",
+      "target": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/distribution_installer.py:doctor_power",
+      "target": "function:scripts/dw_cli.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/distribution_installer.py:doctor_power",
+      "target": "function:scripts/dw_entry.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/distribution_installer.py:uninstall_power",
+      "target": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/distribution_installer.py:uninstall_power",
+      "target": "function:scripts/dw_cli.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/distribution_installer.py:uninstall_power",
+      "target": "function:scripts/dw_entry.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/distribution_installer.py:verify_package",
+      "target": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/distribution_installer.py:verify_package",
+      "target": "function:scripts/dw_cli.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/distribution_installer.py:verify_package",
+      "target": "function:scripts/dw_entry.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/distribution_installer.py:validate_power",
+      "target": "function:scripts/dw_power_store/package_io.py:verify_package",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:workspace",
+      "target": "function:scripts/dw_orchestrator.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:workspace",
+      "target": "function:scripts/dw_power_store/common.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:workspace",
+      "target": "function:scripts/dw_project_registry.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:workspace",
+      "target": "function:scripts/dw_report.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:workspace",
+      "target": "function:scripts/dw_workspace_dist.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:manifests",
+      "target": "function:scripts/dw_orchestrator.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:manifests",
+      "target": "function:scripts/dw_power_store/common.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:manifests",
+      "target": "function:scripts/dw_project_registry.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:manifests",
+      "target": "function:scripts/dw_report.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:manifests",
+      "target": "function:scripts/dw_workspace_dist.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:store_root",
+      "target": "function:scripts/dw_power_store/common.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:store_root",
+      "target": "function:scripts/dw_project_registry.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:store_root",
+      "target": "function:scripts/dw_workspace_dist.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:store_root",
+      "target": "function:scripts/dw_orchestrator.py:resolve_workspace_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:store_root",
+      "target": "function:scripts/dw_power_store/common.py:resolve_workspace_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:store_root",
+      "target": "function:scripts/dw_report.py:resolve_workspace_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:store_root",
+      "target": "function:scripts/dw_workspace_dist.py:resolve_workspace_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:installed_entrypoints",
+      "target": "function:scripts/dw_workspace_dist.py:store_root",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:installed_entrypoints",
+      "target": "function:scripts/dw_power_store/common.py:load_json",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:installed_entrypoints",
+      "target": "function:scripts/dw_workspace_dist.py:load_json",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:git",
+      "target": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:git",
+      "target": "function:scripts/distribution_installer.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:git",
+      "target": "function:scripts/dw_entry.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:find_system",
+      "target": "function:scripts/dw_power_store/common.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:find_system",
+      "target": "function:scripts/dw_project_registry.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:find_system",
+      "target": "function:scripts/dw_workspace_dist.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:provider_entries",
+      "target": "function:scripts/dw_power_store/common.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:provider_entries",
+      "target": "function:scripts/dw_project_registry.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:provider_entries",
+      "target": "function:scripts/dw_workspace_dist.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:workspace_info",
+      "target": "function:scripts/dw_power_store/common.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:workspace_info",
+      "target": "function:scripts/dw_project_registry.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:workspace_info",
+      "target": "function:scripts/dw_workspace_dist.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:workspace_info",
+      "target": "function:scripts/dw_power_store/cli.py:emit",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:power_list",
+      "target": "function:scripts/dw_workspace_dist.py:manifests",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:power_list",
+      "target": "function:scripts/dw_power_store/cli.py:emit",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:power_info",
+      "target": "function:scripts/dw_workspace_dist.py:manifests",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:power_info",
+      "target": "function:scripts/dw_power_store/cli.py:emit",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:power_prompt",
+      "target": "function:scripts/dw_workspace_dist.py:manifests",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:power_prompt",
+      "target": "function:scripts/dw_orchestrator.py:find_system",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:power_prompt",
+      "target": "function:scripts/dw_report.py:find_system",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:power_prompt",
+      "target": "function:scripts/dw_workspace_dist.py:find_system",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:submodule_entries",
+      "target": "function:scripts/dw_power_store/common.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:submodule_entries",
+      "target": "function:scripts/dw_project_registry.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:submodule_entries",
+      "target": "function:scripts/dw_workspace_dist.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:pinned_sha",
+      "target": "function:scripts/dw_project_registry.py:git",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:submodule_branch",
+      "target": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:submodule_branch",
+      "target": "function:scripts/distribution_installer.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:submodule_branch",
+      "target": "function:scripts/dw_entry.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:remote_sha",
+      "target": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:remote_sha",
+      "target": "function:scripts/distribution_installer.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:remote_sha",
+      "target": "function:scripts/dw_entry.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:power_sync",
+      "target": "function:scripts/dw_project_registry.py:git",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:power_sync",
+      "target": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:power_sync",
+      "target": "function:scripts/distribution_installer.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:power_sync",
+      "target": "function:scripts/dw_entry.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:configured_hosts",
+      "target": "function:scripts/dw_power_store/common.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:configured_hosts",
+      "target": "function:scripts/dw_project_registry.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:configured_hosts",
+      "target": "function:scripts/dw_workspace_dist.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:configured_hosts",
+      "target": "function:scripts/dw_workspace_dist.py:normalize_host",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:select_hosts",
+      "target": "function:scripts/dw_workspace_dist.py:configured_hosts",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:select_hosts",
+      "target": "function:scripts/dw_workspace_dist.py:normalize_host",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:resolve_skill_source",
+      "target": "function:scripts/dw_workspace_dist.py:installed_entrypoints",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:resolve_skill_source",
+      "target": "function:scripts/dw_workspace_dist.py:source_entrypoints",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:safe_remove_generated",
+      "target": "function:scripts/dw_workspace_dist.py:is_generated_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:safe_remove_generated",
+      "target": "function:scripts/dw_workspace_dist.py:display_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:write_generated_file",
+      "target": "function:scripts/dw_workspace_dist.py:safe_remove_generated",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:write_generated_file",
+      "target": "function:scripts/dw_workspace_dist.py:atomic_write",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:wrapper_content",
+      "target": "function:scripts/dw_workspace_dist.py:store_root",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:wrapper_content",
+      "target": "function:scripts/dw_workspace_dist.py:display_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:host_instruction_content",
+      "target": "function:scripts/dw_workspace_dist.py:manifests",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:host_instruction_content",
+      "target": "function:scripts/dw_workspace_dist.py:resolve_skill_source",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:host_instruction_content",
+      "target": "function:scripts/dw_workspace_dist.py:display_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:host_instruction_content",
+      "target": "function:scripts/dw_workspace_dist.py:store_root",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:host_expected_paths",
+      "target": "function:scripts/dw_workspace_dist.py:normalize_host",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:host_expected_paths",
+      "target": "function:scripts/dw_workspace_dist.py:manifests",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:install_skill_host",
+      "target": "function:scripts/dw_workspace_dist.py:safe_remove_generated",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:install_skill_host",
+      "target": "function:scripts/dw_workspace_dist.py:manifests",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:install_skill_host",
+      "target": "function:scripts/dw_workspace_dist.py:resolve_skill_source",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:install_skill_host",
+      "target": "function:scripts/dw_workspace_dist.py:atomic_write",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:install_skill_host",
+      "target": "function:scripts/dw_workspace_dist.py:wrapper_content",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:install_skill_host",
+      "target": "function:scripts/dw_workspace_dist.py:host_instruction_content",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:install_instruction_host",
+      "target": "function:scripts/dw_workspace_dist.py:host_instruction_content",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:install_instruction_host",
+      "target": "function:scripts/dw_workspace_dist.py:kilo_config_content",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:install_host_adapters",
+      "target": "function:scripts/dw_workspace_dist.py:select_hosts",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:install_host_adapters",
+      "target": "function:scripts/dw_workspace_dist.py:install_skill_host",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:install_host_adapters",
+      "target": "function:scripts/dw_workspace_dist.py:install_instruction_host",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:remove_host_adapters",
+      "target": "function:scripts/dw_workspace_dist.py:select_hosts",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:remove_host_adapters",
+      "target": "function:scripts/dw_workspace_dist.py:safe_remove_generated",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:host_list",
+      "target": "function:scripts/dw_workspace_dist.py:configured_hosts",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:host_list",
+      "target": "function:scripts/dw_power_store/cli.py:emit",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:host_status",
+      "target": "function:scripts/dw_workspace_dist.py:select_hosts",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:write_provider_files",
+      "target": "function:scripts/dw_workspace_dist.py:is_generated_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:write_provider_files",
+      "target": "function:scripts/dw_workspace_dist.py:atomic_write",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:provider_info",
+      "target": "function:scripts/dw_power_store/cli.py:emit",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:system_list",
+      "target": "function:scripts/dw_power_store/common.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:system_list",
+      "target": "function:scripts/dw_project_registry.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:system_list",
+      "target": "function:scripts/dw_workspace_dist.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:system_list",
+      "target": "function:scripts/dw_power_store/cli.py:emit",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:system_powers",
+      "target": "function:scripts/dw_orchestrator.py:find_system",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:system_powers",
+      "target": "function:scripts/dw_report.py:find_system",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:system_powers",
+      "target": "function:scripts/dw_workspace_dist.py:find_system",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:system_powers",
+      "target": "function:scripts/dw_power_store/cli.py:emit",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:validate",
+      "target": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:validate",
+      "target": "function:scripts/distribution_installer.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:validate",
+      "target": "function:scripts/dw_entry.py:run",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_cli.py:main",
+      "target": "function:scripts/dw_entry.py:build_parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

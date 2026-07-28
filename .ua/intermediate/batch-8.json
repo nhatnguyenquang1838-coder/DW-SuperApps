@@ -1,0 +1,23 @@
+{
+  "nodes": [
+    {
+      "id": "file:.ua/fingerprints.json",
+      "label": "fingerprints.json",
+      "type": "config",
+      "fileCategory": "config"
+    },
+    {
+      "id": "file:.ua/knowledge-graph.json",
+      "label": "knowledge-graph.json",
+      "type": "config",
+      "fileCategory": "config"
+    },
+    {
+      "id": "file:.ua/meta.json",
+      "label": "meta.json",
+      "type": "config",
+      "fileCategory": "config"
+    }
+  ],
+  "edges": []
+}

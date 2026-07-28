@@ -1,0 +1,61 @@
+{
+  "nodes": [
+    {
+      "id": "config:.gwc/scrums/SCRUM-105/schemas/checkpoint.schema.json",
+      "type": "config",
+      "name": "checkpoint.schema.json",
+      "filePath": ".gwc/scrums/SCRUM-105/schemas/checkpoint.schema.json",
+      "summary": "JSON configuration file 'checkpoint.schema.json' with 7 top-level properties.",
+      "tags": [
+        "configuration",
+        "json",
+        "schema"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "JSON schema configuration"
+    },
+    {
+      "id": "config:.gwc/scrums/SCRUM-105/schemas/pending-action-readback.schema.json",
+      "type": "config",
+      "name": "pending-action-readback.schema.json",
+      "filePath": ".gwc/scrums/SCRUM-105/schemas/pending-action-readback.schema.json",
+      "summary": "JSON configuration file 'pending-action-readback.schema.json' with 7 top-level properties.",
+      "tags": [
+        "configuration",
+        "json",
+        "schema"
+      ],
+      "complexity": "simple",
+      "languageNotes": "JSON schema configuration"
+    },
+    {
+      "id": "config:.gwc/scrums/SCRUM-105/schemas/runtime-event.schema.json",
+      "type": "config",
+      "name": "runtime-event.schema.json",
+      "filePath": ".gwc/scrums/SCRUM-105/schemas/runtime-event.schema.json",
+      "summary": "JSON configuration file 'runtime-event.schema.json' with 7 top-level properties.",
+      "tags": [
+        "configuration",
+        "json",
+        "schema"
+      ],
+      "complexity": "simple",
+      "languageNotes": "JSON schema configuration"
+    },
+    {
+      "id": "config:.gwc/scrums/SCRUM-105/schemas/store-api.schema.json",
+      "type": "config",
+      "name": "store-api.schema.json",
+      "filePath": ".gwc/scrums/SCRUM-105/schemas/store-api.schema.json",
+      "summary": "JSON configuration file 'store-api.schema.json' with 7 top-level properties.",
+      "tags": [
+        "configuration",
+        "json",
+        "schema"
+      ],
+      "complexity": "simple",
+      "languageNotes": "JSON schema configuration"
+    }
+  ],
+  "edges": []
+}

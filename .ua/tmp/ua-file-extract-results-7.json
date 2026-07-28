@@ -1,0 +1,156 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 3,
+  "filesSkipped": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 3,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 0,
+      "failed": 0,
+      "skipped": 3
+    }
+  },
+  "results": [
+    {
+      "path": ".kiro/specs/distribution-revamp/design.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 39,
+      "nonEmptyLines": 25,
+      "sections": [
+        {
+          "heading": "Design",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Overview",
+          "level": 2,
+          "line": 3
+        },
+        {
+          "heading": "Components",
+          "level": 2,
+          "line": 16
+        },
+        {
+          "heading": "Release builder",
+          "level": 3,
+          "line": 18
+        },
+        {
+          "heading": "Offline installer",
+          "level": 3,
+          "line": 22
+        },
+        {
+          "heading": "Evidence schema",
+          "level": 3,
+          "line": 26
+        },
+        {
+          "heading": "Workflow",
+          "level": 3,
+          "line": 30
+        },
+        {
+          "heading": "Ownership boundary",
+          "level": 2,
+          "line": 34
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 8
+      }
+    },
+    {
+      "path": ".kiro/specs/distribution-revamp/requirements.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 40,
+      "nonEmptyLines": 24,
+      "sections": [
+        {
+          "heading": "Requirements",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Requirement 1: Tag/download-only distribution",
+          "level": 2,
+          "line": 3
+        },
+        {
+          "heading": "Acceptance Criteria",
+          "level": 3,
+          "line": 7
+        },
+        {
+          "heading": "Requirement 2: Release evidence",
+          "level": 2,
+          "line": 13
+        },
+        {
+          "heading": "Acceptance Criteria",
+          "level": 3,
+          "line": 17
+        },
+        {
+          "heading": "Requirement 3: Runtime preservation",
+          "level": 2,
+          "line": 23
+        },
+        {
+          "heading": "Acceptance Criteria",
+          "level": 3,
+          "line": 27
+        },
+        {
+          "heading": "Requirement 4: Branch conversion",
+          "level": 2,
+          "line": 33
+        },
+        {
+          "heading": "Acceptance Criteria",
+          "level": 3,
+          "line": 37
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 9
+      }
+    },
+    {
+      "path": ".kiro/specs/distribution-revamp/tasks.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 11,
+      "nonEmptyLines": 10,
+      "sections": [
+        {
+          "heading": "Tasks",
+          "level": 1,
+          "line": 1
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "nodes": [
+    {
+      "id": "config:hosts/openclaw-acpx/manifest.yaml",
+      "type": "config",
+      "name": "manifest.yaml",
+      "filePath": "hosts/openclaw-acpx/manifest.yaml",
+      "summary": "Configuration file defining 4 top-level section(s) for project setup.",
+      "tags": [
+        "configuration",
+        "schema",
+        "project-config"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:hosts/openclaw-acpx/openclaw.config.json",
+      "type": "config",
+      "name": "openclaw.config.json",
+      "filePath": "hosts/openclaw-acpx/openclaw.config.json",
+      "summary": "Configuration file defining 4 top-level section(s) for project setup.",
+      "tags": [
+        "configuration",
+        "schema",
+        "project-config"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:hosts/openclaw-acpx/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "hosts/openclaw-acpx/README.md",
+      "summary": "Documentation file with 8 section(s) covering installation guidance.",
+      "tags": [
+        "documentation",
+        "installation",
+        "reference"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:hosts/openclaw-acpx/install.ps1",
+      "type": "file",
+      "name": "install.ps1",
+      "filePath": "hosts/openclaw-acpx/install.ps1",
+      "summary": "Script file (structural analysis skipped).",
+      "tags": [
+        "script",
+        "automation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:hosts/openclaw-acpx/install.sh",
+      "type": "file",
+      "name": "install.sh",
+      "filePath": "hosts/openclaw-acpx/install.sh",
+      "summary": "Shell script with 4 function(s) implementing host setup and configuration logic.",
+      "tags": [
+        "script",
+        "shell",
+        "automation",
+        "host-setup"
+      ],
+      "complexity": "complex",
+      "languageNotes": "PowerShell or shell script for host orchestration."
+    },
+    {
+      "id": "function:hosts/openclaw-acpx/install.sh:read_and_validate_config",
+      "type": "function",
+      "name": "read_and_validate_config",
+      "filePath": "hosts/openclaw-acpx/install.sh",
+      "lineRange": [
+        116,
+        197
+      ],
+      "summary": "Function 'read_and_validate_config' spanning lines 116-197.",
+      "tags": [
+        "function",
+        "read-and-validate-config"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:hosts/openclaw-acpx/install.sh:usage",
+      "type": "function",
+      "name": "usage",
+      "filePath": "hosts/openclaw-acpx/install.sh",
+      "lineRange": [
+        9,
+        27
+      ],
+      "summary": "Function 'usage' spanning lines 9-27.",
+      "tags": [
+        "function",
+        "usage"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:hosts/openclaw-acpx/install.sh",
+      "target": "function:hosts/openclaw-acpx/install.sh:read_and_validate_config",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:hosts/openclaw-acpx/install.sh",
+      "target": "function:hosts/openclaw-acpx/install.sh:usage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    }
+  ]
+}

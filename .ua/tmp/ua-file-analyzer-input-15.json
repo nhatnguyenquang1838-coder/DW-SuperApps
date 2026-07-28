@@ -1,0 +1,78 @@
+{
+  "projectRoot": "/Users/mac/prj/DW-SuperApps",
+  "batchFiles": [
+    {
+      "path": "schemas/bmad-permission-model.schema.json",
+      "language": "json",
+      "sizeLines": 179,
+      "fileCategory": "config"
+    },
+    {
+      "path": "schemas/bmad-procedure-registry.schema.json",
+      "language": "json",
+      "sizeLines": 202,
+      "fileCategory": "config"
+    },
+    {
+      "path": "schemas/bmad-procedure-request.schema.json",
+      "language": "json",
+      "sizeLines": 166,
+      "fileCategory": "config"
+    },
+    {
+      "path": "schemas/bmad-procedure-result.schema.json",
+      "language": "json",
+      "sizeLines": 228,
+      "fileCategory": "config"
+    },
+    {
+      "path": "schemas/distribution-release.schema.json",
+      "language": "json",
+      "sizeLines": 93,
+      "fileCategory": "config"
+    },
+    {
+      "path": "schemas/power-binding.schema.json",
+      "language": "json",
+      "sizeLines": 34,
+      "fileCategory": "config"
+    },
+    {
+      "path": "schemas/power-consumer-binding.schema.json",
+      "language": "json",
+      "sizeLines": 52,
+      "fileCategory": "config"
+    },
+    {
+      "path": "schemas/power-distribution.schema.json",
+      "language": "json",
+      "sizeLines": 126,
+      "fileCategory": "config"
+    },
+    {
+      "path": "schemas/power-manifest.schema.json",
+      "language": "json",
+      "sizeLines": 334,
+      "fileCategory": "config"
+    },
+    {
+      "path": "schemas/power-package-manifest.schema.json",
+      "language": "json",
+      "sizeLines": 62,
+      "fileCategory": "config"
+    }
+  ],
+  "batchImportData": {
+    "schemas/bmad-permission-model.schema.json": [],
+    "schemas/bmad-procedure-registry.schema.json": [],
+    "schemas/bmad-procedure-request.schema.json": [],
+    "schemas/bmad-procedure-result.schema.json": [],
+    "schemas/distribution-release.schema.json": [],
+    "schemas/power-binding.schema.json": [],
+    "schemas/power-consumer-binding.schema.json": [],
+    "schemas/power-distribution.schema.json": [],
+    "schemas/power-manifest.schema.json": [],
+    "schemas/power-package-manifest.schema.json": []
+  },
+  "neighborMap": {}
+}

@@ -1,0 +1,29 @@
+{
+  "projectRoot": "/Users/mac/prj/DW-SuperApps",
+  "batchFiles": [
+    {
+      "path": ".gwc/scrums/SCRUM-119/notes/task-me-decomposition.md",
+      "language": "markdown",
+      "sizeLines": 23,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".gwc/scrums/SCRUM-119/notes/ua-dependency-map.md",
+      "language": "markdown",
+      "sizeLines": 27,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".gwc/scrums/SCRUM-119/notes/ua-impact.md",
+      "language": "markdown",
+      "sizeLines": 16,
+      "fileCategory": "docs"
+    }
+  ],
+  "batchImportData": {
+    ".gwc/scrums/SCRUM-119/notes/task-me-decomposition.md": [],
+    ".gwc/scrums/SCRUM-119/notes/ua-dependency-map.md": [],
+    ".gwc/scrums/SCRUM-119/notes/ua-impact.md": []
+  },
+  "neighborMap": {}
+}

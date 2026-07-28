@@ -1,0 +1,52 @@
+{
+  "nodes": [
+    {
+      "id": "config:tests/fixtures/power-distribution/invalid-absolute-include.yaml",
+      "type": "config",
+      "name": "invalid-absolute-include.yaml",
+      "filePath": "tests/fixtures/power-distribution/invalid-absolute-include.yaml",
+      "summary": "Invalid PowerDistribution fixture with absolute path include.",
+      "tags": [
+        "config",
+        "yaml",
+        "fixture",
+        "test",
+        "power-distribution"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:tests/fixtures/power-distribution/valid-consumer-binding.yaml",
+      "type": "config",
+      "name": "valid-consumer-binding.yaml",
+      "filePath": "tests/fixtures/power-distribution/valid-consumer-binding.yaml",
+      "summary": "Valid PowerConsumerBinding fixture with permissions and integrations.",
+      "tags": [
+        "config",
+        "yaml",
+        "fixture",
+        "test",
+        "power-distribution",
+        "consumer-binding"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:tests/fixtures/power-distribution/valid-recipe.yaml",
+      "type": "config",
+      "name": "valid-recipe.yaml",
+      "filePath": "tests/fixtures/power-distribution/valid-recipe.yaml",
+      "summary": "Valid PowerDistribution recipe fixture with include/exclude and forbidden rules.",
+      "tags": [
+        "config",
+        "yaml",
+        "fixture",
+        "test",
+        "power-distribution",
+        "recipe"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": []
+}

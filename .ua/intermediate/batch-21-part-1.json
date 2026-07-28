@@ -1,0 +1,64 @@
+{
+  "nodes": [
+    {
+      "id": "document:memory/2026-07-28-1005.md",
+      "type": "document",
+      "name": "2026-07-28-1005.md",
+      "filePath": "memory/2026-07-28-1005.md",
+      "summary": "Documentation file covering 2026-07-28-1005 with 20 lines of content.",
+      "tags": [
+        "content",
+        "documentation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:plugins/bmad-method/SOURCE.lock.json",
+      "type": "config",
+      "name": "SOURCE.lock.json",
+      "filePath": "plugins/bmad-method/SOURCE.lock.json",
+      "summary": "JSON configuration file for SOURCE.lock controlling project settings and dependencies.",
+      "tags": [
+        "configuration",
+        "json",
+        "lockfile"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:plugins/bmad-method/distribution/power-package.yaml",
+      "type": "config",
+      "name": "power-package.yaml",
+      "filePath": "plugins/bmad-method/distribution/power-package.yaml",
+      "summary": "YAML configuration file for power-package defining project structure and deployment settings.",
+      "tags": [
+        "configuration",
+        "distribution",
+        "yaml"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:plugins/bmad-method/knowledge/knowledge-graph.json",
+      "type": "config",
+      "name": "knowledge-graph.json",
+      "filePath": "plugins/bmad-method/knowledge/knowledge-graph.json",
+      "summary": "JSON configuration file for knowledge-graph controlling project settings and dependencies.",
+      "tags": [
+        "configuration",
+        "json",
+        "knowledge-graph"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:plugins/bmad-method/SOURCE.lock.json",
+      "target": "file:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

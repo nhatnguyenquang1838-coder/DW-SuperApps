@@ -1,0 +1,77 @@
+{
+  "nodes": [
+    {
+      "id": "file:AGENTS.md",
+      "label": "AGENTS.md",
+      "type": "document",
+      "fileCategory": "docs"
+    },
+    {
+      "id": "file:CHANGELOG.md",
+      "label": "CHANGELOG.md",
+      "type": "document",
+      "fileCategory": "docs"
+    },
+    {
+      "id": "file:HEARTBEAT.md",
+      "label": "HEARTBEAT.md",
+      "type": "document",
+      "fileCategory": "docs"
+    },
+    {
+      "id": "file:IDENTITY.md",
+      "label": "IDENTITY.md",
+      "type": "document",
+      "fileCategory": "docs"
+    },
+    {
+      "id": "file:README.md",
+      "label": "README.md",
+      "type": "document",
+      "fileCategory": "docs"
+    },
+    {
+      "id": "file:SOUL.md",
+      "label": "SOUL.md",
+      "type": "document",
+      "fileCategory": "docs"
+    },
+    {
+      "id": "file:TOOLS.md",
+      "label": "TOOLS.md",
+      "type": "document",
+      "fileCategory": "docs"
+    },
+    {
+      "id": "file:USER.md",
+      "label": "USER.md",
+      "type": "document",
+      "fileCategory": "docs"
+    },
+    {
+      "id": "file:dw.cmd",
+      "label": "dw.cmd",
+      "type": "code",
+      "fileCategory": "script"
+    },
+    {
+      "id": "file:dw.ps1",
+      "label": "dw.ps1",
+      "type": "code",
+      "fileCategory": "script"
+    },
+    {
+      "id": "file:requirements-dev.txt",
+      "label": "requirements-dev.txt",
+      "type": "document",
+      "fileCategory": "docs"
+    },
+    {
+      "id": "file:workspace.yaml",
+      "label": "workspace.yaml",
+      "type": "config",
+      "fileCategory": "config"
+    }
+  ],
+  "edges": []
+}

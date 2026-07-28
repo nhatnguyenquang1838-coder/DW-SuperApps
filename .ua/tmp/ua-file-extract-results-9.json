@@ -1,0 +1,491 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 9,
+  "filesSkipped": [
+    "dw.cmd",
+    "dw.ps1",
+    "requirements-dev.txt"
+  ],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 9,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 0,
+      "failed": 0,
+      "skipped": 9
+    }
+  },
+  "results": [
+    {
+      "path": "AGENTS.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 193,
+      "nonEmptyLines": 135,
+      "sections": [
+        {
+          "heading": "DW SuperApps Agent Routing",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Source of truth",
+          "level": 2,
+          "line": 5
+        },
+        {
+          "heading": "Workspace and system boundary",
+          "level": 2,
+          "line": 21
+        },
+        {
+          "heading": "Discovery",
+          "level": 2,
+          "line": 53
+        },
+        {
+          "heading": "Power routing",
+          "level": 2,
+          "line": 65
+        },
+        {
+          "heading": "Mandatory runbooks",
+          "level": 2,
+          "line": 74
+        },
+        {
+          "heading": "Power onboarding invariant",
+          "level": 2,
+          "line": 89
+        },
+        {
+          "heading": "Portable multi-host invariant",
+          "level": 2,
+          "line": 116
+        },
+        {
+          "heading": "BMAD ownership",
+          "level": 2,
+          "line": 141
+        },
+        {
+          "heading": "Safety",
+          "level": 2,
+          "line": 155
+        },
+        {
+          "heading": "Model providers",
+          "level": 2,
+          "line": 165
+        },
+        {
+          "heading": "Repository changes",
+          "level": 2,
+          "line": 175
+        },
+        {
+          "heading": "Slack behavior",
+          "level": 2,
+          "line": 189
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 13
+      }
+    },
+    {
+      "path": "CHANGELOG.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 42,
+      "nonEmptyLines": 27,
+      "sections": [
+        {
+          "heading": "Changelog",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "2026-07-27 — G1 user-facing report generator",
+          "level": 2,
+          "line": 5
+        },
+        {
+          "heading": "Added",
+          "level": 3,
+          "line": 7
+        },
+        {
+          "heading": "Changed",
+          "level": 3,
+          "line": 13
+        },
+        {
+          "heading": "Safety",
+          "level": 3,
+          "line": 17
+        },
+        {
+          "heading": "2026-07-27 — GWC-core orchestration",
+          "level": 2,
+          "line": 22
+        },
+        {
+          "heading": "Added",
+          "level": 3,
+          "line": 24
+        },
+        {
+          "heading": "Changed",
+          "level": 3,
+          "line": 32
+        },
+        {
+          "heading": "Safety",
+          "level": 3,
+          "line": 38
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 9
+      }
+    },
+    {
+      "path": "HEARTBEAT.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 5,
+      "nonEmptyLines": 3,
+      "sections": [
+        {
+          "heading": "Keep this file empty (or with only comments) to skip heartbeat API calls.",
+          "level": 1,
+          "line": 3
+        },
+        {
+          "heading": "Add tasks below when you want the agent to check something periodically.",
+          "level": 1,
+          "line": 5
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 2
+      }
+    },
+    {
+      "path": "IDENTITY.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 29,
+      "nonEmptyLines": 21,
+      "sections": [
+        {
+          "heading": "IDENTITY.md - Who Am I?",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Related",
+          "level": 2,
+          "line": 27
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 2
+      }
+    },
+    {
+      "path": "README.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 171,
+      "nonEmptyLines": 125,
+      "sections": [
+        {
+          "heading": "DW SuperApps",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Choose your starting point",
+          "level": 2,
+          "line": 5
+        },
+        {
+          "heading": "Use this workspace",
+          "level": 3,
+          "line": 7
+        },
+        {
+          "heading": "Create another Super Project",
+          "level": 3,
+          "line": 20
+        },
+        {
+          "heading": "Initialize an existing management repository",
+          "level": 3,
+          "line": 55
+        },
+        {
+          "heading": "Core model",
+          "level": 2,
+          "line": 67
+        },
+        {
+          "heading": "Project commands",
+          "level": 2,
+          "line": 83
+        },
+        {
+          "heading": "Power commands",
+          "level": 2,
+          "line": 93
+        },
+        {
+          "heading": "Supported hosts",
+          "level": 2,
+          "line": 105
+        },
+        {
+          "heading": "Installation guides",
+          "level": 2,
+          "line": 115
+        },
+        {
+          "heading": "Daily operations",
+          "level": 2,
+          "line": 125
+        },
+        {
+          "heading": "Orchestration",
+          "level": 2,
+          "line": 136
+        },
+        {
+          "heading": "Reports",
+          "level": 2,
+          "line": 149
+        },
+        {
+          "heading": "Current Powers",
+          "level": 2,
+          "line": 160
+        },
+        {
+          "heading": "Child-project independence",
+          "level": 2,
+          "line": 169
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 15
+      }
+    },
+    {
+      "path": "SOUL.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 42,
+      "nonEmptyLines": 23,
+      "sections": [
+        {
+          "heading": "SOUL.md - Who You Are",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Core Truths",
+          "level": 2,
+          "line": 7
+        },
+        {
+          "heading": "Boundaries",
+          "level": 2,
+          "line": 19
+        },
+        {
+          "heading": "Vibe",
+          "level": 2,
+          "line": 26
+        },
+        {
+          "heading": "Continuity",
+          "level": 2,
+          "line": 30
+        },
+        {
+          "heading": "Related",
+          "level": 2,
+          "line": 40
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 6
+      }
+    },
+    {
+      "path": "TOOLS.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 33,
+      "nonEmptyLines": 19,
+      "sections": [
+        {
+          "heading": "TOOLS.md - Local Notes",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Examples",
+          "level": 2,
+          "line": 5
+        },
+        {
+          "heading": "Why Separate?",
+          "level": 2,
+          "line": 23
+        },
+        {
+          "heading": "Related",
+          "level": 2,
+          "line": 31
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 4
+      }
+    },
+    {
+      "path": "USER.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 21,
+      "nonEmptyLines": 13,
+      "sections": [
+        {
+          "heading": "USER.md - About Your Human",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Context",
+          "level": 2,
+          "line": 11
+        },
+        {
+          "heading": "Related",
+          "level": 2,
+          "line": 19
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 3
+      }
+    },
+    {
+      "path": "workspace.yaml",
+      "language": "yaml",
+      "fileCategory": "config",
+      "totalLines": 131,
+      "nonEmptyLines": 131,
+      "sections": [
+        {
+          "heading": "apiVersion",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "kind",
+          "level": 1,
+          "line": 2
+        },
+        {
+          "heading": "metadata",
+          "level": 1,
+          "line": 3
+        },
+        {
+          "heading": "hosts",
+          "level": 1,
+          "line": 6
+        },
+        {
+          "heading": "orchestrators",
+          "level": 1,
+          "line": 14
+        },
+        {
+          "heading": "providers",
+          "level": 1,
+          "line": 25
+        },
+        {
+          "heading": "distribution",
+          "level": 1,
+          "line": 32
+        },
+        {
+          "heading": "projects",
+          "level": 1,
+          "line": 40
+        },
+        {
+          "heading": "powers",
+          "level": 1,
+          "line": 68
+        },
+        {
+          "heading": "systems",
+          "level": 1,
+          "line": 90
+        },
+        {
+          "heading": "data_ownership",
+          "level": 1,
+          "line": 125
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 11
+      }
+    }
+  ]
+}

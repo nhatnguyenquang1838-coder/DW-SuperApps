@@ -1,0 +1,135 @@
+{
+  "nodes": [
+    {
+      "id": "config:schemas/bmad-permission-model.schema.json",
+      "type": "config",
+      "name": "bmad-permission-model.schema.json",
+      "filePath": "schemas/bmad-permission-model.schema.json",
+      "summary": "Configuration file defining 9 top-level section(s) for project setup.",
+      "tags": [
+        "configuration",
+        "schema",
+        "project-config"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:schemas/bmad-procedure-registry.schema.json",
+      "type": "config",
+      "name": "bmad-procedure-registry.schema.json",
+      "filePath": "schemas/bmad-procedure-registry.schema.json",
+      "summary": "Configuration file defining 9 top-level section(s) for project setup.",
+      "tags": [
+        "configuration",
+        "schema",
+        "project-config"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "config:schemas/bmad-procedure-request.schema.json",
+      "type": "config",
+      "name": "bmad-procedure-request.schema.json",
+      "filePath": "schemas/bmad-procedure-request.schema.json",
+      "summary": "Configuration file defining 9 top-level section(s) for project setup.",
+      "tags": [
+        "configuration",
+        "schema",
+        "project-config"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:schemas/bmad-procedure-result.schema.json",
+      "type": "config",
+      "name": "bmad-procedure-result.schema.json",
+      "filePath": "schemas/bmad-procedure-result.schema.json",
+      "summary": "Configuration file defining 9 top-level section(s) for project setup.",
+      "tags": [
+        "configuration",
+        "schema",
+        "project-config"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "config:schemas/distribution-release.schema.json",
+      "type": "config",
+      "name": "distribution-release.schema.json",
+      "filePath": "schemas/distribution-release.schema.json",
+      "summary": "Configuration file defining 6 top-level section(s) for project setup.",
+      "tags": [
+        "configuration",
+        "schema",
+        "project-config"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:schemas/power-binding.schema.json",
+      "type": "config",
+      "name": "power-binding.schema.json",
+      "filePath": "schemas/power-binding.schema.json",
+      "summary": "Configuration file defining 7 top-level section(s) for project setup.",
+      "tags": [
+        "configuration",
+        "schema",
+        "project-config"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:schemas/power-consumer-binding.schema.json",
+      "type": "config",
+      "name": "power-consumer-binding.schema.json",
+      "filePath": "schemas/power-consumer-binding.schema.json",
+      "summary": "Configuration file defining 7 top-level section(s) for project setup.",
+      "tags": [
+        "configuration",
+        "schema",
+        "project-config"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:schemas/power-distribution.schema.json",
+      "type": "config",
+      "name": "power-distribution.schema.json",
+      "filePath": "schemas/power-distribution.schema.json",
+      "summary": "Configuration file defining 8 top-level section(s) for project setup.",
+      "tags": [
+        "configuration",
+        "schema",
+        "project-config"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:schemas/power-manifest.schema.json",
+      "type": "config",
+      "name": "power-manifest.schema.json",
+      "filePath": "schemas/power-manifest.schema.json",
+      "summary": "Configuration file defining 7 top-level section(s) for project setup.",
+      "tags": [
+        "configuration",
+        "schema",
+        "project-config"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "config:schemas/power-package-manifest.schema.json",
+      "type": "config",
+      "name": "power-package-manifest.schema.json",
+      "filePath": "schemas/power-package-manifest.schema.json",
+      "summary": "Configuration file defining 7 top-level section(s) for project setup.",
+      "tags": [
+        "configuration",
+        "schema",
+        "project-config"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": []
+}

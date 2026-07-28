@@ -1,0 +1,350 @@
+{
+  "nodes": [
+    {
+      "id": "file:scripts/distribution_build.sh",
+      "type": "file",
+      "name": "distribution_build.sh",
+      "filePath": "scripts/distribution_build.sh",
+      "summary": "Shell script orchestrating power distribution build and staged validation.",
+      "tags": [
+        "script",
+        "shell",
+        "distribution",
+        "build"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/install-dw.sh",
+      "type": "file",
+      "name": "install-dw.sh",
+      "filePath": "scripts/install-dw.sh",
+      "summary": "Shell script implementing DW CLI launcher install and uninstall with shell profile management.",
+      "tags": [
+        "script",
+        "shell",
+        "installer",
+        "cli"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:scripts/install-host-adapters.sh",
+      "type": "file",
+      "name": "install-host-adapters.sh",
+      "filePath": "scripts/install-host-adapters.sh",
+      "summary": "Shell script delegating host adapter installation to the DW CLI.",
+      "tags": [
+        "script",
+        "shell",
+        "host-adapter",
+        "installer"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/python-resolver.sh",
+      "type": "file",
+      "name": "python-resolver.sh",
+      "filePath": "scripts/python-resolver.sh",
+      "summary": "Shell script providing shared Python executable resolution and execution helpers.",
+      "tags": [
+        "script",
+        "shell",
+        "python",
+        "resolver"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:scripts/sync-submodules.sh",
+      "type": "file",
+      "name": "sync-submodules.sh",
+      "filePath": "scripts/sync-submodules.sh",
+      "summary": "Shell script triggering power submodule sync via the DW CLI.",
+      "tags": [
+        "script",
+        "shell",
+        "submodule",
+        "sync"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/install-dw.sh:usage",
+      "type": "function",
+      "name": "usage",
+      "filePath": "scripts/install-dw.sh",
+      "lineRange": [
+        12,
+        18
+      ],
+      "summary": "Function 'usage' spanning lines 12-18.",
+      "tags": [
+        "function",
+        "usage",
+        "cli"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/install-dw.sh:resolve_shell_mode",
+      "type": "function",
+      "name": "resolve_shell_mode",
+      "filePath": "scripts/install-dw.sh",
+      "lineRange": [
+        50,
+        59
+      ],
+      "summary": "Function 'resolve_shell_mode' spanning lines 50-59.",
+      "tags": [
+        "function",
+        "shell-detection"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/install-dw.sh:strip_profile_block",
+      "type": "function",
+      "name": "strip_profile_block",
+      "filePath": "scripts/install-dw.sh",
+      "lineRange": [
+        69,
+        77
+      ],
+      "summary": "Function 'strip_profile_block' spanning lines 69-77.",
+      "tags": [
+        "function",
+        "profile",
+        "text-processing"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/install-dw.sh:write_profile_block",
+      "type": "function",
+      "name": "write_profile_block",
+      "filePath": "scripts/install-dw.sh",
+      "lineRange": [
+        79,
+        94
+      ],
+      "summary": "Function 'write_profile_block' spanning lines 79-94.",
+      "tags": [
+        "function",
+        "profile",
+        "installation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/install-dw.sh:remove_profile_block",
+      "type": "function",
+      "name": "remove_profile_block",
+      "filePath": "scripts/install-dw.sh",
+      "lineRange": [
+        96,
+        104
+      ],
+      "summary": "Function 'remove_profile_block' spanning lines 96-104.",
+      "tags": [
+        "function",
+        "profile",
+        "uninstallation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/install-dw.sh:install_launcher",
+      "type": "function",
+      "name": "install_launcher",
+      "filePath": "scripts/install-dw.sh",
+      "lineRange": [
+        106,
+        126
+      ],
+      "summary": "Function 'install_launcher' spanning lines 106-126.",
+      "tags": [
+        "function",
+        "launcher",
+        "installation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/install-dw.sh:uninstall_launcher",
+      "type": "function",
+      "name": "uninstall_launcher",
+      "filePath": "scripts/install-dw.sh",
+      "lineRange": [
+        128,
+        139
+      ],
+      "summary": "Function 'uninstall_launcher' spanning lines 128-139.",
+      "tags": [
+        "function",
+        "launcher",
+        "uninstallation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/python-resolver.sh:dw_python_error",
+      "type": "function",
+      "name": "dw_python_error",
+      "filePath": "scripts/python-resolver.sh",
+      "lineRange": [
+        6,
+        10
+      ],
+      "summary": "Function 'dw_python_error' spanning lines 6-10.",
+      "tags": [
+        "function",
+        "error-handling",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/python-resolver.sh:dw_python",
+      "type": "function",
+      "name": "dw_python",
+      "filePath": "scripts/python-resolver.sh",
+      "lineRange": [
+        12,
+        24
+      ],
+      "summary": "Function 'dw_python' spanning lines 12-24.",
+      "tags": [
+        "function",
+        "python",
+        "resolution"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/python-resolver.sh:dw_exec_python",
+      "type": "function",
+      "name": "dw_exec_python",
+      "filePath": "scripts/python-resolver.sh",
+      "lineRange": [
+        26,
+        39
+      ],
+      "summary": "Function 'dw_exec_python' spanning lines 26-39.",
+      "tags": [
+        "function",
+        "python",
+        "execution"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:scripts/install-dw.sh",
+      "target": "function:scripts/install-dw.sh:usage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/install-dw.sh",
+      "target": "function:scripts/install-dw.sh:resolve_shell_mode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/install-dw.sh",
+      "target": "function:scripts/install-dw.sh:strip_profile_block",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/install-dw.sh",
+      "target": "function:scripts/install-dw.sh:write_profile_block",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/install-dw.sh",
+      "target": "function:scripts/install-dw.sh:remove_profile_block",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/install-dw.sh",
+      "target": "function:scripts/install-dw.sh:install_launcher",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/install-dw.sh",
+      "target": "function:scripts/install-dw.sh:uninstall_launcher",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/python-resolver.sh",
+      "target": "function:scripts/python-resolver.sh:dw_python_error",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/python-resolver.sh",
+      "target": "function:scripts/python-resolver.sh:dw_python",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/python-resolver.sh",
+      "target": "function:scripts/python-resolver.sh:dw_exec_python",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_build.sh",
+      "target": "file:scripts/distribution_builder.py",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/distribution_build.sh",
+      "target": "file:scripts/distribution_installer.py",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/install-dw.sh",
+      "target": "file:bin/dw",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/install-host-adapters.sh",
+      "target": "file:bin/dw",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/sync-submodules.sh",
+      "target": "file:scripts/dw_cli.py",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 1.0
+    }
+  ]
+}

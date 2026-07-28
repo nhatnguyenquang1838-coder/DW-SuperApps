@@ -1,0 +1,96 @@
+{
+  "nodes": [
+    {
+      "id": "document:docs/installation/ADD_PROJECT.md",
+      "type": "document",
+      "name": "ADD_PROJECT.md",
+      "filePath": "docs/installation/ADD_PROJECT.md",
+      "summary": "Documentation file with 4 section(s) covering installation guidance.",
+      "tags": [
+        "documentation",
+        "installation",
+        "reference"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:docs/installation/CREATE_SUPER_PROJECT.md",
+      "type": "document",
+      "name": "CREATE_SUPER_PROJECT.md",
+      "filePath": "docs/installation/CREATE_SUPER_PROJECT.md",
+      "summary": "Documentation file with 5 section(s) covering installation guidance.",
+      "tags": [
+        "documentation",
+        "installation",
+        "reference"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:docs/installation/INSTALL_POWERS.md",
+      "type": "document",
+      "name": "INSTALL_POWERS.md",
+      "filePath": "docs/installation/INSTALL_POWERS.md",
+      "summary": "Documentation file with 1 section(s) covering installation guidance.",
+      "tags": [
+        "documentation",
+        "installation",
+        "reference"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:docs/installation/MIGRATION.md",
+      "type": "document",
+      "name": "MIGRATION.md",
+      "filePath": "docs/installation/MIGRATION.md",
+      "summary": "Documentation file with 2 section(s) covering installation guidance.",
+      "tags": [
+        "documentation",
+        "installation",
+        "reference"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:docs/installation/OFFLINE_INSTALL.md",
+      "type": "document",
+      "name": "OFFLINE_INSTALL.md",
+      "filePath": "docs/installation/OFFLINE_INSTALL.md",
+      "summary": "Documentation file with 1 section(s) covering installation guidance.",
+      "tags": [
+        "documentation",
+        "installation",
+        "reference"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:docs/installation/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "docs/installation/README.md",
+      "summary": "Documentation file with 1 section(s) covering installation guidance.",
+      "tags": [
+        "documentation",
+        "installation",
+        "reference"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:docs/installation/TROUBLESHOOTING.md",
+      "type": "document",
+      "name": "TROUBLESHOOTING.md",
+      "filePath": "docs/installation/TROUBLESHOOTING.md",
+      "summary": "Documentation file with 7 section(s) covering installation guidance.",
+      "tags": [
+        "documentation",
+        "installation",
+        "reference"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": []
+}

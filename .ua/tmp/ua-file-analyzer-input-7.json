@@ -1,0 +1,29 @@
+{
+  "projectRoot": "/Users/mac/prj/DW-SuperApps",
+  "batchFiles": [
+    {
+      "path": ".kiro/specs/distribution-revamp/design.md",
+      "language": "markdown",
+      "sizeLines": 39,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".kiro/specs/distribution-revamp/requirements.md",
+      "language": "markdown",
+      "sizeLines": 40,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".kiro/specs/distribution-revamp/tasks.md",
+      "language": "markdown",
+      "sizeLines": 11,
+      "fileCategory": "docs"
+    }
+  ],
+  "batchImportData": {
+    ".kiro/specs/distribution-revamp/design.md": [],
+    ".kiro/specs/distribution-revamp/requirements.md": [],
+    ".kiro/specs/distribution-revamp/tasks.md": []
+  },
+  "neighborMap": {}
+}

@@ -1,0 +1,92 @@
+{
+  "projectRoot": "/Users/mac/prj/DW-SuperApps",
+  "batchFiles": [
+    {
+      "path": "AGENTS.md",
+      "language": "markdown",
+      "sizeLines": 193,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "language": "markdown",
+      "sizeLines": 42,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "HEARTBEAT.md",
+      "language": "markdown",
+      "sizeLines": 5,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "IDENTITY.md",
+      "language": "markdown",
+      "sizeLines": 29,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "README.md",
+      "language": "markdown",
+      "sizeLines": 171,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "SOUL.md",
+      "language": "markdown",
+      "sizeLines": 42,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "TOOLS.md",
+      "language": "markdown",
+      "sizeLines": 33,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "USER.md",
+      "language": "markdown",
+      "sizeLines": 21,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "dw.cmd",
+      "language": "batch",
+      "sizeLines": 2,
+      "fileCategory": "script"
+    },
+    {
+      "path": "dw.ps1",
+      "language": "powershell",
+      "sizeLines": 4,
+      "fileCategory": "script"
+    },
+    {
+      "path": "requirements-dev.txt",
+      "language": "txt",
+      "sizeLines": 2,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "workspace.yaml",
+      "language": "yaml",
+      "sizeLines": 131,
+      "fileCategory": "config"
+    }
+  ],
+  "batchImportData": {
+    "AGENTS.md": [],
+    "CHANGELOG.md": [],
+    "HEARTBEAT.md": [],
+    "IDENTITY.md": [],
+    "README.md": [],
+    "SOUL.md": [],
+    "TOOLS.md": [],
+    "USER.md": [],
+    "dw.cmd": [],
+    "dw.ps1": [],
+    "requirements-dev.txt": [],
+    "workspace.yaml": []
+  },
+  "neighborMap": {}
+}

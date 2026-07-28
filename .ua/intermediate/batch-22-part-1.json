@@ -1,0 +1,2778 @@
+{
+  "nodes": [
+    {
+      "id": "file:scripts/dw_workspace_init.py",
+      "type": "file",
+      "name": "dw_workspace_init.py",
+      "filePath": "scripts/dw_workspace_init.py",
+      "summary": "Exports 2 symbol(s) from the dw_workspace_init module for use by other components.",
+      "tags": [
+        "code",
+        "module"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_workspace_init.py:parser",
+      "type": "function",
+      "name": "parser",
+      "filePath": "scripts/dw_workspace_init.py",
+      "lineRange": [
+        28,
+        34
+      ],
+      "summary": "Function 'parser' in dw_workspace_init.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_workspace_init.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/dw_workspace_init.py",
+      "lineRange": [
+        37,
+        52
+      ],
+      "summary": "Function 'main' in dw_workspace_init.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/offline_release_installer.py",
+      "type": "file",
+      "name": "offline_release_installer.py",
+      "filePath": "scripts/offline_release_installer.py",
+      "summary": "Provides 7 utility functions in the offline_release_installer module used across the project.",
+      "tags": [
+        "code",
+        "installation",
+        "module"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/offline_release_installer.py:sha256_file",
+      "type": "function",
+      "name": "sha256_file",
+      "filePath": "scripts/offline_release_installer.py",
+      "lineRange": [
+        14,
+        19
+      ],
+      "summary": "Function 'sha256_file' in offline_release_installer.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/offline_release_installer.py:require_safe_archive",
+      "type": "function",
+      "name": "require_safe_archive",
+      "filePath": "scripts/offline_release_installer.py",
+      "lineRange": [
+        22,
+        29
+      ],
+      "summary": "Function 'require_safe_archive' in offline_release_installer.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/offline_release_installer.py:verify_release",
+      "type": "function",
+      "name": "verify_release",
+      "filePath": "scripts/offline_release_installer.py",
+      "lineRange": [
+        32,
+        58
+      ],
+      "summary": "Function 'verify_release' in offline_release_installer.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/offline_release_installer.py:install_component",
+      "type": "function",
+      "name": "install_component",
+      "filePath": "scripts/offline_release_installer.py",
+      "lineRange": [
+        61,
+        72
+      ],
+      "summary": "Function 'install_component' in offline_release_installer.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/offline_release_installer.py:install_release",
+      "type": "function",
+      "name": "install_release",
+      "filePath": "scripts/offline_release_installer.py",
+      "lineRange": [
+        75,
+        111
+      ],
+      "summary": "Function 'install_release' in offline_release_installer.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/offline_release_installer.py:rollback",
+      "type": "function",
+      "name": "rollback",
+      "filePath": "scripts/offline_release_installer.py",
+      "lineRange": [
+        114,
+        127
+      ],
+      "summary": "Function 'rollback' in offline_release_installer.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/offline_release_installer.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/offline_release_installer.py",
+      "lineRange": [
+        130,
+        153
+      ],
+      "summary": "Function 'main' in offline_release_installer.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/power_dist.py",
+      "type": "file",
+      "name": "power_dist.py",
+      "filePath": "scripts/power_dist.py",
+      "summary": "Implements 1 class(es) and 23 function(s) in the power_dist module.",
+      "tags": [
+        "code",
+        "complex",
+        "distribution"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:scripts/power_dist.py:load_structured",
+      "type": "function",
+      "name": "load_structured",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        86,
+        96
+      ],
+      "summary": "Function 'load_structured' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:validate_document",
+      "type": "function",
+      "name": "validate_document",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        99,
+        108
+      ],
+      "summary": "Function 'validate_document' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:validate_recipe",
+      "type": "function",
+      "name": "validate_recipe",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        111,
+        120
+      ],
+      "summary": "Function 'validate_recipe' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:ensure_relative",
+      "type": "function",
+      "name": "ensure_relative",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        123,
+        134
+      ],
+      "summary": "Function 'ensure_relative' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:is_within",
+      "type": "function",
+      "name": "is_within",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        137,
+        142
+      ],
+      "summary": "Function 'is_within' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:matches",
+      "type": "function",
+      "name": "matches",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        145,
+        148
+      ],
+      "summary": "Function 'matches' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:_iter_included",
+      "type": "function",
+      "name": "_iter_included",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        151,
+        167
+      ],
+      "summary": "Function '_iter_included' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:_forbidden_patterns",
+      "type": "function",
+      "name": "_forbidden_patterns",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        170,
+        174
+      ],
+      "summary": "Function '_forbidden_patterns' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:_scan_secret_content",
+      "type": "function",
+      "name": "_scan_secret_content",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        177,
+        192
+      ],
+      "summary": "Function '_scan_secret_content' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:collect_files",
+      "type": "function",
+      "name": "collect_files",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        195,
+        230
+      ],
+      "summary": "Function 'collect_files' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:atomic_write",
+      "type": "function",
+      "name": "atomic_write",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        233,
+        249
+      ],
+      "summary": "Function 'atomic_write' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:sha256_file",
+      "type": "function",
+      "name": "sha256_file",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        252,
+        257
+      ],
+      "summary": "Function 'sha256_file' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:copy_runtime_templates",
+      "type": "function",
+      "name": "copy_runtime_templates",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        260,
+        271
+      ],
+      "summary": "Function 'copy_runtime_templates' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:package_metadata",
+      "type": "function",
+      "name": "package_metadata",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        274,
+        308
+      ],
+      "summary": "Function 'package_metadata' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:build_manifest",
+      "type": "function",
+      "name": "build_manifest",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        311,
+        350
+      ],
+      "summary": "Function 'build_manifest' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:build_staging_tree",
+      "type": "function",
+      "name": "build_staging_tree",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        353,
+        407
+      ],
+      "summary": "Function 'build_staging_tree' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/power_dist.py:zip_timestamp",
+      "type": "function",
+      "name": "zip_timestamp",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        410,
+        413
+      ],
+      "summary": "Function 'zip_timestamp' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:create_deterministic_zip",
+      "type": "function",
+      "name": "create_deterministic_zip",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        416,
+        447
+      ],
+      "summary": "Function 'create_deterministic_zip' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:verify_package",
+      "type": "function",
+      "name": "verify_package",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        450,
+        478
+      ],
+      "summary": "Function 'verify_package' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:build_command",
+      "type": "function",
+      "name": "build_command",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        481,
+        521
+      ],
+      "summary": "Function 'build_command' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:verify_command",
+      "type": "function",
+      "name": "verify_command",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        524,
+        536
+      ],
+      "summary": "Function 'verify_command' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:build_parser",
+      "type": "function",
+      "name": "build_parser",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        539,
+        567
+      ],
+      "summary": "Function 'build_parser' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        570,
+        578
+      ],
+      "summary": "Function 'main' in power_dist.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:scripts/power_dist.py:DistributionError",
+      "type": "class",
+      "name": "DistributionError",
+      "filePath": "scripts/power_dist.py",
+      "lineRange": [
+        82,
+        83
+      ],
+      "summary": "Class 'DistributionError' in power_dist.py (exported)",
+      "tags": [
+        "class",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/power_dist_capability.py",
+      "type": "file",
+      "name": "power_dist_capability.py",
+      "filePath": "scripts/power_dist_capability.py",
+      "summary": "Exports 5 symbol(s) from the power_dist_capability module for use by other components.",
+      "tags": [
+        "code",
+        "distribution",
+        "module"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/power_dist_capability.py:load_power_dist_module",
+      "type": "function",
+      "name": "load_power_dist_module",
+      "filePath": "scripts/power_dist_capability.py",
+      "lineRange": [
+        51,
+        57
+      ],
+      "summary": "Function 'load_power_dist_module' in power_dist_capability.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist_capability.py:dashboard_enabled",
+      "type": "function",
+      "name": "dashboard_enabled",
+      "filePath": "scripts/power_dist_capability.py",
+      "lineRange": [
+        60,
+        62
+      ],
+      "summary": "Function 'dashboard_enabled' in power_dist_capability.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist_capability.py:is_css_style_reference",
+      "type": "function",
+      "name": "is_css_style_reference",
+      "filePath": "scripts/power_dist_capability.py",
+      "lineRange": [
+        65,
+        87
+      ],
+      "summary": "Function 'is_css_style_reference' in power_dist_capability.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist_capability.py:patch_power_dist_module",
+      "type": "function",
+      "name": "patch_power_dist_module",
+      "filePath": "scripts/power_dist_capability.py",
+      "lineRange": [
+        90,
+        126
+      ],
+      "summary": "Function 'patch_power_dist_module' in power_dist_capability.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/power_dist_capability.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/power_dist_capability.py",
+      "lineRange": [
+        129,
+        131
+      ],
+      "summary": "Function 'main' in power_dist_capability.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/release_builder.py",
+      "type": "file",
+      "name": "release_builder.py",
+      "filePath": "scripts/release_builder.py",
+      "summary": "Implements 1 class(es) and 9 function(s) in the release_builder module.",
+      "tags": [
+        "build-system",
+        "code",
+        "module"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/release_builder.py:sha256_file",
+      "type": "function",
+      "name": "sha256_file",
+      "filePath": "scripts/release_builder.py",
+      "lineRange": [
+        32,
+        37
+      ],
+      "summary": "Function 'sha256_file' in release_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/release_builder.py:safe_rel",
+      "type": "function",
+      "name": "safe_rel",
+      "filePath": "scripts/release_builder.py",
+      "lineRange": [
+        40,
+        44
+      ],
+      "summary": "Function 'safe_rel' in release_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/release_builder.py:should_include",
+      "type": "function",
+      "name": "should_include",
+      "filePath": "scripts/release_builder.py",
+      "lineRange": [
+        47,
+        52
+      ],
+      "summary": "Function 'should_include' in release_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/release_builder.py:iter_files",
+      "type": "function",
+      "name": "iter_files",
+      "filePath": "scripts/release_builder.py",
+      "lineRange": [
+        55,
+        58
+      ],
+      "summary": "Function 'iter_files' in release_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/release_builder.py:write_zip_from_dir",
+      "type": "function",
+      "name": "write_zip_from_dir",
+      "filePath": "scripts/release_builder.py",
+      "lineRange": [
+        61,
+        68
+      ],
+      "summary": "Function 'write_zip_from_dir' in release_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/release_builder.py:load_component_config",
+      "type": "function",
+      "name": "load_component_config",
+      "filePath": "scripts/release_builder.py",
+      "lineRange": [
+        71,
+        89
+      ],
+      "summary": "Function 'load_component_config' in release_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/release_builder.py:validate_component",
+      "type": "function",
+      "name": "validate_component",
+      "filePath": "scripts/release_builder.py",
+      "lineRange": [
+        92,
+        100
+      ],
+      "summary": "Function 'validate_component' in release_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/release_builder.py:build_release",
+      "type": "function",
+      "name": "build_release",
+      "filePath": "scripts/release_builder.py",
+      "lineRange": [
+        103,
+        176
+      ],
+      "summary": "Function 'build_release' in release_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/release_builder.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/release_builder.py",
+      "lineRange": [
+        179,
+        189
+      ],
+      "summary": "Function 'main' in release_builder.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:scripts/release_builder.py:Component",
+      "type": "class",
+      "name": "Component",
+      "filePath": "scripts/release_builder.py",
+      "lineRange": [
+        26,
+        29
+      ],
+      "summary": "Class 'Component' in release_builder.py (exported)",
+      "tags": [
+        "class",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/validate-workspace.py",
+      "type": "file",
+      "name": "validate-workspace.py",
+      "filePath": "scripts/validate-workspace.py",
+      "summary": "Provides 10 utility functions in the validate-workspace module used across the project.",
+      "tags": [
+        "code",
+        "module",
+        "validation"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:scripts/validate-workspace.py:fail",
+      "type": "function",
+      "name": "fail",
+      "filePath": "scripts/validate-workspace.py",
+      "lineRange": [
+        37,
+        39
+      ],
+      "summary": "Function 'fail' in validate-workspace.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/validate-workspace.py:git",
+      "type": "function",
+      "name": "git",
+      "filePath": "scripts/validate-workspace.py",
+      "lineRange": [
+        42,
+        48
+      ],
+      "summary": "Function 'git' in validate-workspace.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/validate-workspace.py:load_yaml",
+      "type": "function",
+      "name": "load_yaml",
+      "filePath": "scripts/validate-workspace.py",
+      "lineRange": [
+        51,
+        57
+      ],
+      "summary": "Function 'load_yaml' in validate-workspace.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/validate-workspace.py:resolve_workspace_path",
+      "type": "function",
+      "name": "resolve_workspace_path",
+      "filePath": "scripts/validate-workspace.py",
+      "lineRange": [
+        60,
+        64
+      ],
+      "summary": "Function 'resolve_workspace_path' in validate-workspace.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/validate-workspace.py:is_within",
+      "type": "function",
+      "name": "is_within",
+      "filePath": "scripts/validate-workspace.py",
+      "lineRange": [
+        67,
+        72
+      ],
+      "summary": "Function 'is_within' in validate-workspace.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/validate-workspace.py:validate_distribution",
+      "type": "function",
+      "name": "validate_distribution",
+      "filePath": "scripts/validate-workspace.py",
+      "lineRange": [
+        75,
+        99
+      ],
+      "summary": "Function 'validate_distribution' in validate-workspace.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/validate-workspace.py:validate_providers",
+      "type": "function",
+      "name": "validate_providers",
+      "filePath": "scripts/validate-workspace.py",
+      "lineRange": [
+        102,
+        123
+      ],
+      "summary": "Function 'validate_providers' in validate-workspace.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/validate-workspace.py:gitmodule_map",
+      "type": "function",
+      "name": "gitmodule_map",
+      "filePath": "scripts/validate-workspace.py",
+      "lineRange": [
+        126,
+        138
+      ],
+      "summary": "Function 'gitmodule_map' in validate-workspace.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/validate-workspace.py:source_fallback_required",
+      "type": "function",
+      "name": "source_fallback_required",
+      "filePath": "scripts/validate-workspace.py",
+      "lineRange": [
+        141,
+        144
+      ],
+      "summary": "Function 'source_fallback_required' in validate-workspace.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/validate-workspace.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/validate-workspace.py",
+      "lineRange": [
+        147,
+        253
+      ],
+      "summary": "Function 'main' in validate-workspace.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:templates/power-runtime/bin/configure",
+      "type": "file",
+      "name": "configure",
+      "filePath": "templates/power-runtime/bin/configure",
+      "summary": "Contains 0 function(s) and 0 class(es) in the configure module.",
+      "tags": [
+        "code",
+        "module"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:templates/power-runtime/bin/doctor",
+      "type": "file",
+      "name": "doctor",
+      "filePath": "templates/power-runtime/bin/doctor",
+      "summary": "Contains 0 function(s) and 0 class(es) in the doctor module.",
+      "tags": [
+        "code",
+        "module"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:templates/power-runtime/bin/install",
+      "type": "file",
+      "name": "install",
+      "filePath": "templates/power-runtime/bin/install",
+      "summary": "Contains 0 function(s) and 0 class(es) in the install module.",
+      "tags": [
+        "code",
+        "installation",
+        "module"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:templates/power-runtime/bin/uninstall",
+      "type": "file",
+      "name": "uninstall",
+      "filePath": "templates/power-runtime/bin/uninstall",
+      "summary": "Contains 0 function(s) and 0 class(es) in the uninstall module.",
+      "tags": [
+        "code",
+        "installation",
+        "module"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:templates/power-runtime/lib/power_runtime.py",
+      "type": "file",
+      "name": "power_runtime.py",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "summary": "Implements 1 class(es) and 17 function(s) in the power_runtime module.",
+      "tags": [
+        "code",
+        "complex",
+        "module"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:package_root",
+      "type": "function",
+      "name": "package_root",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        23,
+        24
+      ],
+      "summary": "Function 'package_root' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:load_json",
+      "type": "function",
+      "name": "load_json",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        27,
+        33
+      ],
+      "summary": "Function 'load_json' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:sha256_file",
+      "type": "function",
+      "name": "sha256_file",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        36,
+        41
+      ],
+      "summary": "Function 'sha256_file' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:is_within",
+      "type": "function",
+      "name": "is_within",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        44,
+        49
+      ],
+      "summary": "Function 'is_within' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:metadata",
+      "type": "function",
+      "name": "metadata",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        52,
+        59
+      ],
+      "summary": "Function 'metadata' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:atomic_json",
+      "type": "function",
+      "name": "atomic_json",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        62,
+        76
+      ],
+      "summary": "Function 'atomic_json' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:resolve_store_root",
+      "type": "function",
+      "name": "resolve_store_root",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        79,
+        88
+      ],
+      "summary": "Function 'resolve_store_root' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:target_paths",
+      "type": "function",
+      "name": "target_paths",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        91,
+        102
+      ],
+      "summary": "Function 'target_paths' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:assert_separated",
+      "type": "function",
+      "name": "assert_separated",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        105,
+        112
+      ],
+      "summary": "Function 'assert_separated' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:marker",
+      "type": "function",
+      "name": "marker",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        115,
+        116
+      ],
+      "summary": "Function 'marker' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:install",
+      "type": "function",
+      "name": "install",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        119,
+        171
+      ],
+      "summary": "Function 'install' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:configure",
+      "type": "function",
+      "name": "configure",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        174,
+        219
+      ],
+      "summary": "Function 'configure' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:verify_manifest",
+      "type": "function",
+      "name": "verify_manifest",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        222,
+        231
+      ],
+      "summary": "Function 'verify_manifest' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:doctor",
+      "type": "function",
+      "name": "doctor",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        234,
+        259
+      ],
+      "summary": "Function 'doctor' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:uninstall",
+      "type": "function",
+      "name": "uninstall",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        262,
+        289
+      ],
+      "summary": "Function 'uninstall' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:parser",
+      "type": "function",
+      "name": "parser",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        292,
+        321
+      ],
+      "summary": "Function 'parser' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:templates/power-runtime/lib/power_runtime.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        324,
+        332
+      ],
+      "summary": "Function 'main' in power_runtime.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:templates/power-runtime/lib/power_runtime.py:RuntimeError_",
+      "type": "class",
+      "name": "RuntimeError_",
+      "filePath": "templates/power-runtime/lib/power_runtime.py",
+      "lineRange": [
+        19,
+        20
+      ],
+      "summary": "Class 'RuntimeError_' in power_runtime.py (exported)",
+      "tags": [
+        "class",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:tests/test_bmad_power_plugin.py",
+      "type": "file",
+      "name": "test_bmad_power_plugin.py",
+      "filePath": "tests/test_bmad_power_plugin.py",
+      "summary": "Exports 1 symbol(s) from the test_bmad_power_plugin module for use by other components.",
+      "tags": [
+        "code",
+        "module",
+        "test"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:tests/test_bmad_power_plugin.py:BmadPowerPluginTests",
+      "type": "class",
+      "name": "BmadPowerPluginTests",
+      "filePath": "tests/test_bmad_power_plugin.py",
+      "lineRange": [
+        31,
+        167
+      ],
+      "summary": "Class 'BmadPowerPluginTests' in test_bmad_power_plugin.py (exported)",
+      "tags": [
+        "class",
+        "exported"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:tests/test_distribution_builder_overlays.py",
+      "type": "file",
+      "name": "test_distribution_builder_overlays.py",
+      "filePath": "tests/test_distribution_builder_overlays.py",
+      "summary": "Exports 1 symbol(s) from the test_distribution_builder_overlays module for use by other components.",
+      "tags": [
+        "build-system",
+        "code",
+        "test"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:tests/test_distribution_builder_overlays.py:DistributionBuilderOverlayTests",
+      "type": "class",
+      "name": "DistributionBuilderOverlayTests",
+      "filePath": "tests/test_distribution_builder_overlays.py",
+      "lineRange": [
+        17,
+        73
+      ],
+      "summary": "Class 'DistributionBuilderOverlayTests' in test_distribution_builder_overlays.py (exported)",
+      "tags": [
+        "class",
+        "exported"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:scripts/dw_workspace_init.py",
+      "target": "function:scripts/dw_workspace_init.py:parser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_workspace_init.py",
+      "target": "function:scripts/dw_workspace_init.py:parser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_workspace_init.py",
+      "target": "function:scripts/dw_workspace_init.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_workspace_init.py",
+      "target": "function:scripts/dw_workspace_init.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/offline_release_installer.py",
+      "target": "function:scripts/offline_release_installer.py:sha256_file",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/offline_release_installer.py",
+      "target": "function:scripts/offline_release_installer.py:sha256_file",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/offline_release_installer.py",
+      "target": "function:scripts/offline_release_installer.py:require_safe_archive",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/offline_release_installer.py",
+      "target": "function:scripts/offline_release_installer.py:require_safe_archive",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/offline_release_installer.py",
+      "target": "function:scripts/offline_release_installer.py:verify_release",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/offline_release_installer.py",
+      "target": "function:scripts/offline_release_installer.py:verify_release",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/offline_release_installer.py",
+      "target": "function:scripts/offline_release_installer.py:install_component",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/offline_release_installer.py",
+      "target": "function:scripts/offline_release_installer.py:install_component",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/offline_release_installer.py",
+      "target": "function:scripts/offline_release_installer.py:install_release",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/offline_release_installer.py",
+      "target": "function:scripts/offline_release_installer.py:install_release",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/offline_release_installer.py",
+      "target": "function:scripts/offline_release_installer.py:rollback",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/offline_release_installer.py",
+      "target": "function:scripts/offline_release_installer.py:rollback",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/offline_release_installer.py",
+      "target": "function:scripts/offline_release_installer.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/offline_release_installer.py",
+      "target": "function:scripts/offline_release_installer.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:load_structured",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:load_structured",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:validate_document",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:validate_document",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:validate_recipe",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:validate_recipe",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:ensure_relative",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:ensure_relative",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:is_within",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:is_within",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:matches",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:matches",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:_iter_included",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:_iter_included",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:_forbidden_patterns",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:_forbidden_patterns",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:_scan_secret_content",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:_scan_secret_content",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:collect_files",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:collect_files",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:atomic_write",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:atomic_write",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:sha256_file",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:sha256_file",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:copy_runtime_templates",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:copy_runtime_templates",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:package_metadata",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:package_metadata",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:build_manifest",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:build_manifest",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:build_staging_tree",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:build_staging_tree",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:zip_timestamp",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:zip_timestamp",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:create_deterministic_zip",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:create_deterministic_zip",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:verify_package",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:verify_package",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:build_command",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:build_command",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:verify_command",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:verify_command",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:build_parser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:build_parser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "function:scripts/power_dist.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "class:scripts/power_dist.py:DistributionError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist.py",
+      "target": "class:scripts/power_dist.py:DistributionError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist_capability.py",
+      "target": "function:scripts/power_dist_capability.py:load_power_dist_module",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist_capability.py",
+      "target": "function:scripts/power_dist_capability.py:load_power_dist_module",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist_capability.py",
+      "target": "function:scripts/power_dist_capability.py:dashboard_enabled",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist_capability.py",
+      "target": "function:scripts/power_dist_capability.py:dashboard_enabled",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist_capability.py",
+      "target": "function:scripts/power_dist_capability.py:is_css_style_reference",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist_capability.py",
+      "target": "function:scripts/power_dist_capability.py:is_css_style_reference",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist_capability.py",
+      "target": "function:scripts/power_dist_capability.py:patch_power_dist_module",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist_capability.py",
+      "target": "function:scripts/power_dist_capability.py:patch_power_dist_module",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/power_dist_capability.py",
+      "target": "function:scripts/power_dist_capability.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/power_dist_capability.py",
+      "target": "function:scripts/power_dist_capability.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:sha256_file",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:sha256_file",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:safe_rel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:safe_rel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:should_include",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:should_include",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:iter_files",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:iter_files",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:write_zip_from_dir",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:write_zip_from_dir",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:load_component_config",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:load_component_config",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:validate_component",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:validate_component",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:build_release",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:build_release",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "function:scripts/release_builder.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "class:scripts/release_builder.py:Component",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/release_builder.py",
+      "target": "class:scripts/release_builder.py:Component",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:fail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:fail",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:git",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:git",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:load_yaml",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:load_yaml",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:resolve_workspace_path",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:resolve_workspace_path",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:is_within",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:is_within",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:validate_distribution",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:validate_distribution",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:validate_providers",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:validate_providers",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:gitmodule_map",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:gitmodule_map",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:source_fallback_required",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:source_fallback_required",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/validate-workspace.py",
+      "target": "function:scripts/validate-workspace.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:package_root",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:package_root",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:load_json",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:load_json",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:sha256_file",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:sha256_file",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:is_within",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:is_within",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:metadata",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:metadata",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:atomic_json",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:atomic_json",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:resolve_store_root",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:resolve_store_root",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:target_paths",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:target_paths",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:assert_separated",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:assert_separated",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:marker",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:marker",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:install",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:install",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:configure",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:configure",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:verify_manifest",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:verify_manifest",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:doctor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:doctor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:uninstall",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:uninstall",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:parser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:parser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "class:templates/power-runtime/lib/power_runtime.py:RuntimeError_",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:templates/power-runtime/lib/power_runtime.py",
+      "target": "class:templates/power-runtime/lib/power_runtime.py:RuntimeError_",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_bmad_power_plugin.py",
+      "target": "class:tests/test_bmad_power_plugin.py:BmadPowerPluginTests",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:tests/test_bmad_power_plugin.py",
+      "target": "class:tests/test_bmad_power_plugin.py:BmadPowerPluginTests",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_distribution_builder_overlays.py",
+      "target": "class:tests/test_distribution_builder_overlays.py:DistributionBuilderOverlayTests",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:tests/test_distribution_builder_overlays.py",
+      "target": "class:tests/test_distribution_builder_overlays.py:DistributionBuilderOverlayTests",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_workspace_init.py:main",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/offline_release_installer.py:verify_release",
+      "target": "function:scripts/power_dist.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/offline_release_installer.py:verify_release",
+      "target": "function:scripts/release_builder.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/offline_release_installer.py:verify_release",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/power_dist.py:collect_files",
+      "target": "function:scripts/validate-workspace.py:is_within",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/power_dist.py:collect_files",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:is_within",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/power_dist.py:build_manifest",
+      "target": "function:scripts/offline_release_installer.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/power_dist.py:build_manifest",
+      "target": "function:scripts/release_builder.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/power_dist.py:build_manifest",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/power_dist.py:build_staging_tree",
+      "target": "function:scripts/validate-workspace.py:is_within",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/power_dist.py:build_staging_tree",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:is_within",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/power_dist.py:verify_package",
+      "target": "function:scripts/offline_release_installer.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/power_dist.py:verify_package",
+      "target": "function:scripts/release_builder.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/power_dist.py:verify_package",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/power_dist.py:build_command",
+      "target": "function:scripts/offline_release_installer.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/power_dist.py:build_command",
+      "target": "function:scripts/release_builder.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/power_dist.py:build_command",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/release_builder.py:write_zip_from_dir",
+      "target": "function:scripts/offline_release_installer.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/release_builder.py:write_zip_from_dir",
+      "target": "function:scripts/power_dist.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/release_builder.py:write_zip_from_dir",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/release_builder.py:build_release",
+      "target": "function:scripts/offline_release_installer.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/release_builder.py:build_release",
+      "target": "function:scripts/power_dist.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/release_builder.py:build_release",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/validate-workspace.py:validate_distribution",
+      "target": "function:scripts/power_dist.py:is_within",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/validate-workspace.py:validate_distribution",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:is_within",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/validate-workspace.py:main",
+      "target": "function:scripts/power_dist.py:is_within",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/validate-workspace.py:main",
+      "target": "function:templates/power-runtime/lib/power_runtime.py:is_within",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:templates/power-runtime/lib/power_runtime.py:target_paths",
+      "target": "function:scripts/power_dist.py:is_within",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:templates/power-runtime/lib/power_runtime.py:target_paths",
+      "target": "function:scripts/validate-workspace.py:is_within",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:templates/power-runtime/lib/power_runtime.py:assert_separated",
+      "target": "function:scripts/power_dist.py:is_within",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:templates/power-runtime/lib/power_runtime.py:assert_separated",
+      "target": "function:scripts/validate-workspace.py:is_within",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:templates/power-runtime/lib/power_runtime.py:install",
+      "target": "function:scripts/offline_release_installer.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:templates/power-runtime/lib/power_runtime.py:install",
+      "target": "function:scripts/power_dist.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:templates/power-runtime/lib/power_runtime.py:install",
+      "target": "function:scripts/release_builder.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:templates/power-runtime/lib/power_runtime.py:verify_manifest",
+      "target": "function:scripts/offline_release_installer.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:templates/power-runtime/lib/power_runtime.py:verify_manifest",
+      "target": "function:scripts/power_dist.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:templates/power-runtime/lib/power_runtime.py:verify_manifest",
+      "target": "function:scripts/release_builder.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:templates/power-runtime/lib/power_runtime.py:main",
+      "target": "function:scripts/dw_workspace_init.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

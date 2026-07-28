@@ -1,0 +1,1797 @@
+{
+  "nodes": [
+    {
+      "id": "file:scripts/dw_power_store/package_io.py",
+      "type": "file",
+      "name": "package_io.py",
+      "filePath": "scripts/dw_power_store/package_io.py",
+      "summary": "Provides 9 utility functions in the package_io module used across the project.",
+      "tags": [
+        "code",
+        "serialization",
+        "storage"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/dw_power_store/package_io.py:safe_extract",
+      "type": "function",
+      "name": "safe_extract",
+      "filePath": "scripts/dw_power_store/package_io.py",
+      "lineRange": [
+        23,
+        37
+      ],
+      "summary": "Function 'safe_extract' in package_io.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_power_store/package_io.py:read_checksum",
+      "type": "function",
+      "name": "read_checksum",
+      "filePath": "scripts/dw_power_store/package_io.py",
+      "lineRange": [
+        40,
+        44
+      ],
+      "summary": "Function 'read_checksum' in package_io.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_power_store/package_io.py:discover_local_package",
+      "type": "function",
+      "name": "discover_local_package",
+      "filePath": "scripts/dw_power_store/package_io.py",
+      "lineRange": [
+        47,
+        58
+      ],
+      "summary": "Function 'discover_local_package' in package_io.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_power_store/package_io.py:download",
+      "type": "function",
+      "name": "download",
+      "filePath": "scripts/dw_power_store/package_io.py",
+      "lineRange": [
+        61,
+        67
+      ],
+      "summary": "Function 'download' in package_io.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_power_store/package_io.py:source_urls",
+      "type": "function",
+      "name": "source_urls",
+      "filePath": "scripts/dw_power_store/package_io.py",
+      "lineRange": [
+        70,
+        88
+      ],
+      "summary": "Function 'source_urls' in package_io.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_power_store/package_io.py:verify_package",
+      "type": "function",
+      "name": "verify_package",
+      "filePath": "scripts/dw_power_store/package_io.py",
+      "lineRange": [
+        91,
+        108
+      ],
+      "summary": "Function 'verify_package' in package_io.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_power_store/package_io.py:verify_installed_manifest",
+      "type": "function",
+      "name": "verify_installed_manifest",
+      "filePath": "scripts/dw_power_store/package_io.py",
+      "lineRange": [
+        111,
+        120
+      ],
+      "summary": "Function 'verify_installed_manifest' in package_io.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_power_store/package_io.py:install_package_tree",
+      "type": "function",
+      "name": "install_package_tree",
+      "filePath": "scripts/dw_power_store/package_io.py",
+      "lineRange": [
+        123,
+        159
+      ],
+      "summary": "Function 'install_package_tree' in package_io.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_power_store/package_io.py:materialize_package",
+      "type": "function",
+      "name": "materialize_package",
+      "filePath": "scripts/dw_power_store/package_io.py",
+      "lineRange": [
+        162,
+        202
+      ],
+      "summary": "Function 'materialize_package' in package_io.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/dw_project_add.py",
+      "type": "file",
+      "name": "dw_project_add.py",
+      "filePath": "scripts/dw_project_add.py",
+      "summary": "Exports 3 symbol(s) from the dw_project_add module for use by other components.",
+      "tags": [
+        "code",
+        "module"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/dw_project_add.py:parser",
+      "type": "function",
+      "name": "parser",
+      "filePath": "scripts/dw_project_add.py",
+      "lineRange": [
+        13,
+        22
+      ],
+      "summary": "Function 'parser' in dw_project_add.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_add.py:preflight",
+      "type": "function",
+      "name": "preflight",
+      "filePath": "scripts/dw_project_add.py",
+      "lineRange": [
+        25,
+        75
+      ],
+      "summary": "Function 'preflight' in dw_project_add.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/dw_project_add.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/dw_project_add.py",
+      "lineRange": [
+        78,
+        85
+      ],
+      "summary": "Function 'main' in dw_project_add.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/dw_project_registry.py",
+      "type": "file",
+      "name": "dw_project_registry.py",
+      "filePath": "scripts/dw_project_registry.py",
+      "summary": "Implements 1 class(es) and 19 function(s) in the dw_project_registry module.",
+      "tags": [
+        "code",
+        "complex",
+        "registry"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:load_yaml",
+      "type": "function",
+      "name": "load_yaml",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        46,
+        52
+      ],
+      "summary": "Function 'load_yaml' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:write_yaml",
+      "type": "function",
+      "name": "write_yaml",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        55,
+        57
+      ],
+      "summary": "Function 'write_yaml' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:workspace",
+      "type": "function",
+      "name": "workspace",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        60,
+        61
+      ],
+      "summary": "Function 'workspace' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:normalize_repo",
+      "type": "function",
+      "name": "normalize_repo",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        64,
+        72
+      ],
+      "summary": "Function 'normalize_repo' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:safe_relative_path",
+      "type": "function",
+      "name": "safe_relative_path",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        75,
+        86
+      ],
+      "summary": "Function 'safe_relative_path' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:project_entries",
+      "type": "function",
+      "name": "project_entries",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        89,
+        95
+      ],
+      "summary": "Function 'project_entries' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:validate_registry",
+      "type": "function",
+      "name": "validate_registry",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        98,
+        184
+      ],
+      "summary": "Function 'validate_registry' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:find_project",
+      "type": "function",
+      "name": "find_project",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        187,
+        191
+      ],
+      "summary": "Function 'find_project' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:project_list",
+      "type": "function",
+      "name": "project_list",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        194,
+        206
+      ],
+      "summary": "Function 'project_list' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:project_info",
+      "type": "function",
+      "name": "project_info",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        209,
+        218
+      ],
+      "summary": "Function 'project_info' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:ignored",
+      "type": "function",
+      "name": "ignored",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        221,
+        222
+      ],
+      "summary": "Function 'ignored' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:copy_runtime",
+      "type": "function",
+      "name": "copy_runtime",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        225,
+        250
+      ],
+      "summary": "Function 'copy_runtime' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:template_workspace",
+      "type": "function",
+      "name": "template_workspace",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        253,
+        284
+      ],
+      "summary": "Function 'template_workspace' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:ensure_git_repository",
+      "type": "function",
+      "name": "ensure_git_repository",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        287,
+        292
+      ],
+      "summary": "Function 'ensure_git_repository' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:workspace_init",
+      "type": "function",
+      "name": "workspace_init",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        295,
+        322
+      ],
+      "summary": "Function 'workspace_init' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:git",
+      "type": "function",
+      "name": "git",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        325,
+        328
+      ],
+      "summary": "Function 'git' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:project_add",
+      "type": "function",
+      "name": "project_add",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        331,
+        361
+      ],
+      "summary": "Function 'project_add' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:parser",
+      "type": "function",
+      "name": "parser",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        364,
+        395
+      ],
+      "summary": "Function 'parser' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_project_registry.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        398,
+        404
+      ],
+      "summary": "Function 'main' in dw_project_registry.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:scripts/dw_project_registry.py:ProjectRegistryError",
+      "type": "class",
+      "name": "ProjectRegistryError",
+      "filePath": "scripts/dw_project_registry.py",
+      "lineRange": [
+        42,
+        43
+      ],
+      "summary": "Class 'ProjectRegistryError' in dw_project_registry.py (exported)",
+      "tags": [
+        "class",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/dw_report.py",
+      "type": "file",
+      "name": "dw_report.py",
+      "filePath": "scripts/dw_report.py",
+      "summary": "Implements 1 class(es) and 11 function(s) in the dw_report module.",
+      "tags": [
+        "code",
+        "complex",
+        "reporting"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:scripts/dw_report.py:load_yaml",
+      "type": "function",
+      "name": "load_yaml",
+      "filePath": "scripts/dw_report.py",
+      "lineRange": [
+        17,
+        28
+      ],
+      "summary": "Function 'load_yaml' in dw_report.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_report.py:resolve_workspace_path",
+      "type": "function",
+      "name": "resolve_workspace_path",
+      "filePath": "scripts/dw_report.py",
+      "lineRange": [
+        31,
+        35
+      ],
+      "summary": "Function 'resolve_workspace_path' in dw_report.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_report.py:find_system",
+      "type": "function",
+      "name": "find_system",
+      "filePath": "scripts/dw_report.py",
+      "lineRange": [
+        38,
+        48
+      ],
+      "summary": "Function 'find_system' in dw_report.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_report.py:render_field",
+      "type": "function",
+      "name": "render_field",
+      "filePath": "scripts/dw_report.py",
+      "lineRange": [
+        51,
+        76
+      ],
+      "summary": "Function 'render_field' in dw_report.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_report.py:render_checks",
+      "type": "function",
+      "name": "render_checks",
+      "filePath": "scripts/dw_report.py",
+      "lineRange": [
+        79,
+        87
+      ],
+      "summary": "Function 'render_checks' in dw_report.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_report.py:render_options",
+      "type": "function",
+      "name": "render_options",
+      "filePath": "scripts/dw_report.py",
+      "lineRange": [
+        90,
+        116
+      ],
+      "summary": "Function 'render_options' in dw_report.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_report.py:render_subagent_plan",
+      "type": "function",
+      "name": "render_subagent_plan",
+      "filePath": "scripts/dw_report.py",
+      "lineRange": [
+        119,
+        144
+      ],
+      "summary": "Function 'render_subagent_plan' in dw_report.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_report.py:build_g1_report",
+      "type": "function",
+      "name": "build_g1_report",
+      "filePath": "scripts/dw_report.py",
+      "lineRange": [
+        147,
+        256
+      ],
+      "summary": "Function 'build_g1_report' in dw_report.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/dw_report.py:cmd_report",
+      "type": "function",
+      "name": "cmd_report",
+      "filePath": "scripts/dw_report.py",
+      "lineRange": [
+        259,
+        268
+      ],
+      "summary": "Function 'cmd_report' in dw_report.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_report.py:parser",
+      "type": "function",
+      "name": "parser",
+      "filePath": "scripts/dw_report.py",
+      "lineRange": [
+        271,
+        275
+      ],
+      "summary": "Function 'parser' in dw_report.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/dw_report.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/dw_report.py",
+      "lineRange": [
+        278,
+        284
+      ],
+      "summary": "Function 'main' in dw_report.py (exported)",
+      "tags": [
+        "function",
+        "exported"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:scripts/dw_report.py:ReportError",
+      "type": "class",
+      "name": "ReportError",
+      "filePath": "scripts/dw_report.py",
+      "lineRange": [
+        13,
+        14
+      ],
+      "summary": "Class 'ReportError' in dw_report.py (exported)",
+      "tags": [
+        "class",
+        "exported"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:safe_extract",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:safe_extract",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:read_checksum",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:read_checksum",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:discover_local_package",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:discover_local_package",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:download",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:download",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:source_urls",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:source_urls",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:verify_package",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:verify_package",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:verify_installed_manifest",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:verify_installed_manifest",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:install_package_tree",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:install_package_tree",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:materialize_package",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_power_store/package_io.py",
+      "target": "function:scripts/dw_power_store/package_io.py:materialize_package",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_add.py",
+      "target": "function:scripts/dw_project_add.py:parser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_add.py",
+      "target": "function:scripts/dw_project_add.py:parser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_add.py",
+      "target": "function:scripts/dw_project_add.py:preflight",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_add.py",
+      "target": "function:scripts/dw_project_add.py:preflight",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_add.py",
+      "target": "function:scripts/dw_project_add.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_add.py",
+      "target": "function:scripts/dw_project_add.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:load_yaml",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:load_yaml",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:write_yaml",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:write_yaml",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:workspace",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:workspace",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:normalize_repo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:normalize_repo",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:safe_relative_path",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:safe_relative_path",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:project_entries",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:project_entries",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:validate_registry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:validate_registry",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:find_project",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:find_project",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:project_list",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:project_list",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:project_info",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:project_info",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:ignored",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:ignored",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:copy_runtime",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:copy_runtime",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:template_workspace",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:template_workspace",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:ensure_git_repository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:ensure_git_repository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:workspace_init",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:workspace_init",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:git",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:git",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:project_add",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:project_add",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:parser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:parser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "function:scripts/dw_project_registry.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "class:scripts/dw_project_registry.py:ProjectRegistryError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_project_registry.py",
+      "target": "class:scripts/dw_project_registry.py:ProjectRegistryError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:load_yaml",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:load_yaml",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:resolve_workspace_path",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:resolve_workspace_path",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:find_system",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:find_system",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:render_field",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:render_field",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:render_checks",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:render_checks",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:render_options",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:render_options",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:render_subagent_plan",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:render_subagent_plan",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:build_g1_report",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:build_g1_report",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:cmd_report",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:cmd_report",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:parser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:parser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "function:scripts/dw_report.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "class:scripts/dw_report.py:ReportError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/dw_report.py",
+      "target": "class:scripts/dw_report.py:ReportError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:safe_extract",
+      "target": "class:scripts/dw_power_store/common.py:ConsumerError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:read_checksum",
+      "target": "class:scripts/dw_power_store/common.py:ConsumerError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:discover_local_package",
+      "target": "class:scripts/dw_power_store/common.py:ConsumerError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:download",
+      "target": "class:scripts/dw_power_store/common.py:ConsumerError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:source_urls",
+      "target": "class:scripts/dw_power_store/common.py:ConsumerError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:verify_package",
+      "target": "class:scripts/dw_power_store/common.py:ConsumerError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:verify_package",
+      "target": "function:scripts/dw_cli.py:load_json",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:verify_package",
+      "target": "function:scripts/dw_power_store/common.py:load_json",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:verify_package",
+      "target": "function:scripts/dw_workspace_dist.py:load_json",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:verify_package",
+      "target": "function:scripts/dw_power_store/common.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:verify_installed_manifest",
+      "target": "class:scripts/dw_power_store/common.py:ConsumerError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:verify_installed_manifest",
+      "target": "function:scripts/dw_power_store/common.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:install_package_tree",
+      "target": "function:scripts/dw_power_store/common.py:package_marker",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:install_package_tree",
+      "target": "class:scripts/dw_power_store/common.py:ConsumerError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:install_package_tree",
+      "target": "function:scripts/dw_power_store/common.py:atomic_json",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:install_package_tree",
+      "target": "function:scripts/dw_power_store/common.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:materialize_package",
+      "target": "class:scripts/dw_power_store/common.py:ConsumerError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_power_store/package_io.py:materialize_package",
+      "target": "function:scripts/dw_power_store/common.py:sha256_file",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_add.py:main",
+      "target": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_add.py:main",
+      "target": "function:scripts/dw_orchestrator.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_add.py:main",
+      "target": "function:scripts/dw_power_store/cli.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_add.py:main",
+      "target": "function:scripts/dw_project_registry.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_add.py:main",
+      "target": "function:scripts/dw_report.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_add.py:main",
+      "target": "function:scripts/dw_workspace_dist.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:workspace",
+      "target": "function:scripts/dw_cli.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:workspace",
+      "target": "function:scripts/dw_orchestrator.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:workspace",
+      "target": "function:scripts/dw_power_store/common.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:workspace",
+      "target": "function:scripts/dw_report.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:workspace",
+      "target": "function:scripts/dw_workspace_dist.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:find_project",
+      "target": "function:scripts/dw_cli.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:find_project",
+      "target": "function:scripts/dw_power_store/common.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:find_project",
+      "target": "function:scripts/dw_workspace_dist.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:project_list",
+      "target": "function:scripts/dw_cli.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:project_list",
+      "target": "function:scripts/dw_power_store/common.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:project_list",
+      "target": "function:scripts/dw_workspace_dist.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:project_add",
+      "target": "function:scripts/dw_cli.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:project_add",
+      "target": "function:scripts/dw_power_store/common.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:project_add",
+      "target": "function:scripts/dw_workspace_dist.py:workspace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:project_add",
+      "target": "function:scripts/dw_cli.py:git",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:main",
+      "target": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:main",
+      "target": "function:scripts/dw_orchestrator.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:main",
+      "target": "function:scripts/dw_power_store/cli.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:main",
+      "target": "function:scripts/dw_project_add.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:main",
+      "target": "function:scripts/dw_report.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_project_registry.py:main",
+      "target": "function:scripts/dw_workspace_dist.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_report.py:build_g1_report",
+      "target": "function:scripts/dw_cli.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_report.py:build_g1_report",
+      "target": "function:scripts/dw_orchestrator.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_report.py:build_g1_report",
+      "target": "function:scripts/dw_power_store/common.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_report.py:build_g1_report",
+      "target": "function:scripts/dw_project_registry.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_report.py:build_g1_report",
+      "target": "function:scripts/dw_workspace_dist.py:load_yaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_report.py:cmd_report",
+      "target": "function:scripts/dw_cli.py:resolve_workspace_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_report.py:cmd_report",
+      "target": "function:scripts/dw_orchestrator.py:resolve_workspace_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_report.py:cmd_report",
+      "target": "function:scripts/dw_power_store/common.py:resolve_workspace_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_report.py:cmd_report",
+      "target": "function:scripts/dw_workspace_dist.py:resolve_workspace_path",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_report.py:main",
+      "target": "function:plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_report.py:main",
+      "target": "function:scripts/dw_orchestrator.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_report.py:main",
+      "target": "function:scripts/dw_power_store/cli.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_report.py:main",
+      "target": "function:scripts/dw_project_add.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_report.py:main",
+      "target": "function:scripts/dw_project_registry.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/dw_report.py:main",
+      "target": "function:scripts/dw_workspace_dist.py:parser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

@@ -1,0 +1,374 @@
+{
+  "nodes": [
+    {
+      "id": "document:.codex/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": ".codex/README.md",
+      "summary": "Governance document for README.md.",
+      "tags": [
+        "docs",
+        "documentation",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/g0/context-snapshot.yaml",
+      "type": "config",
+      "name": "context-snapshot.yaml",
+      "filePath": ".gwc/g0/context-snapshot.yaml",
+      "summary": "Governance/configuration artifact for context-snapshot.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:.gwc/g1/brainstorming/g1-options.yaml",
+      "type": "config",
+      "name": "g1-options.yaml",
+      "filePath": ".gwc/g1/brainstorming/g1-options.yaml",
+      "summary": "Governance/configuration artifact for g1-options.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/g1/decision/g1-SCRUM-119-20260728-0023.yaml",
+      "type": "config",
+      "name": "g1-SCRUM-119-20260728-0023.yaml",
+      "filePath": ".gwc/g1/decision/g1-SCRUM-119-20260728-0023.yaml",
+      "summary": "Governance/configuration artifact for g1-SCRUM-119-20260728-0023.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/g1/decision/g1-decision-record.yaml",
+      "type": "config",
+      "name": "g1-decision-record.yaml",
+      "filePath": ".gwc/g1/decision/g1-decision-record.yaml",
+      "summary": "Governance/configuration artifact for g1-decision-record.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/g1/intake/g1-intake-brief.yaml",
+      "type": "config",
+      "name": "g1-intake-brief.yaml",
+      "filePath": ".gwc/g1/intake/g1-intake-brief.yaml",
+      "summary": "Governance/configuration artifact for g1-intake-brief.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/g1/preflight/g1-SCRUM-119-20260728-0023.yaml",
+      "type": "config",
+      "name": "g1-SCRUM-119-20260728-0023.yaml",
+      "filePath": ".gwc/g1/preflight/g1-SCRUM-119-20260728-0023.yaml",
+      "summary": "Governance/configuration artifact for g1-SCRUM-119-20260728-0023.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/g1/preflight/g1-preflight-report.yaml",
+      "type": "config",
+      "name": "g1-preflight-report.yaml",
+      "filePath": ".gwc/g1/preflight/g1-preflight-report.yaml",
+      "summary": "Governance/configuration artifact for g1-preflight-report.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/g2/execution/g2-execution-record.yaml",
+      "type": "config",
+      "name": "g2-execution-record.yaml",
+      "filePath": ".gwc/g2/execution/g2-execution-record.yaml",
+      "summary": "Governance/configuration artifact for g2-execution-record.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/g2/execution/scrum-105-fix-record.yaml",
+      "type": "config",
+      "name": "scrum-105-fix-record.yaml",
+      "filePath": ".gwc/g2/execution/scrum-105-fix-record.yaml",
+      "summary": "Governance/configuration artifact for scrum-105-fix-record.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/policies/notification-policy.yaml",
+      "type": "config",
+      "name": "notification-policy.yaml",
+      "filePath": ".gwc/policies/notification-policy.yaml",
+      "summary": "Governance/configuration artifact for notification-policy.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:.gwc/runbooks/SLACK_NOTIFICATION_RUNBOOK.md",
+      "type": "document",
+      "name": "SLACK_NOTIFICATION_RUNBOOK.md",
+      "filePath": ".gwc/runbooks/SLACK_NOTIFICATION_RUNBOOK.md",
+      "summary": "Governance document for SLACK_NOTIFICATION_RUNBOOK.md.",
+      "tags": [
+        "docs",
+        "documentation",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:.gwc/scrums/SCRUM-105/design.md",
+      "type": "document",
+      "name": "design.md",
+      "filePath": ".gwc/scrums/SCRUM-105/design.md",
+      "summary": "Governance document for design.md.",
+      "tags": [
+        "docs",
+        "documentation",
+        "governance"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.gwc/scrums/SCRUM-105/migration/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": ".gwc/scrums/SCRUM-105/migration/README.md",
+      "summary": "Governance document for README.md.",
+      "tags": [
+        "docs",
+        "documentation",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:.gwc/scrums/SCRUM-119/design.md",
+      "type": "document",
+      "name": "design.md",
+      "filePath": ".gwc/scrums/SCRUM-119/design.md",
+      "summary": "Governance document for design.md.",
+      "tags": [
+        "docs",
+        "documentation",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/tasks/SCRUM-119/g0/context-snapshot.yaml",
+      "type": "config",
+      "name": "context-snapshot.yaml",
+      "filePath": ".gwc/tasks/SCRUM-119/g0/context-snapshot.yaml",
+      "summary": "Governance/configuration artifact for context-snapshot.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/tasks/SCRUM-119/g1/brainstorming/g1-options.yaml",
+      "type": "config",
+      "name": "g1-options.yaml",
+      "filePath": ".gwc/tasks/SCRUM-119/g1/brainstorming/g1-options.yaml",
+      "summary": "Governance/configuration artifact for g1-options.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/tasks/SCRUM-119/g1/decision/g1-decision-record.yaml",
+      "type": "config",
+      "name": "g1-decision-record.yaml",
+      "filePath": ".gwc/tasks/SCRUM-119/g1/decision/g1-decision-record.yaml",
+      "summary": "Governance/configuration artifact for g1-decision-record.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/tasks/SCRUM-119/g1/intake/g1-intake-brief.yaml",
+      "type": "config",
+      "name": "g1-intake-brief.yaml",
+      "filePath": ".gwc/tasks/SCRUM-119/g1/intake/g1-intake-brief.yaml",
+      "summary": "Governance/configuration artifact for g1-intake-brief.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/tasks/SCRUM-119/g1/preflight/g1-preflight-report.yaml",
+      "type": "config",
+      "name": "g1-preflight-report.yaml",
+      "filePath": ".gwc/tasks/SCRUM-119/g1/preflight/g1-preflight-report.yaml",
+      "summary": "Governance/configuration artifact for g1-preflight-report.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/tasks/SCRUM-119/g2/execution-record.yaml",
+      "type": "config",
+      "name": "execution-record.yaml",
+      "filePath": ".gwc/tasks/SCRUM-119/g2/execution-record.yaml",
+      "summary": "Governance/configuration artifact for execution-record.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/tasks/SCRUM-119/g3/delivery-record.yaml",
+      "type": "config",
+      "name": "delivery-record.yaml",
+      "filePath": ".gwc/tasks/SCRUM-119/g3/delivery-record.yaml",
+      "summary": "Governance/configuration artifact for delivery-record.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/tasks/SCRUM-119/g4/merge-approval.yaml",
+      "type": "config",
+      "name": "merge-approval.yaml",
+      "filePath": ".gwc/tasks/SCRUM-119/g4/merge-approval.yaml",
+      "summary": "Governance/configuration artifact for merge-approval.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.gwc/tasks/SCRUM-119/g5/deployment-approval.yaml",
+      "type": "config",
+      "name": "deployment-approval.yaml",
+      "filePath": ".gwc/tasks/SCRUM-119/g5/deployment-approval.yaml",
+      "summary": "Governance/configuration artifact for deployment-approval.yaml.",
+      "tags": [
+        "config",
+        "configuration",
+        "governance"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:gates/g1-bmad-procedure-adapter-integration.md",
+      "target": "document:contracts/permission-action-matrix.md",
+      "type": "references",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:hosts/openclaw-acpx/skills/dw-dispatch-worker/SKILL.md",
+      "target": "schema:hosts/openclaw-acpx/schemas/work-order.schema.json",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:hosts/openclaw-acpx/skills/dw-dispatch-worker/SKILL.md",
+      "target": "schema:hosts/openclaw-acpx/schemas/worker-result.schema.json",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:.task-me/runs/distribution-revamp-v1/task-index.yaml",
+      "target": "document:docs/bmad/distribution-revamp/PRD.md",
+      "type": "references",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:.task-me/runs/distribution-revamp-v1/task-index.yaml",
+      "target": "document:docs/bmad/distribution-revamp/architecture.md",
+      "type": "references",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:manifests/evidence/SCRUM-132/hygiene-evidence.json",
+      "target": "config:manifests/power-distribution-evidence.json",
+      "type": "references",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:manifests/evidence/SCRUM-132/hygiene-evidence.json",
+      "target": "config:manifests/evidence/SCRUM-131/validation-evidence.json",
+      "type": "references",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:manifests/evidence/SCRUM-132/hygiene-evidence.json",
+      "target": "document:manifests/evidence/SCRUM-131/SHA256SUMS.txt",
+      "type": "references",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

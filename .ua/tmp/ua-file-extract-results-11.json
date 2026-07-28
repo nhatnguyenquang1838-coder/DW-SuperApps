@@ -1,0 +1,235 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 7,
+  "filesSkipped": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 7,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 0,
+      "failed": 0,
+      "skipped": 7
+    }
+  },
+  "results": [
+    {
+      "path": "docs/installation/ADD_PROJECT.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 32,
+      "nonEmptyLines": 24,
+      "sections": [
+        {
+          "heading": "Add a project or system",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Add a product project",
+          "level": 2,
+          "line": 3
+        },
+        {
+          "heading": "Add and register a system",
+          "level": 2,
+          "line": 13
+        },
+        {
+          "heading": "Review before committing",
+          "level": 2,
+          "line": 24
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 4
+      }
+    },
+    {
+      "path": "docs/installation/CREATE_SUPER_PROJECT.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 38,
+      "nonEmptyLines": 28,
+      "sections": [
+        {
+          "heading": "Create a Super Project",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Prerequisites",
+          "level": 2,
+          "line": 3
+        },
+        {
+          "heading": "Create",
+          "level": 2,
+          "line": 10
+        },
+        {
+          "heading": "Install the command",
+          "level": 2,
+          "line": 21
+        },
+        {
+          "heading": "Verify the empty workspace",
+          "level": 2,
+          "line": 29
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 5
+      }
+    },
+    {
+      "path": "docs/installation/INSTALL_POWERS.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 32,
+      "nonEmptyLines": 25,
+      "sections": [
+        {
+          "heading": "Install Powers",
+          "level": 1,
+          "line": 1
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 1
+      }
+    },
+    {
+      "path": "docs/installation/MIGRATION.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 37,
+      "nonEmptyLines": 27,
+      "sections": [
+        {
+          "heading": "Migrate an existing DW workspace",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Phase 2 source-project path migration",
+          "level": 2,
+          "line": 23
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 2
+      }
+    },
+    {
+      "path": "docs/installation/OFFLINE_INSTALL.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 20,
+      "nonEmptyLines": 15,
+      "sections": [
+        {
+          "heading": "Offline Power installation",
+          "level": 1,
+          "line": 1
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 1
+      }
+    },
+    {
+      "path": "docs/installation/README.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 19,
+      "nonEmptyLines": 14,
+      "sections": [
+        {
+          "heading": "DW Super Project installation",
+          "level": 1,
+          "line": 1
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 1
+      }
+    },
+    {
+      "path": "docs/installation/TROUBLESHOOTING.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 25,
+      "nonEmptyLines": 13,
+      "sections": [
+        {
+          "heading": "Troubleshooting",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Project is missing from `.gitmodules`",
+          "level": 2,
+          "line": 3
+        },
+        {
+          "heading": "Repository mismatch",
+          "level": 2,
+          "line": 7
+        },
+        {
+          "heading": "Workspace initialization refuses the target",
+          "level": 2,
+          "line": 11
+        },
+        {
+          "heading": "Power package is missing",
+          "level": 2,
+          "line": 15
+        },
+        {
+          "heading": "Store/runtime overlap",
+          "level": 2,
+          "line": 19
+        },
+        {
+          "heading": "Source submodule is not initialized",
+          "level": 2,
+          "line": 23
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 7
+      }
+    }
+  ]
+}

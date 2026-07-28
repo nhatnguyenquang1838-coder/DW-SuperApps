@@ -1,0 +1,1987 @@
+{
+  "schemaVersion": 1,
+  "algorithm": "louvain",
+  "totalFiles": 198,
+  "totalBatches": 23,
+  "exportsByPath": {
+    ".gitmodules": [],
+    ".ua/.understandignore": [],
+    "DW-SuperApps.code-workspace": [],
+    "bin/dw": [],
+    "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py": [
+      "BootstrapError",
+      "package_root",
+      "sha256",
+      "run",
+      "executable",
+      "node_version",
+      "validate_package",
+      "dependency_cache",
+      "safe_target",
+      "bootstrap",
+      "parser",
+      "main"
+    ],
+    "scripts/distribution_builder.py": [
+      "load_manifest",
+      "resolve_recipe",
+      "prepare_source",
+      "git_rev_parse",
+      "git_source_date_epoch",
+      "build_power",
+      "build_all",
+      "main"
+    ],
+    "scripts/distribution_installer.py": [
+      "run",
+      "install_power",
+      "doctor_power",
+      "uninstall_power",
+      "verify_package",
+      "validate_power",
+      "validate_staging",
+      "main"
+    ],
+    "scripts/dw_cli.py": [
+      "DwError",
+      "load_yaml",
+      "workspace",
+      "manifests",
+      "load_json",
+      "resolve_workspace_path",
+      "store_root",
+      "installed_entrypoints",
+      "source_entrypoints",
+      "display_path",
+      "run",
+      "git",
+      "emit",
+      "atomic_write",
+      "find_system",
+      "provider_entries",
+      "find_provider",
+      "workspace_info",
+      "power_list",
+      "power_info",
+      "power_prompt",
+      "submodule_entries",
+      "select_submodules",
+      "require_initialized",
+      "pinned_sha",
+      "submodule_branch",
+      "remote_sha",
+      "power_sync",
+      "normalize_host",
+      "configured_hosts",
+      "select_hosts",
+      "resolve_skill_source",
+      "is_generated_path",
+      "safe_remove_generated",
+      "write_generated_file",
+      "wrapper_content",
+      "host_instruction_content",
+      "kilo_config_content",
+      "host_expected_paths",
+      "install_skill_host",
+      "install_instruction_host",
+      "install_host_adapters",
+      "remove_host_adapters",
+      "host_list",
+      "host_status",
+      "provider_config_path",
+      "provider_env_path",
+      "provider_config",
+      "write_provider_files",
+      "select_providers",
+      "provider_install",
+      "load_provider_config",
+      "probe_openai_provider",
+      "provider_status",
+      "provider_info",
+      "system_list",
+      "system_powers",
+      "validate",
+      "build_parser",
+      "main"
+    ],
+    "scripts/dw_dispatch.py": [
+      "project_add_main",
+      "main"
+    ],
+    "scripts/dw_entry.py": [
+      "EntryError",
+      "run",
+      "load_runtime",
+      "ns",
+      "install_dependencies",
+      "init_all",
+      "sync_all",
+      "clean_adapters",
+      "clean_caches",
+      "runtime_paths",
+      "clean_runtime",
+      "clean_plan",
+      "clean_all",
+      "status_all",
+      "doctor_all",
+      "reset_all",
+      "build_parser",
+      "main"
+    ],
+    "scripts/dw_orchestrator.py": [
+      "OrchestratorError",
+      "load_yaml",
+      "find_system",
+      "load_intents",
+      "resolve_workspace_path",
+      "exact_intent_matches",
+      "orchestration_block",
+      "applicable_hooks",
+      "build_primary_prompt",
+      "build_worker_prompts",
+      "cmd_prompt",
+      "cmd_run",
+      "parser",
+      "main"
+    ],
+    "scripts/dw_power_package.py": [],
+    "scripts/dw_power_store/__init__.py": [],
+    "scripts/dw_power_store/cli.py": [
+      "emit",
+      "parser",
+      "main"
+    ],
+    "scripts/dw_power_store/common.py": [
+      "ConsumerError",
+      "load_yaml",
+      "load_json",
+      "workspace",
+      "manifest",
+      "sha256_file",
+      "is_within",
+      "atomic_json",
+      "resolve_workspace_path",
+      "distribution_roots",
+      "validate_store_target_separation",
+      "installed_root",
+      "history_root",
+      "runtime_root_for",
+      "runtime_config_root",
+      "target_key",
+      "binding_path",
+      "binding_records",
+      "package_marker",
+      "legacy_target_install",
+      "write_binding",
+      "refresh_bindings"
+    ],
+    "scripts/dw_power_store/history_ops.py": [
+      "history_entries",
+      "history",
+      "rollback",
+      "uninstall"
+    ],
+    "scripts/dw_power_store/install_ops.py": [
+      "install",
+      "configured_install",
+      "configure",
+      "doctor"
+    ],
+    "scripts/dw_power_store/package_io.py": [
+      "safe_extract",
+      "read_checksum",
+      "discover_local_package",
+      "download",
+      "source_urls",
+      "verify_package",
+      "verify_installed_manifest",
+      "install_package_tree",
+      "materialize_package"
+    ],
+    "scripts/dw_project_add.py": [
+      "parser",
+      "preflight",
+      "main"
+    ],
+    "scripts/dw_project_registry.py": [
+      "ProjectRegistryError",
+      "load_yaml",
+      "write_yaml",
+      "workspace",
+      "normalize_repo",
+      "safe_relative_path",
+      "project_entries",
+      "validate_registry",
+      "find_project",
+      "project_list",
+      "project_info",
+      "ignored",
+      "copy_runtime",
+      "template_workspace",
+      "ensure_git_repository",
+      "workspace_init",
+      "git",
+      "project_add",
+      "parser",
+      "main"
+    ],
+    "scripts/dw_report.py": [
+      "ReportError",
+      "load_yaml",
+      "resolve_workspace_path",
+      "find_system",
+      "render_field",
+      "render_checks",
+      "render_options",
+      "render_subagent_plan",
+      "build_g1_report",
+      "cmd_report",
+      "parser",
+      "main"
+    ],
+    "scripts/dw_workspace_dist.py": [
+      "DistError",
+      "load_yaml",
+      "load_json",
+      "workspace",
+      "manifests",
+      "resolve_workspace_path",
+      "store_root",
+      "find_system",
+      "normalize_host",
+      "configured_hosts",
+      "select_hosts",
+      "installed_entrypoints",
+      "source_entrypoints",
+      "resolve_skill_source",
+      "display_path",
+      "atomic_write",
+      "is_generated_path",
+      "safe_remove_generated",
+      "write_generated",
+      "wrapper_content",
+      "host_instruction_content",
+      "kilo_config_content",
+      "install_skill_host",
+      "install_instruction_host",
+      "host_install",
+      "expected_host_paths",
+      "host_status",
+      "power_prompt",
+      "parser",
+      "main"
+    ],
+    "scripts/dw_workspace_init.py": [
+      "parser",
+      "main"
+    ],
+    "scripts/offline_release_installer.py": [
+      "sha256_file",
+      "require_safe_archive",
+      "verify_release",
+      "install_component",
+      "install_release",
+      "rollback",
+      "main"
+    ],
+    "scripts/power_dist.py": [
+      "DistributionError",
+      "load_structured",
+      "validate_document",
+      "validate_recipe",
+      "ensure_relative",
+      "is_within",
+      "matches",
+      "_iter_included",
+      "_forbidden_patterns",
+      "_scan_secret_content",
+      "collect_files",
+      "atomic_write",
+      "sha256_file",
+      "copy_runtime_templates",
+      "package_metadata",
+      "build_manifest",
+      "build_staging_tree",
+      "zip_timestamp",
+      "create_deterministic_zip",
+      "verify_package",
+      "build_command",
+      "verify_command",
+      "build_parser",
+      "main"
+    ],
+    "scripts/power_dist_capability.py": [
+      "load_power_dist_module",
+      "dashboard_enabled",
+      "is_css_style_reference",
+      "patch_power_dist_module",
+      "main"
+    ],
+    "scripts/release_builder.py": [
+      "Component",
+      "sha256_file",
+      "safe_rel",
+      "should_include",
+      "iter_files",
+      "write_zip_from_dir",
+      "load_component_config",
+      "validate_component",
+      "build_release",
+      "main"
+    ],
+    "scripts/validate-workspace.py": [
+      "fail",
+      "git",
+      "load_yaml",
+      "resolve_workspace_path",
+      "is_within",
+      "validate_distribution",
+      "validate_providers",
+      "gitmodule_map",
+      "source_fallback_required",
+      "main"
+    ],
+    "templates/power-runtime/bin/configure": [],
+    "templates/power-runtime/bin/doctor": [],
+    "templates/power-runtime/bin/install": [],
+    "templates/power-runtime/bin/uninstall": [],
+    "templates/power-runtime/lib/power_runtime.py": [
+      "RuntimeError_",
+      "package_root",
+      "load_json",
+      "sha256_file",
+      "is_within",
+      "metadata",
+      "atomic_json",
+      "resolve_store_root",
+      "target_paths",
+      "assert_separated",
+      "marker",
+      "install",
+      "configure",
+      "verify_manifest",
+      "doctor",
+      "uninstall",
+      "parser",
+      "main"
+    ],
+    "tests/test_bmad_power_plugin.py": [
+      "BmadPowerPluginTests"
+    ],
+    "tests/test_distribution_builder_overlays.py": [
+      "DistributionBuilderOverlayTests"
+    ],
+    "tests/test_multi_host_runtime.py": [
+      "MultiHostRuntimeTests"
+    ],
+    "tests/test_offline_distribution_release.py": [
+      "OfflineDistributionReleaseTests"
+    ],
+    "tests/test_oneclick_commands.py": [
+      "OneClickCommandTests"
+    ],
+    "tests/test_openclaw_acpx_runtime.py": [
+      "OpenClawAcpxRuntimeTests"
+    ],
+    "tests/test_power_dist_builder.py": [
+      "PowerDistributionBuilderTests"
+    ],
+    "tests/test_power_dist_capability.py": [
+      "PowerDistributionCapabilityTests"
+    ],
+    "tests/test_power_distribution_contract.py": [
+      "PowerDistributionContractTests"
+    ],
+    "tests/test_power_distribution_integration.py": [
+      "PowerDistributionIntegrationTests"
+    ],
+    "tests/test_power_package_consumer.py": [
+      "file_record",
+      "PowerPackageConsumerTests"
+    ],
+    "tests/test_power_runtime_installer.py": [
+      "PowerRuntimeInstallerTests"
+    ],
+    "tests/test_power_runtime_v2.py": [
+      "PowerRuntimeV2Tests"
+    ],
+    "tests/test_project_registry.py": [
+      "ProjectRegistryTests"
+    ],
+    "tests/test_workspace_distribution_routing.py": [
+      "WorkspaceDistributionRoutingTests"
+    ]
+  },
+  "batches": [
+    {
+      "batchIndex": 1,
+      "files": [
+        {
+          "path": ".github/workflows/offline-distribution-release.yml",
+          "language": "yaml",
+          "sizeLines": 52,
+          "fileCategory": "infra"
+        },
+        {
+          "path": ".github/workflows/power-source-update.yml",
+          "language": "yaml",
+          "sizeLines": 264,
+          "fileCategory": "infra"
+        },
+        {
+          "path": ".github/workflows/publish-bmad-power.yml",
+          "language": "yaml",
+          "sizeLines": 389,
+          "fileCategory": "infra"
+        },
+        {
+          "path": ".github/workflows/reusable-publish-power.yml",
+          "language": "yaml",
+          "sizeLines": 210,
+          "fileCategory": "infra"
+        },
+        {
+          "path": ".github/workflows/staging-power-distribution.yml",
+          "language": "yaml",
+          "sizeLines": 147,
+          "fileCategory": "infra"
+        },
+        {
+          "path": ".github/workflows/validate-workspace.yml",
+          "language": "yaml",
+          "sizeLines": 146,
+          "fileCategory": "infra"
+        }
+      ],
+      "batchImportData": {
+        ".github/workflows/offline-distribution-release.yml": [],
+        ".github/workflows/power-source-update.yml": [],
+        ".github/workflows/publish-bmad-power.yml": [],
+        ".github/workflows/reusable-publish-power.yml": [],
+        ".github/workflows/staging-power-distribution.yml": [],
+        ".github/workflows/validate-workspace.yml": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 2,
+      "files": [
+        {
+          "path": ".gwc/g3/draft-pr/g3-delivery-record.yaml",
+          "language": "yaml",
+          "sizeLines": 115,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/g3/draft-pr/g3-independent-review.md",
+          "language": "markdown",
+          "sizeLines": 73,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".gwc/g3/draft-pr/g3-pr-assembly.md",
+          "language": "markdown",
+          "sizeLines": 70,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".gwc/g3/draft-pr/g3-review-closure.md",
+          "language": "markdown",
+          "sizeLines": 39,
+          "fileCategory": "docs"
+        }
+      ],
+      "batchImportData": {
+        ".gwc/g3/draft-pr/g3-delivery-record.yaml": [],
+        ".gwc/g3/draft-pr/g3-independent-review.md": [],
+        ".gwc/g3/draft-pr/g3-pr-assembly.md": [],
+        ".gwc/g3/draft-pr/g3-review-closure.md": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 3,
+      "files": [
+        {
+          "path": ".gwc/scrums/SCRUM-105/contracts/cas-lease-fencing.md",
+          "language": "markdown",
+          "sizeLines": 93,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".gwc/scrums/SCRUM-105/contracts/node-adapter.md",
+          "language": "markdown",
+          "sizeLines": 103,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".gwc/scrums/SCRUM-105/contracts/store-api.md",
+          "language": "markdown",
+          "sizeLines": 214,
+          "fileCategory": "docs"
+        }
+      ],
+      "batchImportData": {
+        ".gwc/scrums/SCRUM-105/contracts/cas-lease-fencing.md": [],
+        ".gwc/scrums/SCRUM-105/contracts/node-adapter.md": [],
+        ".gwc/scrums/SCRUM-105/contracts/store-api.md": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 4,
+      "files": [
+        {
+          "path": ".gwc/scrums/SCRUM-105/schemas/checkpoint.schema.json",
+          "language": "json",
+          "sizeLines": 99,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/scrums/SCRUM-105/schemas/pending-action-readback.schema.json",
+          "language": "json",
+          "sizeLines": 40,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/scrums/SCRUM-105/schemas/runtime-event.schema.json",
+          "language": "json",
+          "sizeLines": 31,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/scrums/SCRUM-105/schemas/store-api.schema.json",
+          "language": "json",
+          "sizeLines": 42,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        ".gwc/scrums/SCRUM-105/schemas/checkpoint.schema.json": [],
+        ".gwc/scrums/SCRUM-105/schemas/pending-action-readback.schema.json": [],
+        ".gwc/scrums/SCRUM-105/schemas/runtime-event.schema.json": [],
+        ".gwc/scrums/SCRUM-105/schemas/store-api.schema.json": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 5,
+      "files": [
+        {
+          "path": ".gwc/scrums/SCRUM-119/notes/task-me-decomposition.md",
+          "language": "markdown",
+          "sizeLines": 23,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".gwc/scrums/SCRUM-119/notes/ua-dependency-map.md",
+          "language": "markdown",
+          "sizeLines": 27,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".gwc/scrums/SCRUM-119/notes/ua-impact.md",
+          "language": "markdown",
+          "sizeLines": 16,
+          "fileCategory": "docs"
+        }
+      ],
+      "batchImportData": {
+        ".gwc/scrums/SCRUM-119/notes/task-me-decomposition.md": [],
+        ".gwc/scrums/SCRUM-119/notes/ua-dependency-map.md": [],
+        ".gwc/scrums/SCRUM-119/notes/ua-impact.md": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 6,
+      "files": [
+        {
+          "path": ".kilo/plans/1784987769805-ua-full-analysis-plan.md",
+          "language": "markdown",
+          "sizeLines": 74,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".kilo/plans/1785082271655-gwc-core-orchestration-plan.md",
+          "language": "markdown",
+          "sizeLines": 146,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".kilo/plans/1785089875395-scrum-108-runtime-store-nodes-plan.md",
+          "language": "markdown",
+          "sizeLines": 163,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".kilo/plans/1785133483763-kiro-offline-windows-migration.md",
+          "language": "markdown",
+          "sizeLines": 197,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".kilo/plans/1785171049744-bmad-procedure-adapter-contracts-plan.md",
+          "language": "markdown",
+          "sizeLines": 121,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".kilo/plans/1785180238321-regenerate-knowledge-map.md",
+          "language": "markdown",
+          "sizeLines": 76,
+          "fileCategory": "docs"
+        }
+      ],
+      "batchImportData": {
+        ".kilo/plans/1784987769805-ua-full-analysis-plan.md": [],
+        ".kilo/plans/1785082271655-gwc-core-orchestration-plan.md": [],
+        ".kilo/plans/1785089875395-scrum-108-runtime-store-nodes-plan.md": [],
+        ".kilo/plans/1785133483763-kiro-offline-windows-migration.md": [],
+        ".kilo/plans/1785171049744-bmad-procedure-adapter-contracts-plan.md": [],
+        ".kilo/plans/1785180238321-regenerate-knowledge-map.md": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 7,
+      "files": [
+        {
+          "path": ".kiro/specs/distribution-revamp/design.md",
+          "language": "markdown",
+          "sizeLines": 39,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".kiro/specs/distribution-revamp/requirements.md",
+          "language": "markdown",
+          "sizeLines": 40,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".kiro/specs/distribution-revamp/tasks.md",
+          "language": "markdown",
+          "sizeLines": 11,
+          "fileCategory": "docs"
+        }
+      ],
+      "batchImportData": {
+        ".kiro/specs/distribution-revamp/design.md": [],
+        ".kiro/specs/distribution-revamp/requirements.md": [],
+        ".kiro/specs/distribution-revamp/tasks.md": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 8,
+      "files": [
+        {
+          "path": ".ua/fingerprints.json",
+          "language": "json",
+          "sizeLines": 3519,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/knowledge-graph.json",
+          "language": "json",
+          "sizeLines": 4784,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/meta.json",
+          "language": "json",
+          "sizeLines": 5,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        ".ua/fingerprints.json": [],
+        ".ua/knowledge-graph.json": [],
+        ".ua/meta.json": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 9,
+      "files": [
+        {
+          "path": "AGENTS.md",
+          "language": "markdown",
+          "sizeLines": 193,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "CHANGELOG.md",
+          "language": "markdown",
+          "sizeLines": 42,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "HEARTBEAT.md",
+          "language": "markdown",
+          "sizeLines": 5,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "IDENTITY.md",
+          "language": "markdown",
+          "sizeLines": 29,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "README.md",
+          "language": "markdown",
+          "sizeLines": 171,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "SOUL.md",
+          "language": "markdown",
+          "sizeLines": 42,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "TOOLS.md",
+          "language": "markdown",
+          "sizeLines": 33,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "USER.md",
+          "language": "markdown",
+          "sizeLines": 21,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "dw.cmd",
+          "language": "batch",
+          "sizeLines": 2,
+          "fileCategory": "script"
+        },
+        {
+          "path": "dw.ps1",
+          "language": "powershell",
+          "sizeLines": 4,
+          "fileCategory": "script"
+        },
+        {
+          "path": "requirements-dev.txt",
+          "language": "txt",
+          "sizeLines": 2,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "workspace.yaml",
+          "language": "yaml",
+          "sizeLines": 131,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        "AGENTS.md": [],
+        "CHANGELOG.md": [],
+        "HEARTBEAT.md": [],
+        "IDENTITY.md": [],
+        "README.md": [],
+        "SOUL.md": [],
+        "TOOLS.md": [],
+        "USER.md": [],
+        "dw.cmd": [],
+        "dw.ps1": [],
+        "requirements-dev.txt": [],
+        "workspace.yaml": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 10,
+      "files": [
+        {
+          "path": "docs/DW_SUPER_SETUP.md",
+          "language": "markdown",
+          "sizeLines": 175,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/DW_SUPER_SETUP_VERIFICATION.md",
+          "language": "markdown",
+          "sizeLines": 39,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/MULTI_HOST_SETUP.md",
+          "language": "markdown",
+          "sizeLines": 86,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/OPENCLAW_ACPX_SETUP.md",
+          "language": "markdown",
+          "sizeLines": 169,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/PORTABLE_MULTI_HOST_ROUTER.md",
+          "language": "markdown",
+          "sizeLines": 106,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/POWER_CONSUMER_RUNTIME_V1.md",
+          "language": "markdown",
+          "sizeLines": 76,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/POWER_DISTRIBUTION_V1.md",
+          "language": "markdown",
+          "sizeLines": 141,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/POWER_RUNTIME_V2.md",
+          "language": "markdown",
+          "sizeLines": 219,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/WORKSPACE_OPERATIONS.md",
+          "language": "markdown",
+          "sizeLines": 59,
+          "fileCategory": "docs"
+        }
+      ],
+      "batchImportData": {
+        "docs/DW_SUPER_SETUP.md": [],
+        "docs/DW_SUPER_SETUP_VERIFICATION.md": [],
+        "docs/MULTI_HOST_SETUP.md": [],
+        "docs/OPENCLAW_ACPX_SETUP.md": [],
+        "docs/PORTABLE_MULTI_HOST_ROUTER.md": [],
+        "docs/POWER_CONSUMER_RUNTIME_V1.md": [],
+        "docs/POWER_DISTRIBUTION_V1.md": [],
+        "docs/POWER_RUNTIME_V2.md": [],
+        "docs/WORKSPACE_OPERATIONS.md": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 11,
+      "files": [
+        {
+          "path": "docs/installation/ADD_PROJECT.md",
+          "language": "markdown",
+          "sizeLines": 32,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/installation/CREATE_SUPER_PROJECT.md",
+          "language": "markdown",
+          "sizeLines": 38,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/installation/INSTALL_POWERS.md",
+          "language": "markdown",
+          "sizeLines": 32,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/installation/MIGRATION.md",
+          "language": "markdown",
+          "sizeLines": 37,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/installation/OFFLINE_INSTALL.md",
+          "language": "markdown",
+          "sizeLines": 20,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/installation/README.md",
+          "language": "markdown",
+          "sizeLines": 19,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/installation/TROUBLESHOOTING.md",
+          "language": "markdown",
+          "sizeLines": 25,
+          "fileCategory": "docs"
+        }
+      ],
+      "batchImportData": {
+        "docs/installation/ADD_PROJECT.md": [],
+        "docs/installation/CREATE_SUPER_PROJECT.md": [],
+        "docs/installation/INSTALL_POWERS.md": [],
+        "docs/installation/MIGRATION.md": [],
+        "docs/installation/OFFLINE_INSTALL.md": [],
+        "docs/installation/README.md": [],
+        "docs/installation/TROUBLESHOOTING.md": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 12,
+      "files": [
+        {
+          "path": "examples/positive-architecture-analysis.md",
+          "language": "markdown",
+          "sizeLines": 105,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "examples/positive-review-only.md",
+          "language": "markdown",
+          "sizeLines": 106,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "examples/positive-tdd-implementation.md",
+          "language": "markdown",
+          "sizeLines": 99,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "examples/rejected-scope-violation.md",
+          "language": "markdown",
+          "sizeLines": 92,
+          "fileCategory": "docs"
+        }
+      ],
+      "batchImportData": {
+        "examples/positive-architecture-analysis.md": [],
+        "examples/positive-review-only.md": [],
+        "examples/positive-tdd-implementation.md": [],
+        "examples/rejected-scope-violation.md": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 13,
+      "files": [
+        {
+          "path": "hosts/openclaw-acpx/README.md",
+          "language": "markdown",
+          "sizeLines": 125,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "hosts/openclaw-acpx/install.ps1",
+          "language": "powershell",
+          "sizeLines": 186,
+          "fileCategory": "script"
+        },
+        {
+          "path": "hosts/openclaw-acpx/install.sh",
+          "language": "shell",
+          "sizeLines": 256,
+          "fileCategory": "script"
+        },
+        {
+          "path": "hosts/openclaw-acpx/manifest.yaml",
+          "language": "yaml",
+          "sizeLines": 58,
+          "fileCategory": "config"
+        },
+        {
+          "path": "hosts/openclaw-acpx/openclaw.config.json",
+          "language": "json",
+          "sizeLines": 51,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        "hosts/openclaw-acpx/README.md": [],
+        "hosts/openclaw-acpx/install.ps1": [],
+        "hosts/openclaw-acpx/install.sh": [],
+        "hosts/openclaw-acpx/manifest.yaml": [],
+        "hosts/openclaw-acpx/openclaw.config.json": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 14,
+      "files": [
+        {
+          "path": "manifests/powers/bmad.yaml",
+          "language": "yaml",
+          "sizeLines": 83,
+          "fileCategory": "config"
+        },
+        {
+          "path": "manifests/powers/gwc.yaml",
+          "language": "yaml",
+          "sizeLines": 73,
+          "fileCategory": "config"
+        },
+        {
+          "path": "manifests/powers/task-me.yaml",
+          "language": "yaml",
+          "sizeLines": 74,
+          "fileCategory": "config"
+        },
+        {
+          "path": "manifests/powers/ua.yaml",
+          "language": "yaml",
+          "sizeLines": 74,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        "manifests/powers/bmad.yaml": [],
+        "manifests/powers/gwc.yaml": [],
+        "manifests/powers/task-me.yaml": [],
+        "manifests/powers/ua.yaml": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 15,
+      "files": [
+        {
+          "path": "schemas/bmad-permission-model.schema.json",
+          "language": "json",
+          "sizeLines": 179,
+          "fileCategory": "config"
+        },
+        {
+          "path": "schemas/bmad-procedure-registry.schema.json",
+          "language": "json",
+          "sizeLines": 202,
+          "fileCategory": "config"
+        },
+        {
+          "path": "schemas/bmad-procedure-request.schema.json",
+          "language": "json",
+          "sizeLines": 166,
+          "fileCategory": "config"
+        },
+        {
+          "path": "schemas/bmad-procedure-result.schema.json",
+          "language": "json",
+          "sizeLines": 228,
+          "fileCategory": "config"
+        },
+        {
+          "path": "schemas/distribution-release.schema.json",
+          "language": "json",
+          "sizeLines": 93,
+          "fileCategory": "config"
+        },
+        {
+          "path": "schemas/power-binding.schema.json",
+          "language": "json",
+          "sizeLines": 34,
+          "fileCategory": "config"
+        },
+        {
+          "path": "schemas/power-consumer-binding.schema.json",
+          "language": "json",
+          "sizeLines": 52,
+          "fileCategory": "config"
+        },
+        {
+          "path": "schemas/power-distribution.schema.json",
+          "language": "json",
+          "sizeLines": 126,
+          "fileCategory": "config"
+        },
+        {
+          "path": "schemas/power-manifest.schema.json",
+          "language": "json",
+          "sizeLines": 334,
+          "fileCategory": "config"
+        },
+        {
+          "path": "schemas/power-package-manifest.schema.json",
+          "language": "json",
+          "sizeLines": 62,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        "schemas/bmad-permission-model.schema.json": [],
+        "schemas/bmad-procedure-registry.schema.json": [],
+        "schemas/bmad-procedure-request.schema.json": [],
+        "schemas/bmad-procedure-result.schema.json": [],
+        "schemas/distribution-release.schema.json": [],
+        "schemas/power-binding.schema.json": [],
+        "schemas/power-consumer-binding.schema.json": [],
+        "schemas/power-distribution.schema.json": [],
+        "schemas/power-manifest.schema.json": [],
+        "schemas/power-package-manifest.schema.json": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 16,
+      "files": [
+        {
+          "path": "scripts/distribution_build.sh",
+          "language": "shell",
+          "sizeLines": 29,
+          "fileCategory": "script"
+        },
+        {
+          "path": "scripts/install-dw.sh",
+          "language": "shell",
+          "sizeLines": 164,
+          "fileCategory": "script"
+        },
+        {
+          "path": "scripts/install-host-adapters.sh",
+          "language": "shell",
+          "sizeLines": 6,
+          "fileCategory": "script"
+        },
+        {
+          "path": "scripts/python-resolver.sh",
+          "language": "shell",
+          "sizeLines": 39,
+          "fileCategory": "script"
+        },
+        {
+          "path": "scripts/sync-submodules.sh",
+          "language": "shell",
+          "sizeLines": 6,
+          "fileCategory": "script"
+        }
+      ],
+      "batchImportData": {
+        "scripts/distribution_build.sh": [],
+        "scripts/install-dw.sh": [],
+        "scripts/install-host-adapters.sh": [],
+        "scripts/python-resolver.sh": [],
+        "scripts/sync-submodules.sh": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 17,
+      "files": [
+        {
+          "path": "templates/power-runtime/bin/configure.ps1",
+          "language": "powershell",
+          "sizeLines": 6,
+          "fileCategory": "script"
+        },
+        {
+          "path": "templates/power-runtime/bin/doctor.ps1",
+          "language": "powershell",
+          "sizeLines": 6,
+          "fileCategory": "script"
+        },
+        {
+          "path": "templates/power-runtime/bin/install.ps1",
+          "language": "powershell",
+          "sizeLines": 6,
+          "fileCategory": "script"
+        },
+        {
+          "path": "templates/power-runtime/bin/uninstall.ps1",
+          "language": "powershell",
+          "sizeLines": 6,
+          "fileCategory": "script"
+        }
+      ],
+      "batchImportData": {
+        "templates/power-runtime/bin/configure.ps1": [],
+        "templates/power-runtime/bin/doctor.ps1": [],
+        "templates/power-runtime/bin/install.ps1": [],
+        "templates/power-runtime/bin/uninstall.ps1": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 18,
+      "files": [
+        {
+          "path": "tests/fixtures/power-distribution/invalid-absolute-include.yaml",
+          "language": "yaml",
+          "sizeLines": 15,
+          "fileCategory": "config"
+        },
+        {
+          "path": "tests/fixtures/power-distribution/valid-consumer-binding.yaml",
+          "language": "yaml",
+          "sizeLines": 16,
+          "fileCategory": "config"
+        },
+        {
+          "path": "tests/fixtures/power-distribution/valid-recipe.yaml",
+          "language": "yaml",
+          "sizeLines": 29,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        "tests/fixtures/power-distribution/invalid-absolute-include.yaml": [],
+        "tests/fixtures/power-distribution/valid-consumer-binding.yaml": [],
+        "tests/fixtures/power-distribution/valid-recipe.yaml": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 19,
+      "files": [
+        {
+          "path": ".codex/README.md",
+          "language": "markdown",
+          "sizeLines": 12,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".gitmodules",
+          "language": "unknown",
+          "sizeLines": 19,
+          "fileCategory": "code"
+        },
+        {
+          "path": ".gwc/g0/context-snapshot.yaml",
+          "language": "yaml",
+          "sizeLines": 159,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/g1/brainstorming/g1-options.yaml",
+          "language": "yaml",
+          "sizeLines": 112,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/g1/decision/g1-SCRUM-119-20260728-0023.yaml",
+          "language": "yaml",
+          "sizeLines": 101,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/g1/decision/g1-decision-record.yaml",
+          "language": "yaml",
+          "sizeLines": 109,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/g1/intake/g1-intake-brief.yaml",
+          "language": "yaml",
+          "sizeLines": 125,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/g1/preflight/g1-SCRUM-119-20260728-0023.yaml",
+          "language": "yaml",
+          "sizeLines": 84,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/g1/preflight/g1-preflight-report.yaml",
+          "language": "yaml",
+          "sizeLines": 81,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/g2/execution/g2-execution-record.yaml",
+          "language": "yaml",
+          "sizeLines": 76,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/g2/execution/scrum-105-fix-record.yaml",
+          "language": "yaml",
+          "sizeLines": 48,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/policies/notification-policy.yaml",
+          "language": "yaml",
+          "sizeLines": 32,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/runbooks/SLACK_NOTIFICATION_RUNBOOK.md",
+          "language": "markdown",
+          "sizeLines": 32,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".gwc/scrums/SCRUM-105/design.md",
+          "language": "markdown",
+          "sizeLines": 345,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".gwc/scrums/SCRUM-105/migration/README.md",
+          "language": "markdown",
+          "sizeLines": 81,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".gwc/scrums/SCRUM-119/design.md",
+          "language": "markdown",
+          "sizeLines": 39,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".gwc/tasks/SCRUM-119/g0/context-snapshot.yaml",
+          "language": "yaml",
+          "sizeLines": 41,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/tasks/SCRUM-119/g1/brainstorming/g1-options.yaml",
+          "language": "yaml",
+          "sizeLines": 23,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/tasks/SCRUM-119/g1/decision/g1-decision-record.yaml",
+          "language": "yaml",
+          "sizeLines": 36,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/tasks/SCRUM-119/g1/intake/g1-intake-brief.yaml",
+          "language": "yaml",
+          "sizeLines": 20,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/tasks/SCRUM-119/g1/preflight/g1-preflight-report.yaml",
+          "language": "yaml",
+          "sizeLines": 28,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/tasks/SCRUM-119/g2/execution-record.yaml",
+          "language": "yaml",
+          "sizeLines": 45,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/tasks/SCRUM-119/g3/delivery-record.yaml",
+          "language": "yaml",
+          "sizeLines": 51,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/tasks/SCRUM-119/g4/merge-approval.yaml",
+          "language": "yaml",
+          "sizeLines": 27,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/tasks/SCRUM-119/g5/deployment-approval.yaml",
+          "language": "yaml",
+          "sizeLines": 26,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        ".codex/README.md": [],
+        ".gitmodules": [],
+        ".gwc/g0/context-snapshot.yaml": [],
+        ".gwc/g1/brainstorming/g1-options.yaml": [],
+        ".gwc/g1/decision/g1-SCRUM-119-20260728-0023.yaml": [],
+        ".gwc/g1/decision/g1-decision-record.yaml": [],
+        ".gwc/g1/intake/g1-intake-brief.yaml": [],
+        ".gwc/g1/preflight/g1-SCRUM-119-20260728-0023.yaml": [],
+        ".gwc/g1/preflight/g1-preflight-report.yaml": [],
+        ".gwc/g2/execution/g2-execution-record.yaml": [],
+        ".gwc/g2/execution/scrum-105-fix-record.yaml": [],
+        ".gwc/policies/notification-policy.yaml": [],
+        ".gwc/runbooks/SLACK_NOTIFICATION_RUNBOOK.md": [],
+        ".gwc/scrums/SCRUM-105/design.md": [],
+        ".gwc/scrums/SCRUM-105/migration/README.md": [],
+        ".gwc/scrums/SCRUM-119/design.md": [],
+        ".gwc/tasks/SCRUM-119/g0/context-snapshot.yaml": [],
+        ".gwc/tasks/SCRUM-119/g1/brainstorming/g1-options.yaml": [],
+        ".gwc/tasks/SCRUM-119/g1/decision/g1-decision-record.yaml": [],
+        ".gwc/tasks/SCRUM-119/g1/intake/g1-intake-brief.yaml": [],
+        ".gwc/tasks/SCRUM-119/g1/preflight/g1-preflight-report.yaml": [],
+        ".gwc/tasks/SCRUM-119/g2/execution-record.yaml": [],
+        ".gwc/tasks/SCRUM-119/g3/delivery-record.yaml": [],
+        ".gwc/tasks/SCRUM-119/g4/merge-approval.yaml": [],
+        ".gwc/tasks/SCRUM-119/g5/deployment-approval.yaml": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 20,
+      "files": [
+        {
+          "path": ".kiro/steering/workspace-powers.md",
+          "language": "markdown",
+          "sizeLines": 12,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".task-me/runs/distribution-revamp-v1/task-index.yaml",
+          "language": "yaml",
+          "sizeLines": 20,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/.understandignore",
+          "language": "unknown",
+          "sizeLines": 91,
+          "fileCategory": "code"
+        },
+        {
+          "path": ".ua/intermediate/scan-result.json",
+          "language": "json",
+          "sizeLines": 705,
+          "fileCategory": "config"
+        },
+        {
+          "path": "DW-SuperApps.code-workspace",
+          "language": "code-workspace",
+          "sizeLines": 7,
+          "fileCategory": "code"
+        },
+        {
+          "path": "bin/dw",
+          "language": "unknown",
+          "sizeLines": 92,
+          "fileCategory": "code"
+        },
+        {
+          "path": "bin/dw.ps1",
+          "language": "powershell",
+          "sizeLines": 4,
+          "fileCategory": "script"
+        },
+        {
+          "path": "contracts/permission-action-matrix.md",
+          "language": "markdown",
+          "sizeLines": 61,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/bmad/distribution-revamp/PRD.md",
+          "language": "markdown",
+          "sizeLines": 23,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/bmad/distribution-revamp/architecture.md",
+          "language": "markdown",
+          "sizeLines": 39,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/powers/BMAD_POWER.md",
+          "language": "markdown",
+          "sizeLines": 55,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/runbooks/OFFLINE_DISTRIBUTION_RELEASE.md",
+          "language": "markdown",
+          "sizeLines": 38,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/runbooks/POWER_DIST_ONBOARDING.md",
+          "language": "markdown",
+          "sizeLines": 316,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "gates/g1-bmad-procedure-adapter-integration.md",
+          "language": "markdown",
+          "sizeLines": 161,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "hosts/openclaw-acpx/schemas/work-order.schema.json",
+          "language": "json",
+          "sizeLines": 256,
+          "fileCategory": "config"
+        },
+        {
+          "path": "hosts/openclaw-acpx/schemas/worker-result.schema.json",
+          "language": "json",
+          "sizeLines": 134,
+          "fileCategory": "config"
+        },
+        {
+          "path": "hosts/openclaw-acpx/skills/dw-dispatch-worker/SKILL.md",
+          "language": "markdown",
+          "sizeLines": 51,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "manifests/evidence/SCRUM-131/SHA256SUMS.txt",
+          "language": "txt",
+          "sizeLines": 9,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "manifests/evidence/SCRUM-131/validation-evidence.json",
+          "language": "json",
+          "sizeLines": 69,
+          "fileCategory": "config"
+        },
+        {
+          "path": "manifests/evidence/SCRUM-132/hygiene-evidence.json",
+          "language": "json",
+          "sizeLines": 26,
+          "fileCategory": "config"
+        },
+        {
+          "path": "manifests/evidence/SCRUM-132/removed-files.txt",
+          "language": "txt",
+          "sizeLines": 53,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "manifests/evidence/SCRUM-134/SHA256SUMS.txt",
+          "language": "txt",
+          "sizeLines": 12,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "manifests/evidence/SCRUM-134/setup-evidence.json",
+          "language": "json",
+          "sizeLines": 81,
+          "fileCategory": "config"
+        },
+        {
+          "path": "manifests/orchestration/intents.yaml",
+          "language": "yaml",
+          "sizeLines": 24,
+          "fileCategory": "config"
+        },
+        {
+          "path": "manifests/power-distribution-evidence.json",
+          "language": "json",
+          "sizeLines": 83,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        ".kiro/steering/workspace-powers.md": [],
+        ".task-me/runs/distribution-revamp-v1/task-index.yaml": [],
+        ".ua/.understandignore": [],
+        ".ua/intermediate/scan-result.json": [],
+        "DW-SuperApps.code-workspace": [],
+        "bin/dw": [],
+        "bin/dw.ps1": [],
+        "contracts/permission-action-matrix.md": [],
+        "docs/bmad/distribution-revamp/PRD.md": [],
+        "docs/bmad/distribution-revamp/architecture.md": [],
+        "docs/powers/BMAD_POWER.md": [],
+        "docs/runbooks/OFFLINE_DISTRIBUTION_RELEASE.md": [],
+        "docs/runbooks/POWER_DIST_ONBOARDING.md": [],
+        "gates/g1-bmad-procedure-adapter-integration.md": [],
+        "hosts/openclaw-acpx/schemas/work-order.schema.json": [],
+        "hosts/openclaw-acpx/schemas/worker-result.schema.json": [],
+        "hosts/openclaw-acpx/skills/dw-dispatch-worker/SKILL.md": [],
+        "manifests/evidence/SCRUM-131/SHA256SUMS.txt": [],
+        "manifests/evidence/SCRUM-131/validation-evidence.json": [],
+        "manifests/evidence/SCRUM-132/hygiene-evidence.json": [],
+        "manifests/evidence/SCRUM-132/removed-files.txt": [],
+        "manifests/evidence/SCRUM-134/SHA256SUMS.txt": [],
+        "manifests/evidence/SCRUM-134/setup-evidence.json": [],
+        "manifests/orchestration/intents.yaml": [],
+        "manifests/power-distribution-evidence.json": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 21,
+      "files": [
+        {
+          "path": "memory/2026-07-28-1005.md",
+          "language": "markdown",
+          "sizeLines": 23,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "plugins/bmad-method/SOURCE.lock.json",
+          "language": "json",
+          "sizeLines": 9,
+          "fileCategory": "config"
+        },
+        {
+          "path": "plugins/bmad-method/distribution/power-package.yaml",
+          "language": "yaml",
+          "sizeLines": 54,
+          "fileCategory": "config"
+        },
+        {
+          "path": "plugins/bmad-method/knowledge/knowledge-graph.json",
+          "language": "json",
+          "sizeLines": 32,
+          "fileCategory": "config"
+        },
+        {
+          "path": "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py",
+          "language": "python",
+          "sizeLines": 225,
+          "fileCategory": "code"
+        },
+        {
+          "path": "plugins/bmad-method/overlay/distribution/skills/bmad/SKILL.md",
+          "language": "markdown",
+          "sizeLines": 38,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "prompts/power-dist/onboard-offline-zip.md",
+          "language": "markdown",
+          "sizeLines": 31,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "prompts/power-dist/onboard.md",
+          "language": "markdown",
+          "sizeLines": 37,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "scripts/distribution_builder.py",
+          "language": "python",
+          "sizeLines": 207,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/distribution_installer.py",
+          "language": "python",
+          "sizeLines": 159,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dw_cli.py",
+          "language": "python",
+          "sizeLines": 993,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dw_dispatch.py",
+          "language": "python",
+          "sizeLines": 54,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dw_entry.py",
+          "language": "python",
+          "sizeLines": 357,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dw_orchestrator.py",
+          "language": "python",
+          "sizeLines": 248,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dw_power_package.py",
+          "language": "python",
+          "sizeLines": 25,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dw_power_store/__init__.py",
+          "language": "python",
+          "sizeLines": 1,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dw_power_store/cli.py",
+          "language": "python",
+          "sizeLines": 97,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dw_power_store/common.py",
+          "language": "python",
+          "sizeLines": 240,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dw_power_store/history_ops.py",
+          "language": "python",
+          "sizeLines": 137,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dw_power_store/install_ops.py",
+          "language": "python",
+          "sizeLines": 179,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dw_power_store/package_io.py",
+          "language": "python",
+          "sizeLines": 202,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dw_project_add.py",
+          "language": "python",
+          "sizeLines": 89,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dw_project_registry.py",
+          "language": "python",
+          "sizeLines": 408,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dw_report.py",
+          "language": "python",
+          "sizeLines": 288,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dw_workspace_dist.py",
+          "language": "python",
+          "sizeLines": 543,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        "memory/2026-07-28-1005.md": [],
+        "plugins/bmad-method/SOURCE.lock.json": [],
+        "plugins/bmad-method/distribution/power-package.yaml": [],
+        "plugins/bmad-method/knowledge/knowledge-graph.json": [],
+        "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py": [],
+        "plugins/bmad-method/overlay/distribution/skills/bmad/SKILL.md": [],
+        "prompts/power-dist/onboard-offline-zip.md": [],
+        "prompts/power-dist/onboard.md": [],
+        "scripts/distribution_builder.py": [],
+        "scripts/distribution_installer.py": [],
+        "scripts/dw_cli.py": [],
+        "scripts/dw_dispatch.py": [],
+        "scripts/dw_entry.py": [],
+        "scripts/dw_orchestrator.py": [],
+        "scripts/dw_power_package.py": [],
+        "scripts/dw_power_store/__init__.py": [],
+        "scripts/dw_power_store/cli.py": [],
+        "scripts/dw_power_store/common.py": [],
+        "scripts/dw_power_store/history_ops.py": [],
+        "scripts/dw_power_store/install_ops.py": [],
+        "scripts/dw_power_store/package_io.py": [],
+        "scripts/dw_project_add.py": [],
+        "scripts/dw_project_registry.py": [],
+        "scripts/dw_report.py": [],
+        "scripts/dw_workspace_dist.py": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 22,
+      "files": [
+        {
+          "path": "scripts/dw_workspace_init.py",
+          "language": "python",
+          "sizeLines": 56,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/offline_release_installer.py",
+          "language": "python",
+          "sizeLines": 157,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/power_dist.py",
+          "language": "python",
+          "sizeLines": 582,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/power_dist_capability.py",
+          "language": "python",
+          "sizeLines": 135,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/release_builder.py",
+          "language": "python",
+          "sizeLines": 193,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/validate-workspace.py",
+          "language": "python",
+          "sizeLines": 257,
+          "fileCategory": "code"
+        },
+        {
+          "path": "templates/power-runtime/bin/configure",
+          "language": "unknown",
+          "sizeLines": 15,
+          "fileCategory": "code"
+        },
+        {
+          "path": "templates/power-runtime/bin/doctor",
+          "language": "unknown",
+          "sizeLines": 15,
+          "fileCategory": "code"
+        },
+        {
+          "path": "templates/power-runtime/bin/install",
+          "language": "unknown",
+          "sizeLines": 15,
+          "fileCategory": "code"
+        },
+        {
+          "path": "templates/power-runtime/bin/uninstall",
+          "language": "unknown",
+          "sizeLines": 15,
+          "fileCategory": "code"
+        },
+        {
+          "path": "templates/power-runtime/lib/power_runtime.py",
+          "language": "python",
+          "sizeLines": 336,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_bmad_power_plugin.py",
+          "language": "python",
+          "sizeLines": 171,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_distribution_builder_overlays.py",
+          "language": "python",
+          "sizeLines": 77,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_multi_host_runtime.py",
+          "language": "python",
+          "sizeLines": 75,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_offline_distribution_release.py",
+          "language": "python",
+          "sizeLines": 94,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_oneclick_commands.py",
+          "language": "python",
+          "sizeLines": 58,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_openclaw_acpx_runtime.py",
+          "language": "python",
+          "sizeLines": 174,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_power_dist_builder.py",
+          "language": "python",
+          "sizeLines": 112,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_power_dist_capability.py",
+          "language": "python",
+          "sizeLines": 103,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_power_distribution_contract.py",
+          "language": "python",
+          "sizeLines": 94,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_power_distribution_integration.py",
+          "language": "python",
+          "sizeLines": 55,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_power_package_consumer.py",
+          "language": "python",
+          "sizeLines": 277,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_power_runtime_installer.py",
+          "language": "python",
+          "sizeLines": 116,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_power_runtime_v2.py",
+          "language": "python",
+          "sizeLines": 127,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_project_registry.py",
+          "language": "python",
+          "sizeLines": 203,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        "scripts/dw_workspace_init.py": [],
+        "scripts/offline_release_installer.py": [],
+        "scripts/power_dist.py": [],
+        "scripts/power_dist_capability.py": [],
+        "scripts/release_builder.py": [],
+        "scripts/validate-workspace.py": [],
+        "templates/power-runtime/bin/configure": [],
+        "templates/power-runtime/bin/doctor": [],
+        "templates/power-runtime/bin/install": [],
+        "templates/power-runtime/bin/uninstall": [],
+        "templates/power-runtime/lib/power_runtime.py": [],
+        "tests/test_bmad_power_plugin.py": [],
+        "tests/test_distribution_builder_overlays.py": [],
+        "tests/test_multi_host_runtime.py": [],
+        "tests/test_offline_distribution_release.py": [],
+        "tests/test_oneclick_commands.py": [],
+        "tests/test_openclaw_acpx_runtime.py": [],
+        "tests/test_power_dist_builder.py": [],
+        "tests/test_power_dist_capability.py": [],
+        "tests/test_power_distribution_contract.py": [],
+        "tests/test_power_distribution_integration.py": [],
+        "tests/test_power_package_consumer.py": [],
+        "tests/test_power_runtime_installer.py": [],
+        "tests/test_power_runtime_v2.py": [],
+        "tests/test_project_registry.py": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 23,
+      "files": [
+        {
+          "path": "tests/test_python_resolver.sh",
+          "language": "shell",
+          "sizeLines": 35,
+          "fileCategory": "script"
+        },
+        {
+          "path": "tests/test_workspace_distribution_routing.py",
+          "language": "python",
+          "sizeLines": 155,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/validator-test-plan.md",
+          "language": "markdown",
+          "sizeLines": 218,
+          "fileCategory": "docs"
+        }
+      ],
+      "batchImportData": {
+        "tests/test_python_resolver.sh": [],
+        "tests/test_workspace_distribution_routing.py": [],
+        "tests/validator-test-plan.md": []
+      },
+      "neighborMap": {}
+    }
+  ]
+}

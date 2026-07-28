@@ -1,0 +1,29 @@
+{
+  "projectRoot": "/Users/mac/prj/DW-SuperApps",
+  "batchFiles": [
+    {
+      "path": ".gwc/scrums/SCRUM-105/contracts/cas-lease-fencing.md",
+      "language": "markdown",
+      "sizeLines": 93,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".gwc/scrums/SCRUM-105/contracts/node-adapter.md",
+      "language": "markdown",
+      "sizeLines": 103,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".gwc/scrums/SCRUM-105/contracts/store-api.md",
+      "language": "markdown",
+      "sizeLines": 214,
+      "fileCategory": "docs"
+    }
+  ],
+  "batchImportData": {
+    ".gwc/scrums/SCRUM-105/contracts/cas-lease-fencing.md": [],
+    ".gwc/scrums/SCRUM-105/contracts/node-adapter.md": [],
+    ".gwc/scrums/SCRUM-105/contracts/store-api.md": []
+  },
+  "neighborMap": {}
+}

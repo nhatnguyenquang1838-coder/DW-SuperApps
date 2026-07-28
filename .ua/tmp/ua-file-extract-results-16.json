@@ -1,0 +1,147 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 5,
+  "filesSkipped": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 5,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 0,
+      "failed": 0,
+      "skipped": 5
+    }
+  },
+  "results": [
+    {
+      "path": "scripts/distribution_build.sh",
+      "language": "shell",
+      "fileCategory": "script",
+      "totalLines": 29,
+      "nonEmptyLines": 25,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "scripts/install-dw.sh",
+      "language": "shell",
+      "fileCategory": "script",
+      "totalLines": 164,
+      "nonEmptyLines": 150,
+      "functions": [
+        {
+          "name": "usage",
+          "startLine": 12,
+          "endLine": 18,
+          "params": []
+        },
+        {
+          "name": "resolve_shell_mode",
+          "startLine": 50,
+          "endLine": 59,
+          "params": []
+        },
+        {
+          "name": "strip_profile_block",
+          "startLine": 69,
+          "endLine": 77,
+          "params": []
+        },
+        {
+          "name": "write_profile_block",
+          "startLine": 79,
+          "endLine": 94,
+          "params": []
+        },
+        {
+          "name": "remove_profile_block",
+          "startLine": 96,
+          "endLine": 104,
+          "params": []
+        },
+        {
+          "name": "install_launcher",
+          "startLine": 106,
+          "endLine": 126,
+          "params": []
+        },
+        {
+          "name": "uninstall_launcher",
+          "startLine": 128,
+          "endLine": 139,
+          "params": []
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 7,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "scripts/install-host-adapters.sh",
+      "language": "shell",
+      "fileCategory": "script",
+      "totalLines": 6,
+      "nonEmptyLines": 6,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "scripts/python-resolver.sh",
+      "language": "shell",
+      "fileCategory": "script",
+      "totalLines": 39,
+      "nonEmptyLines": 35,
+      "functions": [
+        {
+          "name": "dw_python_error",
+          "startLine": 6,
+          "endLine": 10,
+          "params": []
+        },
+        {
+          "name": "dw_python",
+          "startLine": 12,
+          "endLine": 24,
+          "params": []
+        },
+        {
+          "name": "dw_exec_python",
+          "startLine": 26,
+          "endLine": 39,
+          "params": []
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "scripts/sync-submodules.sh",
+      "language": "shell",
+      "fileCategory": "script",
+      "totalLines": 6,
+      "nonEmptyLines": 6,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    }
+  ]
+}
