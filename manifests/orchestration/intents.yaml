@@ -1,0 +1,24 @@
+apiVersion: dw.superapps/v1
+kind: OrchestrationIntents
+metadata:
+  id: dw-superapps-intents
+  name: DW SuperApps Intent Registry
+intents:
+  task-decomposition:
+    description: Break work into bounded implementation tasks and validation plans
+    worker: task-me
+  validation-planning:
+    description: Plan validation strategy for implementation tasks
+    worker: task-me
+  architecture-design:
+    description: Design service boundaries, modules, or system architecture
+    worker: bmad
+  data-modeling:
+    description: Design or change data models and schemas
+    worker: bmad
+  dependency-mapping:
+    description: Map repository dependencies and coupling
+    worker: ua
+  impact-analysis:
+    description: Analyze blast radius and downstream impact of changes
+    worker: ua

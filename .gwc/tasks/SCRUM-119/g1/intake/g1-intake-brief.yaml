@@ -1,0 +1,20 @@
+schema_version: '1.0'
+artifact_type: g1-intake-brief
+task_id: SCRUM-119
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: main
+base_sha: b5d0b118713ebfd5cbc1ebaafa8d1fe807294f49
+problem_statement: >
+  Define BMAD as a bounded procedure adapter for P4 so it can execute approved
+  methodology steps without owning canonical gate state, broadening scope,
+  self-approving, or mutating unowned runtime roots.
+desired_outcome: >
+  A complete SCRUM-119 evidence package: schemas, permission matrix, examples,
+  validator plan, and GWC gate records proving the adapter remains bounded.
+acceptance_criteria:
+  - Exact provenance binding exists for every invocation.
+  - Permission envelope refuses out-of-scope paths before side effects.
+  - Idempotency keys prevent duplicate side effects.
+  - Scope-changing recommendations are read-only proposals only.
+  - GWC remains the only authority for G2/G4/G5/G6 transitions.
+next_gate: G1_ALIGNMENT

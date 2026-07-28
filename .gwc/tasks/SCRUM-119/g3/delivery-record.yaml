@@ -1,0 +1,51 @@
+schema_version: '1.0'
+artifact_type: g3-delivery-record
+task_id: SCRUM-119
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: main
+base_sha: b5d0b118713ebfd5cbc1ebaafa8d1fe807294f49
+scope_hash: sha256:4b7541cdebac967cda4d9ffb281dc2a277df486339384b0942fa056278388fd9
+outcome: PASS
+implementer: Kilo (local_agent)
+reviewer: Kilo (fresh-context self-review for bounded design evidence)
+review_independence: fresh-context
+changed_files:
+  - .gwc/tasks/SCRUM-119/g0/context-snapshot.yaml
+  - .gwc/tasks/SCRUM-119/g1/intake/g1-intake-brief.yaml
+  - .gwc/tasks/SCRUM-119/g1/brainstorming/g1-options.yaml
+  - .gwc/tasks/SCRUM-119/g1/preflight/g1-preflight-report.yaml
+  - .gwc/tasks/SCRUM-119/g1/decision/g1-decision-record.yaml
+  - .gwc/tasks/SCRUM-119/g2/execution-record.yaml
+  - .gwc/scrums/SCRUM-119/design.md
+  - .gwc/scrums/SCRUM-119/notes/ua-impact.md
+  - .gwc/scrums/SCRUM-119/notes/ua-dependency-map.md
+  - .gwc/scrums/SCRUM-119/notes/task-me-decomposition.md
+  - gates/g1-bmad-procedure-adapter-integration.md
+  - contracts/permission-action-matrix.md
+  - examples/positive-architecture-analysis.md
+  - examples/positive-tdd-implementation.md
+  - examples/positive-review-only.md
+  - examples/rejected-scope-violation.md
+  - tests/validator-test-plan.md
+main_implementation_decisions:
+  - Keep BMAD bounded to declared outputs and owned paths.
+  - Make GWC the sole authority for gate transitions.
+  - Record UA dependency mapping and task-me decomposition in the task root.
+  - Treat merge/deploy as not applicable for this evidence package.
+review:
+  lanes:
+    requirement: PASS
+    design: PASS
+    code: not_applicable
+    test: PASS
+    governance: PASS
+    delivery: PASS
+    ci: not_applicable
+  findings_summary:
+    blocker: 0
+    major: 0
+    minor: 0
+    nit: 0
+next_gate: G4_MERGE_NOT_GRANTED
+notes:
+  - This is a governance/evidence task, not a merge or deploy request.

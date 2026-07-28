@@ -1,0 +1,115 @@
+apiVersion: gwc/v1
+kind: G3DeliveryRecord
+metadata:
+  runId: g3-SCRUM-105-revalidation-20260726-0924
+  status: VERIFIED
+  workspaceMode: canonical
+  workspaceRoot: .gwc
+  repositoryArtifactWritten: YES
+  conflictPolicy: no-shared-active-writes
+  verificationMode: TOOL_VERIFIED
+  timestamp: "2026-07-26T09:24:10Z"
+
+approval:
+  gate: G3_PR
+  approvalId: APPROVE_G3_SCRUM105_BASE_REFRESH_20260726
+  scopeHash16: e413903c967d960d
+  expiresAt: "2026-07-26T10:24:10Z"
+  status: VERIFIED
+
+trace:
+  projectId: dw-superapps
+  taskId: SCRUM-105
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  pr: 20
+  branch: marmalade-beanie
+  baseRef: main
+  approvedBaseSha: 158223c14b530c2676391f071c93b5549397aa45
+  verifiedOriginMainSha: 158223c14b530c2676391f071c93b5549397aa45
+  reviewedHeadSha: e20d99211457836816d898d617a0937feefea0a1
+  mergeBaseSha: 158223c14b530c2676391f071c93b5549397aa45
+  compareStatus: ahead
+  aheadBy: 10
+  behindBy: 0
+
+g2Evidence:
+  exactHeadReadback: true
+  headSha: e20d99211457836816d898d617a0937feefea0a1
+  sourceHeadStatus: VERIFIED
+  changedFiles: 20
+  changedPaths:
+    - .gwc/g0/context-snapshot.yaml
+    - .gwc/g1/brainstorming/g1-options.yaml
+    - .gwc/g1/decision/g1-decision-record.yaml
+    - .gwc/g1/intake/g1-intake-brief.yaml
+    - .gwc/g1/preflight/g1-preflight-report.yaml
+    - .gwc/g2/execution/g2-execution-record.yaml
+    - .gwc/g2/execution/scrum-105-fix-record.yaml
+    - .gwc/g3/draft-pr/g3-delivery-record.yaml
+    - .gwc/g3/draft-pr/g3-independent-review.md
+    - .gwc/g3/draft-pr/g3-pr-assembly.md
+    - .gwc/g3/draft-pr/g3-review-closure.md
+    - .gwc/scrums/SCRUM-105/contracts/cas-lease-fencing.md
+    - .gwc/scrums/SCRUM-105/contracts/node-adapter.md
+    - .gwc/scrums/SCRUM-105/contracts/store-api.md
+    - .gwc/scrums/SCRUM-105/design.md
+    - .gwc/scrums/SCRUM-105/migration/README.md
+    - .gwc/scrums/SCRUM-105/schemas/checkpoint.schema.json
+    - .gwc/scrums/SCRUM-105/schemas/pending-action-readback.schema.json
+    - .gwc/scrums/SCRUM-105/schemas/runtime-event.schema.json
+    - .gwc/scrums/SCRUM-105/schemas/store-api.schema.json
+  scopeHash16: e413903c967d960d
+
+ciEvidence:
+  workflow: Validate workspace
+  runId: 30196370896
+  status: completed
+  conclusion: success
+  exactHeadSha: e20d99211457836816d898d617a0937feefea0a1
+  combinedStatus: no_commit_statuses_reported
+
+validation:
+  local:
+    workspaceValidator: PASS
+    jsonSchemaParseAndDraft202012Meta: PASS
+    yamlParse: PASS
+    crossContractOperationCoverage: PASS
+    diffCheck: PASS
+    secretScan: PASS
+  contentReview:
+    schemaAndDesignChecks: PASS
+    migrationLeaseEpochConsistency: PASS
+  deliveryBinding:
+    status: VERIFIED
+    reason: >
+      Current origin/main, PR base, merge base and approved base all resolve to
+      158223c. GitHub compare is ahead by 10 and behind by 0.
+
+g3Review:
+  outcome: PASS
+  findings:
+    - severity: INFO
+      lane: DELIVERY
+      description: PR body retains historical G3/G4 claims
+      resolution: >
+        Treat GWC artifacts, current GitHub state and CI as authoritative; no merge
+        authority is inferred from the PR body.
+
+authorityBoundary:
+  grants:
+    - G3_PR_REVALIDATION
+  excludes:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION_DATA
+  note: G3 pass does not grant merge authority.
+
+g4ApprovalRequest:
+  gate: G4_MERGE
+  status: PENDING_FINAL_HEAD_READBACK
+  reason: >
+    This G3 evidence commit changes the PR head; generate G4 only after the final
+    pushed head and CI are read back.
+
+g3Outcome: PASS
+g4MergeNotGranted: true

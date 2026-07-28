@@ -7,7 +7,7 @@ metadata:
   description: Governance, delivery control, approval boundaries, validation, and repository lifecycle workflows.
 spec:
   category: governance
-  path: powers/gwc
+  path: projects/gwc
   source: nhatnguyenquang1838-coder/gwc
   provides:
     - governance
@@ -50,3 +50,24 @@ spec:
     deny:
       - ".env*"
       - "**/secrets/**"
+  distribution:
+    contract: dw.power-distribution/v1
+    defaultMode: power-dist
+    modes:
+      submodule:
+        repository: nhatnguyenquang1838-coder/gwc
+        path: projects/gwc
+        ref: main
+      release:
+        repository: nhatnguyenquang1838-coder/gwc
+        assetPattern: "gwc-{version}.zip"
+        checksumAssetPattern: "gwc-{version}.zip.sha256"
+      powerDist:
+        repository: nhatnguyenquang1838-coder/gwc
+        ref: power-dist
+    providerState:
+      status: published
+      task: DW-PDIST-02
+      sourceCommit: 62689ce35e279751a3bf17b5255ac258dafbe7d7
+      sourceLock: distribution/power-package.yaml
+      note: Published as main-20260725.1-62689ce; power-dist and immutable release validated by run 30123787605. Submodule remains available as migration fallback.

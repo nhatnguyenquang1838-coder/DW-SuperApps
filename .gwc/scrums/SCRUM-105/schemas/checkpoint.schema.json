@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw.superapps/schemas/checkpoint.schema.json",
+  "title": "GWC Durable Execution Checkpoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "checkpointId",
+    "runId",
+    "projectId",
+    "repository",
+    "taskId",
+    "cursor",
+    "bindings",
+    "pendingAction",
+    "continuation",
+    "ownership"
+  ],
+  "properties": {
+    "checkpointId": { "type": "string", "format": "uuid" },
+    "runId": { "type": "string", "minLength": 1 },
+    "projectId": { "type": "string", "minLength": 1 },
+    "repository": { "type": "string", "minLength": 1 },
+    "taskId": { "type": "string", "minLength": 1 },
+    "executionMode": { "type": "string", "minLength": 1 },
+    "cursor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate", "lastCompletedNode", "activeNode", "nextNode", "status", "attempt"],
+      "properties": {
+        "gate": { "type": "string", "minLength": 1 },
+        "lastCompletedNode": { "type": ["string", "null"] },
+        "activeNode": { "type": ["string", "null"] },
+        "nextNode": { "type": ["string", "null"] },
+        "status": {
+          "type": "string",
+          "enum": [
+            "STABLE",
+            "RUNNING",
+            "PREPARED",
+            "AWAITING_READBACK",
+            "AWAITING_HUMAN",
+            "SUSPENDED",
+            "RECONCILING",
+            "BLOCKED",
+            "COMPLETED",
+            "SUPERSEDED"
+          ]
+        },
+        "attempt": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baseSha", "workingBranch", "headSha", "scopeHash", "riskClass"],
+      "properties": {
+        "baseSha": { "type": "string", "minLength": 40, "maxLength": 40 },
+        "workingBranch": { "type": "string", "minLength": 1 },
+        "headSha": { "type": "string", "minLength": 40, "maxLength": 40 },
+        "scopeHash": { "type": "string", "minLength": 1 },
+        "riskClass": { "type": "string", "minLength": 1 }
+      }
+    },
+    "pendingAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operationId", "idempotencyKey", "expectedPrestate", "expectedPoststate", "resultState", "readbackNode"],
+      "properties": {
+        "operationId": { "type": ["string", "null"] },
+        "idempotencyKey": { "type": ["string", "null"] },
+        "expectedPrestate": { "type": ["object", "null"] },
+        "expectedPoststate": { "type": ["object", "null"] },
+        "resultState": { "type": ["object", "null"] },
+        "readbackNode": { "type": ["string", "null"] }
+      }
+    },
+    "continuation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mechanism", "nextCheckAtUtc", "active"],
+      "properties": {
+        "mechanism": { "type": ["string", "null"] },
+        "nextCheckAtUtc": { "type": ["string", "null"], "format": "date-time" },
+        "active": { "type": "boolean" }
+      }
+    },
+    "ownership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision", "leaseOwner", "leaseExpiresAtUtc"],
+      "properties": {
+        "revision": { "type": "integer", "minimum": 0 },
+        "leaseOwner": { "type": ["string", "null"] },
+        "leaseExpiresAtUtc": { "type": ["string", "null"], "format": "date-time" }
+      }
+    }
+  }
+}

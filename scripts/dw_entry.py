@@ -12,8 +12,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 REQUIREMENTS = ROOT / "requirements-dev.txt"
-GENERATED_MARKER = "<!-- generated-by: dw host install -->"
-HOSTS = ("kiro", "codex")
+HOSTS = ("kiro", "codex", "copilot", "cline", "kilo", "claude", "custom")
 ONECLICK = {"init", "sync", "clean", "status", "doctor", "reset"}
 
 
@@ -76,12 +75,30 @@ def init_all(args: argparse.Namespace) -> int:
     result = runtime.install_host_adapters(ns(host=args.host, mode=args.mode))
     if result:
         return int(result)
+    if not args.skip_providers:
+        print("==> Install configured model providers")
+        result = runtime.provider_install(
+            ns(
+                provider_id="all",
+                model=args.model,
+                base_url=None,
+                api_key=None,
+            )
+        )
+        if result:
+            return int(result)
     print("==> Validate workspace")
     result = runtime.validate(ns())
     if result:
         return int(result)
     print("==> Verify host adapters")
-    return int(runtime.host_status(ns(host=args.host)))
+    result = runtime.host_status(ns(host=args.host))
+    if result:
+        return int(result)
+    if not args.skip_providers:
+        print("==> Verify providers")
+        return int(runtime.provider_status(ns(provider_id="all", probe=False)))
+    return 0
 
 
 def sync_all(args: argparse.Namespace) -> int:
@@ -105,31 +122,10 @@ def sync_all(args: argparse.Namespace) -> int:
     return int(runtime.validate(ns()))
 
 
-def generated_adapter(path: Path) -> bool:
-    if path.is_symlink():
-        return True
-    marker = path / "SKILL.md" if path.is_dir() else path
-    return marker.is_file() and GENERATED_MARKER in marker.read_text(
-        encoding="utf-8", errors="ignore"
-    )
-
-
 def clean_adapters() -> int:
-    removed = 0
-    for host in HOSTS:
-        root = ROOT / f".{host}" / "skills"
-        if not root.is_dir():
-            continue
-        for path in sorted(root.iterdir()):
-            if path.name == "README.generated.md" or generated_adapter(path):
-                if path.is_symlink() or path.is_file():
-                    path.unlink()
-                else:
-                    shutil.rmtree(path)
-                removed += 1
-            else:
-                print(f"KEEP: {path.relative_to(ROOT)} (not generated)")
-    print(f"Removed generated adapters: {removed}")
+    runtime = load_runtime()
+    removed = int(runtime.remove_host_adapters("all"))
+    print(f"Removed generated host adapters: {removed}")
     return removed
 
 
@@ -219,7 +215,9 @@ def status_all(args: argparse.Namespace) -> int:
     result = runtime.power_sync(ns(target=args.target, mode="status"))
     print("\nHost adapters:")
     host_result = runtime.host_status(ns(host=args.host))
-    return 1 if result or host_result else 0
+    print("\nProviders:")
+    provider_result = runtime.provider_status(ns(provider_id="all", probe=False))
+    return 1 if result or host_result or provider_result else 0
 
 
 def doctor_all(args: argparse.Namespace) -> int:
@@ -233,6 +231,12 @@ def doctor_all(args: argparse.Namespace) -> int:
     failed = bool(runtime.power_sync(ns(target=args.target, mode=mode))) or failed
     print("\nHost adapters:")
     failed = bool(runtime.host_status(ns(host=args.host))) or failed
+    print("\nProviders:")
+    failed = bool(
+        runtime.provider_status(
+            ns(provider_id="all", probe=args.probe_providers)
+        )
+    ) or failed
     return 1 if failed else 0
 
 
@@ -266,14 +270,22 @@ def build_parser() -> argparse.ArgumentParser:
     )
     commands = parser.add_subparsers(dest="command", required=True)
 
-    init_parser = commands.add_parser("init", help="bootstrap dependencies, submodules, hosts, validation")
+    init_parser = commands.add_parser(
+        "init",
+        help="bootstrap dependencies, submodules, hosts, providers, validation",
+    )
     init_parser.add_argument("target", nargs="?", default="all")
     init_parser.add_argument("--host", choices=[*HOSTS, "all"], default="all")
     init_parser.add_argument("--mode", choices=["wrapper", "link", "copy"], default="wrapper")
     init_parser.add_argument("--skip-deps", action="store_true")
+    init_parser.add_argument("--skip-providers", action="store_true")
+    init_parser.add_argument("--model", help="override the configured local provider model")
     init_parser.set_defaults(handler=init_all)
 
-    sync_parser = commands.add_parser("sync", help="update submodules, refresh hosts, validate")
+    sync_parser = commands.add_parser(
+        "sync",
+        help="update submodules, refresh hosts, validate",
+    )
     sync_parser.add_argument("target", nargs="?", default="all")
     sync_parser.add_argument("--pin", action="store_true")
     sync_parser.add_argument("--host", choices=[*HOSTS, "all"], default="all")
@@ -281,26 +293,42 @@ def build_parser() -> argparse.ArgumentParser:
     sync_parser.add_argument("--skip-validate", action="store_true")
     sync_parser.set_defaults(handler=sync_all)
 
-    clean_parser = commands.add_parser("clean", help="remove generated adapters and caches safely")
+    clean_parser = commands.add_parser(
+        "clean",
+        help="remove generated adapters and caches safely",
+    )
     clean_parser.add_argument(
-        "scope", nargs="?", choices=["all", "adapters", "cache", "runtime"], default="all"
+        "scope",
+        nargs="?",
+        choices=["all", "adapters", "cache", "runtime"],
+        default="all",
     )
     clean_parser.add_argument("--include-runtime", action="store_true")
     clean_parser.add_argument("--yes", action="store_true")
     clean_parser.set_defaults(handler=clean_all)
 
-    status_parser = commands.add_parser("status", help="show workspace, submodules, hosts")
+    status_parser = commands.add_parser(
+        "status",
+        help="show workspace, submodules, hosts, and providers",
+    )
     status_parser.add_argument("target", nargs="?", default="all")
     status_parser.add_argument("--host", choices=[*HOSTS, "all"], default="all")
     status_parser.set_defaults(handler=status_all)
 
-    doctor_parser = commands.add_parser("doctor", help="validate contract, submodules, and hosts")
+    doctor_parser = commands.add_parser(
+        "doctor",
+        help="validate contract, submodules, hosts, and providers",
+    )
     doctor_parser.add_argument("target", nargs="?", default="all")
     doctor_parser.add_argument("--host", choices=[*HOSTS, "all"], default="all")
     doctor_parser.add_argument("--offline", action="store_true")
+    doctor_parser.add_argument("--probe-providers", action="store_true")
     doctor_parser.set_defaults(handler=doctor_all)
 
-    reset_parser = commands.add_parser("reset", help="deinitialize clean submodules and generated files")
+    reset_parser = commands.add_parser(
+        "reset",
+        help="deinitialize clean submodules and generated files",
+    )
     reset_parser.add_argument("target", nargs="?", default="all")
     reset_parser.add_argument("--yes", action="store_true")
     reset_parser.set_defaults(handler=reset_all)
@@ -310,7 +338,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     argv = sys.argv[1:]
     if argv == ["--version"]:
-        print("dw 2.1")
+        print("dw 2.3")
         return 0
     if not argv or argv[0] not in ONECLICK:
         runtime = load_runtime()

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw.superapps/schemas/runtime-event.schema.json",
+  "title": "GWC Runtime Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["eventId", "streamId", "streamVersion", "eventType", "timestamp", "payload", "metadata"],
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid", "description": "UUID v7 identifier" },
+    "streamId": { "type": "string", "minLength": 1, "description": "Aggregate stream identifier" },
+    "streamVersion": { "type": "integer", "minimum": 0, "description": "Monotonically increasing stream sequence" },
+    "eventType": {
+      "type": "string",
+      "description": "Fully qualified event type name",
+      "pattern": "^(run|store|lease|fence|pending|adapter)\\.[a-zA-Z]+(\\.[a-zA-Z]+)*$"
+    },
+    "timestamp": { "type": "string", "format": "date-time", "description": "ISO-8601 with timezone" },
+    "traceId": { "type": ["string", "null"], "format": "uuid", "description": "Distributed trace identifier" },
+    "payload": { "type": "object", "description": "Event-specific payload" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor", "source"],
+      "properties": {
+        "actor": { "type": "string", "minLength": 1, "description": "Node or user that produced the event" },
+        "source": { "type": "string", "minLength": 1, "description": "Originating system or service" },
+        "correlationId": { "type": ["string", "null"], "format": "uuid" }
+      }
+    }
+  }
+}

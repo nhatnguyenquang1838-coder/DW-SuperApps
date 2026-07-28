@@ -1,0 +1,26 @@
+schema_version: '1.0'
+artifact_type: g5-deployment-approval
+gate: G5_DEPLOY
+task_id: SCRUM-119
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: main
+base_sha: b5d0b118713ebfd5cbc1ebaafa8d1fe807294f49
+merge_commit_sha: null
+status: not_applicable
+authorized_actions: []
+excluded_actions:
+  - manual_deploy
+  - manual_redeploy
+  - manual_release
+  - manual_reload_runtime
+  - production_config_change
+  - credential_rotation
+  - production_data_write
+  - production_data_access
+verification:
+  state: not_applicable
+  reason: >
+    No merge commit or deployment target exists for this evidence-only task.
+g4_approval_ref: null
+notes:
+  - G5 remains unused because the task does not enter deployment scope.

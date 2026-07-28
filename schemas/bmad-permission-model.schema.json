@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw.superapps/schemas/bmad-permission-model.schema.json",
+  "title": "BMAD Permission Model",
+  "description": "Permission/action matrix separating read-only analysis, bounded repository write, and prohibited actions for BMAD procedure adapters.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "spec"],
+  "properties": {
+    "apiVersion": {
+      "const": "dw.superapps/v1"
+    },
+    "kind": {
+      "const": "BmadPermissionModel"
+    },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["permissionLevels", "authorityBoundaries"],
+      "properties": {
+        "permissionLevels": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["readAnalysis", "boundedWrite", "prohibited"],
+          "properties": {
+            "readAnalysis": {
+              "$ref": "#/$defs/permissionLevel"
+            },
+            "boundedWrite": {
+              "$ref": "#/$defs/permissionLevel"
+            },
+            "prohibited": {
+              "$ref": "#/$defs/prohibitedActions"
+            }
+          }
+        },
+        "authorityBoundaries": {
+          "$ref": "#/$defs/authorityBoundaries"
+        },
+        "procedurePermissions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["procedureId", "permissionLevel"],
+            "properties": {
+              "procedureId": { "type": "string" },
+              "permissionLevel": {
+                "enum": ["readAnalysis", "boundedWrite", "prohibited"]
+              },
+              "notes": { "type": "string" }
+            }
+          },
+          "description": "Mapping of each registered procedure to its permission level."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "permissionLevel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description", "allowedPaths", "actions"],
+      "properties": {
+        "description": { "type": "string" },
+        "allowedPaths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "prohibitedActions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deniedPaths", "actions"],
+      "properties": {
+        "description": { "type": "string" },
+        "deniedPaths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "authorityBoundaries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gateApproval",
+        "canonicalState",
+        "scopeExpansion",
+        "projectionWrites"
+      ],
+      "properties": {
+        "gateApproval": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rule", "enforcedBy", "gates"],
+          "properties": {
+            "rule": {
+              "type": "string",
+              "description": "BMAD cannot approve G2/G4/G5/G6. Gate transitions are performed by GWC only."
+            },
+            "enforcedBy": {
+              "type": "string",
+              "description": "Who/what enforces this boundary (GWC governance layer)."
+            },
+            "gates": {
+              "type": "array",
+              "items": { "enum": ["G2", "G4", "G5", "G6"] }
+            }
+          }
+        },
+        "canonicalState": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rule", "protectedPaths"],
+          "properties": {
+            "rule": {
+              "type": "string",
+              "description": "BMAD cannot alter .gwc canonical state."
+            },
+            "protectedPaths": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "scopeExpansion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rule", "authorizationRequired"],
+          "properties": {
+            "rule": {
+              "type": "string",
+              "description": "BMAD cannot expand scope without explicit GWC authorization."
+            },
+            "authorizationRequired": {
+              "type": "string",
+              "description": "What is required to expand scope (GWC scope hash, gate approval)."
+            }
+          }
+        },
+        "projectionWrites": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rule", "systems"],
+          "properties": {
+            "rule": {
+              "type": "string",
+              "description": "BMAD cannot perform Jira/Notion/Slack projection writes."
+            },
+            "systems": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

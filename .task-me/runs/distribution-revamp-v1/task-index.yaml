@@ -1,0 +1,20 @@
+version: 1
+run_id: distribution-revamp-v1
+method: task-me
+gwc_used: false
+tasks:
+  - id: DR-001
+    title: Define artifact-only release contract
+    status: done
+  - id: DR-002
+    title: Implement source-side release builder
+    status: done
+  - id: DR-003
+    title: Implement offline verifier and installer
+    status: done
+  - id: DR-004
+    title: Add rollback and force-update behavior
+    status: done
+  - id: DR-005
+    title: Add release workflow and tests
+    status: done

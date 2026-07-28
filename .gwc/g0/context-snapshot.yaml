@@ -1,0 +1,159 @@
+apiVersion: gwc/v1
+kind: ContextSnapshot
+metadata:
+  id: g0-SCRUM-105
+  project: dw-superapps
+  repository: DW-SuperApps
+  status: SUPERSEDED_BY_G2_REPAIR
+  baseRef: main
+  baseSha: 8cf13d7d6bef535bff77e36815b737aff9d7f709
+  baseShaOriginMain: 8cf13d7d6bef535bff77e36815b737aff9d7f709
+  currentBranch: marmalade-beanie
+  headSha: 839f04638ba15dca6a1b4d901cae5ee2b6b6f1c4
+  headIsAheadOfMain: true
+  headAheadCount: 1
+  timestamp: "2026-07-26T14:57:00+07:00"
+  verificationMode: TOOL_VERIFIED
+  actor: nhatdear
+  actorEmail: nhat.nguyenquang1838@gmail.com
+
+project:
+  id: dw-superapps
+  name: DW SuperApps
+  workspaceConfigPath: workspace.yaml
+  targetSystem: rental-home
+  targetSystemPath: systems/rental-home
+  targetSystemSource: nhatnguyenquang1838-coder/rental_home
+  targetSystemEnabledPowers:
+    - gwc
+    - ua
+    - task-me
+    - bmad
+
+governance:
+  sourceOfTruthOrder:
+    - 1: repository-state
+    - 2: root AGENTS.md
+    - 3: workspace.yaml
+    - 4: target-system AGENTS.md
+    - 5: manifests/powers/<power-id>.yaml
+    - 6: installed-package MANIFEST.json
+    - 7: applicable-runbooks-and-host-adapters
+
+  sources:
+    - id: root-agents-md
+      type: REPOSITORY_DECLARED
+      path: AGENTS.md
+      status: AVAILABLE
+      sha: null
+    - id: workspace-yaml
+      type: REPOSITORY_DECLARED
+      path: workspace.yaml
+      status: AVAILABLE
+    - id: gwc-policies
+      type: OBSERVED
+      path: .gwc/policies/
+      status: AVAILABLE
+      files:
+        - notification-policy.yaml
+    - id: gwc-runbooks
+      type: OBSERVED
+      path: .gwc/runbooks/
+      status: AVAILABLE
+      files:
+        - SLACK_NOTIFICATION_RUNBOOK.md
+    - id: gwc-g0-skill
+      type: REPOSITORY_DECLARED
+      path: powers/gwc/skills/gwc-g0/SKILL.md
+      status: UNVERIFIED
+      note: submodule not initialized in worktree
+    - id: gwc-g1-skill
+      type: REPOSITORY_DECLARED
+      path: powers/gwc/skills/gwc-g1/SKILL.md
+      status: UNVERIFIED
+      note: submodule not initialized in worktree
+    - id: gwc-g2-skill
+      type: REPOSITORY_DECLARED
+      path: powers/gwc/skills/gwc-g2/SKILL.md
+      status: UNVERIFIED
+      note: submodule not initialized in worktree
+    - id: rental-home-agents-md
+      type: REPOSITORY_DECLARED
+      path: systems/rental-home/AGENTS.md
+      status: UNVERIFIED
+      note: submodule not initialized in worktree
+    - id: rental-home-project-profile
+      type: MISSING
+      path: .gwc/gwc/projects/rental-home/project-profile.yaml
+    - id: rental-home-project-instructions
+      type: MISSING
+      path: .gwc/gwc/projects/rental-home/project-instructions.md
+    - id: rental-home-project-extension
+      type: MISSING
+      path: .gwc/gwc/projects/rental-home/project-extension.md
+    - id: gate-lifecycle-contract
+      type: MISSING
+      path: .gwc/gwc/core/GATE_LIFECYCLE_CONTRACT_v1.0.md
+    - id: coding-project-governance
+      type: MISSING
+      path: .gwc/gwc/core/Coding_Project_Governance_v1.0.md
+    - id: agent-operating-runtime-contract
+      type: MISSING
+      path: .gwc/gwc/core/Agent_Operating_Runtime_Contract_v1.0.md
+
+task:
+  id: SCRUM-105
+  key: SCRUM-105
+  summary: "[P2-K1] Design durable runtime store, event model and adapter contracts"
+  priority: High
+  lane: Knowledge
+  phase: 2
+  status: "To Do"
+  labels:
+    - event-sourcing
+    - gwc-runtime
+    - high-priority
+    - knowledge-lane
+    - phase-2
+    - runtime-store
+
+constraints:
+  - gate-sequence-required: G0 -> G1 -> G2 -> G3 -> G4 -> G5 -> G6
+  - no-skip-gates: true
+  - no-commit-without-gate-clearance: true
+  - submodule-not-initialized: true
+  - system-owned-data: true
+
+authority-boundary:
+  grants:
+    - G0_CONTEXT
+    - G1_ALIGNMENT
+    - G2_EXECUTION
+  excludes:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION_DATA
+  excluded-actions:
+    - merge
+    - deploy
+    - production-configuration
+    - credential-operation
+    - production-data-access
+    - migration
+
+g0-outcome: PARTIAL
+unresolved-blockers:
+  - required GWC and target-system instruction sources were unavailable in the worktree
+  - exact-head evidence must be re-read after the G2 repair commit
+unverified-sources:
+  - gwc-g0-skill (submodule not initialized)
+  - gwc-g1-skill (submodule not initialized)
+  - gwc-g2-skill (submodule not initialized)
+  - rental-home-agents-md (submodule not initialized)
+missing-sources:
+  - rental-home-project-profile
+  - rental-home-project-instructions
+  - rental-home-project-extension
+  - gate-lifecycle-contract
+  - coding-project-governance
+  - agent-operating-runtime-contract

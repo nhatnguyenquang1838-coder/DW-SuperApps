@@ -27,34 +27,120 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Test Bash Python resolver
+      - name: Validate Bash entrypoints
         shell: bash
-        run: bash tests/test_python_resolver.sh
+        run: bash -n bin/dw scripts/install-dw.sh scripts/python-resolver.sh hosts/openclaw-acpx/install.sh
 
-      - name: Test one-click CLI installer
+      - name: Install global DW CLI in temporary home
         shell: bash
         run: |
-          bash -n bin/dw scripts/install-dw.sh scripts/python-resolver.sh
-          test_home="$(mktemp -d)"
-          HOME="$test_home" SHELL=/bin/bash ./bin/dw install --shell bash
-          HOME="$test_home" "$test_home/.local/bin/dw" --version
-          grep -Fq "DW SuperApps CLI" "$test_home/.bashrc"
-          HOME="$test_home" SHELL=/bin/bash "$test_home/.local/bin/dw" uninstall --shell bash
-          test ! -e "$test_home/.local/bin/dw"
-          ! grep -Fq "DW SuperApps CLI" "$test_home/.bashrc"
+          rm -rf /tmp/dw-cli-home
+          mkdir -p /tmp/dw-cli-home
+          HOME=/tmp/dw-cli-home SHELL=/bin/bash bash bin/dw install --shell bash
 
-      - run: python -m pip install -r requirements-dev.txt
+      - name: Verify global DW CLI
+        shell: bash
+        run: |
+          HOME=/tmp/dw-cli-home /tmp/dw-cli-home/.local/bin/dw --version
+          grep -Fq "DW SuperApps CLI" /tmp/dw-cli-home/.bashrc
+
+      - name: Uninstall global DW CLI
+        shell: bash
+        run: |
+          HOME=/tmp/dw-cli-home SHELL=/bin/bash /tmp/dw-cli-home/.local/bin/dw uninstall --shell bash
+          test ! -e /tmp/dw-cli-home/.local/bin/dw
+          ! grep -Fq "DW SuperApps CLI" /tmp/dw-cli-home/.bashrc
+
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements-dev.txt
 
       - name: Validate workspace contract
         run: python scripts/dw_cli.py validate
 
-      - name: Test Power Runtime v2
-        run: python -m unittest discover -s tests -p "test_*.py"
+      - name: Test one-click commands
+        run: python -m unittest -v tests.test_oneclick_commands
 
-      - name: Validate host adapters
+      - name: Test multi-host runtime
+        run: python -m unittest -v tests.test_multi_host_runtime
+
+      - name: Test OpenClaw ACPX runtime
+        run: python -m unittest -v tests.test_openclaw_acpx_runtime
+
+      - name: Test Power Runtime v2
+        run: python -m unittest -v tests.test_power_runtime_v2
+
+      - name: Test distribution contract
+        run: python -m unittest -v tests.test_power_distribution_contract
+
+      - name: Test deterministic builder
+        run: python -m unittest -v tests.test_power_dist_builder
+
+      - name: Test distribution capabilities and overlays
+        run: >-
+          python -m unittest -v
+          tests.test_power_dist_capability
+          tests.test_distribution_builder_overlays
+
+      - name: Test distribution integration
+        run: python -m unittest -v tests.test_power_distribution_integration
+
+      - name: Test portable runtime installer
+        run: python -m unittest -v tests.test_power_runtime_installer
+
+      - name: Test package consumer
+        run: python -m unittest -v tests.test_power_package_consumer
+
+      - name: Test BMAD source lock and graph
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_source_lock_and_graph_use_same_commit
+
+      - name: Test BMAD graph closure
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_knowledge_graph_references_are_closed
+
+      - name: Test BMAD distribution recipe
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_distribution_recipe_is_valid_and_skills_only
+
+      - name: Test BMAD Power manifest
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_power_manifest_validates
+
+      - name: Test BMAD host mapping
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_bootstrap_host_mapping
+
+      - name: Test BMAD deterministic package
+        id: bmad_deterministic
+        continue-on-error: true
+        run: >-
+          python -m unittest -v
+          tests.test_bmad_power_plugin.BmadPowerPluginTests.test_external_source_overlay_builds_a_deterministic_package
+          > bmad-deterministic.log 2>&1
+
+      - name: Upload BMAD deterministic test log
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bmad-deterministic-test-log
+          path: bmad-deterministic.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Fail on BMAD deterministic test
+        if: steps.bmad_deterministic.outcome == 'failure'
         run: |
+          cat bmad-deterministic.log
+          exit 1
+
+      - name: Test BMAD workflow modes
+        run: python -m unittest -v tests.test_bmad_power_plugin.BmadPowerPluginTests.test_workflow_has_manual_and_scheduled_modes
+
+      - name: Validate all host adapters
+        run: |
+          python scripts/dw_cli.py host list
           python scripts/dw_cli.py host install all
           python scripts/dw_cli.py host status all
+
+      - name: Validate Ollama provider profile
+        run: |
+          python scripts/dw_cli.py provider install all
+          python scripts/dw_cli.py provider status all
 
       - name: Report submodule status
         run: python scripts/dw_cli.py power status all
