@@ -154,6 +154,7 @@ jobs:
           path: |
             .staging-build-result.json
             .staging-build-error.log
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 7
 
