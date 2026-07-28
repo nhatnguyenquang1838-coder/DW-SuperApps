@@ -32,6 +32,13 @@
             "defaultRef": {"type": "string", "default": "main"}
           }
         },
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "dashboard": {"type": "boolean", "default": false}
+          }
+        },
         "package": {
           "type": "object",
           "additionalProperties": false,

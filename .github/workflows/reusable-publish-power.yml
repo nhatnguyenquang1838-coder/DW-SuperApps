@@ -85,7 +85,7 @@ jobs:
 
       - name: Validate recipe
         run: >-
-          python .dw-power-dist/scripts/power_dist.py validate-recipe
+          python .dw-power-dist/scripts/power_dist_capability.py validate-recipe
           --recipe "${{ inputs.recipe_path }}"
 
       - name: Build deterministic distribution
@@ -93,7 +93,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python .dw-power-dist/scripts/power_dist.py build \
+          python .dw-power-dist/scripts/power_dist_capability.py build \
             --recipe "${{ inputs.recipe_path }}" \
             --source . \
             --output "${RUNNER_TEMP}/power-dist-output" \
@@ -127,7 +127,7 @@ jobs:
 
       - name: Verify staged package
         run: >-
-          python .dw-power-dist/scripts/power_dist.py verify
+          python .dw-power-dist/scripts/power_dist_capability.py verify
           --package-root "${{ steps.result.outputs.staging_root }}"
 
       - name: Smoke install and doctor

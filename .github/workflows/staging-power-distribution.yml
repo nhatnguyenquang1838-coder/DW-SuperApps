@@ -68,15 +68,19 @@ jobs:
         run: |
           set -euo pipefail
           FOUNDATION_REF="${{ inputs.foundation_ref }}"
-          EXTRA=()
+          POWER_ARGS=()
           if [[ -n "${{ inputs.powers }}" ]]; then
             IFS=',' read -ra EXTRA <<< "${{ inputs.powers }}"
+            for power in "${EXTRA[@]}"; do
+              power="${power//[[:space:]]/}"
+              if [[ -n "$power" ]]; then
+                POWER_ARGS+=(--power "$power")
+              fi
+            done
           fi
           python scripts/distribution_builder.py \
             --foundation-ref "$FOUNDATION_REF" \
-            ${
-              for p in "${EXTRA[@]}"; do printf -- "--power %q " "$p"; done
-            } \
+            "${POWER_ARGS[@]}" \
             > .staging-build-result.json
           cat .staging-build-result.json
 
@@ -85,17 +89,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          EXTRA=()
+          POWER_ARGS=()
           if [[ -n "${{ inputs.powers }}" ]]; then
             IFS=',' read -ra EXTRA <<< "${{ inputs.powers }}"
+            for power in "${EXTRA[@]}"; do
+              power="${power//[[:space:]]/}"
+              if [[ -n "$power" ]]; then
+                POWER_ARGS+=(--power "$power")
+              fi
+            done
           fi
           python scripts/distribution_installer.py \
             --staging .kilo/staging/power-dist \
             --store-root .kilo/staging/power-dist/.store \
             --target .kilo/staging/power-dist/.consumer \
-            ${
-              for p in "${EXTRA[@]}"; do printf -- "--power %q " "$p"; done
-            }
+            "${POWER_ARGS[@]}"
 
       - name: Upload staging artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
