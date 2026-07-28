@@ -71,6 +71,14 @@ Do not ask for facts already available from repository state, manifests, governa
 
 Installing a Power does not grant GitHub write, Jira write, Slack, merge, deployment, approval, or production authority.
 
+## Native Power activation
+
+Power aliases such as `/dw-gwc`, `/dw-ua`, `/dw-task-me`, and `/dw-bmad` select native host skills. They are not terminal commands and do not require prompt export.
+
+When a Power is selected, the agent must resolve the target system, load the canonical installed entrypoint, and apply the skill directly to the remainder of the user's request. It must not tell the user to execute an activation command, generate a copy-and-paste prompt, or merely explain the Power instead of using it.
+
+The DW CLI owns installation, configuration, inspection, validation, doctor, history, rollback, and uninstall operations. It does not generate task prompts.
+
 ## Mandatory runbooks
 
 For Power installation, update, configuration, activation, validation, doctor, repair, offline ZIP use, or initial host setup, read and execute:

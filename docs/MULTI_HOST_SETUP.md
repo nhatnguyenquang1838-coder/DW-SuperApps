@@ -49,22 +49,18 @@ Current adapter roots:
 | Claude Code | `CLAUDE.md` and `.claude/skills/<power>/SKILL.md` |
 | Custom | `.agents/DW_AGENT.md` and `.agents/skills/<power>/SKILL.md` |
 
-## Call a Power
+## Activate a Power
 
-```bash
-dw power prompt ua --system rental-home --task "Analyze architecture"
-dw power prompt task-me --system rental-home --task "Create an implementation plan"
-dw power prompt gwc --system rental-home --task "Review governance and evidence"
+Use the native skill alias in the configured host and put the task after it:
+
+```text
+/dw-gwc Review governance and evidence
+/dw-ua Analyze architecture
+/dw-task-me Create an implementation plan
+/dw-bmad Refine the product specification
 ```
 
-Prompt output displays:
-
-- workspace root;
-- package store and installed package;
-- resolved entrypoint and fallback mode;
-- target system path;
-- runtime root;
-- legacy target-install probe.
+The selected adapter resolves the target system and canonical installed entrypoint directly. No terminal command or generated task prompt is required.
 
 ## Legacy installations
 

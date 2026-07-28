@@ -1,1 +1,0 @@
-active references remain: scripts/remove_power_prompt_once.py, scripts/remove_power_prompt_once_v2.py, scripts/remove_power_prompt_once_v3.py, scripts/remove_power_prompt_once_v4.py

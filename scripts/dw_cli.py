@@ -278,46 +278,6 @@ def power_info(args: argparse.Namespace) -> int:
     return 0
 
 
-def power_prompt(args: argparse.Namespace) -> int:
-    all_manifests = manifests()
-    if args.power_id not in all_manifests:
-        raise DwError(f"unknown Power: {args.power_id}")
-    manifest = all_manifests[args.power_id]
-    system = find_system(args.system_id)
-    if args.power_id not in system.get("enabled_powers", []):
-        raise DwError(f"Power {args.power_id} is not enabled for system {args.system_id}")
-    spec = manifest["spec"]
-    skill_candidates = spec["entrypoints"]["skillCandidates"]
-    task = args.task.strip() if args.task else "<describe the task>"
-    candidate_lines = os.linesep.join(
-        f"   - `{spec['path']}/{candidate}`" for candidate in skill_candidates
-    )
-    print(
-        f"""Use the `{args.power_id}` Power for system `{args.system_id}`.
-
-Workspace root: `{ROOT}`
-System repository: `{system['path']}`
-Power source: `{spec['path']}`
-Power manifest: `manifests/powers/{args.power_id}.yaml`
-Runtime data root in the system: `{spec['runtimeDataRoot']}`
-
-Read in this order:
-1. `workspace.yaml`
-2. `AGENTS.md`
-3. `{system['path']}/AGENTS.md` when present
-4. The first existing Power entrypoint from:
-{candidate_lines}
-
-Task:
-{task}
-
-Keep generated data inside `{system['path']}/{spec['runtimeDataRoot']}/`.
-Do not write generated data into `{spec['path']}`.
-"""
-    )
-    return 0
-
-
 def submodule_entries() -> list[dict[str, str]]:
     ws = workspace()
     entries: list[dict[str, str]] = []
@@ -556,18 +516,18 @@ Thin `{host}` adapter owned by DW-SuperApps.
 - Source fallback: `{spec['path']}`
 - Power manifest: `manifests/powers/{power_id}.yaml`
 
-## Invocation
+## Activation
 
-1. Read `workspace.yaml` and `AGENTS.md` from DW-SuperApps.
-2. Resolve one target system from the workspace registry.
-3. Read project-local instructions in that system.
-4. Prefer the installed package entrypoint above; use source fallback only when no managed package exists.
-5. Keep runtime and project configuration under the target system's `{spec['runtimeDataRoot']}/`.
-6. Never create `.dw/powers`, host skill payloads, or distribution history inside the target system.
+This Power is already active when this skill is selected or invoked through its native host alias.
 
-Generate a complete task prompt with:
+1. Resolve one target system from `workspace.yaml`.
+2. Read the resolved canonical installed Power entrypoint directly.
+3. Apply that Power to the user's task in the current conversation.
+4. Continue until the task reaches a real capability, evidence, or authority boundary.
 
-`dw power prompt {power_id} --system <system> --task \"<task>\"`
+Do not generate or execute a command to activate this Power.
+Do not tell the user to run a slash command or terminal command.
+Do not describe the Power instead of applying it.
 """
 
 
@@ -600,9 +560,11 @@ Read `AGENTS.md` and `workspace.yaml` before acting.
 5. Keep packages, inbox, history, bindings, router, and all host adapters in DW-SuperApps.
 6. Never install Power skill payloads into a registered system.
 
-Generate a host-neutral prompt:
+## Power activation routing
 
-`dw power prompt <power> --system <system> --task \"<task>\"`
+When a registered Power skill or native alias is selected, load its canonical installed entrypoint and apply it directly to the user's request.
+
+Do not generate a shell command, exported prompt, or copy-and-paste handoff to activate a Power.
 """
 
 
@@ -909,12 +871,6 @@ def build_parser() -> argparse.ArgumentParser:
     power_info_parser.add_argument("power_id")
     power_info_parser.add_argument("--json", action="store_true")
     power_info_parser.set_defaults(handler=power_info)
-
-    power_prompt_parser = power_commands.add_parser("prompt")
-    power_prompt_parser.add_argument("power_id")
-    power_prompt_parser.add_argument("--system", dest="system_id", required=True)
-    power_prompt_parser.add_argument("--task", default="")
-    power_prompt_parser.set_defaults(handler=power_prompt)
 
     for mode in ("init", "check", "update", "pin", "status"):
         mode_parser = power_commands.add_parser(mode)

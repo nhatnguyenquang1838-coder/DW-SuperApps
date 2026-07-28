@@ -85,31 +85,18 @@ dw host status codex
 
 Host adapters are generated discovery layers. Canonical instructions and tools remain in the Power distributions or provider repositories.
 
-## 5. Generate Power prompts
+## 5. Activate Powers natively
 
-### GWC governance
+Open the DW-SuperApps workspace in a configured host and invoke the native skill alias directly:
 
-```bash
-dw power prompt gwc \
-  --system rental-home \
-  --task "Recover the current governed task state and execute the next authorized gate"
+```text
+/dw-gwc Recover the current governed task state and execute the next authorized gate
+/dw-ua Refresh the Rental Home architecture and codebase knowledge graph
+/dw-task-me Create an implementation plan with impact analysis for OPS-LEASE
+/dw-bmad Refine the product specification
 ```
 
-### Understand Anything
-
-```bash
-dw power prompt ua \
-  --system rental-home \
-  --task "Refresh the Rental Home architecture and codebase knowledge graph"
-```
-
-### Task Me
-
-```bash
-dw power prompt task-me \
-  --system rental-home \
-  --task "Create an implementation plan with impact analysis for OPS-LEASE"
-```
+The host resolves the target system and canonical installed entrypoint. No generated prompt or terminal activation command is required.
 
 Useful discovery commands:
 
