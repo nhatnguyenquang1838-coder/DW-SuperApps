@@ -1,0 +1,23 @@
+test_cli_parses_v2_commands (tests.test_power_runtime_v2.PowerRuntimeV2Tests.test_cli_parses_v2_commands) ... ok
+test_cli_rejects_removed_prompt_command (tests.test_power_runtime_v2.PowerRuntimeV2Tests.test_cli_rejects_removed_prompt_command) ... usage: dw power [-h] {list,info,init,check,update,pin,status} ...
+dw power: error: argument power_command: invalid choice: 'prompt' (choose from 'list', 'info', 'init', 'check', 'update', 'pin', 'status')
+ok
+test_dynamic_submodule_targets_exclude_external_power (tests.test_power_runtime_v2.PowerRuntimeV2Tests.test_dynamic_submodule_targets_exclude_external_power) ... ok
+test_manifests_use_v2_contract (tests.test_power_runtime_v2.PowerRuntimeV2Tests.test_manifests_use_v2_contract) ... ok
+test_provider_config_uses_workspace_defaults (tests.test_power_runtime_v2.PowerRuntimeV2Tests.test_provider_config_uses_workspace_defaults) ... ok
+test_registered_power_ids (tests.test_power_runtime_v2.PowerRuntimeV2Tests.test_registered_power_ids) ... ok
+test_rental_home_enables_bmad (tests.test_power_runtime_v2.PowerRuntimeV2Tests.test_rental_home_enables_bmad) ... ok
+test_wrapper_is_host_neutral (tests.test_power_runtime_v2.PowerRuntimeV2Tests.test_wrapper_is_host_neutral) ... FAIL
+
+======================================================================
+FAIL: test_wrapper_is_host_neutral (tests.test_power_runtime_v2.PowerRuntimeV2Tests.test_wrapper_is_host_neutral)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/runner/work/DW-SuperApps/DW-SuperApps/tests/test_power_runtime_v2.py", line 112, in test_wrapper_is_host_neutral
+    self.assertIn(".task-me", content)
+AssertionError: '.task-me' not found in "---\nname: dw-task-me\ndescription: Impact analysis, implementation planning, task decomposition, coding guidance, and validation planning.\n---\n<!-- generated-by: dw host install -->\n\n# Task Me Power\n\nThin `codex` adapter owned by DW-SuperApps.\n\n- Workspace package store: `.dw/powers`\n- Installed package: `.dw/powers/task-me`\n- Resolved entrypoint: `powers/task-me/.kiro/skills/implementation-task-architect`\n- Resolution mode: `source-submodule-fallback`\n- Source fallback: `projects/task-me`\n- Power manifest: `manifests/powers/task-me.yaml`\n\n## Activation\n\nThis Power is already active when this skill is selected or invoked through its native host alias.\n\n1. Resolve one target system from `workspace.yaml`.\n2. Read the resolved canonical installed Power entrypoint directly.\n3. Apply that Power to the user's task in the current conversation.\n4. Continue until the task reaches a real capability, evidence, or authority boundary.\n\nDo not generate or execute a command to activate this Power.\nDo not tell the user to run a slash command or terminal command.\nDo not describe the Power instead of applying it.\n"
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.108s
+
+FAILED (failures=1)
