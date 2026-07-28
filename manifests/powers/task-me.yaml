@@ -7,7 +7,7 @@ metadata:
   description: Impact analysis, implementation planning, task decomposition, coding guidance, and validation planning.
 spec:
   category: implementation-planning
-  path: powers/task-me
+  path: projects/task-me
   source: nhatnguyenquang1838-coder/task-me
   provides:
     - impact-analysis
@@ -51,3 +51,24 @@ spec:
     deny:
       - ".env*"
       - "**/secrets/**"
+  distribution:
+    contract: dw.power-distribution/v1
+    defaultMode: power-dist
+    modes:
+      submodule:
+        repository: nhatnguyenquang1838-coder/task-me
+        path: projects/task-me
+        ref: main
+      release:
+        repository: nhatnguyenquang1838-coder/task-me
+        assetPattern: "task-me-{version}.zip"
+        checksumAssetPattern: "task-me-{version}.zip.sha256"
+      powerDist:
+        repository: nhatnguyenquang1838-coder/task-me
+        ref: power-dist
+    providerState:
+      status: published
+      task: DW-PDIST-03
+      sourceCommit: ef0b890b1fb9140109c04cbb490b41d9aa94bfff
+      sourceLock: distribution/power-package.yaml
+      note: Published as main-20260725.1-ef0b890; power-dist and immutable release validated by run 30123645327. Submodule remains available as migration fallback.

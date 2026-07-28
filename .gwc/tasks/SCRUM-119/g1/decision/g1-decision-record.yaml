@@ -1,0 +1,36 @@
+schema_version: '1.0'
+artifact_type: g1-decision-record
+task_id: SCRUM-119
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: main
+base_sha: b5d0b118713ebfd5cbc1ebaafa8d1fe807294f49
+status: ACCEPTED
+selected_option_id: OPT-1
+rationale: >
+  Proceed with the bounded evidence package. The SCRUM-119 work is a design and
+  governance artifact set; it does not grant merge, deploy, or production authority.
+rejected_option_ids:
+  - OPT-2
+scope_hash: sha256:4b7541cdebac967cda4d9ffb281dc2a277df486339384b0942fa056278388fd9
+g1_gate_outcome: PASS
+authority_boundaries:
+  grants:
+    - G1_ALIGNMENT
+    - G2_EXECUTION
+  excludes:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION_DATA
+subagent_distribution_plan:
+  task_decomposition:
+    - task: Validate BMAD schemas and permission matrix
+      agent: bmad
+    - task: Map dependency and provenance impact
+      agent: ua
+    - task: Break validation into executable checks
+      agent: task-me
+    - task: Record gate evidence and boundary posture
+      agent: gwc
+  summary: >
+    GWC governs the gate, BMAD supplies contract structure, UA supplies impact
+    mapping, and task-me supplies validation planning.

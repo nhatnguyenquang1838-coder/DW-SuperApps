@@ -52,8 +52,8 @@ bash bin/dw system list
 ## Rental Home flow
 
 ```text
-systems/rental-home
-  -> powers/ua       builds or refreshes .ua
-  -> powers/task-me  produces .task-me plans
-  -> powers/gwc      applies governance only when explicitly activated
+projects/rental-home
+  -> projects/ua       builds or refreshes .ua
+  -> projects/task-me  produces .task-me plans
+  -> projects/gwc      applies governance only when explicitly activated
 ```

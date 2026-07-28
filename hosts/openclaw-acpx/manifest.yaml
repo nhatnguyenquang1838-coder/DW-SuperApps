@@ -1,0 +1,58 @@
+apiVersion: dw.superapps/orchestrator/v1
+kind: Orchestrator
+metadata:
+  id: openclaw-acpx
+  name: OpenClaw ACPX
+  version: "0.1.0"
+  description: OpenClaw control plane for governed dispatch to external coding harnesses through ACPX.
+spec:
+  host: openclaw
+  backend: acpx
+  skillRoots:
+    - .agents/skills
+    - hosts/openclaw-acpx/skills
+  defaultWorker: codex
+  workers:
+    - id: codex
+      purpose:
+        - bounded-implementation
+        - testing
+        - independent-review
+    - id: claude
+      purpose:
+        - architecture-analysis
+        - complex-debugging
+        - broad-refactor
+    - id: kiro
+      purpose:
+        - requirements
+        - design
+        - specification
+        - task-decomposition
+    - id: kilocode
+      purpose:
+        - provider-flexible-execution
+        - quota-fallback
+        - isolated-parallel-work
+  permissions:
+    permissionMode: approve-reads
+    nonInteractivePermissions: fail
+  bridges:
+    pluginToolsMcpBridge: false
+    openClawToolsMcpBridge: false
+  sessions:
+    mode: persistent
+    threadBindings:
+      enabled: true
+      idleHours: 24
+      maxAgeHours: 0
+      spawnSessions: true
+  contracts:
+    workOrder: schemas/work-order.schema.json
+    workerResult: schemas/worker-result.schema.json
+  governance:
+    authority: projects/gwc
+    planning: projects/task-me
+    knowledge: projects/ua
+    repositoryTruth: github
+    communicationProjection: slack

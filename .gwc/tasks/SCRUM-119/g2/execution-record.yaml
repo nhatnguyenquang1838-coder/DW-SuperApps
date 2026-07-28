@@ -1,0 +1,45 @@
+schema_version: '1.0'
+artifact_type: g2-execution-record
+task_id: SCRUM-119
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: main
+base_sha: b5d0b118713ebfd5cbc1ebaafa8d1fe807294f49
+working_branch: main
+execution_mode: local_agent
+scope_hash: sha256:4b7541cdebac967cda4d9ffb281dc2a277df486339384b0942fa056278388fd9
+started_at_utc: '2026-07-27T17:27:35Z'
+completed_at_utc: '2026-07-27T17:27:35Z'
+status: READY_FOR_G3
+authorized_scope:
+  - .gwc/tasks/SCRUM-119/**
+  - .gwc/scrums/SCRUM-119/**
+  - contracts/permission-action-matrix.md
+  - examples/positive-architecture-analysis.md
+  - examples/positive-tdd-implementation.md
+  - examples/positive-review-only.md
+  - examples/rejected-scope-violation.md
+  - gates/g1-bmad-procedure-adapter-integration.md
+  - tests/validator-test-plan.md
+  - schemas/bmad-procedure-*.json
+authorized_actions:
+  - modify_scoped_files
+  - run_validation
+  - record_gate_evidence
+excluded_actions:
+  - merge
+  - auto_merge
+  - deploy
+  - release
+  - production_config_change
+  - credential_rotation
+  - production_data_access
+result:
+  changed_files: 19
+  scope_allowlist_check: PASS
+  validation:
+    json_schemas: PASS
+    yaml_parse: PASS
+    gate_boundary_check: PASS
+  next_gate: G3_PR
+notes:
+  - Bounded evidence task only; no merge or deploy authority is granted.

@@ -11,37 +11,121 @@ hosts:
   - kilo
   - claude
   - custom
+orchestrators:
+  - id: openclaw-acpx
+    host: openclaw
+    backend: acpx
+    path: hosts/openclaw-acpx
+    enabled: true
+    workers:
+      - codex
+      - claude
+      - kiro
+      - kilocode
 providers:
   - id: ollama
     type: openai-compatible
     base_url: http://localhost:11434/v1
     api_key: ollama
     model_env: OLLAMA_MODEL
-    default_model: qwen2.5-coder:7b
+    default_model: qwen3-coder:30b
+distribution:
+  ownership: workspace
+  storeRoot: .dw/powers
+  inboxRoot: .dw/inbox/powers
+  cacheRoot: .dw/cache
+  historyRoot: .dw/history/powers
+  bindingsRoot: .dw/bindings
+  hostAdaptersRoot: .
+projects:
+  - id: gwc
+    path: projects/gwc
+    source: nhatnguyenquang1838-coder/gwc
+    roles:
+      - power-source
+  - id: ua
+    path: projects/ua
+    source: nhatnguyenquang1838-coder/Understand-Anything
+    upstream: Egonex-AI/Understand-Anything
+    roles:
+      - power-source
+  - id: task-me
+    path: projects/task-me
+    source: nhatnguyenquang1838-coder/task-me
+    roles:
+      - power-source
+  - id: bmad
+    path: projects/bmad
+    source: nhatnguyenquang1838-coder/BMAD-METHOD
+    roles:
+      - power-source
+  - id: rental-home
+    path: projects/rental-home
+    source: nhatnguyenquang1838-coder/rental_home
+    roles:
+      - product
+      - system
 powers:
   - id: gwc
-    path: powers/gwc
+    project: gwc
+    path: projects/gwc
     source: nhatnguyenquang1838-coder/gwc
     enabled: true
   - id: ua
-    path: powers/ua
-    source: Egonex-AI/Understand-Anything
+    project: ua
+    path: projects/ua
+    source: nhatnguyenquang1838-coder/Understand-Anything
+    upstream: Egonex-AI/Understand-Anything
     enabled: true
   - id: task-me
-    path: powers/task-me
+    project: task-me
+    path: projects/task-me
     source: nhatnguyenquang1838-coder/task-me
+    enabled: true
+  - id: bmad
+    project: bmad
+    path: projects/bmad
+    source: nhatnguyenquang1838-coder/BMAD-METHOD
     enabled: true
 systems:
   - id: rental-home
-    path: systems/rental-home
+    project: rental-home
+    path: projects/rental-home
     source: nhatnguyenquang1838-coder/rental_home
     enabled_powers:
       - gwc
       - ua
       - task-me
+      - bmad
+    orchestration:
+      primary: gwc
+      workers:
+        - task-me
+        - bmad
+        - ua
+      hooks:
+        - gate: g1
+          intents:
+            - task-decomposition
+            - validation-planning
+          worker: task-me
+          output_into: g1-options
+        - gate: g1
+          intents:
+            - architecture-design
+            - data-modeling
+          worker: bmad
+          output_into: g1-options
+        - gate: g1
+          intents:
+            - dependency-mapping
+            - impact-analysis
+          worker: ua
+          output_into: g1-preflight
 data_ownership:
   policy: system-owned
   roots:
     ua: .ua
     task_me: .task-me
     gwc: .gwc
+    bmad: .bmad

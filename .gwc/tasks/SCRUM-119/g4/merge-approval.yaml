@@ -1,0 +1,27 @@
+schema_version: '1.0'
+artifact_type: g4-merge-approval
+gate: G4_MERGE
+task_id: SCRUM-119
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: main
+base_sha: b5d0b118713ebfd5cbc1ebaafa8d1fe807294f49
+approved_files: []
+authorized_actions: []
+excluded_actions:
+  - merge_pull_request
+  - auto_merge
+  - deploy
+  - release
+  - production_data_write
+  - production_config_change
+  - credential_rotation
+  - force_push
+  - change_pr_base
+g3_evidence_ref: .gwc/tasks/SCRUM-119/g3/delivery-record.yaml
+risk_class: R1
+approval_status: not_applicable
+status: not_applicable
+reason: >
+  No Draft PR or merge request is in scope for this bounded design/evidence task.
+  G4 merge authority is therefore not granted.
+post_merge_required_actions: []
