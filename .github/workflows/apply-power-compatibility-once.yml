@@ -46,9 +46,8 @@ jobs:
           from pathlib import Path
 
           encoded = Path(os.environ['RUNNER_TEMP'], 'power-compatibility.b64').read_text()
-          compressed = base64.b64decode(encoded, validate=True)
           target = Path(os.environ['RUNNER_TEMP'], 'apply_power_compatibility.py')
-          target.write_bytes(gzip.decompress(compressed))
+          target.write_bytes(gzip.decompress(base64.b64decode(encoded, validate=True)))
           PY
           echo 'b67d6ed746ef760e0bf037ab555e4e0a4b4ef28600c7feb43c3091d18d83767e  '"$RUNNER_TEMP/apply_power_compatibility.py" | sha256sum -c -
           python - <<'PY'
@@ -112,15 +111,39 @@ jobs:
           } 2>&1 | tee .diagnostics/validation.log
 
       - name: Commit clean source patch
+        id: commit
         if: steps.apply.outputs.status == '0'
         shell: bash
         run: |
-          set -euo pipefail
-          rm -rf .diagnostics .github/patches
-          rm -f .github/workflows/apply-power-compatibility-once.yml
-          git add -A
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git diff --cached --check
-          git commit -m 'fix(runtime): validate current Power compatibility'
-          git push origin HEAD:fix/remove-power-prompt-command
+          set +e
+          {
+            rm -rf .diagnostics .github/patches
+            rm -f .github/workflows/apply-power-compatibility-once.yml
+            git add -A
+            git status --short
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git diff --cached --check
+            git commit -m 'fix(runtime): validate current Power compatibility'
+            git push origin HEAD:fix/remove-power-prompt-command
+          } > "$RUNNER_TEMP/commit.log" 2>&1
+          status=$?
+          cat "$RUNNER_TEMP/commit.log"
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Report clean commit failure
+        if: steps.commit.outputs.status != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          {
+            echo '## Power compatibility clean-commit diagnostic'
+            echo
+            echo '```text'
+            tail -n 120 "$RUNNER_TEMP/commit.log"
+            echo '```'
+          } > "$RUNNER_TEMP/commit-comment.md"
+          gh pr comment 26 --body-file "$RUNNER_TEMP/commit-comment.md"
+          exit 1
