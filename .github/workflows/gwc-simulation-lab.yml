@@ -1,0 +1,43 @@
+name: GWC Simulation Lab
+
+on:
+  pull_request:
+    paths:
+      - "systems/gwc-simulation-lab/**"
+      - "tests/test_gwc_simulation_lab.py"
+      - ".github/workflows/gwc-simulation-lab.yml"
+      - "workspace.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Unit tests
+        run: python -m unittest -v tests.test_gwc_simulation_lab
+
+      - name: Run 100-task simulation
+        run: >-
+          python systems/gwc-simulation-lab/tools/simulate.py
+          --mock-human auto --strict
+
+      - name: Upload simulation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gwc-simulation-lab-evidence
+          path: systems/gwc-simulation-lab/.simulation/latest/
+          if-no-files-found: error
+          retention-days: 14
