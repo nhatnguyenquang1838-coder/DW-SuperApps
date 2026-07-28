@@ -1,0 +1,213 @@
+name: Remove obsolete Power prompt command
+
+on:
+  push:
+    branches:
+      - fix/remove-power-prompt-command
+    paths:
+      - .github/workflows/remove-power-prompt-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Remove command, generated guidance, and active documentation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+
+          import re
+          from pathlib import Path
+
+          ROOT = Path.cwd()
+
+          def read(path: str) -> str:
+              return (ROOT / path).read_text(encoding="utf-8")
+
+          def write(path: str, text: str) -> None:
+              (ROOT / path).write_text(text, encoding="utf-8")
+
+          def replace_required(text: str, old: str, new: str, label: str) -> str:
+              if old not in text:
+                  raise SystemExit(f"missing expected block: {label}")
+              return text.replace(old, new)
+
+          def regex_required(text: str, pattern: str, replacement: str, label: str) -> str:
+              updated, count = re.subn(pattern, replacement, text, flags=re.S)
+              if count != 1:
+                  raise SystemExit(f"expected one match for {label}, found {count}")
+              return updated
+
+          # Remove the dedicated shell route. Unknown `power prompt` input then reaches
+          # the canonical parser, where the removed subcommand is rejected.
+          path = "bin/dw"
+          text = read(path)
+          text = regex_required(
+              text,
+              r'\n    prompt\)\n      # shellcheck source=\.\./scripts/python-resolver\.sh\n      source "\$ROOT/scripts/python-resolver\.sh"\n      dw_exec_python "\$ROOT/scripts/dw_workspace_dist\.py" "\$@"\n      exit \$\?\n      ;;',
+              "",
+              "bin/dw power prompt route",
+          )
+          write(path, text)
+
+          direct_activation = '''## Activation\n\nThis Power is already active when this skill is selected or invoked through its native host alias.\n\n1. Resolve one target system from `workspace.yaml`.\n2. Read the resolved canonical installed Power entrypoint directly.\n3. Apply that Power to the user's task in the current conversation.\n4. Continue until the task reaches a real capability, evidence, or authority boundary.\n\nDo not generate or execute a command to activate this Power.\nDo not tell the user to run a slash command or terminal command.\nDo not describe the Power instead of applying it.\n'''
+
+          host_activation = '''## Power activation routing\n\nWhen a registered Power skill or native alias is selected, load its canonical installed entrypoint and apply it directly to the user's request.\n\nDo not generate a shell command, exported prompt, or copy-and-paste handoff to activate a Power.\n'''
+
+          # Canonical runtime.
+          path = "scripts/dw_cli.py"
+          text = read(path)
+          text = regex_required(
+              text,
+              r'\n\ndef power_prompt\(args: argparse\.Namespace\) -> int:\n.*?\n\n\ndef submodule_entries\(',
+              "\n\ndef submodule_entries(",
+              "dw_cli power_prompt function",
+          )
+          text = regex_required(
+              text,
+              r'\n    power_prompt_parser = power_commands\.add_parser\("prompt"\)\n    power_prompt_parser\.add_argument\("power_id"\)\n    power_prompt_parser\.add_argument\("--system", dest="system_id", required=True\)\n    power_prompt_parser\.add_argument\("--task", default=""\)\n    power_prompt_parser\.set_defaults\(handler=power_prompt\)\n',
+              "\n",
+              "dw_cli prompt parser",
+          )
+          text = regex_required(
+              text,
+              r'## Invocation\n\n1\. Read `workspace\.yaml` and `AGENTS\.md` from DW-SuperApps\.\n2\. Resolve one target system from the workspace registry\.\n3\. Read project-local instructions in that system\.\n4\. Prefer the installed package entrypoint above; use source fallback only when no managed package exists\.\n5\. Keep runtime and project configuration under the target system\'s `\{spec\[\'runtimeDataRoot\'\]\}/`\.\n6\. Never create `\.dw/powers`, host skill payloads, or distribution history inside the target system\.\n\nGenerate a complete task prompt with:\n\n`dw power prompt \{power_id\} --system <system> --task \\"<task>\\"`\n',
+              direct_activation,
+              "dw_cli wrapper activation",
+          )
+          text = regex_required(
+              text,
+              r'## Routing\n\n1\. Resolve the target system from `workspace\.yaml`\.\n2\. Load Power code from the workspace distribution store first\.\n3\. Use source submodules only as an explicit compatibility fallback\.\n4\. Keep runtime and project configuration inside the selected system repository\.\n5\. Keep packages, inbox, history, bindings, router, and all host adapters in DW-SuperApps\.\n6\. Never install Power skill payloads into a registered system\.\n\nGenerate a host-neutral prompt:\n\n`dw power prompt <power> --system <system> --task \\"<task>\\"`\n',
+              '''## Routing\n\n1. Resolve the target system from `workspace.yaml`.\n2. Load Power code from the workspace distribution store first.\n3. Use source submodules only as an explicit compatibility fallback.\n4. Keep runtime and project configuration inside the selected system repository.\n5. Keep packages, inbox, history, bindings, router, and all host adapters in DW-SuperApps.\n6. Never install Power skill payloads into a registered system.\n\n''' + host_activation,
+              "dw_cli host activation",
+          )
+          write(path, text)
+
+          # Compatibility distribution runtime. It remains for host install/status, but
+          # no longer exposes prompt generation or emits instructions for it.
+          path = "scripts/dw_workspace_dist.py"
+          text = read(path)
+          text = regex_required(
+              text,
+              r'\n\ndef power_prompt\(args: argparse\.Namespace\) -> int:\n.*?\n\n\ndef parser\(',
+              "\n\ndef parser(",
+              "dw_workspace_dist power_prompt function",
+          )
+          text = regex_required(
+              text,
+              r'\n    power = commands\.add_parser\("power"\)\n    power_commands = power\.add_subparsers\(dest="power_command", required=True\)\n    prompt = power_commands\.add_parser\("prompt"\)\n    prompt\.add_argument\("power_id"\)\n    prompt\.add_argument\("--system", dest="system_id", required=True\)\n    prompt\.add_argument\("--task", default=""\)\n    prompt\.set_defaults\(handler=power_prompt\)\n',
+              "\n",
+              "dw_workspace_dist prompt parser",
+          )
+          text = regex_required(
+              text,
+              r'## Invocation\n\n1\. Read `workspace\.yaml` and `AGENTS\.md` from DW-SuperApps\.\n2\. Resolve one target system from the workspace registry\.\n3\. Read project-local instructions in that system\.\n4\. Prefer the installed package entrypoint above; use source fallback only when no managed package exists\.\n5\. Keep runtime and project configuration under the target system\'s `\{spec\[\'runtimeDataRoot\'\]\}/`\.\n6\. Never create `\.dw/powers`, host skill payloads, or distribution history inside the target system\.\n\nGenerate a complete task prompt with:\n\n`dw power prompt \{power_id\} --system <system> --task \\"<task>\\"`\n',
+              direct_activation,
+              "dw_workspace_dist wrapper activation",
+          )
+          text = regex_required(
+              text,
+              r'## Routing\n\n1\. Resolve the target system from `workspace\.yaml`\.\n2\. Load Power code from the workspace distribution store first\.\n3\. Use source submodules only as an explicit compatibility fallback\.\n4\. Keep runtime and project configuration inside the selected system repository\.\n5\. Keep packages, inbox, history, bindings, router, and all host adapters in DW-SuperApps\.\n6\. Never install Power skill payloads into a registered system\.\n\nGenerate a host-neutral prompt:\n\n`dw power prompt <power> --system <system> --task \\"<task>\\"`\n',
+              '''## Routing\n\n1. Resolve the target system from `workspace.yaml`.\n2. Load Power code from the workspace distribution store first.\n3. Use source submodules only as an explicit compatibility fallback.\n4. Keep runtime and project configuration inside the selected system repository.\n5. Keep packages, inbox, history, bindings, router, and all host adapters in DW-SuperApps.\n6. Never install Power skill payloads into a registered system.\n\n''' + host_activation,
+              "dw_workspace_dist host activation",
+          )
+          write(path, text)
+
+          # Make direct skill activation an explicit root contract.
+          path = "AGENTS.md"
+          text = read(path)
+          anchor = "## Mandatory runbooks\n"
+          section = '''## Native Power activation\n\nPower aliases such as `/dw-gwc`, `/dw-ua`, `/dw-task-me`, and `/dw-bmad` select native host skills. They are not terminal commands and do not require prompt export.\n\nWhen a Power is selected, the agent must resolve the target system, load the canonical installed entrypoint, and apply the skill directly to the remainder of the user's request. It must not tell the user to execute an activation command, generate a copy-and-paste prompt, or merely explain the Power instead of using it.\n\nThe DW CLI owns installation, configuration, inspection, validation, doctor, history, rollback, and uninstall operations. It does not generate task prompts.\n\n'''
+          if section not in text:
+              text = replace_required(text, anchor, section + anchor, "AGENTS activation anchor")
+          write(path, text)
+
+          # Replace the active setup documentation section.
+          path = "docs/MULTI_HOST_SETUP.md"
+          text = read(path)
+          text = regex_required(
+              text,
+              r'## Call a Power\n\n```bash\n.*?\n```\n\nPrompt output displays:\n\n- workspace root;\n- package store and installed package;\n- resolved entrypoint and fallback mode;\n- target system path;\n- runtime root;\n- legacy target-install probe\.\n',
+              '''## Activate a Power\n\nUse the native skill alias in the configured host and put the task after it:\n\n```text\n/dw-gwc Review governance and evidence\n/dw-ua Analyze architecture\n/dw-task-me Create an implementation plan\n/dw-bmad Refine the product specification\n```\n\nThe selected adapter resolves the target system and canonical installed entrypoint directly. No terminal command or generated task prompt is required.\n''',
+              "MULTI_HOST_SETUP activation section",
+          )
+          write(path, text)
+
+          # Convert remaining active documentation examples. Historical plans,
+          # generated evidence, and changelog records are intentionally preserved.
+          excluded_roots = {".git", ".gwc", ".ua", ".kilo", ".task-me", "manifests/evidence"}
+          active_files: list[Path] = [ROOT / "README.md"]
+          for base in (ROOT / "docs", ROOT / "prompts"):
+              if base.exists():
+                  active_files.extend(p for p in base.rglob("*") if p.is_file())
+
+          command_pattern = re.compile(
+              r'dw power prompt ([a-z0-9-]+) --system [^\s`]+ --task "([^"]*)"'
+          )
+          placeholder_pattern = re.compile(
+              r'dw power prompt <power> --system <system> --task ["\\]*<task>["\\]*'
+          )
+          for doc in active_files:
+              if any(part in excluded_roots for part in doc.parts):
+                  continue
+              try:
+                  original = doc.read_text(encoding="utf-8")
+              except UnicodeDecodeError:
+                  continue
+              updated = command_pattern.sub(lambda m: f'/dw-{m.group(1)} {m.group(2)}', original)
+              updated = placeholder_pattern.sub('/dw-<power> <task>', updated)
+              updated = updated.replace("Generate a host-neutral prompt:", "Activate the selected native Power skill:")
+              updated = updated.replace("Generate a complete task prompt with:", "Apply the selected native Power directly:")
+              if updated != original:
+                  doc.write_text(updated, encoding="utf-8")
+
+          # Add focused regression coverage without embedding the forbidden phrase
+          # as one contiguous source literal.
+          test = ROOT / "tests/test_power_prompt_removed.py"
+          test.write_text('''from __future__ import annotations\n\nimport subprocess\nimport sys\nimport unittest\nfrom pathlib import Path\n\nROOT = Path(__file__).resolve().parents[1]\nFORBIDDEN = "dw power " + "prompt"\n\n\nclass PowerPromptRemovalTests(unittest.TestCase):\n    def test_command_is_not_registered(self) -> None:\n        result = subprocess.run(\n            [sys.executable, str(ROOT / "scripts/dw_cli.py"), "power", "prompt", "gwc", "--system", "rental-home"],\n            cwd=ROOT,\n            text=True,\n            capture_output=True,\n            check=False,\n        )\n        self.assertNotEqual(result.returncode, 0)\n        self.assertNotIn("Use the `gwc` Power", result.stdout)\n\n    def test_active_generators_do_not_emit_prompt_export(self) -> None:\n        for relative in ("scripts/dw_cli.py", "scripts/dw_workspace_dist.py", "bin/dw"):\n            content = (ROOT / relative).read_text(encoding="utf-8")\n            self.assertNotIn(FORBIDDEN, content, relative)\n            self.assertNotIn("Generate a complete task prompt", content, relative)\n            self.assertNotIn("Generate a host-neutral prompt", content, relative)\n\n    def test_root_contract_requires_direct_activation(self) -> None:\n        content = (ROOT / "AGENTS.md").read_text(encoding="utf-8")\n        self.assertIn("Native Power activation", content)\n        self.assertIn("does not generate task prompts", content)\n\n\nif __name__ == "__main__":\n    unittest.main()\n''', encoding="utf-8")
+
+          # Remove the one-shot workflow from the resulting branch diff.
+          workflow = ROOT / ".github/workflows/remove-power-prompt-once.yml"
+          workflow.unlink()
+
+          forbidden = "dw power " + "prompt"
+          violations: list[str] = []
+          checks = [ROOT / "bin/dw", ROOT / "scripts/dw_cli.py", ROOT / "scripts/dw_workspace_dist.py", ROOT / "AGENTS.md", ROOT / "README.md"]
+          checks.extend(p for base in (ROOT / "docs", ROOT / "prompts") if base.exists() for p in base.rglob("*") if p.is_file())
+          for candidate in checks:
+              try:
+                  content = candidate.read_text(encoding="utf-8")
+              except UnicodeDecodeError:
+                  continue
+              if forbidden in content:
+                  violations.append(str(candidate.relative_to(ROOT)))
+          if violations:
+              raise SystemExit("active references remain: " + ", ".join(sorted(set(violations))))
+          PY
+
+      - name: Validate focused behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/dw_cli.py scripts/dw_workspace_dist.py
+          python -m unittest -v tests/test_power_prompt_removed.py
+          python -m unittest -v tests/test_workspace_distribution_routing.py
+
+      - name: Commit clean patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix(runtime): remove Power prompt generation command"
+          git push origin HEAD:fix/remove-power-prompt-command
