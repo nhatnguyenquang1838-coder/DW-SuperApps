@@ -58,24 +58,6 @@ class PowerRuntimeV2Tests(unittest.TestCase):
             ["workspace", "info"],
             ["power", "list"],
             ["power", "info", "task-me"],
-            [
-                "power",
-                "prompt",
-                "ua",
-                "--system",
-                "rental-home",
-                "--task",
-                "Analyze architecture",
-            ],
-            [
-                "power",
-                "prompt",
-                "bmad",
-                "--system",
-                "rental-home",
-                "--task",
-                "Plan a product change",
-            ],
             ["power", "check", "all"],
             ["host", "list"],
             ["host", "install", "copilot"],
@@ -93,6 +75,23 @@ class PowerRuntimeV2Tests(unittest.TestCase):
                 parsed = parser.parse_args(argv)
                 self.assertTrue(callable(parsed.handler))
 
+    def test_cli_rejects_removed_prompt_command(self) -> None:
+        parser = dw_cli.build_parser()
+        with self.assertRaises(SystemExit) as raised:
+            parser.parse_args(
+                [
+                    "power",
+                    "prompt",
+                    "ua",
+                    "--system",
+                    "rental-home",
+                    "--task",
+                    "Analyze architecture",
+                ]
+            )
+        self.assertNotEqual(raised.exception.code, 0)
+        self.assertFalse(hasattr(dw_cli, "power_prompt"))
+
     def test_wrapper_is_host_neutral(self) -> None:
         manifest = dw_cli.manifests()["task-me"]
         content = dw_cli.wrapper_content(
@@ -107,10 +106,13 @@ class PowerRuntimeV2Tests(unittest.TestCase):
             / "implementation-task-architect",
             "source-submodule-fallback",
         )
+        forbidden = "dw power " + "prompt"
         self.assertIn(dw_cli.GENERATED_MARKER, content)
         self.assertIn("workspace.yaml", content)
         self.assertIn(".task-me", content)
-        self.assertIn("dw power prompt task-me", content)
+        self.assertIn("This Power is already active", content)
+        self.assertIn("Apply that Power", content)
+        self.assertNotIn(forbidden, content)
 
     def test_provider_config_uses_workspace_defaults(self) -> None:
         provider = dw_cli.find_provider("ollama")
