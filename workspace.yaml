@@ -122,14 +122,6 @@ systems:
             - impact-analysis
           worker: ua
           output_into: g1-preflight
-  - id: gwc-simulation-lab
-    path: systems/gwc-simulation-lab
-    source: nhatnguyenquang1838-coder/DW-SuperApps
-    enabled_powers:
-      - gwc
-    orchestration:
-      primary: gwc
-      workers: []
 data_ownership:
   policy: system-owned
   roots:
