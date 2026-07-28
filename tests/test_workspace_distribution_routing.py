@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import contextlib
 import importlib.util
-import io
 import json
 import tempfile
 import unittest
@@ -108,29 +107,19 @@ spec:
                 text = adapter.read_text(encoding="utf-8")
                 self.assertIn("Resolution mode: `workspace-store`", text)
                 self.assertIn(".dw/powers/bmad", text)
+                self.assertIn("This Power is already active", text)
+                self.assertNotIn("Generate a complete task prompt", text)
                 self.assertFalse((root / "projects" / "rental-home" / ".codex").exists())
                 self.assertFalse((root / "projects" / "rental-home" / ".dw").exists())
                 self.assertFalse((root / "projects" / "rental-home" / "SKILL.md").exists())
 
-    def test_prompt_displays_store_runtime_and_legacy_probe(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            self.fixture(root)
-            with self.patched_root(root):
-                output = io.StringIO()
-                with contextlib.redirect_stdout(output):
-                    routing.power_prompt(
-                        argparse.Namespace(
-                            power_id="bmad",
-                            system_id="rental-home",
-                            task="Plan the implementation",
-                        )
-                    )
-                text = output.getvalue()
-                self.assertIn(str(root / ".dw" / "powers"), text)
-                self.assertIn(str(root / "projects" / "rental-home" / ".bmad"), text)
-                self.assertIn("LEGACY_TARGET_INSTALL", text)
-                self.assertIn("Resolution mode: `workspace-store`", text)
+    def test_prompt_command_is_removed(self) -> None:
+        self.assertFalse(hasattr(routing, "power_prompt"))
+        with self.assertRaises(SystemExit) as raised:
+            routing.parser().parse_args(
+                ["power", "prompt", "bmad", "--system", "rental-home"]
+            )
+        self.assertNotEqual(raised.exception.code, 0)
 
     def test_source_submodule_is_only_fallback(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
