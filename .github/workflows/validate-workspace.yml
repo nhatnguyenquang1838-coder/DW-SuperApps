@@ -57,6 +57,11 @@ jobs:
       - name: Validate workspace contract
         run: python scripts/dw_cli.py validate
 
+      - name: Validate Power compatibility and sanity contracts
+        run: |
+          python scripts/validate-power-compatibility.py --strict
+          python -m unittest -v tests.test_power_compatibility
+
       - name: Test one-click commands
         run: python -m unittest -v tests.test_oneclick_commands
 
