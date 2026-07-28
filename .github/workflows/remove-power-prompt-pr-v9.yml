@@ -1,0 +1,68 @@
+name: Apply and validate Power prompt removal v9
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - synchronize
+      - reopened
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.head_ref == 'fix/remove-power-prompt-command'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Apply deterministic patch
+        run: python scripts/remove_power_prompt_once_v8.py
+
+      - name: Run focused validation and capture output
+        id: test
+        shell: bash
+        run: |
+          mkdir -p .diagnostics
+          set +e
+          {
+            python -m py_compile scripts/dw_cli.py scripts/dw_workspace_dist.py scripts/dw_dispatch.py
+            python -m unittest -v tests/test_power_prompt_removed.py
+            python -m unittest -v tests/test_workspace_distribution_routing.py
+          } > .diagnostics/power-prompt-removal-tests.txt 2>&1
+          rc=$?
+          echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
+          cat .diagnostics/power-prompt-removal-tests.txt
+          exit 0
+
+      - name: Commit clean patch
+        if: steps.test.outputs.exit_code == '0'
+        shell: bash
+        run: |
+          rm -f .github/workflows/remove-power-prompt-pr-v9.yml
+          rm -rf .diagnostics
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix(runtime): remove Power prompt generation command"
+          git push origin HEAD:fix/remove-power-prompt-command
+
+      - name: Commit diagnostic only on validation failure
+        if: steps.test.outputs.exit_code != '0'
+        shell: bash
+        run: |
+          cp .diagnostics/power-prompt-removal-tests.txt /tmp/power-prompt-removal-tests.txt
+          git reset --hard HEAD
+          mkdir -p .diagnostics
+          cp /tmp/power-prompt-removal-tests.txt .diagnostics/power-prompt-removal-tests.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .diagnostics/power-prompt-removal-tests.txt
+          git commit -m "chore: capture Power prompt removal test failure"
+          git push origin HEAD:fix/remove-power-prompt-command
+          exit 1
