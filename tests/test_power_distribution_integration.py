@@ -33,10 +33,10 @@ class PowerDistributionIntegrationTests(unittest.TestCase):
             for power_id, manifest in dw_cli.manifests().items()
         }
         expected_commits = {
-            "gwc": "62689ce35e279751a3bf17b5255ac258dafbe7d7",
-            "task-me": "ef0b890b1fb9140109c04cbb490b41d9aa94bfff",
-            "ua": "c0e4821c519f564d6c8b353537cf121eb52a1617",
-            "bmad": "bb45db4aa4496c69239f9c0629c290fd1b072fc9",
+            "gwc": "9627e0bd43c531396bc3a00275a5f04a61571208",
+            "task-me": "90138ffb298f34d517aeb0b86e738d3027e71677",
+            "ua": "4d5fda706fc9683d097cedc947a02011f11baa38",
+            "bmad": "744227169addadb50d8b946777939a73207970f3",
         }
         for power_id, source_commit in expected_commits.items():
             with self.subTest(power_id=power_id):
