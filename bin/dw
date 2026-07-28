@@ -17,6 +17,76 @@ case "${1:-}" in
     ;;
 esac
 
+if [[ "${1:-}" == "workspace" && "${2:-}" == "init" ]]; then
+  # shellcheck source=../scripts/python-resolver.sh
+  source "$ROOT/scripts/python-resolver.sh"
+  dw_exec_python "$ROOT/scripts/dw_workspace_init.py" "$@"
+  exit $?
+fi
+
+if [[ "${1:-}" == "project" ]]; then
+  case "${2:-}" in
+    list|info)
+      # shellcheck source=../scripts/python-resolver.sh
+      source "$ROOT/scripts/python-resolver.sh"
+      dw_exec_python "$ROOT/scripts/dw_project_registry.py" "$@"
+      exit $?
+      ;;
+    add)
+      shift 2
+      # shellcheck source=../scripts/python-resolver.sh
+      source "$ROOT/scripts/python-resolver.sh"
+      dw_exec_python "$ROOT/scripts/dw_project_add.py" "$@"
+      exit $?
+      ;;
+  esac
+fi
+
+if [[ "${1:-}" == "orchestrator" ]]; then
+  shift
+  # shellcheck source=../scripts/python-resolver.sh
+  source "$ROOT/scripts/python-resolver.sh"
+  dw_exec_python "$ROOT/scripts/dw_orchestrator.py" "$@"
+  exit $?
+fi
+
+if [[ "${1:-}" == "report" ]]; then
+  shift
+  # shellcheck source=../scripts/python-resolver.sh
+  source "$ROOT/scripts/python-resolver.sh"
+  dw_exec_python "$ROOT/scripts/dw_report.py" "$@"
+  exit $?
+fi
+
+if [[ "${1:-}" == "power" ]]; then
+  case "${2:-}" in
+    install|configure|doctor|history|rollback|uninstall)
+      shift
+      # shellcheck source=../scripts/python-resolver.sh
+      source "$ROOT/scripts/python-resolver.sh"
+      dw_exec_python "$ROOT/scripts/dw_power_package.py" "$@"
+      exit $?
+      ;;
+    prompt)
+      # shellcheck source=../scripts/python-resolver.sh
+      source "$ROOT/scripts/python-resolver.sh"
+      dw_exec_python "$ROOT/scripts/dw_workspace_dist.py" "$@"
+      exit $?
+      ;;
+  esac
+fi
+
+if [[ "${1:-}" == "host" ]]; then
+  case "${2:-}" in
+    install|status)
+      # shellcheck source=../scripts/python-resolver.sh
+      source "$ROOT/scripts/python-resolver.sh"
+      dw_exec_python "$ROOT/scripts/dw_workspace_dist.py" "$@"
+      exit $?
+      ;;
+  esac
+fi
+
 # shellcheck source=../scripts/python-resolver.sh
 source "$ROOT/scripts/python-resolver.sh"
 dw_exec_python "$ROOT/scripts/dw_entry.py" "$@"
