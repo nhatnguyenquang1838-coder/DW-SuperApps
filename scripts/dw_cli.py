@@ -523,7 +523,8 @@ This Power is already active when this skill is selected or invoked through its 
 1. Resolve one target system from `workspace.yaml`.
 2. Read the resolved canonical installed Power entrypoint directly.
 3. Apply that Power to the user's task in the current conversation.
-4. Continue until the task reaches a real capability, evidence, or authority boundary.
+4. Keep runtime and project configuration under the target system's `{spec['runtimeDataRoot']}/`.
+5. Continue until the task reaches a real capability, evidence, or authority boundary.
 
 Do not generate or execute a command to activate this Power.
 Do not tell the user to run a slash command or terminal command.
