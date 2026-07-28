@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: apply-power-compatibility-${{ github.head_ref || github.ref_name }}
@@ -52,12 +53,34 @@ jobs:
           echo 'b67d6ed746ef760e0bf037ab555e4e0a4b4ef28600c7feb43c3091d18d83767e  '"$RUNNER_TEMP/apply_power_compatibility.py" | sha256sum -c -
 
       - name: Apply compatibility patch
+        id: apply
         shell: bash
         run: |
-          set -euo pipefail
-          python "$RUNNER_TEMP/apply_power_compatibility.py" 2>&1 | tee .diagnostics/apply.log
+          set +e
+          python "$RUNNER_TEMP/apply_power_compatibility.py" > .diagnostics/apply.log 2>&1
+          status=$?
+          cat .diagnostics/apply.log
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Report patch failure
+        if: steps.apply.outputs.status != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          {
+            echo '## Power compatibility patch diagnostic'
+            echo
+            echo '```text'
+            tail -n 100 .diagnostics/apply.log
+            echo '```'
+          } > .diagnostics/pr-comment.md
+          gh pr comment 26 --body-file .diagnostics/pr-comment.md
+          exit 1
 
       - name: Validate focused compatibility behavior
+        if: steps.apply.outputs.status == '0'
         shell: bash
         run: |
           set -euo pipefail
@@ -76,16 +99,8 @@ jobs:
               tests.test_workspace_distribution_routing
           } 2>&1 | tee .diagnostics/validation.log
 
-      - name: Upload diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: power-compatibility-final-diagnostic
-          path: .diagnostics/*.log
-          if-no-files-found: warn
-          retention-days: 2
-
       - name: Commit clean source patch
+        if: steps.apply.outputs.status == '0'
         shell: bash
         run: |
           set -euo pipefail
