@@ -1,0 +1,278 @@
+{
+  "scenarios": [
+    {
+      "id": "missing-context",
+      "human_boundaries": [
+        "G1_ALIGNMENT"
+      ],
+      "route_nodes": [
+        "intake_context.context-gap-escalation",
+        "gate_authority.blocked-action-escalation"
+      ],
+      "guards": [
+        {
+          "field": "context_complete",
+          "type": "equals",
+          "value": true,
+          "reason": "CONTEXT_MISSING"
+        }
+      ],
+      "pass_classification": "PASS"
+    },
+    {
+      "id": "ambiguity",
+      "human_boundaries": [
+        "G1_ALIGNMENT"
+      ],
+      "route_nodes": [
+        "intake_context.context-gap-escalation",
+        "gate_authority.gate-state-resolution"
+      ],
+      "guards": [
+        {
+          "field": "ambiguity_count",
+          "type": "equals",
+          "value": 0,
+          "reason": "AMBIGUITY_REMAINS"
+        }
+      ],
+      "pass_classification": "PASS"
+    },
+    {
+      "id": "baseline-drift",
+      "human_boundaries": [
+        "G2_EXECUTION"
+      ],
+      "route_nodes": [
+        "failure_recovery.version-drift-rollback-routing",
+        "gate_authority.blocked-action-escalation"
+      ],
+      "guards": [
+        {
+          "field": "base_sha",
+          "type": "equals",
+          "value_from_field": "expected_base_sha",
+          "reason": "BASELINE_DRIFT"
+        }
+      ],
+      "pass_classification": "PASS"
+    },
+    {
+      "id": "scope-drift",
+      "human_boundaries": [
+        "G2_EXECUTION"
+      ],
+      "route_nodes": [
+        "gate_authority.scope-hash-calculation",
+        "gate_authority.blocked-action-escalation"
+      ],
+      "guards": [
+        {
+          "field": "scope_hash",
+          "type": "equals",
+          "value_from_field": "approved_scope_hash",
+          "reason": "SCOPE_DRIFT"
+        }
+      ],
+      "pass_classification": "PASS"
+    },
+    {
+      "id": "ambiguous-write-outcome",
+      "human_boundaries": [
+        "G2_EXECUTION"
+      ],
+      "route_nodes": [
+        "failure_recovery.unknown-write-reconciliation",
+        "gate_authority.blocked-action-escalation"
+      ],
+      "guards": [
+        {
+          "field": "write_outcome",
+          "type": "in",
+          "values": [
+            "confirmed",
+            "rejected"
+          ],
+          "reason": "WRITE_OUTCOME_AMBIGUOUS"
+        }
+      ],
+      "pass_classification": "PASS"
+    },
+    {
+      "id": "observability-gap",
+      "human_boundaries": [
+        "G5_DEPLOY"
+      ],
+      "route_nodes": [
+        "validation_quality.ci-evidence-capture",
+        "gate_authority.blocked-action-escalation"
+      ],
+      "guards": [
+        {
+          "field": "observability_complete",
+          "type": "equals",
+          "value": true,
+          "reason": "OBSERVABILITY_GAP"
+        }
+      ],
+      "pass_classification": "PASS"
+    },
+    {
+      "id": "ci-pending",
+      "human_boundaries": [
+        "G3_PR"
+      ],
+      "route_nodes": [
+        "runtime_checkpoint.checkpoint-persist",
+        "validation_quality.ci-evidence-capture"
+      ],
+      "guards": [
+        {
+          "field": "ci_status",
+          "type": "equals",
+          "value": "PENDING",
+          "reason": "CI_PENDING"
+        }
+      ],
+      "pass_classification": "CONDITIONAL"
+    },
+    {
+      "id": "ci-failure",
+      "human_boundaries": [
+        "G3_PR"
+      ],
+      "route_nodes": [
+        "validation_quality.ci-evidence-capture",
+        "failure_recovery.timeout-recovery"
+      ],
+      "guards": [
+        {
+          "field": "ci_status",
+          "type": "equals",
+          "value": "SUCCESS",
+          "reason": "CI_FAILED"
+        }
+      ],
+      "pass_classification": "PASS"
+    },
+    {
+      "id": "ci-sha-mismatch",
+      "human_boundaries": [
+        "G3_PR",
+        "G5_DEPLOY"
+      ],
+      "route_nodes": [
+        "repo_delivery.ci-run-capture",
+        "failure_recovery.timeout-recovery"
+      ],
+      "guards": [
+        {
+          "field": "head_sha",
+          "type": "equals",
+          "value_from_field": "expected_head_sha",
+          "reason": "CI_SHA_MISMATCH"
+        }
+      ],
+      "pass_classification": "PASS"
+    },
+    {
+      "id": "stale-review",
+      "human_boundaries": [
+        "G4_MERGE"
+      ],
+      "route_nodes": [
+        "gate_authority.approval-command-validation",
+        "failure_recovery.approval-expiry-recovery"
+      ],
+      "guards": [
+        {
+          "field": "review_head_sha",
+          "type": "equals",
+          "value_from_field": "current_head_sha",
+          "reason": "STALE_REVIEW"
+        }
+      ],
+      "pass_classification": "PASS"
+    },
+    {
+      "id": "approval-expiry",
+      "human_boundaries": [
+        "G2_EXECUTION",
+        "G4_MERGE"
+      ],
+      "route_nodes": [
+        "gate_authority.approval-command-validation",
+        "failure_recovery.approval-expiry-recovery"
+      ],
+      "guards": [
+        {
+          "field": "approval_valid",
+          "type": "equals",
+          "value": true,
+          "reason": "APPROVAL_EXPIRED"
+        }
+      ],
+      "pass_classification": "PASS"
+    },
+    {
+      "id": "partial-deployment",
+      "human_boundaries": [
+        "G5_DEPLOY"
+      ],
+      "route_nodes": [
+        "failure_recovery.version-drift-rollback-routing",
+        "gate_authority.blocked-action-escalation"
+      ],
+      "guards": [
+        {
+          "field": "deployment_state",
+          "type": "equals",
+          "value": "complete",
+          "reason": "PARTIAL_DEPLOYMENT"
+        }
+      ],
+      "pass_classification": "PASS"
+    },
+    {
+      "id": "production-partial-success",
+      "human_boundaries": [
+        "G6_PRODUCTION"
+      ],
+      "route_nodes": [
+        "failure_recovery.unknown-write-reconciliation",
+        "gate_authority.authority-boundary-check"
+      ],
+      "guards": [
+        {
+          "field": "production_state",
+          "type": "equals",
+          "value": "complete",
+          "reason": "PRODUCTION_PARTIAL_SUCCESS"
+        }
+      ],
+      "pass_classification": "PASS"
+    },
+    {
+      "id": "blocked-authority",
+      "human_boundaries": [
+        "G2_EXECUTION",
+        "G4_MERGE",
+        "G5_DEPLOY",
+        "G6_PRODUCTION"
+      ],
+      "route_nodes": [
+        "gate_authority.authority-boundary-check",
+        "gate_authority.blocked-action-escalation"
+      ],
+      "guards": [
+        {
+          "field": "authority_granted",
+          "type": "equals",
+          "value": true,
+          "reason": "AUTHORITY_BLOCKED"
+        }
+      ],
+      "pass_classification": "PASS"
+    }
+  ]
+}
