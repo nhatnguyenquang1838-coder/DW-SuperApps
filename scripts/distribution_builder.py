@@ -20,6 +20,12 @@ POWER_SOURCES = {
     "bmad": ROOT / "projects" / "bmad",
     "ua": ROOT / "projects" / "ua",
 }
+POWER_OVERLAYS: dict[str, dict[str, Path]] = {
+    "bmad": {
+        "overlay_root": ROOT / "plugins" / "bmad-method" / "overlay",
+        "recipe_path": ROOT / "plugins" / "bmad-method" / "distribution" / "power-package.yaml",
+    }
+}
 DEFAULT_OUTPUT = ROOT / ".dw" / "distributions"
 DEFAULT_STAGING = ROOT / ".kilo" / "staging" / "power-dist"
 FOUNDATION_REF_ENV = "DW_FOUNDATION_REF"
@@ -39,6 +45,37 @@ def resolve_recipe(power_id: str, source_root: Path) -> Path:
     if not recipe.is_file():
         raise SystemExit(f"missing distribution recipe for {power_id}: {recipe}")
     return recipe
+
+
+def prepare_source(power_id: str, source_root: Path, output_root: Path) -> Path:
+    """Prepare a build-only source tree when DW owns a provider overlay."""
+
+    overlay = POWER_OVERLAYS.get(power_id)
+    if overlay is None:
+        return source_root
+
+    overlay_root = overlay["overlay_root"]
+    recipe_path = overlay["recipe_path"]
+    if not overlay_root.is_dir():
+        raise SystemExit(f"missing distribution overlay for {power_id}: {overlay_root}")
+    if not recipe_path.is_file():
+        raise SystemExit(f"missing DW-owned distribution recipe for {power_id}: {recipe_path}")
+
+    prepared_root = output_root / ".prepared-sources" / power_id
+    if prepared_root.exists():
+        shutil.rmtree(prepared_root)
+    shutil.copytree(
+        source_root,
+        prepared_root,
+        symlinks=True,
+        ignore=shutil.ignore_patterns(".git"),
+    )
+    shutil.copytree(overlay_root, prepared_root, dirs_exist_ok=True)
+
+    prepared_recipe = prepared_root / "distribution" / "power-package.yaml"
+    prepared_recipe.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(recipe_path, prepared_recipe)
+    return prepared_root
 
 
 def git_rev_parse(repo: Path, ref: str = "HEAD") -> str:
@@ -63,9 +100,10 @@ def build_power(
     output_root: Path,
     foundation_ref: str,
 ) -> dict[str, Any]:
-    recipe_path = resolve_recipe(power_id, source_root)
     source_sha = git_rev_parse(source_root)
     source_epoch = git_source_date_epoch(source_root)
+    prepared_source_root = prepare_source(power_id, source_root, output_root)
+    recipe_path = resolve_recipe(power_id, prepared_source_root)
     version = f"main-{source_sha[:12]}"
     build_script = ROOT / "scripts" / "power_dist_capability.py"
     if not build_script.is_file():
@@ -78,7 +116,7 @@ def build_power(
         "--recipe",
         str(recipe_path),
         "--source",
-        str(source_root),
+        str(prepared_source_root),
         "--output",
         str(output_root),
         "--version",

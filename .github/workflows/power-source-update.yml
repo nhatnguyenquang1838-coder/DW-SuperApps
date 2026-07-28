@@ -130,11 +130,57 @@ jobs:
               POWER_ARGS+=(--power "$power")
             fi
           done
+          : > .staging-build-result.json
+          : > .staging-build-error.log
+          set +e
           python scripts/distribution_builder.py \
             --foundation-ref "$FOUNDATION_REF" \
             "${POWER_ARGS[@]}" \
-            > .staging-build-result.json
+            > .staging-build-result.json \
+            2> .staging-build-error.log
+          status=$?
+          set -e
           cat .staging-build-result.json
+          if [[ -s .staging-build-error.log ]]; then
+            cat .staging-build-error.log >&2
+          fi
+          exit "$status"
+
+      - name: Upload distribution build diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: power-source-update-build-diagnostics
+          path: |
+            .staging-build-result.json
+            .staging-build-error.log
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Comment distribution build diagnostics
+        if: failure() && github.event_name == 'pull_request'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          {
+            echo "## Power distribution build diagnostics"
+            echo
+            echo "- Head: \`${{ github.sha }}\`"
+            echo "- Powers: \`${{ needs.detect.outputs.powers }}\`"
+            echo
+            echo '```text'
+            echo 'STDOUT (last 80 lines)'
+            tail -n 80 .staging-build-result.json || true
+            echo
+            echo 'STDERR (last 120 lines)'
+            tail -n 120 .staging-build-error.log || true
+            echo '```'
+          } > /tmp/power-source-update-diagnostics.md
+          gh pr comment "${{ github.event.pull_request.number }}" \
+            --body-file /tmp/power-source-update-diagnostics.md
 
       - name: Validate staged distributions
         id: validate
@@ -204,13 +250,13 @@ jobs:
           cat > /tmp/staging-comment.md <<EOF
           ## Power distribution staging updated
 
-          - Commit: `${{ github.sha }}`
-          - Powers: `${{ needs.detect.outputs.powers }}`
-          - Branch: `staging`
+          - Commit: \`${{ github.sha }}\`
+          - Powers: \`${{ needs.detect.outputs.powers }}\`
+          - Branch: \`staging\`
 
           Artifacts:
-          - `build-summary.json`
-          - `validation-report.json`
+          - \`build-summary.json\`
+          - \`validation-report.json\`
           - Per-power ZIP + SHA256
 
           EOF
