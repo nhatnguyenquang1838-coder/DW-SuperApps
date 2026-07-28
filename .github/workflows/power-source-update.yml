@@ -130,11 +130,30 @@ jobs:
               POWER_ARGS+=(--power "$power")
             fi
           done
+          set +e
           python scripts/distribution_builder.py \
             --foundation-ref "$FOUNDATION_REF" \
             "${POWER_ARGS[@]}" \
-            > .staging-build-result.json
+            > .staging-build-result.json \
+            2> .staging-build-error.log
+          status=$?
+          set -e
           cat .staging-build-result.json
+          if [[ -s .staging-build-error.log ]]; then
+            cat .staging-build-error.log >&2
+          fi
+          exit "$status"
+
+      - name: Upload distribution build diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: power-source-update-build-diagnostics
+          path: |
+            .staging-build-result.json
+            .staging-build-error.log
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Validate staged distributions
         id: validate
@@ -204,13 +223,13 @@ jobs:
           cat > /tmp/staging-comment.md <<EOF
           ## Power distribution staging updated
 
-          - Commit: `${{ github.sha }}`
-          - Powers: `${{ needs.detect.outputs.powers }}`
-          - Branch: `staging`
+          - Commit: \`${{ github.sha }}\`
+          - Powers: \`${{ needs.detect.outputs.powers }}\`
+          - Branch: \`staging\`
 
           Artifacts:
-          - `build-summary.json`
-          - `validation-report.json`
+          - \`build-summary.json\`
+          - \`validation-report.json\`
           - Per-power ZIP + SHA256
 
           EOF
