@@ -11,7 +11,7 @@ from typing import Any, Iterable
 
 LAB_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = LAB_ROOT / "fixtures"
-DEFAULT_SEEDS = LAB_ROOT / "seeds" / "tasks.jsonl"
+DEFAULT_SEEDS = LAB_ROOT / "seeds"
 FIXED_EXPIRY = "2099-12-31T23:59:59Z"
 
 
@@ -29,6 +29,15 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
         except json.JSONDecodeError as exc:
             raise ValueError(f"invalid JSONL at {path}:{line_number}: {exc}") from exc
     return rows
+
+
+def load_tasks(path: Path) -> list[dict[str, Any]]:
+    if path.is_dir():
+        rows: list[dict[str, Any]] = []
+        for shard in sorted(path.glob("tasks-*.jsonl")):
+            rows.extend(load_jsonl(shard))
+        return rows
+    return load_jsonl(path)
 
 
 def canonical_digest(payload: Any) -> str:
@@ -130,7 +139,7 @@ def simulate(
     nodes = load_json(FIXTURES / "node-index.json")["nodes"]
     scenarios = load_json(FIXTURES / "scenario-index.json")["scenarios"]
     faults = load_json(FIXTURES / "failure-cases.json")["cases"]
-    tasks = load_jsonl(seeds_path)
+    tasks = load_tasks(seeds_path)
 
     expected = manifest["invariants"]
     if len(nodes) != expected["nodes"]:
