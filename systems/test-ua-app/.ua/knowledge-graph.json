@@ -1,0 +1,137 @@
+{
+  "version": "1.0.0-semantic",
+  "kind": "codebase",
+  "project": {
+    "name": "Test UA APP",
+    "description": "Test application for validating DW-SuperApps workspace-managed GWC workflow and UA Power knowledge graph generation",
+    "languages": [
+      "JavaScript",
+      "HTML",
+      "CSS"
+    ],
+    "frameworks": [
+      "Vite 6"
+    ],
+    "analyzedAt": "2026-07-23T17:50:00.000000Z",
+    "gitCommitHash": "6332c8f62614d581c45403cb5e3e0c4f528cbd70",
+    "analysisMode": "local-checkout",
+    "limitations": [
+      "Local checkout analysis at one point in time; working tree assumed clean.",
+      "Minimal codebase - simple Vite test application."
+    ],
+    "evidencePaths": [
+      "package.json",
+      "index.html",
+      "main.js",
+      "style.css",
+      "vite.config.js"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "config:package.json",
+      "type": "config",
+      "name": "Application package contract",
+      "summary": "Defines the Vite 6 test application with dev, build, and preview scripts",
+      "tags": ["javascript", "vite", "config"],
+      "complexity": "simple",
+      "filePath": "package.json"
+    },
+    {
+      "id": "document:index.html",
+      "type": "document",
+      "name": "Application HTML entry point",
+      "summary": "Main HTML page that loads the UA Power development process log",
+      "tags": ["html", "markup", "entry-point"],
+      "complexity": "simple",
+      "filePath": "index.html"
+    },
+    {
+      "id": "file:main.js",
+      "type": "file",
+      "name": "UA Power process logger",
+      "summary": "JavaScript module that loads and displays the knowledge graph analysis in a textarea",
+      "tags": ["javascript", "ua-power", "graph-loading"],
+      "complexity": "moderate",
+      "filePath": "main.js"
+    },
+    {
+      "id": "file:style.css",
+      "type": "file",
+      "name": "Application styles",
+      "summary": "CSS styles for the UA Power process log display",
+      "tags": ["css", "styling"],
+      "complexity": "simple",
+      "filePath": "style.css"
+    },
+    {
+      "id": "config:vite.config.js",
+      "type": "config",
+      "name": "Vite build configuration",
+      "summary": "Configures Vite dev server on port 5173 with auto-open",
+      "tags": ["vite", "build", "config"],
+      "complexity": "simple",
+      "filePath": "vite.config.js"
+    },
+    {
+      "id": "service:surface-test-web",
+      "type": "service",
+      "name": "Test web application",
+      "summary": "Simple Vite-powered test application for UA Power validation",
+      "tags": ["test", "vite", "web"],
+      "complexity": "simple"
+    },
+    {
+      "id": "concept:ua-power-testing",
+      "type": "concept",
+      "name": "UA Power testing harness",
+      "summary": "Test application designed to validate workspace-managed GWC workflow and UA knowledge graph generation",
+      "tags": ["testing", "validation", "ua-power"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:index.html",
+      "target": "file:main.js",
+      "type": "contains",
+      "weight": 1.0,
+      "direction": "forward"
+    },
+    {
+      "source": "document:index.html",
+      "target": "file:style.css",
+      "type": "references",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "config:package.json",
+      "target": "service:surface-test-web",
+      "type": "configures",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "config:vite.config.js",
+      "target": "config:package.json",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:main.js",
+      "target": "service:surface-test-web",
+      "type": "implements",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "service:surface-test-web",
+      "target": "concept:ua-power-testing",
+      "type": "related",
+      "weight": 0.5,
+      "direction": "forward"
+    }
+  ]
+}
