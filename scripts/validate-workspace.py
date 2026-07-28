@@ -17,10 +17,14 @@ except ImportError as exc:
     raise SystemExit(2) from exc
 
 from dw_project_registry import ProjectRegistryError, validate_registry
+from dw_power_store.common import ConsumerError
+from dw_power_store.compatibility import validate_lock
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE = ROOT / "workspace.yaml"
 SCHEMA = ROOT / "schemas" / "power-manifest.schema.json"
+COMPATIBILITY_LOCK = ROOT / "manifests" / "power-compatibility-lock.json"
+COMPATIBILITY_SCHEMA = ROOT / "schemas" / "power-compatibility-lock.schema.json"
 MANIFEST_DIR = ROOT / "manifests" / "powers"
 GITMODULES = ROOT / ".gitmodules"
 SUPPORTED_HOSTS = {"kiro", "codex", "copilot", "cline", "kilo", "claude", "custom"}
@@ -195,6 +199,22 @@ def main() -> int:
             fail(f"Power {power_id} does not support workspace hosts: {sorted(missing_hosts)}")
         manifests[power_id] = manifest
 
+    compatibility_data = json.loads(COMPATIBILITY_LOCK.read_text(encoding="utf-8"))
+    compatibility_schema = json.loads(COMPATIBILITY_SCHEMA.read_text(encoding="utf-8"))
+    compatibility_errors = sorted(
+        Draft202012Validator(compatibility_schema).iter_errors(compatibility_data),
+        key=lambda error: list(error.path),
+    )
+    if compatibility_errors:
+        for error in compatibility_errors:
+            location = ".".join(str(part) for part in error.path) or "<root>"
+            print(f"ERROR: {COMPATIBILITY_LOCK.relative_to(ROOT)}:{location}: {error.message}", file=sys.stderr)
+        return 1
+    try:
+        compatibility = validate_lock(manifests)
+    except ConsumerError as exc:
+        fail(str(exc))
+
     power_ids = {entry["id"] for entry in power_entries}
     unknown_powers = power_ids - set(manifests)
     if unknown_powers:
@@ -248,7 +268,8 @@ def main() -> int:
         f"PASS: {len(projects)} projects, {len(manifests)} Powers "
         f"({len(power_entries)} source-project, {len(external_ids)} package-only), "
         f"{len(system_entries)} systems, {len(workspace_hosts)} hosts, {len(providers)} providers, "
-        f"{len(submodule_paths)} submodules, store={distribution['storeRoot'].relative_to(ROOT)}"
+        f"{len(submodule_paths)} submodules, store={distribution['storeRoot'].relative_to(ROOT)}, "
+        f"compatibility={compatibility['status']}"
     )
     return 0
 

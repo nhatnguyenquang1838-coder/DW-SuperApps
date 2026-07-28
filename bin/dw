@@ -60,7 +60,7 @@ fi
 
 if [[ "${1:-}" == "power" ]]; then
   case "${2:-}" in
-    install|configure|doctor|history|rollback|uninstall)
+    install|configure|sanity|doctor|history|rollback|uninstall)
       shift
       # shellcheck source=../scripts/python-resolver.sh
       source "$ROOT/scripts/python-resolver.sh"

@@ -3,7 +3,7 @@ kind: Power
 metadata:
   id: gwc
   name: GWC
-  version: main-pinned
+  version: gwc-main-26-9627e0bd43c531396bc3a00275a5f04a61571208
   description: Governance, delivery control, approval boundaries, validation, and repository lifecycle workflows.
 spec:
   category: governance
@@ -36,6 +36,7 @@ spec:
     - cli
   entrypoints:
     skillCandidates:
+      - skills/gwc-g0/SKILL.md
       - skills/gwc-g1/SKILL.md
       - AGENTS.md
       - agents/chatgpt-agent/agent-instructions.md
@@ -68,6 +69,6 @@ spec:
     providerState:
       status: published
       task: DW-PDIST-02
-      sourceCommit: 62689ce35e279751a3bf17b5255ac258dafbe7d7
+      sourceCommit: 9627e0bd43c531396bc3a00275a5f04a61571208
       sourceLock: distribution/power-package.yaml
-      note: Published as main-20260725.1-62689ce; power-dist and immutable release validated by run 30123787605. Submodule remains available as migration fallback.
+      note: Published as gwc-main-26-9627e0bd43c531396bc3a00275a5f04a61571208; current power-dist SOURCE.json is locked to the same source SHA. Submodule remains a compatibility fallback.

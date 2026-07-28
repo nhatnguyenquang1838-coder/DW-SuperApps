@@ -76,7 +76,7 @@ DEFAULT_SECRET_PATTERNS = (
     re.compile(r"\bgh[pousr]_[A-Za-z0-9_]{30,}\b"),
 )
 MAX_SECRET_SCAN_BYTES = 2_000_000
-GENERATED_FILES = ("POWER.yaml", "SOURCE.json", "VERSION")
+GENERATED_FILES = ("POWER.yaml", "SOURCE.json", "VERSION", "AGENT_GUIDANCE.md")
 
 
 class DistributionError(RuntimeError):
@@ -271,6 +271,54 @@ def copy_runtime_templates(staging_root: Path, templates_root: Path) -> None:
         destination.chmod(mode)
 
 
+def render_agent_guidance(
+    recipe: dict[str, Any],
+    *,
+    version: str,
+    source_repository: str,
+    source_ref: str,
+    source_sha: str,
+) -> str:
+    power_id = recipe["metadata"]["id"]
+    runtime_root = recipe["spec"]["runtime"]["dataRoot"]
+    entrypoints = recipe["spec"]["package"]["entrypoints"]
+    rendered_entrypoints = "\n".join(f"- `{item}`" for item in entrypoints)
+    return f"""# DW Power Agent Activation Contract
+
+This is static distribution guidance generated when the package was built. It is not a task prompt, not a shell command, and not authority to perform external writes.
+
+## Package identity
+
+- Power: `{power_id}`
+- Package version: `{version}`
+- Source: `{source_repository}@{source_sha}` (`{source_ref}`)
+- Target-owned runtime root: `{runtime_root}/`
+
+## Required activation behavior
+
+1. Read the workspace `AGENTS.md` and `workspace.yaml`.
+2. Resolve exactly one target system and read its local instructions.
+3. Read this contract, `POWER.yaml`, `SOURCE.json`, and `MANIFEST.json`.
+4. Select the applicable skill entrypoint from the declared list below.
+5. Apply that skill directly to the user's request in the current conversation.
+
+A native alias selects a skill; it is not something to execute in a terminal. Do not create a prompt-export command, ask the user to copy a generated prompt, or merely describe the Power instead of applying it.
+
+When multiple entrypoints exist, load only the entrypoint whose scope matches the current task. A non-`SKILL.md` entrypoint is a supporting executable or module and must not be run unless the selected skill explicitly requires it and current authority permits execution.
+
+## Declared package entrypoints
+
+{rendered_entrypoints}
+
+## Ownership and safety
+
+- Power package files remain in the DW-SuperApps workspace store.
+- Runtime state and project configuration remain under the selected target's `{runtime_root}/`.
+- Do not create a target-local `.dw/powers` installation.
+- Installation, configuration, sanity, doctor, history, rollback, and uninstall are lifecycle operations; none of them grants merge, deployment, release, credential, migration, production-data, or approval authority.
+"""
+
+
 def package_metadata(
     recipe: dict[str, Any],
     *,
@@ -296,6 +344,7 @@ def package_metadata(
             "managedPaths": spec["package"].get("managedPaths", []),
             "runtimeDataRoot": spec["runtime"]["dataRoot"],
             "configRequired": spec["runtime"].get("configRequired", False),
+            "agentGuidance": "AGENT_GUIDANCE.md",
         },
     }
     source = {
@@ -345,6 +394,7 @@ def build_manifest(
             "runtimeDataRoot": recipe["spec"]["runtime"]["dataRoot"],
             "managedPaths": recipe["spec"]["package"].get("managedPaths", []),
             "generatedFiles": list(GENERATED_FILES),
+            "agentGuidance": "AGENT_GUIDANCE.md",
         },
         "files": files,
     }
@@ -392,6 +442,16 @@ def build_staging_tree(
     atomic_write(staging_root / "POWER.yaml", yaml.safe_dump(power, sort_keys=False))
     atomic_write(staging_root / "SOURCE.json", json.dumps(source, indent=2, sort_keys=True) + "\n")
     atomic_write(staging_root / "VERSION", version + "\n")
+    atomic_write(
+        staging_root / "AGENT_GUIDANCE.md",
+        render_agent_guidance(
+            recipe,
+            version=version,
+            source_repository=source_repository,
+            source_ref=source_ref,
+            source_sha=source_sha,
+        ),
+    )
 
     manifest = build_manifest(
         recipe,
@@ -474,6 +534,9 @@ def verify_package(package_root: Path) -> dict[str, Any]:
     for entrypoint in manifest["spec"]["entrypoints"]:
         if entrypoint not in expected:
             raise DistributionError(f"manifest entrypoint missing: {entrypoint}")
+    guidance = manifest["spec"].get("agentGuidance")
+    if guidance and guidance not in expected:
+        raise DistributionError(f"manifest agent guidance missing: {guidance}")
 
     return manifest
 

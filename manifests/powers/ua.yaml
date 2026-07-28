@@ -3,7 +3,7 @@ kind: Power
 metadata:
   id: ua
   name: Understand Anything
-  version: main-pinned
+  version: ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38
   description: Semantic codebase analysis, architecture discovery, dependency mapping, dashboard visualization, and project knowledge generation.
 spec:
   category: knowledge
@@ -69,6 +69,6 @@ spec:
     providerState:
       status: published
       task: DW-PDIST-04
-      sourceCommit: c0e4821c519f564d6c8b353537cf121eb52a1617
+      sourceCommit: 4d5fda706fc9683d097cedc947a02011f11baa38
       sourceLock: SOURCE.lock.json
-      note: Published as main-20260725.1-c0e4821 from the reviewed controlled fork and upstream lock; power-dist and immutable release validated by run 30123849723. The controlled fork is the active source submodule; Egonex-AI/Understand-Anything remains recorded as upstream provenance.
+      note: Current published power-dist is ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38. Provider main 36166580700472d88bb80d7f3f1e7f257b8adf7f contains a newer dashboard-package change, so dashboard availability is reported as source-ahead until provider republication.

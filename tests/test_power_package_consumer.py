@@ -73,6 +73,8 @@ class PowerPackageConsumerTests(unittest.TestCase):
             "config": None,
             "contract": None,
             "require_config": False,
+            "strict": False,
+            "strict_compatibility": False,
             "include_runtime": False,
             "yes": False,
         }
@@ -95,6 +97,9 @@ class PowerPackageConsumerTests(unittest.TestCase):
             self.assertTrue((store / "task-me").is_dir())
             self.assertTrue((target / ".task-me").is_dir())
             self.assertFalse((target / ".dw").exists())
+            sanity = consumer.sanity(self.args(store_root=str(store)))
+            self.assertEqual("PASS_WITH_WARNINGS", sanity["status"])
+            self.assertTrue(sanity["warnings"])
 
             config = root / "config.yaml"
             contract = root / "contract.yaml"
@@ -266,7 +271,7 @@ class PowerPackageConsumerTests(unittest.TestCase):
 
     def test_parser_exposes_split_lifecycle_and_store_override(self) -> None:
         parser = consumer.parser()
-        for command in ("install", "configure", "doctor", "history", "rollback", "uninstall"):
+        for command in ("install", "configure", "sanity", "doctor", "history", "rollback", "uninstall"):
             with self.subTest(command=command):
                 parsed = parser.parse_args([command, "task-me", "--store-root", "/tmp/store"])
                 self.assertTrue(callable(parsed.handler))

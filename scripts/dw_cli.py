@@ -498,6 +498,12 @@ def wrapper_content(
     metadata = manifest["metadata"]
     spec = manifest["spec"]
     package = store_root() / power_id
+    guidance = package / "AGENT_GUIDANCE.md"
+    guidance_display = (
+        display_path(guidance)
+        if guidance.is_file()
+        else "legacy package: embedded activation contract"
+    )
     relative_source = source.relative_to(ROOT).as_posix() if source is not None else spec["path"]
     return f"""---
 name: dw-{power_id}
@@ -515,16 +521,18 @@ Thin `{host}` adapter owned by DW-SuperApps.
 - Resolution mode: `{source_mode}`
 - Source fallback: `{spec['path']}`
 - Power manifest: `manifests/powers/{power_id}.yaml`
+- Agent guidance: `{guidance_display}`
 
 ## Activation
 
 This Power is already active when this skill is selected or invoked through its native host alias.
 
 1. Resolve one target system from `workspace.yaml`.
-2. Read the resolved canonical installed Power entrypoint directly.
-3. Apply that Power to the user's task in the current conversation.
-4. Keep runtime and project configuration under the target system's `{spec['runtimeDataRoot']}/`.
-5. Continue until the task reaches a real capability, evidence, or authority boundary.
+2. Read `AGENT_GUIDANCE.md` from the installed package when present.
+3. Read the resolved canonical installed Power entrypoint directly.
+4. Apply that Power to the user's task in the current conversation.
+5. Keep runtime and project configuration under the target system's `{spec['runtimeDataRoot']}/`.
+6. Continue until the task reaches a real capability, evidence, or authority boundary.
 
 Do not generate or execute a command to activate this Power.
 Do not tell the user to run a slash command or terminal command.

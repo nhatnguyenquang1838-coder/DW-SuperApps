@@ -8,6 +8,7 @@ from typing import Any
 from .common import ConsumerError
 from .history_ops import history, rollback, uninstall
 from .install_ops import configure, doctor, install
+from .compatibility import sanity
 from .package_io import safe_extract
 
 
@@ -47,9 +48,16 @@ def parser() -> argparse.ArgumentParser:
     common(configure_parser)
     configure_parser.set_defaults(handler=configure)
 
+    sanity_parser = commands.add_parser("sanity")
+    sanity_parser.add_argument("power_id")
+    sanity_parser.add_argument("--strict", action="store_true")
+    common(sanity_parser, target=False)
+    sanity_parser.set_defaults(handler=sanity)
+
     doctor_parser = commands.add_parser("doctor")
     doctor_parser.add_argument("power_id")
     doctor_parser.add_argument("--require-config", action="store_true")
+    doctor_parser.add_argument("--strict-compatibility", action="store_true")
     common(doctor_parser)
     doctor_parser.set_defaults(handler=doctor)
 
@@ -93,5 +101,6 @@ __all__ = [
     "parser",
     "rollback",
     "safe_extract",
+    "sanity",
     "uninstall",
 ]
