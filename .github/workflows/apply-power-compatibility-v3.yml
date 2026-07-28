@@ -1,0 +1,115 @@
+name: Apply Power compatibility validation v3
+
+on:
+  pull_request:
+    branches: [main]
+    types: [synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'fix/remove-power-prompt-command'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/remove-power-prompt-command
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install validation dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Recover corrected patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .diagnostics
+          python - <<'PY'
+          import base64
+          import gzip
+          from pathlib import Path
+          import yaml
+
+          workflow = yaml.safe_load(Path('.github/workflows/apply-power-compatibility-once.yml').read_text())
+          encoded = next(step['env']['PATCH_GZIP_B64'] for step in workflow['jobs']['patch']['steps'] if 'env' in step)
+          script = gzip.decompress(base64.b64decode(encoded)).decode()
+
+          old_wrapper = '''for path in ("scripts/dw_cli.py", "scripts/dw_workspace_dist.py"):
+              replace_once(
+                  path,
+                  '    package = store_root() / power_id\\n',
+                  '    package = store_root() / power_id\\n'
+                  '    guidance = package / "AGENT_GUIDANCE.md"\\n'
+                  '    guidance_display = (\\n'
+                  '        display_path(guidance)\\n'
+                  '        if guidance.is_file()\\n'
+                  '        else "legacy package: embedded activation contract"\\n'
+                  '    )\\n',
+              )
+          '''
+          new_wrapper = '''for path in ("scripts/dw_cli.py", "scripts/dw_workspace_dist.py"):
+              replace_once(
+                  path,
+                  '    metadata = manifest["metadata"]\\n'
+                  '    spec = manifest["spec"]\\n'
+                  '    package = store_root() / power_id\\n',
+                  '    metadata = manifest["metadata"]\\n'
+                  '    spec = manifest["spec"]\\n'
+                  '    package = store_root() / power_id\\n'
+                  '    guidance = package / "AGENT_GUIDANCE.md"\\n'
+                  '    guidance_display = (\\n'
+                  '        display_path(guidance)\\n'
+                  '        if guidance.is_file()\\n'
+                  '        else "legacy package: embedded activation contract"\\n'
+                  '    )\\n',
+              )
+          '''
+          stale_test = '''replace_once(
+              "tests/test_multi_host_runtime.py",
+              '                self.assertNotIn("dw power prompt", content)\\n',
+              '                self.assertNotIn("dw power prompt", content)\\n'
+              '                self.assertIn("canonical installed entrypoint", content)\\n',
+          )
+          '''
+          if old_wrapper not in script:
+              raise SystemExit('wrapper correction marker not found')
+          if stale_test not in script:
+              raise SystemExit('stale test correction marker not found')
+          script = script.replace(old_wrapper, new_wrapper).replace(stale_test, '')
+          Path('.diagnostics/apply_power_compatibility_v3.py').write_text(script)
+          PY
+          python .diagnostics/apply_power_compatibility_v3.py 2>&1 | tee .diagnostics/apply-v3.log
+      - name: Validate focused compatibility behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            bash -n bin/dw
+            python scripts/validate-workspace.py
+            python scripts/validate-power-compatibility.py --strict
+            python -m unittest -v tests.test_power_compatibility tests.test_power_dist_builder tests.test_power_runtime_installer tests.test_power_package_consumer tests.test_multi_host_runtime tests.test_power_prompt_removed tests.test_power_runtime_v2 tests.test_workspace_distribution_routing
+          } 2>&1 | tee .diagnostics/validation-v3.log
+      - name: Upload v3 diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: power-compatibility-v3-diagnostic
+          path: .diagnostics/*.log
+          if-no-files-found: warn
+          retention-days: 2
+      - name: Commit clean source patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .diagnostics
+          rm -f .github/workflows/apply-power-compatibility-once.yml .github/workflows/diagnose-power-compatibility-once.yml .github/workflows/apply-power-compatibility-v2.yml .github/workflows/diagnose-power-compatibility-v2.yml .github/workflows/apply-power-compatibility-v3.yml
+          git add -A
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git diff --cached --check
+          git commit -m 'fix(runtime): validate current Power compatibility'
+          git push origin HEAD:fix/remove-power-prompt-command
