@@ -16,3 +16,4 @@ spec:
   - tools/installer
   runtimeDataRoot: .bmad
   configRequired: false
+  agentGuidance: AGENT_GUIDANCE.md

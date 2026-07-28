@@ -2,6 +2,12 @@
   "apiVersion": "dw.superapps/v1",
   "files": [
     {
+      "mode": "0600",
+      "path": "AGENT_GUIDANCE.md",
+      "sha256": "5f697de3df9ed1b214f3765a409cfca03a77d2389f1e6c4b257518082594b5b8",
+      "size": 1820
+    },
+    {
       "mode": "0644",
       "path": "LICENSE",
       "sha256": "24c4b35344840f1abaf3a3a4a44f5e29ee0e73b6bf25e42ef108e0afebd402bc",
@@ -10,8 +16,8 @@
     {
       "mode": "0600",
       "path": "POWER.yaml",
-      "sha256": "f812495f01225a6551c29adc80ebe33d83994a5e7a6415ac7830609f377330f2",
-      "size": 859
+      "sha256": "6f19e60d9cd40ebcd4f351cab6a313423062966e35408dd5bd3b13411c82dd39",
+      "size": 894
     },
     {
       "mode": "0600",
@@ -82,8 +88,8 @@
     {
       "mode": "0644",
       "path": "lib/power_runtime.py",
-      "sha256": "86c79aae09910426afc68caa66d3c3dadb60e49140297d078cee3c1dfb870290",
-      "size": 12517
+      "sha256": "c6f1dc56f67554a2f7223d1c006526c909b3841ec06d343dda04cff47b5934a5",
+      "size": 14569
     },
     {
       "mode": "0644",
@@ -2051,13 +2057,15 @@
     "version": "main-361665807004"
   },
   "spec": {
+    "agentGuidance": "AGENT_GUIDANCE.md",
     "entrypoints": [
       "understand-anything-plugin/skills/understand/SKILL.md"
     ],
     "generatedFiles": [
       "POWER.yaml",
       "SOURCE.json",
-      "VERSION"
+      "VERSION",
+      "AGENT_GUIDANCE.md"
     ],
     "managedPaths": [
       "LICENSE",

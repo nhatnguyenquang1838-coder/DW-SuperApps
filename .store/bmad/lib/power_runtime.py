@@ -231,6 +231,47 @@ def verify_manifest(install_root: Path, manifest: dict[str, Any]) -> None:
             raise RuntimeError_(f"entrypoint missing: {entrypoint}")
 
 
+def sanity_payload(package: Path, install_root: Path | None = None) -> dict[str, Any]:
+    manifest = load_json(package / "MANIFEST.json")
+    root = install_root or package
+    verify_manifest(root, manifest)
+    warnings: list[str] = []
+    spec = manifest.get("spec") or {}
+    guidance = spec.get("agentGuidance")
+    if guidance:
+        if not (root / str(guidance)).is_file():
+            raise RuntimeError_(f"declared agent guidance missing: {guidance}")
+    else:
+        warnings.append("legacy package has no declared agent guidance")
+    source = load_json(root / "SOURCE.json") if (root / "SOURCE.json").is_file() else {}
+    metadata_ = manifest.get("metadata") or {}
+    if source:
+        if source.get("sha") != metadata_.get("sourceSha"):
+            raise RuntimeError_("SOURCE.json SHA differs from MANIFEST.json")
+        if metadata_.get("sourceRepository") and source.get("repository") != metadata_.get("sourceRepository"):
+            raise RuntimeError_("SOURCE.json repository differs from MANIFEST.json")
+    else:
+        warnings.append("legacy package has no SOURCE.json")
+    return {
+        "status": "PASS_WITH_WARNINGS" if warnings else "PASS",
+        "power_id": metadata_.get("powerId"),
+        "version": metadata_.get("version"),
+        "source_sha": source.get("sha") or metadata_.get("sourceSha"),
+        "guidance": guidance or "legacy-embedded",
+        "warnings": warnings,
+    }
+
+
+def sanity(args: argparse.Namespace) -> dict[str, Any]:
+    source = Path(args.package_root).resolve()
+    target = Path(args.target).expanduser().resolve()
+    store = resolve_store_root(args.store_root)
+    info = metadata(source)
+    paths = target_paths(target, info, store)
+    install_root = paths["install"] if paths["install"].is_dir() else None
+    return sanity_payload(source, install_root)
+
+
 def doctor(args: argparse.Namespace) -> dict[str, Any]:
     source = Path(args.package_root).resolve()
     target = Path(args.target).expanduser().resolve()
@@ -243,6 +284,7 @@ def doctor(args: argparse.Namespace) -> dict[str, Any]:
     installed_marker = marker(install_root)
     installed_manifest = load_json(install_root / "MANIFEST.json")
     verify_manifest(install_root, installed_manifest)
+    sanity_result = sanity_payload(source, install_root)
     if not paths["runtime"].is_dir():
         raise RuntimeError_(f"runtime root missing: {paths['runtime']}")
     configuration = "managed" if paths["config"].is_dir() else "missing"
@@ -256,6 +298,7 @@ def doctor(args: argparse.Namespace) -> dict[str, Any]:
         "install_root": str(install_root),
         "runtime_root": str(paths["runtime"]),
         "configuration": configuration,
+        "sanity": sanity_result,
     }
 
 
@@ -307,6 +350,10 @@ def parser() -> argparse.ArgumentParser:
     configure_parser.add_argument("--config")
     configure_parser.add_argument("--contract")
     configure_parser.set_defaults(handler=configure)
+
+    sanity_parser = subparsers.add_parser("sanity")
+    common(sanity_parser)
+    sanity_parser.set_defaults(handler=sanity)
 
     doctor_parser = subparsers.add_parser("doctor")
     common(doctor_parser)

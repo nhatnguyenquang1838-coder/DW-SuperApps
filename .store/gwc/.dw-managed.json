@@ -1,7 +1,7 @@
 {
-  "installedAtEpoch": 1785207162,
+  "installedAtEpoch": 1785261988,
   "managedBy": "dw-superapps-power-store",
   "powerId": "gwc",
-  "sourceManifestSha256": "7c3eb25e2c7c035991e5b3becdfc7428c86f45df4c3072c58b86a90c0374d69b",
-  "version": "main-57cd885a6c8e"
+  "sourceManifestSha256": "e740cc4220ec5a497940af9a61336a998ad315219dd1575fc4f71297be601493",
+  "version": "main-9627e0bd43c5"
 }
