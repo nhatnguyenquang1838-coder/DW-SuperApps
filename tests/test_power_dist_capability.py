@@ -49,6 +49,13 @@ class PowerDistributionCapabilityTests(unittest.TestCase):
         recipe["spec"]["capabilities"] = {"dashboard": True}
         return recipe
 
+    def recipe_with_token_pattern(self) -> dict:
+        recipe = self.capability_recipe()
+        recipe["spec"].setdefault("forbidden", {}).setdefault("contentPatterns", []).append(
+            TOKEN_PATTERN
+        )
+        return recipe
+
     def test_dashboard_rejected_without_capability(self) -> None:
         with self.assertRaises(power_dist.DistributionError):
             power_dist.collect_files(copy.deepcopy(self.recipe), self.source)
@@ -62,10 +69,7 @@ class PowerDistributionCapabilityTests(unittest.TestCase):
         self.assertIn("skills/demo/SKILL.md", selected_paths)
 
     def test_css_custom_property_token_mapping_is_not_a_secret(self) -> None:
-        recipe = self.capability_recipe()
-        recipe["spec"].setdefault("forbidden", {}).setdefault("contentPatterns", []).append(
-            TOKEN_PATTERN
-        )
+        recipe = self.recipe_with_token_pattern()
         (self.source / "dashboard/index.html").write_text(
             'token: "var(--color-node-config)"\n', encoding="utf-8"
         )
@@ -74,11 +78,18 @@ class PowerDistributionCapabilityTests(unittest.TestCase):
         selected = power_dist.collect_files(recipe, self.source)
         self.assertIn(self.source / "dashboard/index.html", selected)
 
-    def test_real_token_literal_remains_forbidden(self) -> None:
-        recipe = self.capability_recipe()
-        recipe["spec"].setdefault("forbidden", {}).setdefault("contentPatterns", []).append(
-            TOKEN_PATTERN
+    def test_css_utility_token_mapping_is_not_a_secret(self) -> None:
+        recipe = self.recipe_with_token_pattern()
+        (self.source / "dashboard/index.html").write_text(
+            'token: "text-node-config"\n', encoding="utf-8"
         )
+
+        power_dist_capability.patch_power_dist_module(power_dist)
+        selected = power_dist.collect_files(recipe, self.source)
+        self.assertIn(self.source / "dashboard/index.html", selected)
+
+    def test_real_token_literal_remains_forbidden(self) -> None:
+        recipe = self.recipe_with_token_pattern()
         (self.source / "dashboard/index.html").write_text(
             'token: "abcdefghijklmnop"\n', encoding="utf-8"
         )
