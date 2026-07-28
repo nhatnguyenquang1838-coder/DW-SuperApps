@@ -31,8 +31,19 @@ DASHBOARD_PATTERNS = (
     "web-ui/**",
     "**/web-ui/**",
 )
-CSS_STYLE_REFERENCE = re.compile(
-    r"^(?:var\(--[A-Za-z0-9_-]+\)|(?:text|bg|border|ring|shadow|fill|stroke)-[A-Za-z0-9_./%-]+)$"
+CSS_CUSTOM_PROPERTY_REFERENCE = re.compile(r"^var\(--[A-Za-z0-9_-]+\)$")
+CSS_UTILITY_TOKEN = re.compile(r"^[A-Za-z0-9_:\-\[\]()./%#]+$")
+CSS_UTILITY_PREFIXES = (
+    "text-",
+    "bg-",
+    "border",
+    "ring-",
+    "shadow-",
+    "fill-",
+    "stroke-",
+    "hover:",
+    "focus:",
+    "dark:",
 )
 TRAILING_QUOTED_LITERAL = re.compile(r"['\"]([^'\"]+)['\"]\s*$")
 
@@ -52,16 +63,28 @@ def dashboard_enabled(recipe: dict[str, Any]) -> bool:
 
 
 def is_css_style_reference(match_text: str) -> bool:
-    """Return true only for assigned CSS references or utility identifiers.
+    """Return true only for assigned CSS references or utility-class lists.
 
-    Dashboard source may legitimately contain mappings such as
-    ``token: "var(--color-node-config)"`` and ``token: "text-node-config"``.
-    Those values are style references, not credentials. Arbitrary token-like
+    Dashboard source may legitimately map the node type ``token`` to CSS values,
+    for example ``var(--color-node-config)`` or a Tailwind class list. A value is
+    exempted only when every whitespace-delimited item is valid CSS utility syntax
+    and at least one item carries a recognized style prefix. Arbitrary token-like
     literals remain subject to the configured secret patterns.
     """
 
-    literal = TRAILING_QUOTED_LITERAL.search(match_text)
-    return bool(literal and CSS_STYLE_REFERENCE.fullmatch(literal.group(1)))
+    literal_match = TRAILING_QUOTED_LITERAL.search(match_text)
+    if not literal_match:
+        return False
+    literal = literal_match.group(1)
+    if CSS_CUSTOM_PROPERTY_REFERENCE.fullmatch(literal):
+        return True
+
+    utilities = literal.split()
+    return bool(
+        utilities
+        and all(CSS_UTILITY_TOKEN.fullmatch(utility) for utility in utilities)
+        and any(utility.startswith(CSS_UTILITY_PREFIXES) for utility in utilities)
+    )
 
 
 def patch_power_dist_module(power_dist_module):
