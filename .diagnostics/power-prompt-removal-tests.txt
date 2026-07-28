@@ -1,0 +1,26 @@
+test_active_generators_do_not_emit_prompt_export (tests.test_power_prompt_removed.PowerPromptRemovalTests.test_active_generators_do_not_emit_prompt_export) ... ok
+test_command_is_not_registered (tests.test_power_prompt_removed.PowerPromptRemovalTests.test_command_is_not_registered) ... ok
+test_root_contract_requires_direct_activation (tests.test_power_prompt_removed.PowerPromptRemovalTests.test_root_contract_requires_direct_activation) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.084s
+
+OK
+test_host_adapter_prefers_workspace_store_and_stays_out_of_system (tests.test_workspace_distribution_routing.WorkspaceDistributionRoutingTests.test_host_adapter_prefers_workspace_store_and_stays_out_of_system) ... ok
+test_prompt_displays_store_runtime_and_legacy_probe (tests.test_workspace_distribution_routing.WorkspaceDistributionRoutingTests.test_prompt_displays_store_runtime_and_legacy_probe) ... ERROR
+test_source_submodule_is_only_fallback (tests.test_workspace_distribution_routing.WorkspaceDistributionRoutingTests.test_source_submodule_is_only_fallback) ... ok
+
+======================================================================
+ERROR: test_prompt_displays_store_runtime_and_legacy_probe (tests.test_workspace_distribution_routing.WorkspaceDistributionRoutingTests.test_prompt_displays_store_runtime_and_legacy_probe)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/runner/work/DW-SuperApps/DW-SuperApps/tests/test_workspace_distribution_routing.py", line 122, in test_prompt_displays_store_runtime_and_legacy_probe
+    routing.power_prompt(
+    ^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'dw_workspace_dist' has no attribute 'power_prompt'
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.014s
+
+FAILED (errors=1)
+WRAP: .codex/skills/bmad [workspace-store]
