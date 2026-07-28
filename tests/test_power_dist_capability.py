@@ -22,6 +22,8 @@ assert CAPABILITY_SPEC is not None and CAPABILITY_SPEC.loader is not None
 power_dist_capability = importlib.util.module_from_spec(CAPABILITY_SPEC)
 CAPABILITY_SPEC.loader.exec_module(power_dist_capability)
 
+TOKEN_PATTERN = r"(?i)(api[_-]?key|token|secret)\s*[:=]\s*['\"][^'\"]{12,}['\"]"
+
 
 class PowerDistributionCapabilityTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -42,18 +44,48 @@ class PowerDistributionCapabilityTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temp.cleanup()
 
+    def capability_recipe(self) -> dict:
+        recipe = copy.deepcopy(self.recipe)
+        recipe["spec"]["capabilities"] = {"dashboard": True}
+        return recipe
+
     def test_dashboard_rejected_without_capability(self) -> None:
         with self.assertRaises(power_dist.DistributionError):
             power_dist.collect_files(copy.deepcopy(self.recipe), self.source)
 
     def test_dashboard_allowed_with_dashboard_capability(self) -> None:
-        recipe = copy.deepcopy(self.recipe)
-        recipe["spec"]["capabilities"] = {"dashboard": True}
+        recipe = self.capability_recipe()
         power_dist_capability.patch_power_dist_module(power_dist)
         selected = power_dist.collect_files(recipe, self.source)
         selected_paths = {path.relative_to(self.source).as_posix() for path in selected}
         self.assertIn("dashboard/index.html", selected_paths)
         self.assertIn("skills/demo/SKILL.md", selected_paths)
+
+    def test_css_custom_property_token_mapping_is_not_a_secret(self) -> None:
+        recipe = self.capability_recipe()
+        recipe["spec"].setdefault("forbidden", {}).setdefault("contentPatterns", []).append(
+            TOKEN_PATTERN
+        )
+        (self.source / "dashboard/index.html").write_text(
+            'token: "var(--color-node-config)"\n', encoding="utf-8"
+        )
+
+        power_dist_capability.patch_power_dist_module(power_dist)
+        selected = power_dist.collect_files(recipe, self.source)
+        self.assertIn(self.source / "dashboard/index.html", selected)
+
+    def test_real_token_literal_remains_forbidden(self) -> None:
+        recipe = self.capability_recipe()
+        recipe["spec"].setdefault("forbidden", {}).setdefault("contentPatterns", []).append(
+            TOKEN_PATTERN
+        )
+        (self.source / "dashboard/index.html").write_text(
+            'token: "abcdefghijklmnop"\n', encoding="utf-8"
+        )
+
+        power_dist_capability.patch_power_dist_module(power_dist)
+        with self.assertRaises(power_dist.DistributionError):
+            power_dist.collect_files(recipe, self.source)
 
 
 if __name__ == "__main__":
