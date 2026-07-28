@@ -23,7 +23,7 @@ class GwcSimulationLabTests(unittest.TestCase):
         scenarios = json.loads(
             (LAB / "fixtures" / "scenario-index.json").read_text(encoding="utf-8")
         )["scenarios"]
-        tasks = simulate.load_jsonl(LAB / "seeds" / "tasks.jsonl")
+        tasks = simulate.load_tasks(LAB / "seeds")
         self.assertEqual(81, manifest["invariants"]["nodes"])
         self.assertEqual(81, len(nodes))
         self.assertEqual(81, len({node["id"] for node in nodes}))
