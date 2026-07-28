@@ -1,0 +1,46 @@
+{
+  "built_at": "2026-07-28T02:38:34.134967+00:00",
+  "foundation_ref": "4e3e8c4f0520a9a241911e902a153b16606faeac",
+  "powers": {
+    "bmad": {
+      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/bmad-main-744227169add.zip",
+      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/bmad-main-744227169add.zip.sha256",
+      "power_id": "bmad",
+      "recipe": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/.prepared-sources/bmad/distribution/power-package.yaml",
+      "source_epoch": 1785165675,
+      "source_sha": "744227169addadb50d8b946777939a73207970f3",
+      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/bmad-main-744227169add",
+      "version": "main-744227169add"
+    },
+    "gwc": {
+      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/gwc-main-57cd885a6c8e.zip",
+      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/gwc-main-57cd885a6c8e.zip.sha256",
+      "power_id": "gwc",
+      "recipe": "/home/runner/work/DW-SuperApps/DW-SuperApps/projects/gwc/distribution/power-package.yaml",
+      "source_epoch": 1785185464,
+      "source_sha": "57cd885a6c8e1cb0c0c09247ea6b40e8ea7ddfef",
+      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/gwc-main-57cd885a6c8e",
+      "version": "main-57cd885a6c8e"
+    },
+    "task-me": {
+      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/task-me-main-187586fb124a.zip",
+      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/task-me-main-187586fb124a.zip.sha256",
+      "power_id": "task-me",
+      "recipe": "/home/runner/work/DW-SuperApps/DW-SuperApps/projects/task-me/distribution/power-package.yaml",
+      "source_epoch": 1785068081,
+      "source_sha": "187586fb124a2687fef70c1c4a3a3b8b2cd02b09",
+      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/task-me-main-187586fb124a",
+      "version": "main-187586fb124a"
+    },
+    "ua": {
+      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/ua-main-361665807004.zip",
+      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/ua-main-361665807004.zip.sha256",
+      "power_id": "ua",
+      "recipe": "/home/runner/work/DW-SuperApps/DW-SuperApps/projects/ua/distribution/power-package.yaml",
+      "source_epoch": 1785202772,
+      "source_sha": "36166580700472d88bb80d7f3f1e7f257b8adf7f",
+      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/ua-main-361665807004",
+      "version": "main-361665807004"
+    }
+  }
+}

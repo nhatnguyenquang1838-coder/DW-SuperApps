@@ -1,0 +1,25 @@
+apiVersion: dw.superapps/v1
+kind: PowerPackage
+metadata:
+  id: ua
+  name: Understand Anything
+  version: main-361665807004
+  description: Semantic codebase analysis skill, dashboard visualization, and verified
+    runtime dependencies.
+spec:
+  entrypoints:
+  - understand-anything-plugin/skills/understand/SKILL.md
+  managedPaths:
+  - LICENSE
+  - SOURCE.lock.json
+  - understand-anything-plugin/package.json
+  - understand-anything-plugin/pnpm-workspace.yaml
+  - understand-anything-plugin/pnpm-lock.yaml
+  - understand-anything-plugin/agents
+  - understand-anything-plugin/skills/understand
+  - understand-anything-plugin/packages/core
+  - understand-anything-plugin/packages/dashboard
+  - understand-anything-plugin/packages/tree-sitter-dart-wasm
+  - understand-anything-plugin/packages/tree-sitter-swift-wasm
+  runtimeDataRoot: .ua
+  configRequired: false
