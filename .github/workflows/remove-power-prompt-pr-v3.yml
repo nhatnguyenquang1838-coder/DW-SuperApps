@@ -1,0 +1,39 @@
+name: Apply Power prompt removal v3
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - synchronize
+      - reopened
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.head_ref == 'fix/remove-power-prompt-command'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Apply corrected repository patch
+        run: python scripts/remove_power_prompt_once_v3.py
+
+      - name: Validate focused behavior
+        run: |
+          python -m py_compile scripts/dw_cli.py scripts/dw_workspace_dist.py
+          python -m unittest -v tests/test_power_prompt_removed.py
+          python -m unittest -v tests/test_workspace_distribution_routing.py
+
+      - name: Commit clean patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix(runtime): remove Power prompt generation command"
+          git push origin HEAD:fix/remove-power-prompt-command
