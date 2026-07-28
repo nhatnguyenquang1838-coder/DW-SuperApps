@@ -51,6 +51,18 @@ jobs:
           target.write_bytes(gzip.decompress(compressed))
           PY
           echo 'b67d6ed746ef760e0bf037ab555e4e0a4b4ef28600c7feb43c3091d18d83767e  '"$RUNNER_TEMP/apply_power_compatibility.py" | sha256sum -c -
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          target = Path(os.environ['RUNNER_TEMP'], 'apply_power_compatibility.py')
+          text = target.read_text(encoding='utf-8')
+          old = "'dw power doctor <power-id> --target <system-path>\\n'"
+          new = "'dw power doctor task-me --target projects/rental-home\\n'"
+          if text.count(old) != 2:
+              raise SystemExit(f'documentation marker count mismatch: {text.count(old)}')
+          target.write_text(text.replace(old, new), encoding='utf-8')
+          PY
 
       - name: Apply compatibility patch
         id: apply
