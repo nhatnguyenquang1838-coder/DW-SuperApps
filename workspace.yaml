@@ -65,13 +65,6 @@ projects:
     roles:
       - product
       - system
-  - id: gwc-simulation-lab
-    path: systems/gwc-simulation-lab
-    source: nhatnguyenquang1838-coder/DW-SuperApps
-    roles:
-      - product
-      - system
-      - test
 powers:
   - id: gwc
     project: gwc
@@ -130,7 +123,6 @@ systems:
           worker: ua
           output_into: g1-preflight
   - id: gwc-simulation-lab
-    project: gwc-simulation-lab
     path: systems/gwc-simulation-lab
     source: nhatnguyenquang1838-coder/DW-SuperApps
     enabled_powers:
