@@ -75,6 +75,12 @@ jobs:
       - name: Test deterministic builder
         run: python -m unittest -v tests.test_power_dist_builder
 
+      - name: Test distribution capabilities and overlays
+        run: >-
+          python -m unittest -v
+          tests.test_power_dist_capability
+          tests.test_distribution_builder_overlays
+
       - name: Test distribution integration
         run: python -m unittest -v tests.test_power_distribution_integration
 
