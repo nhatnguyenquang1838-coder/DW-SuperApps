@@ -44,3 +44,16 @@ projects/*/.ua/
 projects/*/.task-me/
 projects/*/.bmad/
 .kilo/staging/power-dist/
+
+# OpenClaw local workspace identity, memory, and runtime state
+# Keep AGENTS.md tracked; the paths below are private and machine/session specific.
+/BOOTSTRAP.md
+/HEARTBEAT.md
+/IDENTITY.md
+/MEMORY.md
+/SOUL.md
+/TOOLS.md
+/USER.md
+/memory/
+/.openclaw/
+/openclaw.json
