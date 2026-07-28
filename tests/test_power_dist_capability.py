@@ -56,6 +56,15 @@ class PowerDistributionCapabilityTests(unittest.TestCase):
         )
         return recipe
 
+    def assert_style_token_allowed(self, value: str) -> None:
+        recipe = self.recipe_with_token_pattern()
+        (self.source / "dashboard/index.html").write_text(
+            f'token: "{value}"\n', encoding="utf-8"
+        )
+        power_dist_capability.patch_power_dist_module(power_dist)
+        selected = power_dist.collect_files(recipe, self.source)
+        self.assertIn(self.source / "dashboard/index.html", selected)
+
     def test_dashboard_rejected_without_capability(self) -> None:
         with self.assertRaises(power_dist.DistributionError):
             power_dist.collect_files(copy.deepcopy(self.recipe), self.source)
@@ -69,24 +78,15 @@ class PowerDistributionCapabilityTests(unittest.TestCase):
         self.assertIn("skills/demo/SKILL.md", selected_paths)
 
     def test_css_custom_property_token_mapping_is_not_a_secret(self) -> None:
-        recipe = self.recipe_with_token_pattern()
-        (self.source / "dashboard/index.html").write_text(
-            'token: "var(--color-node-config)"\n', encoding="utf-8"
-        )
-
-        power_dist_capability.patch_power_dist_module(power_dist)
-        selected = power_dist.collect_files(recipe, self.source)
-        self.assertIn(self.source / "dashboard/index.html", selected)
+        self.assert_style_token_allowed("var(--color-node-config)")
 
     def test_css_utility_token_mapping_is_not_a_secret(self) -> None:
-        recipe = self.recipe_with_token_pattern()
-        (self.source / "dashboard/index.html").write_text(
-            'token: "text-node-config"\n', encoding="utf-8"
-        )
+        self.assert_style_token_allowed("text-node-config")
 
-        power_dist_capability.patch_power_dist_module(power_dist)
-        selected = power_dist.collect_files(recipe, self.source)
-        self.assertIn(self.source / "dashboard/index.html", selected)
+    def test_css_utility_class_list_is_not_a_secret(self) -> None:
+        self.assert_style_token_allowed(
+            "text-node-config border border-node-config/30 bg-node-config/10"
+        )
 
     def test_real_token_literal_remains_forbidden(self) -> None:
         recipe = self.recipe_with_token_pattern()
