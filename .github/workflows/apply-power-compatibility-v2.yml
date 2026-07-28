@@ -1,0 +1,110 @@
+name: Apply Power compatibility validation v2
+
+on:
+  pull_request:
+    branches: [main]
+    types: [synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-power-compatibility-v2-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  patch:
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'fix/remove-power-prompt-command'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/remove-power-prompt-command
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install validation dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Recover and correct exact patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import base64
+          import gzip
+          from pathlib import Path
+          import yaml
+
+          workflow = yaml.safe_load(
+              Path('.github/workflows/apply-power-compatibility-once.yml').read_text(encoding='utf-8')
+          )
+          steps = workflow['jobs']['patch']['steps']
+          encoded = next(step['env']['PATCH_GZIP_B64'] for step in steps if 'env' in step)
+          script = gzip.decompress(base64.b64decode(encoded)).decode('utf-8')
+          old = '''for path in ("scripts/dw_cli.py", "scripts/dw_workspace_dist.py"):
+              replace_once(
+                  path,
+                  '    package = store_root() / power_id\\n',
+                  '    package = store_root() / power_id\\n'
+                  '    guidance = package / "AGENT_GUIDANCE.md"\\n'
+                  '    guidance_display = (\\n'
+                  '        display_path(guidance)\\n'
+                  '        if guidance.is_file()\\n'
+                  '        else "legacy package: embedded activation contract"\\n'
+                  '    )\\n',
+              )
+          '''
+          new = '''for path in ("scripts/dw_cli.py", "scripts/dw_workspace_dist.py"):
+              replace_once(
+                  path,
+                  '    metadata = manifest["metadata"]\\n'
+                  '    spec = manifest["spec"]\\n'
+                  '    package = store_root() / power_id\\n',
+                  '    metadata = manifest["metadata"]\\n'
+                  '    spec = manifest["spec"]\\n'
+                  '    package = store_root() / power_id\\n'
+                  '    guidance = package / "AGENT_GUIDANCE.md"\\n'
+                  '    guidance_display = (\\n'
+                  '        display_path(guidance)\\n'
+                  '        if guidance.is_file()\\n'
+                  '        else "legacy package: embedded activation contract"\\n'
+                  '    )\\n',
+              )
+          '''
+          if old not in script:
+              raise SystemExit('compatibility patch correction marker not found')
+          target = Path('.diagnostics/apply_power_compatibility_v2.py')
+          target.parent.mkdir(parents=True, exist_ok=True)
+          target.write_text(script.replace(old, new), encoding='utf-8')
+          PY
+          python .diagnostics/apply_power_compatibility_v2.py
+
+      - name: Validate focused compatibility behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n bin/dw
+          python scripts/validate-workspace.py
+          python scripts/validate-power-compatibility.py --strict
+          python -m unittest -v tests.test_power_compatibility tests.test_power_dist_builder tests.test_power_runtime_installer tests.test_power_package_consumer tests.test_multi_host_runtime tests.test_power_prompt_removed tests.test_power_runtime_v2 tests.test_workspace_distribution_routing
+
+      - name: Commit clean source patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .diagnostics
+          rm -f \
+            .github/workflows/apply-power-compatibility-once.yml \
+            .github/workflows/diagnose-power-compatibility-once.yml \
+            .github/workflows/apply-power-compatibility-v2.yml
+          git add -A
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git diff --cached --check
+          git commit -m 'fix(runtime): validate current Power compatibility'
+          git push origin HEAD:fix/remove-power-prompt-command
