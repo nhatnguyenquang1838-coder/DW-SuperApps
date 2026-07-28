@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "project_id": "gwc-simulation-lab",
+  "source": {
+    "repository": "nhatnguyenquang1838-coder/gwc",
+    "sha": "ae12ec39aa5155ca43fcfd4473bee1a2ac8273eb",
+    "node_registry": "core/node-architect/node-registry.json",
+    "scenario_registry": "core/node-architect/scenario-registry.json",
+    "failure_matrix": "core/node-architect/failure-simulation-matrix.json"
+  },
+  "invariants": {
+    "nodes": 81,
+    "materialized_scenarios": 14,
+    "declared_scenarios": 116,
+    "task_seeds": 100
+  },
+  "authority_policy": {
+    "mock_agent": "mock-human-agent",
+    "simulation_only": true,
+    "real_authority": false,
+    "external_side_effects": false
+  }
+}
