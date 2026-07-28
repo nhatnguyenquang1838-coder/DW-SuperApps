@@ -70,6 +70,11 @@ class PowerDistributionBuilderTests(unittest.TestCase):
         self.assertIn("skills/demo/SKILL.md", paths)
         self.assertIn("bin/install", paths)
         self.assertIn("lib/power_runtime.py", paths)
+        self.assertIn("AGENT_GUIDANCE.md", paths)
+        self.assertEqual("AGENT_GUIDANCE.md", manifest["spec"]["agentGuidance"])
+        guidance = (Path(first["staging_root"]) / "AGENT_GUIDANCE.md").read_text(encoding="utf-8")
+        self.assertIn("static distribution guidance", guidance)
+        self.assertNotIn("dw power prompt", guidance)
 
     def test_runtime_data_is_forbidden(self) -> None:
         (self.source / ".demo").mkdir()

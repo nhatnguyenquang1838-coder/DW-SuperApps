@@ -3,7 +3,7 @@ kind: Power
 metadata:
   id: bmad
   name: BMAD Method
-  version: 6.10.0-pinned
+  version: main-744227169add
   description: Structured software-delivery lifecycle covering analysis, planning, architecture, implementation, and review.
 spec:
   category: software-delivery-method
@@ -42,9 +42,9 @@ spec:
     - cli
   entrypoints:
     skillCandidates:
-      - SKILL.md
       - distribution/skills/bmad/SKILL.md
       - src/core-skills/bmad-help/SKILL.md
+      - SKILL.md
     cliCandidates:
       - distribution/bin/bootstrap-bmad
       - tools/installer/bmad-cli.js
@@ -78,6 +78,6 @@ spec:
     providerState:
       status: ready-unpublished
       task: DW-PDIST-06
-      sourceCommit: bb45db4aa4496c69239f9c0629c290fd1b072fc9
+      sourceCommit: 744227169addadb50d8b946777939a73207970f3
       sourceLock: plugins/bmad-method/SOURCE.lock.json
-      note: External-source wrapper is implemented on feat/bmad-power-plugin; release publication is performed only after exact-head CI and merge.
+      note: power-dist-bmad version main-744227169add is validated from BMAD-METHOD@744227169addadb50d8b946777939a73207970f3. Immutable-release publication remains a separate post-merge action.

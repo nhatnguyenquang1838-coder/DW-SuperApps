@@ -3,7 +3,7 @@ kind: Power
 metadata:
   id: task-me
   name: Task Me
-  version: main-pinned
+  version: task-me-main-2-90138ffb298f34d517aeb0b86e738d3027e71677
   description: Impact analysis, implementation planning, task decomposition, coding guidance, and validation planning.
 spec:
   category: implementation-planning
@@ -42,6 +42,7 @@ spec:
       - docs/runbooks/TASK-ARCHITECT-RUNBOOK.md
       - README.md
     cliCandidates:
+      - scripts/task-me-host.py
       - scripts/validate.sh
   permissions:
     read:
@@ -69,6 +70,6 @@ spec:
     providerState:
       status: published
       task: DW-PDIST-03
-      sourceCommit: ef0b890b1fb9140109c04cbb490b41d9aa94bfff
+      sourceCommit: 90138ffb298f34d517aeb0b86e738d3027e71677
       sourceLock: distribution/power-package.yaml
-      note: Published as main-20260725.1-ef0b890; power-dist and immutable release validated by run 30123645327. Submodule remains available as migration fallback.
+      note: Published as task-me-main-2-90138ffb298f34d517aeb0b86e738d3027e71677; current power-dist includes the host-root CLI boundary and is locked to the same source SHA.

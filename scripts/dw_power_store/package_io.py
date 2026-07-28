@@ -102,9 +102,13 @@ def verify_package(package_root: Path, power_id: str) -> dict[str, Any]:
             raise ConsumerError(f"package file missing or size mismatch: {entry.get('path')}")
         if sha256_file(path) != entry.get("sha256"):
             raise ConsumerError(f"package file checksum mismatch: {entry.get('path')}")
-    runtime_root = Path(str(data.get("spec", {}).get("runtimeDataRoot", "")))
+    spec = data.get("spec", {})
+    runtime_root = Path(str(spec.get("runtimeDataRoot", "")))
     if not str(runtime_root) or runtime_root.is_absolute() or ".." in runtime_root.parts:
         raise ConsumerError("package runtimeDataRoot must be a safe relative path")
+    guidance = spec.get("agentGuidance")
+    if guidance and not (package_root / str(guidance)).is_file():
+        raise ConsumerError(f"package agent guidance missing: {guidance}")
     return data
 
 
@@ -115,9 +119,13 @@ def verify_installed_manifest(install: Path, package_manifest: dict[str, Any]) -
             raise ConsumerError(f"installed file missing or size mismatch: {entry['path']}")
         if sha256_file(path) != entry["sha256"]:
             raise ConsumerError(f"installed hash mismatch: {entry['path']}")
-    for entrypoint in package_manifest.get("spec", {}).get("entrypoints", []):
+    spec = package_manifest.get("spec", {})
+    for entrypoint in spec.get("entrypoints", []):
         if not (install / entrypoint).is_file():
             raise ConsumerError(f"entrypoint missing: {entrypoint}")
+    guidance = spec.get("agentGuidance")
+    if guidance and not (install / str(guidance)).is_file():
+        raise ConsumerError(f"agent guidance missing: {guidance}")
 
 
 def install_package_tree(

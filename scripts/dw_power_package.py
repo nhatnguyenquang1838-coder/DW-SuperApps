@@ -18,6 +18,7 @@ from dw_power_store import (  # noqa: E402,F401
     parser,
     rollback,
     safe_extract,
+    sanity,
     uninstall,
 )
 
