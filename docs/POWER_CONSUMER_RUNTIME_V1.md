@@ -35,6 +35,7 @@ dw power install task-me \
   --target projects/rental-home
 
 dw power configure task-me --config ./config.yaml --contract ./contract.yaml --target projects/rental-home
+dw power sanity <power-id>
 dw power doctor task-me --target projects/rental-home
 dw power history task-me
 dw power rollback task-me --version <version>

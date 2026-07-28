@@ -31,6 +31,7 @@ from .package_io import (
     verify_installed_manifest,
     verify_package,
 )
+from .compatibility import sanity
 
 
 def install(args: Any) -> dict[str, Any]:
@@ -138,6 +139,7 @@ def configure(args: Any) -> dict[str, Any]:
 
 def doctor(args: Any) -> dict[str, Any]:
     roots, target, package_manifest, install = configured_install(args)
+    compatibility = sanity(args)
     marker = package_marker(install)
     if marker.get("powerId") != args.power_id:
         raise ConsumerError("managed marker power ID mismatch")
@@ -175,5 +177,6 @@ def doctor(args: Any) -> dict[str, Any]:
         "binding": {"status": "managed", "path": str(binding)},
         "runtime": {"status": "PASS", "path": str(runtime)},
         "configuration": configuration,
+        "compatibility": compatibility,
         "legacy": legacy_target_install(target, args.power_id),
     }

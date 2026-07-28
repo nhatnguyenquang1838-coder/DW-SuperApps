@@ -96,8 +96,9 @@ dw project add <project-id> --repo <owner/repository> --role product
 dw power list
 dw power info gwc
 dw power install gwc --source auto --target projects/rental-home
+dw power sanity gwc
 dw power doctor gwc --target projects/rental-home
-dw power prompt gwc --system rental-home --task "Review delivery scope"
+/dw-gwc Review delivery scope
 ```
 
 Power packages belong to the Super Project package store. Runtime and project configuration belong to the selected project/system.

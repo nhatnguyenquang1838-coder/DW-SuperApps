@@ -170,12 +170,10 @@ dw init all --host kiro
 dw host status kiro
 ```
 
-Open the `DW-SuperApps` root in Kiro. Generate a Power prompt:
+Open the `DW-SuperApps` root in Kiro and activate the native skill directly:
 
-```bash
-dw power prompt ua \
-  --system rental-home \
-  --task "Analyze the current architecture and refresh the project knowledge graph"
+```text
+/dw-ua Analyze the current architecture and refresh the project knowledge graph
 ```
 
 ## Codex IDE setup
@@ -185,12 +183,10 @@ dw power prompt ua \
 .\dw.ps1 host status codex
 ```
 
-Open the `DW-SuperApps` root in Codex. Generate a Power prompt:
+Open the `DW-SuperApps` root in Codex and activate the native skill directly:
 
-```powershell
-.\dw.ps1 power prompt task-me `
-  --system rental-home `
-  --task "Create an implementation plan for OPS-LEASE"
+```text
+/dw-task-me Create an implementation plan for OPS-LEASE
 ```
 
 ## Low-level lifecycle commands

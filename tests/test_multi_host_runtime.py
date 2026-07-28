@@ -63,12 +63,15 @@ class MultiHostRuntimeTests(unittest.TestCase):
         )
 
     def test_instruction_hosts_include_canonical_routing(self) -> None:
+        forbidden = "dw power " + "prompt"
         for host in ("copilot", "cline", "kilo", "claude", "custom"):
             with self.subTest(host=host):
                 content = dw_cli.host_instruction_content(host)
                 self.assertIn("AGENTS.md", content)
                 self.assertIn("workspace.yaml", content)
-                self.assertIn("dw power prompt", content)
+                self.assertIn("Power activation routing", content)
+                self.assertIn("apply it directly", content)
+                self.assertNotIn(forbidden, content)
 
 
 if __name__ == "__main__":

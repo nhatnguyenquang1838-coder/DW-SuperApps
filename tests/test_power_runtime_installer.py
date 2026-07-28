@@ -73,6 +73,9 @@ class PowerRuntimeInstallerTests(unittest.TestCase):
         self.assertTrue((install_root / ".dw-managed.json").is_file())
         self.assertTrue((self.consumer / ".demo").is_dir())
         self.assertFalse((self.consumer / ".dw").exists())
+        sanity = self.run_runtime("sanity")
+        self.assertEqual("PASS", json.loads(sanity.stdout)["status"])
+        self.assertEqual("AGENT_GUIDANCE.md", json.loads(sanity.stdout)["guidance"])
 
         config = self.root / "config.yaml"
         contract = self.root / "contract.yaml"
