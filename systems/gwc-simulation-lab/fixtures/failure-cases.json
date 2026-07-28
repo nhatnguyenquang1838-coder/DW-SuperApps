@@ -1,0 +1,52 @@
+{
+  "cases": [
+    {
+      "id": "unknown_write_result_reconciles_before_retry",
+      "expected_response": "reconcile live state before retry",
+      "forbidden": [
+        "blind retry",
+        "false pass"
+      ]
+    },
+    {
+      "id": "cas_mismatch_reloads_checkpoint",
+      "expected_response": "reload checkpoint and reconcile",
+      "forbidden": [
+        "overwrite newer checkpoint",
+        "continue stale state"
+      ]
+    },
+    {
+      "id": "lease_expired_stops_or_reacquires",
+      "expected_response": "stop or safely reacquire lease after readback",
+      "forbidden": [
+        "advance without lease",
+        "assume ownership"
+      ]
+    },
+    {
+      "id": "approval_expired_regenerates_request",
+      "expected_response": "regenerate approval request without side effect",
+      "forbidden": [
+        "execute with stale approval",
+        "reuse scope hash blindly"
+      ]
+    },
+    {
+      "id": "duplicate_agent_blocked_by_lease",
+      "expected_response": "only lease holder advances node",
+      "forbidden": [
+        "double write",
+        "parallel checkpoint advance"
+      ]
+    },
+    {
+      "id": "node_version_drift_pins_or_restarts",
+      "expected_response": "pin old version or restart with explicit new run",
+      "forbidden": [
+        "mix node versions",
+        "silently continue with drift"
+      ]
+    }
+  ]
+}
