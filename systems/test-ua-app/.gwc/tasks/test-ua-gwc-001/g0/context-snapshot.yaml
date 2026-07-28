@@ -1,0 +1,86 @@
+schema_version: "1.0"
+artifact_type: g0-context-snapshot
+generated_at: "2026-07-23T17:44:00Z"
+
+project:
+  id: test-ua-app
+  name: Test UA APP
+  profile_path: projects/test-ua-app/project-profile.yaml
+
+repository:
+  full_name: nhatnguyenquang1838-coder/DW-SuperApps
+  base_ref: main
+  base_sha: 6332c8f62614d581c45403cb5e3e0c4f528cbd70
+  protected_branches:
+    - main
+  connector: cline
+  write_enabled: true
+
+constraints:
+  - "UA outputs must live under systems/test-ua-app/.ua/"
+  - "GWC gate artifacts must live under systems/test-ua-app/.gwc/tasks/<task-id>/"
+  - "No secrets or environment-file content in generated graph"
+  - "Exclude .git, node_modules, dist, build, coverage, test-results, playwright-report, .pnpm-store, caches, .env*, credentials, secrets"
+
+applicable_policies:
+  - id: gwc-agents
+    path: powers/gwc/AGENTS.md
+    ref: main
+    source_sha: b3edbb102fb5b0e7e1532e221d89c16896f17755
+  - id: gwc-gate-lifecycle
+    path: powers/gwc/core/GATE_LIFECYCLE_CONTRACT_v1.0.md
+    ref: main
+    source_sha: b3edbb102fb5b0e7e1532e221d89c16896f17755
+  - id: gwc-coding-governance
+    path: powers/gwc/core/Coding_Project_Governance_v1.0.md
+    ref: main
+    source_sha: b3edbb102fb5b0e7e1532e221d89c16896f17755
+  - id: gwc-g01-runbook
+    path: powers/gwc/core/runbooks/GATE_G0_G1_OPERATIONAL_RUNBOOK_v1.0.md
+    ref: main
+    source_sha: b3edbb102fb5b0e7e1532e221d89c16896f17755
+  - id: workspace-yaml
+    path: workspace.yaml
+    ref: main
+    source_sha: 6332c8f62614d581c45403cb5e3e0c4f528cbd70
+
+sources:
+  - path: AGENTS.md (root)
+    required: true
+    status: AVAILABLE
+    source_sha: 6332c8f62614d581c45403cb5e3e0c4f528cbd70
+  - path: workspace.yaml
+    required: true
+    status: AVAILABLE
+    source_sha: 6332c8f62614d581c45403cb5e3e0c4f528cbd70
+  - path: powers/gwc/AGENTS.md
+    required: true
+    status: AVAILABLE
+    source_sha: b3edbb102fb5b0e7e1532e221d89c16896f17755
+  - path: powers/gwc/core/GATE_LIFECYCLE_CONTRACT_v1.0.md
+    required: true
+    status: AVAILABLE
+    source_sha: b3edbb102fb5b0e7e1532e221d89c16896f17755
+  - path: powers/ua/understand-anything-plugin/skills/understand/SKILL.md
+    required: true
+    status: AVAILABLE
+    source_sha: 6ae71878beb50226a1e4b7e2f52ac6468c86f74b
+
+status: READY
+
+blockers: []
+
+runtime_context:
+  agent_runtime_id: cline-20260723-2311
+  execution_mode: local_agent
+  selected_profile:
+    id: test-ua-app
+    path: systems/test-ua-app/project-profile.yaml
+  selected_connector: cline
+  connector_priority:
+    - cline
+  required_behavior_contracts:
+    - core/Coding_Project_Governance_v1.0.md
+    - core/GATE_LIFECYCLE_CONTRACT_v1.0.md
+    - core/E2E_DRAFT_PR_DELIVERY_RULE.md
+    - core/runbooks/GATE_G0_G1_OPERATIONAL_RUNBOOK_v1.0.md
