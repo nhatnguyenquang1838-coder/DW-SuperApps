@@ -4,7 +4,7 @@ metadata:
   id: ua
   name: Understand Anything
   version: main-pinned
-  description: Semantic codebase analysis, architecture discovery, dependency mapping, and project knowledge generation.
+  description: Semantic codebase analysis, architecture discovery, dependency mapping, dashboard visualization, and project knowledge generation.
 spec:
   category: knowledge
   path: projects/ua
@@ -15,6 +15,7 @@ spec:
     - codebase-graph
     - architecture-graph
     - dependency-map
+    - dashboard
   consumes:
     - source-code
     - project-documents

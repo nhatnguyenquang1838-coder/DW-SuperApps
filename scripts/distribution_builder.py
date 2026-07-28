@@ -67,7 +67,7 @@ def build_power(
     source_sha = git_rev_parse(source_root)
     source_epoch = git_source_date_epoch(source_root)
     version = f"main-{source_sha[:12]}"
-    build_script = ROOT / "scripts" / "power_dist.py"
+    build_script = ROOT / "scripts" / "power_dist_capability.py"
     if not build_script.is_file():
         raise SystemExit(f"missing builder script: {build_script}")
 
