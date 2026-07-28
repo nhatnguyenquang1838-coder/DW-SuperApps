@@ -4,6 +4,9 @@ on:
   pull_request:
     branches: [main]
     types: [synchronize, reopened]
+    paths:
+      - .github/workflows/apply-power-compatibility-once.yml
+      - .github/patches/**
   workflow_dispatch:
 
 permissions:
@@ -64,86 +67,35 @@ jobs:
           PY
 
       - name: Apply compatibility patch
-        id: apply
         shell: bash
-        run: |
-          set +e
-          python "$RUNNER_TEMP/apply_power_compatibility.py" > .diagnostics/apply.log 2>&1
-          status=$?
-          cat .diagnostics/apply.log
-          echo "status=$status" >> "$GITHUB_OUTPUT"
-          exit 0
-
-      - name: Report patch failure
-        if: steps.apply.outputs.status != '0'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          {
-            echo '## Power compatibility patch diagnostic'
-            echo
-            echo '```text'
-            tail -n 100 .diagnostics/apply.log
-            echo '```'
-          } > .diagnostics/pr-comment.md
-          gh pr comment 26 --body-file .diagnostics/pr-comment.md
-          exit 1
+        run: python "$RUNNER_TEMP/apply_power_compatibility.py"
 
       - name: Validate focused compatibility behavior
-        if: steps.apply.outputs.status == '0'
         shell: bash
         run: |
           set -euo pipefail
-          {
-            bash -n bin/dw
-            python scripts/validate-workspace.py
-            python scripts/validate-power-compatibility.py --strict
-            python -m unittest -v \
-              tests.test_power_compatibility \
-              tests.test_power_dist_builder \
-              tests.test_power_runtime_installer \
-              tests.test_power_package_consumer \
-              tests.test_multi_host_runtime \
-              tests.test_power_prompt_removed \
-              tests.test_power_runtime_v2 \
-              tests.test_workspace_distribution_routing
-          } 2>&1 | tee .diagnostics/validation.log
+          bash -n bin/dw
+          python scripts/validate-workspace.py
+          python scripts/validate-power-compatibility.py --strict
+          python -m unittest -v \
+            tests.test_power_compatibility \
+            tests.test_power_dist_builder \
+            tests.test_power_runtime_installer \
+            tests.test_power_package_consumer \
+            tests.test_multi_host_runtime \
+            tests.test_power_prompt_removed \
+            tests.test_power_runtime_v2 \
+            tests.test_workspace_distribution_routing
 
-      - name: Commit clean source patch
-        id: commit
-        if: steps.apply.outputs.status == '0'
+      - name: Commit runtime and contract changes
         shell: bash
         run: |
-          set +e
-          {
-            rm -rf .diagnostics .github/patches
-            rm -f .github/workflows/apply-power-compatibility-once.yml
-            git add -A
-            git status --short
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git diff --cached --check
-            git commit -m 'fix(runtime): validate current Power compatibility'
-            git push origin HEAD:fix/remove-power-prompt-command
-          } > "$RUNNER_TEMP/commit.log" 2>&1
-          status=$?
-          cat "$RUNNER_TEMP/commit.log"
-          echo "status=$status" >> "$GITHUB_OUTPUT"
-          exit 0
-
-      - name: Report clean commit failure
-        if: steps.commit.outputs.status != '0'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          {
-            echo '## Power compatibility clean-commit diagnostic'
-            echo
-            echo '```text'
-            tail -n 120 "$RUNNER_TEMP/commit.log"
-            echo '```'
-          } > "$RUNNER_TEMP/commit-comment.md"
-          gh pr comment 26 --body-file "$RUNNER_TEMP/commit-comment.md"
-          exit 1
+          set -euo pipefail
+          rm -rf .diagnostics
+          git restore --source=HEAD -- .github/workflows/validate-workspace.yml
+          git add -A
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git diff --cached --check
+          git commit -m 'fix(runtime): validate current Power compatibility'
+          git push origin HEAD:fix/remove-power-prompt-command
