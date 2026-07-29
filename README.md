@@ -1,10 +1,25 @@
 # DW SuperApps
 
-DW SuperApps is a host-neutral control workspace for reusable AI Powers, editable projects, product systems, model providers, and agent hosts.
+DW SuperApps is a host-neutral control workspace for reusable AI Powers, editable project repositories, product systems, model providers, and agent hosts.
 
-## Choose your starting point
+## Current workspace model
 
-### Use this workspace
+```text
+DW-SuperApps
+├── projects/*                 editable project and Power-source repositories
+├── manifests/powers/*         logical Power contracts and routing metadata
+├── .dw/powers/*               installed, validated Power packages
+├── .dw/inbox/powers/*         local/offline package drop zone
+├── .dw/cache/*                package cache
+├── .dw/history/powers/*       package rollback history
+├── .dw/bindings/*             system-to-package bindings
+├── host adapter roots         thin workspace-owned native routing
+└── <system runtime roots>     .gwc, .ua, .task-me, .bmad
+```
+
+The workspace owns Power distributions and host adapters. Each registered system owns its runtime data and project configuration. Normal Power onboarding must not copy Power packages or host skill implementations into the target system.
+
+## Quick start
 
 ```bash
 git clone --recurse-submodules https://github.com/nhatnguyenquang1838-coder/DW-SuperApps.git
@@ -17,7 +32,7 @@ dw system list
 dw doctor all
 ```
 
-### Create another Super Project
+## Create another Super Project
 
 Run from an initialized DW-SuperApps checkout:
 
@@ -30,9 +45,21 @@ cd ../my-super-project
 bash bin/dw install --shell auto
 ```
 
-The initializer copies the governed DW runtime and manifests, creates an empty generic project registry, prepares the workspace-owned package inbox, and initializes Git. It does not copy product repositories, installed Power packages, runtime data, credentials, or generated host adapters.
+The initializer copies the governed DW runtime and manifests, creates an empty project registry, prepares the workspace-owned package inbox, and initializes Git. It does not copy product repositories, installed Power packages, runtime data, credentials, or generated host adapters.
 
-Add the first product project:
+To initialize an existing management repository:
+
+```bash
+cd existing-super-project
+dw workspace init . \
+  --id existing-super-project \
+  --name "Existing Super Project" \
+  --in-place
+```
+
+Initialization is non-destructive and refuses to replace an existing `workspace.yaml` or managed runtime path.
+
+## Add a project or system
 
 ```bash
 dw project add rental-home \
@@ -52,45 +79,9 @@ dw validate
 dw doctor all --offline
 ```
 
-### Initialize an existing management repository
+`dw project add` creates a Git submodule and updates `workspace.yaml`. It does not install a Power package or write project runtime data.
 
-```bash
-cd existing-super-project
-dw workspace init . \
-  --id existing-super-project \
-  --name "Existing Super Project" \
-  --in-place
-```
-
-Initialization is non-destructive and refuses to replace an existing `workspace.yaml` or managed runtime path.
-
-## Core model
-
-```text
-projects/*                    editable Git project repositories
-manifests/powers/*            logical Power contracts and routing metadata
-.dw/powers/*                  installed validated Power packages
-.dw/bindings/*                project/system-to-package bindings
-<project>/.gwc                GWC runtime and configuration
-<project>/.ua                 UA runtime and knowledge
-<project>/.task-me            Task Me runtime and plans
-<project>/.bmad               BMAD project configuration
-host adapter roots            thin workspace-owned routing only
-```
-
-All editable source repositories live below `projects/*`. Root `powers/` contains only non-submodule routing assets, while installed packages remain under `.dw/powers/*`.
-
-## Project commands
-
-```bash
-dw project list
-dw project info rental-home
-dw project add <project-id> --repo <owner/repository> --role product
-```
-
-`dw project add` creates a Git submodule and updates `workspace.yaml`. It never installs a Power package or writes project runtime data.
-
-## Power commands
+## Install and operate Powers
 
 ```bash
 dw power list
@@ -98,14 +89,47 @@ dw power info gwc
 dw power install gwc --source auto --target projects/rental-home
 dw power sanity gwc
 dw power doctor gwc --target projects/rental-home
-/dw-gwc Review delivery scope
 ```
 
-Power packages belong to the Super Project package store. Runtime and project configuration belong to the selected project/system.
+Required lifecycle:
 
-## Supported hosts
+```text
+DISCOVER → PREFLIGHT → INSTALL → CONFIGURE → ACTIVATE → DOCTOR → USE → REPORT
+```
 
-Kiro, Codex, GitHub Copilot, Cline, Kilo Code, Claude Code, and custom agents are supported through thin adapters. Ollama is registered separately as an OpenAI-compatible model provider.
+The package store and runtime target are separate:
+
+```text
+package store   = workspace distribution.storeRoot
+runtime target  = selected project/system path
+```
+
+Use `--store-root` only for tests or an explicitly external workspace layout. A store root must not overlap or resolve inside the runtime target.
+
+## Native Power activation
+
+Power aliases select native host skills. They are not terminal commands.
+
+```text
+/dw-gwc      governance, gates, approvals, delivery control, validation
+/dw-ua       architecture, semantic analysis, dependency and impact mapping
+/dw-task-me  implementation planning, task decomposition, coding guidance
+/dw-bmad     product, specification, architecture, implementation, review
+```
+
+Example user request:
+
+```text
+/dw-gwc Review the delivery scope and prepare the governed execution.
+```
+
+The agent must resolve the target system, load the selected installed Power entrypoint, and apply it directly to the remainder of the request. It must not ask the user to run an activation command or generate a copy-and-paste task prompt.
+
+The DW CLI owns installation, configuration, inspection, validation, doctor, history, rollback, and uninstall operations. Task prompt generation is owned by the selected Power/host skill, not by the CLI.
+
+## Hosts, providers, and orchestration
+
+Configured native host families include Kiro, Codex, GitHub Copilot, Cline, Kilo Code, Claude Code, and custom agents. Thin adapters may coexist in the workspace, but each task should resolve one canonical Power entrypoint.
 
 ```bash
 dw host install all --mode wrapper
@@ -113,15 +137,26 @@ dw host status all
 dw provider status all
 ```
 
-## Installation guides
+OpenClaw ACPX is the configured multi-agent orchestrator. It can route governed work to Codex, Claude, Kiro, and Kilo Code workers. GWC remains the primary governance workflow for registered systems.
 
-- [Installation index](docs/installation/README.md)
-- [Create a Super Project](docs/installation/CREATE_SUPER_PROJECT.md)
-- [Add a project or system](docs/installation/ADD_PROJECT.md)
-- [Install Powers](docs/installation/INSTALL_POWERS.md)
-- [Offline installation](docs/installation/OFFLINE_INSTALL.md)
-- [Migrate an existing workspace](docs/installation/MIGRATION.md)
-- [Troubleshooting](docs/installation/TROUBLESHOOTING.md)
+Ollama is an OpenAI-compatible model provider, not an agent host. The workspace default endpoint is:
+
+```text
+http://localhost:11434/v1
+```
+
+Provider configuration must not contain real secrets.
+
+## Current Powers
+
+| Power | Purpose | Runtime root |
+|---|---|---|
+| GWC | Governance and governed delivery | `.gwc/` |
+| Understand Anything | Architecture and semantic codebase knowledge | `.ua/` |
+| Task Me | Impact analysis and implementation planning | `.task-me/` |
+| BMAD Method | Product and delivery lifecycle workflows | `.bmad/`, `_bmad/`, `_bmad-output/` when declared |
+
+Installing a Power does not grant GitHub write, Jira write, Slack, merge, deployment, approval, or production authority.
 
 ## Daily operations
 
@@ -134,39 +169,36 @@ dw clean all
 
 `dw clean all` removes generated adapters and caches only. Runtime data is preserved unless destructive runtime cleanup is explicitly authorized with `--include-runtime --yes`.
 
-## Orchestration
-
-GWC is the primary governance workflow. DW SuperApps can orchestrate worker
-powers when G1 hooks match task intents.
-
-```bash
-dw orchestrator prompt --system rental-home --task "Plan implementation tasks for user authentication"
-dw orchestrator run --system rental-home --task "Design service boundaries for notification system"
-```
-
-- `prompt` returns a composed human-readable prompt.
-- `run` returns a structured JSON execution plan with ordered phases.
-
 ## Reports
 
-Generate user-facing Markdown reports from GWC gate artifacts.
+Generate user-facing Markdown reports from GWC gate artifacts:
 
 ```bash
 dw report g1 --workspace .gwc/tasks/<task-id>
 ```
 
-Currently supported:
-- `g1` — alignment report from `g1-intake-brief.yaml`, `g1-options.yaml`, `g1-preflight-report.yaml`, and `g1-decision-record.yaml`
+## Installation and operations guides
 
-## Current Powers
+- [Installation index](docs/installation/README.md)
+- [Create a Super Project](docs/installation/CREATE_SUPER_PROJECT.md)
+- [Add a project or system](docs/installation/ADD_PROJECT.md)
+- [Install Powers](docs/installation/INSTALL_POWERS.md)
+- [Power distribution onboarding](docs/runbooks/POWER_DIST_ONBOARDING.md)
+- [Portable multi-host routing](docs/PORTABLE_MULTI_HOST_ROUTER.md)
+- [Offline installation](docs/installation/OFFLINE_INSTALL.md)
+- [Migrate an existing workspace](docs/installation/MIGRATION.md)
+- [Troubleshooting](docs/installation/TROUBLESHOOTING.md)
 
-| Power | Purpose | Default delivery |
-|---|---|---|
-| GWC | Governance and governed delivery | Validated distribution; source project available for development |
-| Understand Anything | Architecture and semantic codebase knowledge | Validated distribution; controlled source project under `projects/ua` |
-| Task Me | Impact analysis and implementation planning | Validated distribution; source project available for development |
-| BMAD Method | Product and delivery lifecycle workflows | Release-first external Power |
+## Safety and authority boundaries
+
+- Repository state, package manifests, checksums, governance artifacts, and audit records are authoritative.
+- Never invent credentials, approvals, checksums, package identities, or validation evidence.
+- Preserve legacy target installations unless a separate migration or cleanup is authorized.
+- Refuse path traversal, archive symlinks, store/runtime overlap, unmanaged overwrite, and package identity mismatch.
+- Do not write directly to protected `main`.
+- Use a dedicated branch, review the complete diff, run applicable validation, and create a reviewable PR.
+- Merge, deployment, release, secrets, migrations, production configuration, and production data require separate authority.
 
 ## Child-project independence
 
-Standalone project contracts and direct Power injection without a parent Super Project are tracked separately in GitHub Issue #15. The current Super Project bootstrap does not move package-store ownership into child projects.
+Standalone project contracts and direct Power injection without a parent Super Project are tracked separately in GitHub Issue #15. The current Super Project bootstrap keeps package-store ownership in the parent workspace.
