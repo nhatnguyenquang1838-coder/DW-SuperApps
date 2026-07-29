@@ -3,7 +3,7 @@ kind: Power
 metadata:
   id: ua
   name: Understand Anything
-  version: ua-local-3254f75
+  version: ua-main-f01391f7
   description: Semantic codebase analysis, architecture discovery, dependency mapping, dashboard visualization, and project knowledge generation.
 spec:
   category: knowledge
@@ -70,6 +70,6 @@ spec:
     providerState:
       status: published
       task: DW-PDIST-04
-      sourceCommit: 3254f75d9aa014a4d1166579ee1657783dd5436f
+      sourceCommit: f01391f7d1658d84b8ee6f34fb08399cd8fc3f62
       sourceLock: SOURCE.lock.json
       note: Local source integration pin; remote publication was not checked (SKIPPED_OFFLINE).

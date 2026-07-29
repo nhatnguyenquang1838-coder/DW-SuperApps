@@ -3,7 +3,7 @@ kind: Power
 metadata:
   id: bmad
   name: BMAD Method
-  version: bmad-local-dca9cd73
+  version: bmad-main-fdc47614
   description: Structured software-delivery lifecycle covering analysis, planning, architecture, implementation, and review.
 spec:
   category: software-delivery-method
@@ -78,6 +78,6 @@ spec:
     providerState:
       status: ready-unpublished
       task: DW-PDIST-06
-      sourceCommit: dca9cd73f30c9a69167adf71020b2b1f210c93fb
+      sourceCommit: fdc47614b5903bf342ca92d9547ae4c49817aa3a
       sourceLock: plugins/bmad-method/SOURCE.lock.json
       note: Local source integration pin; remote publication was not checked (SKIPPED_OFFLINE).

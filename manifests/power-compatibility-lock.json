@@ -4,11 +4,11 @@
   "powers": {
     "gwc": {
       "sourceRepository": "nhatnguyenquang1838-coder/gwc",
-      "providerHeadSha": "8d18324b2f5bb149ea94c133b53d742b93b04b5a",
+      "providerHeadSha": "1db5cdde7666e95e0a5d864633a3255a2a6ad40e",
       "distributionRepository": "nhatnguyenquang1838-coder/gwc",
       "distributionRef": "power-dist",
-      "publishedSourceSha": "8d18324b2f5bb149ea94c133b53d742b93b04b5a",
-      "packageVersion": "gwc-local-8d18324",
+      "publishedSourceSha": "1db5cdde7666e95e0a5d864633a3255a2a6ad40e",
+      "packageVersion": "gwc-main-1db5cdde",
       "runtimeDataRoot": ".gwc",
       "entrypoints": [
         "skills/gwc-g0/SKILL.md",
@@ -20,11 +20,11 @@
     },
     "task-me": {
       "sourceRepository": "nhatnguyenquang1838-coder/task-me",
-      "providerHeadSha": "61428b39296c73d4131e3eef04d2ed15bd073111",
+      "providerHeadSha": "bfa0752d9ca2c4e57cfe219c16294e728fc6a16b",
       "distributionRepository": "nhatnguyenquang1838-coder/task-me",
       "distributionRef": "power-dist",
-      "publishedSourceSha": "61428b39296c73d4131e3eef04d2ed15bd073111",
-      "packageVersion": "task-me-local-61428b3",
+      "publishedSourceSha": "bfa0752d9ca2c4e57cfe219c16294e728fc6a16b",
+      "packageVersion": "task-me-main-bfa0752d",
       "runtimeDataRoot": ".task-me",
       "entrypoints": [
         ".kiro/skills/implementation-task-architect/SKILL.md",
@@ -36,11 +36,11 @@
     },
     "ua": {
       "sourceRepository": "nhatnguyenquang1838-coder/Understand-Anything",
-      "providerHeadSha": "3254f75d9aa014a4d1166579ee1657783dd5436f",
+      "providerHeadSha": "f01391f7d1658d84b8ee6f34fb08399cd8fc3f62",
       "distributionRepository": "nhatnguyenquang1838-coder/Understand-Anything",
       "distributionRef": "power-dist",
-      "publishedSourceSha": "3254f75d9aa014a4d1166579ee1657783dd5436f",
-      "packageVersion": "ua-local-3254f75",
+      "publishedSourceSha": "f01391f7d1658d84b8ee6f34fb08399cd8fc3f62",
+      "packageVersion": "ua-main-f01391f7",
       "runtimeDataRoot": ".ua",
       "entrypoints": [
         "understand-anything-plugin/skills/understand/SKILL.md"
@@ -52,11 +52,11 @@
     },
     "bmad": {
       "sourceRepository": "nhatnguyenquang1838-coder/BMAD-METHOD",
-      "providerHeadSha": "dca9cd73f30c9a69167adf71020b2b1f210c93fb",
+      "providerHeadSha": "fdc47614b5903bf342ca92d9547ae4c49817aa3a",
       "distributionRepository": "nhatnguyenquang1838-coder/DW-SuperApps",
       "distributionRef": "power-dist-bmad",
-      "publishedSourceSha": "dca9cd73f30c9a69167adf71020b2b1f210c93fb",
-      "packageVersion": "bmad-local-dca9cd73",
+      "publishedSourceSha": "fdc47614b5903bf342ca92d9547ae4c49817aa3a",
+      "packageVersion": "bmad-main-fdc47614",
       "runtimeDataRoot": ".bmad",
       "entrypoints": [
         "src/core-skills/bmad-help/SKILL.md",
