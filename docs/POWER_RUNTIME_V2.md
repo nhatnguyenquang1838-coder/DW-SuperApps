@@ -111,6 +111,9 @@ dw.cmd clean all
 | `dw doctor all --offline` | Run health checks without remote drift lookup. |
 | `dw clean all` | Remove generated Kiro/Codex adapters and workspace caches. Preserve `.ua`, `.task-me`, and `.gwc` runtime data. |
 | `dw clean all --include-runtime --yes` | Also remove system-owned runtime data. This is destructive. |
+| `dw power cleanup` | Preview removal of workspace Power packages, bindings, histories, caches, inbox, distribution artifacts, and generated adapters. |
+| `dw power cleanup --yes` | Apply the Power setup cleanup while preserving registered projects, source submodules, and runtime data. |
+| `dw power cleanup --include-runtime --yes` | Also remove declared system runtime roots. This is destructive. |
 | `dw reset all --yes` | Refuse dirty submodules, deinitialize all clean submodules, and remove generated adapters/caches. Rebuild with `dw init all`. |
 
 ## Common daily flow

@@ -65,6 +65,9 @@ jobs:
       - name: Test one-click commands
         run: python -m unittest -v tests.test_oneclick_commands
 
+      - name: Test Power setup cleanup
+        run: python -m unittest -v tests.test_clean_power_setup
+
       - name: Test multi-host runtime
         run: python -m unittest -v tests.test_multi_host_runtime
 
