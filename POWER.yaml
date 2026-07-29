@@ -3,7 +3,7 @@ kind: PowerPackage
 metadata:
   id: bmad
   name: BMAD Method
-  version: main-744227169add
+  version: main-fdc47614b590
   description: Skills-only BMAD software-delivery lifecycle with a portable multi-host
     bootstrap.
 spec:

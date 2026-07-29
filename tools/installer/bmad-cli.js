@@ -1,5 +1,14 @@
 #!/usr/bin/env node
 
+// Keep discovery available in a fresh/offline checkout before optional CLI
+// dependencies are installed. This path must remain side-effect free.
+if (process.argv.slice(2).some((arg) => arg === '--help' || arg === '-h')) {
+  console.log('BMAD Core CLI - Universal AI agent framework');
+  console.log('Usage: bmad <install|uninstall|status> [options]');
+  console.log('Offline discovery: node tools/power-help.js --help');
+  process.exit(0);
+}
+
 const { program } = require('commander');
 const path = require('node:path');
 const fs = require('node:fs');
@@ -17,9 +26,13 @@ if (process.stdin?.setMaxListeners) {
 // Check for updates - do this asynchronously so it doesn't block startup
 const packageJson = require('../../package.json');
 const packageName = 'bmad-method';
-checkForUpdate().catch(() => {
-  // Silently ignore errors - version check is best-effort
-});
+const offlineMode = process.env.DW_OFFLINE === '1' || process.env.BMAD_OFFLINE === '1';
+const helpOnly = process.argv.slice(2).some((arg) => arg === '--help' || arg === '-h');
+if (!offlineMode && !helpOnly) {
+  checkForUpdate().catch(() => {
+    // Silently ignore errors - version check is best-effort
+  });
+}
 
 async function checkForUpdate() {
   try {

@@ -4,7 +4,7 @@
     {
       "mode": "0600",
       "path": "AGENT_GUIDANCE.md",
-      "sha256": "64693fb228a73596a8be508f86e3c5a892f4f1a4eeb1b3e770eb9556c91af5b9",
+      "sha256": "5165b8897f2c457bd91fe678324abcfe7c94534e35e74d16aba2a70857cd9dd3",
       "size": 1815
     },
     {
@@ -16,13 +16,13 @@
     {
       "mode": "0600",
       "path": "POWER.yaml",
-      "sha256": "60cd43ea22af787be76fc662ffcbf9439454301d9d2f38d49721114f096f1a02",
+      "sha256": "0a38ba58e1b54b460bd964b3c8aaf8d7d0a7798b7cdb3384fc622b6d8c249145",
       "size": 466
     },
     {
       "mode": "0600",
       "path": "SOURCE.json",
-      "sha256": "d85d2c5441fea480bfb4a1417ff6edadff59df281ac9572a97356fd000896011",
+      "sha256": "74efc1629e68568e44de2cca7a6c63194480de75de65d065c4a202ef118eca1e",
       "size": 204
     },
     {
@@ -34,7 +34,7 @@
     {
       "mode": "0600",
       "path": "VERSION",
-      "sha256": "591988973fe6d88d5620f8ad26e7bf48a11826094620302e3cfc167a402047ad",
+      "sha256": "4edba89b024d5eb9dc14864ab71cb94d53f266a0dc4461e7cf9211a131852947",
       "size": 18
     },
     {
@@ -1612,8 +1612,8 @@
     {
       "mode": "0755",
       "path": "tools/installer/bmad-cli.js",
-      "sha256": "5f8f774004fc215d0450f5c01f7ff90493e96126fcbd59faaf3717a1dc74935b",
-      "size": 3392
+      "sha256": "82be32685c52c218be921fbf2ee098df5582aa850c4019ab907b2e5431a4f5ef",
+      "size": 4054
     },
     {
       "mode": "0644",
@@ -1855,8 +1855,8 @@
     "powerId": "bmad",
     "sourceRef": "main",
     "sourceRepository": "nhatnguyenquang1838-coder/BMAD-METHOD",
-    "sourceSha": "744227169addadb50d8b946777939a73207970f3",
-    "version": "main-744227169add"
+    "sourceSha": "fdc47614b5903bf342ca92d9547ae4c49817aa3a",
+    "version": "main-fdc47614b590"
   },
   "spec": {
     "agentGuidance": "AGENT_GUIDANCE.md",
