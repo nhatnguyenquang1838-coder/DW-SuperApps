@@ -88,13 +88,17 @@ def assemble(args: argparse.Namespace) -> dict:
     kiro_skill = ROOT / ".kiro" / "skills" / "dw-power-installation"
     kiro_agent = ROOT / ".kiro" / "agents" / "dw-power-installation.json"
     kiro_agent_prompt = ROOT / ".kiro" / "agents" / "DW_POWER_INSTALLATION_AGENT.md"
+    offline_verifier = ROOT / "scripts" / "offline_release_installer.py"
     for required in (kiro_skill / "SKILL.md", kiro_skill / "scripts" / "python-session.sh", kiro_agent, kiro_agent_prompt):
         if not required.is_file():
             raise SystemExit(f"missing Kiro installation asset: {required}")
+    if not offline_verifier.is_file():
+        raise SystemExit(f"missing standalone release verifier: {offline_verifier}")
     shutil.copytree(kiro_skill, release_root / "kiro" / "skills" / "dw-power-installation")
     (release_root / "kiro" / "agents").mkdir(parents=True, exist_ok=True)
     shutil.copy2(kiro_agent, release_root / "kiro" / "agents" / kiro_agent.name)
     shutil.copy2(kiro_agent_prompt, release_root / "kiro" / "agents" / kiro_agent_prompt.name)
+    shutil.copy2(offline_verifier, release_root / offline_verifier.name)
 
     components = []
     source_packages = []
@@ -118,9 +122,14 @@ def assemble(args: argparse.Namespace) -> dict:
         })
         source_packages.append(package_manifest["metadata"])
 
-    validation_path = distribution_root / "validation-report.json"
-    if not validation_path.is_file():
-        raise SystemExit(f"missing validation report: {validation_path}")
+    validation_candidates = (
+        distribution_root / "validation-report.json",
+        distribution_root / "staging" / "validation-report.json",
+    )
+    validation_path = next((path for path in validation_candidates if path.is_file()), None)
+    if validation_path is None:
+        expected = " or ".join(str(path) for path in validation_candidates)
+        raise SystemExit(f"missing validation report: expected {expected}")
     validation = json.loads(validation_path.read_text(encoding="utf-8"))
     power_results = validation.get("powers", {})
     missing = [power_id for power_id in args.powers if power_id not in power_results]
@@ -146,8 +155,11 @@ def assemble(args: argparse.Namespace) -> dict:
                 "SHA256SUMS.txt",
                 "VALIDATION_REPORT.json",
                 "KIRO_OFFLINE_INSTALL_PROMPT.md",
+                "offline_release_installer.py",
                 "kiro/skills/dw-power-installation/SKILL.md",
+                "kiro/skills/dw-power-installation/scripts/python-session.sh",
                 "kiro/agents/dw-power-installation.json",
+                "kiro/agents/DW_POWER_INSTALLATION_AGENT.md",
             ],
             "powers": list(args.powers),
             "kiroPrompt": "KIRO_OFFLINE_INSTALL_PROMPT.md",
@@ -156,6 +168,9 @@ def assemble(args: argparse.Namespace) -> dict:
                 "agent": "kiro/agents/dw-power-installation.json",
                 "agentPrompt": "kiro/agents/DW_POWER_INSTALLATION_AGENT.md",
                 "pythonSession": "kiro/skills/dw-power-installation/scripts/python-session.sh",
+            },
+            "standaloneTools": {
+                "releaseVerifier": "offline_release_installer.py",
             },
             "registrationMode": "offline-local",
         },

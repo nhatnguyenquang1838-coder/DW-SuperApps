@@ -11,6 +11,7 @@ The release contains both:
 dw-superapps-full-<version>.zip       # complete offline bundle
 assets/<power>-<version>.zip          # individual package assets
 assets/<power>-<version>.zip.sha256
+offline_release_installer.py         # release-local verifier/installer helper
 MANIFEST.json
 SOURCE_LOCK.json
 SHA256SUMS.txt
@@ -23,9 +24,14 @@ kiro/agents/dw-power-installation.json   # Kiro installation agent
 Verify an extracted full bundle before installation:
 
 ```bash
-python scripts/offline_release_installer.py verify \
+python /path/to/dw-superapps-full-<version>/offline_release_installer.py verify \
   --release /path/to/dw-superapps-full-<version>
 ```
+
+The verifier, package ZIPs, checksums, prompt, Kiro skill, Kiro agent, and Python session bootstrap are
+inside the release. A receiving Super Project must only provide its local compatible `dw` runtime and
+registered project directory; it does not need to pull this repository, Power source repositories, or
+remote release assets.
 
 For a DW-SuperApps checkout, place each validated pair in its workspace inbox:
 

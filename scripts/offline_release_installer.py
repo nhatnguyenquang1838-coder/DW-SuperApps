@@ -50,6 +50,13 @@ def verify_release(release_root: Path) -> dict:
     if manifest.get("apiVersion") != "dw.superapps.distribution/v1":
         raise SystemExit("unsupported release apiVersion")
 
+    required_evidence = manifest.get("spec", {}).get("requiredEvidence", [])
+    if not isinstance(required_evidence, list):
+        raise SystemExit("release requiredEvidence must be a list")
+    for required in required_evidence:
+        if not isinstance(required, str) or not required or not (release_root / required).is_file():
+            raise SystemExit(f"required release asset missing: {required}")
+
     for line in (release_root / "SHA256SUMS.txt").read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
@@ -80,7 +87,32 @@ def install_component(package: Path, destination: Path, force: bool) -> str:
     destination.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(package) as archive:
         require_safe_archive(archive)
-        archive.extractall(destination)
+        names = [info.filename.replace("\\", "/").rstrip("/") for info in archive.infolist()]
+        top_levels = {name.split("/", 1)[0] for name in names if name}
+        candidate_root = next(iter(top_levels)) if len(top_levels) == 1 else None
+        has_nested_member = bool(candidate_root) and any(
+            name.startswith(f"{candidate_root}/") for name in names
+        )
+        strip_root = candidate_root if has_nested_member else None
+        for info in archive.infolist():
+            normalized = info.filename.replace("\\", "/").rstrip("/")
+            if not normalized:
+                continue
+            parts = normalized.split("/")
+            if strip_root and parts[0] == strip_root:
+                parts = parts[1:]
+            if not parts:
+                continue
+            target = (destination.joinpath(*parts)).resolve()
+            try:
+                target.relative_to(destination.resolve())
+            except ValueError as exc:
+                raise SystemExit(f"archive path escapes install destination: {info.filename}") from exc
+            if info.is_dir():
+                target.mkdir(parents=True, exist_ok=True)
+                continue
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(archive.read(info))
     return changed
 
 

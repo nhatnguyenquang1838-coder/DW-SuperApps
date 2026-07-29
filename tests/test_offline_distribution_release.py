@@ -65,6 +65,7 @@ class OfflineDistributionReleaseTests(unittest.TestCase):
             ], check=True)
 
             self.assertTrue((workspace / ".dw" / "powers" / "task-me" / "MANIFEST.json").is_file())
+            self.assertFalse((workspace / ".dw" / "powers" / "task-me" / "task-me").exists())
             self.assertTrue((workspace / ".task-me" / "state.json").is_file())
 
             blocked = subprocess.run([

@@ -126,11 +126,11 @@ jobs:
           set -euo pipefail
           release_dir="dist/full-release/dw-superapps-full-${{ steps.identity.outputs.version }}"
           (cd "$release_dir" && sha256sum -c SHA256SUMS.txt)
-          python scripts/offline_release_installer.py verify --release "$release_dir"
+          python "$release_dir/offline_release_installer.py" verify --release "$release_dir"
           extracted="$RUNNER_TEMP/dw-full-release-extracted"
           mkdir -p "$extracted"
           unzip -q "$release_dir/dw-superapps-full-${{ steps.identity.outputs.version }}.zip" -d "$extracted"
-          python scripts/offline_release_installer.py verify --release "$extracted"
+          python "$extracted/offline_release_installer.py" verify --release "$extracted"
 
       - name: Upload full release artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

@@ -4,8 +4,17 @@ Use a single full `DW-SuperApps` release when installing into another Super Proj
 `dw-superapps-full-<version>.zip`, verify `MANIFEST.json`, `SOURCE_LOCK.json`, `SHA256SUMS.txt`, and
 `VALIDATION_REPORT.json`, then copy only the four ZIP/checksum pairs into the receiving workspace inbox.
 
-The release also contains `KIRO_OFFLINE_INSTALL_PROMPT.md`. This is the single Kiro prompt for offline
-installation and project binding; the release does not need copied Kiro Power adapters.
+The release also contains `KIRO_OFFLINE_INSTALL_PROMPT.md`, the Kiro installation skill and agent, the
+Windows Bash-compatible Python session bootstrap, and `offline_release_installer.py`. These are the
+complete local onboarding assets; the release does not need copied Kiro Power adapters or a repository
+pull.
+
+Verify with the copy shipped in the release:
+
+```bash
+python /path/to/dw-superapps-full-<version>/offline_release_installer.py verify \
+  --release /path/to/dw-superapps-full-<version>
+```
 
 Register an existing local project and its system metadata without creating a submodule:
 

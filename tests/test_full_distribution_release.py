@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -65,7 +66,7 @@ class FullDistributionReleaseTests(unittest.TestCase):
             (distribution / "assets").mkdir()
             shutil.copy2(built["archive"], distribution / "assets/gwc-power-v1.0.0.zip")
             shutil.copy2(built["checksum"], distribution / "assets/gwc-power-v1.0.0.zip.sha256")
-            (distribution / "validation-report.json").write_text(
+            (distribution / "staging" / "validation-report.json").write_text(
                 json.dumps({"powers": {"gwc": {"status": "PASS"}}}) + "\n", encoding="utf-8"
             )
 
@@ -87,6 +88,7 @@ class FullDistributionReleaseTests(unittest.TestCase):
             offline_release_installer.verify_release(release)
             self.assertTrue((release / "dw-superapps-full-1.0.0.zip").is_file())
             self.assertTrue((release / "KIRO_OFFLINE_INSTALL_PROMPT.md").is_file())
+            self.assertTrue((release / "offline_release_installer.py").is_file())
             self.assertTrue(
                 (release / "kiro/skills/dw-power-installation/SKILL.md").is_file()
             )
@@ -97,6 +99,10 @@ class FullDistributionReleaseTests(unittest.TestCase):
                 "kiro/skills/dw-power-installation/SKILL.md",
                 manifest["spec"]["kiroInstallation"]["skill"],
             )
+            self.assertEqual(
+                "offline_release_installer.py",
+                manifest["spec"]["standaloneTools"]["releaseVerifier"],
+            )
             self.assertEqual("offline-local", manifest["spec"]["registrationMode"])
             self.assertIn("assets/gwc-power-v1.0.0.zip", (release / "SHA256SUMS.txt").read_text())
 
@@ -104,6 +110,18 @@ class FullDistributionReleaseTests(unittest.TestCase):
             with zipfile.ZipFile(release / "dw-superapps-full-1.0.0.zip") as archive:
                 archive.extractall(extracted)
             offline_release_installer.verify_release(extracted)
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(extracted / "offline_release_installer.py"),
+                    "verify",
+                    "--release",
+                    str(extracted),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
 
 
 if __name__ == "__main__":

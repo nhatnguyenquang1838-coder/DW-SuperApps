@@ -44,8 +44,12 @@ POWERS            comma-separated subset of gwc,ua,task-me,bmad
 2. Verify the extracted release locally:
 
    ```bash
-   dw_kiro_python "$SUPER_PROJECT/scripts/offline_release_installer.py" verify --release "$RELEASE_DIR"
+   release_verifier="$RELEASE_DIR/offline_release_installer.py"
+   test -f "$release_verifier"
+   dw_kiro_python "$release_verifier" verify --release "$RELEASE_DIR"
    ```
+
+   The verifier is shipped inside the release. Do not replace it with a copy from a repository checkout.
 
 3. Confirm `PROJECT_PATH` already exists as a local directory. Do not create or clone project source.
 

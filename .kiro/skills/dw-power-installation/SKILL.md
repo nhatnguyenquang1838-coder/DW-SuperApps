@@ -34,8 +34,11 @@ commands in scripts. Do not assume `python3` exists on Windows.
 2. Verify the full release with the local script only:
 
    ```bash
-   dw_kiro_python "$SUPER_PROJECT/scripts/offline_release_installer.py" verify --release "$RELEASE_DIR"
+   dw_kiro_python "$RELEASE_DIR/offline_release_installer.py" verify --release "$RELEASE_DIR"
    ```
+
+   The verifier is part of the extracted release. Do not replace it with a copy from a repository
+   checkout.
 
 3. Register an existing local project/system once. `--repo` is metadata and `--offline` must be present:
 
