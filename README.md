@@ -172,6 +172,36 @@ The agent must resolve the target system, load the selected installed Power entr
 
 The DW CLI owns installation, configuration, inspection, validation, doctor, history, rollback, and uninstall operations. Task prompt generation is owned by the selected Power/host skill, not by the CLI.
 
+### Understand a Power before using it
+
+Use the offline, manifest-backed help command when you need to know what a Power
+does, when it applies, how to invoke it, why it exists, what it produces, and
+what authority it does not grant:
+
+```bash
+./bin/dw power help gwc
+./bin/dw power help ua
+./bin/dw power help task-me
+./bin/dw power help bmad
+```
+
+The shorter discovery alias is also available:
+
+```bash
+./bin/dw skill gwc --help
+```
+
+These commands are read-only diagnostics. They do not activate a Power, create
+a prompt, modify a project, or contact GitHub. To use a Power, invoke its
+native host alias after installation:
+
+```text
+/dw-gwc      governance, context, intake, preflight, and delivery boundaries
+/dw-ua       semantic analysis and project knowledge
+/dw-task-me  impact analysis and implementation planning
+/dw-bmad     product and software-delivery lifecycle workflows
+```
+
 ## Hosts, providers, and orchestration
 
 Configured native host families include Kiro, Codex, GitHub Copilot, Cline, Kilo Code, Claude Code, and custom agents. Thin adapters may coexist in the workspace, but each task should resolve one canonical Power entrypoint.

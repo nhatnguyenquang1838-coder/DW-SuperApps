@@ -115,5 +115,29 @@ test -f "$SUPER_PROJECT/.dw/bindings/app/gwc.json"
 "$SUPER_PROJECT/bin/dw" validate
 ```
 
+## Understand the four Powers
+
+After setup, the release includes an offline help command for each Power. It
+explains what it is for, when to use it, how to invoke it, why it exists, what
+the user gets, and its authority boundaries:
+
+```bash
+"$SUPER_PROJECT/bin/dw" power help gwc
+"$SUPER_PROJECT/bin/dw" power help ua
+"$SUPER_PROJECT/bin/dw" power help task-me
+"$SUPER_PROJECT/bin/dw" power help bmad
+```
+
+For an ergonomic alias, use:
+
+```bash
+"$SUPER_PROJECT/bin/dw" skill gwc --help
+```
+
+The help command is read-only and offline. It is not a Power activation
+command and does not generate a task prompt. Use the selected native host
+alias, such as `/dw-gwc`, `/dw-ua`, `/dw-task-me`, or `/dw-bmad`, to perform
+work in the current agent session.
+
 Use only the release-local `offline_release_installer.py` and runtime after extraction. Do not fall back to
 scripts from a different DW-SuperApps checkout because that can reintroduce version drift.

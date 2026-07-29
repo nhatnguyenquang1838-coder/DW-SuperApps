@@ -158,6 +158,27 @@ class FullDistributionReleaseTests(unittest.TestCase):
             self.assertTrue((setup_root / ".dw/bindings/app/gwc.json").is_file())
             self.assertTrue((setup_root / "projects/app/.gwc").is_dir())
 
+            help_result = subprocess.run(
+                [str(setup_root / "bin/dw"), "power", "help", "gwc"],
+                cwd=setup_root,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(0, help_result.returncode)
+            self.assertIn("What:", help_result.stdout)
+            self.assertIn("/dw-gwc", help_result.stdout)
+
+            skill_help_result = subprocess.run(
+                [str(setup_root / "bin/dw"), "skill", "gwc", "--help"],
+                cwd=setup_root,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(0, skill_help_result.returncode)
+            self.assertIn("When:", skill_help_result.stdout)
+
             (setup_root / "bin/dw").write_text("broken\n", encoding="utf-8")
             repaired = offline_release_installer.setup_release(
                 type(

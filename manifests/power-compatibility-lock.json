@@ -4,11 +4,11 @@
   "powers": {
     "gwc": {
       "sourceRepository": "nhatnguyenquang1838-coder/gwc",
-      "providerHeadSha": "9627e0bd43c531396bc3a00275a5f04a61571208",
+      "providerHeadSha": "8d18324b2f5bb149ea94c133b53d742b93b04b5a",
       "distributionRepository": "nhatnguyenquang1838-coder/gwc",
       "distributionRef": "power-dist",
-      "publishedSourceSha": "9627e0bd43c531396bc3a00275a5f04a61571208",
-      "packageVersion": "gwc-main-26-9627e0bd43c531396bc3a00275a5f04a61571208",
+      "publishedSourceSha": "8d18324b2f5bb149ea94c133b53d742b93b04b5a",
+      "packageVersion": "gwc-local-8d18324",
       "runtimeDataRoot": ".gwc",
       "entrypoints": [
         "skills/gwc-g0/SKILL.md",
@@ -20,11 +20,11 @@
     },
     "task-me": {
       "sourceRepository": "nhatnguyenquang1838-coder/task-me",
-      "providerHeadSha": "90138ffb298f34d517aeb0b86e738d3027e71677",
+      "providerHeadSha": "61428b39296c73d4131e3eef04d2ed15bd073111",
       "distributionRepository": "nhatnguyenquang1838-coder/task-me",
       "distributionRef": "power-dist",
-      "publishedSourceSha": "90138ffb298f34d517aeb0b86e738d3027e71677",
-      "packageVersion": "task-me-main-2-90138ffb298f34d517aeb0b86e738d3027e71677",
+      "publishedSourceSha": "61428b39296c73d4131e3eef04d2ed15bd073111",
+      "packageVersion": "task-me-local-61428b3",
       "runtimeDataRoot": ".task-me",
       "entrypoints": [
         ".kiro/skills/implementation-task-architect/SKILL.md",
@@ -36,30 +36,31 @@
     },
     "ua": {
       "sourceRepository": "nhatnguyenquang1838-coder/Understand-Anything",
-      "providerHeadSha": "36166580700472d88bb80d7f3f1e7f257b8adf7f",
+      "providerHeadSha": "3254f75d9aa014a4d1166579ee1657783dd5436f",
       "distributionRepository": "nhatnguyenquang1838-coder/Understand-Anything",
       "distributionRef": "power-dist",
-      "publishedSourceSha": "4d5fda706fc9683d097cedc947a02011f11baa38",
-      "packageVersion": "ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38",
+      "publishedSourceSha": "3254f75d9aa014a4d1166579ee1657783dd5436f",
+      "packageVersion": "ua-local-3254f75",
       "runtimeDataRoot": ".ua",
       "entrypoints": [
         "understand-anything-plugin/skills/understand/SKILL.md"
       ],
       "guidanceMode": "legacy-optional",
-      "status": "PROVIDER_SOURCE_AHEAD",
+      "status": "CURRENT",
       "publicationState": "release-and-branch",
-      "note": "Provider main includes the dashboard-package update, while the current published power-dist still points to 4d5fda7. Treat dashboard availability as pending provider republication."
+      "note": "Local source integration pin; remote publication was not checked (SKIPPED_OFFLINE)."
     },
     "bmad": {
       "sourceRepository": "nhatnguyenquang1838-coder/BMAD-METHOD",
-      "providerHeadSha": "744227169addadb50d8b946777939a73207970f3",
+      "providerHeadSha": "b3bb751c09a3227689d0732f314ea8b0553a7591",
       "distributionRepository": "nhatnguyenquang1838-coder/DW-SuperApps",
       "distributionRef": "power-dist-bmad",
-      "publishedSourceSha": "744227169addadb50d8b946777939a73207970f3",
-      "packageVersion": "main-744227169add",
+      "publishedSourceSha": "b3bb751c09a3227689d0732f314ea8b0553a7591",
+      "packageVersion": "bmad-local-b3bb751c",
       "runtimeDataRoot": ".bmad",
       "entrypoints": [
-        "distribution/skills/bmad/SKILL.md"
+        "src/core-skills/bmad-help/SKILL.md",
+        "src/bmm-skills/module.yaml"
       ],
       "guidanceMode": "legacy-optional",
       "status": "CURRENT",

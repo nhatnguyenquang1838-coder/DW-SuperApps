@@ -3,7 +3,7 @@ kind: Power
 metadata:
   id: ua
   name: Understand Anything
-  version: ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38
+  version: ua-local-3254f75
   description: Semantic codebase analysis, architecture discovery, dependency mapping, dashboard visualization, and project knowledge generation.
 spec:
   category: knowledge
@@ -40,6 +40,7 @@ spec:
       - understand-anything-plugin/skills/understand/SKILL.md
       - README.md
     cliCandidates:
+      - scripts/power_help.py
       - install.sh
       - install.ps1
   permissions:
@@ -69,6 +70,6 @@ spec:
     providerState:
       status: published
       task: DW-PDIST-04
-      sourceCommit: 4d5fda706fc9683d097cedc947a02011f11baa38
+      sourceCommit: 3254f75d9aa014a4d1166579ee1657783dd5436f
       sourceLock: SOURCE.lock.json
-      note: Current published power-dist is ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38. Provider main 36166580700472d88bb80d7f3f1e7f257b8adf7f contains a newer dashboard-package change, so dashboard availability is reported as source-ahead until provider republication.
+      note: Local source integration pin; remote publication was not checked (SKIPPED_OFFLINE).
