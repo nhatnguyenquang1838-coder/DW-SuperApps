@@ -1,0 +1,19 @@
+{
+  "name": "dw-power-installation",
+  "description": "Install and bind DW Powers from local packages with Windows Git Bash Python compatibility",
+  "prompt": "file://.kiro/agents/DW_POWER_INSTALLATION_AGENT.md",
+  "tools": [
+    "read",
+    "write",
+    "shell",
+    "grep",
+    "glob",
+    "code"
+  ],
+  "resources": [
+    "file://.kiro/skills/dw-power-installation/SKILL.md",
+    "file://.kiro/skills/dw-power-installation/scripts/python-session.sh",
+    "file://scripts/python-resolver.sh",
+    "file://docs/runbooks/POWER_DIST_ONBOARDING.md"
+  ]
+}

@@ -148,11 +148,23 @@ def matches(path: str, pattern: str) -> bool:
     return candidate.match(pattern) or fnmatch.fnmatchcase(normalized, pattern)
 
 
-def _iter_included(source_root: Path, patterns: Iterable[str]) -> Iterable[Path]:
+def _iter_included(
+    source_root: Path,
+    patterns: Iterable[str],
+    excludes: Iterable[str] = (),
+) -> Iterable[Path]:
     seen: set[Path] = set()
+    exclude_patterns = tuple(excludes)
+
+    def excluded(path: Path) -> bool:
+        relative = path.relative_to(source_root).as_posix()
+        return any(matches(relative, pattern) for pattern in exclude_patterns)
+
     for pattern in patterns:
         normalized = ensure_relative(pattern, label="include pattern")
         for match in source_root.glob(normalized):
+            if excluded(match):
+                continue
             if match.is_symlink():
                 raise DistributionError(f"symlinks are not distributable: {match}")
             if match.is_dir():
@@ -160,6 +172,8 @@ def _iter_included(source_root: Path, patterns: Iterable[str]) -> Iterable[Path]
             else:
                 children = [match]
             for child in children:
+                if excluded(child):
+                    continue
                 if child.is_symlink():
                     raise DistributionError(f"symlinks are not distributable: {child}")
                 if child.is_file() and child not in seen:
@@ -200,7 +214,7 @@ def collect_files(recipe: dict[str, Any], source_root: Path) -> list[Path]:
     selected: list[Path] = []
     collisions: dict[str, str] = {}
 
-    for path in _iter_included(source_root, recipe["spec"]["include"]):
+    for path in _iter_included(source_root, recipe["spec"]["include"], excludes):
         resolved = path.resolve(strict=True)
         if not is_within(resolved, source_root):
             raise DistributionError(f"included file escapes source root: {path}")

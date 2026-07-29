@@ -16,4 +16,13 @@ dw validate
 dw doctor all --offline
 ```
 
+To return the package/control plane to a pre-Power-install state, preview and then apply:
+
+```bash
+./bin/dw power cleanup
+./bin/dw power cleanup --yes
+```
+
+Runtime roots are preserved unless `--include-runtime --yes` is explicitly supplied.
+
 A Super Project owns packages, bindings, host adapters, and project registrations. Child projects own their source, runtime roots, and project-specific configuration.

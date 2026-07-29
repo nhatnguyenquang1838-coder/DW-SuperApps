@@ -105,6 +105,20 @@ class PowerDistributionBuilderTests(unittest.TestCase):
         with self.assertRaises(power_dist.DistributionError):
             power_dist.collect_files(self.recipe, self.source)
 
+    @unittest.skipIf(os.name == "nt", "symlink creation requires elevated Windows privileges")
+    def test_excluded_symlink_is_ignored(self) -> None:
+        excluded = self.source / "node_modules"
+        excluded.mkdir()
+        target = self.root / "external-node-module.txt"
+        target.write_text("excluded", encoding="utf-8")
+        (excluded / "package.txt").symlink_to(target)
+        recipe = dict(self.recipe)
+        recipe["spec"] = dict(self.recipe["spec"])
+        recipe["spec"]["include"] = ["**/*"]
+        recipe["spec"]["exclude"] = ["node_modules/**"]
+        selected = power_dist.collect_files(recipe, self.source)
+        self.assertNotIn(excluded / "package.txt", selected)
+
     def test_manifest_detects_tampering(self) -> None:
         result = self.build("tamper")
         skill = Path(result["staging_root"]) / "skills/demo/SKILL.md"

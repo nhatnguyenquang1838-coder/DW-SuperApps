@@ -1,0 +1,4 @@
+interface:
+  display_name: "DW Power Installation"
+  short_description: "Install DW Powers from local releases"
+  default_prompt: "Use $dw-power-installation to install DW Powers in Kiro with Windows Bash Python compatibility."

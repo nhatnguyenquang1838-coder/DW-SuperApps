@@ -222,7 +222,11 @@ def main() -> int:
 
     submodule_paths = set(configured_submodules)
     if projects:
-        expected_paths = {project["path"] for project in projects.values()}
+        expected_paths = {
+            project["path"]
+            for project in projects.values()
+            if project.get("sourceMode") != "offline-local"
+        }
     else:
         expected_paths = {entry["path"] for entry in power_entries if entry.get("path")} | {
             entry["path"] for entry in system_entries if entry.get("path")

@@ -20,6 +20,12 @@ POWER_SOURCES = {
     "bmad": ROOT / "projects" / "bmad",
     "ua": ROOT / "projects" / "ua",
 }
+POWER_SOURCE_REPOSITORIES = {
+    "gwc": "nhatnguyenquang1838-coder/gwc",
+    "ua": "nhatnguyenquang1838-coder/Understand-Anything",
+    "task-me": "nhatnguyenquang1838-coder/task-me",
+    "bmad": "nhatnguyenquang1838-coder/BMAD-METHOD",
+}
 POWER_OVERLAYS: dict[str, dict[str, Path]] = {
     "bmad": {
         "overlay_root": ROOT / "plugins" / "bmad-method" / "overlay",
@@ -122,7 +128,7 @@ def build_power(
         "--version",
         version,
         "--source-repository",
-        f"nhatnguyenquang1838-coder/{power_id}",
+        POWER_SOURCE_REPOSITORIES[power_id],
         "--source-ref",
         "main",
         "--source-sha",
@@ -173,11 +179,13 @@ def build_all(
     staging_root.mkdir(parents=True, exist_ok=True)
     for power_id, result in results["powers"].items():
         dest = staging_root / f"{power_id}-{result['version']}"
-        if dest.exists():
-            shutil.rmtree(dest)
-        shutil.copytree(Path(result["staging_root"]), dest)
-        shutil.copy2(result["archive"], staging_root / f"{power_id}-{result['version']}.zip")
-        shutil.copy2(result["checksum"], staging_root / f"{power_id}-{result['version']}.zip.sha256")
+        built_root = Path(result["staging_root"]).resolve()
+        if built_root != dest.resolve():
+            if dest.exists():
+                shutil.rmtree(dest)
+            shutil.copytree(built_root, dest)
+            shutil.copy2(result["archive"], staging_root / f"{power_id}-{result['version']}.zip")
+            shutil.copy2(result["checksum"], staging_root / f"{power_id}-{result['version']}.zip.sha256")
 
     summary = staging_root / "build-summary.json"
     summary.write_text(json.dumps(results, indent=2, sort_keys=True) + "\n", encoding="utf-8")

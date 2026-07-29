@@ -67,6 +67,13 @@ if [[ "${1:-}" == "power" ]]; then
       dw_exec_python "$ROOT/scripts/dw_power_package.py" "$@"
       exit $?
       ;;
+    cleanup)
+      shift
+      # shellcheck source=../scripts/python-resolver.sh
+      source "$ROOT/scripts/python-resolver.sh"
+      dw_exec_python "$ROOT/scripts/clean_power_setup.py" "$@"
+      exit $?
+      ;;
   esac
 fi
 

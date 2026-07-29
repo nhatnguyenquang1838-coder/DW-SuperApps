@@ -1,0 +1,160 @@
+name: Publish full DW-SuperApps distribution
+
+on:
+  push:
+    tags:
+      - "dw-superapps-v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag to create, for example dw-superapps-v1.0.0"
+        required: true
+        default: "dw-superapps-v0.1.0"
+        type: string
+      publish_release:
+        description: "Publish the validated full distribution as a GitHub Release"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: full-dw-superapps-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-verify-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out DW-SuperApps and Power sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.DW_SUBMODULE_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.12"
+
+      - name: Install distribution dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Resolve release identity
+        id: identity
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_TAG: ${{ github.ref_name }}
+          INPUT_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "push" ]]; then
+            tag="$EVENT_TAG"
+          else
+            tag="$INPUT_TAG"
+          fi
+          case "$tag" in
+            dw-superapps-v*) ;;
+            *) echo "release tag must match dw-superapps-v*" >&2; exit 1 ;;
+          esac
+          version="${tag#dw-superapps-v}"
+          [[ "$version" =~ ^[0-9A-Za-z._-]+$ ]] || { echo "unsafe release version" >&2; exit 1; }
+          source_epoch="$(git show -s --format=%ct "$GITHUB_SHA")"
+          {
+            echo "tag=$tag"
+            echo "version=$version"
+            echo "source_epoch=$source_epoch"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run focused distribution tests
+        run: >-
+          python -m unittest -v
+          tests.test_distribution_builder_overlays
+          tests.test_offline_distribution_release
+          tests.test_full_distribution_release
+          tests.test_project_registry
+          tests.test_clean_power_setup
+          tests.test_kiro_installation_assets
+
+      - name: Build all four Power distributions
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist/full-power-distribution
+          python scripts/distribution_builder.py \
+            --output dist/full-power-distribution \
+            --staging dist/full-power-distribution/staging \
+            --foundation-ref "$GITHUB_SHA" \
+            --power gwc \
+            --power ua \
+            --power task-me \
+            --power bmad \
+            | tee dist/full-power-distribution/build.log
+
+      - name: Validate every staged Power package
+        run: >-
+          python scripts/distribution_installer.py
+          --staging dist/full-power-distribution/staging
+          --store-root "$RUNNER_TEMP/dw-full-store"
+          --target "$RUNNER_TEMP/dw-full-consumer"
+          --power gwc
+          --power ua
+          --power task-me
+          --power bmad
+
+      - name: Assemble full release bundle
+        run: >-
+          python scripts/full_distribution_release.py
+          --distribution-root dist/full-power-distribution
+          --output dist/full-release
+          --version "${{ steps.identity.outputs.version }}"
+          --source-ref "${{ github.ref_name }}"
+          --source-sha "$GITHUB_SHA"
+          --source-date-epoch "${{ steps.identity.outputs.source_epoch }}"
+          --power gwc
+          --power ua
+          --power task-me
+          --power bmad
+
+      - name: Verify full release evidence and bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_dir="dist/full-release/dw-superapps-full-${{ steps.identity.outputs.version }}"
+          (cd "$release_dir" && sha256sum -c SHA256SUMS.txt)
+          python "$release_dir/offline_release_installer.py" verify --release "$release_dir"
+          extracted="$RUNNER_TEMP/dw-full-release-extracted"
+          mkdir -p "$extracted"
+          unzip -q "$release_dir/dw-superapps-full-${{ steps.identity.outputs.version }}.zip" -d "$extracted"
+          python "$extracted/offline_release_installer.py" verify --release "$extracted"
+
+      - name: Upload full release artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: dw-superapps-full-${{ steps.identity.outputs.version }}
+          path: dist/full-release/dw-superapps-full-${{ steps.identity.outputs.version }}/**
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish full distribution GitHub Release
+        if: ${{ github.event_name == 'push' || inputs.publish_release == true }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.identity.outputs.tag }}
+          VERSION: ${{ steps.identity.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_dir="dist/full-release/dw-superapps-full-${VERSION}"
+          mapfile -t assets < <(find "$release_dir" -maxdepth 2 -type f ! -name 'RELEASE_NOTES.md' | sort)
+          notes=$'Full DW-SuperApps distribution for source '"$GITHUB_SHA"$'.\n\nIncludes validated packages for gwc, ua, task-me, and bmad, plus MANIFEST.json, SOURCE_LOCK.json, SHA256SUMS.txt, and VALIDATION_REPORT.json.'
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${assets[@]}" --clobber
+            gh release edit "$TAG" --title "DW-SuperApps full distribution $VERSION" --notes "$notes"
+          else
+            gh release create "$TAG" "${assets[@]}" --title "DW-SuperApps full distribution $VERSION" --notes "$notes"
+          fi

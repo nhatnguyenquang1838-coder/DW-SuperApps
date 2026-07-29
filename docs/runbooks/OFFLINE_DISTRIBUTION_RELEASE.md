@@ -4,6 +4,11 @@
 
 Replace branch-based offline distribution with source-built, tag/download-only release artifacts.
 
+The aggregate release workflow is `.github/workflows/publish-full-distribution-release.yml`. It runs on
+`dw-superapps-v*` tags or manual dispatch, builds `gwc`, `ua`, `task-me`, and `bmad` from the checked-out
+source pins, validates each package, and publishes one full DW-SuperApps release containing the package
+assets and release evidence.
+
 ## Source and delivery separation
 
 - `main` contains source, builders, validators, specs and tests.

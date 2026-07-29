@@ -19,10 +19,16 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--system", action="store_true")
     result.add_argument("--system-id")
     result.add_argument("--enable-powers", default="")
+    result.add_argument(
+        "--offline",
+        action="store_true",
+        help="register an existing local project without git/submodule or network access",
+    )
     return result
 
 
 def preflight(args: argparse.Namespace) -> None:
+    offline = bool(getattr(args, "offline", False))
     data = registry.workspace(ROOT)
     projects = registry.validate_registry(data, root=ROOT)
     if not registry.PROJECT_ID.fullmatch(args.project_id):
@@ -36,7 +42,12 @@ def preflight(args: argparse.Namespace) -> None:
     registered_paths = {str(project["path"]) for project in projects.values()}
     if relative in registered_paths:
         raise registry.ProjectRegistryError(f"project path already registered: {relative}")
-    if (ROOT / relative).exists():
+    if offline:
+        if not (ROOT / relative).is_dir():
+            raise registry.ProjectRegistryError(
+                f"offline project path must already exist as a directory: {relative}"
+            )
+    elif (ROOT / relative).exists():
         raise registry.ProjectRegistryError(f"project path already exists: {relative}")
 
     source = registry.normalize_repo(args.repository)
@@ -52,6 +63,8 @@ def preflight(args: argparse.Namespace) -> None:
         raise registry.ProjectRegistryError(
             "--system-id and --enable-powers require --system"
         )
+    if offline and not args.system:
+        raise registry.ProjectRegistryError("--offline requires --system for binding registration")
 
     system_id = args.system_id or args.project_id
     if args.system and not registry.PROJECT_ID.fullmatch(system_id):

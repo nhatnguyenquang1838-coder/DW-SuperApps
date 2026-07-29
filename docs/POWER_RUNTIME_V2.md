@@ -52,6 +52,18 @@ Optional explicit override:
 DW_PYTHON=/custom/path/python ./bin/dw doctor all
 ```
 
+For a Kiro/Git Bash working session, expose all Windows-compatible spellings before running Python:
+
+```bash
+source scripts/kiro-python-session.sh
+dw_kiro_python --version
+python3 --version
+python --version
+py -3 --version
+```
+
+The session resolver selects one interpreter and makes `python3`, `python`, and `py -3` use it.
+
 ### Uninstall
 
 ```bash
@@ -111,6 +123,9 @@ dw.cmd clean all
 | `dw doctor all --offline` | Run health checks without remote drift lookup. |
 | `dw clean all` | Remove generated Kiro/Codex adapters and workspace caches. Preserve `.ua`, `.task-me`, and `.gwc` runtime data. |
 | `dw clean all --include-runtime --yes` | Also remove system-owned runtime data. This is destructive. |
+| `dw power cleanup` | Preview removal of workspace Power packages, bindings, histories, caches, inbox, distribution artifacts, and generated adapters. |
+| `dw power cleanup --yes` | Apply the Power setup cleanup while preserving registered projects, source submodules, and runtime data. |
+| `dw power cleanup --include-runtime --yes` | Also remove declared system runtime roots. This is destructive. |
 | `dw reset all --yes` | Refuse dirty submodules, deinitialize all clean submodules, and remove generated adapters/caches. Rebuild with `dw init all`. |
 
 ## Common daily flow
