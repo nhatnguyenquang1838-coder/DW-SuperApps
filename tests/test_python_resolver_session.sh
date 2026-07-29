@@ -25,7 +25,7 @@ output="$(PATH="$TMP" "$BASH_BIN" -c '
   dw_kiro_python --version
 ' _ "$ROOT/scripts/python-resolver.sh")"
 
-expected="py-launcher:-3 --version"
+expected="Python 3.13.0"
 [[ "$(printf '%s\n' "$output" | sed -n '2p')" == "$expected" ]]
 [[ "$(printf '%s\n' "$output" | sed -n '3p')" == "$expected" ]]
 [[ "$(printf '%s\n' "$output" | sed -n '4p')" == "$expected" ]]
