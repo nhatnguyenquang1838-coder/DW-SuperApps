@@ -6,7 +6,7 @@ This is static distribution guidance generated when the package was built. It is
 
 - Power: `ua`
 - Package version: `main-361665807004`
-- Source: `nhatnguyenquang1838-coder/ua@36166580700472d88bb80d7f3f1e7f257b8adf7f` (`main`)
+- Source: `nhatnguyenquang1838-coder/Understand-Anything@36166580700472d88bb80d7f3f1e7f257b8adf7f` (`main`)
 - Target-owned runtime root: `.ua/`
 
 ## Required activation behavior

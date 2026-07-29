@@ -4,8 +4,8 @@
     {
       "mode": "0600",
       "path": "AGENT_GUIDANCE.md",
-      "sha256": "1bcfa9f3c27466348a133ee11b004c41762fcae020063e163643b5a7e682436a",
-      "size": 1808
+      "sha256": "64693fb228a73596a8be508f86e3c5a892f4f1a4eeb1b3e770eb9556c91af5b9",
+      "size": 1815
     },
     {
       "mode": "0644",
@@ -22,8 +22,8 @@
     {
       "mode": "0600",
       "path": "SOURCE.json",
-      "sha256": "3bfaaf2f981961c152af77df7f04a860c23374d1540de7b92badc0bcbfc1be88",
-      "size": 197
+      "sha256": "d85d2c5441fea480bfb4a1417ff6edadff59df281ac9572a97356fd000896011",
+      "size": 204
     },
     {
       "mode": "0644",
@@ -1854,7 +1854,7 @@
   "metadata": {
     "powerId": "bmad",
     "sourceRef": "main",
-    "sourceRepository": "nhatnguyenquang1838-coder/bmad",
+    "sourceRepository": "nhatnguyenquang1838-coder/BMAD-METHOD",
     "sourceSha": "744227169addadb50d8b946777939a73207970f3",
     "version": "main-744227169add"
   },

@@ -6,7 +6,7 @@ This is static distribution guidance generated when the package was built. It is
 
 - Power: `bmad`
 - Package version: `main-744227169add`
-- Source: `nhatnguyenquang1838-coder/bmad@744227169addadb50d8b946777939a73207970f3` (`main`)
+- Source: `nhatnguyenquang1838-coder/BMAD-METHOD@744227169addadb50d8b946777939a73207970f3` (`main`)
 - Target-owned runtime root: `.bmad/`
 
 ## Required activation behavior

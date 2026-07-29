@@ -34,8 +34,8 @@
           {
             "mode": "0600",
             "path": "AGENT_GUIDANCE.md",
-            "sha256": "1bcfa9f3c27466348a133ee11b004c41762fcae020063e163643b5a7e682436a",
-            "size": 1808
+            "sha256": "64693fb228a73596a8be508f86e3c5a892f4f1a4eeb1b3e770eb9556c91af5b9",
+            "size": 1815
           },
           {
             "mode": "0644",
@@ -52,8 +52,8 @@
           {
             "mode": "0600",
             "path": "SOURCE.json",
-            "sha256": "3bfaaf2f981961c152af77df7f04a860c23374d1540de7b92badc0bcbfc1be88",
-            "size": 197
+            "sha256": "d85d2c5441fea480bfb4a1417ff6edadff59df281ac9572a97356fd000896011",
+            "size": 204
           },
           {
             "mode": "0644",
@@ -1884,7 +1884,7 @@
         "metadata": {
           "powerId": "bmad",
           "sourceRef": "main",
-          "sourceRepository": "nhatnguyenquang1838-coder/bmad",
+          "sourceRepository": "nhatnguyenquang1838-coder/BMAD-METHOD",
           "sourceSha": "744227169addadb50d8b946777939a73207970f3",
           "version": "main-744227169add"
         },
@@ -2639,8 +2639,8 @@
           {
             "mode": "0600",
             "path": "AGENT_GUIDANCE.md",
-            "sha256": "5f697de3df9ed1b214f3765a409cfca03a77d2389f1e6c4b257518082594b5b8",
-            "size": 1820
+            "sha256": "99c105699431693a15f8f57510030a11264c06d11d02aaa20456cba65efaab6b",
+            "size": 1837
           },
           {
             "mode": "0644",
@@ -2657,8 +2657,8 @@
           {
             "mode": "0600",
             "path": "SOURCE.json",
-            "sha256": "bd9db93a18087d18fa6bc8ed3490878d972dbbbbbcddd17658d12c043d25a0aa",
-            "size": 195
+            "sha256": "19d89950a2d6998783e1b844479016fda9da2d7e43371de0ecb195c77d9ce8db",
+            "size": 212
           },
           {
             "mode": "0644",
@@ -4687,7 +4687,7 @@
         "metadata": {
           "powerId": "ua",
           "sourceRef": "main",
-          "sourceRepository": "nhatnguyenquang1838-coder/ua",
+          "sourceRepository": "nhatnguyenquang1838-coder/Understand-Anything",
           "sourceSha": "36166580700472d88bb80d7f3f1e7f257b8adf7f",
           "version": "main-361665807004"
         },
@@ -4736,5 +4736,5 @@
   "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist",
   "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
   "target_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.consumer",
-  "validated_at": "2026-07-28T18:38:04.190986+00:00"
+  "validated_at": "2026-07-29T05:49:26.401836+00:00"
 }
