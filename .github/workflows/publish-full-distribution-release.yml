@@ -85,6 +85,7 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf dist/full-power-distribution
+          mkdir -p dist/full-power-distribution
           python scripts/distribution_builder.py \
             --output dist/full-power-distribution \
             --staging dist/full-power-distribution/staging \
