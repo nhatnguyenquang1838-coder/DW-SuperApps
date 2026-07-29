@@ -161,6 +161,45 @@ class ProjectRegistryTests(unittest.TestCase):
                 registry.ROOT = previous_registry_root
                 project_add.ROOT = previous_add_root
 
+    def test_offline_project_add_requires_local_path_and_system(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            data = self.workspace()
+            data["projects"] = []
+            data["powers"] = []
+            data["systems"] = []
+            registry.write_yaml(root / "workspace.yaml", data)
+            (root / "projects" / "billing").mkdir(parents=True)
+            (root / "manifests" / "powers").mkdir(parents=True)
+            (root / "manifests" / "powers" / "gwc.yaml").write_text("{}\n", encoding="utf-8")
+            (root / "manifests" / "powers" / "ua.yaml").write_text("{}\n", encoding="utf-8")
+            previous_registry_root = registry.ROOT
+            previous_add_root = project_add.ROOT
+            previous_workspace_path = registry.WORKSPACE_PATH
+            registry.ROOT = root
+            registry.WORKSPACE_PATH = root / "workspace.yaml"
+            project_add.ROOT = root
+            try:
+                args = argparse.Namespace(
+                    project_id="billing",
+                    repository="example/billing",
+                    path="projects/billing",
+                    role=["product", "system"],
+                    system=True,
+                    system_id="billing",
+                    enable_powers="gwc,ua",
+                    offline=True,
+                )
+                project_add.preflight(args)
+                self.assertEqual(0, registry.project_add(args))
+                registered = registry.load_yaml(root / "workspace.yaml")
+                self.assertEqual("offline-local", registered["projects"][0]["sourceMode"])
+                self.assertEqual("billing", registered["systems"][0]["id"])
+            finally:
+                registry.ROOT = previous_registry_root
+                registry.WORKSPACE_PATH = previous_workspace_path
+                project_add.ROOT = previous_add_root
+
     def test_workspace_wrapper_rejects_invalid_id_before_copy(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             target = Path(temporary) / "target"

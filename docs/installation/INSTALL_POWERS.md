@@ -1,9 +1,9 @@
 # Install Powers
 
-The supported plug-and-play source is the full `DW-SuperApps` GitHub Release. Each release contains a
+The supported plug-and-play source is a locally supplied full `DW-SuperApps` release bundle. Each bundle contains a
 validated ZIP and matching `.sha256` file for `gwc`, `ua`, `task-me`, and `bmad`, together with release
-evidence. Download the release assets first; installation itself is local and must not acquire packages
-from Git, GitHub, `curl`, `wget`, or provider branches.
+evidence. Do not perform an online repository or release check. Installation itself is local and must not
+acquire packages from Git, GitHub, `curl`, `wget`, or provider branches.
 
 The release contains both:
 
@@ -15,6 +15,7 @@ MANIFEST.json
 SOURCE_LOCK.json
 SHA256SUMS.txt
 VALIDATION_REPORT.json
+KIRO_OFFLINE_INSTALL_PROMPT.md  # one Kiro install/register/binding prompt
 ```
 
 Verify an extracted full bundle before installation:

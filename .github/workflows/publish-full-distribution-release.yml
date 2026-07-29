@@ -76,6 +76,7 @@ jobs:
           tests.test_distribution_builder_overlays
           tests.test_offline_distribution_release
           tests.test_full_distribution_release
+          tests.test_project_registry
 
       - name: Build all four Power distributions
         shell: bash

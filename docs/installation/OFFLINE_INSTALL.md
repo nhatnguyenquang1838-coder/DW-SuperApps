@@ -4,6 +4,26 @@ Use a single full `DW-SuperApps` release when installing into another Super Proj
 `dw-superapps-full-<version>.zip`, verify `MANIFEST.json`, `SOURCE_LOCK.json`, `SHA256SUMS.txt`, and
 `VALIDATION_REPORT.json`, then copy only the four ZIP/checksum pairs into the receiving workspace inbox.
 
+The release also contains `KIRO_OFFLINE_INSTALL_PROMPT.md`. This is the single Kiro prompt for offline
+installation and project binding; the release does not need copied Kiro Power adapters.
+
+Register an existing local project and its system metadata without creating a submodule:
+
+```bash
+./bin/dw project add <project-id> \
+  --repo <owner/name> \
+  --path <existing-relative-project-path> \
+  --role product \
+  --role system \
+  --system \
+  --system-id <system-id> \
+  --enable-powers gwc,ua,task-me,bmad \
+  --offline
+```
+
+In this mode `--repo` is metadata only. The path must already exist locally, and no GitHub, Git,
+submodule, or remote checksum check is performed.
+
 The full release is authoritative for the package set; do not mix a BMAD asset from the retired standalone
 BMAD release with assets from a different full-release version.
 

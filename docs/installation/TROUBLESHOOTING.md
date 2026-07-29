@@ -2,7 +2,9 @@
 
 ## Project is missing from `.gitmodules`
 
-`dw validate` fails closed when a registered project path is not a Git submodule. Add it with `dw project add`, or repair `.gitmodules` and `workspace.yaml` together.
+`dw validate` fails closed when a normal registered project path is not a Git submodule. For an existing
+local project, register it with `dw project add ... --offline`; this records `sourceMode: offline-local`
+and intentionally does not require a `.gitmodules` entry.
 
 ## Repository mismatch
 

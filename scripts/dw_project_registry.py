@@ -21,6 +21,7 @@ WORKSPACE_PATH = ROOT / "workspace.yaml"
 PROJECT_ID = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 REPOSITORY = re.compile(r"^[^/\s]+/[^/\s]+$")
 PROJECT_ROLES = {"power-source", "product", "system", "library", "tooling"}
+OFFLINE_SOURCE_MODE = "offline-local"
 RUNTIME_FILES = (
     "AGENTS.md",
     "requirements-dev.txt",
@@ -126,7 +127,7 @@ def validate_registry(
             raise ProjectRegistryError(
                 f"project {project_id} has unsupported roles: {sorted(unknown_roles)}"
             )
-        if gitmodules is not None:
+        if gitmodules is not None and project.get("sourceMode") != OFFLINE_SOURCE_MODE:
             if relative not in gitmodules:
                 raise ProjectRegistryError(
                     f"project {project_id} path is not registered in .gitmodules: {relative}"
@@ -214,6 +215,8 @@ def project_info(args: argparse.Namespace) -> int:
     print(f"Project: {project['id']}")
     print(f"Path: {project['path']}")
     print(f"Source: {project['source']}")
+    if project.get("sourceMode"):
+        print(f"Source mode: {project['sourceMode']}")
     print(f"Roles: {', '.join(project['roles'])}")
     return 0
 
@@ -329,6 +332,7 @@ def git(*args: str, cwd: Path = ROOT) -> None:
 
 
 def project_add(args: argparse.Namespace) -> int:
+    offline = bool(getattr(args, "offline", False))
     data = workspace(ROOT)
     projects = validate_registry(data, root=ROOT)
     if args.project_id in projects:
@@ -337,13 +341,15 @@ def project_add(args: argparse.Namespace) -> int:
     source = normalize_repo(args.repository)
     if not REPOSITORY.fullmatch(source):
         raise ProjectRegistryError("repository must use owner/name")
-    if (ROOT / relative).exists():
+    if (ROOT / relative).exists() and not offline:
         raise ProjectRegistryError(f"project path already exists: {relative}")
-    git("submodule", "add", f"https://github.com/{source}.git", relative)
+    if not offline:
+        git("submodule", "add", f"https://github.com/{source}.git", relative)
     roles = list(dict.fromkeys(args.role or ["product"]))
-    data.setdefault("projects", []).append(
-        {"id": args.project_id, "path": relative, "source": source, "roles": roles}
-    )
+    project = {"id": args.project_id, "path": relative, "source": source, "roles": roles}
+    if offline:
+        project["sourceMode"] = OFFLINE_SOURCE_MODE
+    data.setdefault("projects", []).append(project)
     if args.system:
         enabled = [item for item in (args.enable_powers or "").split(",") if item]
         data.setdefault("systems", []).append(
@@ -356,7 +362,8 @@ def project_add(args: argparse.Namespace) -> int:
             }
         )
     write_yaml(WORKSPACE_PATH, data)
-    print(f"ADDED: {args.project_id} -> {relative}")
+    mode = "offline-local" if offline else "git-submodule"
+    print(f"ADDED: {args.project_id} -> {relative} ({mode})")
     print("Review: git diff -- .gitmodules workspace.yaml")
     return 0
 
@@ -391,6 +398,7 @@ def parser() -> argparse.ArgumentParser:
     add.add_argument("--system", action="store_true")
     add.add_argument("--system-id")
     add.add_argument("--enable-powers", default="")
+    add.add_argument("--offline", action="store_true")
     add.set_defaults(handler=project_add)
     return result
 

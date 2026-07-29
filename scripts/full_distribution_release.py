@@ -14,6 +14,7 @@ from power_dist import verify_package
 
 
 DEFAULT_POWERS = ("gwc", "ua", "task-me", "bmad")
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def sha256_file(path: Path) -> str:
@@ -80,6 +81,10 @@ def assemble(args: argparse.Namespace) -> dict:
         shutil.rmtree(release_root)
     assets_root = release_root / "assets"
     assets_root.mkdir(parents=True, exist_ok=True)
+    prompt = ROOT / "prompts" / "power-dist" / "kiro-offline-install.md"
+    if not prompt.is_file():
+        raise SystemExit(f"missing Kiro offline prompt: {prompt}")
+    shutil.copy2(prompt, release_root / "KIRO_OFFLINE_INSTALL_PROMPT.md")
 
     components = []
     source_packages = []
@@ -125,8 +130,16 @@ def assemble(args: argparse.Namespace) -> dict:
             "generatedZipsInRepository": False,
             "delivery": "tag-or-release-download",
             "components": components,
-            "requiredEvidence": ["MANIFEST.json", "SOURCE_LOCK.json", "SHA256SUMS.txt", "VALIDATION_REPORT.json"],
+            "requiredEvidence": [
+                "MANIFEST.json",
+                "SOURCE_LOCK.json",
+                "SHA256SUMS.txt",
+                "VALIDATION_REPORT.json",
+                "KIRO_OFFLINE_INSTALL_PROMPT.md",
+            ],
             "powers": list(args.powers),
+            "kiroPrompt": "KIRO_OFFLINE_INSTALL_PROMPT.md",
+            "registrationMode": "offline-local",
         },
     }
     source_lock = {
