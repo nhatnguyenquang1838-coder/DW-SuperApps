@@ -29,6 +29,18 @@ def require_safe_archive(archive: zipfile.ZipFile) -> None:
             raise SystemExit(f"archive symlink rejected: {info.filename}")
 
 
+def next_history_path(history_root: Path) -> Path:
+    """Return a collision-safe path for an offline-release backup."""
+
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    candidate = history_root / stamp
+    suffix = 1
+    while candidate.exists():
+        candidate = history_root / f"{stamp}-{suffix}"
+        suffix += 1
+    return candidate
+
+
 def verify_release(release_root: Path) -> dict:
     for required in ("MANIFEST.json", "SOURCE_LOCK.json", "SHA256SUMS.txt", "VALIDATION_REPORT.json"):
         if not (release_root / required).is_file():
@@ -83,8 +95,7 @@ def install_release(args: argparse.Namespace) -> dict:
     bindings_root.mkdir(parents=True, exist_ok=True)
 
     manifest = verify_release(release_root)
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    backup_root = history_root / stamp
+    backup_root = next_history_path(history_root)
     backup_root.mkdir(parents=True, exist_ok=False)
 
     if store_root.exists():

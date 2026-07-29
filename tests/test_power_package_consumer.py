@@ -83,7 +83,7 @@ class PowerPackageConsumerTests(unittest.TestCase):
 
     def test_split_store_runtime_config_history_rollback_and_uninstall(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
+            root = Path(temporary).resolve()
             store = root / "workspace" / ".dw" / "powers"
             target = root / "systems" / "consumer"
             target.mkdir(parents=True)
@@ -154,7 +154,7 @@ class PowerPackageConsumerTests(unittest.TestCase):
 
     def test_shared_package_detach_preserves_other_system(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
+            root = Path(temporary).resolve()
             store = root / "workspace" / ".dw" / "powers"
             first = root / "systems" / "first"
             second = root / "systems" / "second"
@@ -182,7 +182,7 @@ class PowerPackageConsumerTests(unittest.TestCase):
 
     def test_legacy_target_install_is_reported_and_preserved(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
+            root = Path(temporary).resolve()
             store = root / "workspace" / ".dw" / "powers"
             target = root / "systems" / "consumer"
             legacy = target / ".dw" / "powers" / "task-me"
@@ -203,7 +203,7 @@ class PowerPackageConsumerTests(unittest.TestCase):
 
     def test_offline_package_is_discovered_from_workspace_inbox(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
+            root = Path(temporary).resolve()
             store = root / "workspace" / ".dw" / "powers"
             inbox = store.parent / "inbox" / "powers" / "task-me"
             inbox.mkdir(parents=True)
@@ -229,7 +229,7 @@ class PowerPackageConsumerTests(unittest.TestCase):
 
     def test_archive_checksum_overlap_and_path_safety(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
+            root = Path(temporary).resolve()
             package = self.package(root, "1.0.0")
             archive = root / "task-me.zip"
             with zipfile.ZipFile(archive, "w") as bundle:

@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class OfflineDistributionReleaseTests(unittest.TestCase):
     def test_build_verify_install_conflict_force_and_rollback(self):
         with tempfile.TemporaryDirectory() as td:
-            temp = Path(td)
+            temp = Path(td).resolve()
             source = temp / "source"
             (source / "projects" / "task-me").mkdir(parents=True)
             (source / "projects" / "bmad").mkdir(parents=True)
