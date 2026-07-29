@@ -9,14 +9,14 @@
         "sanity": {
           "guidance": "AGENT_GUIDANCE.md",
           "power_id": "bmad",
-          "source_sha": "744227169addadb50d8b946777939a73207970f3",
+          "source_sha": "fdc47614b5903bf342ca92d9547ae4c49817aa3a",
           "status": "PASS",
-          "version": "main-744227169add",
+          "version": "bmad-main-fdc47614",
           "warnings": []
         },
         "status": "PASS",
         "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
-        "version": "main-744227169add"
+        "version": "bmad-main-fdc47614"
       },
       "install": {
         "backup": null,
@@ -26,7 +26,7 @@
         "runtime_target": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.consumer",
         "status": "INSTALLED",
         "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
-        "version": "main-744227169add"
+        "version": "bmad-main-fdc47614"
       },
       "manifest": {
         "apiVersion": "dw.superapps/v1",
@@ -34,8 +34,8 @@
           {
             "mode": "0600",
             "path": "AGENT_GUIDANCE.md",
-            "sha256": "64693fb228a73596a8be508f86e3c5a892f4f1a4eeb1b3e770eb9556c91af5b9",
-            "size": 1815
+            "sha256": "bb81b809cd924f38071df1ff64b5a712ffd96da30e921d37a4bfbc0b2c1fe118",
+            "size": 1872
           },
           {
             "mode": "0644",
@@ -46,26 +46,26 @@
           {
             "mode": "0600",
             "path": "POWER.yaml",
-            "sha256": "60cd43ea22af787be76fc662ffcbf9439454301d9d2f38d49721114f096f1a02",
-            "size": 466
+            "sha256": "637a690ccaa7239c45d46c1aaf371f454784787774feb930ee370ee7f4f55791",
+            "size": 578
+          },
+          {
+            "mode": "0644",
+            "path": "README.md",
+            "sha256": "540c78ec2d1bfb0b12d94792df37580f96bb91d968189fab84002cc9d1146d74",
+            "size": 7557
           },
           {
             "mode": "0600",
             "path": "SOURCE.json",
-            "sha256": "d85d2c5441fea480bfb4a1417ff6edadff59df281ac9572a97356fd000896011",
+            "sha256": "3b7bae937cb9f76ebcbc9f5eb366a94b19425191e26564a601555bbd260ee486",
             "size": 204
-          },
-          {
-            "mode": "0644",
-            "path": "TRADEMARK.md",
-            "sha256": "ce57ad749e43277c6021e5d5085980b33c9bf8f67a070bbbf07e041ccdddc58b",
-            "size": 2805
           },
           {
             "mode": "0600",
             "path": "VERSION",
-            "sha256": "591988973fe6d88d5620f8ad26e7bf48a11826094620302e3cfc167a402047ad",
-            "size": 18
+            "sha256": "d497430cbe4b9667b8f92a1000597572a2a521ca2fdd3ef2de7be3a82be53cf4",
+            "size": 19
           },
           {
             "mode": "0755",
@@ -123,39 +123,9 @@
           },
           {
             "mode": "0644",
-            "path": "distribution/lib/bootstrap_bmad.py",
-            "sha256": "4f0e803df980a35580af6d2a7101309bfb062e9987e1ff2dae11159e2124b8ce",
-            "size": 7874
-          },
-          {
-            "mode": "0644",
-            "path": "distribution/power-package.yaml",
-            "sha256": "e0182d148590d22747734ceb941cf61856815eca19ec76100e68940fa4dc4bcd",
-            "size": 1251
-          },
-          {
-            "mode": "0644",
-            "path": "distribution/skills/bmad/SKILL.md",
-            "sha256": "4e9ef70f1513b269eca69c22dbf2f4e4c31fcf83609d16dd01165e7b0a673c7f",
-            "size": 1403
-          },
-          {
-            "mode": "0644",
             "path": "lib/power_runtime.py",
             "sha256": "c6f1dc56f67554a2f7223d1c006526c909b3841ec06d343dda04cff47b5934a5",
             "size": 14569
-          },
-          {
-            "mode": "0644",
-            "path": "package-lock.json",
-            "sha256": "c1e0de1fe219b251097ac78f275c42250595c075f63fab39b47800fbd92e883d",
-            "size": 506748
-          },
-          {
-            "mode": "0644",
-            "path": "package.json",
-            "sha256": "7b4f67e25fb6ed90136d9e6214e9e67373c109bfa64b341a484ae6cc9dc09d83",
-            "size": 4144
           },
           {
             "mode": "0644",
@@ -618,6 +588,12 @@
             "path": "src/bmm-skills/3-solutioning/bmad-architecture/scripts/lint_spine.py",
             "sha256": "040e0f1c13d31e6a21c518df943d1d7de7b75d8d98a07603b0983f3f3fb500db",
             "size": 10472
+          },
+          {
+            "mode": "0644",
+            "path": "src/bmm-skills/3-solutioning/bmad-architecture/scripts/tests/test_lint_spine.py",
+            "sha256": "e86bb9a62c5cca74ddc89c843386f2b992610fcc1792d40e03bc9cd445b77681",
+            "size": 9932
           },
           {
             "mode": "0644",
@@ -1215,6 +1191,12 @@
           },
           {
             "mode": "0644",
+            "path": "src/core-skills/bmad-advanced-elicitation/scripts/tests/test_pick_methods.py",
+            "sha256": "610099d8494529f9203d7262567810b500552bcef006b3b6388d58da3da71978",
+            "size": 8059
+          },
+          {
+            "mode": "0644",
             "path": "src/core-skills/bmad-brainstorming/SKILL.md",
             "sha256": "e9cb07fe86aa254f9fb7217720d77fd693bf66a0c01af8114ecdf7148159fdd1",
             "size": 9736
@@ -1299,6 +1281,12 @@
           },
           {
             "mode": "0644",
+            "path": "src/core-skills/bmad-brainstorming/scripts/tests/test_brain.py",
+            "sha256": "021c0b9fae8db859725312d50d8b304fff00ee7acc310699c35523e86bffbdd8",
+            "size": 9175
+          },
+          {
+            "mode": "0644",
             "path": "src/core-skills/bmad-customize/SKILL.md",
             "sha256": "a42086f90024013e2611503eb0224ac0e90b2aecac44a886ae0e38cfdda69511",
             "size": 6701
@@ -1308,6 +1296,12 @@
             "path": "src/core-skills/bmad-customize/scripts/list_customizable_skills.py",
             "sha256": "8787f542930b927789e7fdf12bc5a67ff08e19865903a5ad05ff2cc8fc426b66",
             "size": 8061
+          },
+          {
+            "mode": "0644",
+            "path": "src/core-skills/bmad-customize/scripts/tests/test_list_customizable_skills.py",
+            "sha256": "24c3d384b3b5d490b7335c17866bfe0425af253ce669c32382fa88feb705934d",
+            "size": 9244
           },
           {
             "mode": "0644",
@@ -1389,6 +1383,12 @@
           },
           {
             "mode": "0644",
+            "path": "src/core-skills/bmad-deep-recon/scripts/tests/test_recon_kit.py",
+            "sha256": "1b4ddf482dd2d11a214ee2f821c35d7a8c41905b5d8d9cc69a293304bb8a1665",
+            "size": 4913
+          },
+          {
+            "mode": "0644",
             "path": "src/core-skills/bmad-deep-recon/types/academic-lit.md",
             "sha256": "514b0b7b1184cb95363dedeb0c2298a9bf5c430c74146fe2114f31780fadb325",
             "size": 1544
@@ -1440,6 +1440,12 @@
             "path": "src/core-skills/bmad-forge-idea/scripts/resolve_personas.py",
             "sha256": "ec732bf4f64a78071a92884c64424680bb08f1a4d461f5a5f32e3ea29dd980b8",
             "size": 10085
+          },
+          {
+            "mode": "0644",
+            "path": "src/core-skills/bmad-forge-idea/scripts/tests/test_resolve_personas.py",
+            "sha256": "1c4fa4b1d68bfbd10e4b38cad3c8286dad62345cebd08fe94a6862351b02855e",
+            "size": 6343
           },
           {
             "mode": "0644",
@@ -1497,6 +1503,12 @@
           },
           {
             "mode": "0644",
+            "path": "src/core-skills/bmad-party-mode/scripts/tests/test_resolve_party.py",
+            "sha256": "bb53fe03ec3013ed96c0fb399c1948f28bcf55cb2d7727fe0189343fcaa667d5",
+            "size": 6695
+          },
+          {
+            "mode": "0644",
             "path": "src/core-skills/bmad-review/SKILL.md",
             "sha256": "bc46cdf66b37b4d49d414bdc5afc54747a9b19b3fecae471d451b36959343ec3",
             "size": 7470
@@ -1548,6 +1560,12 @@
             "path": "src/core-skills/bmad-review/references/structure-models.md",
             "sha256": "f84f85070e1af75f2482757aba9d37d69d805a20826d185527e598f2ba6b9292",
             "size": 1972
+          },
+          {
+            "mode": "0644",
+            "path": "src/core-skills/bmad-review/scripts/tests/test_word_metrics.py",
+            "sha256": "3b5a285d3c9f611b3cda8c9c1d52d6b214c1f72e6e64a94ea5b0e220db5a8765",
+            "size": 1556
           },
           {
             "mode": "0644",
@@ -1635,6 +1653,42 @@
           },
           {
             "mode": "0644",
+            "path": "src/scripts/tests/test_memlog.py",
+            "sha256": "0eaf504681429d86a6c415d8f8165a107b019792113ed06a7751683eb22be550",
+            "size": 10133
+          },
+          {
+            "mode": "0644",
+            "path": "src/scripts/tests/test_resolve_customization.py",
+            "sha256": "3c93a68544b28e10c08fe4f8c24f296926e69bf142ace13d1c30867e3283c4cb",
+            "size": 1505
+          },
+          {
+            "mode": "0644",
+            "path": "tools/build-docs.mjs",
+            "sha256": "b93724675c508724bb174ede1c8e27874c764883faad66779d87e69be5a55e4d",
+            "size": 16129
+          },
+          {
+            "mode": "0644",
+            "path": "tools/bundle-web-bundles.js",
+            "sha256": "b7ca6820af921e91d0444f16f7fdeb0b2f534405cc2f19073a7123023abdb627",
+            "size": 3920
+          },
+          {
+            "mode": "0644",
+            "path": "tools/fix-doc-links.js",
+            "sha256": "672628b49b63f62e079b7bb027561628e5b5bb9b06e03195ad1d710059c1c453",
+            "size": 9302
+          },
+          {
+            "mode": "0755",
+            "path": "tools/format-workflow-md.js",
+            "sha256": "870e494ac29d3b3ab892cee260cb0c449d18810dfa1e219dc3795b82413c1c3a",
+            "size": 7255
+          },
+          {
+            "mode": "0644",
             "path": "tools/installer/README.md",
             "sha256": "6f7e8d1d1eff02a70e0f20afbbe2be98e0348b9daaf9115fdf3cd7ad58000a73",
             "size": 1815
@@ -1642,8 +1696,8 @@
           {
             "mode": "0755",
             "path": "tools/installer/bmad-cli.js",
-            "sha256": "5f8f774004fc215d0450f5c01f7ff90493e96126fcbd59faaf3717a1dc74935b",
-            "size": 3392
+            "sha256": "82be32685c52c218be921fbf2ee098df5582aa850c4019ab907b2e5431a4f5ef",
+            "size": 4054
           },
           {
             "mode": "0644",
@@ -1878,20 +1932,76 @@
             "path": "tools/installer/yaml-format.js",
             "sha256": "66aab12aca4e94d33eaa837d0e78fb47fd1d371ebd03113da6eb899bbe21c677",
             "size": 7673
+          },
+          {
+            "mode": "0644",
+            "path": "tools/javascript-conventions.md",
+            "sha256": "bd3f4163f95eea6108debc1771534e762a2e9d25cbce68012d671628867182d3",
+            "size": 218
+          },
+          {
+            "mode": "0755",
+            "path": "tools/migrate-custom-module-paths.js",
+            "sha256": "4fe62d179c46f26f79f29c443b2e9822ad771334b3f498638f0db552e71c0f96",
+            "size": 3659
+          },
+          {
+            "mode": "0644",
+            "path": "tools/power-help.js",
+            "sha256": "7391096aad3b22de28997ff871ee56ca62d3a881ec4a1469e92886042968ab7d",
+            "size": 2350
+          },
+          {
+            "mode": "0644",
+            "path": "tools/skill-validator.md",
+            "sha256": "e4cebeeb92385610c1833dea24437bc6d1625964735360d68b2fcfc251f527f3",
+            "size": 23443
+          },
+          {
+            "mode": "0644",
+            "path": "tools/validate-doc-links.js",
+            "sha256": "34fefbe8864b976c5179b3eeadd9a26979a0fd476e3913473ea176e147abf4c4",
+            "size": 12876
+          },
+          {
+            "mode": "0644",
+            "path": "tools/validate-file-refs.js",
+            "sha256": "9eed056574f4d58aff23eb705727a5eca00ee4f0a7485e23ccccbe32dffc90c5",
+            "size": 18292
+          },
+          {
+            "mode": "0644",
+            "path": "tools/validate-sidebar-order.js",
+            "sha256": "8d1f7894f124f28b2324f6191b4211551966089af88a7198d3b14ec8fda198a0",
+            "size": 13575
+          },
+          {
+            "mode": "0644",
+            "path": "tools/validate-skills.js",
+            "sha256": "2a147a62408edfa536951d3fd18c0b4227b734769155c9f75ab049669b82f379",
+            "size": 24279
+          },
+          {
+            "mode": "0755",
+            "path": "tools/validate-svg-changes.sh",
+            "sha256": "1faa14525dcdda4f32e925b1ace5a165d6c93138d04017bc7bc23d6b7597b57c",
+            "size": 11240
           }
         ],
         "kind": "PowerPackageManifest",
         "metadata": {
           "powerId": "bmad",
-          "sourceRef": "main",
+          "sourceRef": "HEAD",
           "sourceRepository": "nhatnguyenquang1838-coder/BMAD-METHOD",
-          "sourceSha": "744227169addadb50d8b946777939a73207970f3",
-          "version": "main-744227169add"
+          "sourceSha": "fdc47614b5903bf342ca92d9547ae4c49817aa3a",
+          "version": "bmad-main-fdc47614"
         },
         "spec": {
           "agentGuidance": "AGENT_GUIDANCE.md",
           "entrypoints": [
-            "distribution/skills/bmad/SKILL.md"
+            "src/core-skills/bmad-help/SKILL.md",
+            "src/bmm-skills/module.yaml",
+            "tools/power-help.js"
           ],
           "generatedFiles": [
             "POWER.yaml",
@@ -1900,10 +2010,12 @@
             "AGENT_GUIDANCE.md"
           ],
           "managedPaths": [
-            "distribution/skills/bmad",
             "src/core-skills",
             "src/bmm-skills",
-            "tools/installer"
+            "src/scripts",
+            "tools",
+            "distribution/config",
+            "distribution/contracts"
           ],
           "runtimeDataRoot": ".bmad"
         }
@@ -1931,14 +2043,14 @@
         "sanity": {
           "guidance": "AGENT_GUIDANCE.md",
           "power_id": "gwc",
-          "source_sha": "9627e0bd43c531396bc3a00275a5f04a61571208",
+          "source_sha": "1db5cdde7666e95e0a5d864633a3255a2a6ad40e",
           "status": "PASS",
-          "version": "main-9627e0bd43c5",
+          "version": "gwc-main-1db5cdde",
           "warnings": []
         },
         "status": "PASS",
         "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
-        "version": "main-9627e0bd43c5"
+        "version": "gwc-main-1db5cdde"
       },
       "install": {
         "backup": null,
@@ -1948,7 +2060,7 @@
         "runtime_target": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.consumer",
         "status": "INSTALLED",
         "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
-        "version": "main-9627e0bd43c5"
+        "version": "gwc-main-1db5cdde"
       },
       "manifest": {
         "apiVersion": "dw.superapps/v1",
@@ -1962,25 +2074,25 @@
           {
             "mode": "0600",
             "path": "AGENT_GUIDANCE.md",
-            "sha256": "9bea878646a027af7c8ac9683a32402c4181995775446519010b0782606cc1b9",
-            "size": 1820
+            "sha256": "0f258f24bef8a88cd8b213563c37ec249afac8b8011c495c32e16daa4333b5ab",
+            "size": 1844
           },
           {
             "mode": "0600",
             "path": "POWER.yaml",
-            "sha256": "0c01a78128c9ede8cb5f57311be474ddcc690da7d4acee9e3cb77c52668d37f6",
-            "size": 632
+            "sha256": "97c2cad5a6621a9b23594a16272208c9300c425d365e7644f2776e7ec466aa2c",
+            "size": 656
           },
           {
             "mode": "0600",
             "path": "SOURCE.json",
-            "sha256": "9d962be85c7febca11740d56901ef96a406d80f4f0c03e6dc6760dca121b2102",
+            "sha256": "249c42a30327b128057ff4b30fbf9788e1e52f8e19a51f37fd7a09a687f08bd8",
             "size": 196
           },
           {
             "mode": "0600",
             "path": "VERSION",
-            "sha256": "334125d7e8d53d721255a9c66c83e1c960869e6bf96dbd4fbd248a6bba81820a",
+            "sha256": "40f227a7379e9aaf3ae59daf9250ff903ec5ee374418a2ebbe704d9768249c85",
             "size": 18
           },
           {
@@ -2314,6 +2426,12 @@
             "size": 29539
           },
           {
+            "mode": "0644",
+            "path": "tools/power_help.py",
+            "sha256": "97f91cb2e385b35270be6bf238b02e2d62486dc13603a3e07460e730c5ba0b25",
+            "size": 2578
+          },
+          {
             "mode": "0755",
             "path": "tools/validate_g01.py",
             "sha256": "31bdc701b8290e8e3b4c3c43652805950a430df3d6e21526d415c94fef9793cb",
@@ -2323,16 +2441,17 @@
         "kind": "PowerPackageManifest",
         "metadata": {
           "powerId": "gwc",
-          "sourceRef": "main",
+          "sourceRef": "HEAD",
           "sourceRepository": "nhatnguyenquang1838-coder/gwc",
-          "sourceSha": "9627e0bd43c531396bc3a00275a5f04a61571208",
-          "version": "main-9627e0bd43c5"
+          "sourceSha": "1db5cdde7666e95e0a5d864633a3255a2a6ad40e",
+          "version": "gwc-main-1db5cdde"
         },
         "spec": {
           "agentGuidance": "AGENT_GUIDANCE.md",
           "entrypoints": [
             "skills/gwc-g0/SKILL.md",
-            "skills/gwc-g1/SKILL.md"
+            "skills/gwc-g1/SKILL.md",
+            "tools/power_help.py"
           ],
           "generatedFiles": [
             "POWER.yaml",
@@ -2382,14 +2501,14 @@
         "sanity": {
           "guidance": "AGENT_GUIDANCE.md",
           "power_id": "task-me",
-          "source_sha": "90138ffb298f34d517aeb0b86e738d3027e71677",
+          "source_sha": "bfa0752d9ca2c4e57cfe219c16294e728fc6a16b",
           "status": "PASS",
-          "version": "main-90138ffb298f",
+          "version": "task-me-main-bfa0752d",
           "warnings": []
         },
         "status": "PASS",
         "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
-        "version": "main-90138ffb298f"
+        "version": "task-me-main-bfa0752d"
       },
       "install": {
         "backup": null,
@@ -2399,7 +2518,7 @@
         "runtime_target": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.consumer",
         "status": "INSTALLED",
         "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
-        "version": "main-90138ffb298f"
+        "version": "task-me-main-bfa0752d"
       },
       "manifest": {
         "apiVersion": "dw.superapps/v1",
@@ -2455,8 +2574,8 @@
           {
             "mode": "0600",
             "path": "AGENT_GUIDANCE.md",
-            "sha256": "450a9b83d4bac9a4a7c4ef86bc4ca3881e1eba526f8a7e0daaf651be36114844",
-            "size": 1866
+            "sha256": "9dfedb734c1c43a1c9f946add4ffb5f9c51cbc34ee5e202caca8bb118b3dfc5d",
+            "size": 1896
           },
           {
             "mode": "0644",
@@ -2467,20 +2586,20 @@
           {
             "mode": "0600",
             "path": "POWER.yaml",
-            "sha256": "d1c1225262f22ce1d3b1c81f6f3092c0db1366a8a2d871e391e35bf6ac7ecf8d",
-            "size": 543
+            "sha256": "60b72276f5ee6394b82b01255af1c9068c799f1816639432ba8ffcf42904ed0e",
+            "size": 573
           },
           {
             "mode": "0600",
             "path": "SOURCE.json",
-            "sha256": "0dc51aebd337ecf53066261c7e2bd7de66c33f43ab33f7a8342f39645f786c62",
+            "sha256": "aca37375a8ec5d914fed8e3dbdc034b9e3ff72dea7667e76f9b080344d76cb38",
             "size": 200
           },
           {
             "mode": "0600",
             "path": "VERSION",
-            "sha256": "1fd073f318c44ad2a3ad0f63f0d4c3f717b7757858141b9a93da8a006dca5bc8",
-            "size": 18
+            "sha256": "6d2a71e21c7428ba52e9f8acfffaebc9d24f2b09eace8f3df65d8d1174a846dc",
+            "size": 22
           },
           {
             "mode": "0755",
@@ -2556,6 +2675,12 @@
           },
           {
             "mode": "0644",
+            "path": "scripts/power_help.py",
+            "sha256": "0bca4decbd302b94211d3513857a5b17e21469f214b7b53768739bb52853bb69",
+            "size": 2564
+          },
+          {
+            "mode": "0644",
             "path": "scripts/task-me-host.py",
             "sha256": "a136db4d6e9797b95c8f31cbd2032fc64559650503950c11440afc07008da833",
             "size": 5551
@@ -2564,16 +2689,17 @@
         "kind": "PowerPackageManifest",
         "metadata": {
           "powerId": "task-me",
-          "sourceRef": "main",
+          "sourceRef": "HEAD",
           "sourceRepository": "nhatnguyenquang1838-coder/task-me",
-          "sourceSha": "90138ffb298f34d517aeb0b86e738d3027e71677",
-          "version": "main-90138ffb298f"
+          "sourceSha": "bfa0752d9ca2c4e57cfe219c16294e728fc6a16b",
+          "version": "task-me-main-bfa0752d"
         },
         "spec": {
           "agentGuidance": "AGENT_GUIDANCE.md",
           "entrypoints": [
             ".kiro/skills/implementation-task-architect/SKILL.md",
-            "scripts/task-me-host.py"
+            "scripts/task-me-host.py",
+            "scripts/power_help.py"
           ],
           "generatedFiles": [
             "POWER.yaml",
@@ -2614,14 +2740,14 @@
         "sanity": {
           "guidance": "AGENT_GUIDANCE.md",
           "power_id": "ua",
-          "source_sha": "36166580700472d88bb80d7f3f1e7f257b8adf7f",
+          "source_sha": "f01391f7d1658d84b8ee6f34fb08399cd8fc3f62",
           "status": "PASS",
-          "version": "main-361665807004",
+          "version": "ua-main-f01391f7",
           "warnings": []
         },
         "status": "PASS",
         "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
-        "version": "main-361665807004"
+        "version": "ua-main-f01391f7"
       },
       "install": {
         "backup": null,
@@ -2631,7 +2757,7 @@
         "runtime_target": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.consumer",
         "status": "INSTALLED",
         "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
-        "version": "main-361665807004"
+        "version": "ua-main-f01391f7"
       },
       "manifest": {
         "apiVersion": "dw.superapps/v1",
@@ -2639,8 +2765,8 @@
           {
             "mode": "0600",
             "path": "AGENT_GUIDANCE.md",
-            "sha256": "99c105699431693a15f8f57510030a11264c06d11d02aaa20456cba65efaab6b",
-            "size": 1837
+            "sha256": "1674d513ae369e18c362a72442930bd9f7fd4630eddfb7b76d58c4ae8618c7e2",
+            "size": 1862
           },
           {
             "mode": "0644",
@@ -2651,13 +2777,13 @@
           {
             "mode": "0600",
             "path": "POWER.yaml",
-            "sha256": "6f19e60d9cd40ebcd4f351cab6a313423062966e35408dd5bd3b13411c82dd39",
-            "size": 894
+            "sha256": "1dd53aed15b046da00911142820fba95f66a087825421016d501a2dc6f4600df",
+            "size": 945
           },
           {
             "mode": "0600",
             "path": "SOURCE.json",
-            "sha256": "19d89950a2d6998783e1b844479016fda9da2d7e43371de0ecb195c77d9ce8db",
+            "sha256": "1ba934856583b0d134a5f05ffa3182aca10ac936ada567751ea75c67d0baad58",
             "size": 212
           },
           {
@@ -2669,8 +2795,8 @@
           {
             "mode": "0600",
             "path": "VERSION",
-            "sha256": "ff44d41062e2e46c15c088d23785eb377fde358d8375b59a2fd57f65197f97d8",
-            "size": 18
+            "sha256": "2c130a2a7d04088dd01e02c428518ebeac1db81ce0a5587785c0193c768ab3d6",
+            "size": 17
           },
           {
             "mode": "0755",
@@ -2725,6 +2851,12 @@
             "path": "lib/power_runtime.py",
             "sha256": "c6f1dc56f67554a2f7223d1c006526c909b3841ec06d343dda04cff47b5934a5",
             "size": 14569
+          },
+          {
+            "mode": "0644",
+            "path": "scripts/power_help.py",
+            "sha256": "8073aba9c09b39528af207fd496e164445603959c2b959c4cb992bdca87b11b0",
+            "size": 2742
           },
           {
             "mode": "0644",
@@ -4686,15 +4818,16 @@
         "kind": "PowerPackageManifest",
         "metadata": {
           "powerId": "ua",
-          "sourceRef": "main",
+          "sourceRef": "HEAD",
           "sourceRepository": "nhatnguyenquang1838-coder/Understand-Anything",
-          "sourceSha": "36166580700472d88bb80d7f3f1e7f257b8adf7f",
-          "version": "main-361665807004"
+          "sourceSha": "f01391f7d1658d84b8ee6f34fb08399cd8fc3f62",
+          "version": "ua-main-f01391f7"
         },
         "spec": {
           "agentGuidance": "AGENT_GUIDANCE.md",
           "entrypoints": [
-            "understand-anything-plugin/skills/understand/SKILL.md"
+            "understand-anything-plugin/skills/understand/SKILL.md",
+            "scripts/power_help.py"
           ],
           "generatedFiles": [
             "POWER.yaml",
@@ -4713,7 +4846,8 @@
             "understand-anything-plugin/packages/core",
             "understand-anything-plugin/packages/dashboard",
             "understand-anything-plugin/packages/tree-sitter-dart-wasm",
-            "understand-anything-plugin/packages/tree-sitter-swift-wasm"
+            "understand-anything-plugin/packages/tree-sitter-swift-wasm",
+            "scripts/power_help.py"
           ],
           "runtimeDataRoot": ".ua"
         }
@@ -4736,5 +4870,5 @@
   "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist",
   "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
   "target_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.consumer",
-  "validated_at": "2026-07-29T06:37:54.423365+00:00"
+  "validated_at": "2026-07-29T15:49:04.657664+00:00"
 }

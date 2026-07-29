@@ -1,46 +1,46 @@
 {
-  "built_at": "2026-07-29T06:37:49.692387+00:00",
-  "foundation_ref": "022ac581f1b738ff548269e1655fd7a908c8f630",
+  "built_at": "2026-07-29T15:48:57.917814+00:00",
+  "foundation_ref": "39d722e80f99e846c60d8e0fa6260623b4367fa7",
   "powers": {
     "bmad": {
-      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/bmad-main-744227169add.zip",
-      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/bmad-main-744227169add.zip.sha256",
+      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/bmad-bmad-main-fdc47614.zip",
+      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/bmad-bmad-main-fdc47614.zip.sha256",
       "power_id": "bmad",
-      "recipe": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/.prepared-sources/bmad/distribution/power-package.yaml",
-      "source_epoch": 1785165675,
-      "source_sha": "744227169addadb50d8b946777939a73207970f3",
-      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/bmad-main-744227169add",
-      "version": "main-744227169add"
+      "recipe": "/home/runner/work/DW-SuperApps/DW-SuperApps/projects/bmad/distribution/power-package.yaml",
+      "source_epoch": 1785339995,
+      "source_sha": "fdc47614b5903bf342ca92d9547ae4c49817aa3a",
+      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/bmad-bmad-main-fdc47614",
+      "version": "bmad-main-fdc47614"
     },
     "gwc": {
-      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/gwc-main-9627e0bd43c5.zip",
-      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/gwc-main-9627e0bd43c5.zip.sha256",
+      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/gwc-gwc-main-1db5cdde.zip",
+      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/gwc-gwc-main-1db5cdde.zip.sha256",
       "power_id": "gwc",
       "recipe": "/home/runner/work/DW-SuperApps/DW-SuperApps/projects/gwc/distribution/power-package.yaml",
-      "source_epoch": 1785244379,
-      "source_sha": "9627e0bd43c531396bc3a00275a5f04a61571208",
-      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/gwc-main-9627e0bd43c5",
-      "version": "main-9627e0bd43c5"
+      "source_epoch": 1785339984,
+      "source_sha": "1db5cdde7666e95e0a5d864633a3255a2a6ad40e",
+      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/gwc-gwc-main-1db5cdde",
+      "version": "gwc-main-1db5cdde"
     },
     "task-me": {
-      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/task-me-main-90138ffb298f.zip",
-      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/task-me-main-90138ffb298f.zip.sha256",
+      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/task-me-task-me-main-bfa0752d.zip",
+      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/task-me-task-me-main-bfa0752d.zip.sha256",
       "power_id": "task-me",
       "recipe": "/home/runner/work/DW-SuperApps/DW-SuperApps/projects/task-me/distribution/power-package.yaml",
-      "source_epoch": 1785235208,
-      "source_sha": "90138ffb298f34d517aeb0b86e738d3027e71677",
-      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/task-me-main-90138ffb298f",
-      "version": "main-90138ffb298f"
+      "source_epoch": 1785339992,
+      "source_sha": "bfa0752d9ca2c4e57cfe219c16294e728fc6a16b",
+      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/task-me-task-me-main-bfa0752d",
+      "version": "task-me-main-bfa0752d"
     },
     "ua": {
-      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/ua-main-361665807004.zip",
-      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/ua-main-361665807004.zip.sha256",
+      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/ua-ua-main-f01391f7.zip",
+      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/ua-ua-main-f01391f7.zip.sha256",
       "power_id": "ua",
       "recipe": "/home/runner/work/DW-SuperApps/DW-SuperApps/projects/ua/distribution/power-package.yaml",
-      "source_epoch": 1785202772,
-      "source_sha": "36166580700472d88bb80d7f3f1e7f257b8adf7f",
-      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/ua-main-361665807004",
-      "version": "main-361665807004"
+      "source_epoch": 1785339988,
+      "source_sha": "f01391f7d1658d84b8ee6f34fb08399cd8fc3f62",
+      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/ua-ua-main-f01391f7",
+      "version": "ua-main-f01391f7"
     }
   }
 }
