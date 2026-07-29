@@ -26,12 +26,7 @@ POWER_SOURCE_REPOSITORIES = {
     "task-me": "nhatnguyenquang1838-coder/task-me",
     "bmad": "nhatnguyenquang1838-coder/BMAD-METHOD",
 }
-POWER_OVERLAYS: dict[str, dict[str, Path]] = {
-    "bmad": {
-        "overlay_root": ROOT / "plugins" / "bmad-method" / "overlay",
-        "recipe_path": ROOT / "plugins" / "bmad-method" / "distribution" / "power-package.yaml",
-    }
-}
+POWER_OVERLAYS: dict[str, dict[str, Path]] = {}
 DEFAULT_OUTPUT = ROOT / ".dw" / "distributions"
 DEFAULT_STAGING = ROOT / ".kilo" / "staging" / "power-dist"
 FOUNDATION_REF_ENV = "DW_FOUNDATION_REF"
@@ -100,6 +95,16 @@ def git_source_date_epoch(repo: Path, ref: str = "HEAD") -> int:
     )
 
 
+def git_source_ref(repo: Path) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(repo), "symbolic-ref", "--short", "HEAD"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return result.stdout.strip() or "HEAD"
+
+
 def build_power(
     power_id: str,
     source_root: Path,
@@ -110,7 +115,7 @@ def build_power(
     source_epoch = git_source_date_epoch(source_root)
     prepared_source_root = prepare_source(power_id, source_root, output_root)
     recipe_path = resolve_recipe(power_id, prepared_source_root)
-    version = f"main-{source_sha[:12]}"
+    version = load_manifest(power_id)["metadata"]["version"]
     build_script = ROOT / "scripts" / "power_dist_capability.py"
     if not build_script.is_file():
         raise SystemExit(f"missing builder script: {build_script}")
@@ -130,7 +135,7 @@ def build_power(
         "--source-repository",
         POWER_SOURCE_REPOSITORIES[power_id],
         "--source-ref",
-        "main",
+        git_source_ref(source_root),
         "--source-sha",
         source_sha,
         "--source-date-epoch",

@@ -115,6 +115,27 @@ def installed_entrypoints(power_id: str) -> list[Path]:
     return result
 
 
+def power_cli_entrypoint(power_id: str, manifest: dict[str, Any]) -> tuple[Path | None, str]:
+    """Resolve the source-owned, read-only help entrypoint."""
+    candidates = manifest["spec"]["entrypoints"].get("cliCandidates", [])
+    if not candidates:
+        return None, "missing"
+    package = store_root() / power_id
+    package_manifest = package / "MANIFEST.json"
+    if package_manifest.is_file():
+        data = load_json(package_manifest)
+        if data.get("metadata", {}).get("powerId") != power_id:
+            raise DwError(f"installed package identity mismatch: {package_manifest}")
+        candidate = package / candidates[0]
+        if candidate.is_file():
+            return candidate, "workspace-store"
+    source_root = ROOT / manifest["spec"]["path"]
+    candidate = source_root / candidates[0]
+    if candidate.is_file():
+        return candidate, "source-submodule"
+    return None, "missing"
+
+
 def source_entrypoints(power_id: str, manifest: dict[str, Any]) -> list[Path]:
     root = ROOT / manifest["spec"]["path"]
     result: list[Path] = []
@@ -140,6 +161,7 @@ def run(
     cwd: Path = ROOT,
     capture: bool = False,
     check: bool = True,
+    env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     result = subprocess.run(
         args,
@@ -147,6 +169,7 @@ def run(
         text=True,
         capture_output=capture,
         check=False,
+        env=env,
     )
     if check and result.returncode != 0:
         detail = (result.stderr or result.stdout or "").strip()
@@ -276,6 +299,110 @@ def power_info(args: argparse.Namespace) -> int:
     print(f"Hosts: {', '.join(spec['hosts'])}")
     print(f"Runtime data: {spec['runtimeDataRoot']}")
     return 0
+
+
+def power_help_data(power_id: str) -> dict[str, Any]:
+    all_manifests = manifests()
+    if power_id not in all_manifests:
+        raise DwError(f"unknown Power: {power_id}")
+    manifest = all_manifests[power_id]
+    metadata = manifest["metadata"]
+    spec = manifest["spec"]
+    entrypoint, mode = power_cli_entrypoint(power_id, manifest)
+    if entrypoint is None:
+        # Legacy/demo packages may predate the source-owned help contract. Keep
+        # discovery usable without reintroducing Power-specific prose in DW.
+        return {
+            "id": power_id,
+            "name": metadata["name"],
+            "version": metadata["version"],
+            "category": spec["category"],
+            "runtimeDataRoot": spec["runtimeDataRoot"],
+            "nativeAlias": f"/dw-{power_id}",
+            "entrypoints": spec["entrypoints"].get("skillCandidates", []),
+            "cliEntrypoint": None,
+            "resolution": "legacy-manifest-fallback",
+            "what": metadata["description"],
+            "when": [f"When you need the {metadata['name']} capabilities."],
+            "how": [f"Activate /dw-{power_id} in a configured native host."],
+            "why": f"Use the {metadata['name']} Power through its canonical installed entrypoint.",
+            "gives": list(spec.get("provides", [])),
+            "doesNot": ["Grant authority that is not explicitly provided by the current workspace and task."],
+        }
+    if entrypoint.suffix == ".py":
+        command = [sys.executable, str(entrypoint), "--json"]
+    elif entrypoint.suffix == ".js":
+        node = shutil.which("node")
+        if node is None:
+            raise DwError("Node.js is required to read the BMAD help entrypoint")
+        command = [node, str(entrypoint), "--json"]
+    else:
+        raise DwError(f"unsupported help entrypoint type: {entrypoint}")
+    help_env = os.environ.copy()
+    help_env["DW_OFFLINE"] = "1"
+    result = run(command, cwd=entrypoint.parent, capture=True, check=False, env=help_env)
+    if result.returncode != 0:
+        raise DwError((result.stderr or result.stdout).strip() or f"help entrypoint failed: {entrypoint}")
+    try:
+        help_data = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise DwError(f"help entrypoint did not return JSON: {entrypoint}") from exc
+    if not isinstance(help_data, dict) or help_data.get("id") != power_id:
+        raise DwError(f"help entrypoint returned an invalid contract: {entrypoint}")
+    return {
+        "id": power_id,
+        "name": metadata["name"],
+        "version": metadata["version"],
+        "category": spec["category"],
+        "runtimeDataRoot": spec["runtimeDataRoot"],
+        "nativeAlias": f"/dw-{power_id}",
+        "entrypoints": spec["entrypoints"].get("skillCandidates", []),
+        "cliEntrypoint": display_path(entrypoint),
+        "resolution": mode,
+        **{key: value for key, value in help_data.items() if key not in {"id", "name"}},
+    }
+
+
+def power_help(args: argparse.Namespace) -> int:
+    data = power_help_data(args.power_id)
+    if args.json:
+        emit(data, as_json=True)
+        return 0
+
+    print(f"{data['name']} ({data['id']})")
+    print(f"Version: {data['version']}")
+    print(f"Category: {data['category']}")
+    print(f"Runtime: {data['runtimeDataRoot']}")
+    print(f"Native activation: {data['nativeAlias']}")
+    print(f"What: {data['what']}")
+    print("When:")
+    for item in data["when"]:
+        print(f"  - {item}")
+    print("How:")
+    for index, item in enumerate(data["how"], start=1):
+        print(f"  {index}. {item}")
+    print(f"Why: {data['why']}")
+    print("User gets:")
+    for item in data["gives"]:
+        print(f"  - {item}")
+    print("Does not:")
+    for item in data["doesNot"]:
+        print(f"  - {item}")
+    print("Entrypoints:")
+    for item in data["entrypoints"]:
+        print(f"  - {item}")
+    return 0
+
+
+def skill_help(args: argparse.Namespace) -> int:
+    if not args.power_id:
+        if args.show_help:
+            print("Usage: dw skill <power-id> [--json]")
+            print("Show what a DW Power does, when to use it, how to invoke it, and its boundaries.")
+            print("Available Powers: " + ", ".join(sorted(manifests())))
+            return 0
+        raise DwError("skill requires a Power id; use `dw skill --help`")
+    return power_help(args)
 
 
 def submodule_entries() -> list[dict[str, str]]:
@@ -881,6 +1008,18 @@ def build_parser() -> argparse.ArgumentParser:
     power_info_parser.add_argument("--json", action="store_true")
     power_info_parser.set_defaults(handler=power_info)
 
+    power_help_parser = power_commands.add_parser(
+        "help",
+        help="explain what, when, how, why, outputs, and boundaries for a Power",
+        description=(
+            "Show user-facing guidance for one registered Power. "
+            "This is discovery only; it does not activate or execute the Power."
+        ),
+    )
+    power_help_parser.add_argument("power_id", choices=sorted(manifests()))
+    power_help_parser.add_argument("--json", action="store_true")
+    power_help_parser.set_defaults(handler=power_help)
+
     for mode in ("init", "check", "update", "pin", "status"):
         mode_parser = power_commands.add_parser(mode)
         mode_parser.add_argument("target", nargs="?", default="all")
@@ -907,6 +1046,24 @@ def build_parser() -> argparse.ArgumentParser:
     host_status_parser = host_commands.add_parser("status")
     host_status_parser.add_argument("host", nargs="?", choices=host_choices, default="all")
     host_status_parser.set_defaults(handler=host_status)
+
+    # `skill` is an ergonomic, read-only alias for user discovery. Native
+    # activation still happens through /dw-<power-id> in the configured host.
+    skill_parser = commands.add_parser(
+        "skill",
+        add_help=False,
+        help="show user-facing help for a Power (read-only; does not activate it)",
+    )
+    skill_parser.add_argument("power_id", nargs="?", choices=sorted(manifests()))
+    skill_parser.add_argument("--json", action="store_true")
+    skill_parser.add_argument(
+        "-h",
+        "--help",
+        dest="show_help",
+        action="store_true",
+        help="show this command and available Power ids, or semantic help when an id is provided",
+    )
+    skill_parser.set_defaults(handler=skill_help, show_help=False)
 
     provider_parser = commands.add_parser("provider")
     provider_commands = provider_parser.add_subparsers(dest="provider_command", required=True)

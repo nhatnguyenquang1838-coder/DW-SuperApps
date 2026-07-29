@@ -15,9 +15,14 @@ class KiroInstallationAssetTests(unittest.TestCase):
             (ROOT / ".kiro" / "agents" / "dw-power-installation.json").read_text(encoding="utf-8")
         )
         self.assertIn("name: dw-power-installation", skill)
+        self.assertIn("dw_python_init", skill)
         self.assertIn("python3", skill)
         self.assertIn("py -3", skill)
         self.assertIn('"$RELEASE_DIR/offline_release_installer.py"', skill)
+        agent_prompt = (ROOT / ".kiro" / "agents" / "DW_POWER_INSTALLATION_AGENT.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("dw_python_init", agent_prompt)
         self.assertEqual("dw-power-installation", agent["name"])
         self.assertEqual("file://.kiro/agents/DW_POWER_INSTALLATION_AGENT.md", agent["prompt"])
         for resource in agent["resources"]:

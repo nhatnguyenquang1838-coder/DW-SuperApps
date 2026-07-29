@@ -17,6 +17,17 @@ case "${1:-}" in
     ;;
 esac
 
+if [[ "${1:-}" == "python" && "${2:-}" == "init" ]]; then
+  # This is a fail-fast preflight for non-interactive callers. A child
+  # process cannot export functions into the caller's shell; Kiro sessions
+  # must source scripts/kiro-python-session.sh first.
+  # shellcheck source=../scripts/python-resolver.sh
+  source "$ROOT/scripts/python-resolver.sh"
+  dw_python_init
+  dw_kiro_python --version
+  exit $?
+fi
+
 if [[ "${1:-}" == "workspace" && "${2:-}" == "init" ]]; then
   # shellcheck source=../scripts/python-resolver.sh
   source "$ROOT/scripts/python-resolver.sh"

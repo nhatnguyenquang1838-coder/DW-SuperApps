@@ -3,7 +3,7 @@ kind: Power
 metadata:
   id: gwc
   name: GWC
-  version: gwc-main-26-9627e0bd43c531396bc3a00275a5f04a61571208
+  version: gwc-main-1db5cdde
   description: Governance, delivery control, approval boundaries, validation, and repository lifecycle workflows.
 spec:
   category: governance
@@ -41,6 +41,7 @@ spec:
       - AGENTS.md
       - agents/chatgpt-agent/agent-instructions.md
     cliCandidates:
+      - tools/power_help.py
       - tools/validate_instructions.py
       - tools/validate_g01.py
   permissions:
@@ -69,6 +70,6 @@ spec:
     providerState:
       status: published
       task: DW-PDIST-02
-      sourceCommit: 9627e0bd43c531396bc3a00275a5f04a61571208
+      sourceCommit: 1db5cdde7666e95e0a5d864633a3255a2a6ad40e
       sourceLock: distribution/power-package.yaml
-      note: Published as gwc-main-26-9627e0bd43c531396bc3a00275a5f04a61571208; current power-dist SOURCE.json is locked to the same source SHA. Submodule remains a compatibility fallback.
+      note: Local source integration pin; remote publication was not checked (SKIPPED_OFFLINE). Submodule remains a compatibility fallback.

@@ -5,8 +5,36 @@
 
 dw_python_error() {
   echo "ERROR: Python 3 was not found." >&2
-  echo "Install Python 3 or set DW_PYTHON to an executable path." >&2
+  echo "Install Python 3 or set DW_PYTHON_BIN/DW_PYTHON to an executable path." >&2
   return 127
+}
+
+dw_python_validate_candidate() {
+  local candidate="$1"
+  local launcher_args="${2:-}"
+  local version=""
+  local -a args=()
+
+  if [[ -n "$launcher_args" ]]; then
+    read -r -a args <<< "$launcher_args"
+  fi
+
+  if [[ -n "$launcher_args" ]]; then
+    if ! version="$(command "$candidate" "${args[@]}" --version 2>&1)"; then
+      echo "ERROR: Python launcher failed during session init: $candidate ${launcher_args:-} --version" >&2
+      [[ -n "$version" ]] && echo "$version" >&2
+      return 127
+    fi
+  elif ! version="$(command "$candidate" --version 2>&1)"; then
+    echo "ERROR: Python launcher failed during session init: $candidate --version" >&2
+    [[ -n "$version" ]] && echo "$version" >&2
+    return 127
+  fi
+  if [[ ! "$version" =~ (^|[[:space:]])Python[[:space:]]3([.]|[[:space:]]|$) ]]; then
+    echo "ERROR: resolved launcher is not Python 3: $candidate ${launcher_args:-}" >&2
+    echo "Reported version: $version" >&2
+    return 127
+  fi
 }
 
 dw_python_with_launcher() {
@@ -91,6 +119,10 @@ dw_python_session_init() {
     return 127
   fi
 
+  # Fail at bootstrap time instead of allowing a broken shim or Python 2
+  # executable to fail later during package verification or project binding.
+  dw_python_validate_candidate "$candidate" "$launcher_args" || return $?
+
   export DW_PYTHON_BIN="$candidate"
   export DW_PYTHON_ARGS="$launcher_args"
   export DW_PYTHON="$candidate"
@@ -110,4 +142,10 @@ dw_python_session_init() {
   export -f dw_python_with_launcher dw_kiro_python python3 python py
 
   printf 'PYTHON_SESSION: %s %s\n' "$DW_PYTHON_BIN" "${DW_PYTHON_ARGS:-}"
+}
+
+# Explicit name used by Kiro/bootstrap prompts. Keep session initialization
+# separate from command execution so callers can fail before touching files.
+dw_python_init() {
+  dw_python_session_init "$@"
 }

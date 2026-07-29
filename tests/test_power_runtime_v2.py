@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
+import io
 import importlib.util
 import unittest
 from pathlib import Path
@@ -58,6 +60,7 @@ class PowerRuntimeV2Tests(unittest.TestCase):
             ["workspace", "info"],
             ["power", "list"],
             ["power", "info", "task-me"],
+            ["power", "help", "gwc"],
             ["power", "check", "all"],
             ["host", "list"],
             ["host", "install", "copilot"],
@@ -68,12 +71,40 @@ class PowerRuntimeV2Tests(unittest.TestCase):
             ["provider", "info", "ollama"],
             ["system", "list"],
             ["system", "powers", "rental-home"],
+            ["skill", "bmad", "--help"],
+            ["skill", "--help"],
             ["validate"],
         ]
         for argv in cases:
             with self.subTest(argv=argv):
                 parsed = parser.parse_args(argv)
                 self.assertTrue(callable(parsed.handler))
+
+    def test_power_help_contract_covers_user_questions(self) -> None:
+        for power_id in ("gwc", "ua", "task-me", "bmad"):
+            with self.subTest(power_id=power_id):
+                data = dw_cli.power_help_data(power_id)
+                self.assertEqual(power_id, data["id"])
+                self.assertTrue(data["what"])
+                self.assertTrue(data["why"])
+                for key in ("when", "how", "gives", "doesNot"):
+                    self.assertTrue(data[key])
+                    self.assertTrue(all(isinstance(item, str) for item in data[key]))
+                self.assertEqual(f"/dw-{power_id}", data["nativeAlias"])
+
+    def test_power_help_is_read_only_user_facing_output(self) -> None:
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            result = dw_cli.power_help(argparse.Namespace(power_id="ua", json=False))
+        self.assertEqual(0, result)
+        rendered = output.getvalue()
+        self.assertIn("What:", rendered)
+        self.assertIn("When:", rendered)
+        self.assertIn("How:", rendered)
+        self.assertIn("Why:", rendered)
+        self.assertIn("User gets:", rendered)
+        self.assertIn("Does not:", rendered)
+        self.assertIn("/dw-ua", rendered)
 
     def test_cli_rejects_removed_prompt_command(self) -> None:
         parser = dw_cli.build_parser()

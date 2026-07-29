@@ -133,6 +133,46 @@ jobs:
           unzip -q "$release_dir/dw-superapps-full-${{ steps.identity.outputs.version }}.zip" -d "$extracted"
           python "$extracted/offline_release_installer.py" verify --release "$extracted"
 
+      - name: Exercise standalone empty-project bootstrap and repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_dir="dist/full-release/dw-superapps-full-${{ steps.identity.outputs.version }}"
+          extracted="$RUNNER_TEMP/dw-full-release-extracted"
+          bootstrap="$RUNNER_TEMP/dw-full-bootstrap"
+          python "$extracted/offline_release_installer.py" setup \
+            --release "$extracted" \
+            --workspace "$bootstrap" \
+            --workspace-id ci-bootstrap \
+            --workspace-name "DW full release CI bootstrap" \
+            --project-id consumer \
+            --project-path projects/consumer \
+            --project-source offline/consumer \
+            --system-id consumer \
+            --powers all \
+            --repair > "$RUNNER_TEMP/dw-full-bootstrap.json"
+          python - "$RUNNER_TEMP/dw-full-bootstrap.json" <<'PY'
+          import json
+          import sys
+
+          result = json.load(open(sys.argv[1], encoding="utf-8"))
+          if result.get("status") != "READY":
+              raise SystemExit(f"standalone bootstrap did not reach READY: {result.get('status')}")
+          if result.get("remoteAcquisition") != "SKIPPED_OFFLINE":
+              raise SystemExit("bootstrap attempted non-offline acquisition")
+          PY
+          python "$extracted/offline_release_installer.py" setup \
+            --release "$extracted" \
+            --workspace "$bootstrap" \
+            --workspace-id ci-bootstrap \
+            --workspace-name "DW full release CI bootstrap" \
+            --project-id consumer \
+            --project-path projects/consumer \
+            --project-source offline/consumer \
+            --system-id consumer \
+            --powers all \
+            --repair > "$RUNNER_TEMP/dw-full-bootstrap-repair.json"
+
       - name: Upload full release artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
