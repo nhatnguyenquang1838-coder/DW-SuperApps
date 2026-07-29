@@ -28,15 +28,43 @@ POWERS            comma-separated subset of gwc,ua,task-me,bmad
 
 ## Procedure
 
-1. Verify the extracted release locally:
+1. Start the Windows Bash-compatible Python session from the local Super Project:
 
    ```bash
-   python "$SUPER_PROJECT/scripts/offline_release_installer.py" verify --release "$RELEASE_DIR"
+   cd "$SUPER_PROJECT"
+   if [ -f scripts/kiro-python-session.sh ]; then
+     source scripts/kiro-python-session.sh
+   else
+     source scripts/python-resolver.sh
+     dw_python_session_init
+   fi
+   dw_kiro_python --version
    ```
 
-2. Confirm `PROJECT_PATH` already exists as a local directory. Do not create or clone project source.
+2. Verify the extracted release locally:
 
-3. Register the local project and system without network or submodule mutation:
+   ```bash
+   dw_kiro_python "$SUPER_PROJECT/scripts/offline_release_installer.py" verify --release "$RELEASE_DIR"
+   ```
+
+3. Confirm `PROJECT_PATH` already exists as a local directory. Do not create or clone project source.
+
+4. Install the Kiro skill and agent from the local release. Refuse an existing conflicting file rather
+   than overwriting unmanaged Kiro configuration:
+
+   ```bash
+   kiro_skill="$RELEASE_DIR/kiro/skills/dw-power-installation"
+   kiro_agent="$RELEASE_DIR/kiro/agents/dw-power-installation.json"
+   kiro_prompt="$RELEASE_DIR/kiro/agents/DW_POWER_INSTALLATION_AGENT.md"
+   test -f "$kiro_skill/SKILL.md" && test -f "$kiro_agent" && test -f "$kiro_prompt"
+   test ! -e "$SUPER_PROJECT/.kiro/skills/dw-power-installation"
+   test ! -e "$SUPER_PROJECT/.kiro/agents/dw-power-installation.json"
+   mkdir -p "$SUPER_PROJECT/.kiro/skills" "$SUPER_PROJECT/.kiro/agents"
+   cp -R "$kiro_skill" "$SUPER_PROJECT/.kiro/skills/"
+   cp "$kiro_agent" "$kiro_prompt" "$SUPER_PROJECT/.kiro/agents/"
+   ```
+
+5. Register the local project and system without network or submodule mutation:
 
    ```bash
    cd "$SUPER_PROJECT"
@@ -51,7 +79,7 @@ POWERS            comma-separated subset of gwc,ua,task-me,bmad
      --offline
    ```
 
-4. For each selected Power, install only its local release asset:
+6. For each selected Power, install only its local release asset:
 
    ```bash
    ./bin/dw power install <power-id> \
@@ -63,7 +91,7 @@ POWERS            comma-separated subset of gwc,ua,task-me,bmad
 
    Resolve `<package>.zip` and its checksum from the local release `MANIFEST.json`; never guess a version.
 
-5. Confirm the resulting binding exists at:
+7. Confirm the resulting binding exists at:
 
    ```text
    $SUPER_PROJECT/.dw/bindings/$SYSTEM_ID/<power-id>.json
@@ -72,4 +100,4 @@ POWERS            comma-separated subset of gwc,ua,task-me,bmad
    The binding must contain the registered system target, installed package path, package version,
    manifest digest, and runtime path. Do not modify runtime data outside the declared project roots.
 
-6. Report the local paths and binding files. Do not claim online provenance or remote synchronization.
+8. Report the local paths and binding files. Do not claim online provenance or remote synchronization.

@@ -16,6 +16,8 @@ SOURCE_LOCK.json
 SHA256SUMS.txt
 VALIDATION_REPORT.json
 KIRO_OFFLINE_INSTALL_PROMPT.md  # one Kiro install/register/binding prompt
+kiro/skills/dw-power-installation/       # Kiro installation skill + Python session bootstrap
+kiro/agents/dw-power-installation.json   # Kiro installation agent
 ```
 
 Verify an extracted full bundle before installation:

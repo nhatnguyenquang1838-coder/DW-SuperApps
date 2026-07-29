@@ -29,7 +29,16 @@ jobs:
 
       - name: Validate Bash entrypoints
         shell: bash
-        run: bash -n bin/dw scripts/install-dw.sh scripts/python-resolver.sh hosts/openclaw-acpx/install.sh
+        run: bash -n bin/dw scripts/install-dw.sh scripts/python-resolver.sh scripts/kiro-python-session.sh hosts/openclaw-acpx/install.sh
+
+      - name: Test Python resolver sessions
+        shell: bash
+        run: |
+          bash tests/test_python_resolver.sh
+          bash tests/test_python_resolver_session.sh
+
+      - name: Test Kiro installation assets
+        run: python -m unittest -v tests.test_kiro_installation_assets
 
       - name: Install global DW CLI in temporary home
         shell: bash

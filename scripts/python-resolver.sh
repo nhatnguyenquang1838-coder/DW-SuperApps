@@ -9,8 +9,22 @@ dw_python_error() {
   return 127
 }
 
+dw_python_with_launcher() {
+  local launcher="$1"
+  shift
+  if [[ -n "${DW_PYTHON_ARGS:-}" ]]; then
+    local -a launcher_args=()
+    read -r -a launcher_args <<< "$DW_PYTHON_ARGS"
+    command "$launcher" "${launcher_args[@]}" "$@"
+  else
+    command "$launcher" "$@"
+  fi
+}
+
 dw_python() {
-  if [[ -n "${DW_PYTHON:-}" ]]; then
+  if [[ -n "${DW_PYTHON_BIN:-}" ]]; then
+    dw_python_with_launcher "$DW_PYTHON_BIN" "$@"
+  elif [[ -n "${DW_PYTHON:-}" ]]; then
     command "$DW_PYTHON" "$@"
   elif command -v python3 >/dev/null 2>&1; then
     command python3 "$@"
@@ -24,7 +38,15 @@ dw_python() {
 }
 
 dw_exec_python() {
-  if [[ -n "${DW_PYTHON:-}" ]]; then
+  if [[ -n "${DW_PYTHON_BIN:-}" ]]; then
+    if [[ -n "${DW_PYTHON_ARGS:-}" ]]; then
+      local -a launcher_args=()
+      read -r -a launcher_args <<< "$DW_PYTHON_ARGS"
+      exec "$DW_PYTHON_BIN" "${launcher_args[@]}" "$@"
+    else
+      exec "$DW_PYTHON_BIN" "$@"
+    fi
+  elif [[ -n "${DW_PYTHON:-}" ]]; then
     exec "$DW_PYTHON" "$@"
   elif command -v python3 >/dev/null 2>&1; then
     exec python3 "$@"
@@ -36,4 +58,56 @@ dw_exec_python() {
     dw_python_error
     exit 127
   fi
+}
+
+dw_kiro_python() {
+  if [[ -z "${DW_PYTHON_BIN:-}" ]]; then
+    dw_python_session_init || return $?
+  fi
+  dw_python_with_launcher "$DW_PYTHON_BIN" "$@"
+}
+
+dw_python_session_init() {
+  local candidate=""
+  local launcher_args=""
+
+  if [[ -n "${DW_PYTHON_BIN:-}" ]]; then
+    candidate="$DW_PYTHON_BIN"
+    launcher_args="${DW_PYTHON_ARGS:-}"
+  elif [[ -n "${DW_PYTHON:-}" ]]; then
+    candidate="$(type -P "$DW_PYTHON" 2>/dev/null || true)"
+    [[ -n "$candidate" ]] || candidate="$DW_PYTHON"
+  elif type -P python3 >/dev/null 2>&1; then
+    candidate="$(type -P python3)"
+  elif type -P python >/dev/null 2>&1; then
+    candidate="$(type -P python)"
+  elif type -P py >/dev/null 2>&1; then
+    candidate="$(type -P py)"
+    launcher_args="-3"
+  fi
+
+  if [[ -z "$candidate" ]]; then
+    dw_python_error
+    return 127
+  fi
+
+  export DW_PYTHON_BIN="$candidate"
+  export DW_PYTHON_ARGS="$launcher_args"
+  export DW_PYTHON="$candidate"
+  export PYTHON="$candidate"
+  export PYTHON3="$candidate"
+  export PY="$candidate"
+
+  # Bash/Git Bash functions make all three spellings work in this session.
+  python3() { dw_kiro_python "$@"; }
+  python() { dw_kiro_python "$@"; }
+  py() {
+    if [[ "${1:-}" == "-3" ]]; then
+      shift
+    fi
+    dw_kiro_python "$@"
+  }
+  export -f dw_python_with_launcher dw_kiro_python python3 python py
+
+  printf 'PYTHON_SESSION: %s %s\n' "$DW_PYTHON_BIN" "${DW_PYTHON_ARGS:-}"
 }

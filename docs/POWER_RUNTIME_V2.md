@@ -52,6 +52,18 @@ Optional explicit override:
 DW_PYTHON=/custom/path/python ./bin/dw doctor all
 ```
 
+For a Kiro/Git Bash working session, expose all Windows-compatible spellings before running Python:
+
+```bash
+source scripts/kiro-python-session.sh
+dw_kiro_python --version
+python3 --version
+python --version
+py -3 --version
+```
+
+The session resolver selects one interpreter and makes `python3`, `python`, and `py -3` use it.
+
 ### Uninstall
 
 ```bash

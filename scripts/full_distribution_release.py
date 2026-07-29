@@ -85,6 +85,16 @@ def assemble(args: argparse.Namespace) -> dict:
     if not prompt.is_file():
         raise SystemExit(f"missing Kiro offline prompt: {prompt}")
     shutil.copy2(prompt, release_root / "KIRO_OFFLINE_INSTALL_PROMPT.md")
+    kiro_skill = ROOT / ".kiro" / "skills" / "dw-power-installation"
+    kiro_agent = ROOT / ".kiro" / "agents" / "dw-power-installation.json"
+    kiro_agent_prompt = ROOT / ".kiro" / "agents" / "DW_POWER_INSTALLATION_AGENT.md"
+    for required in (kiro_skill / "SKILL.md", kiro_skill / "scripts" / "python-session.sh", kiro_agent, kiro_agent_prompt):
+        if not required.is_file():
+            raise SystemExit(f"missing Kiro installation asset: {required}")
+    shutil.copytree(kiro_skill, release_root / "kiro" / "skills" / "dw-power-installation")
+    (release_root / "kiro" / "agents").mkdir(parents=True, exist_ok=True)
+    shutil.copy2(kiro_agent, release_root / "kiro" / "agents" / kiro_agent.name)
+    shutil.copy2(kiro_agent_prompt, release_root / "kiro" / "agents" / kiro_agent_prompt.name)
 
     components = []
     source_packages = []
@@ -136,9 +146,17 @@ def assemble(args: argparse.Namespace) -> dict:
                 "SHA256SUMS.txt",
                 "VALIDATION_REPORT.json",
                 "KIRO_OFFLINE_INSTALL_PROMPT.md",
+                "kiro/skills/dw-power-installation/SKILL.md",
+                "kiro/agents/dw-power-installation.json",
             ],
             "powers": list(args.powers),
             "kiroPrompt": "KIRO_OFFLINE_INSTALL_PROMPT.md",
+            "kiroInstallation": {
+                "skill": "kiro/skills/dw-power-installation/SKILL.md",
+                "agent": "kiro/agents/dw-power-installation.json",
+                "agentPrompt": "kiro/agents/DW_POWER_INSTALLATION_AGENT.md",
+                "pythonSession": "kiro/skills/dw-power-installation/scripts/python-session.sh",
+            },
             "registrationMode": "offline-local",
         },
     }

@@ -36,6 +36,8 @@ RUNTIME_DIRS = (
     "prompts",
     "docs/runbooks",
     "powers/bmad",
+    ".kiro/skills/dw-power-installation",
+    ".kiro/agents",
 )
 IGNORE_NAMES = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 

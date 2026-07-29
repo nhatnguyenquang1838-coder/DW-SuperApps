@@ -78,6 +78,7 @@ jobs:
           tests.test_full_distribution_release
           tests.test_project_registry
           tests.test_clean_power_setup
+          tests.test_kiro_installation_assets
 
       - name: Build all four Power distributions
         shell: bash

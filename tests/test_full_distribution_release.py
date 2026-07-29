@@ -87,8 +87,16 @@ class FullDistributionReleaseTests(unittest.TestCase):
             offline_release_installer.verify_release(release)
             self.assertTrue((release / "dw-superapps-full-1.0.0.zip").is_file())
             self.assertTrue((release / "KIRO_OFFLINE_INSTALL_PROMPT.md").is_file())
+            self.assertTrue(
+                (release / "kiro/skills/dw-power-installation/SKILL.md").is_file()
+            )
+            self.assertTrue((release / "kiro/agents/dw-power-installation.json").is_file())
             manifest = json.loads((release / "MANIFEST.json").read_text(encoding="utf-8"))
             self.assertEqual("KIRO_OFFLINE_INSTALL_PROMPT.md", manifest["spec"]["kiroPrompt"])
+            self.assertEqual(
+                "kiro/skills/dw-power-installation/SKILL.md",
+                manifest["spec"]["kiroInstallation"]["skill"],
+            )
             self.assertEqual("offline-local", manifest["spec"]["registrationMode"])
             self.assertIn("assets/gwc-power-v1.0.0.zip", (release / "SHA256SUMS.txt").read_text())
 
