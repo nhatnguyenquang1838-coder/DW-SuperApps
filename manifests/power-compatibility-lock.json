@@ -52,11 +52,11 @@
     },
     "bmad": {
       "sourceRepository": "nhatnguyenquang1838-coder/BMAD-METHOD",
-      "providerHeadSha": "b3bb751c09a3227689d0732f314ea8b0553a7591",
+      "providerHeadSha": "dca9cd73f30c9a69167adf71020b2b1f210c93fb",
       "distributionRepository": "nhatnguyenquang1838-coder/DW-SuperApps",
       "distributionRef": "power-dist-bmad",
-      "publishedSourceSha": "b3bb751c09a3227689d0732f314ea8b0553a7591",
-      "packageVersion": "bmad-local-b3bb751c",
+      "publishedSourceSha": "dca9cd73f30c9a69167adf71020b2b1f210c93fb",
+      "packageVersion": "bmad-local-dca9cd73",
       "runtimeDataRoot": ".bmad",
       "entrypoints": [
         "src/core-skills/bmad-help/SKILL.md",
