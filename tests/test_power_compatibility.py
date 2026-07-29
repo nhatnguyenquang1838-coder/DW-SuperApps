@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -27,27 +28,23 @@ class PowerCompatibilityTests(unittest.TestCase):
     def test_lock_matches_all_power_manifests(self) -> None:
         result = validate_lock()
         self.assertEqual(4, result["power_count"])
-        self.assertEqual("PASS_WITH_WARNINGS", result["status"])
-        self.assertTrue(any("ua" in item for item in result["warnings"]))
+        self.assertEqual("PASS", result["status"])
+        self.assertEqual([], result["warnings"])
 
     def test_current_published_contracts_are_locked(self) -> None:
         powers = compatibility_lock()["powers"]
-        self.assertEqual(
-            "9627e0bd43c531396bc3a00275a5f04a61571208",
-            powers["gwc"]["publishedSourceSha"],
-        )
-        self.assertEqual(
-            "90138ffb298f34d517aeb0b86e738d3027e71677",
-            powers["task-me"]["publishedSourceSha"],
-        )
-        self.assertEqual(
-            "4d5fda706fc9683d097cedc947a02011f11baa38",
-            powers["ua"]["publishedSourceSha"],
-        )
-        self.assertEqual(
-            "744227169addadb50d8b946777939a73207970f3",
-            powers["bmad"]["publishedSourceSha"],
-        )
+        for power_id in ("gwc", "ua", "task-me", "bmad"):
+            with self.subTest(power_id=power_id):
+                manifest = yaml.safe_load(
+                    (ROOT / "manifests" / "powers" / f"{power_id}.yaml").read_text(
+                        encoding="utf-8"
+                    )
+                )
+                source_root = ROOT / manifest["spec"]["path"]
+                expected = subprocess.check_output(
+                    ["git", "-C", str(source_root), "rev-parse", "HEAD"], text=True
+                ).strip()
+                self.assertEqual(expected, powers[power_id]["publishedSourceSha"])
 
     def test_new_package_contains_static_agent_guidance(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
