@@ -85,6 +85,7 @@ jobs:
           python -m unittest -v
           tests.test_power_dist_capability
           tests.test_distribution_builder_overlays
+          tests.test_full_distribution_release
 
       - name: Test distribution integration
         run: python -m unittest -v tests.test_power_distribution_integration

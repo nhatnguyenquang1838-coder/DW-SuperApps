@@ -20,6 +20,12 @@ POWER_SOURCES = {
     "bmad": ROOT / "projects" / "bmad",
     "ua": ROOT / "projects" / "ua",
 }
+POWER_SOURCE_REPOSITORIES = {
+    "gwc": "nhatnguyenquang1838-coder/gwc",
+    "ua": "nhatnguyenquang1838-coder/Understand-Anything",
+    "task-me": "nhatnguyenquang1838-coder/task-me",
+    "bmad": "nhatnguyenquang1838-coder/BMAD-METHOD",
+}
 POWER_OVERLAYS: dict[str, dict[str, Path]] = {
     "bmad": {
         "overlay_root": ROOT / "plugins" / "bmad-method" / "overlay",
@@ -122,7 +128,7 @@ def build_power(
         "--version",
         version,
         "--source-repository",
-        f"nhatnguyenquang1838-coder/{power_id}",
+        POWER_SOURCE_REPOSITORIES[power_id],
         "--source-ref",
         "main",
         "--source-sha",
