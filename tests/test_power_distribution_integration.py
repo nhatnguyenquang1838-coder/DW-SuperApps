@@ -35,10 +35,17 @@ class PowerDistributionIntegrationTests(unittest.TestCase):
         }
         for power_id, state in states.items():
             with self.subTest(power_id=power_id):
-                source_root = ROOT / dw_cli.manifests()[power_id]["spec"]["path"]
-                source_commit = subprocess.check_output(
-                    ["git", "-C", str(source_root), "rev-parse", "HEAD"], text=True
-                ).strip()
+                # Provenance is owned by the root gitlink.  A CI checkout may
+                # intentionally omit or shallow-update nested source repos, so
+                # reading their working-tree HEAD is not reliable evidence of
+                # the source revision pinned by this distribution.
+                path = dw_cli.manifests()[power_id]["spec"]["path"]
+                gitlink = subprocess.check_output(
+                    ["git", "ls-tree", "HEAD", path], cwd=ROOT, text=True
+                ).strip().split()
+                self.assertGreaterEqual(len(gitlink), 3)
+                self.assertEqual("160000", gitlink[0])
+                source_commit = gitlink[2]
                 self.assertEqual(source_commit, state["sourceCommit"])
 
     def test_submodule_source_contract_remains_available_as_fallback(self) -> None:
