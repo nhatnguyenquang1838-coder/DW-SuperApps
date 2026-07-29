@@ -28,18 +28,27 @@ POWERS            comma-separated subset of gwc,ua,task-me,bmad
 
 ## Procedure
 
-1. Start the Windows Bash-compatible Python session from the local Super Project:
+1. Start and validate the Windows Bash-compatible Python session before any verifier, registration, or
+   installation command. Prefer the resolver shipped in the local release so bootstrap does not depend
+   on the target checkout already containing `scripts/`:
 
    ```bash
    cd "$SUPER_PROJECT"
-   if [ -f scripts/kiro-python-session.sh ]; then
+   if [ -f "$RELEASE_DIR/kiro/skills/dw-power-installation/scripts/python-session.sh" ]; then
+     source "$RELEASE_DIR/kiro/skills/dw-power-installation/scripts/python-session.sh"
+   elif [ -f scripts/kiro-python-session.sh ]; then
      source scripts/kiro-python-session.sh
    else
      source scripts/python-resolver.sh
-     dw_python_session_init
    fi
+   dw_python_init
    dw_kiro_python --version
    ```
+
+   `dw_python_init` is mandatory and fail-fast: it resolves the launcher, executes `--version`, and
+   rejects a broken shim or a non-Python-3 executable. The equivalent non-interactive preflight is
+   `./bin/dw python init`; it validates the interpreter but cannot export functions into the parent
+   shell, so the current Kiro Bash session must still source the bootstrap above.
 
 2. Verify the extracted release locally:
 

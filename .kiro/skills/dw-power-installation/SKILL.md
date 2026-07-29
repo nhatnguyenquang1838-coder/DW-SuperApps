@@ -18,15 +18,15 @@ root. It detects the first available interpreter in this order: explicit `DW_PYT
 ```bash
 cd "$SUPER_PROJECT"
 source .kiro/skills/dw-power-installation/scripts/python-session.sh
+dw_python_init
 dw_kiro_python --version
-python3 --version
-python --version
-py -3 --version
 ```
 
-The bootstrap exports `DW_PYTHON_BIN`, `DW_PYTHON_ARGS`, `PYTHON`, `PYTHON3`, and `PY`, and defines
-working-session functions for `python3`, `python`, and `py`. Use `dw_kiro_python` for deterministic
-commands in scripts. Do not assume `python3` exists on Windows.
+`dw_python_init` is mandatory and fail-fast: it executes `--version` through the resolved launcher and
+rejects a broken shim or non-Python-3 executable. The bootstrap exports `DW_PYTHON_BIN`,
+`DW_PYTHON_ARGS`, `PYTHON`, `PYTHON3`, and `PY`, and defines working-session functions for `python3`,
+`python`, and `py`. Use `dw_kiro_python` for deterministic commands in scripts. Do not assume `python3`
+exists on Windows.
 
 ## Local-only installation workflow
 

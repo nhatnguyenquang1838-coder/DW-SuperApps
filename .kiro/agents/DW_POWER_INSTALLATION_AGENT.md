@@ -11,11 +11,14 @@ From the Super Project root, source the Python session bootstrap before any Pyth
 
 ```bash
 source .kiro/skills/dw-power-installation/scripts/python-session.sh
+dw_python_init
 dw_kiro_python --version
 ```
 
-This gives the current Bash session compatible `python3`, `python`, and `py -3` commands. Use
-`dw_kiro_python` inside compound commands so Windows Git Bash uses the selected interpreter consistently.
+`dw_python_init` is mandatory and fail-fast: it executes `--version` through the resolved launcher and
+rejects a broken shim or non-Python-3 executable. This gives the current Bash session compatible
+`python3`, `python`, and `py -3` commands. Use `dw_kiro_python` inside compound commands so Windows Git
+Bash uses the selected interpreter consistently.
 
 ## Execution contract
 

@@ -12,6 +12,32 @@ if [[ -f "$SUPER_PROJECT_ROOT/scripts/python-resolver.sh" ]]; then
   # shellcheck source=../../../../scripts/python-resolver.sh
   source "$SUPER_PROJECT_ROOT/scripts/python-resolver.sh"
 else
+  dw_python_validate_candidate() {
+    local candidate="$1"
+    local launcher_args="${2:-}"
+    local version=""
+    local -a args=()
+    if [[ -n "$launcher_args" ]]; then
+      read -r -a args <<< "$launcher_args"
+    fi
+    if [[ -n "$launcher_args" ]]; then
+      if ! version="$(command "$candidate" "${args[@]}" --version 2>&1)"; then
+        echo "ERROR: Python launcher failed during session init: $candidate ${launcher_args:-} --version" >&2
+        [[ -n "$version" ]] && echo "$version" >&2
+        return 127
+      fi
+    elif ! version="$(command "$candidate" --version 2>&1)"; then
+      echo "ERROR: Python launcher failed during session init: $candidate --version" >&2
+      [[ -n "$version" ]] && echo "$version" >&2
+      return 127
+    fi
+    if [[ ! "$version" =~ (^|[[:space:]])Python[[:space:]]3([.]|[[:space:]]|$) ]]; then
+      echo "ERROR: resolved launcher is not Python 3: $candidate ${launcher_args:-}" >&2
+      echo "Reported version: $version" >&2
+      return 127
+    fi
+  }
+
   dw_python_with_launcher() {
     local launcher="$1"
     shift
@@ -38,6 +64,8 @@ else
     if [[ -n "${DW_PYTHON_BIN:-}" ]]; then
       launcher="$DW_PYTHON_BIN"
       args="${DW_PYTHON_ARGS:-}"
+    elif [[ -n "${DW_PYTHON:-}" ]]; then
+      launcher="$DW_PYTHON"
     elif command -v python3 >/dev/null 2>&1; then
       launcher="$(command -v python3)"
     elif command -v python >/dev/null 2>&1; then
@@ -49,6 +77,7 @@ else
       echo "ERROR: Python 3 was not found (tried python3, python, py -3)." >&2
       return 127
     fi
+    dw_python_validate_candidate "$launcher" "$args" || return $?
     export DW_PYTHON_BIN="$launcher" DW_PYTHON_ARGS="$args"
     export DW_PYTHON="$launcher" PYTHON="$launcher" PYTHON3="$launcher" PY="$launcher"
     python3() { dw_python_with_launcher "$DW_PYTHON_BIN" ${DW_PYTHON_ARGS:-} "$@"; }
@@ -57,9 +86,13 @@ else
     export -f python3 python py 2>/dev/null || true
     echo "PYTHON_SESSION: $DW_PYTHON_BIN ${DW_PYTHON_ARGS:-}" >&2
   }
+
+  dw_python_init() {
+    dw_python_session_init "$@"
+  }
 fi
 
-dw_python_session_init
+dw_python_init
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   echo "ERROR: source this file in the active Kiro Bash session." >&2
