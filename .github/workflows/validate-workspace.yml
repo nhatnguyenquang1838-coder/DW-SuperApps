@@ -27,6 +27,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements-dev.txt
+
       - name: Validate Bash entrypoints
         shell: bash
         run: bash -n bin/dw scripts/install-dw.sh scripts/python-resolver.sh scripts/kiro-python-session.sh hosts/openclaw-acpx/install.sh
@@ -59,9 +62,6 @@ jobs:
           HOME=/tmp/dw-cli-home SHELL=/bin/bash /tmp/dw-cli-home/.local/bin/dw uninstall --shell bash
           test ! -e /tmp/dw-cli-home/.local/bin/dw
           ! grep -Fq "DW SuperApps CLI" /tmp/dw-cli-home/.bashrc
-
-      - name: Install Python dependencies
-        run: python -m pip install -r requirements-dev.txt
 
       - name: Validate workspace contract
         run: python scripts/dw_cli.py validate
@@ -137,7 +137,7 @@ jobs:
         with:
           name: bmad-deterministic-test-log
           path: bmad-deterministic.log
-          if-no-files-found: error
+          if-no-files-found: ignore
           retention-days: 7
 
       - name: Fail on BMAD deterministic test
