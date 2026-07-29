@@ -10,6 +10,8 @@ import unittest
 import zipfile
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
@@ -42,7 +44,15 @@ class FullDistributionReleaseTests(unittest.TestCase):
             (source / "skills/demo").mkdir(parents=True)
             (source / "skills/demo/SKILL.md").write_text("# Demo\n", encoding="utf-8")
             (source / "README.md").write_text("demo\n", encoding="utf-8")
-            recipe = ROOT / "tests/fixtures/power-distribution/valid-recipe.yaml"
+            recipe_data = yaml.safe_load(
+                (ROOT / "tests/fixtures/power-distribution/valid-recipe.yaml").read_text(
+                    encoding="utf-8"
+                )
+            )
+            recipe_data["metadata"]["id"] = "gwc"
+            recipe_data["spec"]["runtime"]["dataRoot"] = ".gwc"
+            recipe = root / "recipe.yaml"
+            recipe.write_text(yaml.safe_dump(recipe_data, sort_keys=False), encoding="utf-8")
             args = type(
                 "Args",
                 (),
@@ -122,6 +132,151 @@ class FullDistributionReleaseTests(unittest.TestCase):
                 capture_output=True,
                 text=True,
             )
+
+            setup_root = root / "consumer-workspace"
+            setup_result = offline_release_installer.setup_release(
+                type(
+                    "SetupArgs",
+                    (),
+                    {
+                        "release": str(extracted),
+                        "workspace": str(setup_root),
+                        "workspace_id": "consumer-super",
+                        "workspace_name": "Consumer Super",
+                        "project_id": "app",
+                        "project_path": "projects/app",
+                        "project_source": "example/app",
+                        "system_id": "app",
+                        "powers": "gwc",
+                        "repair": True,
+                    },
+                )()
+            )
+            self.assertEqual("READY", setup_result["status"])
+            self.assertTrue((setup_root / "workspace.yaml").is_file())
+            self.assertTrue((setup_root / ".dw/powers/gwc/MANIFEST.json").is_file())
+            self.assertTrue((setup_root / ".dw/bindings/app/gwc.json").is_file())
+            self.assertTrue((setup_root / "projects/app/.gwc").is_dir())
+
+            (setup_root / "bin/dw").write_text("broken\n", encoding="utf-8")
+            repaired = offline_release_installer.setup_release(
+                type(
+                    "SetupArgs",
+                    (),
+                    {
+                        "release": str(extracted),
+                        "workspace": str(setup_root),
+                        "workspace_id": "consumer-super",
+                        "workspace_name": "Consumer Super",
+                        "project_id": "app",
+                        "project_path": "projects/app",
+                        "project_source": "example/app",
+                        "system_id": "app",
+                        "powers": "gwc",
+                        "repair": True,
+                    },
+                )()
+            )
+            self.assertEqual("READY", repaired["status"])
+            self.assertTrue((Path(repaired["backup"]) / "runtime/bin/dw").is_file())
+
+            (setup_root / ".dw/powers/gwc/skills/demo/SKILL.md").write_text(
+                "corrupted\n", encoding="utf-8"
+            )
+            repaired_package = offline_release_installer.setup_release(
+                type(
+                    "SetupArgs",
+                    (),
+                    {
+                        "release": str(extracted),
+                        "workspace": str(setup_root),
+                        "workspace_id": "consumer-super",
+                        "workspace_name": "Consumer Super",
+                        "project_id": "app",
+                        "project_path": "projects/app",
+                        "project_source": "example/app",
+                        "system_id": "app",
+                        "powers": "gwc",
+                        "repair": True,
+                    },
+                )()
+            )
+            self.assertEqual("READY", repaired_package["status"])
+            self.assertTrue(
+                (Path(repaired_package["backup"]) / "powers/gwc-corrupt/skills/demo/SKILL.md").is_file()
+            )
+
+            stale = yaml.safe_load((setup_root / "workspace.yaml").read_text(encoding="utf-8"))
+            stale["projects"] = [{"id": "stale", "path": "projects/stale", "source": "broken"}]
+            stale["systems"] = [{"id": "stale", "project": "missing", "path": "projects/stale"}]
+            (setup_root / "workspace.yaml").write_text(
+                yaml.safe_dump(stale, sort_keys=False), encoding="utf-8"
+            )
+            repaired_stale = offline_release_installer.setup_release(
+                type(
+                    "SetupArgs",
+                    (),
+                    {
+                        "release": str(extracted),
+                        "workspace": str(setup_root),
+                        "workspace_id": "consumer-super",
+                        "workspace_name": "Consumer Super",
+                        "project_id": "app",
+                        "project_path": "projects/app",
+                        "project_source": "example/app",
+                        "system_id": "app",
+                        "powers": "gwc",
+                        "repair": True,
+                    },
+                )()
+            )
+            self.assertEqual("READY", repaired_stale["status"])
+            self.assertTrue((Path(repaired_stale["backup"]) / "workspace.yaml").is_file())
+
+            (setup_root / "workspace.yaml").write_text("broken: [", encoding="utf-8")
+            repaired_registry = offline_release_installer.setup_release(
+                type(
+                    "SetupArgs",
+                    (),
+                    {
+                        "release": str(extracted),
+                        "workspace": str(setup_root),
+                        "workspace_id": "consumer-super",
+                        "workspace_name": "Consumer Super",
+                        "project_id": "app",
+                        "project_path": "projects/app",
+                        "project_source": "example/app",
+                        "system_id": "app",
+                        "powers": "gwc",
+                        "repair": True,
+                    },
+                )()
+            )
+            self.assertEqual("READY", repaired_registry["status"])
+            self.assertTrue((Path(repaired_registry["backup"]) / "workspace.yaml").is_file())
+
+            root_only = root / "root-only"
+            root_result = offline_release_installer.setup_release(
+                type(
+                    "SetupArgs",
+                    (),
+                    {
+                        "release": str(extracted),
+                        "workspace": str(root_only),
+                        "workspace_id": "root-only",
+                        "workspace_name": "Root Only",
+                        "project_id": None,
+                        "project_path": None,
+                        "project_source": None,
+                        "system_id": None,
+                        "powers": "gwc",
+                        "repair": True,
+                    },
+                )()
+            )
+            self.assertEqual("PARTIAL", root_result["status"])
+            self.assertTrue((root_only / ".dw/powers/gwc/MANIFEST.json").is_file())
+            self.assertFalse((root_only / ".dw/bindings").exists())
 
 
 if __name__ == "__main__":

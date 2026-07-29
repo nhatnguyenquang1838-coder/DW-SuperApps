@@ -253,9 +253,16 @@ def main() -> int:
             fail(f"Power source mismatch for {entry['id']}")
 
     external_ids = set(manifests) - power_ids
-    for power_id in sorted(external_ids):
+    enabled_power_ids = {
+        power_id
+        for system in system_entries
+        for power_id in (system.get("enabled_powers") or [])
+    }
+    for power_id in sorted(external_ids & enabled_power_ids):
         source_path = ROOT / manifests[power_id]["spec"]["path"]
-        if not source_path.exists() and source_fallback_required(manifests[power_id]):
+        package_manifest = distribution["storeRoot"] / power_id / "MANIFEST.json"
+        package_available = package_manifest.is_file()
+        if not source_path.exists() and not package_available and source_fallback_required(manifests[power_id]):
             fail(f"external Power {power_id} local routing path is missing: {source_path.relative_to(ROOT)}")
 
     for system in system_entries:

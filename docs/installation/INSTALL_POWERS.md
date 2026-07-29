@@ -1,90 +1,119 @@
-# Install Powers
+# Install Powers from a full offline release
 
-The supported plug-and-play source is a locally supplied full `DW-SuperApps` release bundle. Each bundle contains a
-validated ZIP and matching `.sha256` file for `gwc`, `ua`, `task-me`, and `bmad`, together with release
-evidence. Do not perform an online repository or release check. Installation itself is local and must not
-acquire packages from Git, GitHub, `curl`, `wget`, or provider branches.
+The supported plug-and-play input is the extracted `dw-superapps-full-<version>` release directory. It is
+self-contained: it carries the DW control plane, workspace template, Kiro prompt/skill/agent, Python-session
+bootstrap, Power ZIPs, and checksums. The receiving project does not need a DW-SuperApps checkout or Power
+source repositories.
 
-The release contains both:
+The release supports a target that is:
 
-```text
-dw-superapps-full-<version>.zip       # complete offline bundle
-assets/<power>-<version>.zip          # individual package assets
-assets/<power>-<version>.zip.sha256
-offline_release_installer.py         # release-local verifier/installer helper
-MANIFEST.json
-SOURCE_LOCK.json
-SHA256SUMS.txt
-VALIDATION_REPORT.json
-KIRO_OFFLINE_INSTALL_PROMPT.md  # one Kiro install/register/binding prompt
-kiro/skills/dw-power-installation/       # Kiro installation skill + Python session bootstrap
-kiro/agents/dw-power-installation.json   # Kiro installation agent
-```
+- empty and not yet initialized;
+- stale or partially initialized; or
+- broken, with a recoverable DW runtime, registry, host adapter, or package store.
 
-Verify an extracted full bundle before installation:
+All acquisition is offline. Do not run GitHub/release checks, `git fetch`, `curl`, `wget`, remote `power-dist`,
+or submodule initialization to acquire Powers.
+
+## Verify the release
+
+Run the verifier shipped inside the release. On Kiro/Git Bash, first source the shipped Python session helper
+so `python3`, `python`, and `py` all resolve to the same validated Python 3 interpreter:
 
 ```bash
-python /path/to/dw-superapps-full-<version>/offline_release_installer.py verify \
+source /path/to/dw-superapps-full-<version>/kiro/skills/dw-power-installation/scripts/python-session.sh
+dw_kiro_python /path/to/dw-superapps-full-<version>/offline_release_installer.py verify \
   --release /path/to/dw-superapps-full-<version>
 ```
 
-The verifier, package ZIPs, checksums, prompt, Kiro skill, Kiro agent, and Python session bootstrap are
-inside the release. A receiving Super Project must only provide its local compatible `dw` runtime and
-registered project directory; it does not need to pull this repository, Power source repositories, or
-remote release assets.
+On Windows Git Bash, `py -3` is used when `python3`/`python` are unavailable. If PyYAML is missing, install
+from the release-local `runtime/requirements-dev.txt` using an already available offline wheel/cache; do not
+download dependencies during setup.
 
-For a DW-SuperApps checkout, place each validated pair in its workspace inbox:
+## Full setup: root package store plus a child project
 
-```text
-.dw/inbox/powers/gwc/<package>.zip       .dw/inbox/powers/gwc/<package>.zip.sha256
-.dw/inbox/powers/ua/<package>.zip        .dw/inbox/powers/ua/<package>.zip.sha256
-.dw/inbox/powers/task-me/<package>.zip   .dw/inbox/powers/task-me/<package>.zip.sha256
-.dw/inbox/powers/bmad/<package>.zip      .dw/inbox/powers/bmad/<package>.zip.sha256
-```
-
-Then install each package into the selected target system:
+`--workspace` is the Super Project root. The shared package store is placed under
+`<workspace>/.dw/powers`. A child project is the runtime owner for `.gwc`, `.ua`, `.task-me`, or `.bmad` and
+receives bindings; it must not receive Power package payloads or host skill copies.
 
 ```bash
-dw power install gwc --source package \
-  --package .dw/inbox/powers/gwc/<package>.zip \
-  --checksum .dw/inbox/powers/gwc/<package>.zip.sha256 \
-  --target projects/billing
-dw power install ua --source package \
-  --package .dw/inbox/powers/ua/<package>.zip \
-  --checksum .dw/inbox/powers/ua/<package>.zip.sha256 \
-  --target projects/billing
-dw power install task-me --source package \
-  --package .dw/inbox/powers/task-me/<package>.zip \
-  --checksum .dw/inbox/powers/task-me/<package>.zip.sha256 \
-  --target projects/billing
-dw power install bmad --source package \
-  --package .dw/inbox/powers/bmad/<package>.zip \
-  --checksum .dw/inbox/powers/bmad/<package>.zip.sha256 \
-  --target projects/billing
+RELEASE_DIR=/path/to/dw-superapps-full-<version>
+SUPER_PROJECT=/path/to/my-super-project
+
+source "$RELEASE_DIR/kiro/skills/dw-power-installation/scripts/python-session.sh"
+dw_kiro_python "$RELEASE_DIR/offline_release_installer.py" setup \
+  --release "$RELEASE_DIR" \
+  --workspace "$SUPER_PROJECT" \
+  --workspace-id my-super-project \
+  --workspace-name "My Super Project" \
+  --project-id app \
+  --project-path projects/app \
+  --project-source owner/app \
+  --system-id app \
+  --powers all \
+  --repair
 ```
 
-When using the current compatibility layout, the target may still be `systems/<system-id>`.
+`--project-source owner/app` is local repository metadata only; it is not contacted. Omit it only when the
+existing child has a local Git `remote.origin.url` that can be read without contacting the remote. For an empty
+child with no local remote, the value is required.
 
-Complete the lifecycle:
-
-```bash
-dw power configure <power-id> \
-  --config <config-file> \
-  --contract <consumer-contract> \
-  --target <project-path>
-dw host install all --mode wrapper
-dw power doctor <power-id> --target <project-path>
-dw doctor all --offline
-```
+The command creates or repairs `workspace.yaml`, initializes the local control-plane Git repository when
+needed, installs the package store, registers the project/system, creates target runtime roots, writes bindings,
+generates host adapters, and runs workspace validation plus Power doctors. `--repair` backs up replaced files
+under `<workspace>/.dw/history/offline-releases/<timestamp>/` and preserves unrelated files.
 
 Expected ownership:
 
 ```text
-Super Project/.dw/powers/<power-id>        package code
-Super Project/.dw/bindings/<system>/       binding records
-<project>/<runtime-root>/                  runtime and project configuration
-Super Project/<host-adapter-root>/         thin adapter
+<workspace>/.dw/powers/<power-id>/       shared package code
+<workspace>/.dw/bindings/<system>/       package-to-target bindings
+<workspace>/<project>/.gwc/              target runtime/configuration
+<workspace>/<project>/.ua/
+<workspace>/<project>/.task-me/
+<workspace>/<project>/.bmad/
+<workspace>/<host-adapter-root>/         thin host adapters
 ```
 
-The package store is shared by the workspace; runtime data remains target-owned:
-`.gwc`, `.ua`, `.task-me`, `.bmad`, `_bmad`, and `_bmad-output` are never copied into the package inbox.
+Do not create `<project>/.dw/powers` or copy Kiro skill payloads into the child project. Existing legacy paths
+there are reported and preserved.
+
+## Root-only package installation
+
+If the child project is not known yet, omit all child arguments:
+
+```bash
+dw_kiro_python "$RELEASE_DIR/offline_release_installer.py" setup \
+  --release "$RELEASE_DIR" \
+  --workspace "$SUPER_PROJECT" \
+  --workspace-id my-super-project \
+  --workspace-name "My Super Project" \
+  --powers all \
+  --repair
+```
+
+This installs the shared root package store and control plane, but reports `PARTIAL` because there is no
+project runtime to bind or doctor. Run the full setup again after supplying `--project-id`, `--project-path`,
+and local `--project-source` metadata.
+
+## Result and recovery
+
+The JSON result records exact release/workspace paths, selected Powers, package actions, bindings, host status,
+validation, doctor results, backup history, and `remoteAcquisition: SKIPPED_OFFLINE`.
+
+- `READY`: package integrity, registration, host routing, validation, and every selected Power doctor pass;
+- `PARTIAL`: root package/control-plane setup succeeded but a child runtime or required activation is incomplete;
+- `BLOCKED`: safe repair, Python dependency, project identity, or local metadata is unavailable;
+- `FAILED`: an executed operation returned a real failure.
+
+Before using the project, inspect the result and verify:
+
+```bash
+test -f "$SUPER_PROJECT/workspace.yaml"
+test -d "$SUPER_PROJECT/.dw/powers"
+test -f "$SUPER_PROJECT/.dw/bindings/app/gwc.json"
+"$SUPER_PROJECT/bin/dw" host status all
+"$SUPER_PROJECT/bin/dw" validate
+```
+
+Use only the release-local `offline_release_installer.py` and runtime after extraction. Do not fall back to
+scripts from a different DW-SuperApps checkout because that can reintroduce version drift.

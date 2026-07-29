@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import shutil
+import stat
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -15,6 +16,29 @@ from power_dist import verify_package
 
 DEFAULT_POWERS = ("gwc", "ua", "task-me", "bmad")
 ROOT = Path(__file__).resolve().parents[1]
+
+# The full release must carry the DW control plane as well as Power ZIPs. Keep
+# this list explicit so source repositories, tests, dashboards, and runtime
+# data cannot accidentally become part of the standalone bootstrap payload.
+RUNTIME_FILES = (
+    "AGENTS.md",
+    "requirements-dev.txt",
+    "dw.ps1",
+    "dw.cmd",
+)
+RUNTIME_DIRS = (
+    "bin",
+    "scripts",
+    "schemas",
+    "manifests",
+    "prompts",
+    "docs/installation",
+    "docs/runbooks",
+    "powers/bmad",
+    ".kiro/skills/dw-power-installation",
+    ".kiro/agents",
+)
+RUNTIME_TEMPLATE = ROOT / "templates" / "full-distribution" / "workspace-template.yaml"
 
 
 def sha256_file(path: Path) -> str:
@@ -27,6 +51,55 @@ def sha256_file(path: Path) -> str:
 
 def write_json(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def copy_runtime(source_root: Path, release_root: Path) -> dict:
+    runtime_root = release_root / "runtime"
+    runtime_root.mkdir(parents=True, exist_ok=True)
+
+    def copy_file(relative: str) -> None:
+        source = source_root / relative
+        if not source.is_file():
+            raise SystemExit(f"missing full-release runtime file: {source}")
+        destination = runtime_root / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination)
+
+    for relative in RUNTIME_FILES:
+        copy_file(relative)
+    for relative in RUNTIME_DIRS:
+        source = source_root / relative
+        if not source.is_dir():
+            # Some legacy source trees do not carry optional compatibility
+            # payloads (for example powers/bmad); the control plane itself is
+            # checked below through the required evidence list.
+            continue
+        for path in sorted(source.rglob("*")):
+            if not path.is_file() or path.suffix in {".pyc", ".pyo"} or "__pycache__" in path.parts:
+                continue
+            copy_file(path.relative_to(source_root).as_posix())
+    if not RUNTIME_TEMPLATE.is_file():
+        raise SystemExit(f"missing workspace template: {RUNTIME_TEMPLATE}")
+    shutil.copy2(RUNTIME_TEMPLATE, runtime_root / "workspace-template.yaml")
+
+    files = []
+    for path in sorted(runtime_root.rglob("*")):
+        if path.is_file():
+            files.append(
+                {
+                    "path": path.relative_to(runtime_root).as_posix(),
+                    "size": path.stat().st_size,
+                    "sha256": sha256_file(path),
+                    "mode": f"{stat.S_IMODE(path.stat().st_mode):04o}",
+                }
+            )
+    manifest = {
+        "apiVersion": "dw.superapps.distribution/runtime-v1",
+        "root": "runtime",
+        "files": files,
+    }
+    write_json(release_root / "RUNTIME_MANIFEST.json", manifest)
+    return manifest
 
 
 def write_deterministic_bundle(source_root: Path, destination: Path, source_date_epoch: int) -> None:
@@ -42,7 +115,8 @@ def write_deterministic_bundle(source_root: Path, destination: Path, source_date
             info = zipfile.ZipInfo(relative, date_time=date_time)
             info.create_system = 3
             info.compress_type = zipfile.ZIP_DEFLATED
-            info.external_attr = 0o644 << 16
+            mode = 0o755 if relative == "runtime/bin/dw" or relative.endswith(".sh") else 0o644
+            info.external_attr = mode << 16
             archive.writestr(info, path.read_bytes(), compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary.replace(destination)
@@ -81,6 +155,7 @@ def assemble(args: argparse.Namespace) -> dict:
         shutil.rmtree(release_root)
     assets_root = release_root / "assets"
     assets_root.mkdir(parents=True, exist_ok=True)
+    runtime_manifest = copy_runtime(ROOT, release_root)
     prompt = ROOT / "prompts" / "power-dist" / "kiro-offline-install.md"
     if not prompt.is_file():
         raise SystemExit(f"missing Kiro offline prompt: {prompt}")
@@ -105,6 +180,11 @@ def assemble(args: argparse.Namespace) -> dict:
     for power_id in args.powers:
         package_root, archive, checksum = package_paths(distribution_root, power_id)
         package_manifest = verify_package(package_root)
+        if package_manifest["metadata"].get("powerId") != power_id:
+            raise SystemExit(
+                f"staged package identity mismatch for {power_id}: "
+                f"{package_manifest['metadata'].get('powerId')}"
+            )
         actual_sha = sha256_file(archive)
         checksum_text = checksum.read_text(encoding="utf-8").split()[0]
         if checksum_text != actual_sha:
@@ -118,6 +198,9 @@ def assemble(args: argparse.Namespace) -> dict:
             "sha256": actual_sha,
             "size": archive.stat().st_size,
             "packageVersion": package_manifest["metadata"]["version"],
+            "runtimeDataRoot": package_manifest["spec"]["runtimeDataRoot"],
+            "entrypoints": package_manifest["spec"].get("entrypoints", []),
+            "agentGuidance": package_manifest["spec"].get("agentGuidance"),
             "source": package_manifest["metadata"],
         })
         source_packages.append(package_manifest["metadata"])
@@ -154,8 +237,16 @@ def assemble(args: argparse.Namespace) -> dict:
                 "SOURCE_LOCK.json",
                 "SHA256SUMS.txt",
                 "VALIDATION_REPORT.json",
+                "RUNTIME_MANIFEST.json",
                 "KIRO_OFFLINE_INSTALL_PROMPT.md",
                 "offline_release_installer.py",
+                "runtime/bin/dw",
+                "runtime/scripts/dw_project_registry.py",
+                "runtime/scripts/dw_workspace_init.py",
+                "runtime/scripts/offline_release_installer.py",
+                "runtime/requirements-dev.txt",
+                "runtime/workspace-template.yaml",
+                "runtime/docs/installation/INSTALL_POWERS.md",
                 "kiro/skills/dw-power-installation/SKILL.md",
                 "kiro/skills/dw-power-installation/scripts/python-session.sh",
                 "kiro/agents/dw-power-installation.json",
@@ -173,6 +264,13 @@ def assemble(args: argparse.Namespace) -> dict:
                 "releaseVerifier": "offline_release_installer.py",
             },
             "registrationMode": "offline-local",
+            "bootstrap": {
+                "runtimeRoot": "runtime",
+                "runtimeManifest": "RUNTIME_MANIFEST.json",
+                "workspaceTemplate": "runtime/workspace-template.yaml",
+                "setupCommand": "offline_release_installer.py setup",
+                "supports": ["empty", "stale", "broken", "root-package-store", "child-system"],
+            },
         },
     }
     source_lock = {
@@ -191,6 +289,7 @@ def assemble(args: argparse.Namespace) -> dict:
             "allPowerPackagesVerified": True,
             "allArchiveChecksumsVerified": True,
             "offlineInstallerValidation": True,
+            "controlPlaneRuntimePackaged": True,
         },
         "powers": power_results,
     }

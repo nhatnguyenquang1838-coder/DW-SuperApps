@@ -5,9 +5,10 @@ description: Install, bind, validate, and repair DW Powers from local packages i
 
 # DW Power Installation
 
-This skill owns the local Kiro workflow for installing DW Power packages into the Super Project package
-store and binding them to an existing project/system. It keeps package code in `.dw/powers`, project
-runtime in the target project, and never creates a target-local `.dw` Power installation.
+This skill owns the local Kiro workflow for bootstrapping an empty, stale, or broken Super Project from a
+full offline release. It keeps package code in `.dw/powers`, project runtime in an optional child target,
+and never creates a target-local `.dw` Power installation. Root-only mode installs the shared package store
+but remains `PARTIAL` until a child runtime is registered and doctored.
 
 ## Python session bootstrap
 
@@ -28,10 +29,10 @@ rejects a broken shim or non-Python-3 executable. The bootstrap exports `DW_PYTH
 `python`, and `py`. Use `dw_kiro_python` for deterministic commands in scripts. Do not assume `python3`
 exists on Windows.
 
-## Local-only installation workflow
+## Local-only full setup workflow
 
-1. Read `workspace.yaml`, the selected system path, and the local release `MANIFEST.json`.
-2. Verify the full release with the local script only:
+1. Read the local release `MANIFEST.json` and resolve whether the target is empty, stale, or broken.
+2. Verify the full release with the release-owned script only:
 
    ```bash
    dw_kiro_python "$RELEASE_DIR/offline_release_installer.py" verify --release "$RELEASE_DIR"
@@ -40,40 +41,33 @@ exists on Windows.
    The verifier is part of the extracted release. Do not replace it with a copy from a repository
    checkout.
 
-3. Register an existing local project/system once. `--repo` is metadata and `--offline` must be present:
+3. Run the release-owned setup command. It bootstraps the DW control plane, creates or repairs
+   `workspace.yaml`, installs the root package store, optionally registers a child project/system, binds
+   runtime roots, generates host adapters, and runs local validation/doctor:
 
    ```bash
-   ./bin/dw project add "$PROJECT_ID" \
-     --repo "$PROJECT_SOURCE" \
-     --path "$PROJECT_PATH" \
-     --role product \
-     --role system \
-     --system \
+   dw_kiro_python "$RELEASE_DIR/offline_release_installer.py" setup \
+     --release "$RELEASE_DIR" \
+     --workspace "$SUPER_PROJECT" \
+     --workspace-id "$WORKSPACE_ID" \
+     --workspace-name "$WORKSPACE_NAME" \
+     --project-id "$PROJECT_ID" \
+     --project-path "$PROJECT_PATH" \
+     --project-source "$PROJECT_SOURCE" \
      --system-id "$SYSTEM_ID" \
-     --enable-powers "$POWERS" \
-     --offline
+     --powers "$POWERS" \
+     --repair
    ```
 
-   The project directory must already exist. Never clone it or run `git submodule add` in this workflow.
+   `PROJECT_SOURCE` is local owner/name metadata only. It may be detected from an existing local Git
+   remote, but no remote is contacted. `--repair` backs up replaced DW runtime/package files under
+   `.dw/history/offline-releases/` and preserves unrelated user files.
 
-4. Install each selected Power from its local ZIP/checksum pair:
+4. For root-only package installation, omit the child project arguments. This installs packages into the
+   Super Project `.dw/powers` store but must report `PARTIAL` because no runtime target can be doctored.
 
-   ```bash
-   ./bin/dw power install <power-id> \
-     --source package \
-     --package "$RELEASE_DIR/assets/<package>.zip" \
-     --checksum "$RELEASE_DIR/assets/<package>.zip.sha256" \
-     --target "$PROJECT_PATH"
-   ```
-
-5. Install the Kiro host wrappers only in the Super Project when requested:
-
-   ```bash
-   ./bin/dw host install kiro --mode wrapper
-   ```
-
-6. Verify each binding at `.dw/bindings/$SYSTEM_ID/<power-id>.json`. It must point to the workspace
-   package store and target runtime path.
+5. Confirm each binding at `.dw/bindings/$SYSTEM_ID/<power-id>.json`, host status, workspace validation,
+   Power doctor, and the reported backup path. Do not claim `READY` when any required phase is incomplete.
 
 ## Safety boundaries
 

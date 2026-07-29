@@ -1,5 +1,9 @@
 # DW Super Project installation
 
+For a standalone offline release, start with [Install Powers from a full offline release](INSTALL_POWERS.md)
+and run the release-owned `offline_release_installer.py setup` command. It is the supported path for empty,
+stale, or broken consumer projects and does not require this repository or its submodules.
+
 Choose one path:
 
 1. **Use DW-SuperApps directly:** clone with submodules and run `bash bin/dw install --shell auto --init`.
