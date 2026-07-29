@@ -106,6 +106,51 @@ runtime target  = selected project/system path
 
 Use `--store-root` only for tests or an explicitly external workspace layout. A store root must not overlap or resolve inside the runtime target.
 
+### Offline Power installation
+
+Use offline installation when the package ZIPs and checksum sidecars have already been transferred to the machine. The package inbox belongs to DW-SuperApps; never place offline packages under the target system.
+
+First resolve the target and enabled Powers from the local workspace registry:
+
+```bash
+./bin/dw workspace info
+./bin/dw power list
+```
+
+Each selected Power must have exactly one ZIP and matching checksum sidecar in the workspace inbox:
+
+```text
+.dw/inbox/powers/<power-id>/<package>.zip
+.dw/inbox/powers/<power-id>/<package>.zip.sha256
+```
+
+Install each Power with an explicit package path and runtime target:
+
+```bash
+./bin/dw power install <power-id> \
+  --source package \
+  --package .dw/inbox/powers/<power-id>/<package>.zip \
+  --checksum .dw/inbox/powers/<power-id>/<package>.zip.sha256 \
+  --target projects/<system-id>
+```
+
+The installer verifies the archive checksum, package identity, `MANIFEST.json`, declared file sizes and hashes, entrypoints, runtime root, archive paths, and managed-overwrite safety. It preserves the ZIP and checksum, writes the package to `.dw/powers/<power-id>/`, updates `.dw/bindings/<system-id>/`, and keeps runtime data in the target's declared `.gwc/`, `.ua/`, `.task-me/`, or `.bmad/` root.
+
+After installation, configure only when the package contract requires it, refresh workspace-owned host adapters, and validate without remote acquisition:
+
+```bash
+./bin/dw power configure <power-id> \
+  --config <config-file> \
+  --contract <consumer-contract> \
+  --target projects/<system-id>
+./bin/dw host install all --mode wrapper
+./bin/dw power doctor <power-id> --target projects/<system-id>
+./bin/dw validate
+./bin/dw doctor all --offline
+```
+
+Offline mode must not run Git fetch/clone, release downloads, `curl`, `wget`, remote `power-dist`, or Power submodule initialization. Existing `<system>/.dw/powers/<power-id>` paths are reported as `LEGACY_TARGET_INSTALL` and preserved. For the complete agent workflow and evidence requirements, use [the offline ZIP onboarding prompt](prompts/power-dist/onboard-offline-zip.md) and [the offline installation guide](docs/installation/OFFLINE_INSTALL.md).
+
 ## Native Power activation
 
 Power aliases select native host skills. They are not terminal commands.

@@ -18,7 +18,7 @@ SPEC.loader.exec_module(power_dist)
 class PowerRuntimeInstallerTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()
-        self.root = Path(self.temp.name)
+        self.root = Path(self.temp.name).resolve()
         self.source = self.root / "source"
         (self.source / "skills/demo").mkdir(parents=True)
         (self.source / "skills/demo/SKILL.md").write_text("# Demo\n", encoding="utf-8")
