@@ -10,7 +10,10 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from dw_project_targets import ProjectTargetError, find_runtime_project, runtime_projects
+try:
+    from dw_project_targets import ProjectTargetError, find_runtime_project, runtime_projects
+except ModuleNotFoundError:
+    from scripts.dw_project_targets import ProjectTargetError, find_runtime_project, runtime_projects
 
 try:
     import yaml

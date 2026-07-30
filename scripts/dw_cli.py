@@ -22,12 +22,20 @@ except ImportError as exc:
     )
     raise SystemExit(2) from exc
 
-from dw_project_targets import (
-    ProjectTargetError,
-    enabled_powers,
-    find_runtime_project,
-    runtime_projects,
-)
+try:
+    from dw_project_targets import (
+        ProjectTargetError,
+        enabled_powers,
+        find_runtime_project,
+        runtime_projects,
+    )
+except ModuleNotFoundError:
+    from scripts.dw_project_targets import (
+        ProjectTargetError,
+        enabled_powers,
+        find_runtime_project,
+        runtime_projects,
+    )
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE_PATH = ROOT / "workspace.yaml"

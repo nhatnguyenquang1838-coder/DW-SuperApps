@@ -9,7 +9,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from dw_project_targets import ProjectTargetError, find_runtime_project
+try:
+    from dw_project_targets import ProjectTargetError, find_runtime_project
+except ModuleNotFoundError:
+    from scripts.dw_project_targets import ProjectTargetError, find_runtime_project
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE_PATH = ROOT / "workspace.yaml"

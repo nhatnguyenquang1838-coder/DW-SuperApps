@@ -9,7 +9,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from dw_project_targets import ProjectTargetError, project_path, runtime_projects
+try:
+    from dw_project_targets import ProjectTargetError, project_path, runtime_projects
+except ModuleNotFoundError:
+    from scripts.dw_project_targets import ProjectTargetError, project_path, runtime_projects
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"

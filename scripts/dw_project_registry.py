@@ -16,7 +16,10 @@ except ImportError as exc:
     print("Missing PyYAML. Run: python -m pip install -r requirements-dev.txt", file=sys.stderr)
     raise SystemExit(2) from exc
 
-from dw_project_targets import enabled_powers, project_entries as target_project_entries
+try:
+    from dw_project_targets import enabled_powers, project_entries as target_project_entries
+except ModuleNotFoundError:
+    from scripts.dw_project_targets import enabled_powers, project_entries as target_project_entries
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE_PATH = ROOT / "workspace.yaml"
