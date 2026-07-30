@@ -29,7 +29,7 @@ COMPATIBILITY_SCHEMA = ROOT / "schemas" / "power-compatibility-lock.schema.json"
 MANIFEST_DIR = ROOT / "manifests" / "powers"
 GITMODULES = ROOT / ".gitmodules"
 SUPPORTED_HOSTS = {"kiro", "codex", "copilot", "cline", "kilo", "claude", "custom"}
-TARGET_ROLES = {"product", "system"}
+TARGET_ROLES = {"product", "runtime-target"}
 DISTRIBUTION_ROOTS = {
     "storeRoot": ".dw/powers",
     "inboxRoot": ".dw/inbox/powers",

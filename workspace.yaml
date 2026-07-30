@@ -73,7 +73,7 @@ projects:
     path: projects/dw-chatgpt-app
     source: nhatnguyenquang1838-coder/dw-chatgpt-app
     roles:
-      - power-source
+      - tooling
 
   - id: rental-home
     path: projects/rental-home
@@ -86,7 +86,6 @@ projects:
         - ua
         - task-me
         - bmad
-        - dw-chatgpt-app
     orchestration:
       primary: gwc
       workers:
@@ -126,10 +125,6 @@ powers:
   - id: bmad
     project: bmad
     enabled: true
-  - id: dw-chatgpt-app
-    project: dw-chatgpt-app
-    enabled: true
-
 data_ownership:
   policy: project-owned
   roots:

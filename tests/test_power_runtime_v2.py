@@ -46,11 +46,8 @@ class PowerRuntimeV2Tests(unittest.TestCase):
     def test_dynamic_submodule_targets_exclude_external_power(self) -> None:
         powers = dw_cli.select_submodules("powers")
         systems = dw_cli.select_submodules("systems")
-        self.assertEqual(5, len(powers))
-        self.assertEqual(
-            {"gwc", "ua", "task-me", "bmad", "dw-chatgpt-app"},
-            {item["id"] for item in powers},
-        )
+        self.assertEqual(4, len(powers))
+        self.assertEqual({"gwc", "ua", "task-me", "bmad"}, {item["id"] for item in powers})
         self.assertEqual(1, len(systems))
         self.assertEqual("rental-home", systems[0]["id"])
 

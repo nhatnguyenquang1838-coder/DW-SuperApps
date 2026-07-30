@@ -27,7 +27,7 @@ PROJECT_ID = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 REPOSITORY = re.compile(r"^[^/\s]+/[^/\s]+$")
 DEFAULT_HOSTS = ["kiro", "codex", "copilot", "cline", "kilo", "claude", "custom"]
 DEFAULT_RUNTIME_ROOTS = {"ua": ".ua", "task_me": ".task-me", "gwc": ".gwc", "bmad": ".bmad"}
-PROJECT_ROLES = {"power-source", "product", "system", "library", "tooling"}
+PROJECT_ROLES = {"power-source", "product", "runtime-target", "library", "tooling"}
 
 
 class SetupError(RuntimeError):
@@ -135,8 +135,7 @@ def template_workspace(workspace_id: str, workspace_name: str) -> dict[str, Any]
         },
         "projects": [],
         "powers": [],
-        "systems": [],
-        "data_ownership": {"policy": "system-owned", "roots": dict(DEFAULT_RUNTIME_ROOTS)},
+        "data_ownership": {"policy": "project-owned", "roots": dict(DEFAULT_RUNTIME_ROOTS)},
     }
 
 
@@ -167,7 +166,13 @@ def render_workspace_template(release_root: Path, workspace_id: str, workspace_n
         "  hostAdaptersRoot: .\n"
         "projects: []\n"
         "powers: []\n"
-        "systems: []\n"
+        "data_ownership:\n"
+        "  policy: project-owned\n"
+        "  roots:\n"
+        "    ua: .ua\n"
+        "    task_me: .task-me\n"
+        "    gwc: .gwc\n"
+        "    bmad: .bmad\n"
     )
 
 
@@ -463,6 +468,10 @@ def merge_workspace_defaults(data: dict[str, Any], workspace_id: str, workspace_
     defaults = template_workspace(workspace_id, workspace_name)
     if data.get("apiVersion") != "ai-workspace/v1" or data.get("kind") != "Workspace":
         raise SetupError("workspace.yaml has an unsupported apiVersion/kind")
+    if "systems" in data:
+        raise SetupError(
+            "workspace systems registry is removed; move target configuration under projects[]"
+        )
     metadata = data.setdefault("metadata", {})
     if not isinstance(metadata, dict):
         raise SetupError("workspace.yaml metadata must be a mapping")
@@ -483,7 +492,7 @@ def merge_workspace_defaults(data: dict[str, Any], workspace_id: str, workspace_
         elif isinstance(value, dict) and isinstance(data[key], dict):
             for child, child_value in value.items():
                 data[key].setdefault(child, child_value)
-    for key in ("projects", "powers", "systems", "hosts", "providers"):
+    for key in ("projects", "powers", "hosts", "providers"):
         if not isinstance(data.get(key), list):
             raise SetupError(f"workspace.yaml {key} must be a list")
     return data
@@ -492,6 +501,10 @@ def merge_workspace_defaults(data: dict[str, Any], workspace_id: str, workspace_
 def validate_setup_registry(data: dict[str, Any], workspace: Path) -> None:
     """Reject a structurally valid but unusable stale registry before setup."""
 
+    if "systems" in data:
+        raise SetupError(
+            "workspace systems registry is removed; move target configuration under projects[]"
+        )
     hosts = data.get("hosts")
     if not isinstance(hosts, list) or not hosts or any(host not in DEFAULT_HOSTS for host in hosts):
         raise SetupError("workspace hosts are missing or unsupported")
@@ -523,32 +536,15 @@ def validate_setup_registry(data: dict[str, Any], workspace: Path) -> None:
         roles = project.get("roles") or []
         if not isinstance(roles, list) or not roles or set(map(str, roles)) - PROJECT_ROLES:
             raise SetupError(f"project {project_id} has invalid roles")
+        powers = project.get("powers") or {}
+        if not isinstance(powers, dict):
+            raise SetupError(f"project {project_id} powers must be a mapping")
+        enabled = powers.get("enabled") or []
+        if not isinstance(enabled, list) or not all(isinstance(item, str) for item in enabled):
+            raise SetupError(f"project {project_id} powers.enabled must be a string list")
         project_ids.add(project_id)
         project_paths.add(relative)
         project_rows[project_id] = project
-
-    systems = data.get("systems") or []
-    if not isinstance(systems, list):
-        raise SetupError("workspace systems must be a list")
-    system_ids: set[str] = set()
-    for system in systems:
-        if not isinstance(system, dict):
-            raise SetupError("workspace system entries must be mappings")
-        system_id = system.get("id")
-        if not isinstance(system_id, str) or not PROJECT_ID.fullmatch(system_id) or system_id in system_ids:
-            raise SetupError(f"invalid or duplicate system id: {system_id!r}")
-        system_ids.add(system_id)
-        project_id = system.get("project")
-        if project_id is not None:
-            if project_id not in project_rows:
-                raise SetupError(f"system {system_id} references unknown project: {project_id}")
-            project = project_rows[project_id]
-            if not ({"system", "product"} & set(map(str, project.get("roles") or []))):
-                raise SetupError(f"system {system_id} project {project_id} lacks system/product role")
-            if system.get("path") and system["path"] != project.get("path"):
-                raise SetupError(f"system path mismatch for project {project_id}")
-        if system.get("path"):
-            safe_relative(workspace, str(system["path"]))
 
     distribution = data.get("distribution")
     if not isinstance(distribution, dict) or distribution.get("ownership") != "workspace":
@@ -639,12 +635,15 @@ def register_project(
         raise SetupError(
             f"PROJECT_SOURCE_REQUIRED: provide --project-source owner/name for local target {relative}"
         )
-    system_key = system_id or project_id
-    if not PROJECT_ID.fullmatch(system_key):
-        raise SetupError(f"invalid system id: {system_key}")
+    if system_id and system_id != project_id:
+        raise SetupError(
+            f"BLOCKED_TARGET_ID_CONFLICT: project={project_id}, deprecated system id={system_id}"
+        )
+    project_key = project_id
+    if not PROJECT_ID.fullmatch(project_key):
+        raise SetupError(f"invalid project target id: {project_key}")
 
     projects = data.setdefault("projects", [])
-    systems = data.setdefault("systems", [])
     project = next((item for item in projects if isinstance(item, dict) and item.get("id") == project_id), None)
     path_owner = next((item for item in projects if isinstance(item, dict) and item.get("path") == relative.as_posix() and item is not project), None)
     if path_owner:
@@ -654,8 +653,9 @@ def register_project(
             "id": project_id,
             "path": relative.as_posix(),
             "source": source,
-            "roles": ["product", "system"],
+            "roles": ["product"],
             "sourceMode": "offline-local",
+            "powers": {"enabled": list(power_ids)},
         }
         projects.append(project)
     else:
@@ -671,31 +671,11 @@ def register_project(
         if (project.get("path") != relative.as_posix() or source_conflict) and not repair:
             raise SetupError(f"BLOCKED_PROJECT_REGISTRATION_CONFLICT: {project_id}; use --repair")
         project.update({"path": relative.as_posix(), "source": source, "sourceMode": "offline-local"})
-        project["roles"] = list(dict.fromkeys([*(project.get("roles") or []), "product", "system"]))
-
-    system = next((item for item in systems if isinstance(item, dict) and item.get("id") == system_key), None)
-    if system is None:
-        systems.append(
-            {
-                "id": system_key,
-                "project": project_id,
-                "path": relative.as_posix(),
-                "source": source,
-                "enabled_powers": power_ids,
-            }
-        )
-    else:
-        if system.get("project") not in {None, project_id} and not repair:
-            raise SetupError(f"BLOCKED_SYSTEM_REGISTRATION_CONFLICT: {system_key}; use --repair")
-        system.update(
-            {
-                "project": project_id,
-                "path": relative.as_posix(),
-                "source": source,
-                "enabled_powers": power_ids,
-            }
-        )
-    return data, target, system_key
+        project["roles"] = list(dict.fromkeys([role for role in project.get("roles") or [] if role != "system"]))
+        if "product" not in project["roles"] and "runtime-target" not in project["roles"]:
+            project["roles"].append("product")
+        project["powers"] = {"enabled": list(power_ids)}
+    return data, target, project_key
 
 
 def install_power_for_setup(
