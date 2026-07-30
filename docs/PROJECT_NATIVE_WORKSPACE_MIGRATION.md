@@ -4,7 +4,7 @@
 
 ## Runtime targets
 
-A project is a runtime target when its `roles` contains `product` or the legacy-compatible `system` role.
+A project is a runtime target when its `roles` contains `product` or `runtime-target`.
 
 Target-local configuration belongs under the project entry:
 
