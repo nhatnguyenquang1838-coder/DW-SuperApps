@@ -1,8 +1,10 @@
 apiVersion: ai-workspace/v1
 kind: Workspace
+
 metadata:
   id: dw-superapps
   name: DW SuperApps
+
 hosts:
   - kiro
   - codex
@@ -11,6 +13,7 @@ hosts:
   - kilo
   - claude
   - custom
+
 orchestrators:
   - id: openclaw-acpx
     host: openclaw
@@ -22,6 +25,7 @@ orchestrators:
       - claude
       - kiro
       - kilocode
+
 providers:
   - id: ollama
     type: openai-compatible
@@ -29,6 +33,7 @@ providers:
     api_key: ollama
     model_env: OLLAMA_MODEL
     default_model: qwen3-coder:30b
+
 distribution:
   ownership: workspace
   storeRoot: .dw/powers
@@ -37,77 +42,51 @@ distribution:
   historyRoot: .dw/history/powers
   bindingsRoot: .dw/bindings
   hostAdaptersRoot: .
+
 projects:
   - id: gwc
     path: projects/gwc
     source: nhatnguyenquang1838-coder/gwc
     roles:
       - power-source
+
   - id: ua
     path: projects/ua
     source: nhatnguyenquang1838-coder/Understand-Anything
     upstream: Egonex-AI/Understand-Anything
     roles:
       - power-source
+
   - id: task-me
     path: projects/task-me
     source: nhatnguyenquang1838-coder/task-me
     roles:
       - power-source
+
   - id: bmad
     path: projects/bmad
     source: nhatnguyenquang1838-coder/BMAD-METHOD
     roles:
       - power-source
+
+  - id: dw-chatgpt-app
+    path: projects/dw-chatgpt-app
+    source: nhatnguyenquang1838-coder/dw-chatgpt-app
+    roles:
+      - power-source
+
   - id: rental-home
     path: projects/rental-home
     source: nhatnguyenquang1838-coder/rental_home
     roles:
       - product
-      - system
-  - id: dw-chatgpt-app
-    path: projects/dw-chatgpt-app
-    source: nhatnguyenquang1838-coder/dw-chatgpt-app
-    roles:
-      - power-source
-powers:
-  - id: gwc
-    project: gwc
-    path: projects/gwc
-    source: nhatnguyenquang1838-coder/gwc
-    enabled: true
-  - id: ua
-    project: ua
-    path: projects/ua
-    source: nhatnguyenquang1838-coder/Understand-Anything
-    upstream: Egonex-AI/Understand-Anything
-    enabled: true
-  - id: task-me
-    project: task-me
-    path: projects/task-me
-    source: nhatnguyenquang1838-coder/task-me
-    enabled: true
-  - id: bmad
-    project: bmad
-    path: projects/bmad
-    source: nhatnguyenquang1838-coder/BMAD-METHOD
-    enabled: true
-  - id: dw-chatgpt-app
-    project: dw-chatgpt-app
-    path: projects/dw-chatgpt-app
-    source: nhatnguyenquang1838-coder/dw-chatgpt-app
-    enabled: true
-systems:
-  - id: rental-home
-    project: rental-home
-    path: projects/rental-home
-    source: nhatnguyenquang1838-coder/rental_home
-    enabled_powers:
-      - gwc
-      - ua
-      - task-me
-      - bmad
-      - dw-chatgpt-app
+    powers:
+      enabled:
+        - gwc
+        - ua
+        - task-me
+        - bmad
+        - dw-chatgpt-app
     orchestration:
       primary: gwc
       workers:
@@ -133,8 +112,26 @@ systems:
             - impact-analysis
           worker: ua
           output_into: g1-preflight
+
+powers:
+  - id: gwc
+    project: gwc
+    enabled: true
+  - id: ua
+    project: ua
+    enabled: true
+  - id: task-me
+    project: task-me
+    enabled: true
+  - id: bmad
+    project: bmad
+    enabled: true
+  - id: dw-chatgpt-app
+    project: dw-chatgpt-app
+    enabled: true
+
 data_ownership:
-  policy: system-owned
+  policy: project-owned
   roots:
     ua: .ua
     task_me: .task-me
