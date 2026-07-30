@@ -7,6 +7,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from dw_project_targets import ProjectTargetError, find_runtime_project
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -42,10 +44,10 @@ def find_system(system_id: str) -> dict[str, Any]:
         raise ReportError("PyYAML is required") from exc
     workspace_path = ROOT / "workspace.yaml"
     data = yaml.safe_load(workspace_path.read_text(encoding="utf-8"))
-    for system in data.get("systems", []):
-        if isinstance(system, dict) and system.get("id") == system_id:
-            return system
-    raise ReportError(f"unknown system: {system_id}")
+    try:
+        return find_runtime_project(data, system_id)
+    except ProjectTargetError as exc:
+        raise ReportError(str(exc)) from exc
 
 
 def render_field(title: str, value: Any) -> str:

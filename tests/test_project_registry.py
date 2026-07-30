@@ -45,7 +45,8 @@ class ProjectRegistryTests(unittest.TestCase):
                     "id": "alpha",
                     "path": "projects/alpha",
                     "source": "example/alpha",
-                    "roles": ["product", "system"],
+                    "roles": ["product"],
+                    "powers": {"enabled": ["gwc"]},
                 },
                 {
                     "id": "gwc",
@@ -62,14 +63,6 @@ class ProjectRegistryTests(unittest.TestCase):
                     "source": "example/gwc",
                 }
             ],
-            "systems": [
-                {
-                    "id": "alpha",
-                    "project": "alpha",
-                    "path": "projects/alpha",
-                    "source": "example/alpha",
-                }
-            ],
         }
 
     def test_registry_resolves_project_references(self) -> None:
@@ -84,7 +77,7 @@ class ProjectRegistryTests(unittest.TestCase):
                 },
             )
             self.assertEqual("example/alpha", projects["alpha"]["source"])
-            self.assertIn("system", projects["alpha"]["roles"])
+            self.assertEqual(["gwc"], projects["alpha"]["powers"]["enabled"])
 
     def test_current_workspace_rejects_legacy_source_roots(self) -> None:
         current_root = Path(__file__).resolve().parents[1]
@@ -98,7 +91,7 @@ class ProjectRegistryTests(unittest.TestCase):
 
     def test_unknown_project_reference_fails_closed(self) -> None:
         data = self.workspace()
-        data["systems"][0]["project"] = "missing"
+        data["powers"][0]["project"] = "missing"
         with tempfile.TemporaryDirectory() as temporary:
             with self.assertRaises(registry.ProjectRegistryError):
                 registry.validate_registry(data, root=Path(temporary))
@@ -108,7 +101,7 @@ class ProjectRegistryTests(unittest.TestCase):
         rendered = str(data).lower()
         self.assertNotIn("rental", rendered)
         self.assertEqual([], data["projects"])
-        self.assertEqual([], data["systems"])
+        self.assertNotIn("systems", data)
         self.assertEqual(".dw/powers", data["distribution"]["storeRoot"])
 
     def test_workspace_init_is_non_destructive(self) -> None:
@@ -167,7 +160,6 @@ class ProjectRegistryTests(unittest.TestCase):
             data = self.workspace()
             data["projects"] = []
             data["powers"] = []
-            data["systems"] = []
             registry.write_yaml(root / "workspace.yaml", data)
             (root / "projects" / "billing").mkdir(parents=True)
             (root / "manifests" / "powers").mkdir(parents=True)
@@ -184,7 +176,7 @@ class ProjectRegistryTests(unittest.TestCase):
                     project_id="billing",
                     repository="example/billing",
                     path="projects/billing",
-                    role=["product", "system"],
+                    role=["product"],
                     system=True,
                     system_id="billing",
                     enable_powers="gwc,ua",
@@ -194,7 +186,7 @@ class ProjectRegistryTests(unittest.TestCase):
                 self.assertEqual(0, registry.project_add(args))
                 registered = registry.load_yaml(root / "workspace.yaml")
                 self.assertEqual("offline-local", registered["projects"][0]["sourceMode"])
-                self.assertEqual("billing", registered["systems"][0]["id"])
+                self.assertEqual(["gwc", "ua"], registered["projects"][0]["powers"]["enabled"])
             finally:
                 registry.ROOT = previous_registry_root
                 registry.WORKSPACE_PATH = previous_workspace_path

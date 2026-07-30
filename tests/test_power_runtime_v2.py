@@ -8,6 +8,9 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+import sys
+
+sys.path.insert(0, str(ROOT / "scripts"))
 SPEC = importlib.util.spec_from_file_location("dw_cli", ROOT / "scripts" / "dw_cli.py")
 assert SPEC is not None and SPEC.loader is not None
 dw_cli = importlib.util.module_from_spec(SPEC)
@@ -43,14 +46,17 @@ class PowerRuntimeV2Tests(unittest.TestCase):
     def test_dynamic_submodule_targets_exclude_external_power(self) -> None:
         powers = dw_cli.select_submodules("powers")
         systems = dw_cli.select_submodules("systems")
-        self.assertEqual(4, len(powers))
-        self.assertEqual({"gwc", "ua", "task-me", "bmad"}, {item["id"] for item in powers})
+        self.assertEqual(5, len(powers))
+        self.assertEqual(
+            {"gwc", "ua", "task-me", "bmad", "dw-chatgpt-app"},
+            {item["id"] for item in powers},
+        )
         self.assertEqual(1, len(systems))
         self.assertEqual("rental-home", systems[0]["id"])
 
     def test_rental_home_enables_bmad(self) -> None:
         system = dw_cli.find_system("rental-home")
-        self.assertIn("bmad", system["enabled_powers"])
+        self.assertIn("bmad", dw_cli.enabled_powers(system))
         manifest = dw_cli.manifests()["bmad"]
         self.assertEqual("projects/bmad", manifest["spec"]["path"])
 

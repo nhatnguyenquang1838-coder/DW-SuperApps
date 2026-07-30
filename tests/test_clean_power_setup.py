@@ -24,10 +24,13 @@ class CleanPowerSetupTests(unittest.TestCase):
   inboxRoot: .dw/inbox/powers
   cacheRoot: .dw/cache
   historyRoot: .dw/history/powers
-  bindingsRoot: .dw/bindings
-systems:
+bindingsRoot: .dw/bindings
+projects:
   - id: demo
     path: systems/demo
+    source: example/demo
+    roles:
+      - product
 data_ownership:
   roots:
     gwc: .gwc

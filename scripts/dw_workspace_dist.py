@@ -10,6 +10,8 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from dw_project_targets import ProjectTargetError, find_runtime_project, runtime_projects
+
 try:
     import yaml
 except ImportError as exc:
@@ -92,10 +94,17 @@ def store_root() -> Path:
 
 
 def find_system(system_id: str) -> dict[str, Any]:
-    for system in workspace().get("systems", []):
-        if isinstance(system, dict) and system.get("id") == system_id:
-            return system
-    raise DistError(f"unknown system: {system_id}")
+    try:
+        return find_runtime_project(workspace(), system_id)
+    except ProjectTargetError as exc:
+        raise DistError(str(exc)) from exc
+
+
+def orchestration_project() -> dict[str, Any] | None:
+    for project in runtime_projects(workspace()):
+        if isinstance(project.get("orchestration"), dict):
+            return project
+    return None
 
 
 def normalize_host(host: str) -> str:
@@ -238,8 +247,8 @@ def wrapper_content(
     )
     orchestration_section = ""
     try:
-        system = find_system("rental-home")
-        block = system.get("orchestration")
+        project = orchestration_project()
+        block = project.get("orchestration") if project else None
         if isinstance(block, dict):
             primary = block.get("primary", "")
             workers = block.get("workers", [])
@@ -291,11 +300,11 @@ Thin `{host}` adapter owned by DW-SuperApps.
 
 This Power is already active when this skill is selected or invoked through its native host alias.
 
-1. Resolve one target system from `workspace.yaml`.
+1. Resolve one runtime target project from `workspace.yaml`.
 2. Read `AGENT_GUIDANCE.md` from the installed package when present.
 3. Read the resolved canonical installed Power entrypoint directly.
 4. Apply that Power to the user's task in the current conversation.
-5. Keep runtime and project configuration under the target system's `{spec['runtimeDataRoot']}/`.
+5. Keep runtime and project configuration under the target project's `{spec['runtimeDataRoot']}/`.
 6. Continue until the task reaches a real capability, evidence, or authority boundary.
 
 Do not generate or execute a command to activate this Power.
@@ -315,13 +324,14 @@ def host_instruction_content(host: str) -> str:
         )
     orchestration_section = ""
     try:
-        system = find_system("rental-home")
-        block = system.get("orchestration")
+        project = orchestration_project()
+        block = project.get("orchestration") if project else None
         if isinstance(block, dict):
             primary = block.get("primary", "")
             workers = block.get("workers", [])
             hooks = block.get("hooks", [])
-            orchestration_section = "\n## Orchestration for rental-home\n\n"
+            project_id = project.get("id", "runtime target") if project else "runtime target"
+            orchestration_section = f"\n## Orchestration for {project_id}\n\n"
             if primary:
                 orchestration_section += f"- Primary: `{primary}`\n"
             if workers:
@@ -357,12 +367,12 @@ Read `AGENTS.md` and `workspace.yaml` before acting.
 
 ## Routing
 
-1. Resolve the target system from `workspace.yaml`.
+1. Resolve the runtime target project from `workspace.yaml`.
 2. Load Power code from the workspace distribution store first.
 3. Use source submodules only as an explicit compatibility fallback.
-4. Keep runtime and project configuration inside the selected system repository.
+4. Keep runtime and project configuration inside the selected project repository.
 5. Keep packages, inbox, history, bindings, router, and all host adapters in DW-SuperApps.
-6. Never install Power skill payloads into a registered system.
+6. Never install Power skill payloads into a registered project target.
 {orchestration_section}
 ## Power activation routing
 

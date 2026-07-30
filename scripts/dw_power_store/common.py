@@ -10,6 +10,8 @@ from typing import Any
 
 import yaml
 
+from dw_project_targets import ProjectTargetError, project_path, runtime_projects
+
 ROOT = Path(__file__).resolve().parents[2]
 WORKSPACE_PATH = ROOT / "workspace.yaml"
 MANIFEST_DIR = ROOT / "manifests" / "powers"
@@ -154,13 +156,12 @@ def runtime_config_root(target: Path, package_manifest: dict[str, Any]) -> Path:
 
 def target_key(target: Path) -> str:
     target = target.resolve()
-    for project in workspace().get("projects", []):
-        if not isinstance(project, dict):
+    for project in runtime_projects(workspace()):
+        try:
+            registered_target = project_path(project, ROOT)
+        except ProjectTargetError:
             continue
-        roles = set(map(str, project.get("roles") or []))
-        if not ({"product", "runtime-target"} & roles):
-            continue
-        if (ROOT / str(project.get("path", ""))).resolve() == target:
+        if registered_target == target:
             return str(project["id"])
     digest = hashlib.sha256(str(target).encode("utf-8")).hexdigest()[:12]
     return f"external-{digest}"

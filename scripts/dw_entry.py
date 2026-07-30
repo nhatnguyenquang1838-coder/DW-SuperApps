@@ -9,6 +9,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from dw_project_targets import ProjectTargetError, project_path, runtime_projects
+
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 REQUIREMENTS = ROOT / "requirements-dev.txt"
@@ -154,8 +156,11 @@ def runtime_paths(runtime: Any) -> list[Path]:
     workspace = runtime.workspace()
     roots = list((workspace.get("data_ownership") or {}).get("roots", {}).values())
     paths: list[Path] = []
-    for system in workspace.get("systems", []):
-        system_root = ROOT / system["path"]
+    for project in runtime_projects(workspace):
+        try:
+            system_root = project_path(project, ROOT)
+        except ProjectTargetError as exc:
+            raise EntryError(str(exc)) from exc
         for name in roots:
             path = system_root / str(name)
             try:

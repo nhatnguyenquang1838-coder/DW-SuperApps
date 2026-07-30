@@ -8,6 +8,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+
 SPEC = importlib.util.spec_from_file_location(
     "dw_workspace_dist",
     Path(__file__).resolve().parents[1] / "scripts" / "dw_workspace_dist.py",
@@ -36,11 +40,15 @@ distribution:
   inboxRoot: .dw/inbox/powers
   historyRoot: .dw/history/powers
   bindingsRoot: .dw/bindings
-systems:
+projects:
   - id: rental-home
     path: projects/rental-home
-    enabled_powers:
-      - bmad
+    source: example/rental-home
+    roles:
+      - product
+    powers:
+      enabled:
+        - bmad
 """,
             encoding="utf-8",
         )
