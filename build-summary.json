@@ -1,6 +1,6 @@
 {
-  "built_at": "2026-07-29T15:54:47.840490+00:00",
-  "foundation_ref": "2fb9894c247dde670310ac5ed5b02dcdc70bac99",
+  "built_at": "2026-07-30T16:22:48.496637+00:00",
+  "foundation_ref": "827826029f1d06ec6d2474a0f83c54d305840c60",
   "powers": {
     "bmad": {
       "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/bmad-bmad-main-fdc47614.zip",
@@ -17,8 +17,8 @@
       "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/gwc-gwc-main-1db5cdde.zip.sha256",
       "power_id": "gwc",
       "recipe": "/home/runner/work/DW-SuperApps/DW-SuperApps/projects/gwc/distribution/power-package.yaml",
-      "source_epoch": 1785339984,
-      "source_sha": "1db5cdde7666e95e0a5d864633a3255a2a6ad40e",
+      "source_epoch": 1785412791,
+      "source_sha": "3b0938065e71e699d327d041f5b6023ed30a29dc",
       "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/gwc-gwc-main-1db5cdde",
       "version": "gwc-main-1db5cdde"
     },

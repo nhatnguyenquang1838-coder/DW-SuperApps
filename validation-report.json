@@ -124,8 +124,8 @@
           {
             "mode": "0644",
             "path": "lib/power_runtime.py",
-            "sha256": "c6f1dc56f67554a2f7223d1c006526c909b3841ec06d343dda04cff47b5934a5",
-            "size": 14569
+            "sha256": "240b69cab384c871d67faef2a5a88801ee8db2356697c5316eb2b3edee95f4d7",
+            "size": 14572
           },
           {
             "mode": "0644",
@@ -2043,7 +2043,7 @@
         "sanity": {
           "guidance": "AGENT_GUIDANCE.md",
           "power_id": "gwc",
-          "source_sha": "1db5cdde7666e95e0a5d864633a3255a2a6ad40e",
+          "source_sha": "3b0938065e71e699d327d041f5b6023ed30a29dc",
           "status": "PASS",
           "version": "gwc-main-1db5cdde",
           "warnings": []
@@ -2074,7 +2074,7 @@
           {
             "mode": "0600",
             "path": "AGENT_GUIDANCE.md",
-            "sha256": "0f258f24bef8a88cd8b213563c37ec249afac8b8011c495c32e16daa4333b5ab",
+            "sha256": "edd7d1c29fb6189199738515513812e78d27d8658201fb6e158f0cdce41da12b",
             "size": 1844
           },
           {
@@ -2086,7 +2086,7 @@
           {
             "mode": "0600",
             "path": "SOURCE.json",
-            "sha256": "249c42a30327b128057ff4b30fbf9788e1e52f8e19a51f37fd7a09a687f08bd8",
+            "sha256": "72a0b7d4c1ee8e868f31cea79ba443f81277cc4691dae8353277df34b364b0f7",
             "size": 196
           },
           {
@@ -2236,8 +2236,8 @@
           {
             "mode": "0644",
             "path": "lib/power_runtime.py",
-            "sha256": "c6f1dc56f67554a2f7223d1c006526c909b3841ec06d343dda04cff47b5934a5",
-            "size": 14569
+            "sha256": "240b69cab384c871d67faef2a5a88801ee8db2356697c5316eb2b3edee95f4d7",
+            "size": 14572
           },
           {
             "mode": "0644",
@@ -2443,7 +2443,7 @@
           "powerId": "gwc",
           "sourceRef": "HEAD",
           "sourceRepository": "nhatnguyenquang1838-coder/gwc",
-          "sourceSha": "1db5cdde7666e95e0a5d864633a3255a2a6ad40e",
+          "sourceSha": "3b0938065e71e699d327d041f5b6023ed30a29dc",
           "version": "gwc-main-1db5cdde"
         },
         "spec": {
@@ -2670,8 +2670,8 @@
           {
             "mode": "0644",
             "path": "lib/power_runtime.py",
-            "sha256": "c6f1dc56f67554a2f7223d1c006526c909b3841ec06d343dda04cff47b5934a5",
-            "size": 14569
+            "sha256": "240b69cab384c871d67faef2a5a88801ee8db2356697c5316eb2b3edee95f4d7",
+            "size": 14572
           },
           {
             "mode": "0644",
@@ -2849,8 +2849,8 @@
           {
             "mode": "0644",
             "path": "lib/power_runtime.py",
-            "sha256": "c6f1dc56f67554a2f7223d1c006526c909b3841ec06d343dda04cff47b5934a5",
-            "size": 14569
+            "sha256": "240b69cab384c871d67faef2a5a88801ee8db2356697c5316eb2b3edee95f4d7",
+            "size": 14572
           },
           {
             "mode": "0644",
@@ -4870,5 +4870,5 @@
   "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist",
   "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
   "target_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.consumer",
-  "validated_at": "2026-07-29T15:54:53.994676+00:00"
+  "validated_at": "2026-07-30T16:22:54.179683+00:00"
 }

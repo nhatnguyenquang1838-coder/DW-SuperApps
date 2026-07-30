@@ -6,7 +6,7 @@ This is static distribution guidance generated when the package was built. It is
 
 - Power: `gwc`
 - Package version: `gwc-main-1db5cdde`
-- Source: `nhatnguyenquang1838-coder/gwc@1db5cdde7666e95e0a5d864633a3255a2a6ad40e` (`HEAD`)
+- Source: `nhatnguyenquang1838-coder/gwc@3b0938065e71e699d327d041f5b6023ed30a29dc` (`HEAD`)
 - Target-owned runtime root: `.gwc/`
 
 ## Required activation behavior

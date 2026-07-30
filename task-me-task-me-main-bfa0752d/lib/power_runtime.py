@@ -91,7 +91,7 @@ def resolve_store_root(value: str | None) -> Path:
 def target_paths(target: Path, info: dict[str, Any], store_root: Path) -> dict[str, Path]:
     runtime = (target / info["runtime_root"]).resolve()
     if not is_within(runtime, target.resolve()):
-        raise RuntimeError_("runtime data root escapes system target")
+        raise RuntimeError_("runtime data root escapes project target")
     return {
         "target": target.resolve(),
         "store": store_root.resolve(),
@@ -107,9 +107,9 @@ def assert_separated(source: Path, target: Path, store: Path) -> None:
     target = target.resolve()
     store = store.resolve()
     if store == target or is_within(store, target) or is_within(target, store):
-        raise RuntimeError_("package store and system target must not overlap")
+        raise RuntimeError_("package store and project target must not overlap")
     if source == target or is_within(target, source):
-        raise RuntimeError_("package source and system target must not overlap")
+        raise RuntimeError_("package source and project target must not overlap")
 
 
 def marker(path: Path) -> dict[str, Any]:
