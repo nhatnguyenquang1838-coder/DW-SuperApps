@@ -57,3 +57,4 @@ projects/*/.bmad/
 /memory/
 /.openclaw/
 /openclaw.json
+openclaw-workspace-state.json
