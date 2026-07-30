@@ -17,3 +17,6 @@
 [submodule "projects/bmad"]
 	path = projects/bmad
 	url = https://github.com/nhatnguyenquang1838-coder/BMAD-METHOD.git
+[submodule "projects/dw-chatgpt-app"]
+	path = projects/dw-chatgpt-app
+	url = https://github.com/nhatnguyenquang1838-coder/dw-chatgpt-app.git

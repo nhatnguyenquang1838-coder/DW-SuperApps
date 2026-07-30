@@ -65,6 +65,11 @@ projects:
     roles:
       - product
       - system
+  - id: dw-chatgpt-app
+    path: projects/dw-chatgpt-app
+    source: nhatnguyenquang1838-coder/dw-chatgpt-app
+    roles:
+      - power-source
 powers:
   - id: gwc
     project: gwc
@@ -87,6 +92,11 @@ powers:
     path: projects/bmad
     source: nhatnguyenquang1838-coder/BMAD-METHOD
     enabled: true
+  - id: dw-chatgpt-app
+    project: dw-chatgpt-app
+    path: projects/dw-chatgpt-app
+    source: nhatnguyenquang1838-coder/dw-chatgpt-app
+    enabled: true
 systems:
   - id: rental-home
     project: rental-home
@@ -97,6 +107,7 @@ systems:
       - ua
       - task-me
       - bmad
+      - dw-chatgpt-app
     orchestration:
       primary: gwc
       workers:
