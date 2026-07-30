@@ -1,14 +1,14 @@
 {
   "schemaVersion": "1.0",
-  "checkedAt": "2026-07-29T00:24:30+07:00",
+  "checkedAt": "2026-07-30T23:32:43+07:00",
   "powers": {
     "gwc": {
       "sourceRepository": "nhatnguyenquang1838-coder/gwc",
-      "providerHeadSha": "1db5cdde7666e95e0a5d864633a3255a2a6ad40e",
+      "providerHeadSha": "3b0938065e71e699d327d041f5b6023ed30a29dc",
       "distributionRepository": "nhatnguyenquang1838-coder/gwc",
       "distributionRef": "power-dist",
-      "publishedSourceSha": "1db5cdde7666e95e0a5d864633a3255a2a6ad40e",
-      "packageVersion": "gwc-main-1db5cdde",
+      "publishedSourceSha": "3b0938065e71e699d327d041f5b6023ed30a29dc",
+      "packageVersion": "gwc-main-28-3b093806",
       "runtimeDataRoot": ".gwc",
       "entrypoints": [
         "skills/gwc-g0/SKILL.md",

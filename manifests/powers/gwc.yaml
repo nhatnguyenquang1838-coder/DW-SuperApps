@@ -3,7 +3,7 @@ kind: Power
 metadata:
   id: gwc
   name: GWC
-  version: gwc-main-1db5cdde
+  version: gwc-main-28-3b093806
   description: Governance, delivery control, approval boundaries, validation, and repository lifecycle workflows.
 spec:
   category: governance
@@ -70,6 +70,6 @@ spec:
     providerState:
       status: published
       task: DW-PDIST-02
-      sourceCommit: 1db5cdde7666e95e0a5d864633a3255a2a6ad40e
+      sourceCommit: 3b0938065e71e699d327d041f5b6023ed30a29dc
       sourceLock: distribution/power-package.yaml
-      note: Local source integration pin; remote publication was not checked (SKIPPED_OFFLINE). Submodule remains a compatibility fallback.
+      note: Published release gwc-main-28-3b0938065e71e699d327d041f5b6023ed30a29dc was verified against the root gitlink; submodule remains a compatibility fallback.
