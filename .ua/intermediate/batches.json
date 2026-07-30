@@ -1,11 +1,18 @@
 {
   "schemaVersion": 1,
   "algorithm": "louvain",
-  "totalFiles": 198,
-  "totalBatches": 23,
+  "totalFiles": 290,
+  "totalBatches": 31,
   "exportsByPath": {
     ".gitmodules": [],
     ".ua/.understandignore": [],
+    ".ua/tmp/process_batch_19.py": [
+      "make_summary",
+      "make_tags",
+      "make_complexity",
+      "main"
+    ],
+    ".ua/tmp/run-batches.js": [],
     "DW-SuperApps.code-workspace": [],
     "bin/dw": [],
     "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py": [
@@ -22,12 +29,26 @@
       "parser",
       "main"
     ],
+    "scripts/clean_power_setup.py": [
+      "CleanupError",
+      "load_workspace",
+      "resolve_owned_root",
+      "distribution_paths",
+      "runtime_paths",
+      "generated_adapter_paths",
+      "build_plan",
+      "remove_path",
+      "cleanup",
+      "parser",
+      "main"
+    ],
     "scripts/distribution_builder.py": [
       "load_manifest",
       "resolve_recipe",
       "prepare_source",
       "git_rev_parse",
       "git_source_date_epoch",
+      "git_source_ref",
       "build_power",
       "build_all",
       "main"
@@ -51,6 +72,7 @@
       "resolve_workspace_path",
       "store_root",
       "installed_entrypoints",
+      "power_cli_entrypoint",
       "source_entrypoints",
       "display_path",
       "run",
@@ -63,7 +85,9 @@
       "workspace_info",
       "power_list",
       "power_info",
-      "power_prompt",
+      "power_help_data",
+      "power_help",
+      "skill_help",
       "submodule_entries",
       "select_submodules",
       "require_initialized",
@@ -175,6 +199,12 @@
       "write_binding",
       "refresh_bindings"
     ],
+    "scripts/dw_power_store/compatibility.py": [
+      "compatibility_lock",
+      "validate_lock",
+      "_package_metadata",
+      "sanity"
+    ],
     "scripts/dw_power_store/history_ops.py": [
       "history_entries",
       "history",
@@ -267,7 +297,6 @@
       "host_install",
       "expected_host_paths",
       "host_status",
-      "power_prompt",
       "parser",
       "main"
     ],
@@ -275,11 +304,67 @@
       "parser",
       "main"
     ],
-    "scripts/offline_release_installer.py": [
+    "scripts/full_distribution_release.py": [
       "sha256_file",
+      "write_json",
+      "copy_runtime",
+      "write_deterministic_bundle",
+      "write_checksums",
+      "package_paths",
+      "assemble",
+      "main"
+    ],
+    "scripts/gwc_report.py": [
+      "ReportError",
+      "load_yaml",
+      "resolve_workspace_path",
+      "find_task_dir",
+      "discover_gates",
+      "extract_gate_status",
+      "extract_gate_timestamp",
+      "enrich_gates",
+      "render_field_list",
+      "render_yaml_fields",
+      "render_gate_content",
+      "render_progress",
+      "render_html",
+      "cmd_report",
+      "parser",
+      "main"
+    ],
+    "scripts/offline_release_installer.py": [
+      "SetupError",
+      "sha256_file",
+      "sha256_bytes",
+      "atomic_json",
+      "atomic_text",
+      "safe_relative",
+      "normalize_repository",
+      "require_yaml",
+      "load_yaml_file",
+      "template_workspace",
+      "render_workspace_template",
+      "package_members",
+      "verify_package_archive",
       "require_safe_archive",
+      "next_history_path",
       "verify_release",
       "install_component",
+      "backup_path",
+      "install_runtime",
+      "ensure_git_repository",
+      "backup_workspace_file",
+      "merge_workspace_defaults",
+      "validate_setup_registry",
+      "ensure_workspace",
+      "detect_repository",
+      "register_project",
+      "install_power_for_setup",
+      "verify_installed_package",
+      "workspace_binding_path",
+      "configured_store_root",
+      "run_runtime_command",
+      "setup_release",
       "install_release",
       "rollback",
       "main"
@@ -299,6 +384,7 @@
       "atomic_write",
       "sha256_file",
       "copy_runtime_templates",
+      "render_agent_guidance",
       "package_metadata",
       "build_manifest",
       "build_staging_tree",
@@ -329,6 +415,9 @@
       "build_release",
       "main"
     ],
+    "scripts/validate-power-compatibility.py": [
+      "main"
+    ],
     "scripts/validate-workspace.py": [
       "fail",
       "git",
@@ -341,6 +430,27 @@
       "source_fallback_required",
       "main"
     ],
+    "systems/gwc-simulation-lab/seeds/tasks-00.jsonl": [],
+    "systems/gwc-simulation-lab/seeds/tasks-01.jsonl": [],
+    "systems/gwc-simulation-lab/seeds/tasks-02.jsonl": [],
+    "systems/gwc-simulation-lab/seeds/tasks-03.jsonl": [],
+    "systems/gwc-simulation-lab/tools/simulate.py": [
+      "load_json",
+      "load_jsonl",
+      "load_tasks",
+      "canonical_digest",
+      "GuardResult",
+      "MockHumanAgent",
+      "compare",
+      "validate_envelope",
+      "classify",
+      "simulate",
+      "write_jsonl",
+      "parse_args",
+      "main"
+    ],
+    "systems/test-ua-app/main.js": [],
+    "systems/test-ua-app/vite.config.js": [],
     "templates/power-runtime/bin/configure": [],
     "templates/power-runtime/bin/doctor": [],
     "templates/power-runtime/bin/install": [],
@@ -360,6 +470,8 @@
       "install",
       "configure",
       "verify_manifest",
+      "sanity_payload",
+      "sanity",
       "doctor",
       "uninstall",
       "parser",
@@ -368,8 +480,20 @@
     "tests/test_bmad_power_plugin.py": [
       "BmadPowerPluginTests"
     ],
+    "tests/test_clean_power_setup.py": [
+      "CleanPowerSetupTests"
+    ],
     "tests/test_distribution_builder_overlays.py": [
       "DistributionBuilderOverlayTests"
+    ],
+    "tests/test_full_distribution_release.py": [
+      "FullDistributionReleaseTests"
+    ],
+    "tests/test_gwc_simulation_lab.py": [
+      "GwcSimulationLabTests"
+    ],
+    "tests/test_kiro_installation_assets.py": [
+      "KiroInstallationAssetTests"
     ],
     "tests/test_multi_host_runtime.py": [
       "MultiHostRuntimeTests"
@@ -382,6 +506,9 @@
     ],
     "tests/test_openclaw_acpx_runtime.py": [
       "OpenClawAcpxRuntimeTests"
+    ],
+    "tests/test_power_compatibility.py": [
+      "PowerCompatibilityTests"
     ],
     "tests/test_power_dist_builder.py": [
       "PowerDistributionBuilderTests"
@@ -398,6 +525,9 @@
     "tests/test_power_package_consumer.py": [
       "file_record",
       "PowerPackageConsumerTests"
+    ],
+    "tests/test_power_prompt_removed.py": [
+      "PowerPromptRemovalTests"
     ],
     "tests/test_power_runtime_installer.py": [
       "PowerRuntimeInstallerTests"
@@ -417,6 +547,12 @@
       "batchIndex": 1,
       "files": [
         {
+          "path": ".github/workflows/gwc-simulation-lab.yml",
+          "language": "yaml",
+          "sizeLines": 43,
+          "fileCategory": "infra"
+        },
+        {
           "path": ".github/workflows/offline-distribution-release.yml",
           "language": "yaml",
           "sizeLines": 52,
@@ -435,6 +571,12 @@
           "fileCategory": "infra"
         },
         {
+          "path": ".github/workflows/publish-full-distribution-release.yml",
+          "language": "yaml",
+          "sizeLines": 201,
+          "fileCategory": "infra"
+        },
+        {
           "path": ".github/workflows/reusable-publish-power.yml",
           "language": "yaml",
           "sizeLines": 210,
@@ -449,14 +591,16 @@
         {
           "path": ".github/workflows/validate-workspace.yml",
           "language": "yaml",
-          "sizeLines": 146,
+          "sizeLines": 164,
           "fileCategory": "infra"
         }
       ],
       "batchImportData": {
+        ".github/workflows/gwc-simulation-lab.yml": [],
         ".github/workflows/offline-distribution-release.yml": [],
         ".github/workflows/power-source-update.yml": [],
         ".github/workflows/publish-bmad-power.yml": [],
+        ".github/workflows/publish-full-distribution-release.yml": [],
         ".github/workflows/reusable-publish-power.yml": [],
         ".github/workflows/staging-power-distribution.yml": [],
         ".github/workflows/validate-workspace.yml": []
@@ -465,42 +609,6 @@
     },
     {
       "batchIndex": 2,
-      "files": [
-        {
-          "path": ".gwc/g3/draft-pr/g3-delivery-record.yaml",
-          "language": "yaml",
-          "sizeLines": 115,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".gwc/g3/draft-pr/g3-independent-review.md",
-          "language": "markdown",
-          "sizeLines": 73,
-          "fileCategory": "docs"
-        },
-        {
-          "path": ".gwc/g3/draft-pr/g3-pr-assembly.md",
-          "language": "markdown",
-          "sizeLines": 70,
-          "fileCategory": "docs"
-        },
-        {
-          "path": ".gwc/g3/draft-pr/g3-review-closure.md",
-          "language": "markdown",
-          "sizeLines": 39,
-          "fileCategory": "docs"
-        }
-      ],
-      "batchImportData": {
-        ".gwc/g3/draft-pr/g3-delivery-record.yaml": [],
-        ".gwc/g3/draft-pr/g3-independent-review.md": [],
-        ".gwc/g3/draft-pr/g3-pr-assembly.md": [],
-        ".gwc/g3/draft-pr/g3-review-closure.md": []
-      },
-      "neighborMap": {}
-    },
-    {
-      "batchIndex": 3,
       "files": [
         {
           "path": ".gwc/scrums/SCRUM-105/contracts/cas-lease-fencing.md",
@@ -529,7 +637,7 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 4,
+      "batchIndex": 3,
       "files": [
         {
           "path": ".gwc/scrums/SCRUM-105/schemas/checkpoint.schema.json",
@@ -565,7 +673,7 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 5,
+      "batchIndex": 4,
       "files": [
         {
           "path": ".gwc/scrums/SCRUM-119/notes/task-me-decomposition.md",
@@ -594,7 +702,7 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 6,
+      "batchIndex": 5,
       "files": [
         {
           "path": ".kilo/plans/1784987769805-ua-full-analysis-plan.md",
@@ -631,6 +739,18 @@
           "language": "markdown",
           "sizeLines": 76,
           "fileCategory": "docs"
+        },
+        {
+          "path": ".kilo/plans/1785339215351-gwc-html-report-plan.md",
+          "language": "markdown",
+          "sizeLines": 70,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".kilo/plans/1785425778750-dw-ua-graph-update-and-install.md",
+          "language": "markdown",
+          "sizeLines": 70,
+          "fileCategory": "docs"
         }
       ],
       "batchImportData": {
@@ -639,12 +759,14 @@
         ".kilo/plans/1785089875395-scrum-108-runtime-store-nodes-plan.md": [],
         ".kilo/plans/1785133483763-kiro-offline-windows-migration.md": [],
         ".kilo/plans/1785171049744-bmad-procedure-adapter-contracts-plan.md": [],
-        ".kilo/plans/1785180238321-regenerate-knowledge-map.md": []
+        ".kilo/plans/1785180238321-regenerate-knowledge-map.md": [],
+        ".kilo/plans/1785339215351-gwc-html-report-plan.md": [],
+        ".kilo/plans/1785425778750-dw-ua-graph-update-and-install.md": []
       },
       "neighborMap": {}
     },
     {
-      "batchIndex": 7,
+      "batchIndex": 6,
       "files": [
         {
           "path": ".kiro/specs/distribution-revamp/design.md",
@@ -673,7 +795,7 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 8,
+      "batchIndex": 7,
       "files": [
         {
           "path": ".ua/fingerprints.json",
@@ -684,7 +806,7 @@
         {
           "path": ".ua/knowledge-graph.json",
           "language": "json",
-          "sizeLines": 4784,
+          "sizeLines": 15666,
           "fileCategory": "config"
         },
         {
@@ -702,12 +824,358 @@
       "neighborMap": {}
     },
     {
+      "batchIndex": 8,
+      "files": [
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-1.json",
+          "language": "json",
+          "sizeLines": 49,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-10.json",
+          "language": "json",
+          "sizeLines": 70,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-11.json",
+          "language": "json",
+          "sizeLines": 56,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-12.json",
+          "language": "json",
+          "sizeLines": 35,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-13.json",
+          "language": "json",
+          "sizeLines": 42,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-14.json",
+          "language": "json",
+          "sizeLines": 35,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-15.json",
+          "language": "json",
+          "sizeLines": 77,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-16.json",
+          "language": "json",
+          "sizeLines": 42,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-17.json",
+          "language": "json",
+          "sizeLines": 35,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-18.json",
+          "language": "json",
+          "sizeLines": 28,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-19.json",
+          "language": "json",
+          "sizeLines": 182,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-2.json",
+          "language": "json",
+          "sizeLines": 35,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-20.json",
+          "language": "json",
+          "sizeLines": 182,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-21.json",
+          "language": "json",
+          "sizeLines": 182,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-22.json",
+          "language": "json",
+          "sizeLines": 182,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-23.json",
+          "language": "json",
+          "sizeLines": 28,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-3.json",
+          "language": "json",
+          "sizeLines": 28,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-4.json",
+          "language": "json",
+          "sizeLines": 35,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-5.json",
+          "language": "json",
+          "sizeLines": 28,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-6.json",
+          "language": "json",
+          "sizeLines": 49,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        ".ua/tmp/ua-file-analyzer-input-1.json": [],
+        ".ua/tmp/ua-file-analyzer-input-10.json": [],
+        ".ua/tmp/ua-file-analyzer-input-11.json": [],
+        ".ua/tmp/ua-file-analyzer-input-12.json": [],
+        ".ua/tmp/ua-file-analyzer-input-13.json": [],
+        ".ua/tmp/ua-file-analyzer-input-14.json": [],
+        ".ua/tmp/ua-file-analyzer-input-15.json": [],
+        ".ua/tmp/ua-file-analyzer-input-16.json": [],
+        ".ua/tmp/ua-file-analyzer-input-17.json": [],
+        ".ua/tmp/ua-file-analyzer-input-18.json": [],
+        ".ua/tmp/ua-file-analyzer-input-19.json": [],
+        ".ua/tmp/ua-file-analyzer-input-2.json": [],
+        ".ua/tmp/ua-file-analyzer-input-20.json": [],
+        ".ua/tmp/ua-file-analyzer-input-21.json": [],
+        ".ua/tmp/ua-file-analyzer-input-22.json": [],
+        ".ua/tmp/ua-file-analyzer-input-23.json": [],
+        ".ua/tmp/ua-file-analyzer-input-3.json": [],
+        ".ua/tmp/ua-file-analyzer-input-4.json": [],
+        ".ua/tmp/ua-file-analyzer-input-5.json": [],
+        ".ua/tmp/ua-file-analyzer-input-6.json": []
+      },
+      "neighborMap": {}
+    },
+    {
       "batchIndex": 9,
+      "files": [
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-7.json",
+          "language": "json",
+          "sizeLines": 28,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-8.json",
+          "language": "json",
+          "sizeLines": 28,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-analyzer-input-9.json",
+          "language": "json",
+          "sizeLines": 91,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-1.json",
+          "language": "json",
+          "sizeLines": 248,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-10.json",
+          "language": "json",
+          "sizeLines": 601,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-11.json",
+          "language": "json",
+          "sizeLines": 234,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-12.json",
+          "language": "json",
+          "sizeLines": 196,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-13.json",
+          "language": "json",
+          "sizeLines": 186,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-14.json",
+          "language": "json",
+          "sizeLines": 161,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-15.json",
+          "language": "json",
+          "sizeLines": 567,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-16.json",
+          "language": "json",
+          "sizeLines": 146,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-17.json",
+          "language": "json",
+          "sizeLines": 21,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-18.json",
+          "language": "json",
+          "sizeLines": 125,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-19.json",
+          "language": "json",
+          "sizeLines": 1908,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-2.json",
+          "language": "json",
+          "sizeLines": 246,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-20.json",
+          "language": "json",
+          "sizeLines": 1093,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-21.json",
+          "language": "json",
+          "sizeLines": 14389,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-22.json",
+          "language": "json",
+          "sizeLines": 9616,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-23.json",
+          "language": "json",
+          "sizeLines": 443,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-3.json",
+          "language": "json",
+          "sizeLines": 295,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        ".ua/tmp/ua-file-analyzer-input-7.json": [],
+        ".ua/tmp/ua-file-analyzer-input-8.json": [],
+        ".ua/tmp/ua-file-analyzer-input-9.json": [],
+        ".ua/tmp/ua-file-extract-results-1.json": [],
+        ".ua/tmp/ua-file-extract-results-10.json": [],
+        ".ua/tmp/ua-file-extract-results-11.json": [],
+        ".ua/tmp/ua-file-extract-results-12.json": [],
+        ".ua/tmp/ua-file-extract-results-13.json": [],
+        ".ua/tmp/ua-file-extract-results-14.json": [],
+        ".ua/tmp/ua-file-extract-results-15.json": [],
+        ".ua/tmp/ua-file-extract-results-16.json": [],
+        ".ua/tmp/ua-file-extract-results-17.json": [],
+        ".ua/tmp/ua-file-extract-results-18.json": [],
+        ".ua/tmp/ua-file-extract-results-19.json": [],
+        ".ua/tmp/ua-file-extract-results-2.json": [],
+        ".ua/tmp/ua-file-extract-results-20.json": [],
+        ".ua/tmp/ua-file-extract-results-21.json": [],
+        ".ua/tmp/ua-file-extract-results-22.json": [],
+        ".ua/tmp/ua-file-extract-results-23.json": [],
+        ".ua/tmp/ua-file-extract-results-3.json": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 10,
+      "files": [
+        {
+          "path": ".ua/tmp/ua-file-extract-results-4.json",
+          "language": "json",
+          "sizeLines": 221,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-5.json",
+          "language": "json",
+          "sizeLines": 125,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-6.json",
+          "language": "json",
+          "sizeLines": 538,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-7.json",
+          "language": "json",
+          "sizeLines": 155,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-8.json",
+          "language": "json",
+          "sizeLines": 135,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".ua/tmp/ua-file-extract-results-9.json",
+          "language": "json",
+          "sizeLines": 490,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        ".ua/tmp/ua-file-extract-results-4.json": [],
+        ".ua/tmp/ua-file-extract-results-5.json": [],
+        ".ua/tmp/ua-file-extract-results-6.json": [],
+        ".ua/tmp/ua-file-extract-results-7.json": [],
+        ".ua/tmp/ua-file-extract-results-8.json": [],
+        ".ua/tmp/ua-file-extract-results-9.json": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 11,
       "files": [
         {
           "path": "AGENTS.md",
           "language": "markdown",
-          "sizeLines": 193,
+          "sizeLines": 201,
           "fileCategory": "docs"
         },
         {
@@ -719,37 +1187,37 @@
         {
           "path": "HEARTBEAT.md",
           "language": "markdown",
-          "sizeLines": 5,
+          "sizeLines": 18,
           "fileCategory": "docs"
         },
         {
           "path": "IDENTITY.md",
           "language": "markdown",
-          "sizeLines": 29,
+          "sizeLines": 24,
           "fileCategory": "docs"
         },
         {
           "path": "README.md",
           "language": "markdown",
-          "sizeLines": 171,
+          "sizeLines": 279,
           "fileCategory": "docs"
         },
         {
           "path": "SOUL.md",
           "language": "markdown",
-          "sizeLines": 42,
+          "sizeLines": 55,
           "fileCategory": "docs"
         },
         {
           "path": "TOOLS.md",
           "language": "markdown",
-          "sizeLines": 33,
+          "sizeLines": 60,
           "fileCategory": "docs"
         },
         {
           "path": "USER.md",
           "language": "markdown",
-          "sizeLines": 21,
+          "sizeLines": 26,
           "fileCategory": "docs"
         },
         {
@@ -773,7 +1241,7 @@
         {
           "path": "workspace.yaml",
           "language": "yaml",
-          "sizeLines": 131,
+          "sizeLines": 142,
           "fileCategory": "config"
         }
       ],
@@ -794,12 +1262,12 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 10,
+      "batchIndex": 12,
       "files": [
         {
           "path": "docs/DW_SUPER_SETUP.md",
           "language": "markdown",
-          "sizeLines": 175,
+          "sizeLines": 162,
           "fileCategory": "docs"
         },
         {
@@ -811,7 +1279,7 @@
         {
           "path": "docs/MULTI_HOST_SETUP.md",
           "language": "markdown",
-          "sizeLines": 86,
+          "sizeLines": 82,
           "fileCategory": "docs"
         },
         {
@@ -829,7 +1297,7 @@
         {
           "path": "docs/POWER_CONSUMER_RUNTIME_V1.md",
           "language": "markdown",
-          "sizeLines": 76,
+          "sizeLines": 77,
           "fileCategory": "docs"
         },
         {
@@ -841,7 +1309,7 @@
         {
           "path": "docs/POWER_RUNTIME_V2.md",
           "language": "markdown",
-          "sizeLines": 219,
+          "sizeLines": 230,
           "fileCategory": "docs"
         },
         {
@@ -865,10 +1333,16 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 11,
+      "batchIndex": 13,
       "files": [
         {
           "path": "docs/installation/ADD_PROJECT.md",
+          "language": "markdown",
+          "sizeLines": 53,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/installation/CLEAN_POWER_SETUP.md",
           "language": "markdown",
           "sizeLines": 32,
           "fileCategory": "docs"
@@ -882,7 +1356,7 @@
         {
           "path": "docs/installation/INSTALL_POWERS.md",
           "language": "markdown",
-          "sizeLines": 32,
+          "sizeLines": 143,
           "fileCategory": "docs"
         },
         {
@@ -894,24 +1368,25 @@
         {
           "path": "docs/installation/OFFLINE_INSTALL.md",
           "language": "markdown",
-          "sizeLines": 20,
+          "sizeLines": 51,
           "fileCategory": "docs"
         },
         {
           "path": "docs/installation/README.md",
           "language": "markdown",
-          "sizeLines": 19,
+          "sizeLines": 32,
           "fileCategory": "docs"
         },
         {
           "path": "docs/installation/TROUBLESHOOTING.md",
           "language": "markdown",
-          "sizeLines": 25,
+          "sizeLines": 27,
           "fileCategory": "docs"
         }
       ],
       "batchImportData": {
         "docs/installation/ADD_PROJECT.md": [],
+        "docs/installation/CLEAN_POWER_SETUP.md": [],
         "docs/installation/CREATE_SUPER_PROJECT.md": [],
         "docs/installation/INSTALL_POWERS.md": [],
         "docs/installation/MIGRATION.md": [],
@@ -922,7 +1397,7 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 12,
+      "batchIndex": 14,
       "files": [
         {
           "path": "examples/positive-architecture-analysis.md",
@@ -958,7 +1433,7 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 13,
+      "batchIndex": 15,
       "files": [
         {
           "path": "hosts/openclaw-acpx/README.md",
@@ -1001,7 +1476,7 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 14,
+      "batchIndex": 16,
       "files": [
         {
           "path": "manifests/powers/bmad.yaml",
@@ -1012,19 +1487,19 @@
         {
           "path": "manifests/powers/gwc.yaml",
           "language": "yaml",
-          "sizeLines": 73,
+          "sizeLines": 75,
           "fileCategory": "config"
         },
         {
           "path": "manifests/powers/task-me.yaml",
           "language": "yaml",
-          "sizeLines": 74,
+          "sizeLines": 76,
           "fileCategory": "config"
         },
         {
           "path": "manifests/powers/ua.yaml",
           "language": "yaml",
-          "sizeLines": 74,
+          "sizeLines": 75,
           "fileCategory": "config"
         }
       ],
@@ -1037,7 +1512,36 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 15,
+      "batchIndex": 17,
+      "files": [
+        {
+          "path": "prompts/power-dist/kiro-offline-install.md",
+          "language": "markdown",
+          "sizeLines": 123,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "prompts/power-dist/onboard-offline-zip.md",
+          "language": "markdown",
+          "sizeLines": 140,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "prompts/power-dist/onboard.md",
+          "language": "markdown",
+          "sizeLines": 37,
+          "fileCategory": "docs"
+        }
+      ],
+      "batchImportData": {
+        "prompts/power-dist/kiro-offline-install.md": [],
+        "prompts/power-dist/onboard-offline-zip.md": [],
+        "prompts/power-dist/onboard.md": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 18,
       "files": [
         {
           "path": "schemas/bmad-permission-model.schema.json",
@@ -1076,6 +1580,12 @@
           "fileCategory": "config"
         },
         {
+          "path": "schemas/power-compatibility-lock.schema.json",
+          "language": "json",
+          "sizeLines": 101,
+          "fileCategory": "config"
+        },
+        {
           "path": "schemas/power-consumer-binding.schema.json",
           "language": "json",
           "sizeLines": 52,
@@ -1096,7 +1606,7 @@
         {
           "path": "schemas/power-package-manifest.schema.json",
           "language": "json",
-          "sizeLines": 62,
+          "sizeLines": 121,
           "fileCategory": "config"
         }
       ],
@@ -1107,6 +1617,7 @@
         "schemas/bmad-procedure-result.schema.json": [],
         "schemas/distribution-release.schema.json": [],
         "schemas/power-binding.schema.json": [],
+        "schemas/power-compatibility-lock.schema.json": [],
         "schemas/power-consumer-binding.schema.json": [],
         "schemas/power-distribution.schema.json": [],
         "schemas/power-manifest.schema.json": [],
@@ -1115,12 +1626,18 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 16,
+      "batchIndex": 19,
       "files": [
         {
           "path": "scripts/distribution_build.sh",
           "language": "shell",
           "sizeLines": 29,
+          "fileCategory": "script"
+        },
+        {
+          "path": "scripts/gwc_post_gate.sh",
+          "language": "shell",
+          "sizeLines": 16,
           "fileCategory": "script"
         },
         {
@@ -1136,9 +1653,15 @@
           "fileCategory": "script"
         },
         {
+          "path": "scripts/kiro-python-session.sh",
+          "language": "shell",
+          "sizeLines": 12,
+          "fileCategory": "script"
+        },
+        {
           "path": "scripts/python-resolver.sh",
           "language": "shell",
-          "sizeLines": 39,
+          "sizeLines": 151,
           "fileCategory": "script"
         },
         {
@@ -1150,15 +1673,111 @@
       ],
       "batchImportData": {
         "scripts/distribution_build.sh": [],
+        "scripts/gwc_post_gate.sh": [],
         "scripts/install-dw.sh": [],
         "scripts/install-host-adapters.sh": [],
+        "scripts/kiro-python-session.sh": [],
         "scripts/python-resolver.sh": [],
         "scripts/sync-submodules.sh": []
       },
       "neighborMap": {}
     },
     {
-      "batchIndex": 17,
+      "batchIndex": 20,
+      "files": [
+        {
+          "path": "systems/gwc-simulation-lab/AGENTS.md",
+          "language": "markdown",
+          "sizeLines": 12,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "systems/gwc-simulation-lab/README.md",
+          "language": "markdown",
+          "sizeLines": 36,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "systems/gwc-simulation-lab/simulation-lab.json",
+          "language": "json",
+          "sizeLines": 23,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        "systems/gwc-simulation-lab/AGENTS.md": [],
+        "systems/gwc-simulation-lab/README.md": [],
+        "systems/gwc-simulation-lab/simulation-lab.json": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 21,
+      "files": [
+        {
+          "path": "systems/gwc-simulation-lab/fixtures/failure-cases.json",
+          "language": "json",
+          "sizeLines": 52,
+          "fileCategory": "config"
+        },
+        {
+          "path": "systems/gwc-simulation-lab/fixtures/node-index.json",
+          "language": "json",
+          "sizeLines": 85,
+          "fileCategory": "config"
+        },
+        {
+          "path": "systems/gwc-simulation-lab/fixtures/scenario-index.json",
+          "language": "json",
+          "sizeLines": 278,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        "systems/gwc-simulation-lab/fixtures/failure-cases.json": [],
+        "systems/gwc-simulation-lab/fixtures/node-index.json": [],
+        "systems/gwc-simulation-lab/fixtures/scenario-index.json": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 22,
+      "files": [
+        {
+          "path": "systems/test-ua-app/AGENTS.md",
+          "language": "markdown",
+          "sizeLines": 56,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "systems/test-ua-app/index.html",
+          "language": "html",
+          "sizeLines": 12,
+          "fileCategory": "markup"
+        },
+        {
+          "path": "systems/test-ua-app/package.json",
+          "language": "json",
+          "sizeLines": 13,
+          "fileCategory": "config"
+        },
+        {
+          "path": "systems/test-ua-app/style.css",
+          "language": "css",
+          "sizeLines": 40,
+          "fileCategory": "markup"
+        }
+      ],
+      "batchImportData": {
+        "systems/test-ua-app/AGENTS.md": [],
+        "systems/test-ua-app/index.html": [],
+        "systems/test-ua-app/package.json": [],
+        "systems/test-ua-app/style.css": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 23,
       "files": [
         {
           "path": "templates/power-runtime/bin/configure.ps1",
@@ -1194,7 +1813,7 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 18,
+      "batchIndex": 24,
       "files": [
         {
           "path": "tests/fixtures/power-distribution/invalid-absolute-include.yaml",
@@ -1223,7 +1842,36 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 19,
+      "batchIndex": 25,
+      "files": [
+        {
+          "path": "tests/test_python_resolver.sh",
+          "language": "shell",
+          "sizeLines": 35,
+          "fileCategory": "script"
+        },
+        {
+          "path": "tests/test_python_resolver_session.sh",
+          "language": "shell",
+          "sizeLines": 64,
+          "fileCategory": "script"
+        },
+        {
+          "path": "tests/validator-test-plan.md",
+          "language": "markdown",
+          "sizeLines": 218,
+          "fileCategory": "docs"
+        }
+      ],
+      "batchImportData": {
+        "tests/test_python_resolver.sh": [],
+        "tests/test_python_resolver_session.sh": [],
+        "tests/validator-test-plan.md": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 26,
       "files": [
         {
           "path": ".codex/README.md",
@@ -1234,62 +1882,8 @@
         {
           "path": ".gitmodules",
           "language": "unknown",
-          "sizeLines": 19,
+          "sizeLines": 22,
           "fileCategory": "code"
-        },
-        {
-          "path": ".gwc/g0/context-snapshot.yaml",
-          "language": "yaml",
-          "sizeLines": 159,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".gwc/g1/brainstorming/g1-options.yaml",
-          "language": "yaml",
-          "sizeLines": 112,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".gwc/g1/decision/g1-SCRUM-119-20260728-0023.yaml",
-          "language": "yaml",
-          "sizeLines": 101,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".gwc/g1/decision/g1-decision-record.yaml",
-          "language": "yaml",
-          "sizeLines": 109,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".gwc/g1/intake/g1-intake-brief.yaml",
-          "language": "yaml",
-          "sizeLines": 125,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".gwc/g1/preflight/g1-SCRUM-119-20260728-0023.yaml",
-          "language": "yaml",
-          "sizeLines": 84,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".gwc/g1/preflight/g1-preflight-report.yaml",
-          "language": "yaml",
-          "sizeLines": 81,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".gwc/g2/execution/g2-execution-record.yaml",
-          "language": "yaml",
-          "sizeLines": 76,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".gwc/g2/execution/scrum-105-fix-record.yaml",
-          "language": "yaml",
-          "sizeLines": 48,
-          "fileCategory": "config"
         },
         {
           "path": ".gwc/policies/notification-policy.yaml",
@@ -1374,20 +1968,65 @@
           "language": "yaml",
           "sizeLines": 26,
           "fileCategory": "config"
+        },
+        {
+          "path": ".gwc/tasks/SCRUM-119/report.html",
+          "language": "html",
+          "sizeLines": 593,
+          "fileCategory": "markup"
+        },
+        {
+          "path": ".kilo/skills/frontend-design/LICENSE.txt",
+          "language": "txt",
+          "sizeLines": 177,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".kilo/skills/frontend-design/SKILL.md",
+          "language": "markdown",
+          "sizeLines": 64,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".kiro/agents/DW_POWER_INSTALLATION_AGENT.md",
+          "language": "markdown",
+          "sizeLines": 37,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".kiro/agents/dw-power-installation.json",
+          "language": "json",
+          "sizeLines": 19,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".kiro/skills/dw-power-installation/SKILL.md",
+          "language": "markdown",
+          "sizeLines": 85,
+          "fileCategory": "docs"
+        },
+        {
+          "path": ".kiro/skills/dw-power-installation/agents/openai.yaml",
+          "language": "yaml",
+          "sizeLines": 4,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".kiro/skills/dw-power-installation/scripts/python-session.sh",
+          "language": "shell",
+          "sizeLines": 100,
+          "fileCategory": "script"
+        },
+        {
+          "path": ".kiro/steering/workspace-powers.md",
+          "language": "markdown",
+          "sizeLines": 12,
+          "fileCategory": "docs"
         }
       ],
       "batchImportData": {
         ".codex/README.md": [],
         ".gitmodules": [],
-        ".gwc/g0/context-snapshot.yaml": [],
-        ".gwc/g1/brainstorming/g1-options.yaml": [],
-        ".gwc/g1/decision/g1-SCRUM-119-20260728-0023.yaml": [],
-        ".gwc/g1/decision/g1-decision-record.yaml": [],
-        ".gwc/g1/intake/g1-intake-brief.yaml": [],
-        ".gwc/g1/preflight/g1-SCRUM-119-20260728-0023.yaml": [],
-        ".gwc/g1/preflight/g1-preflight-report.yaml": [],
-        ".gwc/g2/execution/g2-execution-record.yaml": [],
-        ".gwc/g2/execution/scrum-105-fix-record.yaml": [],
         ".gwc/policies/notification-policy.yaml": [],
         ".gwc/runbooks/SLACK_NOTIFICATION_RUNBOOK.md": [],
         ".gwc/scrums/SCRUM-105/design.md": [],
@@ -1401,19 +2040,22 @@
         ".gwc/tasks/SCRUM-119/g2/execution-record.yaml": [],
         ".gwc/tasks/SCRUM-119/g3/delivery-record.yaml": [],
         ".gwc/tasks/SCRUM-119/g4/merge-approval.yaml": [],
-        ".gwc/tasks/SCRUM-119/g5/deployment-approval.yaml": []
+        ".gwc/tasks/SCRUM-119/g5/deployment-approval.yaml": [],
+        ".gwc/tasks/SCRUM-119/report.html": [],
+        ".kilo/skills/frontend-design/LICENSE.txt": [],
+        ".kilo/skills/frontend-design/SKILL.md": [],
+        ".kiro/agents/DW_POWER_INSTALLATION_AGENT.md": [],
+        ".kiro/agents/dw-power-installation.json": [],
+        ".kiro/skills/dw-power-installation/SKILL.md": [],
+        ".kiro/skills/dw-power-installation/agents/openai.yaml": [],
+        ".kiro/skills/dw-power-installation/scripts/python-session.sh": [],
+        ".kiro/steering/workspace-powers.md": []
       },
       "neighborMap": {}
     },
     {
-      "batchIndex": 20,
+      "batchIndex": 27,
       "files": [
-        {
-          "path": ".kiro/steering/workspace-powers.md",
-          "language": "markdown",
-          "sizeLines": 12,
-          "fileCategory": "docs"
-        },
         {
           "path": ".task-me/runs/distribution-revamp-v1/task-index.yaml",
           "language": "yaml",
@@ -1427,10 +2069,16 @@
           "fileCategory": "code"
         },
         {
-          "path": ".ua/intermediate/scan-result.json",
-          "language": "json",
-          "sizeLines": 705,
-          "fileCategory": "config"
+          "path": ".ua/tmp/process_batch_19.py",
+          "language": "python",
+          "sizeLines": 290,
+          "fileCategory": "code"
+        },
+        {
+          "path": ".ua/tmp/run-batches.js",
+          "language": "javascript",
+          "sizeLines": 43,
+          "fileCategory": "code"
         },
         {
           "path": "DW-SuperApps.code-workspace",
@@ -1441,7 +2089,7 @@
         {
           "path": "bin/dw",
           "language": "unknown",
-          "sizeLines": 92,
+          "sizeLines": 116,
           "fileCategory": "code"
         },
         {
@@ -1477,7 +2125,7 @@
         {
           "path": "docs/runbooks/OFFLINE_DISTRIBUTION_RELEASE.md",
           "language": "markdown",
-          "sizeLines": 38,
+          "sizeLines": 84,
           "fileCategory": "docs"
         },
         {
@@ -1553,17 +2201,17 @@
           "fileCategory": "config"
         },
         {
-          "path": "manifests/power-distribution-evidence.json",
+          "path": "manifests/power-compatibility-lock.json",
           "language": "json",
-          "sizeLines": 83,
+          "sizeLines": 71,
           "fileCategory": "config"
         }
       ],
       "batchImportData": {
-        ".kiro/steering/workspace-powers.md": [],
         ".task-me/runs/distribution-revamp-v1/task-index.yaml": [],
         ".ua/.understandignore": [],
-        ".ua/intermediate/scan-result.json": [],
+        ".ua/tmp/process_batch_19.py": [],
+        ".ua/tmp/run-batches.js": [],
         "DW-SuperApps.code-workspace": [],
         "bin/dw": [],
         "bin/dw.ps1": [],
@@ -1584,18 +2232,18 @@
         "manifests/evidence/SCRUM-134/SHA256SUMS.txt": [],
         "manifests/evidence/SCRUM-134/setup-evidence.json": [],
         "manifests/orchestration/intents.yaml": [],
-        "manifests/power-distribution-evidence.json": []
+        "manifests/power-compatibility-lock.json": []
       },
       "neighborMap": {}
     },
     {
-      "batchIndex": 21,
+      "batchIndex": 28,
       "files": [
         {
-          "path": "memory/2026-07-28-1005.md",
-          "language": "markdown",
-          "sizeLines": 23,
-          "fileCategory": "docs"
+          "path": "manifests/power-distribution-evidence.json",
+          "language": "json",
+          "sizeLines": 83,
+          "fileCategory": "config"
         },
         {
           "path": "plugins/bmad-method/SOURCE.lock.json",
@@ -1628,21 +2276,15 @@
           "fileCategory": "docs"
         },
         {
-          "path": "prompts/power-dist/onboard-offline-zip.md",
-          "language": "markdown",
-          "sizeLines": 31,
-          "fileCategory": "docs"
-        },
-        {
-          "path": "prompts/power-dist/onboard.md",
-          "language": "markdown",
-          "sizeLines": 37,
-          "fileCategory": "docs"
+          "path": "scripts/clean_power_setup.py",
+          "language": "python",
+          "sizeLines": 224,
+          "fileCategory": "code"
         },
         {
           "path": "scripts/distribution_builder.py",
           "language": "python",
-          "sizeLines": 207,
+          "sizeLines": 220,
           "fileCategory": "code"
         },
         {
@@ -1654,13 +2296,13 @@
         {
           "path": "scripts/dw_cli.py",
           "language": "python",
-          "sizeLines": 993,
+          "sizeLines": 1115,
           "fileCategory": "code"
         },
         {
           "path": "scripts/dw_dispatch.py",
           "language": "python",
-          "sizeLines": 54,
+          "sizeLines": 55,
           "fileCategory": "code"
         },
         {
@@ -1678,7 +2320,7 @@
         {
           "path": "scripts/dw_power_package.py",
           "language": "python",
-          "sizeLines": 25,
+          "sizeLines": 26,
           "fileCategory": "code"
         },
         {
@@ -1690,13 +2332,19 @@
         {
           "path": "scripts/dw_power_store/cli.py",
           "language": "python",
-          "sizeLines": 97,
+          "sizeLines": 106,
           "fileCategory": "code"
         },
         {
           "path": "scripts/dw_power_store/common.py",
           "language": "python",
           "sizeLines": 240,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dw_power_store/compatibility.py",
+          "language": "python",
+          "sizeLines": 165,
           "fileCategory": "code"
         },
         {
@@ -1708,25 +2356,25 @@
         {
           "path": "scripts/dw_power_store/install_ops.py",
           "language": "python",
-          "sizeLines": 179,
+          "sizeLines": 182,
           "fileCategory": "code"
         },
         {
           "path": "scripts/dw_power_store/package_io.py",
           "language": "python",
-          "sizeLines": 202,
+          "sizeLines": 210,
           "fileCategory": "code"
         },
         {
           "path": "scripts/dw_project_add.py",
           "language": "python",
-          "sizeLines": 89,
+          "sizeLines": 102,
           "fileCategory": "code"
         },
         {
           "path": "scripts/dw_project_registry.py",
           "language": "python",
-          "sizeLines": 408,
+          "sizeLines": 418,
           "fileCategory": "code"
         },
         {
@@ -1738,19 +2386,18 @@
         {
           "path": "scripts/dw_workspace_dist.py",
           "language": "python",
-          "sizeLines": 543,
+          "sizeLines": 502,
           "fileCategory": "code"
         }
       ],
       "batchImportData": {
-        "memory/2026-07-28-1005.md": [],
+        "manifests/power-distribution-evidence.json": [],
         "plugins/bmad-method/SOURCE.lock.json": [],
         "plugins/bmad-method/distribution/power-package.yaml": [],
         "plugins/bmad-method/knowledge/knowledge-graph.json": [],
         "plugins/bmad-method/overlay/distribution/lib/bootstrap_bmad.py": [],
         "plugins/bmad-method/overlay/distribution/skills/bmad/SKILL.md": [],
-        "prompts/power-dist/onboard-offline-zip.md": [],
-        "prompts/power-dist/onboard.md": [],
+        "scripts/clean_power_setup.py": [],
         "scripts/distribution_builder.py": [],
         "scripts/distribution_installer.py": [],
         "scripts/dw_cli.py": [],
@@ -1761,6 +2408,7 @@
         "scripts/dw_power_store/__init__.py": [],
         "scripts/dw_power_store/cli.py": [],
         "scripts/dw_power_store/common.py": [],
+        "scripts/dw_power_store/compatibility.py": [],
         "scripts/dw_power_store/history_ops.py": [],
         "scripts/dw_power_store/install_ops.py": [],
         "scripts/dw_power_store/package_io.py": [],
@@ -1772,7 +2420,7 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 22,
+      "batchIndex": 29,
       "files": [
         {
           "path": "scripts/dw_workspace_init.py",
@@ -1781,15 +2429,27 @@
           "fileCategory": "code"
         },
         {
+          "path": "scripts/full_distribution_release.py",
+          "language": "python",
+          "sizeLines": 332,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/gwc_report.py",
+          "language": "python",
+          "sizeLines": 795,
+          "fileCategory": "code"
+        },
+        {
           "path": "scripts/offline_release_installer.py",
           "language": "python",
-          "sizeLines": 157,
+          "sizeLines": 1103,
           "fileCategory": "code"
         },
         {
           "path": "scripts/power_dist.py",
           "language": "python",
-          "sizeLines": 582,
+          "sizeLines": 659,
           "fileCategory": "code"
         },
         {
@@ -1805,10 +2465,163 @@
           "fileCategory": "code"
         },
         {
+          "path": "scripts/validate-power-compatibility.py",
+          "language": "python",
+          "sizeLines": 30,
+          "fileCategory": "code"
+        },
+        {
           "path": "scripts/validate-workspace.py",
           "language": "python",
-          "sizeLines": 257,
+          "sizeLines": 289,
           "fileCategory": "code"
+        },
+        {
+          "path": "systems/gwc-simulation-lab/seeds/tasks-00.jsonl",
+          "language": "jsonl",
+          "sizeLines": 25,
+          "fileCategory": "code"
+        },
+        {
+          "path": "systems/gwc-simulation-lab/seeds/tasks-01.jsonl",
+          "language": "jsonl",
+          "sizeLines": 25,
+          "fileCategory": "code"
+        },
+        {
+          "path": "systems/gwc-simulation-lab/seeds/tasks-02.jsonl",
+          "language": "jsonl",
+          "sizeLines": 25,
+          "fileCategory": "code"
+        },
+        {
+          "path": "systems/gwc-simulation-lab/seeds/tasks-03.jsonl",
+          "language": "jsonl",
+          "sizeLines": 25,
+          "fileCategory": "code"
+        },
+        {
+          "path": "systems/gwc-simulation-lab/tools/simulate.py",
+          "language": "python",
+          "sizeLines": 324,
+          "fileCategory": "code"
+        },
+        {
+          "path": "systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/g0/context-snapshot.yaml",
+          "language": "yaml",
+          "sizeLines": 85,
+          "fileCategory": "config"
+        },
+        {
+          "path": "systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/g1/brainstorming/g1-options.yaml",
+          "language": "yaml",
+          "sizeLines": 69,
+          "fileCategory": "config"
+        },
+        {
+          "path": "systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/g1/decision/g1-decision-record.yaml",
+          "language": "yaml",
+          "sizeLines": 96,
+          "fileCategory": "config"
+        },
+        {
+          "path": "systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/g1/intake/g1-intake-brief.yaml",
+          "language": "yaml",
+          "sizeLines": 126,
+          "fileCategory": "config"
+        },
+        {
+          "path": "systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/g1/preflight/g1-preflight-report.yaml",
+          "language": "yaml",
+          "sizeLines": 168,
+          "fileCategory": "config"
+        },
+        {
+          "path": "systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/g2/execution-envelope.yaml",
+          "language": "yaml",
+          "sizeLines": 79,
+          "fileCategory": "config"
+        },
+        {
+          "path": "systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/g3/delivery-record.yaml",
+          "language": "yaml",
+          "sizeLines": 52,
+          "fileCategory": "config"
+        },
+        {
+          "path": "systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/g4/merge-approval.yaml",
+          "language": "yaml",
+          "sizeLines": 30,
+          "fileCategory": "config"
+        },
+        {
+          "path": "systems/test-ua-app/.ua/knowledge-graph.json",
+          "language": "json",
+          "sizeLines": 136,
+          "fileCategory": "config"
+        },
+        {
+          "path": "systems/test-ua-app/.ua/meta.json",
+          "language": "json",
+          "sizeLines": 5,
+          "fileCategory": "config"
+        },
+        {
+          "path": "systems/test-ua-app/main.js",
+          "language": "javascript",
+          "sizeLines": 91,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        "scripts/dw_workspace_init.py": [],
+        "scripts/full_distribution_release.py": [],
+        "scripts/gwc_report.py": [],
+        "scripts/offline_release_installer.py": [],
+        "scripts/power_dist.py": [],
+        "scripts/power_dist_capability.py": [],
+        "scripts/release_builder.py": [],
+        "scripts/validate-power-compatibility.py": [],
+        "scripts/validate-workspace.py": [],
+        "systems/gwc-simulation-lab/seeds/tasks-00.jsonl": [],
+        "systems/gwc-simulation-lab/seeds/tasks-01.jsonl": [],
+        "systems/gwc-simulation-lab/seeds/tasks-02.jsonl": [],
+        "systems/gwc-simulation-lab/seeds/tasks-03.jsonl": [],
+        "systems/gwc-simulation-lab/tools/simulate.py": [],
+        "systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/g0/context-snapshot.yaml": [],
+        "systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/g1/brainstorming/g1-options.yaml": [],
+        "systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/g1/decision/g1-decision-record.yaml": [],
+        "systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/g1/intake/g1-intake-brief.yaml": [],
+        "systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/g1/preflight/g1-preflight-report.yaml": [],
+        "systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/g2/execution-envelope.yaml": [],
+        "systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/g3/delivery-record.yaml": [],
+        "systems/test-ua-app/.gwc/tasks/test-ua-gwc-001/g4/merge-approval.yaml": [],
+        "systems/test-ua-app/.ua/knowledge-graph.json": [],
+        "systems/test-ua-app/.ua/meta.json": [],
+        "systems/test-ua-app/main.js": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 30,
+      "files": [
+        {
+          "path": "systems/test-ua-app/public/ua/knowledge-graph.json",
+          "language": "json",
+          "sizeLines": 1665,
+          "fileCategory": "config"
+        },
+        {
+          "path": "systems/test-ua-app/vite.config.js",
+          "language": "javascript",
+          "sizeLines": 9,
+          "fileCategory": "code"
+        },
+        {
+          "path": "templates/full-distribution/workspace-template.yaml",
+          "language": "yaml",
+          "sizeLines": 38,
+          "fileCategory": "config"
         },
         {
           "path": "templates/power-runtime/bin/configure",
@@ -1837,7 +2650,7 @@
         {
           "path": "templates/power-runtime/lib/power_runtime.py",
           "language": "python",
-          "sizeLines": 336,
+          "sizeLines": 383,
           "fileCategory": "code"
         },
         {
@@ -1847,21 +2660,45 @@
           "fileCategory": "code"
         },
         {
+          "path": "tests/test_clean_power_setup.py",
+          "language": "python",
+          "sizeLines": 100,
+          "fileCategory": "code"
+        },
+        {
           "path": "tests/test_distribution_builder_overlays.py",
           "language": "python",
           "sizeLines": 77,
           "fileCategory": "code"
         },
         {
+          "path": "tests/test_full_distribution_release.py",
+          "language": "python",
+          "sizeLines": 304,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_gwc_simulation_lab.py",
+          "language": "python",
+          "sizeLines": 86,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_kiro_installation_assets.py",
+          "language": "python",
+          "sizeLines": 39,
+          "fileCategory": "code"
+        },
+        {
           "path": "tests/test_multi_host_runtime.py",
           "language": "python",
-          "sizeLines": 75,
+          "sizeLines": 78,
           "fileCategory": "code"
         },
         {
           "path": "tests/test_offline_distribution_release.py",
           "language": "python",
-          "sizeLines": 94,
+          "sizeLines": 95,
           "fileCategory": "code"
         },
         {
@@ -1877,9 +2714,15 @@
           "fileCategory": "code"
         },
         {
+          "path": "tests/test_power_compatibility.py",
+          "language": "python",
+          "sizeLines": 81,
+          "fileCategory": "code"
+        },
+        {
           "path": "tests/test_power_dist_builder.py",
           "language": "python",
-          "sizeLines": 112,
+          "sizeLines": 131,
           "fileCategory": "code"
         },
         {
@@ -1897,89 +2740,84 @@
         {
           "path": "tests/test_power_distribution_integration.py",
           "language": "python",
-          "sizeLines": 55,
+          "sizeLines": 59,
           "fileCategory": "code"
         },
         {
           "path": "tests/test_power_package_consumer.py",
           "language": "python",
-          "sizeLines": 277,
+          "sizeLines": 282,
           "fileCategory": "code"
         },
         {
-          "path": "tests/test_power_runtime_installer.py",
+          "path": "tests/test_power_prompt_removed.py",
           "language": "python",
-          "sizeLines": 116,
-          "fileCategory": "code"
-        },
-        {
-          "path": "tests/test_power_runtime_v2.py",
-          "language": "python",
-          "sizeLines": 127,
-          "fileCategory": "code"
-        },
-        {
-          "path": "tests/test_project_registry.py",
-          "language": "python",
-          "sizeLines": 203,
+          "sizeLines": 46,
           "fileCategory": "code"
         }
       ],
       "batchImportData": {
-        "scripts/dw_workspace_init.py": [],
-        "scripts/offline_release_installer.py": [],
-        "scripts/power_dist.py": [],
-        "scripts/power_dist_capability.py": [],
-        "scripts/release_builder.py": [],
-        "scripts/validate-workspace.py": [],
+        "systems/test-ua-app/public/ua/knowledge-graph.json": [],
+        "systems/test-ua-app/vite.config.js": [],
+        "templates/full-distribution/workspace-template.yaml": [],
         "templates/power-runtime/bin/configure": [],
         "templates/power-runtime/bin/doctor": [],
         "templates/power-runtime/bin/install": [],
         "templates/power-runtime/bin/uninstall": [],
         "templates/power-runtime/lib/power_runtime.py": [],
         "tests/test_bmad_power_plugin.py": [],
+        "tests/test_clean_power_setup.py": [],
         "tests/test_distribution_builder_overlays.py": [],
+        "tests/test_full_distribution_release.py": [],
+        "tests/test_gwc_simulation_lab.py": [],
+        "tests/test_kiro_installation_assets.py": [],
         "tests/test_multi_host_runtime.py": [],
         "tests/test_offline_distribution_release.py": [],
         "tests/test_oneclick_commands.py": [],
         "tests/test_openclaw_acpx_runtime.py": [],
+        "tests/test_power_compatibility.py": [],
         "tests/test_power_dist_builder.py": [],
         "tests/test_power_dist_capability.py": [],
         "tests/test_power_distribution_contract.py": [],
         "tests/test_power_distribution_integration.py": [],
         "tests/test_power_package_consumer.py": [],
-        "tests/test_power_runtime_installer.py": [],
-        "tests/test_power_runtime_v2.py": [],
-        "tests/test_project_registry.py": []
+        "tests/test_power_prompt_removed.py": []
       },
       "neighborMap": {}
     },
     {
-      "batchIndex": 23,
+      "batchIndex": 31,
       "files": [
         {
-          "path": "tests/test_python_resolver.sh",
-          "language": "shell",
-          "sizeLines": 35,
-          "fileCategory": "script"
+          "path": "tests/test_power_runtime_installer.py",
+          "language": "python",
+          "sizeLines": 119,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_power_runtime_v2.py",
+          "language": "python",
+          "sizeLines": 160,
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/test_project_registry.py",
+          "language": "python",
+          "sizeLines": 242,
+          "fileCategory": "code"
         },
         {
           "path": "tests/test_workspace_distribution_routing.py",
           "language": "python",
-          "sizeLines": 155,
+          "sizeLines": 144,
           "fileCategory": "code"
-        },
-        {
-          "path": "tests/validator-test-plan.md",
-          "language": "markdown",
-          "sizeLines": 218,
-          "fileCategory": "docs"
         }
       ],
       "batchImportData": {
-        "tests/test_python_resolver.sh": [],
-        "tests/test_workspace_distribution_routing.py": [],
-        "tests/validator-test-plan.md": []
+        "tests/test_power_runtime_installer.py": [],
+        "tests/test_power_runtime_v2.py": [],
+        "tests/test_project_registry.py": [],
+        "tests/test_workspace_distribution_routing.py": []
       },
       "neighborMap": {}
     }
