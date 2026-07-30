@@ -1,6 +1,6 @@
 {
-  "built_at": "2026-07-30T16:25:51.424664+00:00",
-  "foundation_ref": "0b8c6efa01a1dc89477e4695f81ad3310770b240",
+  "built_at": "2026-07-30T16:34:27.943090+00:00",
+  "foundation_ref": "1299f84d90b24a6ca01aacba30f03ac1d876793e",
   "powers": {
     "bmad": {
       "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/bmad-bmad-main-fdc47614.zip",
@@ -13,14 +13,14 @@
       "version": "bmad-main-fdc47614"
     },
     "gwc": {
-      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/gwc-gwc-main-1db5cdde.zip",
-      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/gwc-gwc-main-1db5cdde.zip.sha256",
+      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/gwc-gwc-main-28-3b093806.zip",
+      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/gwc-gwc-main-28-3b093806.zip.sha256",
       "power_id": "gwc",
       "recipe": "/home/runner/work/DW-SuperApps/DW-SuperApps/projects/gwc/distribution/power-package.yaml",
       "source_epoch": 1785412791,
       "source_sha": "3b0938065e71e699d327d041f5b6023ed30a29dc",
-      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/gwc-gwc-main-1db5cdde",
-      "version": "gwc-main-1db5cdde"
+      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/gwc-gwc-main-28-3b093806",
+      "version": "gwc-main-28-3b093806"
     },
     "task-me": {
       "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/task-me-task-me-main-bfa0752d.zip",
