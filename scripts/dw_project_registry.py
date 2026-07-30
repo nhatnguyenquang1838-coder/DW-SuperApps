@@ -16,11 +16,16 @@ except ImportError as exc:
     print("Missing PyYAML. Run: python -m pip install -r requirements-dev.txt", file=sys.stderr)
     raise SystemExit(2) from exc
 
+try:
+    from dw_project_targets import enabled_powers, project_entries as target_project_entries
+except ModuleNotFoundError:
+    from scripts.dw_project_targets import enabled_powers, project_entries as target_project_entries
+
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE_PATH = ROOT / "workspace.yaml"
 PROJECT_ID = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 REPOSITORY = re.compile(r"^[^/\s]+/[^/\s]+$")
-PROJECT_ROLES = {"power-source", "product", "system", "library", "tooling"}
+PROJECT_ROLES = {"power-source", "product", "runtime-target", "library", "tooling"}
 OFFLINE_SOURCE_MODE = "offline-local"
 RUNTIME_FILES = (
     "AGENTS.md",
@@ -90,12 +95,10 @@ def safe_relative_path(root: Path, value: str, *, allow_root: bool = False) -> P
 
 
 def project_entries(data: dict[str, Any]) -> list[dict[str, Any]]:
-    rows = data.get("projects") or []
-    if not isinstance(rows, list):
-        raise ProjectRegistryError("workspace projects must be a list")
-    if not all(isinstance(item, dict) for item in rows):
-        raise ProjectRegistryError("workspace project entries must be mappings")
-    return rows
+    try:
+        return target_project_entries(data)
+    except RuntimeError as exc:
+        raise ProjectRegistryError(str(exc)) from exc
 
 
 def validate_registry(
@@ -104,6 +107,10 @@ def validate_registry(
     root: Path,
     gitmodules: dict[str, str] | None = None,
 ) -> dict[str, dict[str, Any]]:
+    if "systems" in data:
+        raise ProjectRegistryError(
+            "workspace systems registry is removed; configure Powers and orchestration under projects[]"
+        )
     projects: dict[str, dict[str, Any]] = {}
     paths: set[str] = set()
     for project in project_entries(data):
@@ -144,6 +151,14 @@ def validate_registry(
         normalized["path"] = relative
         normalized["source"] = normalize_repo(repository)
         normalized["roles"] = list(map(str, roles))
+        try:
+            enabled = enabled_powers(normalized)
+        except RuntimeError as exc:
+            raise ProjectRegistryError(str(exc)) from exc
+        if enabled and "product" not in normalized["roles"] and "runtime-target" not in normalized["roles"]:
+            raise ProjectRegistryError(
+                f"project {project_id} enables Powers but is not a product/runtime target"
+            )
         projects[project_id] = normalized
         paths.add(relative)
 
@@ -166,24 +181,6 @@ def validate_registry(
             if power.get("source") and normalize_repo(str(power["source"])) != project["source"]:
                 raise ProjectRegistryError(f"Power source mismatch for project {project_id}")
 
-    for system in data.get("systems") or []:
-        if not isinstance(system, dict):
-            raise ProjectRegistryError("workspace system entries must be mappings")
-        project_id = system.get("project")
-        if project_id is not None:
-            if project_id not in projects:
-                raise ProjectRegistryError(
-                    f"system {system.get('id')} references unknown project: {project_id}"
-                )
-            project = projects[str(project_id)]
-            if not ({"system", "product"} & set(project["roles"])):
-                raise ProjectRegistryError(
-                    f"system {system.get('id')} project {project_id} lacks system/product role"
-                )
-            if system.get("path") and system["path"] != project["path"]:
-                raise ProjectRegistryError(f"system path mismatch for project {project_id}")
-            if system.get("source") and normalize_repo(str(system["source"])) != project["source"]:
-                raise ProjectRegistryError(f"system source mismatch for project {project_id}")
     return projects
 
 
@@ -281,9 +278,8 @@ def template_workspace(workspace_id: str, name: str) -> dict[str, Any]:
         },
         "projects": [],
         "powers": [],
-        "systems": [],
         "data_ownership": {
-            "policy": "system-owned",
+            "policy": "project-owned",
             "roots": {"ua": ".ua", "task_me": ".task-me", "gwc": ".gwc", "bmad": ".bmad"},
         },
     }
@@ -352,17 +348,12 @@ def project_add(args: argparse.Namespace) -> int:
     if offline:
         project["sourceMode"] = OFFLINE_SOURCE_MODE
     data.setdefault("projects", []).append(project)
-    if args.system:
-        enabled = [item for item in (args.enable_powers or "").split(",") if item]
-        data.setdefault("systems", []).append(
-            {
-                "id": args.system_id or args.project_id,
-                "project": args.project_id,
-                "path": relative,
-                "source": source,
-                "enabled_powers": enabled,
-            }
-        )
+    enabled = [item.strip() for item in (args.enable_powers or "").split(",") if item.strip()]
+    if args.system or enabled:
+        project["powers"] = {"enabled": enabled}
+        if "product" not in roles and "runtime-target" not in roles:
+            project["roles"] = list(dict.fromkeys([*roles, "product"]))
+        data["projects"][-1] = project
     write_yaml(WORKSPACE_PATH, data)
     mode = "offline-local" if offline else "git-submodule"
     print(f"ADDED: {args.project_id} -> {relative} ({mode})")

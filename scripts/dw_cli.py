@@ -22,6 +22,21 @@ except ImportError as exc:
     )
     raise SystemExit(2) from exc
 
+try:
+    from dw_project_targets import (
+        ProjectTargetError,
+        enabled_powers,
+        find_runtime_project,
+        runtime_projects,
+    )
+except ModuleNotFoundError:
+    from scripts.dw_project_targets import (
+        ProjectTargetError,
+        enabled_powers,
+        find_runtime_project,
+        runtime_projects,
+    )
+
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE_PATH = ROOT / "workspace.yaml"
 MANIFEST_DIR = ROOT / "manifests" / "powers"
@@ -210,11 +225,16 @@ def atomic_write(path: Path, content: str) -> None:
                 pass
 
 
+def find_runtime_target(project_id: str) -> dict[str, Any]:
+    try:
+        return find_runtime_project(workspace(), project_id)
+    except ProjectTargetError as exc:
+        raise DwError(str(exc)) from exc
+
+
 def find_system(system_id: str) -> dict[str, Any]:
-    for system in workspace().get("systems", []):
-        if system.get("id") == system_id:
-            return system
-    raise DwError(f"unknown system: {system_id}")
+    """Deprecated compatibility alias for project-native target lookup."""
+    return find_runtime_target(system_id)
 
 
 def provider_entries() -> list[dict[str, Any]]:
@@ -239,7 +259,7 @@ def workspace_info(args: argparse.Namespace) -> int:
         "hosts": ws.get("hosts", []),
         "providers": [item["id"] for item in provider_entries()],
         "powers": [item["id"] for item in ws.get("powers", []) if item.get("enabled", True)],
-        "systems": [item["id"] for item in ws.get("systems", [])],
+        "projects": [item["id"] for item in runtime_projects(ws)],
     }
     if args.json:
         emit(data, as_json=True)
@@ -248,7 +268,7 @@ def workspace_info(args: argparse.Namespace) -> int:
     print(f"Hosts: {', '.join(data['hosts']) or '-'}")
     print(f"Providers: {', '.join(data['providers']) or '-'}")
     print(f"Powers: {', '.join(data['powers']) or '-'}")
-    print(f"Systems: {', '.join(data['systems']) or '-'}")
+    print(f"Runtime projects: {', '.join(data['projects']) or '-'}")
     return 0
 
 
@@ -408,10 +428,18 @@ def skill_help(args: argparse.Namespace) -> int:
 def submodule_entries() -> list[dict[str, str]]:
     ws = workspace()
     entries: list[dict[str, str]] = []
+    projects = {
+        str(project.get("id")): project for project in ws.get("projects", []) if isinstance(project, dict)
+    }
     for power in ws.get("powers", []):
-        entries.append({"type": "power", "id": power["id"], "path": power["path"]})
-    for system in ws.get("systems", []):
-        entries.append({"type": "system", "id": system["id"], "path": system["path"]})
+        project = projects.get(str(power.get("project")))
+        path = power.get("path") or (project or {}).get("path")
+        if path:
+            entries.append({"type": "power", "id": str(power["id"]), "path": str(path)})
+    for project in runtime_projects(ws):
+        entries.append(
+            {"type": "system", "id": str(project["id"]), "path": str(project["path"])}
+        )
     return entries
 
 
@@ -654,11 +682,11 @@ Thin `{host}` adapter owned by DW-SuperApps.
 
 This Power is already active when this skill is selected or invoked through its native host alias.
 
-1. Resolve one target system from `workspace.yaml`.
+1. Resolve one runtime target project from `workspace.yaml`.
 2. Read `AGENT_GUIDANCE.md` from the installed package when present.
 3. Read the resolved canonical installed Power entrypoint directly.
 4. Apply that Power to the user's task in the current conversation.
-5. Keep runtime and project configuration under the target system's `{spec['runtimeDataRoot']}/`.
+5. Keep runtime and project configuration under the target project's `{spec['runtimeDataRoot']}/`.
 6. Continue until the task reaches a real capability, evidence, or authority boundary.
 
 Do not generate or execute a command to activate this Power.
@@ -689,12 +717,12 @@ Read `AGENTS.md` and `workspace.yaml` before acting.
 
 ## Routing
 
-1. Resolve the target system from `workspace.yaml`.
+1. Resolve the runtime target project from `workspace.yaml`.
 2. Load Power code from the workspace distribution store first.
 3. Use source submodules only as an explicit compatibility fallback.
-4. Keep runtime and project configuration inside the selected system repository.
+4. Keep runtime and project configuration inside the selected project repository.
 5. Keep packages, inbox, history, bindings, router, and all host adapters in DW-SuperApps.
-6. Never install Power skill payloads into a registered system.
+6. Never install Power skill payloads into a registered project target.
 
 ## Power activation routing
 
@@ -953,22 +981,27 @@ def provider_info(args: argparse.Namespace) -> int:
 
 
 def system_list(args: argparse.Namespace) -> int:
-    systems = workspace().get("systems", [])
+    systems = runtime_projects(workspace())
     if args.json:
         emit(systems, as_json=True)
         return 0
     for system in systems:
-        powers = ", ".join(system.get("enabled_powers", []))
+        powers = ", ".join(enabled_powers(system))
         print(f"{system['id']}: {system['path']} [{powers}]")
     return 0
 
 
 def system_powers(args: argparse.Namespace) -> int:
-    system = find_system(args.system_id)
-    enabled = system.get("enabled_powers", [])
+    system = find_runtime_target(args.system_id)
+    enabled = enabled_powers(system)
     if args.json:
         emit(
-            {"system": system["id"], "path": system["path"], "enabled_powers": enabled},
+            {
+                "system": system["id"],
+                "path": system["path"],
+                "enabled_powers": enabled,
+                "project": system["id"],
+            },
             as_json=True,
         )
         return 0

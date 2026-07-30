@@ -25,13 +25,13 @@ All notable changes to the DW SuperApps workspace control plane are documented h
 
 - `manifests/orchestration/intents.yaml` — workspace-level intent registry declaring worker intents for `task-me`, `bmad`, and `ua`.
 - `scripts/dw_orchestrator.py` — new orchestration runtime with `prompt` and `run` subcommands.
-- `dw orchestrator prompt --system <system> --task "<task>"` — composed human-readable prompt with GWC as primary and applicable worker delegation notes.
-- `dw orchestrator run --system <system> --task "<task>"` — structured JSON execution plan with ordered phases.
+- `dw orchestrator prompt --system <project-id> --task "<task>"` — composed human-readable prompt with GWC as primary and applicable worker delegation notes. `--system` is a deprecated compatibility flag.
+- `dw orchestrator run --system <project-id> --task "<task>"` — structured JSON execution plan with ordered phases. `--system` is a deprecated compatibility flag.
 - Hybrid intent matching: exact intent-ID match first, then candidate intent list for host LLM judgment when no exact match is found.
 
 ### Changed
 
-- `workspace.yaml` system entries now support an optional `orchestration` block with `primary`, `workers`, and `hooks`.
+- Product project entries in `workspace.yaml` now support an optional `orchestration` block with `primary`, `workers`, and `hooks`.
 - Generated host adapters now include an `## Orchestration` section derived from `workspace.yaml`, so regeneration preserves orchestration rules.
 - `bin/dw` now routes `orchestrator prompt|run` to the new orchestrator runtime.
 

@@ -28,9 +28,8 @@ distribution:
   hostAdaptersRoot: .
 projects: []
 powers: []
-systems: []
 data_ownership:
-  policy: system-owned
+  policy: project-owned
   roots:
     ua: .ua
     task_me: .task-me

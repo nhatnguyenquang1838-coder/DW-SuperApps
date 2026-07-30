@@ -1,6 +1,6 @@
 # DW Power Consumer Runtime v1
 
-The consumer runtime separates the shared DW-SuperApps package store from system-owned runtime and project configuration.
+The consumer runtime separates the shared DW-SuperApps package store from project-owned runtime and project configuration.
 
 ## Ownership
 
@@ -8,12 +8,12 @@ The consumer runtime separates the shared DW-SuperApps package store from system
 Workspace distribution store: DW-SuperApps/.dw/powers/<power-id>/
 Workspace inbox:             DW-SuperApps/.dw/inbox/powers/<power-id>/
 Workspace history:           DW-SuperApps/.dw/history/powers/<power-id>/
-Workspace bindings:          DW-SuperApps/.dw/bindings/<system>/<power-id>.json
-System runtime:              <system>/.gwc | .ua | .task-me | .bmad
-System configuration:        <system>/<runtime-root>/config/
+Workspace bindings:          DW-SuperApps/.dw/bindings/<project-id>/<power-id>.json
+Project runtime:             <project>/.gwc | .ua | .task-me | .bmad
+Project configuration:       <project>/<runtime-root>/config/
 ```
 
-`--target` selects the system runtime target. `--store-root` overrides the workspace package store for tests or explicit external layouts.
+`--target` selects the project runtime target. `--store-root` overrides the workspace package store for tests or explicit external layouts.
 
 ## Source modes
 
@@ -54,16 +54,16 @@ Normal lifecycle commands must not create `projects/rental-home/.dw/`.
 
 ## Split lifecycle behavior
 
-- **Install:** writes package code to the workspace store and creates only the declared runtime root in the system.
-- **Configure:** writes managed configuration below the system runtime root and updates the workspace binding.
+- **Install:** writes package code to the workspace store and creates only the declared runtime root in the project.
+- **Configure:** writes managed configuration below the project runtime root and updates the workspace binding.
 - **Doctor:** validates store, package integrity, binding, runtime, configuration, and legacy detection separately.
 - **History:** lists workspace package history and does not require a target.
 - **Rollback:** replaces the shared managed package from workspace history and refreshes bindings.
-- **Uninstall:** detaches the selected system; preserves runtime by default; removes the shared package only when no bindings remain.
+- **Uninstall:** detaches the selected project target; preserves runtime by default; removes the shared package only when no bindings remain.
 
 ## Legacy detection
 
-Existing `<system>/.dw/powers/<power-id>` paths are reported as `LEGACY_TARGET_INSTALL`. They are never overwritten, deleted, migrated, or used as an execution fallback by normal onboarding.
+Existing `<project>/.dw/powers/<power-id>` paths are reported as `LEGACY_TARGET_INSTALL`. They are never overwritten, deleted, migrated, or used as an execution fallback by normal onboarding.
 
 ## Safety rules
 
@@ -71,7 +71,7 @@ Existing `<system>/.dw/powers/<power-id>` paths are reported as `LEGACY_TARGET_I
 - Package identity must match the requested manifest.
 - Every declared file is size- and SHA-256-verified.
 - Store and runtime target must not overlap.
-- Distribution roots must not resolve inside the system.
+- Distribution roots must not resolve inside the project target.
 - Unmanaged packages and runtime configuration are never overwritten or removed.
 - Shared package removal is blocked by remaining bindings.
 - Runtime removal requires `--include-runtime --yes`.

@@ -55,7 +55,7 @@ dw --version
 .\dw.ps1 power status powers
 ```
 
-The installer is idempotent. Runtime data remains system-owned under `.gwc`, `.task-me`, `.ua`, and `.bmad` in the target product repository.
+The installer is idempotent. Runtime data remains project-owned under `.gwc`, `.task-me`, `.ua`, and `.bmad` in the target product repository.
 
 ## 3. Initialize and validate the workspace
 
@@ -96,7 +96,7 @@ Open the DW-SuperApps workspace in a configured host and invoke the native skill
 /dw-bmad Refine the product specification
 ```
 
-The host resolves the target system and canonical installed entrypoint. No generated prompt or terminal activation command is required.
+The host resolves the target project and canonical installed entrypoint. No generated prompt or terminal activation command is required.
 
 Useful discovery commands:
 

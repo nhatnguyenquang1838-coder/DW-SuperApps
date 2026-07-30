@@ -9,6 +9,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
+try:
+    from dw_project_targets import ProjectTargetError, find_runtime_project
+except ModuleNotFoundError:
+    from scripts.dw_project_targets import ProjectTargetError, find_runtime_project
+
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE_PATH = ROOT / "workspace.yaml"
 INTENTS_PATH = ROOT / "manifests" / "orchestration" / "intents.yaml"
@@ -34,10 +39,10 @@ def load_yaml(path: Path) -> dict[str, Any]:
 
 def find_system(system_id: str) -> dict[str, Any]:
     workspace = load_yaml(WORKSPACE_PATH)
-    for system in workspace.get("systems", []):
-        if isinstance(system, dict) and system.get("id") == system_id:
-            return system
-    raise OrchestratorError(f"unknown system: {system_id}")
+    try:
+        return find_runtime_project(workspace, system_id)
+    except ProjectTargetError as exc:
+        raise OrchestratorError(str(exc)) from exc
 
 
 def load_intents() -> dict[str, Any]:
@@ -66,7 +71,7 @@ def exact_intent_matches(task_text: str, intent_ids: list[str]) -> list[str]:
 def orchestration_block(system: dict[str, Any]) -> dict[str, Any]:
     block = system.get("orchestration")
     if not isinstance(block, dict):
-        raise OrchestratorError(f"system {system.get('id')} has no orchestration block")
+        raise OrchestratorError(f"project {system.get('id')} has no orchestration block")
     return block
 
 
@@ -104,7 +109,7 @@ def build_primary_prompt(system: dict[str, Any], task: str) -> str:
     workers = ", ".join(block.get("workers", [])) or "none"
     hooks = applicable_hooks(system, set())
     lines = [
-        f"Use the `{primary}` Power as the primary governance workflow for system `{system_id}`.",
+        f"Use the `{primary}` Power as the primary governance workflow for project `{system_id}`.",
         "",
         f"Task: {task}",
         "",
@@ -120,7 +125,7 @@ def build_primary_prompt(system: dict[str, Any], task: str) -> str:
             "When this task matches one of the worker intents above, invoke the worker via:",
             f"`dw orchestrator run --system {system_id} --task \"{task}\"`",
             "",
-            "Keep generated runtime and configuration inside the system repository. Do not create Power skill payloads inside the system.",
+            "Keep generated runtime and configuration inside the project repository. Do not create Power skill payloads inside the project target.",
         ]
     )
     return os.linesep.join(lines)
@@ -137,7 +142,7 @@ def build_worker_prompts(system: dict[str, Any], task: str, matched_intents: set
                 "task": task,
                 "intents": hook["intents"],
                 "output_into": hook["output_into"],
-                "prompt": f"Use the `{hook['worker']}` Power for system `{system.get('id')}`.",
+                "prompt": f"Use the `{hook['worker']}` Power for project `{system.get('id')}`.",
             }
         )
     return prompts

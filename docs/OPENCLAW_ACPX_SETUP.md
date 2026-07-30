@@ -127,7 +127,7 @@ Routing remains capability-based. These defaults do not override GWC scope or ap
 Before dispatch, OpenClaw must have:
 
 - exact repository and base SHA;
-- one target system;
+- one target project;
 - applicable Powers;
 - current GWC gate and risk;
 - allowed and forbidden paths;

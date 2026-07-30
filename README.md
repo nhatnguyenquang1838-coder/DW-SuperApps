@@ -1,6 +1,6 @@
 # DW SuperApps
 
-DW SuperApps is a host-neutral control workspace for reusable AI Powers, editable project repositories, product systems, model providers, and agent hosts.
+DW SuperApps is a host-neutral control workspace for reusable AI Powers, editable project repositories, product projects, model providers, and agent hosts.
 
 ## Current workspace model
 
@@ -12,12 +12,12 @@ DW-SuperApps
 ├── .dw/inbox/powers/*         local/offline package drop zone
 ├── .dw/cache/*                package cache
 ├── .dw/history/powers/*       package rollback history
-├── .dw/bindings/*             system-to-package bindings
+├── .dw/bindings/*             project-to-package bindings
 ├── host adapter roots         thin workspace-owned native routing
-└── <system runtime roots>     .gwc, .ua, .task-me, .bmad
+└── <project runtime roots>    .gwc, .ua, .task-me, .bmad
 ```
 
-The workspace owns Power distributions and host adapters. Each registered system owns its runtime data and project configuration. Normal Power onboarding must not copy Power packages or host skill implementations into the target system.
+The workspace owns Power distributions and host adapters. Each registered product project owns its runtime data and project configuration. Normal Power onboarding must not copy Power packages or host skill implementations into the target project.
 
 ## Quick start
 
@@ -59,14 +59,12 @@ dw workspace init . \
 
 Initialization is non-destructive and refuses to replace an existing `workspace.yaml` or managed runtime path.
 
-## Add a project or system
+## Add a product project
 
 ```bash
 dw project add rental-home \
   --repo nhatnguyenquang1838-coder/rental_home \
   --role product \
-  --role system \
-  --system \
   --enable-powers gwc,ua,task-me,bmad
 ```
 
@@ -101,14 +99,14 @@ The package store and runtime target are separate:
 
 ```text
 package store   = workspace distribution.storeRoot
-runtime target  = selected project/system path
+runtime target  = selected project path
 ```
 
 Use `--store-root` only for tests or an explicitly external workspace layout. A store root must not overlap or resolve inside the runtime target.
 
 ### Offline Power installation
 
-Use offline installation when the package ZIPs and checksum sidecars have already been transferred to the machine. The package inbox belongs to DW-SuperApps; never place offline packages under the target system.
+Use offline installation when the package ZIPs and checksum sidecars have already been transferred to the machine. The package inbox belongs to DW-SuperApps; never place offline packages under the target project.
 
 First resolve the target and enabled Powers from the local workspace registry:
 
@@ -131,10 +129,10 @@ Install each Power with an explicit package path and runtime target:
   --source package \
   --package .dw/inbox/powers/<power-id>/<package>.zip \
   --checksum .dw/inbox/powers/<power-id>/<package>.zip.sha256 \
-  --target projects/<system-id>
+  --target projects/<project-id>
 ```
 
-The installer verifies the archive checksum, package identity, `MANIFEST.json`, declared file sizes and hashes, entrypoints, runtime root, archive paths, and managed-overwrite safety. It preserves the ZIP and checksum, writes the package to `.dw/powers/<power-id>/`, updates `.dw/bindings/<system-id>/`, and keeps runtime data in the target's declared `.gwc/`, `.ua/`, `.task-me/`, or `.bmad/` root.
+The installer verifies the archive checksum, package identity, `MANIFEST.json`, declared file sizes and hashes, entrypoints, runtime root, archive paths, and managed-overwrite safety. It preserves the ZIP and checksum, writes the package to `.dw/powers/<power-id>/`, updates `.dw/bindings/<project-id>/`, and keeps runtime data in the target's declared `.gwc/`, `.ua/`, `.task-me/`, or `.bmad/` root.
 
 After installation, configure only when the package contract requires it, refresh workspace-owned host adapters, and validate without remote acquisition:
 
@@ -142,14 +140,14 @@ After installation, configure only when the package contract requires it, refres
 ./bin/dw power configure <power-id> \
   --config <config-file> \
   --contract <consumer-contract> \
-  --target projects/<system-id>
+  --target projects/<project-id>
 ./bin/dw host install all --mode wrapper
-./bin/dw power doctor <power-id> --target projects/<system-id>
+./bin/dw power doctor <power-id> --target projects/<project-id>
 ./bin/dw validate
 ./bin/dw doctor all --offline
 ```
 
-Offline mode must not run Git fetch/clone, release downloads, `curl`, `wget`, remote `power-dist`, or Power submodule initialization. Existing `<system>/.dw/powers/<power-id>` paths are reported as `LEGACY_TARGET_INSTALL` and preserved. For the complete agent workflow and evidence requirements, use [the offline ZIP onboarding prompt](prompts/power-dist/onboard-offline-zip.md) and [the offline installation guide](docs/installation/OFFLINE_INSTALL.md).
+Offline mode must not run Git fetch/clone, release downloads, `curl`, `wget`, remote `power-dist`, or Power submodule initialization. Existing `<project>/.dw/powers/<power-id>` paths are reported as `LEGACY_TARGET_INSTALL` and preserved. For the complete agent workflow and evidence requirements, use [the offline ZIP onboarding prompt](prompts/power-dist/onboard-offline-zip.md) and [the offline installation guide](docs/installation/OFFLINE_INSTALL.md).
 
 ## Native Power activation
 
@@ -168,7 +166,7 @@ Example user request:
 /dw-gwc Review the delivery scope and prepare the governed execution.
 ```
 
-The agent must resolve the target system, load the selected installed Power entrypoint, and apply it directly to the remainder of the request. It must not ask the user to run an activation command or generate a copy-and-paste task prompt.
+The agent must resolve the target project, load the selected installed Power entrypoint, and apply it directly to the remainder of the request. It must not ask the user to run an activation command or generate a copy-and-paste task prompt.
 
 The DW CLI owns installation, configuration, inspection, validation, doctor, history, rollback, and uninstall operations. Task prompt generation is owned by the selected Power/host skill, not by the CLI.
 
@@ -212,7 +210,7 @@ dw host status all
 dw provider status all
 ```
 
-OpenClaw ACPX is the configured multi-agent orchestrator. It can route governed work to Codex, Claude, Kiro, and Kilo Code workers. GWC remains the primary governance workflow for registered systems.
+OpenClaw ACPX is the configured multi-agent orchestrator. It can route governed work to Codex, Claude, Kiro, and Kilo Code workers. GWC remains the primary governance workflow for registered product projects.
 
 Ollama is an OpenAI-compatible model provider, not an agent host. The workspace default endpoint is:
 
@@ -256,7 +254,7 @@ dw report g1 --workspace .gwc/tasks/<task-id>
 
 - [Installation index](docs/installation/README.md)
 - [Create a Super Project](docs/installation/CREATE_SUPER_PROJECT.md)
-- [Add a project or system](docs/installation/ADD_PROJECT.md)
+- [Add a product project](docs/installation/ADD_PROJECT.md)
 - [Install Powers](docs/installation/INSTALL_POWERS.md)
 - [Power distribution onboarding](docs/runbooks/POWER_DIST_ONBOARDING.md)
 - [Portable multi-host routing](docs/PORTABLE_MULTI_HOST_ROUTER.md)

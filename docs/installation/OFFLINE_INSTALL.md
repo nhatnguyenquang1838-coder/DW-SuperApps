@@ -23,7 +23,6 @@ dw_kiro_python /path/to/dw-superapps-full-<version>/offline_release_installer.py
   --project-id <project-id> \
   --project-path projects/<project-id> \
   --project-source owner/name \
-  --system-id <system-id> \
   --powers all \
   --repair
 ```
@@ -39,7 +38,7 @@ The final ownership split is:
 
 ```text
 <super-project>/.dw/powers/<power-id>/       shared package code
-<super-project>/.dw/bindings/<system>/       bindings
+<super-project>/.dw/bindings/<project-id>/   bindings
 <super-project>/<project>/.gwc/              target runtime/configuration
 <super-project>/<project>/.ua/
 <super-project>/<project>/.task-me/

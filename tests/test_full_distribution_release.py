@@ -154,6 +154,9 @@ class FullDistributionReleaseTests(unittest.TestCase):
             )
             self.assertEqual("READY", setup_result["status"])
             self.assertTrue((setup_root / "workspace.yaml").is_file())
+            setup_workspace = yaml.safe_load((setup_root / "workspace.yaml").read_text(encoding="utf-8"))
+            self.assertNotIn("systems", setup_workspace)
+            self.assertEqual(["gwc"], setup_workspace["projects"][0]["powers"]["enabled"])
             self.assertTrue((setup_root / ".dw/powers/gwc/MANIFEST.json").is_file())
             self.assertTrue((setup_root / ".dw/bindings/app/gwc.json").is_file())
             self.assertTrue((setup_root / "projects/app/.gwc").is_dir())
@@ -253,6 +256,8 @@ class FullDistributionReleaseTests(unittest.TestCase):
             )
             self.assertEqual("READY", repaired_stale["status"])
             self.assertTrue((Path(repaired_stale["backup"]) / "workspace.yaml").is_file())
+            repaired_workspace = yaml.safe_load((setup_root / "workspace.yaml").read_text(encoding="utf-8"))
+            self.assertNotIn("systems", repaired_workspace)
 
             (setup_root / "workspace.yaml").write_text("broken: [", encoding="utf-8")
             repaired_registry = offline_release_installer.setup_release(

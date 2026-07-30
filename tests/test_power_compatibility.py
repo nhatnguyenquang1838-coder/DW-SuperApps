@@ -40,10 +40,17 @@ class PowerCompatibilityTests(unittest.TestCase):
                         encoding="utf-8"
                     )
                 )
-                source_root = ROOT / manifest["spec"]["path"]
-                expected = subprocess.check_output(
-                    ["git", "-C", str(source_root), "rev-parse", "HEAD"], text=True
-                ).strip()
+                # The root gitlink is the immutable integration pin. The
+                # nested provider checkout may be intentionally ahead or
+                # dirty during workspace maintenance.
+                gitlink = subprocess.check_output(
+                    ["git", "ls-tree", "HEAD", manifest["spec"]["path"]],
+                    cwd=ROOT,
+                    text=True,
+                ).strip().split()
+                self.assertGreaterEqual(len(gitlink), 3)
+                self.assertEqual("160000", gitlink[0])
+                expected = gitlink[2]
                 self.assertEqual(expected, powers[power_id]["publishedSourceSha"])
 
     def test_new_package_contains_static_agent_guidance(self) -> None:

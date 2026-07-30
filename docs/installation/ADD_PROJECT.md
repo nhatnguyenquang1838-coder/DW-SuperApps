@@ -1,4 +1,4 @@
-# Add a project or system
+# Add a project target
 
 ## Add a product project
 
@@ -20,25 +20,20 @@ value is metadata only; no GitHub, Git, or submodule operation is performed.
   --repo example-org/billing \
   --path projects/billing \
   --role product \
-  --role system \
-  --system \
-  --system-id billing \
   --enable-powers gwc,ua,task-me,bmad \
   --offline
 ```
 
-`projects/billing` must already exist locally. This writes the project and system records to
-`workspace.yaml` with `sourceMode: offline-local`, which allows Power bindings to resolve without a
+`projects/billing` must already exist locally. This writes one project record to
+`workspace.yaml` with `sourceMode: offline-local`, nested `powers.enabled`, and no `systems` key; this allows Power bindings to resolve without a
 `.gitmodules` entry.
 
-## Add and register a system
+## Add and register a product project
 
 ```bash
 dw project add billing \
   --repo example-org/billing \
   --role product \
-  --role system \
-  --system \
   --enable-powers gwc,ua,task-me
 ```
 

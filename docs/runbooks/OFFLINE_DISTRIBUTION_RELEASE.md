@@ -45,7 +45,7 @@ empty, stale, or broken and perform the following local lifecycle with the relea
 
 ```text
 VERIFY RELEASE -> REPAIR/CREATE workspace.yaml -> INSTALL CONTROL PLANE
--> INSTALL ROOT PACKAGE STORE -> REGISTER CHILD PROJECT/SYSTEM
+-> INSTALL ROOT PACKAGE STORE -> REGISTER CHILD PROJECT
 -> CREATE TARGET RUNTIME ROOTS -> WRITE BINDINGS -> ACTIVATE HOSTS
 -> VALIDATE -> DOCTOR -> REPORT
 ```
@@ -61,7 +61,6 @@ python offline_release_installer.py setup \
   --project-id <id> \
   --project-path projects/<id> \
   --project-source owner/name \
-  --system-id <id> \
   --powers all \
   --repair
 ```
@@ -77,7 +76,7 @@ under `.dw/history/offline-releases/` when repair replaces managed or broken DW 
 
 ## Ownership
 
-Workspace owns `.dw/powers`, `.dw/history`, `.dw/bindings` and host adapters. Target systems own `.gwc`, `.ua`, `.task-me`, `.bmad` and application source.
+Workspace owns `.dw/powers`, `.dw/history`, `.dw/bindings` and host adapters. Target projects own `.gwc`, `.ua`, `.task-me`, `.bmad` and application source.
 
 ## Branch comparison
 

@@ -48,7 +48,6 @@ dw_kiro_python "$RELEASE_DIR/offline_release_installer.py" setup \
   --project-id app \
   --project-path projects/app \
   --project-source owner/app \
-  --system-id app \
   --powers all \
   --repair
 ```
@@ -58,7 +57,7 @@ existing child has a local Git `remote.origin.url` that can be read without cont
 child with no local remote, the value is required.
 
 The command creates or repairs `workspace.yaml`, initializes the local control-plane Git repository when
-needed, installs the package store, registers the project/system, creates target runtime roots, writes bindings,
+needed, installs the package store, registers the project, creates target runtime roots, writes bindings,
 generates host adapters, and runs workspace validation plus Power doctors. `--repair` backs up replaced files
 under `<workspace>/.dw/history/offline-releases/<timestamp>/` and preserves unrelated files.
 
@@ -66,7 +65,7 @@ Expected ownership:
 
 ```text
 <workspace>/.dw/powers/<power-id>/       shared package code
-<workspace>/.dw/bindings/<system>/       package-to-target bindings
+<workspace>/.dw/bindings/<project-id>/   package-to-target bindings
 <workspace>/<project>/.gwc/              target runtime/configuration
 <workspace>/<project>/.ua/
 <workspace>/<project>/.task-me/

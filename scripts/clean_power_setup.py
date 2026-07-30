@@ -10,6 +10,11 @@ from pathlib import Path
 from typing import Any
 
 try:
+    from dw_project_targets import ProjectTargetError, project_path, runtime_projects
+except ModuleNotFoundError:
+    from scripts.dw_project_targets import ProjectTargetError, project_path, runtime_projects
+
+try:
     import yaml
 except ImportError as exc:  # pragma: no cover - handled by the workspace launcher
     print("Missing PyYAML. Run: python -m pip install -r requirements-dev.txt", file=sys.stderr)
@@ -104,18 +109,19 @@ def runtime_paths(data: dict[str, Any], root: Path = ROOT) -> list[tuple[str, Pa
     if not isinstance(declared, dict):
         return []
     paths: list[tuple[str, Path]] = []
-    for system in data.get("systems") or []:
-        if not isinstance(system, dict):
-            continue
-        system_id = str(system.get("id", "unknown"))
-        system_candidate = root / str(system.get("path", ""))
+    for project in runtime_projects(data):
+        project_id = str(project.get("id", "unknown"))
+        try:
+            system_candidate = project_path(project, root)
+        except ProjectTargetError as exc:
+            raise CleanupError(str(exc)) from exc
         if system_candidate.is_symlink():
-            raise CleanupError(f"refusing symlink system path: {system_candidate}")
+            raise CleanupError(f"refusing symlink project path: {system_candidate}")
         system_path = system_candidate.resolve()
         try:
             system_path.relative_to(root.resolve())
         except ValueError as exc:
-            raise CleanupError(f"system path escapes workspace: {system_path}") from exc
+            raise CleanupError(f"project path escapes workspace: {system_path}") from exc
         for name, relative in declared.items():
             if not isinstance(relative, str) or not relative.strip():
                 raise CleanupError(f"runtime root {name} must be a path string")
@@ -124,8 +130,8 @@ def runtime_paths(data: dict[str, Any], root: Path = ROOT) -> list[tuple[str, Pa
             try:
                 runtime.relative_to(system_path)
             except ValueError as exc:
-                raise CleanupError(f"runtime root escapes system {system_id}: {relative}") from exc
-            paths.append((f"runtime:{system_id}:{name}", runtime_candidate))
+                raise CleanupError(f"runtime root escapes project {project_id}: {relative}") from exc
+            paths.append((f"runtime:{project_id}:{name}", runtime_candidate))
     return paths
 
 
@@ -169,7 +175,7 @@ def build_plan(*, include_runtime: bool, root: Path = ROOT) -> dict[str, list[st
         "remove": sorted(dict.fromkeys(remove)),
         "preserve": [
             str(root / "workspace.yaml"),
-            "registered projects and systems",
+            "registered projects",
             "Power source submodules",
             "runtime roots unless --include-runtime is supplied",
             "legacy target .dw installations",

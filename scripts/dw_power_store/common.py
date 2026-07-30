@@ -10,6 +10,11 @@ from typing import Any
 
 import yaml
 
+try:
+    from dw_project_targets import ProjectTargetError, project_path, runtime_projects
+except ModuleNotFoundError:
+    from scripts.dw_project_targets import ProjectTargetError, project_path, runtime_projects
+
 ROOT = Path(__file__).resolve().parents[2]
 WORKSPACE_PATH = ROOT / "workspace.yaml"
 MANIFEST_DIR = ROOT / "manifests" / "powers"
@@ -124,11 +129,11 @@ def validate_store_target_separation(roots: dict[str, Path], target: Path) -> No
     store = roots["store"].resolve()
     target = target.resolve()
     if store == target or is_within(store, target) or is_within(target, store):
-        raise ConsumerError("BLOCKED_STORE_RUNTIME_OVERLAP: package store and system target overlap")
+        raise ConsumerError("BLOCKED_STORE_RUNTIME_OVERLAP: package store and project target overlap")
     for name, path in roots.items():
         if is_within(path, target):
             raise ConsumerError(
-                f"BLOCKED_STORE_INSIDE_SYSTEM: distribution {name} root resolves inside {target}"
+                f"BLOCKED_STORE_INSIDE_PROJECT: distribution {name} root resolves inside {target}"
             )
 
 
@@ -144,7 +149,7 @@ def runtime_root_for(target: Path, package_manifest: dict[str, Any]) -> Path:
     relative = Path(str(package_manifest["spec"]["runtimeDataRoot"]))
     runtime = (target / relative).resolve()
     if relative.is_absolute() or not is_within(runtime, target):
-        raise ConsumerError("runtime data root escapes system target")
+        raise ConsumerError("runtime data root escapes project target")
     return runtime
 
 
@@ -154,9 +159,13 @@ def runtime_config_root(target: Path, package_manifest: dict[str, Any]) -> Path:
 
 def target_key(target: Path) -> str:
     target = target.resolve()
-    for system in workspace().get("systems", []):
-        if isinstance(system, dict) and (ROOT / str(system.get("path", ""))).resolve() == target:
-            return str(system["id"])
+    for project in runtime_projects(workspace()):
+        try:
+            registered_target = project_path(project, ROOT)
+        except ProjectTargetError:
+            continue
+        if registered_target == target:
+            return str(project["id"])
     digest = hashlib.sha256(str(target).encode("utf-8")).hexdigest()[:12]
     return f"external-{digest}"
 

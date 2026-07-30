@@ -1,6 +1,6 @@
 # DW SuperApps Multi-Host Setup
 
-DW-SuperApps owns one shared set of installed Powers and all host adapters. Registered systems own only their runtime and project configuration.
+DW-SuperApps owns one shared set of installed Powers and all host adapters. Registered projects own only their runtime and project configuration.
 
 ## Layout
 
@@ -18,7 +18,7 @@ projects/rental-home/.gwc | .ua | .task-me | .bmad | _bmad*
 
 Do not generate Power packages or host adapters inside `projects/rental-home`.
 
-## Install packages for a system
+## Install packages for a project
 
 ```bash
 ./bin/dw power install gwc --source auto --target projects/rental-home
@@ -60,7 +60,7 @@ Use the native skill alias in the configured host and put the task after it:
 /dw-bmad Refine the product specification
 ```
 
-The selected adapter resolves the target system and canonical installed entrypoint directly. No terminal command or generated task prompt is required.
+The selected adapter resolves the target project and canonical installed entrypoint directly. No terminal command or generated task prompt is required.
 
 ## Legacy installations
 
@@ -69,7 +69,7 @@ If `projects/rental-home/.dw/powers/<power-id>` exists, commands report `LEGACY_
 ## BMAD split
 
 - package and host skills: DW-SuperApps;
-- `.bmad`, `_bmad`, `_bmad-output`, and project configuration: target system.
+- `.bmad`, `_bmad`, `_bmad-output`, and project configuration: target project.
 
 ## Validation
 
@@ -79,4 +79,4 @@ python -m unittest discover -s tests -p "test_*.py"
 ./bin/dw doctor all --offline
 ```
 
-Verify that no host adapter or `.dw/powers` directory was created under a system.
+Verify that no host adapter or `.dw/powers` directory was created under a project target.

@@ -5,6 +5,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 try:
     import yaml
@@ -28,6 +29,7 @@ COMPATIBILITY_SCHEMA = ROOT / "schemas" / "power-compatibility-lock.schema.json"
 MANIFEST_DIR = ROOT / "manifests" / "powers"
 GITMODULES = ROOT / ".gitmodules"
 SUPPORTED_HOSTS = {"kiro", "codex", "copilot", "cline", "kilo", "claude", "custom"}
+TARGET_ROLES = {"product", "runtime-target"}
 DISTRIBUTION_ROOTS = {
     "storeRoot": ".dw/powers",
     "inboxRoot": ".dw/inbox/powers",
@@ -44,15 +46,13 @@ def fail(message: str) -> None:
 
 
 def git(*args: str, check: bool = True) -> str:
-    result = subprocess.run(
-        ["git", *args], cwd=ROOT, text=True, capture_output=True, check=False
-    )
+    result = subprocess.run(["git", *args], cwd=ROOT, text=True, capture_output=True, check=False)
     if check and result.returncode != 0:
         fail(result.stderr.strip() or f"git {' '.join(args)} failed")
     return result.stdout.strip() if result.returncode == 0 else ""
 
 
-def load_yaml(path: Path) -> dict:
+def load_yaml(path: Path) -> dict[str, Any]:
     if not path.exists():
         fail(f"missing {path.relative_to(ROOT)}")
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -76,7 +76,21 @@ def is_within(path: Path, root: Path) -> bool:
         return False
 
 
-def validate_distribution(workspace: dict, systems: list[dict]) -> dict[str, Path]:
+def target_projects(projects: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    return [project for project in projects.values() if TARGET_ROLES & set(project.get("roles", []))]
+
+
+def enabled_powers(project: dict[str, Any]) -> list[str]:
+    powers = project.get("powers") or {}
+    if not isinstance(powers, dict):
+        fail(f"project {project['id']} powers must be a mapping")
+    enabled = powers.get("enabled") or []
+    if not isinstance(enabled, list) or not all(isinstance(item, str) for item in enabled):
+        fail(f"project {project['id']} powers.enabled must be a string list")
+    return enabled
+
+
+def validate_distribution(workspace: dict[str, Any], targets: list[dict[str, Any]]) -> dict[str, Path]:
     distribution = workspace.get("distribution")
     if not isinstance(distribution, dict):
         fail("workspace distribution must be a mapping")
@@ -95,15 +109,15 @@ def validate_distribution(workspace: dict, systems: list[dict]) -> dict[str, Pat
         fail("workspace distribution.storeRoot cannot be the workspace root")
     if resolved["hostAdaptersRoot"] != ROOT.resolve():
         fail("workspace distribution.hostAdaptersRoot must resolve to DW-SuperApps root")
-    for system in systems:
-        system_path = resolve_workspace_path(system["path"])
+    for project in targets:
+        target_path = resolve_workspace_path(project["path"])
         for name, path in resolved.items():
-            if name != "hostAdaptersRoot" and (path == system_path or is_within(path, system_path)):
-                fail(f"workspace distribution.{name} resolves inside system {system['id']}: {path}")
+            if name != "hostAdaptersRoot" and (path == target_path or is_within(path, target_path)):
+                fail(f"workspace distribution.{name} resolves inside project {project['id']}: {path}")
     return resolved
 
 
-def validate_providers(workspace: dict) -> list[dict]:
+def validate_providers(workspace: dict[str, Any]) -> list[dict[str, Any]]:
     providers = workspace.get("providers") or []
     if not isinstance(providers, list):
         fail("workspace providers must be a list")
@@ -130,19 +144,16 @@ def validate_providers(workspace: dict) -> list[dict]:
 def gitmodule_map() -> dict[str, str]:
     if not GITMODULES.is_file():
         return {}
-    paths_output = git(
-        "config", "-f", str(GITMODULES), "--get-regexp", r"^submodule\..*\.path$", check=False
-    )
+    paths_output = git("config", "-f", str(GITMODULES), "--get-regexp", r"^submodule\..*\.path$", check=False)
     result: dict[str, str] = {}
     for line in paths_output.splitlines():
         key, path = line.split(maxsplit=1)
         name = key[len("submodule.") : -len(".path")]
-        url = git("config", "-f", str(GITMODULES), "--get", f"submodule.{name}.url", check=False)
-        result[path] = url
+        result[path] = git("config", "-f", str(GITMODULES), "--get", f"submodule.{name}.url", check=False)
     return result
 
 
-def source_fallback_required(manifest: dict) -> bool:
+def source_fallback_required(manifest: dict[str, Any]) -> bool:
     distribution = manifest.get("spec", {}).get("distribution") or {}
     provider = distribution.get("providerState") or {}
     return provider.get("status") != "published"
@@ -150,9 +161,11 @@ def source_fallback_required(manifest: dict) -> bool:
 
 def main() -> int:
     workspace = load_yaml(WORKSPACE)
-    validator = Draft202012Validator(json.loads(SCHEMA.read_text(encoding="utf-8")))
+    if "systems" in workspace:
+        fail("workspace systems registry is removed; configure Powers and orchestration under projects[]")
     if workspace.get("apiVersion") != "ai-workspace/v1" or workspace.get("kind") != "Workspace":
         fail("workspace.yaml must use apiVersion ai-workspace/v1 and kind Workspace")
+
     workspace_hosts = workspace.get("hosts") or []
     if not isinstance(workspace_hosts, list) or not workspace_hosts:
         fail("workspace.yaml must register at least one host")
@@ -164,11 +177,8 @@ def main() -> int:
 
     providers = validate_providers(workspace)
     power_entries = workspace.get("powers") or []
-    system_entries = workspace.get("systems") or []
     if not isinstance(power_entries, list) or not all(isinstance(item, dict) for item in power_entries):
         fail("workspace power entries must be mappings")
-    if not isinstance(system_entries, list) or not all(isinstance(item, dict) for item in system_entries):
-        fail("workspace system entries must be mappings")
 
     configured_submodules = gitmodule_map()
     try:
@@ -180,9 +190,11 @@ def main() -> int:
     except ProjectRegistryError as exc:
         fail(str(exc))
 
-    distribution = validate_distribution(workspace, system_entries)
+    targets = target_projects(projects)
+    distribution = validate_distribution(workspace, targets)
 
-    manifests: dict[str, dict] = {}
+    validator = Draft202012Validator(json.loads(SCHEMA.read_text(encoding="utf-8")))
+    manifests: dict[str, dict[str, Any]] = {}
     for path in sorted(MANIFEST_DIR.glob("*.yaml")):
         manifest = load_yaml(path)
         errors = sorted(validator.iter_errors(manifest), key=lambda error: list(error.path))
@@ -201,12 +213,9 @@ def main() -> int:
 
     compatibility_data = json.loads(COMPATIBILITY_LOCK.read_text(encoding="utf-8"))
     compatibility_schema = json.loads(COMPATIBILITY_SCHEMA.read_text(encoding="utf-8"))
-    compatibility_errors = sorted(
-        Draft202012Validator(compatibility_schema).iter_errors(compatibility_data),
-        key=lambda error: list(error.path),
-    )
-    if compatibility_errors:
-        for error in compatibility_errors:
+    errors = sorted(Draft202012Validator(compatibility_schema).iter_errors(compatibility_data), key=lambda error: list(error.path))
+    if errors:
+        for error in errors:
             location = ".".join(str(part) for part in error.path) or "<root>"
             print(f"ERROR: {COMPATIBILITY_LOCK.relative_to(ROOT)}:{location}: {error.message}", file=sys.stderr)
         return 1
@@ -220,17 +229,10 @@ def main() -> int:
     if unknown_powers:
         fail(f"workspace references missing Power manifests: {sorted(unknown_powers)}")
 
+    expected_paths = {
+        project["path"] for project in projects.values() if project.get("sourceMode") != "offline-local"
+    }
     submodule_paths = set(configured_submodules)
-    if projects:
-        expected_paths = {
-            project["path"]
-            for project in projects.values()
-            if project.get("sourceMode") != "offline-local"
-        }
-    else:
-        expected_paths = {entry["path"] for entry in power_entries if entry.get("path")} | {
-            entry["path"] for entry in system_entries if entry.get("path")
-        }
     if expected_paths != submodule_paths:
         fail(
             "workspace project paths do not match .gitmodules: "
@@ -240,45 +242,39 @@ def main() -> int:
     for entry in power_entries:
         current = manifests[entry["id"]]
         project_id = entry.get("project")
-        if project_id:
-            project = projects[str(project_id)]
-            expected_path = project["path"]
-            expected_source = project["source"]
-        else:
-            expected_path = entry.get("path")
-            expected_source = entry.get("source")
-        if current["spec"]["path"] != expected_path:
+        if not project_id:
+            fail(f"Power {entry.get('id')} must reference a project")
+        project = projects[str(project_id)]
+        if current["spec"]["path"] != project["path"]:
             fail(f"Power path mismatch for {entry['id']}")
-        if current["spec"]["source"] != expected_source:
+        if current["spec"]["source"] != project["source"]:
             fail(f"Power source mismatch for {entry['id']}")
 
     external_ids = set(manifests) - power_ids
-    enabled_power_ids = {
-        power_id
-        for system in system_entries
-        for power_id in (system.get("enabled_powers") or [])
-    }
+    enabled_power_ids = {power_id for project in targets for power_id in enabled_powers(project)}
     for power_id in sorted(external_ids & enabled_power_ids):
         source_path = ROOT / manifests[power_id]["spec"]["path"]
         package_manifest = distribution["storeRoot"] / power_id / "MANIFEST.json"
-        package_available = package_manifest.is_file()
-        if not source_path.exists() and not package_available and source_fallback_required(manifests[power_id]):
+        if not source_path.exists() and not package_manifest.is_file() and source_fallback_required(manifests[power_id]):
             fail(f"external Power {power_id} local routing path is missing: {source_path.relative_to(ROOT)}")
 
-    for system in system_entries:
-        unknown = set(system.get("enabled_powers") or []) - set(manifests)
+    runtime_roots = (workspace.get("data_ownership") or {}).get("roots", {})
+    if (workspace.get("data_ownership") or {}).get("policy") != "project-owned":
+        fail("workspace data_ownership.policy must be project-owned")
+    for project in targets:
+        unknown = set(enabled_powers(project)) - set(manifests)
         if unknown:
-            fail(f"system {system['id']} enables unknown Powers: {sorted(unknown)}")
-        system_root = resolve_workspace_path(system["path"])
-        for runtime_name in (workspace.get("data_ownership") or {}).get("roots", {}).values():
-            runtime = (system_root / str(runtime_name)).resolve()
-            if not is_within(runtime, system_root):
-                fail(f"unsafe runtime root for system {system['id']}: {runtime}")
+            fail(f"project {project['id']} enables unknown Powers: {sorted(unknown)}")
+        target_root = resolve_workspace_path(project["path"])
+        for runtime_name in runtime_roots.values():
+            runtime = (target_root / str(runtime_name)).resolve()
+            if not is_within(runtime, target_root):
+                fail(f"unsafe runtime root for project {project['id']}: {runtime}")
 
     print(
         f"PASS: {len(projects)} projects, {len(manifests)} Powers "
         f"({len(power_entries)} source-project, {len(external_ids)} package-only), "
-        f"{len(system_entries)} systems, {len(workspace_hosts)} hosts, {len(providers)} providers, "
+        f"{len(targets)} runtime targets, {len(workspace_hosts)} hosts, {len(providers)} providers, "
         f"{len(submodule_paths)} submodules, store={distribution['storeRoot'].relative_to(ROOT)}, "
         f"compatibility={compatibility['status']}"
     )

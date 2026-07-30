@@ -55,27 +55,18 @@ def preflight(args: argparse.Namespace) -> None:
         raise registry.ProjectRegistryError("repository must use owner/name")
 
     roles = list(dict.fromkeys(args.role or ["product"]))
-    if args.system and not ({"product", "system"} & set(roles)):
+    if args.system and not ({"product", "runtime-target"} & set(roles)):
         raise registry.ProjectRegistryError(
-            "a registered system requires product or system role"
+            "a runtime target requires product or runtime-target role"
         )
-    if not args.system and (args.system_id or args.enable_powers):
+    if not args.system and args.system_id:
         raise registry.ProjectRegistryError(
-            "--system-id and --enable-powers require --system"
+            "--system-id requires the deprecated --system compatibility flag"
         )
-    if offline and not args.system:
-        raise registry.ProjectRegistryError("--offline requires --system for binding registration")
-
-    system_id = args.system_id or args.project_id
-    if args.system and not registry.PROJECT_ID.fullmatch(system_id):
-        raise registry.ProjectRegistryError(f"invalid system id: {system_id!r}")
-    existing_system_ids = {
-        str(item.get("id"))
-        for item in data.get("systems") or []
-        if isinstance(item, dict)
-    }
-    if args.system and system_id in existing_system_ids:
-        raise registry.ProjectRegistryError(f"system already exists: {system_id}")
+    if offline and not (args.system or args.enable_powers):
+        raise registry.ProjectRegistryError(
+            "--offline requires a product/runtime target or --enable-powers"
+        )
 
     enabled = {
         item.strip()
