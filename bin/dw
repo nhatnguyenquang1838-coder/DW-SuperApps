@@ -69,6 +69,18 @@ if [[ "${1:-}" == "report" ]]; then
   exit $?
 fi
 
+if [[ "${1:-}" == "gwc" ]]; then
+  case "${2:-}" in
+    report)
+      shift 2
+      # shellcheck source=../scripts/python-resolver.sh
+      source "$ROOT/scripts/python-resolver.sh"
+      dw_exec_python "$ROOT/scripts/gwc_report.py" "$@"
+      exit $?
+      ;;
+  esac
+fi
+
 if [[ "${1:-}" == "power" ]]; then
   case "${2:-}" in
     install|configure|sanity|doctor|history|rollback|uninstall)

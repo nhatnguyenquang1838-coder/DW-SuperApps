@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GWC Dashboard — SCRUM-119</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f5f5;
+    color: #212121;
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: #1a1a1a;
+  }
+  .subtitle {
+    color: #757575;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+  .overview {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .overview .badge {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 600;
+  }
+  .overview .task-id {
+    font-family: monospace;
+    font-size: 0.95rem;
+  }
+  .timestamp {
+    font-size: 0.8rem;
+    color: #9e9e9e;
+    margin-left: 0.5rem;
+  }
+  .progress-bar {
+    background: #e0e0e0;
+    border-radius: 8px;
+    height: 12px;
+    overflow: hidden;
+    margin: 0.5rem 0;
+  }
+  .progress-fill {
+    background: #1565c0;
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.3s ease;
+  }
+  .progress-label {
+    font-size: 0.8rem;
+    color: #757575;
+  }
+  .gate-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+  .gate-header {
+    padding: 0.75rem 1rem;
+    background: #fafafa;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .gate-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    flex: 1;
+  }
+  .gate-body {
+    padding: 1rem;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    color: #fff;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .artifact-section {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .artifact-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+  .artifact-section h4 {
+    font-size: 0.9rem;
+    color: #616161;
+    margin-bottom: 0.5rem;
+  }
+  .field {
+    margin-bottom: 0.5rem;
+  }
+  .field-label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #424242;
+  }
+  ul {
+    margin: 0.25rem 0 0.5rem 1.5rem;
+    padding: 0;
+  }
+  li {
+    margin: 0.15rem 0;
+    font-size: 0.85rem;
+  }
+  p {
+    margin: 0.4rem 0;
+    font-size: 0.85rem;
+  }
+  .summary {
+    background: #f9f9f9;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-style: italic;
+    font-size: 0.85rem;
+  }
+  .key {
+    font-weight: 600;
+    color: #424242;
+    width: 200px;
+    white-space: nowrap;
+  }
+  table.nested {
+    font-size: 0.8rem;
+  }
+  table.nested td {
+    padding: 0.1rem 0.5rem;
+    border: none;
+  }
+  .nk {
+    font-weight: 600;
+    color: #616161;
+    width: 150px;
+  }
+  code {
+    background: #f0f0f0;
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+  }
+  .file-ref {
+    color: #757575;
+    font-size: 0.8rem;
+  }
+  .gate-card h3 {
+    font-size: 1rem;
+  }
+</style>
+</head>
+<body>
+  <h1>GWC Dashboard</h1>
+  <p class="subtitle">Task <span class="task-id">SCRUM-119</span> &middot; Generated 2026-07-29 17:42 UTC</p>
+  <div class="overview">
+    <span class="badge" style="background:#616161">PARTIAL</span>
+    <span>6 gate(s)</span>
+    
+    <div class="progress-bar">
+      <div class="progress-fill" style="width:83%"></div>
+    </div>
+    <p class="progress-label">5/6 gates completed (83%)</p>
+  </div>
+  
+        <div class="gate-card">
+          <div class="gate-header">
+            <h3>G0 — Context</h3>
+            <span class="badge" style="background:#616161">PENDING</span>
+            <span class="timestamp">2026-07-28T00:27:35</span>
+          </div>
+          <div class="gate-body">
+            
+        <div class="artifact-section">
+          <h4>G0 Context Snapshot <span class="badge" style="background:#616161">PENDING</span></h4>
+          <p><strong>Task:</strong> SCRUM-119 — BMAD procedure-adapter contracts and authority boundaries</p>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+        <div class="field">
+          <span class="field-label">Constraints</span>
+          <ul><li>BMAD remains bounded to declared outputs and owned paths.</li><li>GWC retains gate authority; merge and deploy are not granted by design evidence.</li><li>No canonical-state mutation outside .gwc/ governance records.</li></ul>
+        </div>
+          
+          
+          
+          
+          
+          
+          
+        </div>
+          </div>
+        </div>
+        <div class="gate-card">
+          <div class="gate-header">
+            <h3>G1 — Alignment</h3>
+            <span class="badge" style="background:#2e7d32">ACCEPTED</span>
+            
+          </div>
+          <div class="gate-body">
+            
+        <div class="artifact-section">
+          <h4>G1 Options <span class="badge" style="background:#2e7d32">ACCEPTED</span></h4>
+          
+          
+          
+          <p><strong>Selected:</strong> OPT-1</p>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          <p><strong>Options considered:</strong></p><ul><li><strong>OPT-1: Bounded contract package</strong> ✅<br><em>Create the task-scoped GWC evidence chain and keep BMAD bounded to declared outputs.</em></li><li><strong>OPT-2: Expand BMAD authority</strong><br><em>Let BMAD self-approve or mutate canonical state.</em></li></ul>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+        </div>
+        <div class="artifact-section">
+          <h4>G1 Decision Record <span class="badge" style="background:#2e7d32">ACCEPTED</span> <span class="badge" style="background:#2e7d32">ACCEPTED</span></h4>
+          
+          
+          <p class="summary">Proceed with the bounded evidence package. The SCRUM-119 work is a design and governance artifact set; it does not grant merge, deploy, or production authority.</p>
+          <p><strong>Selected:</strong> OPT-1</p><p><strong>Rejected:</strong> OPT-2</p>
+          
+          
+          <p><strong>Scope hash:</strong> <code>sha256:4b7541cdebac967cda4d9ffb2…</code></p>
+          
+          <p><strong>Grants:</strong> G1_ALIGNMENT, G2_EXECUTION</p><p><strong>Excludes:</strong> G4_MERGE, G5_DEPLOY, G6_PRODUCTION_DATA</p>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          <p><strong>Task decomposition:</strong></p><ul><li>Validate BMAD schemas and permission matrix → bmad</li><li>Map dependency and provenance impact → ua</li><li>Break validation into executable checks → task-me</li><li>Record gate evidence and boundary posture → gwc</li></ul>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+        </div>
+        <div class="artifact-section">
+          <h4>G1 Intake Brief <span class="badge" style="background:#2e7d32">ACCEPTED</span></h4>
+          
+          <p><strong>Problem:</strong> Define BMAD as a bounded procedure adapter for P4 so it can execute approved methodology steps without owning canonical gate state, broadening scope, self-approving, or mutating unowned runtime roots.
+</p><p><strong>Desired outcome:</strong> A complete SCRUM-119 evidence package: schemas, permission matrix, examples, validator plan, and GWC gate records proving the adapter remains bounded.
+</p>
+          <p class="summary">Define BMAD as a bounded procedure adapter for P4 so it can execute approved methodology steps without owning canonical gate state, broadening scope, self-approving, or mutating unowned runtime roots.</p>
+          
+          
+          <p><strong>Next gate:</strong> G1_ALIGNMENT</p>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+        <div class="field">
+          <span class="field-label">Acceptance Criteria</span>
+          <ul><li>Exact provenance binding exists for every invocation.</li><li>Permission envelope refuses out-of-scope paths before side effects.</li><li>Idempotency keys prevent duplicate side effects.</li><li>Scope-changing recommendations are read-only proposals only.</li><li>GWC remains the only authority for G2/G4/G5/G6 transitions.</li></ul>
+        </div>
+          
+          
+          
+          
+          
+          
+          
+          
+        </div>
+        <div class="artifact-section">
+          <h4>G1 Preflight Report <span class="badge" style="background:#2e7d32">ACCEPTED</span> <span class="badge" style="background:#2e7d32">PASS</span> <span class="badge" style="background:#616161">LOW</span> <span class="badge" style="background:#1565c0">READY</span></h4>
+          
+          
+          
+          
+          <p><strong>Risk class:</strong> <span class="badge" style="background:#616161">LOW</span></p>
+          <p><strong>Next gate:</strong> G2_EXECUTION</p>
+          
+          
+          
+          <p><strong>Excluded actions:</strong> G4_MERGE, G5_DEPLOY, G6_PRODUCTION_DATA</p>
+          
+          
+        <div class="field">
+          <span class="field-label">Excluded actions</span>
+          <ul><li>G4_MERGE</li><li>G5_DEPLOY</li><li>G6_PRODUCTION_DATA</li></ul>
+        </div>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+        </div>
+          </div>
+        </div>
+        <div class="gate-card">
+          <div class="gate-header">
+            <h3>G2 — Execution</h3>
+            <span class="badge" style="background:#616161">READY_FOR_G3</span>
+            <span class="timestamp">2026-07-27T17:27:35</span>
+          </div>
+          <div class="gate-body">
+            
+        <div class="artifact-section">
+          <h4>G2 Execution Record <span class="badge" style="background:#616161">READY_FOR_G3</span> <span class="badge" style="background:#616161">READY_FOR_G3</span></h4>
+          
+          
+          
+          
+          
+          
+          <p><strong>Scope hash:</strong> <code>sha256:4b7541cdebac967cda4d9ffb2…</code></p>
+          
+          
+          <p><strong>Excluded actions:</strong> merge, auto_merge, deploy, release, production_config_change, credential_rotation, production_data_access</p>
+          
+        <div class="field">
+          <span class="field-label">Authorized actions</span>
+          <ul><li>modify_scoped_files</li><li>run_validation</li><li>record_gate_evidence</li></ul>
+        </div>
+          
+        <div class="field">
+          <span class="field-label">Excluded actions</span>
+          <ul><li>merge</li><li>auto_merge</li><li>deploy</li><li>release</li><li>production_config_change</li><li>credential_rotation</li><li>production_data_access</li></ul>
+        </div>
+          
+          
+          <p><span class="badge" style="background:#616161">19</span> <strong>changed_files</strong></p><p><span class="badge" style="background:#2e7d32">PASS</span> <strong>scope_allowlist_check</strong></p><p><strong>validation:</strong></p><ul><li><span class="badge" style="background:#2e7d32">PASS</span> json_schemas</li><li><span class="badge" style="background:#2e7d32">PASS</span> yaml_parse</li><li><span class="badge" style="background:#2e7d32">PASS</span> gate_boundary_check</li></ul><p><span class="badge" style="background:#616161">G3_PR</span> <strong>next_gate</strong></p>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+        <div class="field">
+          <span class="field-label">Notes</span>
+          <ul><li>Bounded evidence task only; no merge or deploy authority is granted.</li></ul>
+        </div>
+          
+          
+          
+        </div>
+          </div>
+        </div>
+        <div class="gate-card">
+          <div class="gate-header">
+            <h3>G3 — Draft PR</h3>
+            <span class="badge" style="background:#2e7d32">PASS</span>
+            
+          </div>
+          <div class="gate-body">
+            
+        <div class="artifact-section">
+          <h4>G3 Delivery Record <span class="badge" style="background:#2e7d32">PASS</span> <span class="badge" style="background:#2e7d32">PASS</span></h4>
+          
+          
+          
+          
+          
+          <p><strong>Next gate:</strong> G4_MERGE_NOT_GRANTED</p>
+          <p><strong>Scope hash:</strong> <code>sha256:4b7541cdebac967cda4d9ffb2…</code></p>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+        <div class="field">
+          <span class="field-label">Changed files</span>
+          <ul><li>.gwc/tasks/SCRUM-119/g0/context-snapshot.yaml</li><li>.gwc/tasks/SCRUM-119/g1/intake/g1-intake-brief.yaml</li><li>.gwc/tasks/SCRUM-119/g1/brainstorming/g1-options.yaml</li><li>.gwc/tasks/SCRUM-119/g1/preflight/g1-preflight-report.yaml</li><li>.gwc/tasks/SCRUM-119/g1/decision/g1-decision-record.yaml</li><li>.gwc/tasks/SCRUM-119/g2/execution-record.yaml</li><li>.gwc/scrums/SCRUM-119/design.md</li><li>.gwc/scrums/SCRUM-119/notes/ua-impact.md</li><li>.gwc/scrums/SCRUM-119/notes/ua-dependency-map.md</li><li>.gwc/scrums/SCRUM-119/notes/task-me-decomposition.md</li><li>gates/g1-bmad-procedure-adapter-integration.md</li><li>contracts/permission-action-matrix.md</li><li>examples/positive-architecture-analysis.md</li><li>examples/positive-tdd-implementation.md</li><li>examples/positive-review-only.md</li></ul>
+        </div>
+          
+        <div class="field">
+          <span class="field-label">Key decisions</span>
+          <ul><li>Keep BMAD bounded to declared outputs and owned paths.</li><li>Make GWC the sole authority for gate transitions.</li><li>Record UA dependency mapping and task-me decomposition in the task root.</li><li>Treat merge/deploy as not applicable for this evidence package.</li></ul>
+        </div>
+          
+          <p><strong>Review lanes:</strong></p><ul><li><span class="badge" style="background:#2e7d32">PASS</span> requirement</li><li><span class="badge" style="background:#2e7d32">PASS</span> design</li><li><span class="badge" style="background:#9e9e9e">not_applicable</span> code</li><li><span class="badge" style="background:#2e7d32">PASS</span> test</li><li><span class="badge" style="background:#2e7d32">PASS</span> governance</li><li><span class="badge" style="background:#2e7d32">PASS</span> delivery</li><li><span class="badge" style="background:#9e9e9e">not_applicable</span> ci</li></ul>
+          
+          
+          
+          
+          
+          
+          
+        <div class="field">
+          <span class="field-label">Notes</span>
+          <ul><li>This is a governance/evidence task, not a merge or deploy request.</li></ul>
+        </div>
+          
+          
+          
+        </div>
+          </div>
+        </div>
+        <div class="gate-card">
+          <div class="gate-header">
+            <h3>G4 — Merge</h3>
+            <span class="badge" style="background:#9e9e9e">NOT_APPLICABLE</span>
+            
+          </div>
+          <div class="gate-body">
+            
+        <div class="artifact-section">
+          <h4>G4 Merge Approval <span class="badge" style="background:#9e9e9e">NOT_APPLICABLE</span> <span class="badge" style="background:#9e9e9e">NOT_APPLICABLE</span> <span class="badge" style="background:#616161">R1</span> <span class="badge" style="background:#9e9e9e">NOT_APPLICABLE</span></h4>
+          
+          
+          <p class="summary">No Draft PR or merge request is in scope for this bounded design/evidence task. G4 merge authority is therefore not granted.</p>
+          
+          <p><strong>Risk class:</strong> <span class="badge" style="background:#616161">R1</span></p>
+          
+          
+          
+          
+          <p><strong>Excluded actions:</strong> merge_pull_request, auto_merge, deploy, release, production_data_write, production_config_change, credential_rotation, force_push</p>
+          
+          
+        <div class="field">
+          <span class="field-label">Excluded actions</span>
+          <ul><li>merge_pull_request</li><li>auto_merge</li><li>deploy</li><li>release</li><li>production_data_write</li><li>production_config_change</li><li>credential_rotation</li><li>force_push</li><li>change_pr_base</li></ul>
+        </div>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+        </div>
+          </div>
+        </div>
+        <div class="gate-card">
+          <div class="gate-header">
+            <h3>G5 — Deploy</h3>
+            <span class="badge" style="background:#9e9e9e">NOT_APPLICABLE</span>
+            
+          </div>
+          <div class="gate-body">
+            
+        <div class="artifact-section">
+          <h4>G5 Deployment Approval <span class="badge" style="background:#9e9e9e">NOT_APPLICABLE</span> <span class="badge" style="background:#9e9e9e">NOT_APPLICABLE</span></h4>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          <p><strong>Excluded actions:</strong> manual_deploy, manual_redeploy, manual_release, manual_reload_runtime, production_config_change, credential_rotation, production_data_write, production_data_access</p>
+          
+          
+        <div class="field">
+          <span class="field-label">Excluded actions</span>
+          <ul><li>manual_deploy</li><li>manual_redeploy</li><li>manual_release</li><li>manual_reload_runtime</li><li>production_config_change</li><li>credential_rotation</li><li>production_data_write</li><li>production_data_access</li></ul>
+        </div>
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+        <div class="field">
+          <span class="field-label">Notes</span>
+          <ul><li>G5 remains unused because the task does not enter deployment scope.</li></ul>
+        </div>
+          
+          <p><strong>Merge commit:</strong> <code>None…</code></p>
+          <p><strong>Verification:</strong> State: not_applicable, Reason: No merge commit or deployment target exists for this evidence-only task.
+</p>
+        </div>
+          </div>
+        </div>
+</body>
+</html>
