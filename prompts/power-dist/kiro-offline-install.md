@@ -24,8 +24,8 @@ The release repairs only DW-managed control-plane files and stores replaced file
 history. It never overwrites an unrelated project file silently.
 
 "Root install" means the shared Power package store under `SUPER_PROJECT/.dw/powers`. A runtime binding
-must target a child project so the package store and system runtime cannot overlap. A root-only install is
-reported `PARTIAL` until a child system is registered and doctored.
+must target a child project so the package store and project runtime cannot overlap. A root-only install is
+reported `PARTIAL` until a child project is registered and doctored.
 
 ## Inputs required from the user
 
@@ -36,10 +36,9 @@ RELEASE_DIR       extracted full release directory
 SUPER_PROJECT     local target workspace; may be empty, stale, or broken
 WORKSPACE_ID      lowercase workspace identifier
 WORKSPACE_NAME    display name for a new workspace registry
-PROJECT_ID        optional lowercase child project/system identifier
+PROJECT_ID        optional lowercase child project identifier
 PROJECT_PATH      optional child path relative to SUPER_PROJECT
 PROJECT_SOURCE    optional owner/name metadata; local metadata only, no remote check
-SYSTEM_ID         optional system identifier; defaults to PROJECT_ID
 POWERS            comma-separated subset of gwc,ua,task-me,bmad, or all
 ```
 
@@ -95,7 +94,6 @@ POWERS            comma-separated subset of gwc,ua,task-me,bmad, or all
      setup_args+=(
        --project-id "$PROJECT_ID"
        --project-path "$PROJECT_PATH"
-       --system-id "${SYSTEM_ID:-$PROJECT_ID}"
      )
      if [ -n "${PROJECT_SOURCE:-}" ]; then
        setup_args+=(--project-source "$PROJECT_SOURCE")
@@ -113,7 +111,7 @@ POWERS            comma-separated subset of gwc,ua,task-me,bmad, or all
 
    ```text
    SUPER_PROJECT/.dw/powers/<power-id>/
-   SUPER_PROJECT/.dw/bindings/<SYSTEM_ID>/<power-id>.json
+   SUPER_PROJECT/.dw/bindings/<PROJECT_ID>/<power-id>.json
    PROJECT_PATH/.gwc/        PROJECT_PATH/.ua/
    PROJECT_PATH/.task-me/    PROJECT_PATH/.bmad/
    ```

@@ -12,7 +12,7 @@ Implement a release architecture where source remains in `main`, generated packa
 
 - Do not execute GWC gates or use GWC powers for this task.
 - Do not merge generated ZIPs into `main`.
-- Do not install runtime data into registered systems.
+- Do not install runtime data into registered projects.
 
 ## Success metrics
 

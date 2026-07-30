@@ -4,7 +4,7 @@ Use this prompt to install already-transferred DW SUPER Power ZIPs without netwo
 
 ## Objective
 
-Onboard the selected Powers for one unambiguous target system using only local package files. DW-SuperApps owns the package store, inbox, cache, history, bindings, router, and host adapters. The selected system owns only its source, runtime roots, and project configuration.
+Onboard the selected Powers for one unambiguous target project using only local package files. DW-SuperApps owns the package store, inbox, cache, history, bindings, router, and host adapters. The selected project owns only its source, runtime roots, and project configuration.
 
 GitHub, Git remotes, release downloads, and outbound Power acquisition are unavailable and must not be used.
 
@@ -16,7 +16,7 @@ Read, in order:
 2. `workspace.yaml`;
 3. `docs/runbooks/POWER_DIST_ONBOARDING.md`;
 4. `docs/PORTABLE_MULTI_HOST_ROUTER.md`;
-5. target-system instructions, if present;
+5. target-project instructions, if present;
 6. selected Power manifests under `manifests/powers/`.
 
 Resolve these values from the workspace unless the user supplied an explicit value:
@@ -25,13 +25,13 @@ Resolve these values from the workspace unless the user supplied an explicit val
 WORKSPACE_ROOT = current DW-SuperApps checkout
 STORE_ROOT     = workspace.yaml distribution.storeRoot, normally .dw/powers
 INBOX_ROOT     = workspace.yaml distribution.inboxRoot, normally .dw/inbox/powers
-SYSTEM_ID      = one explicit or unambiguous enabled workspace system
-TARGET         = workspace system path for SYSTEM_ID
-POWERS         = SYSTEM_ID enabled_powers, or the explicit user list
+PROJECT_ID     = one explicit or unambiguous enabled workspace product project
+TARGET         = workspace project path for PROJECT_ID
+POWERS         = PROJECT_ID projects[].powers.enabled, or the explicit user list
 HOST           = configured host or all configured hosts
 ```
 
-If more than one enabled system could be the target, stop with `BLOCKED_TARGET_AMBIGUOUS`. Do not silently choose the first system. `--target` selects the runtime target; it does not select the package store.
+If more than one enabled project could be the target, stop with `BLOCKED_TARGET_AMBIGUOUS`. Do not silently choose the first project. `--target` selects the runtime target; it does not select the package store.
 
 ## Offline package contract
 
@@ -82,7 +82,7 @@ The expected ownership split is:
 ```text
 DW-SuperApps/.dw/powers/<power-id>/       installed package
 DW-SuperApps/.dw/history/powers/<power-id>/ previous managed packages
-DW-SuperApps/.dw/bindings/<system-id>/    target binding
+DW-SuperApps/.dw/bindings/<project-id>/   target binding
 DW-SuperApps/<host-adapter-roots>/        thin host routing
 <target-path>/.gwc/                       GWC runtime/configuration
 <target-path>/.ua/                        UA runtime/configuration
@@ -137,4 +137,4 @@ Return one evidence table with `READY`, `PARTIAL`, `BLOCKED`, or `FAILED` for:
 - legacy target detection;
 - network discipline.
 
-Also report the exact workspace root, store root, target path, selected system, selected Powers, package versions/source SHAs when present, changed paths, preserved inbox files, history paths, sanitized commands, and any unresolved warning. Explicitly confirm: `remote acquisition: SKIPPED_OFFLINE`.
+Also report the exact workspace root, store root, target path, selected project, selected Powers, package versions/source SHAs when present, changed paths, preserved inbox files, history paths, sanitized commands, and any unresolved warning. Explicitly confirm: `remote acquisition: SKIPPED_OFFLINE`.

@@ -1,6 +1,6 @@
 # DW SuperApps Agent Routing
 
-DW SuperApps is the executable control workspace for reusable AI Powers, product systems, model providers, and multiple agent hosts. Treat it as a working project, not as documentation-only reference material.
+DW SuperApps is the executable control workspace for reusable AI Powers, product projects, model providers, and multiple agent hosts. Treat it as a working project, not as documentation-only reference material.
 
 ## Source of truth
 
@@ -9,7 +9,7 @@ Use this order:
 1. current repository state and exact local HEAD;
 2. root `AGENTS.md`;
 3. `workspace.yaml`;
-4. target system `AGENTS.md` when present;
+4. target project `AGENTS.md` when present;
 5. `manifests/powers/<power-id>.yaml`;
 6. installed package `MANIFEST.json` and validated distribution evidence;
 7. applicable runbooks and host adapters.
@@ -18,7 +18,7 @@ Repository state, package manifests, checksums, governance artifacts, and audit 
 
 When online, verify the current default branch and exact `main` SHA. When GitHub is explicitly unavailable, record remote verification as `SKIPPED_OFFLINE`; do not block a valid local-package workflow.
 
-## Workspace and system boundary
+## Workspace and project boundary
 
 DW-SuperApps owns the distribution and host-control plane:
 
@@ -27,7 +27,7 @@ DW-SuperApps/.dw/powers/          installed Power packages
 DW-SuperApps/.dw/inbox/powers/    local package drop zone
 DW-SuperApps/.dw/cache/           package cache
 DW-SuperApps/.dw/history/powers/  package rollback history
-DW-SuperApps/.dw/bindings/        system-to-package bindings
+DW-SuperApps/.dw/bindings/        project-to-package bindings
 DW-SuperApps/.codex/              Codex adapters
 DW-SuperApps/.kiro/               Kiro adapters
 DW-SuperApps/.claude/             Claude adapters
@@ -37,7 +37,7 @@ DW-SuperApps/.clinerules/         Cline adapters
 DW-SuperApps/.agents/             configured custom-host adapters
 ```
 
-Registered systems own runtime and project configuration only:
+Registered product projects own runtime and project configuration only:
 
 | Power | Target-owned runtime root |
 |---|---|
@@ -46,19 +46,19 @@ Registered systems own runtime and project configuration only:
 | Task Me | `.task-me/` |
 | BMAD | `.bmad/`, `_bmad/`, and `_bmad-output/` when declared by the package/modules |
 
-Normal Power onboarding must not create `<system>/.dw/`, Power package payloads, or host skill adapters in a registered system.
+Normal Power onboarding must not create `<project>/.dw/`, Power package payloads, or host skill adapters in a registered project.
 
-Existing `<system>/.dw/powers/<power-id>` paths are legacy installations. Report `LEGACY_TARGET_INSTALL` and preserve them. Migration or cleanup requires a separate authorized change.
+Existing `<project>/.dw/powers/<power-id>` paths are legacy installations. Report `LEGACY_TARGET_INSTALL` and preserve them. Migration or cleanup requires a separate authorized change.
 
 ## Discovery
 
 1. Read `workspace.yaml`.
-2. Resolve one target system.
-3. Load only Powers enabled for that system.
+2. Resolve one target project.
+3. Load only Powers enabled for that project.
 4. Read target-local instructions.
 5. Prefer the selected installed package entrypoint under `.dw/powers/<power-id>/`.
 6. Use a Power source submodule only as an explicit compatibility or development fallback.
-7. Keep generated runtime and project configuration inside the owning target system.
+7. Keep generated runtime and project configuration inside the owning target project.
 
 Do not ask for facts already available from repository state, manifests, governance artifacts, or connected systems.
 
@@ -75,7 +75,7 @@ Installing a Power does not grant GitHub write, Jira write, Slack, merge, deploy
 
 Power aliases such as `/dw-gwc`, `/dw-ua`, `/dw-task-me`, and `/dw-bmad` select native host skills. They are not terminal commands and do not require prompt export.
 
-When a Power is selected, the agent must resolve the target system, load the canonical installed entrypoint, and apply the skill directly to the remainder of the user's request. It must not tell the user to execute an activation command, generate a copy-and-paste prompt, or merely explain the Power instead of using it.
+When a Power is selected, the agent must resolve the target project, load the canonical installed entrypoint, and apply the skill directly to the remainder of the user's request. It must not tell the user to execute an activation command, generate a copy-and-paste prompt, or merely explain the Power instead of using it.
 
 The DW CLI owns installation, configuration, inspection, validation, doctor, history, rollback, and uninstall operations. It does not generate task prompts.
 
@@ -102,11 +102,11 @@ The required lifecycle is:
 DISCOVER -> PREFLIGHT -> INSTALL -> CONFIGURE -> ACTIVATE -> DOCTOR -> USE -> REPORT
 ```
 
-The package store and system target are separate concepts:
+The package store and project target are separate concepts:
 
 ```text
 package store   = workspace `distribution.storeRoot`
-runtime target = `--target` system path
+runtime target = `--target` project path
 ```
 
 Default installation:
@@ -114,7 +114,7 @@ Default installation:
 ```bash
 ./bin/dw power install <power-id> \
   --source auto \
-  --target systems/<system-id>
+  --target projects/<project-id>
 ```
 
 Use `--store-root` only for tests or an explicitly external workspace layout. A store root must not overlap or resolve inside the runtime target.
@@ -131,7 +131,7 @@ Target architecture:
 DW-SuperApps/.dw/powers
   -> one canonical DW router when implemented
   -> thin native adapters in DW-SuperApps
-  -> selected system runtime root
+  -> selected project runtime root
 ```
 
 Rules:
@@ -139,7 +139,7 @@ Rules:
 1. canonical Power implementation stays in the workspace package store;
 2. host adapters contain routing only, not copied Power logic;
 3. all configured native adapters may coexist in DW-SuperApps;
-4. systems receive no generated Power skill payloads;
+4. projects receive no generated Power skill payloads;
 5. each host must see only one logical DW router/Power identity;
 6. detect duplicate skill names, cross-host compatibility leakage, stale adapters, and broken targets;
 7. load only one selected canonical Power entrypoint for a task;
@@ -148,17 +148,17 @@ Rules:
 
 ## BMAD ownership
 
-BMAD package code and host skills belong to DW-SuperApps. BMAD project configuration and generated project assets belong to the selected system:
+BMAD package code and host skills belong to DW-SuperApps. BMAD project configuration and generated project assets belong to the selected project:
 
 ```text
 DW-SuperApps/.dw/powers/bmad/
 DW-SuperApps/<host-adapter-roots>/
-<system>/.bmad/
-<system>/_bmad/
-<system>/_bmad-output/
+<project>/.bmad/
+<project>/_bmad/
+<project>/_bmad-output/
 ```
 
-BMAD bootstrap must not place package code or host skills in the system.
+BMAD bootstrap must not place package code or host skills in the project.
 
 ## Safety
 
@@ -167,7 +167,7 @@ BMAD bootstrap must not place package code or host skills in the system.
 - In offline package mode, do not acquire supplied Powers through Git, GitHub, release URLs, `curl`, `wget`, `power-dist`, or submodules.
 - Do not install dashboards, project tasks, generated plans, secrets, tests, evals, or unrelated source content as part of Power onboarding.
 - Preserve runtime by default. Destructive runtime cleanup requires explicit authorization and confirmation flags.
-- Shared package uninstall must not break another bound system. Detach the selected system and remove a shared package only when no bindings remain.
+- Shared package uninstall must not break another bound project. Detach the selected project and remove a shared package only when no bindings remain.
 - Use `READY`, `PARTIAL`, `BLOCKED`, and `FAILED` exactly as defined by the onboarding runbook.
 
 ## Model providers

@@ -35,4 +35,4 @@ dw validate
 dw doctor all --offline
 ```
 
-An empty registry is valid. Readiness for a real workload requires at least one registered system and the required installed Powers.
+An empty registry is valid. Readiness for a real workload requires at least one registered product project and the required installed Powers.

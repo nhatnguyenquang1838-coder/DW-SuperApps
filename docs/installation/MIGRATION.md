@@ -6,7 +6,7 @@ The current compatibility phase registers every existing source submodule as a p
 projects/gwc            project role: power-source
 projects/ua             project role: power-source
 projects/task-me        project role: power-source
-projects/rental-home   project roles: product, system
+projects/rental-home   project roles: product
 ```
 
 Migration sequence:
@@ -19,6 +19,10 @@ Migration sequence:
 6. Refresh generated adapters and absolute binding paths after the physical move.
 
 Do not manually move dirty submodules. Do not migrate project runtime into `.dw/powers`.
+
+The migration removes the duplicated top-level `systems[]` registry. Keep target
+configuration under the product project entry as `powers.enabled` and
+`orchestration`; the old `dw system` commands remain read-only compatibility aliases.
 
 ## Phase 2 source-project path migration
 

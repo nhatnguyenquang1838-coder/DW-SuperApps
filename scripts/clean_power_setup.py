@@ -172,7 +172,7 @@ def build_plan(*, include_runtime: bool, root: Path = ROOT) -> dict[str, list[st
         "remove": sorted(dict.fromkeys(remove)),
         "preserve": [
             str(root / "workspace.yaml"),
-            "registered projects and systems",
+            "registered projects",
             "Power source submodules",
             "runtime roots unless --include-runtime is supplied",
             "legacy target .dw installations",

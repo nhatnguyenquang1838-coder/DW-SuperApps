@@ -115,17 +115,17 @@ dw.cmd clean all
 | `./bin/dw install` | Create `~/.local/bin/dw` and register that directory in the selected Bash/Zsh profile. |
 | `./bin/dw install --init` | Register the global command, then run the complete workspace initialization. |
 | `dw uninstall` | Remove the managed launcher and managed profile block. |
-| `dw init all` | Install development dependencies, initialize every Power and system submodule, install Kiro and Codex adapters, validate the workspace. |
+| `dw init all` | Install development dependencies, initialize every Power and project submodule, install Kiro and Codex adapters, validate the workspace. |
 | `dw sync all` | Refuse dirty submodules, update every submodule to its configured remote branch, refresh adapters, validate. Does not stage or commit pins. |
 | `dw sync all --pin` | Run the normal sync and stage reviewed gitlink changes. Still does not commit. |
 | `dw status all` | Show workspace registration, recursive submodule status, and host-adapter readiness. |
 | `dw doctor all` | Validate the workspace, inspect remote drift and dirty state, and verify adapters. |
 | `dw doctor all --offline` | Run health checks without remote drift lookup. |
 | `dw clean all` | Remove generated Kiro/Codex adapters and workspace caches. Preserve `.ua`, `.task-me`, and `.gwc` runtime data. |
-| `dw clean all --include-runtime --yes` | Also remove system-owned runtime data. This is destructive. |
+| `dw clean all --include-runtime --yes` | Also remove project-owned runtime data. This is destructive. |
 | `dw power cleanup` | Preview removal of workspace Power packages, bindings, histories, caches, inbox, distribution artifacts, and generated adapters. |
 | `dw power cleanup --yes` | Apply the Power setup cleanup while preserving registered projects, source submodules, and runtime data. |
-| `dw power cleanup --include-runtime --yes` | Also remove declared system runtime roots. This is destructive. |
+| `dw power cleanup --include-runtime --yes` | Also remove declared project runtime roots. This is destructive. |
 | `dw reset all --yes` | Refuse dirty submodules, deinitialize all clean submodules, and remove generated adapters/caches. Rebuild with `dw init all`. |
 
 ## Common daily flow
@@ -158,7 +158,7 @@ Valid targets are:
 ```text
 all
 powers
-systems
+projects
 gwc
 ua
 task-me

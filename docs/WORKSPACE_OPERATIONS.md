@@ -27,7 +27,7 @@ bash scripts/sync-submodules.sh pin task-me
 git commit -m "chore: update Task Me Power pin"
 ```
 
-The same workflow applies to `gwc`, `ua`, `rental-home`, `powers`, `systems`, or `all`.
+The same workflow applies to `gwc`, `ua`, `rental-home`, `powers`, `projects`, or `all`.
 
 ## Unified command
 
@@ -46,7 +46,7 @@ bash bin/dw system list
 - `update` refuses to move a dirty submodule.
 - `pin` refuses to stage a dirty submodule.
 - No script creates a commit, pushes, merges, or changes a remote repository.
-- Runtime data stays in the owning system repository: `.ua/`, `.task-me/`, and `.gwc/`.
+- Runtime data stays in the owning project repository: `.ua/`, `.task-me/`, and `.gwc/`.
 - Kiro and Codex adapters are generated links; canonical Power behavior stays in `powers/`.
 
 ## Rental Home flow

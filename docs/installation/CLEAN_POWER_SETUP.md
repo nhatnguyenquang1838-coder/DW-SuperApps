@@ -18,10 +18,10 @@ This removes the workspace-owned Power setup:
 - local `.dw/distributions` build artifacts;
 - generated host adapters only when they carry the DW generated marker.
 
-The command preserves `workspace.yaml`, project/system registrations, Power source submodules,
+The command preserves `workspace.yaml`, project registrations, Power source submodules,
 target runtime roots, and legacy target `.dw` installations. It does not remove or edit source code.
 
-To also remove declared system runtime roots, use the separate destructive confirmation:
+To also remove declared project runtime roots, use the separate destructive confirmation:
 
 ```bash
 ./bin/dw power cleanup --include-runtime --yes

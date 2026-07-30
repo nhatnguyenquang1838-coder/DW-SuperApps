@@ -59,9 +59,9 @@ def preflight(args: argparse.Namespace) -> None:
         raise registry.ProjectRegistryError(
             "a runtime target requires product or runtime-target role"
         )
-    if not args.system and (args.system_id or args.enable_powers):
+    if not args.system and args.system_id:
         raise registry.ProjectRegistryError(
-            "--system-id and --enable-powers require --system"
+            "--system-id requires the deprecated --system compatibility flag"
         )
     if offline and not (args.system or args.enable_powers):
         raise registry.ProjectRegistryError(
