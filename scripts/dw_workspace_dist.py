@@ -281,6 +281,22 @@ def wrapper_content(
             orchestration_section = "\n" + "\n".join(lines) + "\n"
     except DistError:
         orchestration_section = ""
+    usage_section = ""
+    if power_id == "ua":
+        usage_section = """
+## Use UA
+
+Describe the outcome you want in plain language after UA is selected.
+For questions about an existing graph, say **use the current UA knowledge graph**;
+the agent must read `.ua/knowledge-graph.json`, find exact node IDs, inspect direct
+edges and layer/tour membership, and draw only the relationships present in the graph.
+
+Examples:
+
+- `Find the installation-guide node in the current UA knowledge graph. No web search, no rebuild.`
+- `Show the one-hop graph around document:docs/installation/INSTALL_POWERS.md.`
+- `Refresh the UA knowledge graph for this project, then report what changed.`
+"""
     return f"""---
 name: dw-{power_id}
 description: {metadata['description']}
@@ -299,6 +315,7 @@ Thin `{host}` adapter owned by DW-SuperApps.
 - Power manifest: `manifests/powers/{power_id}.yaml`
 - Agent guidance: `{guidance_display}`
 {orchestration_section}
+{usage_section}
 ## Activation
 
 This Power is already active when this skill is selected or invoked through its native host alias.

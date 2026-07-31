@@ -148,6 +148,20 @@ class PowerRuntimeV2Tests(unittest.TestCase):
         self.assertIn("Apply that Power", content)
         self.assertNotIn(forbidden, content)
 
+    def test_ua_wrapper_explains_graph_first_usage(self) -> None:
+        manifest = dw_cli.manifests()["ua"]
+        content = dw_cli.wrapper_content(
+            "codex",
+            "ua",
+            manifest,
+            ROOT / "powers" / "ua" / "skills" / "understand",
+            "source-submodule-fallback",
+        )
+        self.assertIn("## Use UA", content)
+        self.assertIn("current UA knowledge graph", content)
+        self.assertIn("exact node IDs", content)
+        self.assertIn("No web search, no rebuild", content)
+
     def test_provider_config_uses_workspace_defaults(self) -> None:
         provider = dw_cli.find_provider("ollama")
         config = dw_cli.provider_config(

@@ -62,6 +62,14 @@ Use the native skill alias in the configured host and put the task after it:
 
 The selected adapter resolves the target project and canonical installed entrypoint directly. No terminal command or generated task prompt is required.
 
+For UA, use plain-language requests after the Power is selected:
+
+- `Find the installation-guide node in the current UA knowledge graph. No web search, no rebuild.`
+- `Show the one-hop graph around document:docs/installation/INSTALL_POWERS.md.`
+- `Refresh the UA knowledge graph for this project, then report what changed.`
+
+For an existing graph lookup, UA reports exact node IDs and only the edges present in the graph. It does not turn inferred document relationships into graph relationships.
+
 ## Legacy installations
 
 If `projects/rental-home/.dw/powers/<power-id>` exists, commands report `LEGACY_TARGET_INSTALL`. The path is not executed, overwritten, migrated, or deleted.
