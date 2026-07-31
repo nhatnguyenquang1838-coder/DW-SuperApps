@@ -27,6 +27,7 @@ When multiple entrypoints exist, load only the entrypoint whose scope matches th
 - `skills/gwc-g1/SKILL.md`
 - `tools/power_help.py`
 
+
 ## Ownership and safety
 
 - Power package files remain in the DW-SuperApps workspace store.

@@ -34,8 +34,8 @@
           {
             "mode": "0600",
             "path": "AGENT_GUIDANCE.md",
-            "sha256": "bb81b809cd924f38071df1ff64b5a712ffd96da30e921d37a4bfbc0b2c1fe118",
-            "size": 1872
+            "sha256": "ba393ae69acb790314a75dbe8a43b921adb1727d0eda095b3108d8ee3ce6f0f5",
+            "size": 1873
           },
           {
             "mode": "0644",
@@ -2074,8 +2074,8 @@
           {
             "mode": "0600",
             "path": "AGENT_GUIDANCE.md",
-            "sha256": "059cffb62ebf13f4af604df4a321a3972516f38251dca6b1722c426f700b8a44",
-            "size": 1847
+            "sha256": "42350fcab909b1fe227642e3777cc013cbdbaea8b14ec2baf23587c749a452b4",
+            "size": 1848
           },
           {
             "mode": "0600",
@@ -2574,8 +2574,8 @@
           {
             "mode": "0600",
             "path": "AGENT_GUIDANCE.md",
-            "sha256": "9dfedb734c1c43a1c9f946add4ffb5f9c51cbc34ee5e202caca8bb118b3dfc5d",
-            "size": 1896
+            "sha256": "661814b8968a5542a4ca353c0c8997025701c8f30fbeb66218fb1140c2a4e74d",
+            "size": 1897
           },
           {
             "mode": "0644",
@@ -2765,8 +2765,8 @@
           {
             "mode": "0600",
             "path": "AGENT_GUIDANCE.md",
-            "sha256": "1674d513ae369e18c362a72442930bd9f7fd4630eddfb7b76d58c4ae8618c7e2",
-            "size": 1862
+            "sha256": "5e11c6b3f4e24dcbbc71084413dd0d10659a1333da9626cbb1877a83991b3ec7",
+            "size": 3485
           },
           {
             "mode": "0644",
@@ -4870,5 +4870,5 @@
   "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist",
   "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
   "target_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.consumer",
-  "validated_at": "2026-07-30T16:36:43.997043+00:00"
+  "validated_at": "2026-07-31T18:50:10.036649+00:00"
 }

@@ -1,7 +1,7 @@
 {
-  "installedAtEpoch": 1785429405,
+  "installedAtEpoch": 1785523811,
   "managedBy": "dw-superapps-power-store",
   "powerId": "ua",
-  "sourceManifestSha256": "eb2458a80f5879892e0e8bd0ed8cabb735d8319ad28a9936f005ca20d136a014",
+  "sourceManifestSha256": "f7425c5cc2284900b3bc5ab14fd4cabd3f92bbe57695abb502a66f40f5d30784",
   "version": "ua-main-f01391f7"
 }

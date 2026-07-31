@@ -1,7 +1,7 @@
 {
-  "installedAtEpoch": 1785429404,
+  "installedAtEpoch": 1785523810,
   "managedBy": "dw-superapps-power-store",
   "powerId": "bmad",
-  "sourceManifestSha256": "6cffc9f6a969358a3ad61bed207b56938747679e7fecc0f21e188ca3ff47ff9e",
+  "sourceManifestSha256": "3112bdb05fe306565653b4cf68f06a1813dfddbe22748c142cab2d7989781022",
   "version": "bmad-main-fdc47614"
 }
