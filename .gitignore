@@ -58,3 +58,5 @@ projects/*/.bmad/
 /.openclaw/
 /openclaw.json
 openclaw-workspace-state.json
+.env.gg-oauth
+.kilo/kilo.json

@@ -1,0 +1,51 @@
+================================================================================
+GG OAuth Environment Variables — dw-super-chatgpt-app-complete-v1
+Generated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+================================================================================
+
+Vercel Project:     dw-super-chatgpt-app-complete-v1
+Vercel Project ID:  prj_OY5gKUjORdSOwHfdGFGb7kDs7u1S
+Vercel Team:        DW1407 (team_4mKlLmlLe2pWbK5F5e10zck1)
+
+--------------------------------------------------------------------------------
+1. Copy values below into Vercel -> Project -> Settings -> Environment Variables
+--------------------------------------------------------------------------------
+
+GG_OAUTH_AUTHORIZATION_URL="https://supabase.com/auth/v1/authorize"
+GG_OAUTH_TOKEN_URL="https://supabase.com/auth/v1/token"
+GG_OAUTH_REVOCATION_URL="https://supabase.com/auth/v1/logout"
+GG_OAUTH_CLIENT_ID="<REPLACE_WITH_YOUR_CLIENT_ID>"
+GG_OAUTH_CLIENT_SECRET="<REPLACE_WITH_YOUR_CLIENT_SECRET>"
+GG_OAUTH_SCOPES="openid email profile offline_access"
+GG_OAUTH_REDIRECT_URI="https://dw-super-chatgpt-app-complete-v1-nnv7mi9qe-dw1407.vercel.app/api/auth/gg/callback"
+NEXT_PUBLIC_SUPABASE_URL="<REPLACE_WITH_YOUR_SUPABASE_URL>"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<REPLACE_WITH_YOUR_SUPABASE_ANON_KEY>"
+SUPABASE_SERVICE_ROLE_KEY="<REPLACE_WITH_YOUR_SUPABASE_SERVICE_ROLE_KEY>"
+APP_BASE_URL="https://dw-super-chatgpt-app-complete-v1-nnv7mi9qe-dw1407.vercel.app"
+SESSION_SECRET="<REPLACE_WITH_YOUR_SESSION_SECRET>"
+TOKEN_ENCRYPTION_KEY="<REPLACE_WITH_YOUR_TOKEN_ENCRYPTION_KEY>"
+
+--------------------------------------------------------------------------------
+2. Preview Deployment Redirect Policy
+--------------------------------------------------------------------------------
+
+Option A (recommended): Register a fixed preview OAuth callback domain.
+Option B: Disable OAuth on arbitrary preview URLs.
+Option C: Use separate OAuth clients for Preview and Production.
+
+Production callback:
+  https://dw-super-chatgpt-app-complete-v1-nnv7mi9qe-dw1407.vercel.app/api/auth/gg/callback
+
+Preview callback:
+  https://dw-super-chatgpt-app-complete-v1-<preview-id>.vercel.app/api/auth/gg/callback
+
+--------------------------------------------------------------------------------
+3. Security Notes
+--------------------------------------------------------------------------------
+
+- Never commit secrets to version control.
+- .env.gg-oauth is listed in .gitignore.
+- gg-oauth-env.txt is a physical reference file; keep it in a secure location.
+- Separate Preview and Production values in Vercel dashboard.
+- Bind the production redirect URI exactly; do not use wildcards.
+================================================================================
