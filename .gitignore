@@ -1,3 +1,7 @@
+# GG OAuth env files (placeholders, never commit real secrets)
+.env.gg-oauth
+gg-oauth-env.txt
+
 # Python caches
 __pycache__/
 *.pyc
@@ -58,3 +62,4 @@ projects/*/.bmad/
 /.openclaw/
 /openclaw.json
 openclaw-workspace-state.json
+.kilo/kilo.json
