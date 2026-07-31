@@ -25,6 +25,7 @@ When multiple entrypoints exist, load only the entrypoint whose scope matches th
 
 - `distribution/skills/bmad/SKILL.md`
 
+
 ## Ownership and safety
 
 - Power package files remain in the DW-SuperApps workspace store.
