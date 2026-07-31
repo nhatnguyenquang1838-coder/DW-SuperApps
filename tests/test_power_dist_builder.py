@@ -76,6 +76,31 @@ class PowerDistributionBuilderTests(unittest.TestCase):
         self.assertIn("static distribution guidance", guidance)
         self.assertNotIn("dw power prompt", guidance)
 
+    def test_ua_guidance_teaches_graph_first_lookup(self) -> None:
+        recipe = dict(self.recipe)
+        recipe["metadata"] = dict(recipe["metadata"])
+        recipe["metadata"]["id"] = "ua"
+        recipe["spec"] = dict(recipe["spec"])
+        recipe["spec"]["runtime"] = dict(recipe["spec"]["runtime"])
+        recipe["spec"]["runtime"]["dataRoot"] = ".ua"
+        with tempfile.TemporaryDirectory() as temporary:
+            package = Path(temporary) / "package"
+            power_dist.build_staging_tree(
+                recipe,
+                self.source,
+                package,
+                version="ua-v1",
+                source_repository="example/ua",
+                source_ref="main",
+                source_sha="abcdef0123456789",
+                source_date_epoch=1700000000,
+                templates_root=ROOT / "templates" / "power-runtime",
+            )
+            guidance = (package / "AGENT_GUIDANCE.md").read_text(encoding="utf-8")
+            self.assertIn("## UA task routing", guidance)
+            self.assertIn("do not rebuild it, browse the web, or invent edges", guidance)
+            self.assertIn("exact matching node IDs", guidance)
+
     def test_runtime_data_is_forbidden(self) -> None:
         (self.source / ".demo").mkdir()
         (self.source / ".demo/state.json").write_text("{}", encoding="utf-8")
