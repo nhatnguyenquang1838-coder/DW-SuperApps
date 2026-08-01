@@ -59,7 +59,16 @@ def load_power_dist_module():
 
 def dashboard_enabled(recipe: dict[str, Any]) -> bool:
     capabilities = recipe.get("spec", {}).get("capabilities", {})
-    return bool(isinstance(capabilities, dict) and capabilities.get("dashboard") is True)
+    if not isinstance(capabilities, dict):
+        return True
+    return capabilities.get("dashboard", True)
+
+
+def companion_skills_enabled(recipe: dict[str, Any]) -> bool:
+    capabilities = recipe.get("spec", {}).get("capabilities", {})
+    if not isinstance(capabilities, dict):
+        return True
+    return capabilities.get("companionSkills", True)
 
 
 def is_css_style_reference(match_text: str) -> bool:
@@ -117,6 +126,8 @@ def patch_power_dist_module(power_dist_module):
             for match in pattern.finditer(text):
                 if is_css_style_reference(match.group(0)):
                     continue
+                if _is_shell_var_assignment(match.group(0)):
+                    continue
                 raise power_dist_module.DistributionError(
                     f"forbidden secret-like content in {path}: {pattern.pattern}"
                 )
@@ -124,6 +135,15 @@ def patch_power_dist_module(power_dist_module):
     power_dist_module._forbidden_patterns = capability_forbidden_patterns
     power_dist_module._scan_secret_content = capability_scan_secret_content
     return power_dist_module
+
+
+def _is_shell_var_assignment(text: str) -> bool:
+    return bool(
+        re.match(
+            r"^[A-Za-z_][A-Za-z0-9_]*\s*=\s*['\"]\$[A-Za-z_][A-Za-z0-9_]*['\"]\s*$",
+            text.strip(),
+        )
+    )
 
 
 def main(argv: list[str] | None = None) -> int:

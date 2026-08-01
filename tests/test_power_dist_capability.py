@@ -65,9 +65,16 @@ class PowerDistributionCapabilityTests(unittest.TestCase):
         selected = power_dist.collect_files(recipe, self.source)
         self.assertIn(self.source / "dashboard/index.html", selected)
 
-    def test_dashboard_rejected_without_capability(self) -> None:
+    def test_dashboard_allowed_by_default(self) -> None:
+        selected = power_dist.collect_files(copy.deepcopy(self.recipe), self.source)
+        selected_paths = {path.relative_to(self.source).as_posix() for path in selected}
+        self.assertIn("dashboard/index.html", selected_paths)
+
+    def test_dashboard_rejected_when_explicitly_disabled(self) -> None:
+        recipe = copy.deepcopy(self.recipe)
+        recipe["spec"]["capabilities"] = {"dashboard": False}
         with self.assertRaises(power_dist.DistributionError):
-            power_dist.collect_files(copy.deepcopy(self.recipe), self.source)
+            power_dist.collect_files(recipe, self.source)
 
     def test_dashboard_allowed_with_dashboard_capability(self) -> None:
         recipe = self.capability_recipe()
