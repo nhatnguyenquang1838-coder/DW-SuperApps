@@ -178,3 +178,36 @@ npm run build --prefix projects/dw-chatgpt-app
 - No secrets or tokens appear in logs, error messages, or frontend responses
 - Preview and Production OAuth settings should be isolated in Vercel
 - Callback replay is prevented by single-use state tokens
+
+---
+
+## E2E Validation (Worktree: gg-oauth-e2e)
+
+### PR #2 Status
+- Branch: `fix/oauth-vercel-supabase-wiring`
+- Head SHA: `e5d768d7a23445d25a7bd532eccfe9cbdae090cf` (matches expected)
+- State: Draft
+
+### Vercel Deployment
+- Current deployment: `dpl_7YwtexBSQcdXra4mbqAgaywmzZpU`
+- Previous deployment: `dpl_AALsfmWjheLYaeWHxHTfNR2jBgKF` (validated READY)
+- Protected by Vercel Authentication
+- Canonical hostname: `dw-super-chatgpt-app-complete-v1-dw1407.vercel.app`
+
+### Test Results (PR Branch)
+- All 6 tests pass
+- TypeScript strict validation passes
+
+### E2E Validation Sequence
+See `e2e-validation-report.md` in the worktree for the full checklist.
+
+### Blockers
+- No Vercel API token available
+- No Supabase access token available
+- No OAuth provider credentials available
+- Vercel Authentication on deployment prevents direct API testing
+
+### Unresolved Boundary
+- Browser OAuth cookie session is not yet bound to MCP tool-session identity
+- `src/server.ts` still contains a separate process-local OAuth/session path
+- A reviewed MCP authorization mechanism is required as a separate change
