@@ -1,0 +1,35 @@
+schema_version: '1.0'
+artifact_type: g4-merge-approval
+task_id: SCRUM-188
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: main
+base_sha: 72e6bbf0dca70e244dfb10af77ae7d6f870fc88f
+working_branch: fastlane/scrum-188-delivery
+draft_pr:
+  number: 39
+  url: https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/pull/39
+  head_sha: 2aeb2c7
+  status: READY_FOR_REVIEW
+g2_approval_id: FL-SCRUM-188-20260802-001
+scope_hash: sha256:465a96abc0d0ad63efb9ed58f8f3041048bcd97ab9a0b2414bb51bdbaab4f523
+g4_approval:
+  status: APPROVED
+  approved_by: human
+  approved_at: '2026-08-02T04:09:24Z'
+  approval_command: APPROVE G4 SCRUM-188-20260802-001 465a96abc0d0ad63 2026-08-02T04:09:24Z
+  run_id: SCRUM-188-20260802-001
+  token: 465a96abc0d0ad63
+  timestamp: '2026-08-02T04:09:24Z'
+merge_method: merge
+merge_authority: GWC
+g3_review:
+  status: PASS
+  reviewer: gwc
+  review_independence: fresh-context
+  scope_drift: false
+  prohibited_changes: false
+  ci_status: pre-existing failure unrelated to governance artifacts
+excluded_actions:
+- G5_DEPLOY
+- G6_PRODUCTION_DATA
+status: G4_APPROVED
