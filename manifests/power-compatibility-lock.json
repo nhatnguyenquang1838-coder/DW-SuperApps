@@ -1,71 +1,85 @@
 {
-  "schemaVersion": "1.0",
-  "checkedAt": "2026-07-30T23:32:43+07:00",
+  "checkedAt": "2026-08-02T15:23:00.906325+00:00",
   "powers": {
-    "gwc": {
-      "sourceRepository": "nhatnguyenquang1838-coder/gwc",
-      "providerHeadSha": "3b0938065e71e699d327d041f5b6023ed30a29dc",
-      "distributionRepository": "nhatnguyenquang1838-coder/gwc",
-      "distributionRef": "power-dist",
-      "publishedSourceSha": "3b0938065e71e699d327d041f5b6023ed30a29dc",
-      "packageVersion": "gwc-main-28-3b093806",
-      "runtimeDataRoot": ".gwc",
-      "entrypoints": [
-        "skills/gwc-g0/SKILL.md",
-        "skills/gwc-g1/SKILL.md"
-      ],
-      "guidanceMode": "legacy-optional",
-      "status": "CURRENT",
-      "publicationState": "release-and-branch"
-    },
-    "task-me": {
-      "sourceRepository": "nhatnguyenquang1838-coder/task-me",
-      "providerHeadSha": "bfa0752d9ca2c4e57cfe219c16294e728fc6a16b",
-      "distributionRepository": "nhatnguyenquang1838-coder/task-me",
-      "distributionRef": "power-dist",
-      "publishedSourceSha": "bfa0752d9ca2c4e57cfe219c16294e728fc6a16b",
-      "packageVersion": "task-me-main-bfa0752d",
-      "runtimeDataRoot": ".task-me",
-      "entrypoints": [
-        ".kiro/skills/implementation-task-architect/SKILL.md",
-        "scripts/task-me-host.py"
-      ],
-      "guidanceMode": "legacy-optional",
-      "status": "CURRENT",
-      "publicationState": "release-and-branch"
-    },
-    "ua": {
-      "sourceRepository": "nhatnguyenquang1838-coder/Understand-Anything",
-      "providerHeadSha": "f01391f7d1658d84b8ee6f34fb08399cd8fc3f62",
-      "distributionRepository": "nhatnguyenquang1838-coder/Understand-Anything",
-      "distributionRef": "power-dist",
-      "publishedSourceSha": "f01391f7d1658d84b8ee6f34fb08399cd8fc3f62",
-      "packageVersion": "ua-main-f01391f7",
-      "runtimeDataRoot": ".ua",
-      "entrypoints": [
-        "understand-anything-plugin/skills/understand/SKILL.md"
-      ],
-      "guidanceMode": "legacy-optional",
-      "status": "CURRENT",
-      "publicationState": "release-and-branch",
-      "note": "Local source integration pin; remote publication was not checked (SKIPPED_OFFLINE)."
-    },
     "bmad": {
-      "sourceRepository": "nhatnguyenquang1838-coder/BMAD-METHOD",
-      "providerHeadSha": "fdc47614b5903bf342ca92d9547ae4c49817aa3a",
-      "distributionRepository": "nhatnguyenquang1838-coder/DW-SuperApps",
       "distributionRef": "power-dist-bmad",
-      "publishedSourceSha": "fdc47614b5903bf342ca92d9547ae4c49817aa3a",
-      "packageVersion": "bmad-main-fdc47614",
-      "runtimeDataRoot": ".bmad",
+      "distributionRepository": "nhatnguyenquang1838-coder/DW-SuperApps",
       "entrypoints": [
         "src/core-skills/bmad-help/SKILL.md",
-        "src/bmm-skills/module.yaml"
+        "src/bmm-skills/module.yaml",
+        "tools/power-help.js"
       ],
       "guidanceMode": "legacy-optional",
-      "status": "CURRENT",
+      "note": "The validated distribution branch exists; immutable-release publication remains a separate post-merge action.",
+      "packageVersion": "bmad-main-fdc47614",
+      "providerHeadSha": "fdc47614b5903bf342ca92d9547ae4c49817aa3a",
       "publicationState": "distribution-branch",
-      "note": "The validated distribution branch exists; immutable-release publication remains a separate post-merge action."
+      "publishedSourceSha": "fdc47614b5903bf342ca92d9547ae4c49817aa3a",
+      "runtimeDataRoot": ".bmad",
+      "sourceRepository": "nhatnguyenquang1838-coder/BMAD-METHOD",
+      "status": "CURRENT"
+    },
+    "gwc": {
+      "distributionRef": "power-dist",
+      "distributionRepository": "nhatnguyenquang1838-coder/gwc",
+      "entrypoints": [
+        "skills/gwc-g0/SKILL.md",
+        "skills/gwc-g1/SKILL.md",
+        "tools/power_help.py"
+      ],
+      "guidanceMode": "legacy-optional",
+      "note": "Local rebuild from latest submodule main (aad17d2); power-dist branch on remote remains a compatibility fallback.",
+      "packageVersion": "gwc-main-43-3b6c22be933036887a7ae96002e5a48677583812-375-g520aa19",
+      "providerHeadSha": "520aa1968a0809001e8994192278e52a59c86c61",
+      "publicationState": "release-and-branch",
+      "publishedSourceSha": "520aa1968a0809001e8994192278e52a59c86c61",
+      "runtimeDataRoot": ".gwc",
+      "sourceRepository": "nhatnguyenquang1838-coder/gwc",
+      "status": "CURRENT"
+    },
+    "task-me": {
+      "distributionRef": "power-dist",
+      "distributionRepository": "nhatnguyenquang1838-coder/task-me",
+      "entrypoints": [
+        ".kiro/skills/implementation-task-architect/SKILL.md",
+        "scripts/task-me-host.py",
+        "scripts/power_help.py"
+      ],
+      "guidanceMode": "legacy-optional",
+      "note": "Local rebuild verification from latest submodule tag (bfa0752d); distribution recipe unchanged.",
+      "packageVersion": "task-me-main-3-bfa0752d9ca2c4e57cfe219c16294e728fc6a16b",
+      "providerHeadSha": "bfa0752d9ca2c4e57cfe219c16294e728fc6a16b",
+      "publicationState": "release-and-branch",
+      "publishedSourceSha": "bfa0752d9ca2c4e57cfe219c16294e728fc6a16b",
+      "runtimeDataRoot": ".task-me",
+      "sourceRepository": "nhatnguyenquang1838-coder/task-me",
+      "status": "CURRENT"
+    },
+    "ua": {
+      "distributionRef": "power-dist",
+      "distributionRepository": "nhatnguyenquang1838-coder/Understand-Anything",
+      "entrypoints": [
+        "understand-anything-plugin/skills/understand/SKILL.md",
+        "understand-anything-plugin/skills/understand-chat/SKILL.md",
+        "understand-anything-plugin/skills/understand-explain/SKILL.md",
+        "understand-anything-plugin/skills/understand-diff/SKILL.md",
+        "understand-anything-plugin/skills/understand-dashboard/SKILL.md",
+        "understand-anything-plugin/skills/understand-domain/SKILL.md",
+        "understand-anything-plugin/skills/understand-onboard/SKILL.md",
+        "understand-anything-plugin/skills/understand-knowledge/SKILL.md",
+        "understand-anything-plugin/skills/understand-figma/SKILL.md",
+        "scripts/power_help.py"
+      ],
+      "guidanceMode": "legacy-optional",
+      "note": "Local rebuild from latest submodule main (7b6a0a9); power-dist branch on remote remains a compatibility fallback.",
+      "packageVersion": "ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38-4-g7b6a0a9",
+      "providerHeadSha": "7b6a0a931a4f5c6f21eaf4a485738098b8f84286",
+      "publicationState": "release-and-branch",
+      "publishedSourceSha": "7b6a0a931a4f5c6f21eaf4a485738098b8f84286",
+      "runtimeDataRoot": ".ua",
+      "sourceRepository": "nhatnguyenquang1838-coder/Understand-Anything",
+      "status": "CURRENT"
     }
-  }
+  },
+  "schemaVersion": "1.0"
 }
