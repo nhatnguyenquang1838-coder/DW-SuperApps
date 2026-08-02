@@ -1,5 +1,42 @@
 schema_version: '1.0'
 artifact_type: g3-delivery-record
 task_id: SCRUM-189
-status: NOT_APPLICABLE
-note: G3 delivery record is created only when G2 execution completes and a Draft PR is ready for review.
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: main
+base_sha: 72e6bbf0dca70e244dfb10af77ae7d6f870fc88f
+working_branch: fastlane/scrum-189-delivery
+draft_pr:
+  number: 40
+  url: https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/pull/40
+  head_sha: pending
+  status: READY_FOR_REVIEW
+g2_approval_id: FL-SCRUM-189-20260802-001
+scope_hash: sha256:732bf3dd86c1a19fe49e1657940032fe1958b2ba16e930b5ac4f2e407e1d6d0e
+g3_stage: G3.1_PR_ASSEMBLY
+review_status: PENDING_REVIEW
+validation_performed:
+- All YAML files validated (parseable)
+- Fastlane envelope JSON validated (parseable)
+- Fastlane envelope schema compliance verified
+- Scope hash computed and bound to G1 decision record and G2 execution envelope
+- Guarded branch created from locked base SHA
+- Draft PR created and marked ready for review
+validation_skipped:
+- CI validation (no code changes to test)
+- G3 independent review (pending)
+acceptance_criteria:
+  FastLane envelope conforms to schema: true
+  G2 approval command exact with scope hash prefix: true
+  Guarded branch created from locked base SHA: true
+  Only scoped files modified: true
+  Draft PR created with exact head SHA: true
+  No merge/deploy/release/production operations: true
+residual_risks:
+- CI checks not yet run on PRs
+- Independent review not yet completed
+- G4 merge not yet approved
+excluded_actions:
+- G4_MERGE
+- G5_DEPLOY
+- G6_PRODUCTION_DATA
+status: G3_IN_PROGRESS
