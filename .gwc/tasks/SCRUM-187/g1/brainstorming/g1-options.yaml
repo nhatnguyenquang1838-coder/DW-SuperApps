@@ -1,0 +1,26 @@
+schema_version: '1.0'
+artifact_type: g1-options
+task_id: SCRUM-187
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_sha: 72e6bbf0dca70e244dfb10af77ae7d6f870fc88f
+options:
+  - option_id: OPT-1
+    title: FastLane bounded delivery
+    summary: Apply the GWC FastLane bootstrap workflow for SCRUM-187 with a
+      guarded branch, scoped file changes, and a Draft PR.
+    pros:
+      - honors GWC authority boundaries
+      - preserves exact-SHA provenance
+      - keeps merge/deploy out of scope
+      - follows the established FastLane pattern from SCRUM-146-149 and SCRUM-150
+    cons:
+      - does not grant later-gate authority
+  - option_id: OPT-2
+    title: Direct main branch delivery
+    summary: Bypass the FastLane workflow and deliver directly to main.
+    pros: []
+    cons:
+      - violates GWC gate ownership
+      - violates the protected-branch policy
+      - bypasses G2/G3/G4 governance guardrails
+selected_option_id: OPT-1

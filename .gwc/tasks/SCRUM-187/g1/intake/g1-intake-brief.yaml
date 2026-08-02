@@ -1,0 +1,24 @@
+schema_version: '1.0'
+artifact_type: g1-intake-brief
+task_id: SCRUM-187
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: main
+base_sha: 72e6bbf0dca70e244dfb10af77ae7d6f870fc88f
+problem_statement: >
+  Establish a Fastlane delivery pipeline for SCRUM-187 following GWC Governance.
+  The Fastlane bootstrap workflow accelerates bounded delivery with governance
+  guardrails, creating a guarded branch, scoped file changes, and a Draft PR.
+desired_outcome: >
+  A complete SCRUM-187 Fastlane evidence package: G0 context, G1 alignment,
+  Fastlane envelope, guarded branch, scoped implementation, Draft PR, and
+  GWC gate records proving the delivery remains bounded by governance authority.
+acceptance_criteria:
+  - FastLane envelope conforms to the fastlane-envelope.schema.json schema.
+  - G2 approval command is exact and includes the scope hash prefix.
+  - Guarded branch is created from the locked base SHA.
+  - Only scoped files are modified within the approved file scope.
+  - Draft PR is created with the exact head SHA.
+  - No merge, deploy, release, production configuration, credentials, migration,
+    or production data operations are authorized.
+  - GWC remains the only authority for G2/G4/G5/G6 transitions.
+next_gate: G1_ALIGNMENT

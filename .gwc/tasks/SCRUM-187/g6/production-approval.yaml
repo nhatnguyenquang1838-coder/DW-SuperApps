@@ -1,0 +1,5 @@
+schema_version: '1.0'
+artifact_type: g6-production-approval
+task_id: SCRUM-187
+status: NOT_APPLICABLE
+note: G6 production approval is required only when production data, configuration, credential, migration, or secret operations are explicitly in scope.

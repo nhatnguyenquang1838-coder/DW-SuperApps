@@ -1,0 +1,37 @@
+schema_version: '1.0'
+artifact_type: g1-decision-record
+task_id: SCRUM-187
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: main
+base_sha: 72e6bbf0dca70e244dfb10af77ae7d6f870fc88f
+status: ACCEPTED
+selected_option_id: OPT-1
+rationale: >
+  Proceed with the FastLane bounded delivery workflow for SCRUM-187.
+  The SCRUM-187 work follows the GWC FastLane bootstrap pattern with a
+  guarded branch, scoped file changes, and a Draft PR. GWC retains gate
+  authority; merge and deploy are not granted by design evidence.
+rejected_option_ids:
+  - OPT-2
+scope_hash: sha256:18d6b1d01821295c7f7f218a44020b076707d8edee56c21875b3361bc03b66af
+g1_gate_outcome: PASS
+authority_boundaries:
+  grants:
+    - G1_ALIGNMENT
+    - G2_EXECUTION
+  excludes:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION_DATA
+subagent_distribution_plan:
+  task_decomposition:
+    - task: Set up Fastlane delivery pipeline
+      agent: gwc
+    - task: Validate governance artifacts
+      agent: task-me
+    - task: Record gate evidence and boundary posture
+      agent: gwc
+  summary: >
+    GWC governs the gate, task-me supplies validation planning, and the
+    FastLane workflow provides the delivery envelope. GWC remains the only
+    authority for G2/G4/G5/G6 transitions.

@@ -1,0 +1,29 @@
+schema_version: '1.0'
+artifact_type: g1-preflight-report
+task_id: SCRUM-187
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: main
+base_sha: 72e6bbf0dca70e244dfb10af77ae7d6f870fc88f
+intake_status: READY
+existing_mechanisms:
+  - current_mechanism: GWC FastLane bootstrap workflow
+    purpose: Accelerate bounded delivery with governance guardrails
+    limitation: Temporary workflow; does not replace the GWC gate lifecycle
+    improvement: Apply FastLane envelope and gate sequence for SCRUM-187
+  - current_mechanism: .gwc/tasks/SCRUM-187/g0/context-snapshot.yaml
+    purpose: Canonical G0 context for the SCRUM-187 task
+    limitation: Requires G1 alignment artifacts to formalize the gate exit
+    improvement: Add G1 intake, preflight, options, and decision records
+selected_option: OPT-1
+risk_class: LOW
+validation_evidence:
+  - G0 context snapshot is schema-valid with status READY
+  - repository identity and connector permissions are verified
+  - FastLane envelope schema conforms to fastlane-envelope.schema.json
+  - GWC gate posture is explicit and bounded
+required_next_gate: G2_EXECUTION
+excluded_actions:
+  - G4_MERGE
+  - G5_DEPLOY
+  - G6_PRODUCTION_DATA
+outcome: PASS
