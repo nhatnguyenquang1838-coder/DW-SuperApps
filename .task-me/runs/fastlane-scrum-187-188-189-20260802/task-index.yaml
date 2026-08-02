@@ -1,0 +1,31 @@
+version: 1
+run_id: fastlane-scrum-187-188-189-20260802
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+protected_base_sha: 72e6bbf0dca70e244dfb10af77ae7d6f870fc88f
+remote_verification: SKIPPED_OFFLINE
+workflow: GWC_FASTLANE_BOOTSTRAP
+tasks:
+  - task_id: SCRUM-187
+    title: Fastlane delivery pipeline for SCRUM-187
+    folder: tasks/SCRUM-187
+    risk: R1
+    working_branch: fastlane/scrum-187-delivery
+    requires: []
+    parallel_with: [SCRUM-188, SCRUM-189]
+    likely_hours: 8
+  - task_id: SCRUM-188
+    title: Fastlane delivery pipeline for SCRUM-188
+    folder: tasks/SCRUM-188
+    risk: R1
+    working_branch: fastlane/scrum-188-delivery
+    requires: []
+    parallel_with: [SCRUM-187, SCRUM-189]
+    likely_hours: 8
+  - task_id: SCRUM-189
+    title: Fastlane delivery pipeline for SCRUM-189
+    folder: tasks/SCRUM-189
+    risk: R1
+    working_branch: fastlane/scrum-189-delivery
+    requires: []
+    parallel_with: [SCRUM-187, SCRUM-188]
+    likely_hours: 8
