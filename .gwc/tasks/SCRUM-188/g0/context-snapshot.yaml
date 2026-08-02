@@ -1,0 +1,30 @@
+schema_version: '1.0'
+artifact_type: g0-context-snapshot
+generated_at: '2026-08-02T09:22:23+07:00'
+project:
+  id: dw-superapps
+  name: DW SuperApps
+  profile_path: workspace.yaml
+repository:
+  full_name: nhatnguyenquang1838-coder/DW-SuperApps
+  base_ref: main
+  base_sha: 72e6bbf0dca70e244dfb10af77ae7d6f870fc88f
+  protected_branches:
+    - main
+  connector: Git
+  write_enabled: true
+task:
+  id: SCRUM-188
+  title: Fastlane delivery pipeline for SCRUM-188
+constraints:
+  - GWC retains gate authority; merge and deploy are not granted by design evidence.
+  - No canonical-state mutation outside .gwc/ governance records.
+  - Fastlane is a temporary bootstrap workflow; it does not replace the GWC gate lifecycle.
+  - G4 merge, G5 deploy, and G6 production operations remain separate human authority boundaries.
+sources:
+  - path: .gwc/scrums/SCRUM-188/design.md
+    status: AVAILABLE
+  - path: .gwc/tasks/SCRUM-188/g1/decision/g1-decision-record.yaml
+    status: AVAILABLE
+  - path: .gwc/tasks/SCRUM-188/g1/preflight/g1-preflight-report.yaml
+    status: AVAILABLE
