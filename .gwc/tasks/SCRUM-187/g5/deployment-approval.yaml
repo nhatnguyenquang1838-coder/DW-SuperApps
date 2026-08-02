@@ -1,5 +1,36 @@
 schema_version: '1.0'
 artifact_type: g5-deployment-approval
 task_id: SCRUM-187
-status: NOT_APPLICABLE
-note: G5 deployment approval is required only when a manual deploy, release, publish, or runtime reload is explicitly in scope.
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: main
+base_sha: 72e6bbf0dca70e244dfb10af77ae7d6f870fc88f
+working_branch: fastlane/scrum-187-delivery
+draft_pr:
+  number: 38
+  url: https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/pull/38
+  head_sha: 29252f1
+  status: MERGED
+g2_approval_id: FL-SCRUM-187-20260802-001
+scope_hash: sha256:18d6b1d01821295c7f7f218a44020b076707d8edee56c21875b3361bc03b66af
+g4_approval:
+  status: APPROVED
+  approved_at: '2026-08-02T04:17:05Z'
+g5_deployment:
+  status: APPROVED
+  approved_by: human
+  approved_at: '2026-08-02T04:17:05Z'
+  approval_command: APPROVE G5 SCRUM-187-20260802-001 sha256:18d6b1d01 2026-08-02T04:17:05Z
+  run_id: SCRUM-187-20260802-001
+  token: sha256:18d6b1d01
+  timestamp: '2026-08-02T04:17:05Z'
+  deployment_target: preview
+  deployment_method: manual
+  environment: preview
+g3_review:
+  status: PASS
+  reviewer: gwc
+  scope_drift: false
+  prohibited_changes: false
+excluded_actions:
+- G6_PRODUCTION_DATA
+status: G5_APPROVED
