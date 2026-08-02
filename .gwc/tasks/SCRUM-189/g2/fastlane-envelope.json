@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gwc.local/schemas/fastlane/fastlane-envelope.schema.json",
+  "schema_version": "0.1",
+  "workflow": "GWC_FASTLANE_BOOTSTRAP",
+  "temporary": true,
+  "sunset_condition": "Remove or supersede after the SCRUM-187/188/189 FastLane delivery is complete and the GWC revamp workflow is merged and validated.",
+  "task": {
+    "id": "SCRUM-189",
+    "title": "Fastlane delivery pipeline for SCRUM-189",
+    "risk_class": "R1"
+  },
+  "repository": {
+    "full_name": "nhatnguyenquang1838-coder/DW-SuperApps",
+    "base_branch": "main",
+    "base_sha": "72e6bbf0dca70e244dfb10af77ae7d6f870fc88f",
+    "working_branch": "fastlane/scrum-189-delivery"
+  },
+  "connector_route": {
+    "primary": "GitHub",
+    "fallback": ["DWC", "DW1"],
+    "selected": "GitHub"
+  },
+  "scope": {
+    "files_read": [
+      ".gwc/**",
+      "AGENTS.md",
+      "workspace.yaml",
+      "manifests/powers/gwc.yaml",
+      "projects/gwc/core/workflows/GWC_FASTLANE_BOOTSTRAP_WORKFLOW_v0.1.md",
+      "projects/gwc/docs/runbooks/GWC_FASTLANE_BOOTSTRAP_RUNBOOK.md",
+      "schemas/fastlane/fastlane-envelope.schema.json"
+    ],
+    "files_write": [
+      ".gwc/tasks/SCRUM-189/**",
+      ".gwc/scrums/SCRUM-189/**"
+    ],
+    "authorized_actions": [
+      "create_guarded_branch",
+      "modify_scoped_files",
+      "open_or_update_draft_pr",
+      "readback_branch_pr_diff_ci"
+    ],
+    "excluded_actions": [
+      "direct_push_main",
+      "force_push",
+      "delete_branch",
+      "change_pr_base",
+      "merge",
+      "auto_merge",
+      "deploy",
+      "release",
+      "production_config",
+      "credentials",
+      "secrets",
+      "migration",
+      "production_data"
+    ]
+  },
+  "authority": {
+    "g2_approval_required": true,
+    "g4_merge_approval_required": true,
+    "g5_deploy_approval_required": true,
+    "g6_production_approval_required": false
+  },
+  "audit_projection": {
+    "jira": "optional",
+    "tc_ds_mcp": "optional",
+    "blocking": false
+  }
+}

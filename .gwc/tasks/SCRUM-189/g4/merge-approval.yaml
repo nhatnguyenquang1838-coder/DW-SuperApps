@@ -1,0 +1,5 @@
+schema_version: '1.0'
+artifact_type: g4-merge-approval
+task_id: SCRUM-189
+status: NOT_APPLICABLE
+note: G4 merge approval is required only when G3 PASS and the Draft PR is ready for review with explicit human approval.

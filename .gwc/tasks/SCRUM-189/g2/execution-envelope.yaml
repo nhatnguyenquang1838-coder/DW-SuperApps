@@ -1,0 +1,26 @@
+schema_version: '1.0'
+artifact_type: g2-execution-envelope
+task_id: SCRUM-189
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: main
+base_sha: 72e6bbf0dca70e244dfb10af77ae7d6f870fc88f
+working_branch: fastlane/scrum-189-delivery
+risk_class: R1
+fastlane_envelope: .gwc/tasks/SCRUM-189/g2/fastlane-envelope.json
+g2_approval_id: FL-SCRUM-189-20260802-001
+scope_hash: sha256:732bf3dd86c1a19fe49e1657940032fe1958b2ba16e930b5ac4f2e407e1d6d0e
+objective: >
+  Execute the FastLane bounded delivery workflow for SCRUM-189.
+  Create a guarded branch, write scoped files, and produce a Draft PR.
+acceptance_scope:
+  - All changes are within the approved file scope.
+  - No protected branch writes.
+  - No prohibited actions attempted.
+  - Diff readback is available.
+  - Validation status is reported honestly.
+required_validation:
+  - G0 context snapshot is schema-valid
+  - G1 alignment artifacts are complete and PASS
+  - FastLane envelope conforms to fastlane-envelope.schema.json
+  - G2 approval command has been received and matches the envelope
+status: PENDING_G2_APPROVAL
