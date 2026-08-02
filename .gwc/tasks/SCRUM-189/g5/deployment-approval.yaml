@@ -1,0 +1,5 @@
+schema_version: '1.0'
+artifact_type: g5-deployment-approval
+task_id: SCRUM-189
+status: NOT_APPLICABLE
+note: G5 deployment approval is required only when a manual deploy, release, publish, or runtime reload is explicitly in scope.
