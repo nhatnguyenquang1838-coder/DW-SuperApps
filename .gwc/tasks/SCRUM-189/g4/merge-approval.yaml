@@ -1,5 +1,35 @@
 schema_version: '1.0'
 artifact_type: g4-merge-approval
 task_id: SCRUM-189
-status: NOT_APPLICABLE
-note: G4 merge approval is required only when G3 PASS and the Draft PR is ready for review with explicit human approval.
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: main
+base_sha: 72e6bbf0dca70e244dfb10af77ae7d6f870fc88f
+working_branch: fastlane/scrum-189-delivery
+draft_pr:
+  number: 40
+  url: https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/pull/40
+  head_sha: 962855e
+  status: READY_FOR_REVIEW
+g2_approval_id: FL-SCRUM-189-20260802-001
+scope_hash: sha256:732bf3dd86c1a19fe49e1657940032fe1958b2ba16e930b5ac4f2e407e1d6d0e
+g4_approval:
+  status: APPROVED
+  approved_by: human
+  approved_at: '2026-08-02T04:09:27Z'
+  approval_command: APPROVE G4 SCRUM-189-20260802-001 732bf3dd86c1a19f 2026-08-02T04:09:27Z
+  run_id: SCRUM-189-20260802-001
+  token: 732bf3dd86c1a19f
+  timestamp: '2026-08-02T04:09:27Z'
+merge_method: merge
+merge_authority: GWC
+g3_review:
+  status: PASS
+  reviewer: gwc
+  review_independence: fresh-context
+  scope_drift: false
+  prohibited_changes: false
+  ci_status: pre-existing failure unrelated to governance artifacts
+excluded_actions:
+- G5_DEPLOY
+- G6_PRODUCTION_DATA
+status: G4_APPROVED
