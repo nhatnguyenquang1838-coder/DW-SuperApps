@@ -1,0 +1,42 @@
+schema_version: '1.0'
+artifact_type: g2-execution-envelope
+task_id: SCRUM-206
+node_id: runtime_checkpoint.lease-acquisition
+family_gate: G2_EXECUTION
+repository: nhatnguyenquang1838-coder/gwc
+base_ref: main
+base_sha: d4e507aec14db4f62fd4f21f8f84436df08e6216
+working_branch: g1-206-20260802-2328
+risk_class: R2
+authorized_paths:
+  - tools/node_architect/lease_acquisition.py
+  - tests/test_lease_acquisition.py
+  - schemas/lease-acquisition-decision.schema.json
+  - releases/changelog.d/2026-08-02-scrum-206-lease-acquisition-m5.md
+  - .gwc/tasks/SCRUM-206/**
+authorized_actions:
+  - create_files
+  - run_unit_tests
+  - commit
+  - push_branch
+  - open_draft_pr
+excluded_actions:
+  - merge_to_main
+  - deploy
+  - release
+  - edit_core_governance
+  - credentials
+  - migrations
+  - manual_g5_deploy
+  - recursive_evidence_pr
+additional_bindings:
+  - name: node_id
+    value: runtime_checkpoint.lease-acquisition
+  - name: family_gate
+    value: G2_EXECUTION
+  - name: target_maturity
+    value: M5_REPLAY_SAFE
+scope_hash: sha256:c2331b426db4f508694a414c89e88383aca2ef889f9f77647f23a0e846c14dad
+scope_hash_16: c2331b426db4f508
+approval_status: pending_human_g2
+approval_command: 'APPROVE G2_EXECUTION APPROVE_G2_SCRUM-206_R1_20260802 c2331b426db4f508 2026-08-03T23:28:00+0700'

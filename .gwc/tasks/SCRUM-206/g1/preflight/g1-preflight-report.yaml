@@ -1,0 +1,42 @@
+schema_version: '1.0'
+artifact_type: g1-preflight-report
+task_id: SCRUM-206
+node_id: runtime_checkpoint.lease-acquisition
+preflight_status: PASS
+repository_ready: true
+base_sha_valid: true
+working_branch_clean: true
+no_conflicting_task: true
+blockers: []
+risk_signals: []
+read_scope_verified:
+  - AGENTS.md
+  - core/Coding_Project_Governance_v1.0.md
+  - core/GATE_LIFECYCLE_CONTRACT_v1.0.md
+  - core/Agent_Operating_Runtime_Contract_v1.0.md
+  - core/task-lifecycle/gate-transition-map.yaml
+  - core/node-architect/node-registry.json
+  - core/node-architect/node-catalog/runtime_checkpoint/lease-acquisition.node.json
+  - core/node-architect/node-catalog/runtime_checkpoint/README.md
+  - core/node-architect/decision-rule-registry.json
+  - projects/gwc/project-profile.yaml
+  - projects/gwc/project-instructions.md
+  - projects/gwc/project-extension.md
+  - agents/chatgpt-agent/agent-instructions.md
+  - agents/dwc/agent-instructions.md
+  - tools/node_architect/checkpoint_capture.py
+  - tools/node_architect/checkpoint_store.py
+  - tools/node_architect/lease_expiry_recovery.py
+  - tests/test_checkpoint_capture.py
+  - tests/test_lease_expiry_recovery.py
+  - .gwc/tasks/SCRUM-202/g2/execution-envelope.yaml
+  - .gwc/tasks/SCRUM-202/g1/intake/g1-intake-brief.yaml
+  - .gwc/tasks/SCRUM-202/g1/decision/g1-decision-record.yaml
+  - .gwc/tasks/SCRUM-202/g1/preflight/g1-preflight-report.yaml
+  - schemas/runtime-checkpoint.schema.json
+  - schemas/duplicate-agent-fencing-decision.schema.json
+  - schemas/lease-expiry-recovery-decision.schema.json
+validator_evidence:
+  tool: tools/validate_g01.py
+  workspace: .gwc/tasks/SCRUM-206
+  result: PENDING_VALIDATION

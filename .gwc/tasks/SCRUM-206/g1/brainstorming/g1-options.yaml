@@ -1,0 +1,46 @@
+schema_version: '1.0'
+artifact_type: g1-options
+task_id: SCRUM-206
+options:
+  - option_id: '1'
+    title: 'Pure decision utility (recommended)'
+    description: >
+      Implement lease acquisition as a pure deterministic function similar to lease_expiry_recovery.
+      The function accepts all required bindings and returns a decision without side effects.
+      Caller is responsible for lease persistence via checkpoint_store.
+    pros:
+      - Maintains replay safety (M5_REPLAY_SAFE)
+      - No new I/O or persistence layer needed
+      - Consistent with existing node pattern (lease_expiry_recovery)
+      - Pure function enables deterministic testing
+    cons:
+      - Caller must manage fencing token generation
+      - No built-in lease state tracking
+    selected: true
+  - option_id: '2'
+    title: 'Stateful lease manager'
+    description: >
+      Implement a stateful class that manages lease state internally with methods for acquire, renew, and release.
+    pros:
+      - Encapsulates lease logic
+      - Built-in state tracking
+    cons:
+      - Introduces I/O and side effects
+      - Breaks replay safety
+      - Inconsistent with existing pattern
+    selected: false
+  - option_id: '3'
+    title: 'Extend checkpoint_capture.py'
+    description: >
+      Add lease acquisition logic directly into the existing checkpoint_capture module.
+    pros:
+      - Reuses existing infrastructure
+    cons:
+      - Mixes concerns (capture vs acquisition)
+      - Harder to test in isolation
+      - Deviates from single-responsibility node pattern
+    selected: false
+decision_rationale: >
+  Option 1 was selected to maintain consistency with the existing lease_expiry_recovery pattern,
+  preserve replay safety, and keep the implementation as a pure deterministic decision utility.
+  The checkpoint_store.py already handles lease persistence, so no new I/O layer is needed.

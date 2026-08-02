@@ -1,0 +1,16 @@
+schema_version: '1.0'
+artifact_type: g1-intake-brief
+task_id: SCRUM-206
+summary: '[MAT-F4-N05] runtime_checkpoint.lease-acquisition — M2 → M5'
+maturity_target: M5_REPLAY_SAFE
+node: runtime_checkpoint.lease-acquisition
+purpose: Acquire an active lease for a runtime checkpoint task with monotonic fencing and scope validation.
+required_contract:
+  - Lease acquisition requires valid task_id, run_id, scope_hash, repository, branch, and fencing token.
+  - Fencing token must be monotonic; stale workers are rejected.
+  - Competing agents for the same task/scope are rejected.
+  - Scope mismatch (repository or scope_hash) results in rejection.
+  - Expired leases route to RECONCILE or REACQUIRE_REQUIRED based on side-effect state.
+family_gate: G2_EXECUTION
+dependencies: none
+claim_status: claimed_by_Kilo

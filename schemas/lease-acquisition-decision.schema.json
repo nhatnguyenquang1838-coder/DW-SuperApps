@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Lease Acquisition Decision",
+  "description": "Decision output for the runtime_checkpoint.lease-acquisition node",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["1.0"]
+    },
+    "artifact_type": {
+      "type": "string",
+      "enum": ["lease-acquisition-decision"]
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "node_id": {
+      "type": "string",
+      "enum": ["runtime_checkpoint.lease-acquisition"]
+    },
+    "repository": {
+      "type": "string"
+    },
+    "branch": {
+      "type": "string"
+    },
+    "base_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "scope_hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "lease_id": {
+      "type": "string"
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "actor_id": {
+      "type": "string"
+    },
+    "observed_lease_holder": {
+      "type": ["string", "null"]
+    },
+    "observed_fencing_token": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "ACQUIRED",
+        "FENCE_STALE_WORKER",
+        "FENCE_DUPLICATE_AGENT",
+        "RECONCILE",
+        "REACQUIRE_REQUIRED",
+        "SCOPE_MISMATCH"
+      ]
+    },
+    "reason_code": {
+      "type": "string"
+    },
+    "advancement_allowed": {
+      "type": "boolean"
+    },
+    "side_effect_allowed": {
+      "type": "boolean"
+    },
+    "reacquire_required": {
+      "type": "boolean"
+    },
+    "decision_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "required": [
+    "schema_version",
+    "artifact_type",
+    "task_id",
+    "run_id",
+    "node_id",
+    "repository",
+    "branch",
+    "base_sha",
+    "head_sha",
+    "scope_hash",
+    "lease_id",
+    "fencing_token",
+    "actor_id",
+    "observed_lease_holder",
+    "observed_fencing_token",
+    "observed_at",
+    "outcome",
+    "reason_code",
+    "advancement_allowed",
+    "side_effect_allowed",
+    "reacquire_required",
+    "decision_digest"
+  ],
+  "additionalProperties": false
+}

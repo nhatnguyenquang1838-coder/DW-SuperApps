@@ -1,0 +1,33 @@
+schema_version: '1.0'
+artifact_type: g0-context-snapshot
+task_id: SCRUM-206
+created_at: '2026-08-03T01:50:00+0700'
+agent: Kilo
+repository: nhatnguyenquang1838-coder/gwc
+base_ref: main
+base_sha: d4e507aec14db4f62fd4f21f8f84436df08e6216
+working_branch: g1-206-20260802-2328
+node_id: runtime_checkpoint.lease-acquisition
+family_gate: G2_EXECUTION
+target_maturity: M5_REPLAY_SAFE
+parent_task: SCRUM-169
+claimed: true
+claimed_at: '2026-08-02T23:28:00.000+0700'
+sot_boot:
+  resolved_from: DW-SuperApps
+  power_package: .dw/powers/gwc
+  power_source_sha: 520aa1968a0809001e8994192278e52a59c86c61
+  submodule_note: compatibility fallback only
+node_descriptor:
+  node_type: workflow
+  authority_boundary: g2_required
+  gates: [G2_EXECUTION]
+exclusions_planned:
+  - merge_to_main
+  - deploy
+  - release
+  - edit_core_governance
+  - credentials
+  - migrations
+  - manual_g5_deploy
+  - recursive_evidence_pr
