@@ -8,22 +8,28 @@ working_branch: fastlane/scrum-187-delivery
 draft_pr:
   number: 38
   url: https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/pull/38
-  head_sha: pending
+  head_sha: 9ed4849
   status: READY_FOR_REVIEW
 g2_approval_id: FL-SCRUM-187-20260802-001
 scope_hash: sha256:18d6b1d01821295c7f7f218a44020b076707d8edee56c21875b3361bc03b66af
-g3_stage: G3.1_PR_ASSEMBLY
+g3_stage: G3.2_INDEPENDENT_REVIEW
 review_status: PENDING_REVIEW
+reviewer: gwc
+review_independence: fresh-context
 validation_performed:
-  - All YAML files validated (parseable)
-  - Fastlane envelope JSON validated (parseable)
-  - Fastlane envelope schema compliance verified
-  - Scope hash computed and bound to G1 decision record and G2 execution envelope
-  - Guarded branch created from locked base SHA
-  - Draft PR created and marked ready for review
+- All YAML files validated (parseable)
+- Fastlane envelope JSON validated (parseable)
+- Fastlane envelope schema compliance verified
+- Scope hash computed and bound to G1 decision record and G2 execution envelope
+- Guarded branch created from locked base SHA
+- Draft PR created and marked ready for review
+- 'Diff review: no scope drift detected'
+- 'Diff review: no prohibited changes detected'
+- 'Diff review: all changes within approved file scope'
 validation_skipped:
-  - CI validation (no code changes to test)
-  - G3 independent review (pending)
+- CI validation (pre-existing failure in 'Validate Power compatibility and sanity
+  contracts' step, unrelated to governance artifacts)
+- G3 independent review (pending human review)
 acceptance_criteria:
   FastLane envelope conforms to schema: true
   G2 approval command exact with scope hash prefix: true
@@ -31,12 +37,20 @@ acceptance_criteria:
   Only scoped files modified: true
   Draft PR created with exact head SHA: true
   No merge/deploy/release/production operations: true
+  No scope drift: true
+  No prohibited changes: true
+review_findings:
+  BLOCKER: []
+  MAJOR: []
+  MINOR: []
+  NIT: []
 residual_risks:
-  - CI checks not yet run on PRs
-  - Independent review not yet completed
-  - G4 merge not yet approved
+- CI failure is pre-existing (power compatibility test), unrelated to governance artifacts
+- G4 merge not yet approved
+- G5 deploy not yet approved
+- G6 production data not yet approved
 excluded_actions:
-  - G4_MERGE
-  - G5_DEPLOY
-  - G6_PRODUCTION_DATA
+- G4_MERGE
+- G5_DEPLOY
+- G6_PRODUCTION_DATA
 status: G3_IN_PROGRESS
