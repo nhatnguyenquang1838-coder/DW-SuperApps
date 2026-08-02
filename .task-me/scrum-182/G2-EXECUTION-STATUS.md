@@ -46,14 +46,14 @@
 
 ## Validation Gates Status
 
-| Gate | Checkpoint | Criteria | Status | Evidence |
-|------|-----------|----------|--------|----------|
-| **G1.1** | Contract Completeness | Schema covers all SCRUM-175–178 fields | ✅ PASS | intake-card.schema.json validates |
-| **G1.2** | Redaction Rules | All SCRUM-176 patterns implemented | ✅ PASS | x-redacted markers, auto-protection |
-| **G1.3** | Renderer Determinism | Same input → same output | ✅ PASS | Test cases 13–14 pass |
-| **G1.4** | Output Validation | All output validates against schema | ✅ PASS | jsonschema.validate() in tests |
-| **G1.5** | Upstream Clarity | SCRUM-175–178 specs available & clear | ✅ PASS | Contracts retrieved, used |
-| **G1.6** | Downstream Readiness | intake-family validators compatible | ✅ PASS | No breaking changes |
+| Gate     | Checkpoint            | Criteria                               | Status  | Evidence                            |
+| -------- | --------------------- | -------------------------------------- | ------- | ----------------------------------- |
+| **G1.1** | Contract Completeness | Schema covers all SCRUM-175–178 fields | ✅ PASS | intake-card.schema.json validates   |
+| **G1.2** | Redaction Rules       | All SCRUM-176 patterns implemented     | ✅ PASS | x-redacted markers, auto-protection |
+| **G1.3** | Renderer Determinism  | Same input → same output               | ✅ PASS | Test cases 13–14 pass               |
+| **G1.4** | Output Validation     | All output validates against schema    | ✅ PASS | jsonschema.validate() in tests      |
+| **G1.5** | Upstream Clarity      | SCRUM-175–178 specs available & clear  | ✅ PASS | Contracts retrieved, used           |
+| **G1.6** | Downstream Readiness  | intake-family validators compatible    | ✅ PASS | No breaking changes                 |
 
 **Overall Status: ✅ ALL GATES PASS**
 
@@ -61,12 +61,12 @@
 
 ## Upstream Contract Verification
 
-| Task | Title | Status | Impact |
-|------|-------|--------|--------|
+| Task          | Title                            | Status      | Impact                        |
+| ------------- | -------------------------------- | ----------- | ----------------------------- |
 | **SCRUM-175** | intake_context entity definition | ✅ Complete | Task 1 (schema) depends: USED |
-| **SCRUM-176** | Redaction rule specification | ✅ Complete | Task 1, 3: USED |
-| **SCRUM-177** | Immutability & determinism spec | ✅ Complete | Task 3, 4: VERIFIED |
-| **SCRUM-178** | Error handling contract | ✅ Complete | Task 3, 4: VERIFIED |
+| **SCRUM-176** | Redaction rule specification     | ✅ Complete | Task 1, 3: USED               |
+| **SCRUM-177** | Immutability & determinism spec  | ✅ Complete | Task 3, 4: VERIFIED           |
+| **SCRUM-178** | Error handling contract          | ✅ Complete | Task 3, 4: VERIFIED           |
 
 **Result:** No upstream blockers. All contracts satisfied.
 
@@ -99,24 +99,28 @@ projects/gwc/
 ## Key Implementation Highlights
 
 ### Determinism ✅
+
 - Canonical JSON serialization (sorted keys, minimal whitespace)
 - SHA-256 snapshot hash computation
 - No timestamps/UUIDs (except input-provided `created_at`)
 - **Verified:** Identical inputs produce identical outputs
 
 ### Immutability ✅
+
 - Deep-copy inputs before processing
 - No mutable references in output
 - Read-only projection enforced
 - **Verified:** Output snapshot hash matches expected value
 
 ### Redaction ✅
+
 - Explicit redaction directives (JSON Pointer targets)
 - Auto-protection of sensitive keys (`password`, `secret`, `token`, etc.)
 - Comprehensive metadata tracking (pointer, classification, reason)
 - **Verified:** Sensitive fields absent; others present
 
 ### Error Handling ✅
+
 - Fail-closed on invalid input
 - Validates upstream contracts (type/version/SHA agreement)
 - Returns detailed `BLOCKED` status cards with reason codes
@@ -140,7 +144,9 @@ projects/gwc/
 ## Ready for Next Gate
 
 ### G3: PR Review
+
 **Requirements:**
+
 - [ ] Create GitHub PR with `feature/SCRUM-182-intake-card-render-m4`
 - [ ] Pass automated CI checks (linting, schema validation, tests)
 - [ ] Human code review approval
@@ -149,7 +155,9 @@ projects/gwc/
 **Estimated Duration:** 1–2 days (review + iteration)
 
 ### G4: Merge Authority
+
 **Requirements:**
+
 - [ ] Merge approval (maintainers only)
 - [ ] CI verification passed
 - [ ] Code review signed off
@@ -157,7 +165,9 @@ projects/gwc/
 **Estimated Duration:** < 1 day
 
 ### G5: Deployment
+
 **Requirements:**
+
 - [ ] Package distribution
 - [ ] Release notes
 - [ ] Deployment to production
@@ -168,11 +178,11 @@ projects/gwc/
 
 ## Sign-Off
 
-| Role | Name | Status | Date |
-|------|------|--------|------|
+| Role               | Name | Status      | Date       |
+| ------------------ | ---- | ----------- | ---------- |
 | **Implementation** | nhat | ✅ Complete | 2026-08-02 |
-| **Verification** | nhat | ✅ Pass | 2026-08-02 |
-| **G3 Ready** | nhat | ✅ Ready | 2026-08-02 |
+| **Verification**   | nhat | ✅ Pass     | 2026-08-02 |
+| **G3 Ready**       | nhat | ✅ Ready    | 2026-08-02 |
 
 ---
 
@@ -192,4 +202,3 @@ projects/gwc/
 **Branch:** `feature/SCRUM-182-intake-card-render-m4`  
 **Commits:** 2 (implementation + documentation)  
 **Last Commit:** docs(SCRUM-182): Add G2 execution completion report
-

@@ -1,0 +1,220 @@
+artifact_type: g1-validation-gates
+task_id: SCRUM-182
+task_title: "[MAT-F1-N08] intake_context.intake-card-render — M1 → M4"
+gate_sequence: g0_context → g1_alignment → g2_execution → g3_pr → g4_merge
+generated_at: "2026-08-02T00:00:00Z"
+
+upstream_blockers:
+  - id: SCRUM-175
+    title: "intake_context entity definition"
+    status: UNKNOWN
+    required_by: SCRUM-182-01
+    requirement: |
+      Deliver complete intake_context shape: all fields, types, nullable flags, validation rules.
+      Example:
+        - id: string (required)
+        - created_at: iso8601 (required)
+        - customer_name: string (required, sensitive, max 255)
+        - customer_phone: string (required, sensitive, pattern)
+        - metadata: object (optional, nested redaction rules)
+    blocking: true
+    risk: medium
+
+  - id: SCRUM-176
+    title: "redaction rule specification"
+    status: UNKNOWN
+    required_by: SCRUM-182-01
+    requirement: |
+      Define redaction patterns: which fields are sensitive, formatting rules for partial masks.
+      Example:
+        - phone: "***-***-XXXX" (last 4 digits visible)
+        - email: "XXX@domain.com" (first 3 chars visible)
+        - address: "[REDACTED]" (full hide)
+    blocking: true
+    risk: medium
+
+  - id: SCRUM-177
+    title: "immutability & determinism specification"
+    status: UNKNOWN
+    required_by: SCRUM-182-03
+    requirement: |
+      Clarify expected behavior: no side effects, timestamp handling, field-order stability.
+      Example:
+        - Timestamps: use input values (no system time injection)
+        - Field order: alphabetical or declaration order (specify)
+        - Output format: JSON canonical form (specify formatting rules)
+    blocking: true
+    risk: low
+
+  - id: SCRUM-178
+    title: "error handling contract"
+    status: UNKNOWN
+    required_by: SCRUM-182-03
+    requirement: |
+      Define behavior for invalid input: silent skip vs. exception, retry logic, logging.
+      Example:
+        - Missing required field: raise TypeError (fail-closed)
+        - Null phone on redaction: skip redaction (no error)
+        - Invalid email format: log warning, include raw value
+    blocking: true
+    risk: low
+
+validation_gates:
+  - gate_id: G1.1
+    name: "Contract Completeness"
+    checkpoint: "SCRUM-182-01"
+    validation:
+      condition: "schemas/intake-card.schema.json covers all SCRUM-175–178 requirements"
+      evidence: "Schema file exists; JSON Schema valid; all required fields present"
+      blocking: true
+    success_criteria:
+      - "Schema file well-formed JSON Schema"
+      - "All intake_context fields from SCRUM-175 documented in schema"
+      - "All redaction patterns from SCRUM-176 marked in schema"
+      - "No 'any' or 'unknown' type fallbacks"
+    failure_mode: "Missing fields in schema; unmatched redaction rules"
+
+  - gate_id: G1.2
+    name: "Redaction Rule Completeness"
+    checkpoint: "SCRUM-182-01"
+    validation:
+      condition: "All SCRUM-176 redaction rules are implemented in schema annotations"
+      evidence: "x-redacted markers; redaction format patterns; decision matrix document"
+      blocking: true
+    success_criteria:
+      - "Every sensitive field has x-redacted: true"
+      - "Redaction format documented inline (comment or pattern property)"
+      - "Partial redaction rules (e.g., 'show last 4') explicitly specified"
+      - "Fallback behavior for missing field defined"
+    failure_mode: "Incomplete redaction rules; ambiguous mask patterns"
+
+  - gate_id: G1.3
+    name: "Renderer Determinism"
+    checkpoint: "SCRUM-182-04"
+    validation:
+      condition: "All 19+ test cases pass; no non-determinism detected"
+      evidence: "Test suite output; hash equality tests; determinism tests pass"
+      blocking: true
+    success_criteria:
+      - "Task 4 test cases 13–14 (determinism) both passing"
+      - "Same input → same output verified by hash equality"
+      - "No random, UUID, or system-time injection in renderer"
+      - "Input/output serialization is canonical (stable JSON order)"
+    failure_mode: "Non-deterministic output detected; hash mismatch"
+
+  - gate_id: G1.4
+    name: "Output Schema Validation"
+    checkpoint: "SCRUM-182-04"
+    validation:
+      condition: "All 19+ test cases produce output that validates against schema"
+      evidence: "Test assertion: jsonschema.validate(result, schema)"
+      blocking: true
+    success_criteria:
+      - "No validation exceptions in test output"
+      - "Negative test fixtures (10+ malformed inputs) all rejected"
+      - "Positive test fixtures (5+ valid inputs) all accepted"
+      - "Edge cases (empty, null, unicode) all validate correctly"
+    failure_mode: "Output validation exceptions; schema/renderer mismatch"
+
+  - gate_id: G1.5
+    name: "Upstream Contract Clarity"
+    checkpoint: "SCRUM-182-05"
+    validation:
+      condition: "All SCRUM-175–178 contracts are delivered, clear, and unambiguous"
+      evidence: "Specs available; no open questions in decision matrix"
+      blocking: true
+    success_criteria:
+      - "SCRUM-175–178 all have visible spec documents or tasks"
+      - "No conflicting requirements between upstream specs"
+      - "Redaction rules have 3+ worked examples"
+      - "Error handling behavior is explicit (not inferred)"
+    failure_mode: "Upstream spec missing or ambiguous; unresolved questions"
+
+  - gate_id: G1.6
+    name: "Downstream Integration Readiness"
+    checkpoint: "SCRUM-182-05"
+    validation:
+      condition: "Downstream consumers (intake-family validator, context-gap evaluation) can import and use render_intake_card()"
+      evidence: "Integration checklist; consumer task specs reviewed"
+      blocking: false
+    success_criteria:
+      - "Function signature matches consumer expectations"
+      - "Consumer tasks (when available) do not require renderer changes"
+      - "Error handling matches consumer needs"
+      - "Output format compatible with downstream pipelines"
+    failure_mode: "Renderer incompatible with consumer interfaces (non-blocking; fixes in consumer task)"
+
+decision_matrix:
+  - item: "intake_context shape"
+    source: "SCRUM-175"
+    status: "UNKNOWN"
+    assumption: "Standard fields: id, created_at, customer_name, customer_phone, metadata (nested)"
+    confidence: "low"
+    action_if_unknown: "Defer Task 3 renderer until spec is available; start with Task 1 schema"
+
+  - item: "redaction patterns"
+    source: "SCRUM-176"
+    status: "UNKNOWN"
+    assumption: "phone=last-4-visible, email=first-3-visible, address=full-hide, custom=per-field"
+    confidence: "low"
+    action_if_unknown: "Create decision matrix with security team early in G2"
+
+  - item: "determinism requirement"
+    source: "SCRUM-177"
+    status: "ASSUMED"
+    assumption: "No side effects, no timestamp injection, alphabetical field order"
+    confidence: "medium"
+    action_if_unknown: "Confirm field-order and timestamp-handling in SCRUM-177 spec"
+
+  - item: "error handling strategy"
+    source: "SCRUM-178"
+    status: "ASSUMED"
+    assumption: "Fail-closed on missing required field; silent skip on missing optional; log warnings"
+    confidence: "medium"
+    action_if_unknown: "Pair with security/SRE team to define error budget and logging"
+
+g1_checklist:
+  - item: "Five tasks decomposed with clear scope and files"
+    status: "COMPLETE"
+    evidence: "G1_DISCOVERY_BRIEF.md section 3"
+
+  - item: "Upstream blockers identified"
+    status: "COMPLETE"
+    evidence: "upstream_blockers section above"
+
+  - item: "Validation gates documented"
+    status: "COMPLETE"
+    evidence: "validation_gates section above"
+
+  - item: "Risk assessment provided"
+    status: "COMPLETE"
+    evidence: "G1_DISCOVERY_BRIEF.md section 4"
+
+  - item: "Effort estimates (three-point) provided"
+    status: "COMPLETE"
+    evidence: "Each task: 'Effort: Low X | Nominal Y | High Z'"
+
+  - item: "Test strategy defined (19+ test cases)"
+    status: "COMPLETE"
+    evidence: "Task 4 section; test categories table"
+
+  - item: "No unresolved uncertainty blocking G1 decision"
+    status: "CONDITIONAL"
+    condition: "Depends on SCRUM-175–178 delivery; assume specs available by G2 day 2"
+
+g1_approval_signature:
+  approver: "[awaiting gate authority]"
+  approval_time: "[TBD]"
+  scope_hash: "[compute via approval authority]"
+  expires_at_utc: "[TBD: typically 7 days post-approval]"
+  notes: |
+    G1 discovery is complete and ready for alignment review.
+
+    Before G2 authorization:
+    1. Verify SCRUM-175–178 contracts are available or scheduled delivery
+    2. Confirm downstream consumer specs (intake-family validator, context-gap evaluation)
+    3. Assign owners for Tasks 1–5
+    4. Confirm Python/node-architect tooling is available
+    5. Schedule spec review meeting with upstream owners
+
+    Gate passes when all validation_gates above are PASS or CONDITIONAL-PASS.
