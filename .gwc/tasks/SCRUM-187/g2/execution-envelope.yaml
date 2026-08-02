@@ -23,4 +23,4 @@ required_validation:
   - G1 alignment artifacts are complete and PASS
   - FastLane envelope conforms to fastlane-envelope.schema.json
   - G2 approval command has been received and matches the envelope
-status: PENDING_G2_APPROVAL
+status: G2_APPROVED
