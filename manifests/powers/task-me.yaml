@@ -3,7 +3,7 @@ kind: Power
 metadata:
   id: task-me
   name: Task Me
-  version: task-me-main-bfa0752d
+  version: task-me-main-3-bfa0752d9ca2c4e57cfe219c16294e728fc6a16b
   description: Impact analysis, implementation planning, task decomposition, coding guidance, and validation planning.
 spec:
   category: implementation-planning
@@ -73,4 +73,4 @@ spec:
       task: DW-PDIST-03
       sourceCommit: bfa0752d9ca2c4e57cfe219c16294e728fc6a16b
       sourceLock: distribution/power-package.yaml
-      note: Local source integration pin; remote publication was not checked (SKIPPED_OFFLINE).
+      note: Local rebuild verification from latest submodule tag (bfa0752d); distribution recipe unchanged.
