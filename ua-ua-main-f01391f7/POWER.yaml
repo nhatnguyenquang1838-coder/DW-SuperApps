@@ -3,7 +3,7 @@ kind: PowerPackage
 metadata:
   id: ua
   name: Understand Anything
-  version: ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38-4-g7b6a0a9
+  version: ua-main-f01391f7
   description: Semantic codebase analysis, companion graph skills, dashboard visualization,
     and verified runtime dependencies.
 spec:

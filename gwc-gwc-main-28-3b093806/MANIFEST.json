@@ -10,14 +10,14 @@
     {
       "mode": "0600",
       "path": "AGENT_GUIDANCE.md",
-      "sha256": "9af542d348f7f485e2d971d8985b78ad145702326e932074f5095eabe94295a6",
-      "size": 1893
+      "sha256": "f92ac9bfb4d59cd223a3aba2c60d64db757bc55eeca6986a92b2d52d306dfa58",
+      "size": 1848
     },
     {
       "mode": "0600",
       "path": "POWER.yaml",
-      "sha256": "92f1eec66b622fbd07b1ef660deff1d1c7feae3eb33636610c2cf718fdf3b571",
-      "size": 704
+      "sha256": "3d6a83782e96f409420aeb632b64a77944059034dd17418ed909febec3f8178d",
+      "size": 659
     },
     {
       "mode": "0600",
@@ -28,8 +28,8 @@
     {
       "mode": "0600",
       "path": "VERSION",
-      "sha256": "ff02fa5308130264d0d2c210d6e77a41e0d30287000b906bde620a33be234c1f",
-      "size": 66
+      "sha256": "d31e4a26c5fd00116a3cddfda1055ee68700cf9a58c35a1b4c37921298823afe",
+      "size": 21
     },
     {
       "mode": "0644",
@@ -386,7 +386,7 @@
     "sourceRef": "HEAD",
     "sourceRepository": "nhatnguyenquang1838-coder/gwc",
     "sourceSha": "520aa1968a0809001e8994192278e52a59c86c61",
-    "version": "gwc-main-43-3b6c22be933036887a7ae96002e5a48677583812-375-g520aa19"
+    "version": "gwc-main-28-3b093806"
   },
   "spec": {
     "agentGuidance": "AGENT_GUIDANCE.md",

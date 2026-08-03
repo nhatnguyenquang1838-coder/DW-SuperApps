@@ -5,7 +5,7 @@ This is static distribution guidance generated when the package was built. It is
 ## Package identity
 
 - Power: `ua`
-- Package version: `ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38-4-g7b6a0a9`
+- Package version: `ua-main-f01391f7`
 - Source: `nhatnguyenquang1838-coder/Understand-Anything@7b6a0a931a4f5c6f21eaf4a485738098b8f84286` (`HEAD`)
 - Target-owned runtime root: `.ua/`
 

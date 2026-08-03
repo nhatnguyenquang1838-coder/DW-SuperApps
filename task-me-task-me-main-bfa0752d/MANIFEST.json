@@ -52,8 +52,8 @@
     {
       "mode": "0600",
       "path": "AGENT_GUIDANCE.md",
-      "sha256": "d1526b15d374f6d207d9f442f233ca57f523c2521c24faecf05b94c019bb07a6",
-      "size": 1931
+      "sha256": "661814b8968a5542a4ca353c0c8997025701c8f30fbeb66218fb1140c2a4e74d",
+      "size": 1897
     },
     {
       "mode": "0644",
@@ -64,8 +64,8 @@
     {
       "mode": "0600",
       "path": "POWER.yaml",
-      "sha256": "ab304eb3676c8e199961c614f8f292af92c7207dc3153b6ec4bff89527b9f9fa",
-      "size": 607
+      "sha256": "60b72276f5ee6394b82b01255af1c9068c799f1816639432ba8ffcf42904ed0e",
+      "size": 573
     },
     {
       "mode": "0600",
@@ -76,8 +76,8 @@
     {
       "mode": "0600",
       "path": "VERSION",
-      "sha256": "2795c2fca30ce5e53a634df7f44d591e772ddc95f7f830d98299185fcfd34878",
-      "size": 56
+      "sha256": "6d2a71e21c7428ba52e9f8acfffaebc9d24f2b09eace8f3df65d8d1174a846dc",
+      "size": 22
     },
     {
       "mode": "0755",
@@ -170,7 +170,7 @@
     "sourceRef": "HEAD",
     "sourceRepository": "nhatnguyenquang1838-coder/task-me",
     "sourceSha": "bfa0752d9ca2c4e57cfe219c16294e728fc6a16b",
-    "version": "task-me-main-3-bfa0752d9ca2c4e57cfe219c16294e728fc6a16b"
+    "version": "task-me-main-bfa0752d"
   },
   "spec": {
     "agentGuidance": "AGENT_GUIDANCE.md",

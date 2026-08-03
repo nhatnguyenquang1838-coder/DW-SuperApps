@@ -1,7 +1,7 @@
 {
-  "installedAtEpoch": 1785685834,
+  "installedAtEpoch": 1785732244,
   "managedBy": "dw-superapps-power-store",
   "powerId": "task-me",
-  "sourceManifestSha256": "ed946d3b8f2d7e7de232e95efd6b9d39b8500937e7736d5e9356d352249f995b",
-  "version": "task-me-main-3-bfa0752d9ca2c4e57cfe219c16294e728fc6a16b"
+  "sourceManifestSha256": "420a96d4fd25a6e3e2239aeb4711bc0f81c844d54e12d456d89bab412e8b834f",
+  "version": "task-me-main-bfa0752d"
 }

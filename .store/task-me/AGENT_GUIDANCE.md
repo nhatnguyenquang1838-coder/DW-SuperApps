@@ -5,7 +5,7 @@ This is static distribution guidance generated when the package was built. It is
 ## Package identity
 
 - Power: `task-me`
-- Package version: `task-me-main-3-bfa0752d9ca2c4e57cfe219c16294e728fc6a16b`
+- Package version: `task-me-main-bfa0752d`
 - Source: `nhatnguyenquang1838-coder/task-me@bfa0752d9ca2c4e57cfe219c16294e728fc6a16b` (`HEAD`)
 - Target-owned runtime root: `.task-me/`
 

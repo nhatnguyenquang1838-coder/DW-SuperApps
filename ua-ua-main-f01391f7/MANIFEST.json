@@ -4,8 +4,8 @@
     {
       "mode": "0600",
       "path": "AGENT_GUIDANCE.md",
-      "sha256": "cfbb1fd83ed65f69af18161e3e03a18fae64774d9350180e31b0f0bececcce33",
-      "size": 4053
+      "sha256": "2b4e0309ff6b6452e6a3c66c86634d342024c86857e81f5f695e08d877fa9e3e",
+      "size": 4008
     },
     {
       "mode": "0644",
@@ -16,8 +16,8 @@
     {
       "mode": "0600",
       "path": "POWER.yaml",
-      "sha256": "75c9d38a57c1bc7c6b858c500b8c1f0b3e0c70c0f85d80b2aaab4f6178271629",
-      "size": 1982
+      "sha256": "0e030c38f0c5716c0219c45b55c824979bd3723b21908131d7f065f6c6e14fe2",
+      "size": 1937
     },
     {
       "mode": "0600",
@@ -34,8 +34,8 @@
     {
       "mode": "0600",
       "path": "VERSION",
-      "sha256": "7db6c3c4d733d90dbb79d87b5472f459152677a6cf6d3cd4f78904b657887d53",
-      "size": 62
+      "sha256": "2c130a2a7d04088dd01e02c428518ebeac1db81ce0a5587785c0193c768ab3d6",
+      "size": 17
     },
     {
       "mode": "0755",
@@ -2138,7 +2138,7 @@
     "sourceRef": "HEAD",
     "sourceRepository": "nhatnguyenquang1838-coder/Understand-Anything",
     "sourceSha": "7b6a0a931a4f5c6f21eaf4a485738098b8f84286",
-    "version": "ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38-4-g7b6a0a9"
+    "version": "ua-main-f01391f7"
   },
   "spec": {
     "agentGuidance": "AGENT_GUIDANCE.md",

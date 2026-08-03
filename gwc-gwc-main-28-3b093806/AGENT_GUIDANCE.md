@@ -4,10 +4,10 @@ This is static distribution guidance generated when the package was built. It is
 
 ## Package identity
 
-- Power: `task-me`
-- Package version: `task-me-main-3-bfa0752d9ca2c4e57cfe219c16294e728fc6a16b`
-- Source: `nhatnguyenquang1838-coder/task-me@bfa0752d9ca2c4e57cfe219c16294e728fc6a16b` (`HEAD`)
-- Target-owned runtime root: `.task-me/`
+- Power: `gwc`
+- Package version: `gwc-main-28-3b093806`
+- Source: `nhatnguyenquang1838-coder/gwc@520aa1968a0809001e8994192278e52a59c86c61` (`HEAD`)
+- Target-owned runtime root: `.gwc/`
 
 ## Required activation behavior
 
@@ -23,14 +23,14 @@ When multiple entrypoints exist, load only the entrypoint whose scope matches th
 
 ## Declared package entrypoints
 
-- `.kiro/skills/implementation-task-architect/SKILL.md`
-- `scripts/task-me-host.py`
-- `scripts/power_help.py`
+- `skills/gwc-g0/SKILL.md`
+- `skills/gwc-g1/SKILL.md`
+- `tools/power_help.py`
 
 
 ## Ownership and safety
 
 - Power package files remain in the DW-SuperApps workspace store.
-- Runtime state and project configuration remain under the selected target's `.task-me/`.
+- Runtime state and project configuration remain under the selected target's `.gwc/`.
 - Do not create a target-local `.dw/powers` installation.
 - Installation, configuration, sanity, doctor, history, rollback, and uninstall are lifecycle operations; none of them grants merge, deployment, release, credential, migration, production-data, or approval authority.

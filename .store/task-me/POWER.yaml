@@ -3,7 +3,7 @@ kind: PowerPackage
 metadata:
   id: task-me
   name: Task Me
-  version: task-me-main-3-bfa0752d9ca2c4e57cfe219c16294e728fc6a16b
+  version: task-me-main-bfa0752d
   description: Skills-only Implementation Task Architect distribution.
 spec:
   entrypoints:
