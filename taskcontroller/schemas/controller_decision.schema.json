@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw-superapps/taskcontroller/schemas/controller_decision.schema.json",
+  "title": "ControllerDecision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "decision_id",
+    "run_ref",
+    "decision_type",
+    "rationale",
+    "evidence_refs"
+  ],
+  "properties": {
+    "decision_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "run_ref": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/NonEmptyString"
+    },
+    "decision_type": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/DecisionType"
+    },
+    "rationale": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/NonEmptyString"
+    },
+    "selected_option": {
+      "type": "string"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "plan_version": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Version"
+    },
+    "run_version": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Version"
+    }
+  }
+}

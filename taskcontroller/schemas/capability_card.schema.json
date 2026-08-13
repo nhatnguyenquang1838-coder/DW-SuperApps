@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw-superapps/taskcontroller/schemas/capability_card.schema.json",
+  "title": "CapabilityCard",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "capability_id",
+    "name",
+    "version",
+    "idempotency",
+    "cost_class",
+    "required_environment"
+  ],
+  "properties": {
+    "capability_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "name": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/NonEmptyString"
+    },
+    "version": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Version"
+    },
+    "idempotency": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Idempotency"
+    },
+    "cost_class": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/CostClass"
+    },
+    "required_environment": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/EnvironmentRequirement"
+    },
+    "supported_binding_types": {
+      "type": "array",
+      "items": {
+        "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/BindingType"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

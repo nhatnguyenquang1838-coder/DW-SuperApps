@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw-superapps/taskcontroller/schemas/agent_event.schema.json",
+  "title": "AgentEvent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "run_id",
+    "node_id",
+    "execution_id",
+    "attempt_id",
+    "fencing_token",
+    "sequence",
+    "event_type",
+    "producer",
+    "timestamp"
+  ],
+  "properties": {
+    "event_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "run_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "node_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "execution_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "attempt_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "fencing_token": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/NonEmptyString"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "event_type": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/EventType"
+    },
+    "producer": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/ProducerRef"
+    },
+    "timestamp": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/NonEmptyString"
+    },
+    "idempotency_key": {
+      "type": "string"
+    },
+    "payload": {
+      "type": "object"
+    },
+    "artifact_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/ArtifactRef"
+      }
+    }
+  }
+}

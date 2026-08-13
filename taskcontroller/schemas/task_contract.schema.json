@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw-superapps/taskcontroller/schemas/task_contract.schema.json",
+  "title": "TaskContract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_id",
+    "run_id",
+    "node_id",
+    "objective",
+    "scope",
+    "acceptance_criteria",
+    "capability_requirement"
+  ],
+  "properties": {
+    "contract_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "run_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "node_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "objective": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/NonEmptyString"
+    },
+    "scope": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/ScopeSpec"
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "capability_requirement": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/CapabilityRequirement"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/TaskRef"
+      }
+    },
+    "required_evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/EvidenceSpec"
+      }
+    },
+    "reporting": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/ReportingSpec"
+    },
+    "priority": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Priority"
+    },
+    "plan_version": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Version"
+    },
+    "run_version": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Version"
+    }
+  }
+}

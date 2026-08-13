@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw-superapps/taskcontroller/schemas/team_run_state.schema.json",
+  "title": "TeamRunState",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "status",
+    "nodes",
+    "active_attempts",
+    "active_leases",
+    "artifact_refs"
+  ],
+  "properties": {
+    "run_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "status": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/RunStatus"
+    },
+    "nodes": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/NodeState"
+      }
+    },
+    "active_attempts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "active_leases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "artifact_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "last_event_cursor": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/EventCursor"
+    },
+    "checkpoint": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Checkpoint"
+    },
+    "plan_version": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Version"
+    },
+    "run_version": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Version"
+    },
+    "updated_at": {
+      "type": "string"
+    }
+  }
+}

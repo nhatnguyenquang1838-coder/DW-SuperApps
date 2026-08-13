@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw-superapps/taskcontroller/schemas/controller_host_profile.schema.json",
+  "title": "ControllerHostProfile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "host_id",
+    "actor_kind",
+    "trust_tier",
+    "environment"
+  ],
+  "properties": {
+    "host_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "actor_kind": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/ActorKind"
+    },
+    "trust_tier": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/TrustTier"
+    },
+    "environment": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/EnvironmentInfo"
+    },
+    "bindings": {
+      "type": "array",
+      "items": {
+        "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Binding"
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/CapabilityRef"
+      }
+    },
+    "version": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Version"
+    }
+  }
+}
