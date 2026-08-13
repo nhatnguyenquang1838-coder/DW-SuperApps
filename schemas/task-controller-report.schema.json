@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw-superapps.local/schemas/task-controller-report.schema.json",
+  "title": "DW SuperApps TaskController Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subtaskId",
+    "status",
+    "completed",
+    "evidence",
+    "next",
+    "after"
+  ],
+  "properties": {
+    "subtaskId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "RUNNING",
+        "DONE",
+        "BLOCKED",
+        "FAILED"
+      ]
+    },
+    "completed": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "findingRisk": {
+      "type": "string"
+    },
+    "next": {
+      "type": "string",
+      "minLength": 1
+    },
+    "after": {
+      "enum": [
+        "CONTINUE",
+        "WAIT_CONTROLLER",
+        "TERMINAL"
+      ]
+    },
+    "drift": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "scope",
+          "authority",
+          "plan",
+          "evidence",
+          "material"
+        ]
+      }
+    }
+  }
+}

@@ -61,6 +61,14 @@ if [[ "${1:-}" == "orchestrator" ]]; then
   exit $?
 fi
 
+if [[ "${1:-}" == "task-controller" ]]; then
+  shift
+  # shellcheck source=../scripts/python-resolver.sh
+  source "$ROOT/scripts/python-resolver.sh"
+  dw_exec_python "$ROOT/scripts/dw_task_controller.py" "$@"
+  exit $?
+fi
+
 if [[ "${1:-}" == "report" ]]; then
   shift
   # shellcheck source=../scripts/python-resolver.sh

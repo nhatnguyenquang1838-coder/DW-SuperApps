@@ -11,6 +11,7 @@ if str(SCRIPTS) not in sys.path:
 import dw_cli  # noqa: E402
 import clean_power_setup  # noqa: E402
 import dw_entry  # noqa: E402
+import dw_task_controller  # noqa: E402
 import dw_project_add  # noqa: E402
 import dw_project_registry  # noqa: E402
 import dw_workspace_dist  # noqa: E402
@@ -48,6 +49,8 @@ def main() -> int:
             return power_main(argv[1:])
     if len(argv) >= 2 and argv[0] == "host" and argv[1] in {"install", "status"}:
         return distribution_main(argv)
+    if argv and argv[0] == "task-controller":
+        return int(dw_task_controller.main(argv[1:]))
     return int(dw_entry.main())
 
 
