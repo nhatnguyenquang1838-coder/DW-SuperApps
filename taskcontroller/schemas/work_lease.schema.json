@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw-superapps/taskcontroller/schemas/work_lease.schema.json",
+  "title": "WorkLease",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lease_id",
+    "run_id",
+    "node_id",
+    "execution_id",
+    "attempt_id",
+    "holder",
+    "fencing_token",
+    "granted_at",
+    "expires_at",
+    "status"
+  ],
+  "properties": {
+    "lease_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "run_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "node_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "execution_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "attempt_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "holder": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/ProviderRef"
+    },
+    "fencing_token": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/NonEmptyString"
+    },
+    "granted_at": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/NonEmptyString"
+    },
+    "expires_at": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/NonEmptyString"
+    },
+    "resource_ref": {
+      "type": "string"
+    },
+    "status": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/LeaseStatus"
+    }
+  }
+}

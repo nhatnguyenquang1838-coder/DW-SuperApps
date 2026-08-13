@@ -1,0 +1,305 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw-superapps/taskcontroller/schemas/common.schema.json",
+  "title": "TaskController WP0 common definitions",
+  "$defs": {
+    "Id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][-A-Za-z0-9_.]{0,127}$"
+    },
+    "NonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "Version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ActorKind": {
+      "type": "string",
+      "enum": ["CONTROLLER", "AGENT", "HUMAN", "SERVICE", "TOOL"]
+    },
+    "ProviderKind": {
+      "type": "string",
+      "enum": ["LOCAL", "CONNECTOR", "AGENT", "SERVICE", "TOOL"]
+    },
+    "TrustTier": {
+      "type": "string",
+      "enum": ["TRUSTED", "STANDARD", "SANDBOX", "UNVERIFIED"]
+    },
+    "Idempotency": {
+      "type": "string",
+      "enum": ["IDEMPOTENT", "NON_IDEMPOTENT", "BEST_EFFORT"]
+    },
+    "CostClass": {
+      "type": "string",
+      "enum": ["FREE", "LOW", "MEDIUM", "HIGH"]
+    },
+    "BindingType": {
+      "type": "string",
+      "enum": ["LOCAL_IPC", "CHAT", "HTTP_API", "CONNECTOR", "CLI", "GRPC", "WEBHOOK", "MCP"]
+    },
+    "EventType": {
+      "type": "string",
+      "enum": ["TASK_STARTED", "PROGRESS", "ARTIFACT_PRODUCED", "STATUS_CHANGE", "NEEDS_INPUT", "NEEDS_REVIEW", "REVIEW_SUBMITTED", "COMPLETED", "FAILED", "HEARTBEAT", "CANCELLED", "ESCALATED", "CHECKPOINT"]
+    },
+    "ExecutionStatus": {
+      "type": "string",
+      "enum": ["PENDING", "ROUTING", "DISPATCHED", "RUNNING", "SUCCEEDED", "FAILED", "CANCELLED", "TIMED_OUT", "WAITING"]
+    },
+    "LeaseStatus": {
+      "type": "string",
+      "enum": ["ACTIVE", "EXPIRED", "RELEASED", "REVOKED"]
+    },
+    "RunStatus": {
+      "type": "string",
+      "enum": ["CREATED", "PLANNED", "RUNNING", "PAUSED", "BLOCKED", "COMPLETED", "FAILED", "CANCELLED"]
+    },
+    "NodeStatus": {
+      "type": "string",
+      "enum": ["PENDING", "READY", "CLAIMED", "RUNNING", "REVIEWING", "DONE", "BLOCKED", "FAILED", "RETRY_READY", "CANCELLED", "LEASE_EXPIRED"]
+    },
+    "ReviewVerdict": {
+      "type": "string",
+      "enum": ["PASS", "FAIL", "NEEDS_FIX", "NEEDS_CLARIFICATION"]
+    },
+    "DecisionType": {
+      "type": "string",
+      "enum": ["CONTINUE", "WAIT", "RETRY", "REPLAN", "CANCEL", "COMPLETE", "ESCALATE"]
+    },
+    "Priority": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+    },
+    "Locality": {
+      "type": "string",
+      "enum": ["LOCAL", "REMOTE", "ANY"]
+    },
+    "TaskRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "node_id"],
+      "properties": {
+        "run_id": { "$ref": "#/$defs/Id" },
+        "node_id": { "$ref": "#/$defs/Id" }
+      }
+    },
+    "CapabilityRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capability_id"],
+      "properties": {
+        "capability_id": { "$ref": "#/$defs/Id" }
+      }
+    },
+    "ProviderRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider_id"],
+      "properties": {
+        "provider_id": { "$ref": "#/$defs/Id" }
+      }
+    },
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id"],
+      "properties": {
+        "artifact_id": { "$ref": "#/$defs/Id" }
+      }
+    },
+    "BindingRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["binding_id"],
+      "properties": {
+        "binding_id": { "$ref": "#/$defs/Id" }
+      }
+    },
+    "ProducerRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["producer_id"],
+      "properties": {
+        "producer_id": { "$ref": "#/$defs/Id" }
+      }
+    },
+    "ExecutionRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["execution_id", "attempt", "attempt_id", "fencing_token"],
+      "properties": {
+        "execution_id": { "$ref": "#/$defs/Id" },
+        "attempt": { "type": "integer", "minimum": 1 },
+        "attempt_id": { "$ref": "#/$defs/Id" },
+        "fencing_token": { "$ref": "#/$defs/NonEmptyString" }
+      }
+    },
+    "Binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "endpoint_ref"],
+      "properties": {
+        "binding_id": { "$ref": "#/$defs/Id" },
+        "kind": { "$ref": "#/$defs/BindingType" },
+        "protocol": { "type": "string" },
+        "protocol_version": { "type": "string" },
+        "endpoint_ref": { "$ref": "#/$defs/NonEmptyString" },
+        "auth_ref": { "type": "string" }
+      }
+    },
+    "ScopeSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowed_work": { "type": "array", "items": { "type": "string" } },
+        "forbidden_actions": { "type": "array", "items": { "type": "string" } },
+        "boundaries": { "type": "object" }
+      }
+    },
+    "EvidenceSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_id", "description"],
+      "properties": {
+        "evidence_id": { "$ref": "#/$defs/Id" },
+        "description": { "$ref": "#/$defs/NonEmptyString" },
+        "artifact_ref": { "type": "string" }
+      }
+    },
+    "ReportingSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "milestones": { "type": "array", "items": { "type": "string" } },
+        "after_report": { "type": "string" }
+      }
+    },
+    "CapabilityRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capability_id"],
+      "properties": {
+        "capability_id": { "$ref": "#/$defs/Id" },
+        "min_version": { "type": "string" },
+        "idempotency": { "$ref": "#/$defs/Idempotency" },
+        "cost_class": { "$ref": "#/$defs/CostClass" }
+      }
+    },
+    "EnvironmentRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "os": { "type": "string" },
+        "runtime": { "type": "string" },
+        "arch": { "type": "string" },
+        "min_memory_mb": { "type": "integer", "minimum": 0 },
+        "capabilities": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "RoutingPref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "locality": { "$ref": "#/$defs/Locality" },
+        "remote_fallback": { "type": "boolean" },
+        "preferred_kinds": { "type": "array", "items": { "$ref": "#/$defs/ProviderKind" } }
+      }
+    },
+    "InputRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input_id", "source_ref"],
+      "properties": {
+        "input_id": { "$ref": "#/$defs/NonEmptyString" },
+        "source_ref": { "$ref": "#/$defs/NonEmptyString" },
+        "media_type": { "type": "string" }
+      }
+    },
+    "Permission": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "boundaries": { "type": "array", "items": { "type": "string" } },
+        "allowlist": { "type": "array", "items": { "type": "string" } },
+        "deny": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "ArtifactSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id"],
+      "properties": {
+        "artifact_id": { "$ref": "#/$defs/NonEmptyString" },
+        "media_type": { "type": "string" },
+        "schema_ref": { "type": "string" }
+      }
+    },
+    "RetryPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timeout_seconds": { "type": "integer", "minimum": 0 },
+        "max_attempts": { "type": "integer", "minimum": 0 },
+        "backoff_seconds": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "EnvironmentInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "os": { "type": "string" },
+        "runtime": { "type": "string" },
+        "arch": { "type": "string" },
+        "capabilities": { "type": "array", "items": { "type": "string" } },
+        "metadata": { "type": "object" }
+      }
+    },
+    "Provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["producer", "produced_at"],
+      "properties": {
+        "producer": { "$ref": "#/$defs/NonEmptyString" },
+        "produced_at": { "$ref": "#/$defs/NonEmptyString" },
+        "source_ref": { "type": "string" },
+        "digest": { "type": "string" },
+        "media_type": { "type": "string" },
+        "schema_ref": { "type": "string" },
+        "schema_version": { "type": "string" },
+        "execution_ref": { "type": "string" },
+        "attempt_id": { "type": "string" },
+        "fencing_token": { "type": "string" }
+      }
+    },
+    "EventCursor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "last_event_id": { "type": "string" },
+        "sequence": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Checkpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state_version"],
+      "properties": {
+        "state_version": { "type": "integer", "minimum": 0 },
+        "checkpoint_ref": { "type": "string" }
+      }
+    },
+    "NodeState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": { "$ref": "#/$defs/NodeStatus" },
+        "contract_ref": { "type": "string" },
+        "current_attempt": { "type": "integer", "minimum": 1 },
+        "lease_ref": { "type": "string" },
+        "artifact_refs": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

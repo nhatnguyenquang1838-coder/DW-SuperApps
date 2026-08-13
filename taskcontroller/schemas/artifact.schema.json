@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw-superapps/taskcontroller/schemas/artifact.schema.json",
+  "title": "Artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_id",
+    "content_ref",
+    "media_type",
+    "provenance"
+  ],
+  "properties": {
+    "artifact_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "content_ref": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/NonEmptyString"
+    },
+    "media_type": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/NonEmptyString"
+    },
+    "provenance": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Provenance"
+    },
+    "digest": {
+      "type": "string"
+    },
+    "schema_ref": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "string"
+    }
+  }
+}
