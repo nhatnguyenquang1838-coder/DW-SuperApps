@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw-superapps/taskcontroller/schemas/execution_receipt.schema.json",
+  "title": "ExecutionReceipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "receipt_id",
+    "contract_ref",
+    "execution_ref",
+    "selected_provider",
+    "status"
+  ],
+  "properties": {
+    "receipt_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "contract_ref": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/NonEmptyString"
+    },
+    "execution_ref": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/ExecutionRef"
+    },
+    "selected_provider": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/ProviderRef"
+    },
+    "binding": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/BindingRef"
+    },
+    "status": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/ExecutionStatus"
+    },
+    "accepted_at": {
+      "type": "string"
+    }
+  }
+}

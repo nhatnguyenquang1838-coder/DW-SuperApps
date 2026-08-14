@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw-superapps/taskcontroller/schemas/execution_request.schema.json",
+  "title": "ExecutionRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "execution_id",
+    "contract_ref",
+    "attempt",
+    "attempt_id",
+    "fencing_token",
+    "capability_requirements",
+    "environment_requirements",
+    "routing_preferences"
+  ],
+  "properties": {
+    "execution_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "contract_ref": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/NonEmptyString"
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "attempt_id": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Id"
+    },
+    "fencing_token": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/NonEmptyString"
+    },
+    "capability_requirements": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/CapabilityRequirement"
+    },
+    "environment_requirements": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/EnvironmentRequirement"
+    },
+    "routing_preferences": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/RoutingPref"
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/InputRef"
+      }
+    },
+    "permissions": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Permission"
+    },
+    "expected_outputs": {
+      "type": "array",
+      "items": {
+        "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/ArtifactSpec"
+      }
+    },
+    "retry": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/RetryPolicy"
+    },
+    "plan_version": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Version"
+    },
+    "run_version": {
+      "$ref": "https://dw-superapps/taskcontroller/schemas/common.schema.json#/$defs/Version"
+    }
+  }
+}
