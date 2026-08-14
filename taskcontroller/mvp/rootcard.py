@@ -39,6 +39,10 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping, Sequence
 
 from taskcontroller.errors import TaskControllerValidationError
+from taskcontroller.mvp.actions import (
+    INTERNAL_RUNTIME_VERBS,
+    PUBLIC_ACTIONS,
+)
 from taskcontroller.mvp.protocol_bridge import (
     CONTRACTED_AFTER_VALUES,
     ContractedSubtask,
@@ -56,11 +60,12 @@ COST_VALUES = (COST_FREE, COST_METERED, COST_UNKNOWN)
 #: Literal rendered when the runtime does not expose token usage.
 TOKEN_USAGE_UNKNOWN = "N/A"
 
-#: The ONLY public contextual RootCard actions in the MVP API.
-PUBLIC_ROOTCARD_ACTIONS = ("PAUSE", "STOP", "APPROVE", "MERGE")
+#: The ONLY public contextual RootCard actions in the MVP API. Sourced from the
+#: WP3 public action model so there is exactly one action vocabulary.
+PUBLIC_ROOTCARD_ACTIONS = PUBLIC_ACTIONS
 
 #: Control verbs that must never be exposed as default human RootCard UI.
-NON_PUBLIC_ACTIONS = ("RESUME", "CANCEL", "REPLAN")
+NON_PUBLIC_ACTIONS = INTERNAL_RUNTIME_VERBS
 
 #: Root operations. Exactly two — a rotation can never add a third.
 CREATE_ROOT = "CREATE_ROOT"
