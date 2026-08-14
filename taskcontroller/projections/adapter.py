@@ -40,13 +40,17 @@ _TARGET = "slack"
 
 
 class SlackProjectionAdapter:
-    def __init__(self, control_plane: ControlPlane, transport: FakeSlackTransport) -> None:
+    def __init__(self, control_plane: ControlPlane, transport: FakeSlackTransport, registry: "BindingRegistry | None" = None) -> None:
         self._cp = control_plane
         self._transport = transport
-        self._registry = BindingRegistry()
+        self._registry = registry if registry is not None else BindingRegistry()
 
     def _key(self, run_id: str) -> str:
         return f"{run_id}#{_TARGET}"
+
+    def binding_snapshot(self) -> dict[str, Any]:
+        """Deterministic binding snapshot for restart-safe host state."""
+        return self._registry.snapshot()
 
     def materialize(
         self,

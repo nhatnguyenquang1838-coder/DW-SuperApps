@@ -47,6 +47,27 @@ class BindingRegistry:
 
     _bindings: dict[str, Binding] = field(default_factory=dict)
 
+    @classmethod
+    def from_snapshot(cls, snapshot: dict[str, dict[str, Any]]) -> "BindingRegistry":
+        """Restore a registry from a deterministic snapshot (restart-safe).
+
+        Pure reconstruction: each entry rebuilds an immutable Binding. The
+        snapshot is the same ordered dict produced by ``snapshot()``. Restoring
+        before materialize is what prevents the duplicate-root regression after a
+        Controller/host restart.
+        """
+        reg = cls()
+        for key, entry in snapshot.items():
+            reg._bindings[key] = Binding(
+                binding_key=entry["binding_key"],
+                channel=entry["channel"],
+                root=entry["root"],
+                session_id=entry.get("session_id"),
+                model=entry.get("model"),
+                executor=entry.get("executor"),
+            )
+        return reg
+
     def bind(
         self,
         binding_key: str,
