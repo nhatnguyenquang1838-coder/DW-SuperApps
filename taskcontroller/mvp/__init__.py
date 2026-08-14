@@ -31,6 +31,17 @@ from taskcontroller.mvp.actions import (
     default_safe_boundary,
     start_work_unit,
 )
+from taskcontroller.mvp.monitoring import (
+    BOUNDARY_VERDICTS,
+    POLL_INTERVAL_SECONDS,
+    REASON_BOUNDARY,
+    REASON_MAX_POLLS,
+    LoopObservation,
+    LoopOutcome,
+    MalformedReportError,
+    ThreadReply,
+    run_monitoring_loop,
+)
 from taskcontroller.mvp.protocol_bridge import (
     CONTINUE,
     INTERCEPT,
@@ -110,4 +121,13 @@ __all__ = [
     "contextual_actions",
     "default_safe_boundary",
     "start_work_unit",
+    "POLL_INTERVAL_SECONDS",
+    "BOUNDARY_VERDICTS",
+    "REASON_BOUNDARY",
+    "REASON_MAX_POLLS",
+    "ThreadReply",
+    "LoopObservation",
+    "LoopOutcome",
+    "MalformedReportError",
+    "run_monitoring_loop",
 ]
