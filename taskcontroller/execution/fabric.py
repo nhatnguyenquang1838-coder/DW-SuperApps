@@ -15,6 +15,7 @@ from taskcontroller.domain.models import ExecutionProviderCard, ExecutionReceipt
 from taskcontroller.execution.dispatch import build_envelope, check_correlation
 from taskcontroller.execution.errors import (
     AdapterNotFoundError,
+    AdapterUnsupportedError,
     DispatchRejectedError,
     DuplicateCommandError,
 )
@@ -40,6 +41,7 @@ class ExecutionFabric:
         self._lease_mgr = lease_mgr
         # command_id -> (fingerprint, ack) within this fabric snapshot
         self._dispatched: dict[str, tuple[dict[str, Any], DispatchAck]] = {}
+        self._cancelled: dict[str, tuple[dict[str, Any], object]] = {}
 
     def dispatch(
         self,
@@ -105,4 +107,64 @@ class ExecutionFabric:
                 ack.detail or f"adapter rejected command {command_id!r}"
             )
         self._dispatched[command_id] = (fp, ack)
+        return ack
+
+    def cancel(
+        self,
+        request: ExecutionRequest,
+        receipt: ExecutionReceipt,
+        provider: ExecutionProviderCard,
+        run_id: str,
+        node_id: str,
+        command_id: str,
+        now: str,
+        binding_id: str | None = None,
+        adapter_key: str | None = None,
+    ) -> "DispatchAck | object":
+        """Fail-closed cancel: unsupported/uncorrelated => typed error, no adapter call.
+
+        - Unsupported adapter (no cancel capability) -> AdapterUnsupportedError,
+          zero adapter side-effect.
+        - Missing/expired/replaced/stale-fencing lease -> ExecutionCorrelationError
+          (checked by check_correlation, before any adapter call).
+        - Idempotent per command_id: identical canonical envelope => prior CancelAck,
+          no second adapter call; conflicting envelope => DuplicateCommandError.
+        - The fabric never mutates the WP2 run/node state. Cancellation signalling
+          must be handed to WP2 EventRouter via signal_to_event()/forward_signal().
+        """
+        resolved_binding_id: str | None = None
+        if receipt.binding is not None:
+            match = next(
+                (b.binding_id for b in provider.bindings if b.binding_id == receipt.binding.binding_id),
+                None,
+            )
+            resolved_binding_id = match
+        binding_type = provider.bindings[0].kind if provider.bindings else ""
+        adapter = _resolve_adapter(self._registry, adapter_key, binding_type)
+
+        if not adapter.supports_cancel():
+            raise AdapterUnsupportedError(
+                f"adapter {adapter.adapter_key!r} does not support cancel"
+            )
+
+        lease_id = check_correlation(
+            request, receipt, provider, resolved_binding_id, self._lease_mgr,
+            run_id, node_id, now,
+        )
+        envelope = build_envelope(
+            command_id, request, receipt, provider, binding_id, lease_id,
+            getattr(adapter, "adapter_key", adapter_key or ""),
+        )
+        fp = envelope.canonical_fingerprint()
+        prior = self._cancelled.get(command_id)
+        if prior is not None:
+            prior_fp, prior_ack = prior
+            if prior_fp == fp:
+                return prior_ack
+            raise DuplicateCommandError(
+                f"cancel command_id {command_id!r} reused with a different envelope"
+            )
+
+        ack = adapter.cancel(envelope)
+        self._cancelled[command_id] = (fp, ack)
         return ack
