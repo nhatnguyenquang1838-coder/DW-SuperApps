@@ -100,7 +100,11 @@ def team_run_state():
 @pytest.fixture
 def versioned_run(team_run_state):
     meta = RuntimeSnapshotMeta(
-        attempt_registry={},
+        attempt_registry={
+            "att.1": make_attempt_record(
+                "att.1", "run.1", "n1", "exec.1", "ft-1", 1, current_lease_id="lease.1"
+            )
+        },
         leases=RuntimeLeaseState(leases={}),
         stream_watermarks={},
         event_cursor=None,
@@ -128,6 +132,23 @@ def lease_manager(seeded_store):
 
 @pytest.fixture
 def event_router(seeded_store):
+    # WP2 contract: events require an active lease + registered attempt for the quad.
+    # Seed lease.1 (future expiry) so event routing passes correlation/fencing.
+    mgr = LeaseManager(seeded_store)
+    lease = WorkLease(
+        lease_id="lease.1",
+        run_id="run.1",
+        node_id="n1",
+        execution_id="exec.1",
+        attempt_id="att.1",
+        holder=ProviderRef("prov.local"),
+        fencing_token="ft-1",
+        granted_at="2026-08-13T00:00:00Z",
+        expires_at="2026-08-20T01:00:00Z",
+        status=LeaseStatus.ACTIVE.value,
+    )
+    cur = seeded_store.get_run("run.1")
+    mgr.grant(lease, cur.version, cur)
     return EventRouter(seeded_store)
 
 
@@ -142,7 +163,7 @@ def sample_work_lease():
         holder=ProviderRef("prov.local"),
         fencing_token="ft-1",
         granted_at="2026-08-13T00:00:00Z",
-        expires_at="2026-08-13T01:00:00Z",
+        expires_at="2026-08-20T01:00:00Z",
         status=LeaseStatus.ACTIVE.value,
     )
 
@@ -156,7 +177,7 @@ def sample_agent_event():
         execution_id="exec.1",
         attempt_id="att.1",
         fencing_token="ft-1",
-        sequence=1,
+        sequence=0,
         event_type=EventType.TASK_STARTED.value,
         producer=ProducerRef("prov.local"),
         timestamp="2026-08-13T00:00:01Z",
@@ -282,27 +303,54 @@ class TestEventRouterDedupe:
     def test_duplicate_event_id_rejected(self, event_router, sample_agent_event):
         router = event_router
         store = router._store
-        # seeded_store already seeded; get current state
         current = store.get_run("run.1")
-        # first accept
-        router.route(sample_agent_event, current, 0)
+        # first accept (seq 0)
+        router.route(sample_agent_event, current, current.version)
         current = store.get_run("run.1")
-        # second accept same event_id → reject
-        with pytest.raises(EventRejected, match="duplicate event_id"):
-            router.route(sample_agent_event, current, current.version)
+        # conflicting reuse of same event_id (different content) => reject
+        conflicting = AgentEvent(
+            event_id="evt.1",
+            run_id="run.1",
+            node_id="n1",
+            execution_id="exec.1",
+            attempt_id="att.1",
+            fencing_token="ft-1",
+            sequence=1,
+            event_type=EventType.PROGRESS.value,
+            producer=ProducerRef("prov.local"),
+            timestamp="2026-08-13T00:00:02Z",
+            idempotency_key="idem.1",
+            payload={"msg": "changed"},
+            artifact_refs=[],
+        )
+        with pytest.raises(EventRejected, match="conflicting reuse"):
+            router.route(conflicting, current, current.version)
 
     def test_duplicate_idempotency_key_rejected(self, event_router, sample_agent_event):
         router = event_router
         store = router._store
         current = store.get_run("run.1")
         # first accept
-        router.route(sample_agent_event, current, 0)
+        router.route(sample_agent_event, current, current.version)
         current = store.get_run("run.1")
-        # new event with same idempotency_key → reject
-        dup = sample_agent_event
-        dup.event_id = "evt.2"  # different event_id
-        with pytest.raises(EventRejected, match="duplicate idempotency_key"):
-            router.route(dup, current, current.version)
+        # conflicting reuse of same idempotency_key (different event_id) => reject
+        conflicting = AgentEvent(
+            event_id="evt.2",
+            run_id="run.1",
+            node_id="n1",
+            execution_id="exec.1",
+            attempt_id="att.1",
+            fencing_token="ft-1",
+            sequence=1,
+            event_type=EventType.PROGRESS.value,
+            producer=ProducerRef("prov.local"),
+            timestamp="2026-08-13T00:00:02Z",
+            idempotency_key="idem.1",
+            payload={"msg": "changed"},
+            artifact_refs=[],
+        )
+        with pytest.raises(EventRejected, match="conflicting reuse"):
+            router.route(conflicting, current, current.version)
 
     def test_dedupe_key_function(self, sample_agent_event):
         assert _dedupe_key(sample_agent_event) == "evt.1"
@@ -334,9 +382,9 @@ class TestEventRouterSequence:
         router = event_router
         store = router._store
         current = store.get_run("run.1")
-        result = router.route(evt, current, 0)
+        result = router.route(evt, current, current.version)
         assert result is not None
-        assert result.version == 1
+        assert result.version == current.version + 1
 
     def test_out_of_order_sequence_rejected(self, event_router):
         router = event_router
@@ -350,7 +398,7 @@ class TestEventRouterSequence:
             execution_id="exec.1",
             attempt_id="att.1",
             fencing_token="ft-1",
-            sequence=5,
+            sequence=0,
             event_type=EventType.TASK_STARTED.value,
             producer=ProducerRef("prov.local"),
             timestamp="2026-08-13T00:00:01Z",
@@ -358,7 +406,7 @@ class TestEventRouterSequence:
             payload={},
             artifact_refs=[],
         )
-        router.route(first, current, 0)
+        router.route(first, current, current.version)
         current = store.get_run("run.1")
         second = AgentEvent(
             event_id="evt.2",
@@ -389,7 +437,7 @@ class TestEventRouterSequence:
             execution_id="exec.1",
             attempt_id="att.1",
             fencing_token="ft-1",
-            sequence=5,
+            sequence=0,
             event_type=EventType.TASK_STARTED.value,
             producer=ProducerRef("prov.local"),
             timestamp="2026-08-13T00:00:01Z",
@@ -397,7 +445,7 @@ class TestEventRouterSequence:
             payload={},
             artifact_refs=[],
         )
-        router.route(first, current, 0)
+        router.route(first, current, current.version)
         current = store.get_run("run.1")
         second = AgentEvent(
             event_id="evt.2",
@@ -406,7 +454,7 @@ class TestEventRouterSequence:
             execution_id="exec.1",
             attempt_id="att.1",
             fencing_token="ft-1",
-            sequence=5,
+            sequence=0,
             event_type=EventType.TASK_STARTED.value,
             producer=ProducerRef("prov.local"),
             timestamp="2026-08-13T00:00:02Z",
@@ -430,8 +478,8 @@ class TestEventRouterCAS:
         router = event_router
         store = router._store
         current = store.get_run("run.1")
-        result = router.route(sample_agent_event, current, 0)
-        assert result.version == 1
+        result = router.route(sample_agent_event, current, current.version)
+        assert result.version == current.version + 1
 
 
 # ---------------------------------------------------------------------------
@@ -445,7 +493,7 @@ class TestLeaseGrant:
         current = store.get_run("run.1")
         result = mgr.grant(sample_work_lease, 0, current)
         assert result is not None
-        assert result.version == 1
+        assert result.version == current.version + 1
 
     def test_grant_detaches_existing_active_lease(self, lease_manager, sample_work_lease):
         mgr = lease_manager
@@ -554,7 +602,7 @@ class TestLeaseRenew:
         current = store.get_run("run.1")
         result = mgr.renew(
             "lease.1",
-            new_expires_at="2026-08-13T02:00:00Z",
+            new_expires_at="2026-08-20T02:00:00Z",
             fencing_token="ft-1",
             expected_version=current.version,
             current_state=store.get_run("run.1"),
@@ -563,7 +611,7 @@ class TestLeaseRenew:
         assert result.version == 2
         cur = mgr.current("run.1", "n1", "exec.1", "att.1")
         assert cur is not None
-        assert cur.expires_at == "2026-08-13T02:00:00Z"
+        assert cur.expires_at == "2026-08-20T02:00:00Z"
 
     def test_renew_fencing_token_mismatch_raises(self, lease_manager, sample_work_lease):
         mgr = lease_manager

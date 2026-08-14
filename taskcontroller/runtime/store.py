@@ -13,12 +13,14 @@ from __future__ import annotations
 import copy
 from typing import Any
 
+from taskcontroller.domain.models import TeamRunState, WorkLease
 from taskcontroller.kernel.errors import TransitionRejected
 from taskcontroller.runtime.errors import ConcurrentStateError, RuntimeError
 from taskcontroller.runtime.runtime_state import (
     AttemptRecord,
     PendingMutation,
     VersionedRunState,
+    RuntimeSnapshotMeta,
 )
 
 _EventFingerprint = dict[str, Any]
@@ -46,6 +48,13 @@ class StateStore:
     def journal_append(self, run_id: str, record: "RuntimeRecord") -> None: ...
 
     def journal_get(self, run_id: str, after_index: int) -> list["RuntimeRecord"]: ...
+
+    def last_record_index(self, run_id: str) -> int:
+        """Highest durable record_index for run_id, or -1 if empty. Sole journal_position authority."""
+        ...
+
+    def sync_journal_position(self, run_id: str, expected_version: int) -> None: ...
+
 
     def dedupe_state(self) -> dict[str, _EventFingerprint]: ...
 
@@ -122,9 +131,54 @@ class InMemoryStateStore(StateStore):
         record.record_index = len(recs)
         recs.append(_deep(record))
 
-    def journal_get(self, run_id: str, after_index: int) -> list[RuntimeRecord]:
+    def journal_get(self, run_id: str, after_index: int) -> list["RuntimeRecord"]:
         recs = self._journals.get(run_id, [])
         return [_deep(r) for r in recs if r.record_index > after_index]
+
+    def last_record_index(self, run_id: str) -> int:
+        """Sole authority for journal_position: the highest durable record_index.
+
+        Returns -1 when the journal is empty. This is NEVER derived from the
+        run/state version — version and record count are independent dimensions.
+        """
+        recs = self._journals.get(run_id, [])
+        if not recs:
+            return -1
+        return max(r.record_index for r in recs)
+
+    def sync_journal_position(self, run_id: str, expected_version: int) -> None:
+        """Make the stored run meta.journal_position equal the durable last record_index.
+
+        This is the ONLY sanctioned place that writes journal_position from the
+        actual journal. It is a no-op when the run/record disagree on CAS or the
+        position already matches, so it is safe to call after any committed mutation.
+        The correction mandates: journal_position derives from RuntimeRecord.record_index,
+        never from VersionedRunState.version.
+        """
+        rs = self._runs.get(run_id)
+        if rs is None:
+            return
+        real = self.last_record_index(run_id)
+        cur = getattr(rs.meta, "journal_position", None)
+        if isinstance(cur, int) and cur == real:
+            return
+        if isinstance(rs.meta, RuntimeSnapshotMeta):
+            new_meta = RuntimeSnapshotMeta(
+                attempt_registry=rs.meta.attempt_registry,
+                leases=rs.meta.leases,
+                stream_watermarks=rs.meta.stream_watermarks,
+                event_cursor=rs.meta.event_cursor,
+                dedupe_fingerprints=rs.meta.dedupe_fingerprints,
+                journal_position=real,
+            )
+        elif isinstance(rs.meta, dict):
+            new_meta = dict(rs.meta)
+            new_meta["journal_position"] = real
+        else:
+            return
+        self._runs[run_id] = VersionedRunState(
+            state=rs.state, version=rs.version, meta=new_meta
+        )
 
     def dedupe_state(self) -> dict[str, _EventFingerprint]:
         return dict(self._dedupe)
