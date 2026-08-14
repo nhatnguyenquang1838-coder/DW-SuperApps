@@ -1,0 +1,44 @@
+name: TaskController validation
+
+# TaskController-scoped CI for the recovery reconciliation branch.
+# This workflow is intentionally independent of `Validate workspace`: it never
+# initializes or validates the GWC/UA Power submodules, never reads
+# manifests/power-compatibility-lock.json, and never touches global
+# compatibility semantics. It exists only to give TaskController its own
+# authoritative green/red signal.
+
+on:
+  pull_request:
+    paths:
+      - "taskcontroller/**"
+      - "tests/taskcontroller/**"
+      - ".github/workflows/taskcontroller-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  taskcontroller:
+    name: TaskController suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+          pip install pytest
+
+      - name: Run TaskController suite
+        run: |
+          PYTHONPATH=. pytest tests/taskcontroller/
