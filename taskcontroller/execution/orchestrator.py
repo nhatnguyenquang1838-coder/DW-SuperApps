@@ -90,3 +90,15 @@ def signal_to_event(signal: AdapterSignal) -> AgentEvent:
         payload=signal.payload,
         artifact_refs=signal.artifact_refs,
     )
+
+
+def forward_signal_to_router(signal: AdapterSignal, router: Any, store: Any) -> Any:
+    """Convert a trusted AdapterSignal and hand it to WP2 EventRouter.
+
+    WP2 remains the SOLE acceptance authority: it performs correlation/fencing/
+    sequence validation and applies explicit reducer semantics. The orchestrator
+    never mutates run/node state itself for cancellation/completion signals.
+    """
+    event = signal_to_event(signal)
+    current = store.get_run(event.run_id)
+    return router.route(event, current, current.version)

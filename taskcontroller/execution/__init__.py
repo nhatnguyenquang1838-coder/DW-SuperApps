@@ -26,7 +26,11 @@ from taskcontroller.execution.errors import (
     StaleLeaseError,
 )
 from taskcontroller.execution.fabric import ExecutionFabric
-from taskcontroller.execution.orchestrator import route_and_dispatch, signal_to_event
+from taskcontroller.execution.orchestrator import (
+    forward_signal_to_router,
+    route_and_dispatch,
+    signal_to_event,
+)
 from taskcontroller.execution.ports import ExecutionAdapter, FakeExecutionAdapter
 from taskcontroller.execution.registry import AdapterRegistry, build_registry
 from taskcontroller.execution.types import (
@@ -55,4 +59,5 @@ __all__ = [
     "ExecutionFabric",
     "route_and_dispatch",
     "signal_to_event",
+    "forward_signal_to_router",
 ]
