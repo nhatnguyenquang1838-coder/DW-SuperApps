@@ -44,6 +44,16 @@ from taskcontroller.mvp.monitoring import (
     material_signature,
     run_monitoring_loop,
 )
+from taskcontroller.mvp.pilot import (
+    AdvancedModeRequired,
+    HermesExecutorClient,
+    MvpPilot,
+    MvpPilotConfig,
+    SlackTransport,
+    parse_hermes_reply,
+    translate_rootcard_to_blocks,
+    validate_slack_blocks,
+)
 from taskcontroller.mvp.protocol_bridge import (
     CONTINUE,
     INTERCEPT,
@@ -134,4 +144,12 @@ __all__ = [
     "run_monitoring_loop",
     "MATERIAL_REPORT_FIELDS",
     "material_signature",
+    "AdvancedModeRequired",
+    "HermesExecutorClient",
+    "MvpPilot",
+    "MvpPilotConfig",
+    "SlackTransport",
+    "parse_hermes_reply",
+    "translate_rootcard_to_blocks",
+    "validate_slack_blocks",
 ]
