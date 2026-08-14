@@ -49,11 +49,14 @@ class SlackTaskControllerPack:
         self._transport = transport
         # restart-safe: restore the binding registry from host state BEFORE any
         # materialization. This is the core invariant against duplicate roots.
+        # The host owns the registry and shares the SAME object with the adapter
+        # (no private-field reach-through).
         registry = (
             BindingRegistry.from_snapshot(host_state.binding_snapshot)
             if host_state is not None
             else BindingRegistry()
         )
+        self._registry = registry  # host-owned, authoritative root-identity source
         self._adapter = SlackProjectionAdapter(control_plane, transport, registry)
         self._state = host_state or TaskControllerHostState(
             config=config, binding_snapshot=registry.snapshot()
@@ -139,11 +142,11 @@ class SlackTaskControllerPack:
         return cls(state.config, control_plane, transport, host_state=state)
 
     def attempt_second_root(self) -> None:
-        """Attempting a second root for the same task/target must fail closed."""
-        # adapter already holds the binding; a conflicting bind must raise
-        from taskcontroller.projections.binding import Binding
+        """Attempting a second root for the same task/target must fail closed.
 
-        reg = self._adapter._registry
+        Uses the host-owned registry directly; never reads adapter private state.
+        """
+        reg = self._registry
         key = self._config.binding_key()
         existing = reg.lookup(key)
         if existing is None:
@@ -153,3 +156,8 @@ class SlackTaskControllerPack:
 
     def root_count(self) -> int:
         return self._transport.root_count()
+
+    def root_for(self, run_id: str) -> str | None:
+        """Public read of the host-owned root identity (no adapter private state)."""
+        b = self._registry.lookup(self._config.binding_key() if run_id == self._config.run_id else f"{run_id}#slack")
+        return b.root if b is not None else None
