@@ -108,6 +108,21 @@ class TestRestartDuplicateRoot:
         bad_state = TaskControllerHostState.from_dict(d)
         b = SlackTaskControllerPack.restore(bad_state, ControlPlane(_store()), FakeSlackTransport())
         # restoring the registry with a different root is fine; attempting to
-        # (re)bind the same key to the ORIGINAL root must fail closed.
+        # (re)bind the same key to the ORIGINAL root must fail closed via the
+        # host-owned registry (no adapter private state).
         with pytest.raises(DuplicateRootError):
-            b._adapter._registry.bind("run.1#slack", "slack", "root.run.1")
+            b._registry.bind("run.1#slack", "slack", "root.run.1")
+
+    def test_second_root_fail_closed_after_restart_via_host_registry(self):
+        # The host owns the registry after restart; a conflicting second-root
+        # attempt must raise DuplicateRootError using host-owned state only.
+        a = _new_host()
+        a.materialize(session_id="s1")
+        persisted = a.checkpoint_host_state()
+        b = SlackTaskControllerPack.restore(persisted, ControlPlane(_store()), FakeSlackTransport())
+        # restore carries the original root; host-owned registry sees it
+        assert b.root_for("run.1") == "root.run.1"
+        # deliberate second-root attempt via host-owned registry fails closed
+        with pytest.raises(DuplicateRootError):
+            b._registry.bind("run.1#slack", "slack", "root.EVIL2")
+        # and the pack never needs to read adapter private state to enforce it

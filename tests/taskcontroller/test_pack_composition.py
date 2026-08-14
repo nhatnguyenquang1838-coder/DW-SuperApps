@@ -135,7 +135,7 @@ class TestCompositionLifecycle:
         assert restored._transport.roots_created == []
         assert restored._transport.roots_updated == ["root.run.1"]
         # the binding identity is intact (same root, only content changed)
-        assert restored._adapter._registry.lookup("run.1#slack").root == "root.run.1"
+        assert restored.root_for("run.1") == "root.run.1"
 
     def test_no_direct_state_mutation_in_pack(self):
         host, store = _host()
