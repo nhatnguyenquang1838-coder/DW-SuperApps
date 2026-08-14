@@ -640,3 +640,238 @@ class TestLoopIsNotASchedulerAndStaysPure:
         assert "class ReplyReader(Protocol)" in source
         for banned in ("WebClient", "chat_postMessage", "conversations_replies", "urlopen"):
             assert banned not in source, banned
+
+
+# ------------------------------------------- WP4 INTERCEPT correction (#51)
+class TestMaterialSignatureCompleteness:
+    """Intercept fix: the material signature covers ALL user-visible fields.
+
+    The previous logic (`verdict changed or evidence changed`) suppressed the
+    RootCard update when status / completed / finding_risk / next_action changed,
+    even though those drive RootCard progress, risk, Now and Next.
+    """
+
+    def test_signature_declares_every_material_field(self):
+        from taskcontroller.mvp.monitoring import MATERIAL_REPORT_FIELDS
+
+        assert MATERIAL_REPORT_FIELDS == (
+            "status",
+            "completed",
+            "evidence",
+            "finding_risk",
+            "next_action",
+        )
+
+    @pytest.mark.parametrize(
+        "changed",
+        (
+            {"completed": ["unit finished", "second unit finished"]},
+            {"status": "DONE"},
+            {"finding_risk": ["CI lock mismatch is inherited"]},
+            {"next_action": "escalate to controller readback"},
+        ),
+        ids=("completed", "status", "finding_risk", "next_action"),
+    )
+    def test_same_verdict_and_evidence_but_changed_field_triggers_update(self, changed):
+        first = _payload()
+        second = _payload(**changed)
+        assert first["evidence"] == second["evidence"]  # evidence identical
+
+        updater = FakeUpdater()
+        run_monitoring_loop(
+            _contract("S1", CONTINUE),
+            read_replies=FakeReader(
+                [[ThreadReply("101.0", first)], [ThreadReply("102.0", second)]]
+            ),
+            sleeper=FakeSleeper(),
+            max_polls=2,
+            update_rootcard=updater,
+        )
+        # both verdicts are CONTINUE, evidence unchanged -> still 2 updates
+        assert [u.verdict.verdict for u in updater.updates] == [CONTINUE, CONTINUE]
+        assert len(updater.updates) == 2, changed
+
+    def test_exact_duplicate_report_is_still_deduped(self):
+        payload = _payload()
+        updater = FakeUpdater()
+        run_monitoring_loop(
+            _contract("S1", CONTINUE),
+            read_replies=FakeReader(
+                [
+                    [ThreadReply("101.0", payload)],
+                    [ThreadReply("102.0", dict(payload))],
+                    [ThreadReply("103.0", dict(payload))],
+                ]
+            ),
+            sleeper=FakeSleeper(),
+            max_polls=3,
+            update_rootcard=updater,
+        )
+        assert len(updater.updates) == 1
+
+    def test_signature_is_value_based_not_identity_based(self):
+        from taskcontroller.mvp.monitoring import material_signature
+        from taskcontroller.mvp.protocol_bridge import ExecutorReport, classify_report
+
+        contract = _contract("S1", CONTINUE)
+        a = ExecutorReport.from_payload(_payload())
+        b = ExecutorReport.from_payload(dict(_payload()))
+        assert a is not b
+        assert material_signature(a, classify_report(contract, a)) == material_signature(
+            b, classify_report(contract, b)
+        )
+
+    def test_signature_key_order_in_payload_does_not_matter(self):
+        from taskcontroller.mvp.monitoring import material_signature
+        from taskcontroller.mvp.protocol_bridge import ExecutorReport, classify_report
+
+        contract = _contract("S1", CONTINUE)
+        forward = _payload()
+        reversed_payload = dict(reversed(list(forward.items())))
+        a = ExecutorReport.from_payload(forward)
+        b = ExecutorReport.from_payload(reversed_payload)
+        assert material_signature(a, classify_report(contract, a)) == material_signature(
+            b, classify_report(contract, b)
+        )
+
+    def test_signature_is_a_tuple_of_primitives_not_serialization(self):
+        from taskcontroller.mvp.monitoring import material_signature
+        from taskcontroller.mvp.protocol_bridge import ExecutorReport, classify_report
+
+        contract = _contract("S1", CONTINUE)
+        report = ExecutorReport.from_payload(_payload())
+        signature = material_signature(report, classify_report(contract, report))
+        assert isinstance(signature, tuple)
+        for item in signature:
+            assert isinstance(item, (str, tuple)), item
+        assert hash(signature)  # hashable / stable
+
+    def test_signature_rejects_bad_inputs(self):
+        from taskcontroller.mvp.monitoring import material_signature
+        from taskcontroller.mvp.protocol_bridge import ExecutorReport, classify_report
+
+        contract = _contract()
+        report = ExecutorReport.from_payload(_payload())
+        verdict = classify_report(contract, report)
+        with pytest.raises(TaskControllerValidationError):
+            material_signature({"status": "RUNNING"}, verdict)
+        with pytest.raises(TaskControllerValidationError):
+            material_signature(report, "CONTINUE")
+
+    def test_finding_risk_appearing_and_clearing_are_both_material(self):
+        updater = FakeUpdater()
+        run_monitoring_loop(
+            _contract("S1", CONTINUE),
+            read_replies=FakeReader(
+                [
+                    [ThreadReply("101.0", _payload())],
+                    [ThreadReply("102.0", _payload(finding_risk=["lock mismatch"]))],
+                    [ThreadReply("103.0", _payload())],
+                ]
+            ),
+            sleeper=FakeSleeper(),
+            max_polls=3,
+            update_rootcard=updater,
+        )
+        assert len(updater.updates) == 3
+
+    def test_silent_polling_cursor_and_boundary_return_are_preserved(self):
+        # silent empty poll
+        updater = FakeUpdater()
+        sleeper = FakeSleeper()
+        outcome = run_monitoring_loop(
+            _contract(),
+            read_replies=FakeReader([[], []]),
+            sleeper=sleeper,
+            last_seen_ts="100.0",
+            max_polls=2,
+            update_rootcard=updater,
+        )
+        assert updater.updates == [] and outcome.observations == ()
+        assert outcome.last_seen_ts == "100.0" and sleeper.calls == [60, 60]
+
+        # immediate boundary return, cursor advanced
+        reader = FakeReader(
+            [
+                [ThreadReply("101.0", _payload(after=WAIT_CONTROLLER))],
+                [ThreadReply("102.0", _payload())],
+            ]
+        )
+        boundary = run_monitoring_loop(
+            _contract("S1", WAIT_CONTROLLER),
+            read_replies=reader,
+            sleeper=FakeSleeper(),
+            last_seen_ts="100.0",
+            max_polls=5,
+        )
+        assert boundary.verdict == WAIT_CONTROLLER and boundary.polls == 1
+        assert reader.poll == 1 and boundary.last_seen_ts == "101.0"
+
+
+class TestLosslessTimestampKey:
+    """Intercept fix: canonical Slack seconds.microseconds compares exactly."""
+
+    def test_key_uses_exact_integers_not_float(self):
+        from taskcontroller.mvp.monitoring import _ts_key
+
+        key = _ts_key("1786747750.951239")
+        assert key[0] == 0
+        assert key[1] == 1786747750
+        assert key[2] == 951239
+        assert all(not isinstance(part, float) for part in key)
+
+    def test_microsecond_neighbours_are_distinguished(self):
+        from taskcontroller.mvp.monitoring import _is_newer
+
+        assert _is_newer("1786747750.951240", "1786747750.951239") is True
+        assert _is_newer("1786747750.951239", "1786747750.951240") is False
+        assert _is_newer("1786747750.951239", "1786747750.951239") is False
+
+    def test_very_large_precise_ts_is_not_rounded_together(self):
+        from taskcontroller.mvp.monitoring import _is_newer, _ts_key
+
+        a = "99999999999999999.000001"
+        b = "99999999999999999.000002"
+        assert _ts_key(a) != _ts_key(b)
+        assert _is_newer(b, a) is True
+
+    def test_fraction_normalization_treats_equal_values_as_equal(self):
+        from taskcontroller.mvp.monitoring import _is_newer, _ts_key
+
+        assert _ts_key("1.5") == _ts_key("1.500000")
+        assert _is_newer("1.500000", "1.5") is False
+
+    def test_numeric_ordering_still_beats_lexicographic(self):
+        from taskcontroller.mvp.monitoring import _is_newer
+
+        assert _is_newer("100.0", "99.0") is True
+        assert _is_newer("99.0", "100.0") is False
+
+    def test_non_numeric_ts_falls_back_stably(self):
+        from taskcontroller.mvp.monitoring import _is_newer, _ts_key
+
+        assert _ts_key("abc")[0] == 1
+        assert _is_newer("abc", "abd") is False
+        assert _is_newer("abd", "abc") is True
+        # a numeric ts always sorts before the non-numeric fallback bucket
+        assert _is_newer("abc", "100.0") is True
+
+    def test_microsecond_precision_survives_the_full_loop(self):
+        updater = FakeUpdater()
+        outcome = run_monitoring_loop(
+            _contract(),
+            read_replies=FakeReader(
+                [
+                    [
+                        ThreadReply("1786747750.951240", _payload(evidence=["b"])),
+                        ThreadReply("1786747750.951239", _payload(evidence=["a"])),
+                    ]
+                ]
+            ),
+            sleeper=FakeSleeper(),
+            last_seen_ts="1786747750.951239",
+            max_polls=1,
+            update_rootcard=updater,
+        )
+        assert [u.reply_ts for u in updater.updates] == ["1786747750.951240"]
+        assert outcome.last_seen_ts == "1786747750.951240"

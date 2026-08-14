@@ -33,6 +33,7 @@ from taskcontroller.mvp.actions import (
 )
 from taskcontroller.mvp.monitoring import (
     BOUNDARY_VERDICTS,
+    MATERIAL_REPORT_FIELDS,
     POLL_INTERVAL_SECONDS,
     REASON_BOUNDARY,
     REASON_MAX_POLLS,
@@ -40,6 +41,7 @@ from taskcontroller.mvp.monitoring import (
     LoopOutcome,
     MalformedReportError,
     ThreadReply,
+    material_signature,
     run_monitoring_loop,
 )
 from taskcontroller.mvp.protocol_bridge import (
@@ -130,4 +132,6 @@ __all__ = [
     "LoopOutcome",
     "MalformedReportError",
     "run_monitoring_loop",
+    "MATERIAL_REPORT_FIELDS",
+    "material_signature",
 ]

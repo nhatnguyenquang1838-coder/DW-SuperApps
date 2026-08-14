@@ -200,17 +200,68 @@ class LoopOutcome:
 # --------------------------------------------------------------------------
 # The loop
 # --------------------------------------------------------------------------
-def _ts_key(ts: str) -> tuple[int, float, str]:
-    """Ordering key for a reply ts.
+#: Every ExecutorReport field the MVP RootCard actually surfaces. A change in
+#: ANY of these is material: status feeds progress, completed feeds progress,
+#: evidence feeds the last material update, finding_risk feeds risk/blocker, and
+#: next_action feeds Next.
+MATERIAL_REPORT_FIELDS = (
+    "status",
+    "completed",
+    "evidence",
+    "finding_risk",
+    "next_action",
+)
+
+
+def material_signature(
+    report: ExecutorReport, verdict: ProtocolVerdict
+) -> tuple[Any, ...]:
+    """Deterministic material-change signature for one classified report.
+
+    Covers every user-visible/material ``ExecutorReport`` field
+    (:data:`MATERIAL_REPORT_FIELDS`) plus the verdict, its intercept reason and
+    its detail — i.e. everything the MVP RootCard can render.
+
+    Deliberately a normalized tuple of primitives: NOT object identity, NOT
+    ``repr``, NOT JSON/pickle. Two reports that carry the same material content
+    produce the same signature regardless of object identity or field order in
+    the source payload, so an identical repeated report stays deduped.
+    """
+    if not isinstance(report, ExecutorReport):
+        raise TaskControllerValidationError("report must be an ExecutorReport")
+    if not isinstance(verdict, ProtocolVerdict):
+        raise TaskControllerValidationError("verdict must be a ProtocolVerdict")
+    return (
+        report.subtask_id,
+        report.status,
+        tuple(report.completed),
+        tuple(report.evidence),
+        tuple(report.finding_risk),
+        report.next_action,
+        report.after,
+        verdict.verdict,
+        verdict.intercept_reason or "",
+        verdict.detail,
+    )
+
+
+def _ts_key(ts: str) -> tuple[int, int, int, str]:
+    """Lossless ordering key for a reply ts.
 
     Slack-style ``ts`` values are numeric strings, so a plain lexicographic
-    compare is WRONG (``"99.0" > "100.0"``). Numeric strings sort numerically;
-    non-numeric values fall back to a stable lexicographic bucket.
+    compare is WRONG (``"99.0" > "100.0"``). ``float()`` would order correctly at
+    present Slack scale but is lossy in principle, so canonical
+    ``seconds.microseconds`` is split and compared as EXACT INTEGERS. Non-numeric
+    values fall back to a stable lexicographic bucket.
     """
-    try:
-        return (0, float(ts), "")
-    except (TypeError, ValueError):
-        return (1, 0.0, ts)
+    if isinstance(ts, str):
+        candidate = ts.strip()
+        seconds, _, fraction = candidate.partition(".")
+        if seconds.isdigit() and (fraction == "" or fraction.isdigit()):
+            # Normalize the fractional part so 1.5 and 1.500000 compare equal.
+            micros = int((fraction + "000000")[:6]) if fraction else 0
+            return (0, int(seconds), micros, "")
+    return (1, 0, 0, ts if isinstance(ts, str) else repr(ts))
 
 
 def _is_newer(ts: str, last_seen_ts: str | None) -> bool:
@@ -290,7 +341,7 @@ def run_monitoring_loop(
     cursor = last_seen_ts
     observations: list[LoopObservation] = []
     last_verdict: str | None = None
-    accumulated_evidence: tuple[str, ...] = ()
+    last_signature: tuple[Any, ...] | None = None
 
     for poll in range(1, max_polls + 1):
         sleeper(poll_interval_seconds)
@@ -311,7 +362,11 @@ def run_monitoring_loop(
 
             verdict = classify_report(contracted, report)
 
-            material = verdict.verdict != last_verdict or report.evidence != accumulated_evidence
+            # Material change = ANY user-visible report field or verdict state
+            # changed. Evidence alone is not enough: status / completed /
+            # finding_risk / next_action drive RootCard progress, risk and Next.
+            signature = material_signature(report, verdict)
+            material = signature != last_signature
             observation = LoopObservation(
                 poll=poll,
                 reply_ts=reply.ts,
@@ -322,7 +377,7 @@ def run_monitoring_loop(
                 observations.append(observation)
                 update_rootcard(observation)
             last_verdict = verdict.verdict
-            accumulated_evidence = report.evidence
+            last_signature = signature
 
             if verdict.verdict in BOUNDARY_VERDICTS:
                 return LoopOutcome(
