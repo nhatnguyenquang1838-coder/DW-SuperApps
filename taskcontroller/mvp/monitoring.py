@@ -121,19 +121,73 @@ def _no_update(observation: "LoopObservation") -> None:
 # --------------------------------------------------------------------------
 @dataclass(frozen=True)
 class LoopObservation:
-    """One classified, material observation of the delegated segment."""
+    """One classified, material observation of the delegated segment.
+
+    Carries the validated immutable ``ExecutorReport`` itself, so the RootCard
+    updater can render exactly the values that caused the update
+    (``status`` -> progress, ``completed`` -> progress, ``finding_risk`` ->
+    risk/blocker, ``next_action`` -> Next, ``evidence`` -> last material update).
+
+    ``evidence`` is exposed as a read-only convenience property delegating to the
+    report, so there is exactly ONE source of truth and no duplication drift.
+    """
 
     poll: int
     reply_ts: str
     verdict: ProtocolVerdict
-    evidence: tuple[str, ...]
+    report: ExecutorReport
+
+    def __post_init__(self) -> None:
+        if isinstance(self.poll, bool) or not isinstance(self.poll, int) or self.poll < 1:
+            raise TaskControllerValidationError("poll must be an int >= 1")
+        if not isinstance(self.reply_ts, str) or not self.reply_ts.strip():
+            raise TaskControllerValidationError("reply_ts must be a non-empty string")
+        if not isinstance(self.verdict, ProtocolVerdict):
+            raise TaskControllerValidationError("verdict must be a ProtocolVerdict")
+        if not isinstance(self.report, ExecutorReport):
+            raise TaskControllerValidationError("report must be an ExecutorReport")
+
+    # -- material fields, delegated (no copies, no drift) --------------------
+    @property
+    def subtask_id(self) -> str:
+        return self.report.subtask_id
+
+    @property
+    def status(self) -> str:
+        return self.report.status
+
+    @property
+    def completed(self) -> tuple[str, ...]:
+        return self.report.completed
+
+    @property
+    def evidence(self) -> tuple[str, ...]:
+        return self.report.evidence
+
+    @property
+    def finding_risk(self) -> tuple[str, ...]:
+        return self.report.finding_risk
+
+    @property
+    def next_action(self) -> str:
+        return self.report.next_action
+
+    @property
+    def after(self) -> str:
+        return self.report.after
 
     def to_dict(self) -> dict[str, Any]:
+        """Deterministic projection, including the complete report."""
         return {
             "poll": self.poll,
             "reply_ts": self.reply_ts,
             "verdict": self.verdict.to_dict(),
+            "report": self.report.to_dict(),
+            "status": self.status,
+            "completed": list(self.completed),
             "evidence": list(self.evidence),
+            "finding_risk": list(self.finding_risk),
+            "next_action": self.next_action,
         }
 
 
@@ -371,7 +425,7 @@ def run_monitoring_loop(
                 poll=poll,
                 reply_ts=reply.ts,
                 verdict=verdict,
-                evidence=report.evidence,
+                report=report,
             )
             if material:
                 observations.append(observation)

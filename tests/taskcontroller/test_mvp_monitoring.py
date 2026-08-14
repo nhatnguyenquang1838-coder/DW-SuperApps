@@ -12,6 +12,7 @@ scheduler / deferred Full-E2E dependency.
 from __future__ import annotations
 
 import ast
+import dataclasses
 import time
 from pathlib import Path
 
@@ -875,3 +876,243 @@ class TestLosslessTimestampKey:
         )
         assert [u.reply_ts for u in updater.updates] == ["1786747750.951240"]
         assert outcome.last_seen_ts == "1786747750.951240"
+
+
+# ----------------------------------------- WP4 INTERCEPT #2 correction (#51)
+class TestObservationCarriesCompleteMaterialReport:
+    """Intercept #2 fix: the callback can actually render what changed.
+
+    Previously LoopObservation carried only poll/reply_ts/verdict/evidence, so an
+    update caused by status / completed / finding_risk / next_action gave the
+    updater no way to render the new value.
+    """
+
+    def _updates(self, batches, contract=None, polls=None):
+        updater = FakeUpdater()
+        run_monitoring_loop(
+            contract or _contract("S1", CONTINUE),
+            read_replies=FakeReader(batches),
+            sleeper=FakeSleeper(),
+            max_polls=polls or len(batches),
+            update_rootcard=updater,
+        )
+        return updater.updates
+
+    def test_observation_carries_the_validated_immutable_report(self):
+        from taskcontroller.mvp.protocol_bridge import ExecutorReport
+
+        [observation] = self._updates([[ThreadReply("101.0", _payload())]])
+        assert isinstance(observation.report, ExecutorReport)
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            observation.report.status = "DONE"  # type: ignore[misc]
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            observation.report = None  # type: ignore[misc]
+
+    def test_all_material_fields_are_reachable_from_the_observation(self):
+        [observation] = self._updates(
+            [
+                [
+                    ThreadReply(
+                        "101.0",
+                        _payload(
+                            status="BLOCKED",
+                            completed=["u1", "u2"],
+                            evidence=["e1"],
+                            finding_risk=["risk one"],
+                            next_action="await controller release",
+                        ),
+                    )
+                ]
+            ]
+        )
+        assert observation.subtask_id == "S1"
+        assert observation.status == "BLOCKED"
+        assert observation.completed == ("u1", "u2")
+        assert observation.evidence == ("e1",)
+        assert observation.finding_risk == ("risk one",)
+        assert observation.next_action == "await controller release"
+        assert observation.after == CONTINUE
+
+    def test_material_fields_delegate_to_the_report_without_duplication_drift(self):
+        [observation] = self._updates([[ThreadReply("101.0", _payload())]])
+        report = observation.report
+        assert observation.status is report.status
+        assert observation.completed is report.completed
+        assert observation.evidence is report.evidence
+        assert observation.finding_risk is report.finding_risk
+        assert observation.next_action is report.next_action
+        # there is no second stored copy of any material field
+        assert set(observation.__dataclass_fields__) == {
+            "poll",
+            "reply_ts",
+            "verdict",
+            "report",
+        }
+
+    def test_to_dict_exposes_the_report_deterministically(self):
+        [observation] = self._updates(
+            [
+                [
+                    ThreadReply(
+                        "101.0",
+                        _payload(finding_risk=["risk one"], next_action="next thing"),
+                    )
+                ]
+            ]
+        )
+        payload = observation.to_dict()
+        assert payload["report"] == observation.report.to_dict()
+        assert payload["status"] == "RUNNING"
+        assert payload["completed"] == ["unit finished"]
+        assert payload["evidence"] == ["exact evidence"]
+        assert payload["finding_risk"] == ["risk one"]
+        assert payload["next_action"] == "next thing"
+        assert payload["verdict"] == observation.verdict.to_dict()
+        # deterministic: identical every time, JSON-serializable
+        import json
+
+        assert observation.to_dict() == payload
+        assert json.loads(json.dumps(payload, sort_keys=True)) == payload
+
+    def test_changed_next_action_is_delivered_to_the_callback(self):
+        """Same evidence + same verdict, changed Next -> the VALUE arrives."""
+        first = _payload(next_action="await controller readback")
+        second = _payload(next_action="escalate: controller release required")
+        assert first["evidence"] == second["evidence"]
+
+        updates = self._updates(
+            [[ThreadReply("101.0", first)], [ThreadReply("102.0", second)]]
+        )
+        assert [u.verdict.verdict for u in updates] == [CONTINUE, CONTINUE]
+        assert [u.evidence for u in updates] == [("exact evidence",), ("exact evidence",)]
+        assert [u.next_action for u in updates] == [
+            "await controller readback",
+            "escalate: controller release required",
+        ]
+        assert updates[-1].to_dict()["next_action"] == (
+            "escalate: controller release required"
+        )
+
+    def test_changed_progress_and_risk_values_are_delivered(self):
+        updates = self._updates(
+            [
+                [ThreadReply("101.0", _payload(status="RUNNING", completed=["u1"]))],
+                [
+                    ThreadReply(
+                        "102.0",
+                        _payload(
+                            status="BLOCKED",
+                            completed=["u1", "u2"],
+                            finding_risk=["inherited lock mismatch"],
+                        ),
+                    )
+                ],
+            ]
+        )
+        assert [u.status for u in updates] == ["RUNNING", "BLOCKED"]
+        assert [u.completed for u in updates] == [("u1",), ("u1", "u2")]
+        assert [u.finding_risk for u in updates] == [(), ("inherited lock mismatch",)]
+        # evidence never changed, yet the risk/progress values still arrived
+        assert len({u.evidence for u in updates}) == 1
+
+    def test_wp2_rootcard_can_be_driven_from_the_observation(self):
+        """The updater has everything WP2 needs to map into a RootCard."""
+        from taskcontroller.mvp.rootcard import PlanBlock, RootCard, render_rootcard
+
+        rendered: list[dict] = []
+
+        def updater(observation):
+            card = RootCard(
+                run_id="RUN-47",
+                human_owner="Nhat",
+                controller="ChatGPT",
+                executor="Hermes Cloud",
+                plan=PlanBlock.from_contracts(
+                    tuple(_contract(f"S{i}") for i in (1, 2, 3))
+                ),
+                active_subtask_id=observation.subtask_id,
+                risk=observation.finding_risk[0] if observation.finding_risk else None,
+                now=f"{observation.status}: {len(observation.completed)} completed",
+                next=observation.next_action,
+                last_material_update=observation.evidence[-1],
+            )
+            rendered.append(render_rootcard(card))
+
+        run_monitoring_loop(
+            _contract("S1", CONTINUE),
+            read_replies=FakeReader(
+                [
+                    [
+                        ThreadReply(
+                            "101.0",
+                            _payload(
+                                status="BLOCKED",
+                                completed=["u1", "u2"],
+                                evidence=["e1", "latest evidence"],
+                                finding_risk=["inherited lock mismatch"],
+                                next_action="controller release required",
+                            ),
+                        )
+                    ]
+                ]
+            ),
+            sleeper=FakeSleeper(),
+            max_polls=1,
+            update_rootcard=updater,
+        )
+        assert len(rendered) == 1
+        fields = {f["label"]: f["value"] for f in rendered[0]["fields"]}
+        assert fields["now"] == "BLOCKED: 2 completed"
+        assert fields["risk"] == "inherited lock mismatch"
+        assert fields["next"] == "controller release required"
+        assert fields["last material update"] == "latest evidence"
+
+    def test_observation_fails_closed_on_bad_construction(self):
+        from taskcontroller.mvp.protocol_bridge import ExecutorReport, classify_report
+
+        contract = _contract()
+        report = ExecutorReport.from_payload(_payload())
+        verdict = classify_report(contract, report)
+        with pytest.raises(TaskControllerValidationError):
+            LoopObservation(poll=0, reply_ts="101.0", verdict=verdict, report=report)
+        with pytest.raises(TaskControllerValidationError):
+            LoopObservation(poll=1, reply_ts="", verdict=verdict, report=report)
+        with pytest.raises(TaskControllerValidationError):
+            LoopObservation(poll=1, reply_ts="101.0", verdict=CONTINUE, report=report)
+        with pytest.raises(TaskControllerValidationError):
+            LoopObservation(
+                poll=1, reply_ts="101.0", verdict=verdict, report=_payload()
+            )
+
+    def test_dedup_and_lossless_ts_key_are_still_intact(self):
+        from taskcontroller.mvp.monitoring import _is_newer, _ts_key
+
+        # exact duplicate still deduped
+        payload = _payload()
+        updates = self._updates(
+            [
+                [ThreadReply("101.0", payload)],
+                [ThreadReply("102.0", dict(payload))],
+                [ThreadReply("103.0", dict(payload))],
+            ]
+        )
+        assert len(updates) == 1
+        # lossless microsecond key preserved
+        assert _ts_key("1786747750.951239")[1:3] == (1786747750, 951239)
+        assert _is_newer("1786747750.951240", "1786747750.951239") is True
+        assert _is_newer("99.0", "100.0") is False
+
+    def test_outcome_observations_also_expose_the_report(self):
+        outcome = run_monitoring_loop(
+            _contract("S1", WAIT_CONTROLLER),
+            read_replies=FakeReader(
+                [[ThreadReply("101.0", _payload(after=WAIT_CONTROLLER))]]
+            ),
+            sleeper=FakeSleeper(),
+            max_polls=1,
+        )
+        assert outcome.verdict == WAIT_CONTROLLER
+        assert outcome.observations[-1].next_action == "await controller"
+        assert outcome.to_dict()["observations"][-1]["report"]["after"] == (
+            WAIT_CONTROLLER
+        )
