@@ -241,9 +241,14 @@ class LeaseManager:
         node_id: str,
         execution_id: str,
         attempt_id: str,
+        now: str,
         leases: dict[str, WorkLease] | None = None,
     ) -> WorkLease | None:
-        """Return the current ACTIVE lease for the given attempt, or None."""
+        """Return the current ACTIVE, non-expired lease for the attempt, or None.
+
+        ``now`` is an explicit caller-supplied ISO timestamp. Expiry is evaluated
+        against ``now`` only; no hidden/wall-clock time is ever used.
+        """
         if leases is None:
             rs = self._store.get_run(run_id)
             if rs is None:
@@ -267,7 +272,7 @@ class LeaseManager:
                 and lease.attempt_id == attempt_id
                 and lease.status == LeaseStatus.ACTIVE.value
             ):
-                if self._is_expired(lease):
+                if self._is_expired(lease, now):
                     return None
                 return lease
         return None
@@ -277,6 +282,7 @@ class LeaseManager:
         lease_id: str,
         expected_version: int,
         current_state: Any,
+        now: str,
     ) -> Any:
         """Release an ACTIVE lease (transition to RELEASED)."""
         leases = self._leases_dict(current_state)
@@ -287,7 +293,7 @@ class LeaseManager:
             raise LeaseConflictError(
                 f"cannot release non-ACTIVE lease: {lease.status}"
             )
-        if self._is_expired(lease):
+        if self._is_expired(lease, now):
             raise LeaseConflictError(
                 f"cannot release expired lease {lease_id}"
             )
@@ -334,6 +340,7 @@ class LeaseManager:
         fencing_token: str,
         expected_version: int,
         current_state: Any,
+        now: str,
     ) -> Any:
         """Extend expiry of an ACTIVE lease; fencing_token must match."""
         leases = self._leases_dict(current_state)
@@ -346,6 +353,7 @@ class LeaseManager:
                 lease.node_id,
                 lease.execution_id,
                 lease.attempt_id,
+                now,
                 leases,
             )
             if current is not None and current.lease_id != lease_id:
@@ -357,7 +365,7 @@ class LeaseManager:
             raise LeaseConflictError(
                 f"fencing_token mismatch for lease {lease_id}"
             )
-        if self._is_expired(lease):
+        if self._is_expired(lease, now):
             raise LeaseConflictError(
                 f"cannot renew expired lease {lease_id}"
             )
@@ -509,6 +517,7 @@ class LeaseManager:
         lease_id: str,
         expected_version: int,
         current_state: Any,
+        now: str,
     ) -> Any:
         """Expire a lease: mark EXPIRED.
 
@@ -527,8 +536,8 @@ class LeaseManager:
 
         run_id = lease.run_id
         node_id = lease.node_id
-        is_current = self.current(run_id, node_id, lease.execution_id, lease.attempt_id, leases) is not None
-        is_current_lease = is_current and self.current(run_id, node_id, lease.execution_id, lease.attempt_id, leases).lease_id == lease_id
+        is_current = self.current(run_id, node_id, lease.execution_id, lease.attempt_id, now, leases) is not None
+        is_current_lease = is_current and self.current(run_id, node_id, lease.execution_id, lease.attempt_id, now, leases).lease_id == lease_id
 
         rs = self._store.get_run(run_id)
         if rs is None:
@@ -751,11 +760,12 @@ class LeaseManager:
         self._store.sync_journal_position(run_id, new_rs.version)
         return self._store.get_run(run_id)
 
-    def _is_expired(self, lease: WorkLease, now: str | None = None) -> bool:
-        """Check if lease is past expires_at (compares ISO timestamps lexicographically)."""
-        const_now = "2026-08-14T10:00:00Z"
-        if now is None:
-            now = const_now
+    def _is_expired(self, lease: WorkLease, now: str) -> bool:
+        """Check if lease is past expires_at (compares ISO timestamps lexicographically).
+
+        ``now`` is an explicit caller-supplied ISO timestamp. There is no default,
+        constant, or wall-clock fallback: missing time fails at the API boundary.
+        """
         return lease.expires_at < now
 
 

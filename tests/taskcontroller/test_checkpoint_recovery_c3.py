@@ -22,6 +22,7 @@ import copy
 
 import pytest
 
+
 from taskcontroller.domain.enums import NodeStatus, RunStatus, LeaseStatus
 from taskcontroller.domain.ids import ProviderRef, ProducerRef
 from taskcontroller.domain.models import TeamRunState, WorkLease, NodeState, AgentEvent
@@ -50,6 +51,12 @@ from taskcontroller.runtime.lease import LeaseManager
 # ---------------------------------------------------------------------------
 # helpers (self-contained; mirror C1/C2 seeding)
 # ---------------------------------------------------------------------------
+
+# Explicit caller-supplied "now" for lease currentness/expiry. The fixture grants
+# lease.2 (expires 2026-08-20T02:00:00Z) then renews it to 03:00, so this value
+# (01:00) is BEFORE lease.2's original expiry (renew allowed) and is passed
+# explicitly per the time invariant.
+_NOW = "2026-08-20T01:00:00Z"
 
 def _seeded_store() -> tuple[InMemoryStateStore, VersionedRunState]:
     """Fresh store with run.1 + ACTIVE lease.1 + attempt att.1 (version 1)."""
@@ -235,8 +242,8 @@ class TestRecoveryEquivalence:
         )
         mgr.grant(l2, store.get_run("run.1").version, store.get_run("run.1"))
         mgr.renew("lease.2", "2026-08-20T03:00:00Z", "ft-2",
-                  store.get_run("run.1").version, store.get_run("run.1"))
-        mgr.expire("lease.2", store.get_run("run.1").version, store.get_run("run.1"))
+                  store.get_run("run.1").version, store.get_run("run.1"), _NOW)
+        mgr.expire("lease.2", store.get_run("run.1").version, store.get_run("run.1"), _NOW)
         return store
 
     def test_two_consecutive_recoveries_yield_same_state_and_sidecars(self):
@@ -279,7 +286,7 @@ class TestRecoveryEquivalence:
             )
 
         # post-restart current-lease: expired lease.2 => no current ACTIVE lease
-        cur = LeaseManager(store).current("run.1", "n1", "exec.1", "att.1")
+        cur = LeaseManager(store).current("run.1", "n1", "exec.1", "att.1", _NOW)
         assert cur is None
 
         # leases + attempts preserved
