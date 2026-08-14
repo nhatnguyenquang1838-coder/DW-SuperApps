@@ -280,3 +280,205 @@ class TestJournalPositionSync:
         assert node.status == NodeStatus.LEASE_EXPIRED.value
         # attempt current_lease_id cleared
         assert rec.meta.attempt_registry[_ATT].current_lease_id is None
+
+
+# ---------------------------------------------------------------------------
+# R8B — Final runtime safety closure (gaps 1-3 + coverage)
+# ---------------------------------------------------------------------------
+class TestR8BReplayIdentityFailClosed:
+    def _grant_payload(self, missing=None):
+        p = {
+            "op": "grant",
+            "lease_id": "lease.1",
+            "version": 1,
+            "fencing_token": _FENCE,
+            "current_lease_id": "lease.1",
+            "attempt_id": _ATT,
+            "node_id": _NODE,
+            "execution_id": _EXEC,
+            "holder": {"provider": "prov.local"},
+            "granted_at": "2026-08-13T00:00:00Z",
+            "expires_at": "2026-08-20T02:00:00Z",
+            "resource_ref": None,
+        }
+        if missing:
+            del p[missing]
+        return p
+
+    def test_malformed_grant_replay_missing_attempt_id_fails_closed(self):
+        # Gap 1: missing attempt_id in a grant replay record must raise;
+        # no fabricated empty identity.
+        rec = RuntimeRecord(
+            kind="lease", run_id="run.1",
+            payload=self._grant_payload(missing="attempt_id"),
+        )
+        with pytest.raises(RuntimeError):
+            replay_records(_state(), [rec])
+
+    def test_malformed_grant_replay_missing_fencing_token_fails_closed(self):
+        # Gap 1: missing fencing_token in a grant replay record must raise;
+        # no fabricated empty identity.
+        rec = RuntimeRecord(
+            kind="lease", run_id="run.1",
+            payload=self._grant_payload(missing="fencing_token"),
+        )
+        with pytest.raises(RuntimeError):
+            replay_records(_state(), [rec])
+
+
+class TestR8BGrantTimestampValidation:
+    def _grant_bad(self, granted_at, expires_at):
+        return WorkLease(
+            lease_id="lease.1", run_id="run.1", node_id=_NODE,
+            execution_id=_EXEC, attempt_id=_ATT,
+            holder=ProviderRef("prov.local"), fencing_token=_FENCE,
+            granted_at=granted_at, expires_at=expires_at,
+            status=LeaseStatus.ACTIVE.value,
+        )
+
+    def _assert_zero_mutation(self, store, before_version, before_journal):
+        after = store.get_run("run.1")
+        assert after.version == before_version
+        assert [r.record_index for r in store.journal_get("run.1", -1)] == before_journal
+
+    def test_grant_naive_granted_at_rejected(self):
+        mgr, store, cur = _mgr()
+        bv = store.get_run("run.1").version
+        bj = [r.record_index for r in store.journal_get("run.1", -1)]
+        with pytest.raises(LeaseConflictError):
+            mgr.grant(self._grant_bad("2026-08-13 00:00:00", "2026-08-20T02:00:00Z"),
+                      cur.version, cur)
+        self._assert_zero_mutation(store, bv, bj)
+
+    def test_grant_naive_expires_at_rejected(self):
+        mgr, store, cur = _mgr()
+        bv = store.get_run("run.1").version
+        bj = [r.record_index for r in store.journal_get("run.1", -1)]
+        with pytest.raises(LeaseConflictError):
+            mgr.grant(self._grant_bad("2026-08-13T00:00:00Z", "2026-08-20 02:00:00"),
+                      cur.version, cur)
+        self._assert_zero_mutation(store, bv, bj)
+
+    def test_grant_invalid_timestamp_rejected(self):
+        mgr, store, cur = _mgr()
+        bv = store.get_run("run.1").version
+        bj = [r.record_index for r in store.journal_get("run.1", -1)]
+        with pytest.raises(LeaseConflictError):
+            mgr.grant(self._grant_bad("not-a-time", "2026-08-20T02:00:00Z"),
+                      cur.version, cur)
+        self._assert_zero_mutation(store, bv, bj)
+
+    def test_grant_expires_before_granted_rejected(self):
+        mgr, store, cur = _mgr()
+        bv = store.get_run("run.1").version
+        bj = [r.record_index for r in store.journal_get("run.1", -1)]
+        with pytest.raises(LeaseConflictError):
+            mgr.grant(self._grant_bad("2026-08-20T05:00:00Z", "2026-08-20T02:00:00Z"),
+                      cur.version, cur)
+        self._assert_zero_mutation(store, bv, bj)
+
+
+class TestR8BNaturalExpiry:
+    def _past_lease(self, lease_id="lease.1"):
+        # expires_at BEFORE _NOW (2026-08-20T01:00:00Z) -> genuinely time-expired
+        return _lease(lease_id=lease_id, expires_at="2026-08-20T00:30:00Z")
+
+    def test_natural_expiry_marks_node_and_clears_attempt(self):
+        mgr, store, cur = _mgr()
+        cur = mgr.grant(self._past_lease(), cur.version, cur)  # node bound to lease.1
+        cur = mgr.expire("lease.1", cur.version, cur, now=_NOW)
+        l = cur.meta.leases.leases["lease.1"]
+        assert l.status == LeaseStatus.EXPIRED.value
+        node = cur.state.nodes[_NODE]
+        assert node.status == NodeStatus.LEASE_EXPIRED.value
+        assert cur.meta.attempt_registry[_ATT].current_lease_id is None
+
+    def test_natural_expiry_replay_matches_live(self):
+        mgr, store, cur = _mgr()
+        cur = mgr.grant(self._past_lease(), cur.version, cur)
+        cur = mgr.expire("lease.1", cur.version, cur, now=_NOW)
+        rec = recover_from_checkpoint(store, "run.1")
+        rl = rec.meta.leases.leases["lease.1"]
+        assert rl.status == LeaseStatus.EXPIRED.value
+        assert rec.state.nodes[_NODE].status == NodeStatus.LEASE_EXPIRED.value
+        assert rec.meta.attempt_registry[_ATT].current_lease_id is None
+
+    def test_stale_active_lease_expiry_no_node_transition(self):
+        # A genuinely ACTIVE lease that is NOT the node's currently bound lease
+        # must expire WITHOUT transitioning the node or clearing the attempt.
+        lease1 = _lease(lease_id="lease.1")
+        lease2 = _lease(lease_id="lease.2", expires_at="2026-08-20T00:30:00Z")
+        node = NodeState(status=NodeStatus.RUNNING.value, contract_ref="tc.1",
+                         current_attempt=1, lease_ref="lease.1", artifact_refs=[])
+        att = make_attempt_record(_ATT, "run.1", _NODE, _EXEC, _FENCE, 1,
+                                  current_lease_id="lease.1")
+        meta = RuntimeSnapshotMeta(
+            attempt_registry={_ATT: att},
+            leases=RuntimeLeaseState(leases={"lease.1": lease1, "lease.2": lease2}),
+            stream_watermarks={}, event_cursor=None,
+            dedupe_fingerprints={}, journal_position=0,
+        )
+        run = TeamRunState(run_id="run.1", status=RunStatus.RUNNING.value,
+                           nodes={_NODE: node}, active_attempts=[_ATT],
+                           active_leases=["lease.1", "lease.2"])
+        vs = VersionedRunState(state=run, version=1, meta=meta)
+        store = InMemoryStateStore()
+        store.put_run(vs, -1)
+        mgr = LeaseManager(store)
+        # expire lease.2 which is ACTIVE but not node-bound
+        cur = mgr.expire("lease.2", 1, vs, now=_NOW)
+        assert cur.meta.leases.leases["lease.2"].status == LeaseStatus.EXPIRED.value
+        # node must remain RUNNING (lease.1 still bound)
+        assert cur.state.nodes[_NODE].status == NodeStatus.RUNNING.value
+        # attempt current_lease_id untouched (still lease.1)
+        assert cur.meta.attempt_registry[_ATT].current_lease_id == "lease.1"
+
+
+class TestR8BJournalPositionPerOp:
+    def test_position_after_detach_grant(self):
+        mgr, store, cur = _mgr()
+        cur = mgr.grant(_lease(lease_id="lease.2"), cur.version, cur)
+        assert store.get_run("run.1").meta.journal_position == store.last_record_index("run.1")
+
+    def test_position_after_renew(self):
+        mgr, store, cur = _mgr()
+        cur = mgr.grant(_lease(lease_id="lease.2"), cur.version, cur)
+        cur = mgr.renew("lease.2", "2026-08-20T03:00:00Z", _FENCE, cur.version, cur, now=_NOW)
+        assert store.get_run("run.1").meta.journal_position == store.last_record_index("run.1")
+
+    def test_position_after_release(self):
+        mgr, store, cur = _mgr()
+        cur = mgr.release("lease.1", cur.version, cur, now=_NOW)
+        assert store.get_run("run.1").meta.journal_position == store.last_record_index("run.1")
+
+    def test_position_after_revoke(self):
+        mgr, store, cur = _mgr()
+        cur = mgr.revoke("lease.1", cur.version, cur)
+        assert store.get_run("run.1").meta.journal_position == store.last_record_index("run.1")
+
+    def test_position_after_expire(self):
+        mgr, store, cur = _mgr()
+        cur = mgr.expire("lease.1", cur.version, cur, now=_NOW)
+        assert store.get_run("run.1").meta.journal_position == store.last_record_index("run.1")
+
+
+class TestR8BGrantRoundtrip:
+    def test_exact_grant_fields_preserved(self):
+        mgr, store, cur = _mgr()
+        lease = WorkLease(
+            lease_id="lease.2", run_id="run.1", node_id=_NODE,
+            execution_id=_EXEC, attempt_id=_ATT,
+            holder=ProviderRef("prov.local"), fencing_token="ft-9",
+            granted_at="2026-08-13T00:00:00Z", expires_at="2026-08-20T03:00:00Z",
+            resource_ref="res.X", status=LeaseStatus.ACTIVE.value,
+        )
+        cur = mgr.grant(lease, cur.version, cur)
+        rec = recover_from_checkpoint(store, "run.1")
+        rl = rec.meta.leases.leases["lease.2"]
+        assert rl.attempt_id == _ATT
+        assert rl.fencing_token == "ft-9"
+        assert rl.holder == ProviderRef("prov.local")
+        assert rl.granted_at == "2026-08-13T00:00:00Z"
+        assert rl.expires_at == "2026-08-20T03:00:00Z"
+        assert rl.resource_ref == "res.X"
+

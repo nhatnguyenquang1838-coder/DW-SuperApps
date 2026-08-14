@@ -234,7 +234,8 @@ def _apply_lease_record(state: VersionedRunState, sidecars: _ReplaySidecars, rec
     Consumes only the trusted payload (op + resulting snapshot data) and record_index.
     No live LeaseManager call, no CAS, no fencing re-validation.
     """
-    from taskcontroller.domain.models import WorkLease, TeamRunState, NodeState, AttemptRecord
+    from taskcontroller.domain.models import WorkLease, TeamRunState, NodeState
+    from taskcontroller.runtime.runtime_state import AttemptRecord
 
     p = rec.payload
     op = p.get("op")
@@ -249,22 +250,25 @@ def _apply_lease_record(state: VersionedRunState, sidecars: _ReplaySidecars, rec
         if (
             "node_id" not in p
             or "execution_id" not in p
+            or "attempt_id" not in p
+            or "fencing_token" not in p
             or "holder" not in p
             or "granted_at" not in p
             or "expires_at" not in p
         ):
             raise RuntimeError(
                 "malformed/incomplete lease grant record: missing required "
-                "trusted fields (node_id, execution_id, holder, granted_at, expires_at)"
+                "trusted fields (node_id, execution_id, attempt_id, fencing_token, "
+                "holder, granted_at, expires_at)"
             )
         leases[lid] = {
             "lease_id": lid,
             "run_id": p.get("run_id", state.state.run_id),
             "node_id": p["node_id"],
             "execution_id": p["execution_id"],
-            "attempt_id": p.get("attempt_id", ""),
+            "attempt_id": p["attempt_id"],
             "holder": p["holder"],
-            "fencing_token": p.get("fencing_token", ""),
+            "fencing_token": p["fencing_token"],
             "granted_at": p["granted_at"],
             "expires_at": p["expires_at"],
             "resource_ref": p.get("resource_ref"),
@@ -289,11 +293,11 @@ def _apply_lease_record(state: VersionedRunState, sidecars: _ReplaySidecars, rec
             active.append(lid)
         state_dict["active_leases"] = active
         # attempt current_lease_id + fencing
-        att_id = p.get("attempt_id")
+        att_id = p["attempt_id"]
         if att_id and att_id in sidecars.attempt_registry:
             att = dict(sidecars.attempt_registry[att_id])
             att["current_lease_id"] = lid
-            att["fencing_token"] = p.get("fencing_token", att.get("fencing_token", ""))
+            att["fencing_token"] = p["fencing_token"]
             sidecars.attempt_registry[att_id] = att
 
     elif op in ("release", "revoke", "expire"):

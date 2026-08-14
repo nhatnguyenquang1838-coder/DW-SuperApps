@@ -218,6 +218,23 @@ class LeaseManager:
         if lease.status != LeaseStatus.ACTIVE.value:
             raise LeaseConflictError(f"cannot grant non-ACTIVE lease: {lease.status}")
 
+        # R8B Gap 2: validate lease timestamps BEFORE any detach/CAS/journal
+        # mutation. Both must be timezone-aware (no naive strings) and the
+        # expiry must not precede the grant time. Fail closed with zero mutation.
+        try:
+            granted_at = _parse_iso_instant(lease.granted_at)
+            expires_at = _parse_iso_instant(lease.expires_at)
+        except (ValueError, TypeError):
+            raise LeaseConflictError(
+                f"invalid/naive lease timestamp: granted_at={lease.granted_at!r}, "
+                f"expires_at={lease.expires_at!r}"
+            )
+        if expires_at < granted_at:
+            raise LeaseConflictError(
+                f"lease expires_at {lease.expires_at!r} precedes granted_at "
+                f"{lease.granted_at!r}"
+            )
+
         leases = self._leases_dict(current_state)
         existing = self._find_active_lease_in_dict(
             leases,
@@ -576,12 +593,29 @@ class LeaseManager:
 
         run_id = lease.run_id
         node_id = lease.node_id
-        is_current = self.current(run_id, node_id, lease.execution_id, lease.attempt_id, now, leases) is not None
-        is_current_lease = is_current and self.current(run_id, node_id, lease.execution_id, lease.attempt_id, now, leases).lease_id == lease_id
-
-        rs = self._store.get_run(run_id)
-        if rs is None:
+        # R8B Gap 3: determine whether THIS lease is the attempt/node's currently
+        # bound lease via authoritative state/attempt/node binding + exact
+        # lease_id/fencing/attempt identity. Do NOT use current() — it filters
+        # expired leases, so a genuinely time-expired ACTIVE lease would be
+        # misclassified non-current and the node would never reach LEASE_EXPIRED.
+        rs_for_binding = self._store.get_run(run_id)
+        if rs_for_binding is None:
             raise LeaseConflictError("run not found")
+        node = rs_for_binding.state.nodes.get(node_id)
+        node_binds_this = bool(node and node.lease_ref == lease_id)
+        att_reg = getattr(rs_for_binding.meta, "attempt_registry", None) or {}
+        att = att_reg.get(lease.attempt_id)
+        attempt_binds_this = bool(
+            att and getattr(att, "current_lease_id", None) == lease_id
+        )
+        attempt_fencing = getattr(att, "fencing_token", None) if att else None
+        is_current_lease = (
+            node_binds_this
+            and attempt_binds_this
+            and lease.fencing_token == attempt_fencing
+        )
+
+        rs = rs_for_binding
 
         # Build new lease (EXPIRED)
         updated_lease = WorkLease(
