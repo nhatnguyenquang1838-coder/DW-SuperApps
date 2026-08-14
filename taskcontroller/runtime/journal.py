@@ -169,13 +169,15 @@ def _apply_event_record(state: VersionedRunState, sidecars: _ReplaySidecars, rec
     ).to_dict()
     sidecars.event_cursor = state_dict["last_event_cursor"]
 
-    # artifact_refs recording
+    # artifact_refs recording (deterministic order, no set->list coercion)
     arts = p.get("artifact_refs") or []
     if arts:
-        existing = set(state_dict.get("artifact_refs", []))
+        existing = list(state_dict.get("artifact_refs", []))
         for a in arts:
-            existing.add(a.get("artifact_id") if isinstance(a, dict) else str(a))
-        state_dict["artifact_refs"] = list(existing)
+            a_id = a.get("artifact_id") if isinstance(a, dict) else str(a)
+            if a_id not in existing:
+                existing.append(a_id)
+        state_dict["artifact_refs"] = existing
 
     # reducer authority per event_type (mirrors EventRouter._apply_*; no validation re-run
     # beyond the transition check that live acceptance already enforced — deterministic replay)
@@ -242,28 +244,41 @@ def _apply_lease_record(state: VersionedRunState, sidecars: _ReplaySidecars, rec
 
     if op in ("grant", "replace"):
         lid = p["lease_id"]
+        # Trusted-record contract: a replay-sufficient grant MUST carry the lease
+        # identity fields. Missing required fields fail closed (no fabrication).
+        if (
+            "node_id" not in p
+            or "execution_id" not in p
+            or "holder" not in p
+            or "granted_at" not in p
+            or "expires_at" not in p
+        ):
+            raise RuntimeError(
+                "malformed/incomplete lease grant record: missing required "
+                "trusted fields (node_id, execution_id, holder, granted_at, expires_at)"
+            )
         leases[lid] = {
             "lease_id": lid,
             "run_id": p.get("run_id", state.state.run_id),
-            "node_id": p.get("node_id", ""),
-            "execution_id": p.get("execution_id", ""),
+            "node_id": p["node_id"],
+            "execution_id": p["execution_id"],
             "attempt_id": p.get("attempt_id", ""),
-            "holder": p.get("holder", {"provider_id": "provider.replay"}),
+            "holder": p["holder"],
             "fencing_token": p.get("fencing_token", ""),
-            "granted_at": p.get("granted_at", "2026-08-14T00:00:00Z"),
-            "expires_at": p.get("expires_at", "2026-08-15T00:00:00Z"),
+            "granted_at": p["granted_at"],
+            "expires_at": p["expires_at"],
             "resource_ref": p.get("resource_ref"),
             "status": "ACTIVE",
         }
         # node lease_ref
-        node_id = p.get("node_id", "")
+        node_id = p["node_id"]
         if node_id:
             nodes = dict(state_dict.get("nodes", {}))
             node = dict(nodes.get(node_id, {}))
             node["lease_ref"] = lid
             nodes[node_id] = node
             state_dict["nodes"] = nodes
-        # rebuild active_leases from ACTIVE leases (mirrors live LeaseManager.grant)
+        # rebuild active_leases deterministically (preserve order, append unseen)
         active = [
             _lid
             for _lid, _l in leases.items()
@@ -272,7 +287,7 @@ def _apply_lease_record(state: VersionedRunState, sidecars: _ReplaySidecars, rec
         ]
         if lid not in active:
             active.append(lid)
-        state_dict["active_leases"] = list(set(active))
+        state_dict["active_leases"] = active
         # attempt current_lease_id + fencing
         att_id = p.get("attempt_id")
         if att_id and att_id in sidecars.attempt_registry:

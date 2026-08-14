@@ -300,14 +300,12 @@ class EventRouter:
 
         # artifact_refs recording (allowed for most event types)
         if event.artifact_refs:
-            existing = set(new_state_dict.get("artifact_refs", []))
+            existing = list(new_state_dict.get("artifact_refs", []))
             for ar in event.artifact_refs:
-                existing.add(
-                    ar.artifact_id
-                    if hasattr(ar, "artifact_id")
-                    else str(ar)
-                )
-            new_state_dict["artifact_refs"] = list(existing)
+                a_id = ar.artifact_id if hasattr(ar, "artifact_id") else str(ar)
+                if a_id not in existing:
+                    existing.append(a_id)
+            new_state_dict["artifact_refs"] = existing
 
         # ---- reducer authority per event_type ----
         event_type = event.event_type

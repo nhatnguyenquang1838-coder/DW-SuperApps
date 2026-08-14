@@ -13,6 +13,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from datetime import datetime, timezone
+
 from taskcontroller.domain.enums import LeaseStatus, NodeStatus
 from taskcontroller.domain.models import TeamRunState, WorkLease
 from taskcontroller.domain.values import EventCursor, NodeState
@@ -55,6 +57,26 @@ def _safe_to_dict(obj: Any) -> Any:
                 return d
             raise
     return obj
+
+
+def _parse_iso_instant(value: str) -> datetime:
+    """Parse a caller-supplied ISO-8601 timestamp into a timezone-aware UTC instant.
+
+    Fail-closed: rejects timezone-naive or unparseable input with
+    LeaseConflictError. Naive timestamps have no defined ordering against other
+    instants, so they must never be compared as opaque strings or assumed UTC.
+    """
+    if not isinstance(value, str) or not value:
+        raise LeaseConflictError(f"invalid lease timestamp: {value!r}")
+    try:
+        dt = datetime.fromisoformat(value)
+    except (ValueError, TypeError):
+        raise LeaseConflictError(f"unparseable lease timestamp: {value!r}")
+    if dt.tzinfo is None:
+        raise LeaseConflictError(
+            f"naive (timezone-less) lease timestamp rejected: {value!r}"
+        )
+    return dt.astimezone(timezone.utc)
 
 
 def _leases_from_meta(meta: Any) -> dict[str, WorkLease]:
@@ -347,6 +369,10 @@ class LeaseManager:
         lease = leases.get(lease_id)
         if lease is None:
             raise LeaseConflictError(f"unknown lease_id {lease_id}")
+        # R8 Fix A: validate the new expiry timestamp is timezone-aware and
+        # well-formed BEFORE any mutation/journal write. Naive/invalid input
+        # fails closed with zero state/journal change.
+        _validate_ts(new_expires_at)
         if lease.status != LeaseStatus.ACTIVE.value:
             current = self.current(
                 lease.run_id,
@@ -494,15 +520,23 @@ class LeaseManager:
             payload["attempt_id"] = attempt_id
         if op == "grant":
             # Record authoritative lease identity so pure replay reconstructs the
-            # lease (holder/granted_at/resource_ref/node/run) exactly, independent
-            # of any hardcoded default.
+            # lease (holder/granted_at/expires_at/resource_ref/node/run) exactly,
+            # independent of any hardcoded default. All fields required by the
+            # trusted-record contract (D: replay must NOT fabricate timestamps).
             _lease = _leases_from_meta(new_rs.meta).get(lease_id)
             if _lease is not None:
                 payload["node_id"] = _lease.node_id
                 payload["execution_id"] = _lease.execution_id
                 payload["holder"] = _safe_to_dict(_lease.holder)
                 payload["granted_at"] = _lease.granted_at
+                payload["expires_at"] = _lease.expires_at
                 payload["resource_ref"] = _lease.resource_ref
+        elif op == "expire":
+            # Record node identity so replay deterministically restores the correct
+            # node LEASE_EXPIRED status (E: expire replay needs node_id).
+            _lease = _leases_from_meta(new_rs.meta).get(lease_id)
+            if _lease is not None:
+                payload["node_id"] = _lease.node_id
         self._store.journal_append(
             run_id,
             RuntimeRecord(
@@ -511,6 +545,12 @@ class LeaseManager:
                 payload=payload,
             ),
         )
+        # R8-E: journal_position is the SOLE authoritative index and MUST equal
+        # the durable last record_index after every append. The ops call
+        # sync_journal_position *before* _journal_lease, so without this tail sync
+        # the final record's index is never captured. Sync here (post-append) keeps
+        # the invariant exact for live mutation and replay alignment.
+        self._store.sync_journal_position(run_id, new_rs.version)
 
     def expire(
         self,
@@ -589,8 +629,8 @@ class LeaseManager:
             old_meta_dict["leases"][lease_id] = _safe_to_dict(updated_lease)
 
             att_reg = old_meta_dict.get("attempt_registry", {})
-            if "att.1" in att_reg:
-                att = att_reg["att.1"]
+            att = att_reg.get(lease.attempt_id)
+            if att is not None:
                 if isinstance(att, dict):
                     att["status"] = NodeStatus.LEASE_EXPIRED.value
                     att["current_lease_id"] = None
@@ -718,10 +758,15 @@ class LeaseManager:
                 lease_ref=lease.lease_id,
                 artifact_refs=list(node.artifact_refs),
             )
-            # Build new active_leases: only ACTIVE leases + new lease
-            new_active = [lid for lid, l in leases.items() if l.status == LeaseStatus.ACTIVE.value]
-            new_active.append(lease.lease_id)
-            new_active = list(set(new_active))
+            # Build new active_leases deterministically: ACTIVE leases in existing
+            # order, then append the new lease id if not already present. No set()
+            # coercion — set->list order is hash-seed dependent and would break
+            # byte-equivalent restart/recovery across processes.
+            new_active = [
+                lid for lid, l in leases.items() if l.status == LeaseStatus.ACTIVE.value
+            ]
+            if lease.lease_id not in new_active:
+                new_active.append(lease.lease_id)
             new_run = TeamRunState(
                 run_id=rs.state.run_id,
                 status=rs.state.status,
@@ -731,7 +776,9 @@ class LeaseManager:
             )
         else:
             new_run = rs.state
-            new_active = list(rs.state.active_leases) + [lease.lease_id]
+            new_active = list(rs.state.active_leases)
+            if lease.lease_id not in new_active:
+                new_active.append(lease.lease_id)
             new_run.active_leases = new_active
 
         # Update attempt record
@@ -761,12 +808,27 @@ class LeaseManager:
         return self._store.get_run(run_id)
 
     def _is_expired(self, lease: WorkLease, now: str) -> bool:
-        """Check if lease is past expires_at (compares ISO timestamps lexicographically).
+        """Check if lease is past expires_at (compares timezone-aware ISO instants).
 
-        ``now`` is an explicit caller-supplied ISO timestamp. There is no default,
-        constant, or wall-clock fallback: missing time fails at the API boundary.
+        ``now`` and ``lease.expires_at`` are explicit caller-supplied ISO
+        timestamps. Both are parsed as timezone-aware instants; naive/unparseable
+        input fails closed with LeaseConflictError. Expired only when expires_at
+        is strictly before ``now`` (boundary equality is NOT expired).
         """
-        return lease.expires_at < now
+        expires = _parse_iso_instant(lease.expires_at)
+        current = _parse_iso_instant(now)
+        return expires < current
+
+
+def _validate_ts(value: str) -> None:
+    """Validate a caller-supplied ISO-8601 timestamp for time-sensitive lease APIs.
+
+    Rejects timezone-naive or unparseable input by raising LeaseConflictError.
+    This is the single fail-closed gate used by renewal (R8 Fix A): a naive or
+    malformed ``new_expires_at`` must not reach the store/journal. Returns None
+    on success; performs no mutation.
+    """
+    _parse_iso_instant(value)
 
 
 def build_runtime_lease_state(

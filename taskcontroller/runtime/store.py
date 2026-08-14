@@ -154,10 +154,20 @@ class InMemoryStateStore(StateStore):
         position already matches, so it is safe to call after any committed mutation.
         The correction mandates: journal_position derives from RuntimeRecord.record_index,
         never from VersionedRunState.version.
+
+        CAS guard (E): if ``expected_version`` does not match the current stored run
+        version, the sync is a STALE write attempt and is rejected with
+        ConcurrentStateError rather than mutating a newer run. No stale sync may
+        silently overwrite a newer run's journal_position.
         """
         rs = self._runs.get(run_id)
         if rs is None:
             return
+        if rs.version != expected_version:
+            raise ConcurrentStateError(
+                f"stale sync_journal_position for run {run_id}: "
+                f"expected {expected_version}, current {rs.version}"
+            )
         real = self.last_record_index(run_id)
         cur = getattr(rs.meta, "journal_position", None)
         if isinstance(cur, int) and cur == real:
