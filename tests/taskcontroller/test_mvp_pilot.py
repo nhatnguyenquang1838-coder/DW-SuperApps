@@ -3,15 +3,18 @@
 Deterministic fake Slack/Hermes clients only: the MVP CI path never touches a
 network. Proves the *live Slack-mediated topology* (Controller dispatches a
 command into the thread; the Executor replies later as a distinct actor; the
-loop reads only the Executor reply), one-root, ordered 3-5 subtasks with single
-dispatch, valid Block Kit plan/task_card schema + exact status mapping +
-contextual-only actions + rich_text error details, the concrete
-SlackWebApiTransport wrapper, canonical human-readable Executor report parsing,
-material observation updating the SAME RootCard with real values, malformed
-report fail-closed, and that deferred Full-E2E core modules are not imported.
+loop reads only the Executor-authored reply), one-root, ordered 3-5 subtasks
+with single dispatch, valid Block Kit plan/task_card schema + exact status
+mapping + contextual-only actions + rich_text error details, the concrete
+SlackWebApiTransport wrapper with Executor actor filtering, the *authority*
+canonical human-readable Executor report format, lossless timestamp ordering,
+the default 60s live loop with bounded poll count for tests, WP2 projection
+inputs binding (cost / gwc / authority / merge / paused), and that deferred
+Full-E2E core modules are not imported.
 """
 
 import json
+import time
 
 import pytest
 
@@ -24,6 +27,7 @@ from taskcontroller.mvp.monitoring import (
     MalformedReportError,
     ThreadReply,
     REASON_BOUNDARY,
+    POLL_INTERVAL_SECONDS,
 )
 from taskcontroller.mvp.pilot import (
     AdvancedModeRequired,
@@ -47,11 +51,20 @@ from taskcontroller.mvp.rootcard import (
     TaskCard,
     TaskCardStatus,
     COST_UNKNOWN,
+    COST_FREE,
     TOKEN_USAGE_UNKNOWN,
 )
 
 
 # --------------------------------------------------------------------------- fakes
+class FakeSleeper:
+    def __init__(self):
+        self.calls = []
+
+    def __call__(self, seconds: int) -> None:
+        self.calls.append(seconds)
+
+
 class FakeSlack(SlackTransport):
     """Faithful fake: Controller command and Executor reply are DISTINCT events.
 
@@ -87,22 +100,11 @@ class FakeSlack(SlackTransport):
         )
         return ts
 
-    def enqueue_executor_reply_bad(self, root_ts, text: str) -> str:
-        # A malformed executor reply stored as text; the Web API reader would
-        # parse it and fail closed. For the fake we keep the raw text and let
-        # the pilot's reader path exercise parse via a thin wrapper.
-        ts = str(float(root_ts) + 0.1 + len(self._executor_replies.get(root_ts, [])) * 0.001)
-        payload = {"__raw_text__": text}
-        self._executor_replies.setdefault(root_ts, []).append(
-            ThreadReply(ts=ts, payload=payload)
-        )
-        return ts
-
     def read_thread_replies(self, channel, root_ts, since_ts):
         items = self._executor_replies.get(root_ts, [])
         if since_ts is None:
             return list(items)
-        return [r for r in items if float(r.ts) > float(since_ts)]
+        return [r for r in items if pilot_module._ts_key_pilot(r.ts) > pilot_module._ts_key_pilot(since_ts)]
 
 
 class FakeHermes(HermesExecutorClient):
@@ -140,7 +142,7 @@ def _report(subtask_id, status="RUNNING", completed=None, evidence=None,
 
 
 def _pilot_config(slack, contracts, **kw):
-    return MvpPilotConfig(
+    base = dict(
         run_id="RUN-47",
         channel="C0BJSPXN7UN",
         human_owner="Nhat",
@@ -148,8 +150,9 @@ def _pilot_config(slack, contracts, **kw):
         executor="Hermes Cloud",
         contracts=tuple(contracts),
         slack=slack,
-        **kw,
     )
+    base.update(kw)
+    return MvpPilotConfig(**base)
 
 
 def _build_pilot(contracts, slack, **kw):
@@ -252,6 +255,38 @@ class TestSlackBlockKitSchema:
             assert task["status"] in ("pending", "in_progress", "complete", "error")
             assert "task_id" in task and "title" in task
 
+    def test_header_is_a_valid_header_block_not_nested_rich_text(self):
+        slack = FakeSlack()
+        contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(contracts, slack)
+        blocks = translate_rootcard_to_blocks(pilot._build_initial_card())
+        header = blocks[0]
+        assert header["type"] == "header"
+        assert header["text"]["type"] == "plain_text"
+
+    def test_meta_split_into_at_most_10_field_sections(self):
+        slack = FakeSlack()
+        contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
+        # Force the maximum possible metadata to exceed 10 fields.
+        pilot = _build_pilot(
+            contracts, slack,
+            watcher="Nhat", executor_model="gpt-4o", token_usage=1200,
+            branch="fix/x", pr="PR #53", head_sha="03880aa",
+            ci_status="success", cost=COST_FREE, gwc_active=True,
+            gate_journey="gate-1",
+        )
+        blocks = translate_rootcard_to_blocks(pilot._build_initial_card())
+        sections = [b for b in blocks if b["type"] == "section" and b["block_id"].startswith("mvp_meta_")]
+        assert sections, "expected at least one meta section"
+        for s in sections:
+            assert len(s["fields"]) <= 10
+        # All expected metadata present across the split sections.
+        all_text = " ".join(f["text"] for s in sections for f in s["fields"])
+        for label in ("owner", "controller", "executor", "watcher", "model",
+                      "tokens", "cost", "journey", "active", "branch", "pr",
+                      "head", "ci"):
+            assert f"*{label}:*" in all_text
+
     def test_exact_status_mapping(self):
         mapping = {
             TaskCardStatus.PENDING: "pending",
@@ -300,8 +335,23 @@ class TestSlackBlockKitSchema:
         with pytest.raises(TaskControllerValidationError):
             validate_slack_blocks(bad_blocks)
 
+    def test_nested_rich_text_is_rejected(self):
+        bad_blocks = [{
+            "type": "rich_text",
+            "elements": [{"type": "rich_text", "elements": [{"type": "text", "text": "x"}]}],
+        }]
+        with pytest.raises(TaskControllerValidationError):
+            validate_slack_blocks(bad_blocks)
+
+    def test_section_fields_over_ten_is_rejected(self):
+        bad_blocks = [{
+            "type": "section",
+            "fields": [{"type": "mrkdwn", "text": f"*f{i}:* x"} for i in range(11)],
+        }]
+        with pytest.raises(TaskControllerValidationError):
+            validate_slack_blocks(bad_blocks)
+
     def test_actions_render_only_contextual_actions(self):
-        # A default card has no authority boundary / merge_ready -> no APPROVE/MERGE.
         slack = FakeSlack()
         contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
         pilot = _build_pilot(contracts, slack)
@@ -359,17 +409,27 @@ class TestSlackBlockKitSchema:
 
 # --------------------------------------------------------------------------- live topology
 class TestLiveSlackMediatedTopology:
+    def _authority_reply(self, subtask_id="S1", status="RUNNING", after="CONTINUE"):
+        return (
+            f"🟡 EXECUTOR UPDATE · {subtask_id}/3\n"
+            f"Status: {status}\n"
+            f"Phase: executing\n\n"
+            "Completed\n- unit one\n- unit two\n\n"
+            "Evidence\n- exact evidence\n\n"
+            "Finding / Risk\n- inherited lock mismatch\n\n"
+            "Next\n→ controller release required\n\n"
+            f"{subtask_id} · {after}"
+        )
+
     def test_controller_posts_command_executor_replies_later(self):
         slack = FakeSlack()
         contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
         pilot = _build_pilot(contracts, slack, active_subtask_id="S1",
                              executor_user_id="U0BKE3KDY65")
         root = pilot.ensure_root()
-        # Controller dispatches the command (returns a receipt ts, NOT a report)
         cmd_ts = pilot.dispatch_current()
         assert cmd_ts > root
-        # Executor (separate actor) enqueues its own reply later
-        slack.enqueue_executor_reply(root, _report("S1", status="RUNNING"))
+        slack.enqueue_executor_reply(root, parse_hermes_thread_update(self._authority_reply("S1")))
         replies = slack.read_thread_replies(pilot.config.channel, root, cmd_ts)
         assert len(replies) == 1
         assert replies[0].payload["subtask_id"] == "S1"
@@ -377,16 +437,17 @@ class TestLiveSlackMediatedTopology:
     def test_loop_reads_only_executor_reply_not_controller_command(self):
         slack = FakeSlack()
         contracts = [_contract("S1", after=CONTINUE), _contract("S2"), _contract("S3")]
-        pilot = _build_pilot(contracts, slack, active_subtask_id="S1")
+        pilot = _build_pilot(contracts, slack, active_subtask_id="S1",
+                             executor_user_id="U0BKE3KDY65")
         root = pilot.ensure_root()
         cmd_ts = pilot.dispatch_current()
-        slack.enqueue_executor_reply(root, _report("S1", status="RUNNING"))
+        slack.enqueue_executor_reply(root, parse_hermes_thread_update(self._authority_reply("S1")))
         outcome = pilot_module.run_monitoring_loop(
             pilot._selected_contract(),
             read_replies=lambda last_seen_ts: slack.read_thread_replies(
                 pilot.config.channel, root, last_seen_ts),
             update_rootcard=pilot.apply_observation,
-            sleeper=lambda _: None,
+            sleeper=FakeSleeper(),
             last_seen_ts=cmd_ts,
             max_polls=1,
         )
@@ -396,26 +457,39 @@ class TestLiveSlackMediatedTopology:
     def test_full_run_topology_continues(self):
         slack = FakeSlack()
         contracts = [_contract("S1", after=CONTINUE), _contract("S2"), _contract("S3")]
-        pilot = _build_pilot(contracts, slack, active_subtask_id="S1")
+        pilot = _build_pilot(contracts, slack, active_subtask_id="S1",
+                             executor_user_id="U0BKE3KDY65")
         root = pilot.ensure_root()
         cmd_ts = pilot.dispatch_current()
-        slack.enqueue_executor_reply(root, _report("S1", status="RUNNING"))
-        outcome = pilot.run(max_polls=1)
+        slack.enqueue_executor_reply(root, parse_hermes_thread_update(self._authority_reply("S1")))
+        outcome = pilot.run(max_polls=1, sleeper=FakeSleeper())
         assert outcome.verdict == CONTINUE
 
 
 # --------------------------------------------------------------------------- boundaries
 class TestLoopBoundariesThroughPilot:
+    def _authority_reply(self, subtask_id="S1", status="RUNNING", after="CONTINUE"):
+        return (
+            f"🟡 EXECUTOR UPDATE · {subtask_id}/3\n"
+            f"Status: {status}\n"
+            f"Phase: executing\n\n"
+            "Completed\n- unit one\n\n"
+            "Evidence\n- exact evidence\n\n"
+            "Next\n→ controller release required\n\n"
+            f"{subtask_id} · {after}"
+        )
+
     def _outcome(self, executor_status, after=CONTINUE, contracts_after=CONTINUE):
         slack = FakeSlack()
         contracts = [_contract("S1", after=contracts_after),
                      _contract("S2"), _contract("S3")]
-        pilot = _build_pilot(contracts, slack, active_subtask_id="S1")
+        pilot = _build_pilot(contracts, slack, active_subtask_id="S1",
+                             executor_user_id="U0BKE3KDY65")
         root = pilot.ensure_root()
         cmd_ts = pilot.dispatch_current()
         slack.enqueue_executor_reply(
-            root, _report("S1", status=executor_status, after=after))
-        return pilot.run(max_polls=1), slack
+            root, parse_hermes_thread_update(self._authority_reply("S1", executor_status, after)))
+        return pilot.run(max_polls=1, sleeper=FakeSleeper()), slack
 
     def test_continue_returns_without_stopping(self):
         outcome, slack = self._outcome("RUNNING", after=CONTINUE)
@@ -438,12 +512,14 @@ class TestLoopBoundariesThroughPilot:
     def test_drift_triggers_bounded_intercept_not_continue(self):
         slack = FakeSlack()
         contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
-        pilot = _build_pilot(contracts, slack, active_subtask_id="S1")
+        pilot = _build_pilot(contracts, slack, active_subtask_id="S1",
+                             executor_user_id="U0BKE3KDY65")
         root = pilot.ensure_root()
         pilot.dispatch_current()
         # Executor reply claims an uncontracted subtask -> drift
-        slack.enqueue_executor_reply(root, _report("S2", status="RUNNING"))
-        outcome = pilot.run(max_polls=1)
+        slack.enqueue_executor_reply(root, parse_hermes_thread_update(
+            self._authority_reply("S2")))
+        outcome = pilot.run(max_polls=1, sleeper=FakeSleeper())
         assert outcome.verdict == "INTERCEPT"
         assert outcome.reason == REASON_BOUNDARY
         assert slack.creates == 1
@@ -451,41 +527,47 @@ class TestLoopBoundariesThroughPilot:
 
 # --------------------------------------------------------------------------- material update
 class TestMaterialObservationUpdatesSameRoot:
+    def _authority_reply(self, subtask_id="S1"):
+        return (
+            f"🟡 EXECUTOR UPDATE · {subtask_id}/3\n"
+            "Status: RUNNING\n"
+            "Phase: executing\n\n"
+            "Completed\n- u1\n- u2\n\n"
+            "Evidence\n- e1\n- latest evidence\n\n"
+            "Finding / Risk\n- inherited lock mismatch\n\n"
+            "Next\n→ controller release required\n\n"
+            f"{subtask_id} · CONTINUE"
+        )
+
     def test_actual_values_render_into_same_rootcard(self):
         slack = FakeSlack()
         contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
         pilot = _build_pilot(contracts, slack, active_subtask_id="S1",
                              watcher="Nhat", executor_model="gpt-4o",
-                             token_usage=1200)
+                             token_usage=1200, executor_user_id="U0BKE3KDY65")
         root = pilot.ensure_root()
         cmd_ts = pilot.dispatch_current()
-        slack.enqueue_executor_reply(root, _report(
-            "S1", status="RUNNING", completed=["u1", "u2"],
-            evidence=["e1", "latest evidence"],
-            finding_risk=["inherited lock mismatch"],
-            next_action="controller release required",
-        ))
+        slack.enqueue_executor_reply(root, parse_hermes_thread_update(self._authority_reply("S1")))
         outcome = pilot_module.run_monitoring_loop(
             pilot._selected_contract(),
             read_replies=lambda last_seen_ts: slack.read_thread_replies(
                 pilot.config.channel, root, last_seen_ts),
             update_rootcard=pilot.apply_observation,
-            sleeper=lambda _: None,
+            sleeper=FakeSleeper(),
             last_seen_ts=cmd_ts,
             max_polls=1,
         )
         assert outcome.verdict == CONTINUE
         assert slack.creates == 1  # SAME root
-        active_card = next(c for c in pilot._card.plan.cards if c.subtask_id == "S1")  # type: ignore[union-attr]
+        active_card = next(c for c in pilot._card.plan.cards if c.subtask_id == "S1")
         assert active_card.status == TaskCardStatus.IN_PROGRESS
-        # Complete operational metadata preserved in the translated blocks.
-        blocks = translate_rootcard_to_blocks(pilot._card)  # type: ignore[arg-type]
-        meta = next(b for b in blocks if b["type"] == "section")
-        meta_text = " ".join(f["text"] for f in meta["fields"])
-        assert "*watcher:* Nhat" in meta_text
-        assert "*model:* gpt-4o" in meta_text
-        assert "*tokens:* 1200" in meta_text
-        assert f"*cost:* {COST_UNKNOWN}" in meta_text
+        blocks = translate_rootcard_to_blocks(pilot._card)
+        meta_sections = [b for b in blocks if b["type"] == "section" and b["block_id"].startswith("mvp_meta_")]
+        all_meta_text = " ".join(f["text"] for s in meta_sections for f in s["fields"])
+        assert "*watcher:* Nhat" in all_meta_text
+        assert "*model:* gpt-4o" in all_meta_text
+        assert "*tokens:* 1200" in all_meta_text
+        assert f"*cost:* {COST_UNKNOWN}" in all_meta_text
         plan = next(b for b in blocks if b["type"] == "plan")
         task = plan["tasks"][0]
         assert task["status"] == "in_progress"
@@ -496,22 +578,24 @@ class TestMaterialObservationUpdatesSameRoot:
         assert "controller release required" in texts
 
 
-# --------------------------------------------------------------------------- C canonical text
+# --------------------------------------------------------------------------- #1 authority text
 class TestCanonicalHumanReadableReportParsing:
-    def _canonical(self, status="RUNNING", after="CONTINUE"):
+    def _authority(self, subtask_id="S1", status="RUNNING", after="CONTINUE",
+                   include_finding=True):
+        finding = "Finding / Risk\n- inherited lock mismatch\n\n" if include_finding else ""
         return (
-            "EXECUTOR UPDATE\n"
-            f"Subtask: S1\n"
+            f"🟡 EXECUTOR UPDATE · {subtask_id}/3\n"
             f"Status: {status}\n"
-            "Completed: unit one; unit two\n"
-            "Evidence: exact evidence\n"
-            "Finding/Risk: inherited lock mismatch\n"
-            "Next: controller release required\n"
-            f"After: {after}\n"
+            "Phase: executing\n\n"
+            "Completed\n- unit one\n- unit two\n\n"
+            "Evidence\n- exact evidence\n\n"
+            f"{finding}"
+            "Next\n→ controller release required\n\n"
+            f"{subtask_id} · {after}"
         )
 
-    def test_parse_canonical_text_into_complete_report(self):
-        report = parse_hermes_thread_update(self._canonical())
+    def test_parse_authority_text_into_complete_report(self):
+        report = parse_hermes_thread_update(self._authority())
         assert isinstance(report, ExecutorReport)
         assert report.subtask_id == "S1"
         assert report.status == "RUNNING"
@@ -521,55 +605,150 @@ class TestCanonicalHumanReadableReportParsing:
         assert report.next_action == "controller release required"
         assert report.after == "CONTINUE"
 
-    def test_parse_hermes_reply_accepts_canonical_text(self):
-        report = parse_hermes_reply(self._canonical(status="DONE", after="WAIT_CONTROLLER"))
+    def test_header_and_final_subtask_must_agree(self):
+        text = (
+            "🟡 EXECUTOR UPDATE · S1/3\n"
+            "Status: RUNNING\n\n"
+            "Completed\n- u\n\n"
+            "Evidence\n- e\n\n"
+            "Next\n→ x\n\n"
+            "S2 · CONTINUE"
+        )
+        with pytest.raises(MalformedReportError):
+            parse_hermes_thread_update(text)
+
+    def test_missing_emoji_header_fails_closed(self):
+        text = (
+            "EXECUTOR UPDATE · S1/3\n"
+            "Status: RUNNING\n\n"
+            "Completed\n- u\n\n"
+            "Evidence\n- e\n\n"
+            "Next\n→ x\n\n"
+            "S1 · CONTINUE"
+        )
+        with pytest.raises(MalformedReportError):
+            parse_hermes_thread_update(text)
+
+    def test_final_verdict_derived_for_after(self):
+        report = parse_hermes_thread_update(self._authority(after="TERMINAL"))
+        assert report.after == "TERMINAL"
+
+    def test_finding_risk_optional_when_authority_allows(self):
+        report = parse_hermes_thread_update(self._authority(include_finding=False))
+        assert report.finding_risk == ()
+
+    def test_parse_hermes_reply_accepts_authority_text(self):
+        report = parse_hermes_reply(self._authority(status="DONE", after="WAIT_CONTROLLER"))
         assert report.status == "DONE"
         assert report.after == "WAIT_CONTROLLER"
 
-    def test_missing_header_fails_closed(self):
+    def test_missing_status_fails_closed(self):
+        text = (
+            "🟡 EXECUTOR UPDATE · S1/3\n\n"
+            "Completed\n- u\n\n"
+            "Evidence\n- e\n\n"
+            "Next\n→ x\n\n"
+            "S1 · CONTINUE"
+        )
         with pytest.raises(MalformedReportError):
-            parse_hermes_thread_update("Status: RUNNING\nAfter: CONTINUE")
+            parse_hermes_thread_update(text)
 
-    def test_ambiguous_status_fails_closed(self):
+    def test_missing_after_fails_closed(self):
+        text = (
+            "🟡 EXECUTOR UPDATE · S1/3\n"
+            "Status: RUNNING\n\n"
+            "Completed\n- u\n\n"
+            "Evidence\n- e\n\n"
+            "Next\n→ x\n"
+        )
         with pytest.raises(MalformedReportError):
-            parse_hermes_thread_update(
-                "EXECUTOR UPDATE\nSubtask: S1\nStatus: MAYBE\nAfter: CONTINUE")
-
-    def test_ambiguous_after_fails_closed(self):
-        with pytest.raises(MalformedReportError):
-            parse_hermes_thread_update(
-                "EXECUTOR UPDATE\nSubtask: S1\nStatus: RUNNING\nAfter: SOON")
+            parse_hermes_thread_update(text)
 
 
-# --------------------------------------------------------------------------- B web api wrapper
+# --------------------------------------------------------------------------- #2 executor actor filtering
 class TestSlackWebApiTransportWrapper:
-    def _fake_client(self, messages):
+    def _make_transport(self, messages, executor_user_id="U0BKE3KDY65"):
+        class _Msg:
+            def __init__(self, ts, text, user):
+                self._d = {"ts": ts, "text": text, "user": user}
+
+            def get(self, k, default=None):
+                return self._d.get(k, default)
+
+        class _Resp:
+            def __init__(self, msgs):
+                self._msgs = msgs
+
+            def get(self, k, default=None):
+                return self._msgs if k == "messages" else default
+
         class _Client:
+            def conversations_replies(self, **kwargs):
+                return _Resp(messages)
+
             def chat_postMessage(self, **kwargs):
                 return {"ts": "200.0"}
 
             def chat_update(self, **kwargs):
                 return {"ts": "100.0"}
 
+        return SlackWebApiTransport(_Client(), executor_user_id=executor_user_id)
+
+    def test_root_uses_chat_postMessage_with_nonempty_fallback_text(self):
+        captured = {}
+
+        class _Client:
+            def chat_postMessage(self, **kwargs):
+                captured.update(kwargs)
+                return {"ts": "200.0"}
+
+            def chat_update(self, **kwargs):
+                return {"ts": "100.0"}
+
             def conversations_replies(self, **kwargs):
-                return {"messages": messages}
+                return {"messages": []}
 
-        return _Client()
-
-    def test_root_uses_chat_postMessage(self):
-        transport = SlackWebApiTransport(self._fake_client([]))
-        ts = transport.create_root("C", [{"type": "section", "text": {}}])
+        transport = SlackWebApiTransport(_Client(), executor_user_id="U0BKE3KDY65")
+        ts = transport.create_root("C", [{"type": "header", "text": {"type": "plain_text", "text": "Run X"}}])
         assert ts == "200.0"
+        assert isinstance(captured.get("text"), str) and captured["text"].strip()
 
-    def test_read_filters_root_and_returns_executor_reply(self):
+    def test_read_returns_only_executor_authored_reports(self):
+        authority = (
+            "🟡 EXECUTOR UPDATE · S1/3\n"
+            "Status: RUNNING\n\n"
+            "Completed\n- u1\n\n"
+            "Evidence\n- e1\n\n"
+            "Next\n→ n1\n\n"
+            "S1 · CONTINUE"
+        )
         messages = [
-            {"ts": "100.0", "text": "root"},
-            {"ts": "100.5", "text": "EXECUTOR UPDATE\nSubtask: S1\nCompleted: u1\nEvidence: e1\nFinding/Risk: r1\nNext: n1\nStatus: RUNNING\nAfter: CONTINUE"},
+            _FakeMsg("100.0", "root", "UROOT"),
+            _FakeMsg("100.5", "a human reply, not a report", "UHUMAN"),
+            _FakeMsg("100.7", authority, "U0BKE3KDY65"),
         ]
-        transport = SlackWebApiTransport(self._fake_client(messages))
+        transport = self._make_transport(messages, executor_user_id="U0BKE3KDY65")
         replies = transport.read_thread_replies("C", "100.0", "100.0")
         assert len(replies) == 1
         assert replies[0].payload["status"] == "RUNNING"
+
+    def test_human_reply_without_executor_identity_is_ignored(self):
+        authority = (
+            "🟡 EXECUTOR UPDATE · S1/3\n"
+            "Status: RUNNING\n\n"
+            "Completed\n- u1\n\n"
+            "Evidence\n- e1\n\n"
+            "Next\n→ n1\n\n"
+            "S1 · CONTINUE"
+        )
+        messages = [
+            _FakeMsg("100.0", "root", "UROOT"),
+            _FakeMsg("100.5", authority, "U0BKE3KDY65"),
+        ]
+        # transport bound to a DIFFERENT executor id -> nothing returned
+        transport = self._make_transport(messages, executor_user_id="UOTHER")
+        replies = transport.read_thread_replies("C", "100.0", "100.0")
+        assert replies == []
 
     def test_dispatch_command_mentions_executor(self):
         captured = {}
@@ -585,15 +764,207 @@ class TestSlackWebApiTransportWrapper:
             def conversations_replies(self, **kwargs):
                 return {"messages": []}
 
-        transport = SlackWebApiTransport(_Client())
+        transport = SlackWebApiTransport(_Client(), executor_user_id="U0BKE3KDY65")
         ts = transport.dispatch_command("C", "100.0", "do S1", "U0BKE3KDY65")
         assert ts == "200.0"
         assert "U0BKE3KDY65" in captured["text"]
         assert captured["thread_ts"] == "100.0"
 
+    def test_dispatch_command_without_executor_id_fails_closed(self):
+        class _Client:
+            def chat_postMessage(self, **kwargs):
+                return {"ts": "200.0"}
+
+            def chat_update(self, **kwargs):
+                return {"ts": "100.0"}
+
+            def conversations_replies(self, **kwargs):
+                return {"messages": []}
+
+        transport = SlackWebApiTransport(_Client(), executor_user_id=None)
+        with pytest.raises(TaskControllerValidationError):
+            transport.dispatch_command("C", "100.0", "do S1", "")
+
     def test_no_client_rejected(self):
         with pytest.raises(TaskControllerValidationError):
-            SlackWebApiTransport(None)
+            SlackWebApiTransport(None, executor_user_id="U0BKE3KDY65")
+
+
+class _FakeMsg:
+    def __init__(self, ts, text, user):
+        self._d = {"ts": ts, "text": text, "user": user}
+
+    def get(self, k, default=None):
+        return self._d.get(k, default) if isinstance(self._d, dict) else None
+
+
+# --------------------------------------------------------------------------- #3 timestamp ordering
+class TestTimestampOrderingLossless:
+    def test_ts_key_orders_numeric_not_lexicographic(self):
+        key = pilot_module._ts_key_pilot
+        assert key("99.0") < key("100.0")
+        assert key("1.5") == key("1.500000")
+        assert key("100.0") > key("99.999999")
+
+    def test_transport_uses_lossless_ordering(self):
+        authority = (
+            "🟡 EXECUTOR UPDATE · S1/3\n"
+            "Status: RUNNING\n\n"
+            "Completed\n- u1\n\n"
+            "Evidence\n- e1\n\n"
+            "Next\n→ n1\n\n"
+            "S1 · CONTINUE"
+        )
+        # A reply with a lexicographically-smaller-but-numerically-larger ts.
+        messages = [
+            _FakeMsg("100.0", "root", "UROOT"),
+            _FakeMsg("100.9", authority, "U0BKE3KDY65"),
+        ]
+
+        class _Resp:
+            def get(self, k, default=None):
+                return messages if k == "messages" else default
+
+        class _Client:
+            def conversations_replies(self, **kwargs):
+                return _Resp()
+
+        transport = SlackWebApiTransport(_Client(), executor_user_id="U0BKE3KDY65")
+        replies = transport.read_thread_replies("C", "100.0", "100.0")
+        assert len(replies) == 1  # the 100.9 reply is newer than 100.0
+
+
+# --------------------------------------------------------------------------- #4 live 60s loop default
+class TestLiveLoopDefaultCadence:
+    def _authority_reply(self, subtask_id="S1", status="RUNNING", after="CONTINUE"):
+        return (
+            f"🟡 EXECUTOR UPDATE · {subtask_id}/3\n"
+            f"Status: {status}\n"
+            "Phase: x\n\n"
+            "Completed\n- u\n\n"
+            "Evidence\n- e\n\n"
+            "Next\n→ await\n\n"
+            f"{subtask_id} · {after}"
+        )
+
+    def test_run_defaults_to_real_60s_sleeper_until_boundary(self):
+        slack = FakeSlack()
+        contracts = [_contract("S1", after=WAIT_CONTROLLER), _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(contracts, slack, active_subtask_id="S1",
+                             executor_user_id="U0BKE3KDY65")
+        root = pilot.ensure_root()
+        cmd_ts = pilot.dispatch_current()
+        slack.enqueue_executor_reply(root, parse_hermes_thread_update(self._authority_reply("S1", "RUNNING", "WAIT_CONTROLLER")))
+
+        # Patch the live sleeper to capture cadence without real sleeping.
+        captured = []
+
+        def fake_live_sleeper(seconds):
+            captured.append(seconds)
+
+        pilot_module._live_sleeper = fake_live_sleeper
+        try:
+            outcome = pilot.run(max_polls=None)
+        finally:
+            pilot_module._live_sleeper = lambda s: time.sleep(s)
+        assert outcome.verdict == WAIT_CONTROLLER
+        assert captured == [POLL_INTERVAL_SECONDS]
+
+    def test_run_without_executor_identity_fails_closed(self):
+        slack = FakeSlack()
+        contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(contracts, slack, active_subtask_id="S1",
+                             executor_user_id=None)
+        with pytest.raises(TaskControllerValidationError):
+            pilot.run(max_polls=1, sleeper=FakeSleeper())
+
+    def test_run_rejects_zero_or_negative_max_polls(self):
+        slack = FakeSlack()
+        contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(contracts, slack, active_subtask_id="S1",
+                             executor_user_id="U0BKE3KDY65")
+        pilot.ensure_root()
+        for bad in (0, -1, False):
+            with pytest.raises(TaskControllerValidationError):
+                pilot.run(max_polls=bad, sleeper=FakeSleeper())
+
+
+# --------------------------------------------------------------------------- #6 projection inputs binding
+class TestProjectionInputsBinding:
+    def test_cost_and_gwc_fields_project_into_rootcard(self):
+        slack = FakeSlack()
+        contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(
+            contracts, slack,
+            cost=COST_FREE,
+            gwc_active=True,
+            gate_journey="gate-1",
+            authority_boundary=True,
+            merge_ready=True,
+            pr="PR #53",
+            head_sha="03880aa",
+            paused=False,
+            executor_user_id="U0BKE3KDY65",
+        )
+        card = pilot._build_initial_card()
+        assert card.cost == COST_FREE
+        assert card.gwc_active is True
+        assert card.gate_journey == "gate-1"
+        assert card.authority_boundary is True
+        assert card.merge_ready is True
+        assert card.paused is False
+        blocks = translate_rootcard_to_blocks(card)
+        actions = next(b for b in blocks if b["type"] == "actions")
+        labels = [e["text"]["text"] for e in actions["elements"]]
+        assert "APPROVE" in labels
+        assert "MERGE" in labels
+
+    def test_approve_absent_without_authority_boundary(self):
+        slack = FakeSlack()
+        contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(
+            contracts, slack,
+            authority_boundary=False,
+            merge_ready=True, pr="PR #53", head_sha="03880aa",
+            executor_user_id="U0BKE3KDY65",
+        )
+        card = pilot._build_initial_card()
+        blocks = translate_rootcard_to_blocks(card)
+        actions = next(b for b in blocks if b["type"] == "actions")
+        labels = [e["text"]["text"] for e in actions["elements"]]
+        assert "APPROVE" not in labels
+        assert "MERGE" in labels
+
+    def test_merge_absent_without_merge_ready(self):
+        slack = FakeSlack()
+        contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(
+            contracts, slack,
+            authority_boundary=True,
+            merge_ready=False,
+            executor_user_id="U0BKE3KDY65",
+        )
+        card = pilot._build_initial_card()
+        blocks = translate_rootcard_to_blocks(card)
+        actions = next(b for b in blocks if b["type"] == "actions")
+        labels = [e["text"]["text"] for e in actions["elements"]]
+        assert "MERGE" not in labels
+        assert "APPROVE" in labels
+
+    def test_paused_suppresses_pause_action(self):
+        slack = FakeSlack()
+        contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(
+            contracts, slack,
+            paused=True,
+            executor_user_id="U0BKE3KDY65",
+        )
+        card = pilot._build_initial_card()
+        blocks = translate_rootcard_to_blocks(card)
+        actions = next(b for b in blocks if b["type"] == "actions")
+        labels = [e["text"]["text"] for e in actions["elements"]]
+        assert "PAUSE" not in labels
+        assert "STOP" in labels
 
 
 # --------------------------------------------------------------------------- malformed
@@ -614,33 +985,33 @@ class TestMalformedReplyFailClosed:
             parse_hermes_reply(bad)
 
     def test_malformed_executor_reply_never_reaches_continue(self):
-        # The Web API reader path parses the Executor text reply and fails
-        # closed when it is not a valid canonical update.
-        from taskcontroller.mvp.monitoring import run_monitoring_loop as _rml
-
         slack = FakeSlack()
         contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
-        pilot = _build_pilot(contracts, slack, active_subtask_id="S1")
+        pilot = _build_pilot(contracts, slack, active_subtask_id="S1",
+                             executor_user_id="U0BKE3KDY65")
         root = pilot.ensure_root()
         cmd_ts = pilot.dispatch_current()
-        slack.enqueue_executor_reply_bad(root, "not a valid update")
+        # A non-canonical, non-JSON Executor text reply must fail closed.
+        slack._executor_replies.setdefault(root, []).append(
+            ThreadReply(ts=str(float(root) + 0.1), payload={"__raw_text__":
+                "random chatter, not a valid executor update"})
+        )
 
         def reader(last_seen_ts):
             items = slack.read_thread_replies(pilot.config.channel, root, last_seen_ts)
             out = []
             for r in items:
                 raw = r.payload.get("__raw_text__", "")
-                # mirror the Web API transport parse path
                 payload = parse_hermes_reply(raw).to_dict()
                 out.append(ThreadReply(ts=r.ts, payload=payload))
             return out
 
         with pytest.raises(MalformedReportError):
-            _rml(
+            pilot_module.run_monitoring_loop(
                 pilot._selected_contract(),
                 read_replies=reader,
                 update_rootcard=pilot.apply_observation,
-                sleeper=lambda _: None,
+                sleeper=FakeSleeper(),
                 last_seen_ts=cmd_ts,
                 max_polls=1,
             )
@@ -663,21 +1034,26 @@ class TestBlockedFailedRenderAsError:
     def test_blocked_report_renders_error_rich_text_and_ends_segment(self):
         slack = FakeSlack()
         contracts = [_contract("S1", after=CONTINUE), _contract("S2"), _contract("S3")]
-        pilot = _build_pilot(contracts, slack, active_subtask_id="S1")
+        pilot = _build_pilot(contracts, slack, active_subtask_id="S1",
+                             executor_user_id="U0BKE3KDY65")
         root = pilot.ensure_root()
         cmd_ts = pilot.dispatch_current()
-        slack.enqueue_executor_reply(root, _report(
-            "S1", status="BLOCKED", after=CONTINUE,
-            completed=["u1"], evidence=["e1"],
-            finding_risk=["inherited lock mismatch"],
-            next_action="controller release required",
-        ))
+        reply = (
+            "🟡 EXECUTOR UPDATE · S1/3\n"
+            "Status: BLOCKED\n\n"
+            "Completed\n- u1\n\n"
+            "Evidence\n- e1\n\n"
+            "Finding / Risk\n- inherited lock mismatch\n\n"
+            "Next\n→ controller release required\n\n"
+            "S1 · CONTINUE"
+        )
+        slack.enqueue_executor_reply(root, parse_hermes_thread_update(reply))
         outcome = pilot_module.run_monitoring_loop(
             pilot._selected_contract(),
             read_replies=lambda last_seen_ts: slack.read_thread_replies(
                 pilot.config.channel, root, last_seen_ts),
             update_rootcard=pilot.apply_observation,
-            sleeper=lambda _: None,
+            sleeper=FakeSleeper(),
             last_seen_ts=cmd_ts,
             max_polls=1,
         )

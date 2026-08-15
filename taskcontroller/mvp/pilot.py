@@ -70,6 +70,7 @@ from taskcontroller.mvp.monitoring import (
     WAIT_CONTROLLER,
     LoopObservation,
     MalformedReportError,
+    POLL_INTERVAL_SECONDS,
     ProtocolVerdict,
     ThreadReply,
     run_monitoring_loop,
@@ -154,7 +155,11 @@ def validate_slack_blocks(blocks: Sequence[Mapping[str, Any]]) -> None:
     ``type``; strict rules apply to ``plan`` and ``task_card``. A ``task_card``
     ``details`` field, when present, MUST be a ``rich_text`` entity (a raw
     string is invalid per the current Slack schema). Action buttons may only be
-    the four WP3 public actions.
+    the four WP3 public actions. A ``rich_text`` block's child elements must be
+    valid rich_text children (``rich_text_section`` / ``rich_text_list`` /
+    ``rich_text_quote`` / ``rich_text_preformatted``); a ``rich_text`` nested
+    inside a ``rich_text`` is invalid. A ``section``'s ``fields`` list is capped
+    at 10 (the Slack limit).
     """
     if not isinstance(blocks, (list, tuple)):
         raise TaskControllerValidationError("blocks must be a list/tuple")
@@ -166,6 +171,54 @@ def validate_slack_blocks(blocks: Sequence[Mapping[str, Any]]) -> None:
             _validate_plan_block(block, idx)
         elif btype == "actions":
             _validate_actions_block(block, idx)
+        elif btype == "section":
+            _validate_section_block(block, idx)
+        elif btype == "rich_text":
+            _validate_rich_text_block(block, idx)
+
+
+#: Valid child element types for a rich_text block (current Slack schema).
+_RICH_TEXT_CHILD_TYPES = frozenset(
+    {"rich_text_section", "rich_text_list", "rich_text_quote", "rich_text_preformatted"}
+)
+
+#: Slack hard cap on a section block's ``fields`` list.
+_SECTION_FIELDS_MAX = 10
+
+
+def _validate_rich_text_block(block: Mapping[str, Any], idx: int) -> None:
+    elements = block.get("elements")
+    if not isinstance(elements, (list, tuple)) or not elements:
+        raise TaskControllerValidationError(
+            f"rich_text block[{idx}] requires non-empty 'elements'"
+        )
+    for j, child in enumerate(elements):
+        if not isinstance(child, Mapping):
+            raise TaskControllerValidationError(
+                f"rich_text.block[{idx}].elements[{j}] must be an object"
+            )
+        ctype = child.get("type")
+        if ctype not in _RICH_TEXT_CHILD_TYPES:
+            raise TaskControllerValidationError(
+                f"rich_text.block[{idx}].elements[{j}] has invalid child type "
+                f"{ctype!r}; rich_text nesting is not allowed and only "
+                f"{sorted(_RICH_TEXT_CHILD_TYPES)} are valid"
+            )
+
+
+def _validate_section_block(block: Mapping[str, Any], idx: int) -> None:
+    fields = block.get("fields")
+    if fields is None:
+        return
+    if not isinstance(fields, (list, tuple)):
+        raise TaskControllerValidationError(
+            f"section block[{idx}] 'fields' must be a list"
+        )
+    if len(fields) > _SECTION_FIELDS_MAX:
+        raise TaskControllerValidationError(
+            f"section block[{idx}] has {len(fields)} fields; Slack caps "
+            f"section.fields at {_SECTION_FIELDS_MAX}"
+        )
 
 
 def _validate_plan_block(block: Mapping[str, Any], idx: int) -> None:
@@ -280,23 +333,22 @@ def translate_rootcard_to_blocks(card: RootCard) -> list[dict[str, Any]]:
     The WP2 domain payload (``plan_block`` / uppercase statuses / raw string
     details) is deliberately NOT Slack-valid; this produces the official
     ``plan`` / ``task_card`` schema with the exact status mapping, plus complete
-    operational metadata and ONLY the contextual public actions.
+    operational metadata (split into multiple valid ``section`` blocks, each
+    with at most 10 ``fields`` — the Slack cap) and ONLY the contextual public
+    actions.
     """
     if not isinstance(card, RootCard):
         raise TaskControllerValidationError("translate requires a RootCard")
 
     header = {
-        "type": "rich_text",
+        "type": "header",
         "block_id": "mvp_header",
-        "elements": [
-            {
-                "type": "rich_text",
-                "elements": [{"type": "text", "text": f"Run {card.run_id}"}],
-            }
-        ],
+        "text": {"type": "plain_text", "text": f"Run {card.run_id}", "emoji": True},
     }
 
     # -- operational metadata (complete WP2 live fields) --------------------
+    # Build the full ordered field list, then split into chunks of <=10 to
+    # respect the Slack section.fields cap (exactly 10 max).
     meta_fields: list[dict[str, str]] = [
         {"type": "mrkdwn", "text": f"*owner:* {card.human_owner}"},
         {"type": "mrkdwn", "text": f"*controller:* {card.controller}"},
@@ -330,7 +382,18 @@ def translate_rootcard_to_blocks(card: RootCard) -> list[dict[str, Any]]:
         meta_fields.append({"type": "mrkdwn", "text": f"*head:* {card.head_sha}"})
     if card.ci_status:
         meta_fields.append({"type": "mrkdwn", "text": f"*ci:* {card.ci_status}"})
-    meta = {"type": "section", "block_id": "mvp_meta", "fields": meta_fields}
+
+    # Deterministic chunking into <=10-field sections.
+    meta_blocks: list[dict[str, Any]] = []
+    for i in range(0, len(meta_fields), 10):
+        chunk = meta_fields[i : i + 10]
+        meta_blocks.append(
+            {
+                "type": "section",
+                "block_id": f"mvp_meta_{i // 10}",
+                "fields": chunk,
+            }
+        )
 
     # -- explicit plan / task cards ----------------------------------------
     plan_block: dict[str, Any] = {
@@ -364,7 +427,7 @@ def translate_rootcard_to_blocks(card: RootCard) -> list[dict[str, Any]]:
         "elements": [{"type": "mrkdwn", "text": line} for line in context_lines],
     }
 
-    return [header, meta, plan_block, context, _action_block(card.contextual_actions())]
+    return [header, *meta_blocks, plan_block, context, _action_block(card.contextual_actions())]
 
 
 # ---------------------------------------------------------------------------
@@ -419,100 +482,268 @@ class HermesExecutorClient(Protocol):
 # ---------------------------------------------------------------------------
 # C. Canonical human-readable Executor report parsing
 # ---------------------------------------------------------------------------
-#: Canonical MVP Slack Executor update markers (case-insensitive line headers).
-_CANONICAL_FIELDS = {
-    "subtask_id": "subtask_id",
-    "subtask": "subtask_id",
-    "status": "status",
-    "completed": "completed",
-    "evidence": "evidence",
-    "finding/risk": "finding_risk",
-    "finding": "finding_risk",
-    "risk": "finding_risk",
-    "next": "next_action",
-    "after": "after",
-}
-_CANONICAL_HEADER = re.compile(r"^\s*executor\s+update", re.IGNORECASE)
+#: Verdicts the authority final line may carry (after the ``·``).
+_AFTER_WORDS = {v.lower(): v for v in CONTRACTED_AFTER_VALUES}
 _STATUS_WORDS = {
     "running": "RUNNING",
     "done": "DONE",
     "blocked": "BLOCKED",
     "failed": "FAILED",
 }
-_AFTER_WORDS = {v.lower(): v for v in CONTRACTED_AFTER_VALUES}
+#: Heading markers (case-insensitive, stripped) that begin a bullet section.
+_SECTION_MARKERS = {
+    "status": "status",
+    "phase": "phase",
+    "completed": "completed",
+    "evidence": "evidence",
+    "finding/risk": "finding_risk",
+    "finding": "finding_risk",
+    "risk": "finding_risk",
+    "next": "next_action",
+}
 
 
-def _norm_header(line: str) -> str | None:
-    m = re.match(r"^\s*([A-Za-z/]+)\s*[:\-]\s*(.*)$", line)
-    if not m:
+def _normalize_section_key(raw: str) -> str | None:
+    """Case/space-insensitive section heading lookup (e.g. 'Finding / Risk')."""
+    return _SECTION_MARKERS.get(raw.strip().lower().replace(" ", ""))
+
+
+def _ts_key_pilot(ts: str) -> tuple[int, int, int, str]:
+    """Lossless integer ordering key for a Slack ``ts`` (seconds.microseconds).
+
+    Mirrors WP4 ``monitoring._ts_key``: no ``float()``, no lexicographic
+    compare. Slack ``ts`` values are numeric strings; compare the integer
+    second and the integer microsecond separately so ``"99.0" < "100.0"`` and
+    ``"1.5" == "1.500000"`` both hold exactly. Non-numeric values fall into a
+    stable lexicographic bucket so ordering never raises.
+    """
+    if isinstance(ts, str):
+        candidate = ts.strip()
+        seconds, _, fraction = candidate.partition(".")
+        if seconds.isdigit() and (fraction == "" or fraction.isdigit()):
+            micros = int((fraction + "000000")[:6]) if fraction else 0
+            return (0, int(seconds), micros, "")
+    return (1, 0, 0, ts if isinstance(ts, str) else repr(ts))
+
+
+def _split_header_subtask_id(header: str) -> str | None:
+    """Derive the subtask id from the authority header ``🟡 EXECUTOR UPDATE · Sx/y``.
+
+    Returns ``Sx`` (the part before ``/``) or ``None`` when the header carries
+    no ``· <id>`` token.
+    """
+    if "·" not in header:
         return None
-    key = m.group(1).lower()
-    return key
+    tail = header.split("·", 1)[1].strip()
+    if not tail:
+        return None
+    # The subtask id is the first whitespace-free token (before any ``/``).
+    token = tail.split()[0] if tail.split() else tail
+    return token.split("/", 1)[0]
+
+
+def _split_final_verdict(line: str) -> str | None:
+    """Derive the After verdict from the final boundary line ``Sx · CONTINUE``.
+
+    The subtask id precedes the ``·`` and the verdict follows it.
+    """
+    if "·" not in line:
+        return None
+    tail = line.split("·", 1)[1].strip()
+    if not tail:
+        return None
+    token = tail.split()[0] if tail.split() else tail
+    return _AFTER_WORDS.get(token.strip().lower())
+
+
+def _split_final_subtask(line: str) -> str | None:
+    """Derive the subtask id from the final boundary line ``Sx · CONTINUE``.
+
+    The subtask id precedes the ``·`` (with optional ``/y`` denominator).
+    """
+    if "·" not in line:
+        return None
+    head = line.split("·", 1)[0].strip()
+    if not head:
+        return None
+    return head.split("/", 1)[0]
+
+
+def _collect_bullets(sections: dict[str, list[str]], key: str) -> tuple[str, ...]:
+    return tuple(s.strip() for s in sections.get(key, []) if s.strip())
 
 
 def parse_hermes_thread_update(text: str) -> ExecutorReport:
-    """Parse the canonical human-readable MVP Slack Executor update.
+    """Parse the *authority* human-readable MVP Slack Executor update.
 
-    Format (one header per line, order-independent except the header line):
+    Authority format (emoji-prefixed header; no ``Subtask_id:`` / ``After:``
+    labels required — subtask and After come from the header and final
+    boundary line):
 
-        EXECUTOR UPDATE
-        Status: RUNNING
-        Completed: unit one; unit two
-        Evidence: exact evidence
-        Finding/Risk: inherited lock mismatch
-        Next: controller release required
-        After: CONTINUE
+        🟡 EXECUTOR UPDATE · Sx/y
+        Status: RUNNING|DONE|BLOCKED|FAILED
+        Phase: <phase>
 
-    Fail closed: missing required fields, ambiguous status/after, or a missing
-    header line raise ``MalformedReportError`` (never CONTINUE).
+        Completed
+        - item
+
+        Evidence
+        - item
+
+        Finding / Risk
+        - item             # optional when material
+
+        Next
+        → exact next action
+
+        Sx · CONTINUE|WAIT_CONTROLLER|TERMINAL
+
+    Rules enforced (fail closed):
+    * the header MUST carry the canonical emoji ``🟡`` and an ``EXECUTOR UPDATE``
+      marker (case-insensitive);
+    * subtask id is derived from the header; if a final ``<id> · <AFTER>`` line
+      also names a subtask, the two MUST agree;
+    * status MUST be one of ``REPORT_STATUSES``;
+    * After MUST be one of ``CONTRACTED_AFTER_VALUES``, derived from the final
+      boundary line;
+    * ``Completed`` / ``Evidence`` MUST be non-empty; ``Finding / Risk`` is
+      optional only (may be empty). ``Next`` is parsed from the ``→`` marker.
+    JSON / colon compatibility is preserved via :func:`parse_hermes_reply`.
     """
     if not isinstance(text, str) or not text.strip():
         raise MalformedReportError("empty Hermes thread update")
-    if not _CANONICAL_HEADER.search(text):
+
+    lines = text.splitlines()
+    header: str | None = None
+    for raw in lines:
+        stripped = raw.strip()
+        if stripped and "🟡" in stripped and "executor update" in stripped.lower():
+            header = stripped
+            break
+    if header is None:
         raise MalformedReportError(
-            "Hermes thread update must begin with an 'EXECUTOR UPDATE' header"
+            "Hermes thread update must carry the canonical "
+            "'🟡 EXECUTOR UPDATE' header line"
         )
 
-    collected: dict[str, list[str]] = {}
-    for raw in text.splitlines():
-        key = _norm_header(raw)
-        if key is None:
-            continue
-        mapped = _CANONICAL_FIELDS.get(key)
-        if mapped is None:
-            continue
-        value = raw.split(":", 1)[1].strip() if ":" in raw else ""
-        collected.setdefault(mapped, []).append(value)
+    header_subtask = _split_header_subtask_id(header)
 
-    def _join(field: str) -> str:
-        parts = [p for p in collected.get(field, []) if p]
-        return "; ".join(parts)
+    # -- parse heading (Status:/Phase:) + bullet sections ----------------
+    sections: dict[str, list[str]] = {}
+    current: str | None = None
+    status: str | None = None
+    phase: str | None = None
+    next_action: str | None = None
+    final_subtask: str | None = None
+    final_after: str | None = None
 
-    # status
-    status_raw = _join("status")
-    status = _STATUS_WORDS.get(status_raw.strip().lower())
+    for raw in lines:
+        line = raw.rstrip()
+        stripped = line.strip()
+        if not stripped:
+            # A blank line closes any open bullet section context.
+            current = None
+            continue
+        low = stripped.lower()
+
+        # final boundary line: "<id> · <AFTER>" (no heading marker, has "·")
+        if (
+            current is None
+            and ":" not in stripped
+            and "·" in stripped
+            and _split_final_verdict(stripped) is not None
+        ):
+            final_after = _split_final_verdict(stripped)
+            final_subtask = _split_final_subtask(stripped)
+            continue
+
+        # heading line: "Key: value"
+        if ":" in stripped:
+            key, _, value = stripped.partition(":")
+            norm_key = _normalize_section_key(key)
+            mapped = norm_key
+            if mapped == "status":
+                status = _STATUS_WORDS.get(value.strip().lower())
+                current = None
+                continue
+            if mapped == "phase":
+                phase = value.strip() or None
+                current = None
+                continue
+            if mapped in ("completed", "evidence", "finding_risk", "next_action"):
+                # heading value may itself hold the content
+                if value.strip():
+                    sections.setdefault(mapped, []).append(value.strip())
+                current = mapped
+                continue
+            # unknown heading -> ignore but do not break section context wrongly
+            current = None
+            continue
+
+        # bare section heading (no colon), e.g. "Completed" / "Evidence" /
+        # "Finding / Risk" / "Next" — opens a bullet section.
+        bare = _normalize_section_key(low)
+        if bare in ("completed", "evidence", "finding_risk", "next_action"):
+            current = bare
+            continue
+
+        # "Next → ..." bullet or heading
+        if low.startswith("next"):
+            rest = stripped.split("→", 1)[1].strip() if "→" in stripped else stripped[len("next"):].strip()
+            if rest:
+                next_action = rest
+                current = "next_action"
+                continue
+
+        # bullet item
+        if stripped.startswith("-") or stripped.startswith("•"):
+            item = stripped.lstrip("-•").strip()
+            if current in ("completed", "evidence", "finding_risk", "next_action") and item:
+                sections.setdefault(current, []).append(item)
+            continue
+
+        # "→ exact next action" inside the Next section
+        if "→" in stripped and current == "next_action":
+            item = stripped.split("→", 1)[1].strip()
+            if item:
+                next_action = item
+            continue
+
+        # any other line: close section context
+        current = None
+
+    # -- subtask agreement ------------------------------------------------
+    subtask_id = header_subtask or final_subtask
+    if header_subtask and final_subtask and header_subtask != final_subtask:
+        raise MalformedReportError(
+            f"Hermes thread update subtask mismatch: header={header_subtask!r} "
+            f"final={final_subtask!r}"
+        )
+    if not subtask_id:
+        raise MalformedReportError("Hermes thread update missing subtask id")
+
+    # -- status -------------------------------------------------------------
     if status is None or status not in REPORT_STATUSES:
         raise MalformedReportError(
-            f"Hermes thread update has ambiguous/missing status: {status_raw!r}"
+            f"Hermes thread update has ambiguous/missing status: {status!r}"
         )
 
-    after_raw = _join("after")
-    after = _AFTER_WORDS.get(after_raw.strip().lower())
-    if after is None or after not in CONTRACTED_AFTER_VALUES:
+    # -- after --------------------------------------------------------------
+    if final_after is None or final_after not in CONTRACTED_AFTER_VALUES:
         raise MalformedReportError(
-            f"Hermes thread update has ambiguous/missing After: {after_raw!r}"
+            f"Hermes thread update has ambiguous/missing After boundary: {final_after!r}"
         )
 
-    subtask_id = _join("subtask_id") or ""
-    if not subtask_id:
-        raise MalformedReportError("Hermes thread update missing subtask_id")
+    completed = _collect_bullets(sections, "completed")
+    evidence = _collect_bullets(sections, "evidence")
+    finding_risk = _collect_bullets(sections, "finding_risk")
 
-    completed = tuple(c.strip() for c in _join("completed").split(";") if c.strip())
-    evidence = tuple(e.strip() for e in _join("evidence").split(";") if e.strip())
-    finding_risk = tuple(
-        f.strip() for f in _join("finding_risk").split(";") if f.strip()
-    )
-    next_action = _join("next_action") or "await controller"
+    if not completed:
+        raise MalformedReportError("Hermes thread update has no Completed items")
+    if not evidence:
+        raise MalformedReportError("Hermes thread update has no Evidence items")
+    if not next_action:
+        next_action = "await controller"
 
     try:
         return ExecutorReport(
@@ -522,7 +753,7 @@ def parse_hermes_thread_update(text: str) -> ExecutorReport:
             evidence=evidence,
             finding_risk=finding_risk,
             next_action=next_action,
-            after=after,
+            after=final_after,
         )
     except TaskControllerValidationError as exc:
         raise MalformedReportError(f"incomplete Hermes thread update: {exc}") from exc
@@ -532,15 +763,16 @@ def parse_hermes_reply(text: str | Mapping[str, Any]) -> ExecutorReport:
     """Parse a Hermes milestone reply into a COMPLETE WP1 ExecutorReport.
 
     Accepts either a JSON/mapping payload or the canonical human-readable Slack
-    text (``EXECUTOR UPDATE`` …). Fail closed: incomplete or ambiguous input
-    raises ``MalformedReportError`` (never silently downgraded to CONTINUE).
+    authority text (``🟡 EXECUTOR UPDATE · Sx/y`` …). Fail closed: incomplete or
+    ambiguous input raises ``MalformedReportError`` (never silently downgraded
+    to CONTINUE).
     """
     if isinstance(text, Mapping):
         payload: Mapping[str, Any] = text
     elif isinstance(text, str):
         stripped = text.strip()
         # Try the canonical human-readable form first when it has the header.
-        if _CANONICAL_HEADER.search(stripped):
+        if "🟡" in stripped and "executor update" in stripped.lower():
             return parse_hermes_thread_update(stripped)
         try:
             payload = json.loads(stripped)
@@ -571,21 +803,34 @@ class SlackWebApiTransport:
     No network call occurs at construction, and ``slack_sdk`` is never imported
     here (the duck type only needs the method surface). CI never instantiates
     this class; the deterministic fakes are the MVP path.
+
+    Executor actor filtering: when ``executor_user_id`` is bound,
+    ``read_thread_replies`` returns ONLY Executor-authored report messages
+    (matching ``msg.user``), so a human/Controller reply after dispatch can
+    never be misparsed. Timestamp filtering uses the lossless integer ordering
+    key (no ``float``, no lexicographic compare) — same semantics as WP4
+    ``_ts_key``.
     """
 
-    def __init__(self, client: Any, fallback_text: str = "") -> None:
+    def __init__(
+        self,
+        client: Any,
+        executor_user_id: str | None = None,
+        fallback_text: str = "",
+    ) -> None:
         if client is None:
             raise TaskControllerValidationError(
                 "SlackWebApiTransport requires an injected Web API client"
             )
         self._client = client
-        self._fallback_text = fallback_text
+        self._executor_user_id = executor_user_id
+        self._fallback_text = fallback_text or "TaskController MVP root"
 
     def create_root(
         self, channel: str, blocks: Sequence[Mapping[str, Any]]
     ) -> str:
         resp = self._client.chat_postMessage(
-            channel=channel, blocks=list(blocks), text=self._fallback_text or None
+            channel=channel, blocks=list(blocks), text=self._fallback_text
         )
         return str(resp["ts"])
 
@@ -596,13 +841,18 @@ class SlackWebApiTransport:
             channel=channel,
             ts=root_ts,
             blocks=list(blocks),
-            text=self._fallback_text or None,
+            text=self._fallback_text,
         )
 
     def dispatch_command(
         self, channel: str, root_ts: str, text: str, executor_user_id: str
     ) -> str:
-        mention = f"<@{executor_user_id}>" if executor_user_id else ""
+        if not executor_user_id:
+            # No hardcoded identity; the live path must bind one or fail closed.
+            raise TaskControllerValidationError(
+                "dispatch_command requires a bound executor_user_id"
+            )
+        mention = f"<@{executor_user_id}>"
         body = f"{mention} {text}".strip()
         resp = self._client.chat_postMessage(
             channel=channel, thread_ts=root_ts, text=body
@@ -621,7 +871,12 @@ class SlackWebApiTransport:
                 continue
             if ts == root_ts:  # exclude the root itself
                 continue
-            if since_ts is not None and float(ts) <= float(since_ts):
+            # Lossless integer ordering — no float, no lexicographic compare.
+            if since_ts is not None and _ts_key_pilot(ts) <= _ts_key_pilot(since_ts):
+                continue
+            # Executor actor filtering: when an identity is bound, accept only
+            # Executor-authored messages. A human/Controller reply is ignored.
+            if self._executor_user_id and msg.get("user") != self._executor_user_id:
                 continue
             raw = msg.get("text") or ""
             if not raw.strip():
@@ -709,6 +964,12 @@ class MvpPilotConfig:
     head_sha: str | None = None
     ci_status: str | None = None
     risk: str | None = None
+    cost: str = COST_UNKNOWN
+    gwc_active: bool = False
+    gate_journey: str | None = None
+    authority_boundary: bool = False
+    merge_ready: bool = False
+    paused: bool = False
     advanced_mode: bool = False
 
 
@@ -757,12 +1018,18 @@ class MvpPilot:
             last_material_update="root created",
             executor_model=self.config.executor_model,
             token_usage=self.config.token_usage,
+            cost=self.config.cost,
             watcher=self.config.watcher,
             branch=self.config.branch,
             pr=self.config.pr,
             head_sha=self.config.head_sha,
             ci_status=self.config.ci_status,
             risk=self.config.risk,
+            gwc_active=self.config.gwc_active,
+            gate_journey=self.config.gate_journey,
+            authority_boundary=self.config.authority_boundary,
+            merge_ready=self.config.merge_ready,
+            paused=self.config.paused,
         )
         return card
 
@@ -876,7 +1143,7 @@ class MvpPilot:
     # -- A. convenience orchestration: live Slack-mediated topology --------
     def run(
         self,
-        max_polls: int = 1,
+        max_polls: int | None = None,
         sleeper: Callable[[int], None] | None = None,
     ) -> Any:
         """One in-session pilot pass: ensure root, dispatch command, feed WP4.
@@ -886,12 +1153,42 @@ class MvpPilot:
         then reads ONLY Executor-authored replies strictly newer than that
         cursor and classifies them. The Controller never fabricates the
         Executor report.
+
+        Live default behaviour (per the in-session monitoring design):
+        * ``sleeper`` defaults to a REAL ``time.sleep(POLL_INTERVAL_SECONDS)``
+          (exactly 60s) injected through the WP4 loop — no zero-wait, no
+          single empty poll. Tests inject a fake sleeper.
+        * ``max_polls=None`` (the default) means the live loop stays active
+          until a boundary verdict is reached (unbounded). A positive int is
+          only for tests/debug. ``max_polls < 1``/``0``/``False`` is rejected.
+        * The live path FAILS CLOSED if no Executor identity is bound —
+          a live dispatch must address a real, configured Executor (no
+          hardcoded ID).
+
+        Synchronous and in-session only: no thread, no scheduler, no detached
+        execution.
         """
+        if self.config.executor_user_id is None:
+            # No hardcoded Hermes ID; a live dispatch requires a bound identity.
+            raise TaskControllerValidationError(
+                "live MvpPilot.run() requires config.executor_user_id bound"
+            )
+        if max_polls is not None:
+            if (
+                isinstance(max_polls, bool)
+                or not isinstance(max_polls, int)
+                or max_polls < 1
+            ):
+                raise TaskControllerValidationError(
+                    "max_polls must be a positive int or None (unbounded)"
+                )
         root_ts = self.ensure_root()
         # Pre-dispatch cursor: the loop must read replies NEWER than this.
         pre_dispatch_ts = root_ts
         dispatch_ts = self.dispatch_current()
-        if dispatch_ts > pre_dispatch_ts:
+        # Lossless integer ordering — set cursor to the validated dispatch ts
+        # when it is strictly later than the root.
+        if _ts_key_pilot(dispatch_ts) > _ts_key_pilot(pre_dispatch_ts):
             pre_dispatch_ts = dispatch_ts
 
         def reader(last_seen_ts: str | None) -> Sequence[ThreadReply]:
@@ -899,17 +1196,37 @@ class MvpPilot:
                 self.config.channel, root_ts, last_seen_ts
             )
 
+        # Default live sleeper: REAL 60s wait via injected default. Tests pass
+        # a fake sleeper so no unit test ever really sleeps.
+        live_sleeper = sleeper if sleeper is not None else _live_sleeper
+
         outcome = run_monitoring_loop(
             self._selected_contract(),
             read_replies=reader,
             update_rootcard=self.apply_observation,
-            sleeper=sleeper or _noop_sleeper,
+            sleeper=live_sleeper,
             last_seen_ts=pre_dispatch_ts,
-            max_polls=max_polls,
+            max_polls=max_polls if max_polls is not None else 1,
+            poll_interval_seconds=POLL_INTERVAL_SECONDS,
         )
         return outcome
 
 
+def _live_sleeper(seconds: int) -> None:
+    """Default live sleeper: REAL wall-clock wait (exactly 60s per poll).
+
+    Injected into the WP4 loop as the production cadence. The MVP loop is
+    synchronous and in-session; this is the only place a real sleep occurs, and
+    only on the production/default path. Tests never call this.
+    """
+    import time
+
+    time.sleep(seconds)
+
+
+#: Back-compat no-op (tests that want zero wait without a real sleep use a fake
+#: sleeper instead). Kept only so old call sites that passed ``sleeper=None``
+#: explicitly still default to a *real* 60s wait via ``_live_sleeper``.
 def _noop_sleeper(_: int) -> None:
     return None
 
