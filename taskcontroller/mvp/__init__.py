@@ -1,13 +1,20 @@
-"""MVP protocol bridge package (NO GWC, no runtime state, no schema authority).
+"""MVP TaskController package (NO GWC, no runtime state, no schema authority).
 
-This package contains ONE stateless translation surface between the active
-current-main Slack Controller-Executor MVP protocol (``agents/**``, the sole
-protocol authority) and the dormant TaskController core library.
+The active current-main surface contains two small deterministic pieces:
 
-It deliberately exposes no engine, no store, no plan/run state machine and no
-JSON schema. See ``protocol_bridge`` for the hard rules it upholds.
+- ``activation``: explicit TaskController mention -> canonical host load plan.
+- ``protocol_bridge``: contracted Executor report -> MVP controller verdict.
+
+The richer TaskController core remains a dormant Full-E2E library unless current
+repository policy explicitly activates it.
 """
 
+from taskcontroller.mvp.activation import (
+    TASKCONTROLLER_ALIASES,
+    TaskControllerActivationPlan,
+    mentions_taskcontroller,
+    resolve_taskcontroller_activation,
+)
 from taskcontroller.mvp.protocol_bridge import (
     CONTINUE,
     INTERCEPT,
@@ -22,6 +29,10 @@ from taskcontroller.mvp.protocol_bridge import (
 )
 
 __all__ = [
+    "TASKCONTROLLER_ALIASES",
+    "TaskControllerActivationPlan",
+    "mentions_taskcontroller",
+    "resolve_taskcontroller_activation",
     "CONTINUE",
     "WAIT_CONTROLLER",
     "TERMINAL",
