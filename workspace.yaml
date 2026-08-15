@@ -26,6 +26,17 @@ orchestrators:
       - kiro
       - kilocode
 
+controllers:
+  - id: taskcontroller
+    enabled: true
+    kind: workspace-controller
+    registry: controllers/taskcontroller.yaml
+    aliases:
+      - TaskController
+      - task controller
+      - /dw-taskcontroller
+    activation: explicit-mention
+
 providers:
   - id: ollama
     type: openai-compatible
