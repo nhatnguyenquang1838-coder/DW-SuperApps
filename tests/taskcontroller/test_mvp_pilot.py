@@ -1363,7 +1363,7 @@ class TestSingleExecutorIdentity:
             update_rootcard=pilot.apply_observation,
             sleeper=FakeSleeper(),
             last_seen_ts=cmd_ts,
-            max_polls=None,
+            max_polls=1,
         )
         assert outcome.verdict == CONTINUE
         assert len(outcome.observations) == 1
