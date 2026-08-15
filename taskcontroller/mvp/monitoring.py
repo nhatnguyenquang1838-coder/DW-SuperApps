@@ -352,7 +352,7 @@ def run_monitoring_loop(
     read_replies: ReplyReader,
     sleeper: Sleeper,
     last_seen_ts: str | None = None,
-    max_polls: int = 1,
+    max_polls: int | None = 1,
     poll_interval_seconds: int = POLL_INTERVAL_SECONDS,
     update_rootcard: RootCardUpdater = _no_update,
 ) -> LoopOutcome:
@@ -369,7 +369,9 @@ def run_monitoring_loop(
 
     Purely in-session and synchronous. Malformed replies raise
     ``MalformedReportError`` (fail closed). Returns when a boundary verdict is
-    reached or ``max_polls`` is exhausted.
+    reached. When ``max_polls`` is ``None`` the loop is unbounded (synchronous
+    in-session polling until WAIT_CONTROLLER / INTERCEPT / TERMINAL); a positive
+    int bounds it as a test/debug budget. No scheduler, no background task.
     """
     if not isinstance(contracted, ContractedSubtask):
         raise TaskControllerValidationError("contracted must be a ContractedSubtask")
@@ -379,8 +381,8 @@ def run_monitoring_loop(
         raise TaskControllerValidationError("sleeper must be callable")
     if not callable(update_rootcard):
         raise TaskControllerValidationError("update_rootcard must be callable")
-    if isinstance(max_polls, bool) or not isinstance(max_polls, int) or max_polls < 1:
-        raise TaskControllerValidationError("max_polls must be an int >= 1")
+    if isinstance(max_polls, bool) or (max_polls is not None and (not isinstance(max_polls, int) or max_polls < 1)):
+        raise TaskControllerValidationError("max_polls must be a positive int or None (unbounded)")
     if (
         isinstance(poll_interval_seconds, bool)
         or not isinstance(poll_interval_seconds, int)
@@ -397,51 +399,86 @@ def run_monitoring_loop(
     last_verdict: str | None = None
     last_signature: tuple[Any, ...] | None = None
 
-    for poll in range(1, max_polls + 1):
-        sleeper(poll_interval_seconds)
-        replies = _newer_replies(read_replies(cursor), cursor)
-
-        # Silent poll: nothing new -> no observation, no update, no message.
-        if not replies:
-            continue
-
-        for reply in replies:
-            cursor = reply.ts
-            try:
-                report = ExecutorReport.from_payload(reply.payload)
-            except TaskControllerValidationError as exc:
-                raise MalformedReportError(
-                    f"malformed executor report at ts {reply.ts}: {exc}"
-                ) from exc
-
-            verdict = classify_report(contracted, report)
-
-            # Material change = ANY user-visible report field or verdict state
-            # changed. Evidence alone is not enough: status / completed /
-            # finding_risk / next_action drive RootCard progress, risk and Next.
-            signature = material_signature(report, verdict)
-            material = signature != last_signature
-            observation = LoopObservation(
-                poll=poll,
-                reply_ts=reply.ts,
-                verdict=verdict,
-                report=report,
-            )
-            if material:
-                observations.append(observation)
-                update_rootcard(observation)
-            last_verdict = verdict.verdict
-            last_signature = signature
-
-            if verdict.verdict in BOUNDARY_VERDICTS:
-                return LoopOutcome(
-                    verdict=verdict.verdict,
-                    reason=REASON_BOUNDARY,
-                    polls=poll,
-                    last_seen_ts=cursor,
-                    observations=tuple(observations),
-                    detail=verdict.detail,
+    if max_polls is None:
+        # Unbounded: synchronous in-session polling until a boundary verdict is
+        # reached. Bounded only by WAIT_CONTROLLER / INTERCEPT / TERMINAL. No
+        # scheduler, no background task.
+        poll = 0
+        while True:
+            poll += 1
+            sleeper(poll_interval_seconds)
+            replies = _newer_replies(read_replies(cursor), cursor)
+            if not replies:
+                continue
+            for reply in replies:
+                cursor = reply.ts
+                try:
+                    report = ExecutorReport.from_payload(reply.payload)
+                except TaskControllerValidationError as exc:
+                    raise MalformedReportError(
+                        f"malformed executor report at ts {reply.ts}: {exc}"
+                    ) from exc
+                verdict = classify_report(contracted, report)
+                signature = material_signature(report, verdict)
+                material = signature != last_signature
+                observation = LoopObservation(
+                    poll=poll,
+                    reply_ts=reply.ts,
+                    verdict=verdict,
+                    report=report,
                 )
+                if material:
+                    observations.append(observation)
+                    update_rootcard(observation)
+                last_verdict = verdict.verdict
+                last_signature = signature
+                if verdict.verdict in BOUNDARY_VERDICTS:
+                    return LoopOutcome(
+                        verdict=verdict.verdict,
+                        reason=REASON_BOUNDARY,
+                        polls=poll,
+                        last_seen_ts=cursor,
+                        observations=tuple(observations),
+                        detail=verdict.detail,
+                    )
+    else:
+        for poll in range(1, max_polls + 1):
+            sleeper(poll_interval_seconds)
+            replies = _newer_replies(read_replies(cursor), cursor)
+            # Silent poll: nothing new -> no observation, no update, no message.
+            if not replies:
+                continue
+            for reply in replies:
+                cursor = reply.ts
+                try:
+                    report = ExecutorReport.from_payload(reply.payload)
+                except TaskControllerValidationError as exc:
+                    raise MalformedReportError(
+                        f"malformed executor report at ts {reply.ts}: {exc}"
+                    ) from exc
+                verdict = classify_report(contracted, report)
+                signature = material_signature(report, verdict)
+                material = signature != last_signature
+                observation = LoopObservation(
+                    poll=poll,
+                    reply_ts=reply.ts,
+                    verdict=verdict,
+                    report=report,
+                )
+                if material:
+                    observations.append(observation)
+                    update_rootcard(observation)
+                last_verdict = verdict.verdict
+                last_signature = signature
+                if verdict.verdict in BOUNDARY_VERDICTS:
+                    return LoopOutcome(
+                        verdict=verdict.verdict,
+                        reason=REASON_BOUNDARY,
+                        polls=poll,
+                        last_seen_ts=cursor,
+                        observations=tuple(observations),
+                        detail=verdict.detail,
+                    )
 
     return LoopOutcome(
         verdict=last_verdict,

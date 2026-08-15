@@ -457,9 +457,16 @@ class SlackTransport(Protocol):
         ...
 
     def read_thread_replies(
-        self, channel: str, root_ts: str, since_ts: str | None
+        self, channel: str, root_ts: str, since_ts: str | None,
+        executor_user_id: str | None = None,
     ) -> list[ThreadReply]:
-        """Read thread replies strictly newer than ``since_ts``."""
+        """Read thread replies strictly newer than ``since_ts``.
+
+        ``executor_user_id`` is the authoritative expected actor for the run;
+        the transport MUST filter to that actor's replies (a human/Controller
+        reply is ignored). The caller (``MvpPilot.run``) supplies exactly
+        ``config.executor_user_id`` on every read.
+        """
         ...
 
 
@@ -804,12 +811,13 @@ class SlackWebApiTransport:
     here (the duck type only needs the method surface). CI never instantiates
     this class; the deterministic fakes are the MVP path.
 
-    Executor actor filtering: when ``executor_user_id`` is bound,
-    ``read_thread_replies`` returns ONLY Executor-authored report messages
-    (matching ``msg.user``), so a human/Controller reply after dispatch can
-    never be misparsed. Timestamp filtering uses the lossless integer ordering
+    Executor actor filtering: ``read_thread_replies`` accepts the authoritative
+    ``executor_user_id`` (the run's ``config.executor_user_id``) on every call
+    and returns ONLY Executor-authored report messages (matching ``msg.user``),
+    so a human/Controller reply after dispatch can never be misparsed. A missing
+    identity fails closed. Timestamp filtering uses the lossless integer ordering
     key (no ``float``, no lexicographic compare) — same semantics as WP4
-    ``_ts_key``.
+    ``_ts_key``. Exactly one identity governs the run.
     """
 
     def __init__(
@@ -860,8 +868,29 @@ class SlackWebApiTransport:
         return str(resp["ts"])
 
     def read_thread_replies(
-        self, channel: str, root_ts: str, since_ts: str | None
+        self,
+        channel: str,
+        root_ts: str,
+        since_ts: str | None,
+        executor_user_id: str | None = None,
     ) -> list[ThreadReply]:
+        # The authoritative actor for the run is exactly the supplied
+        # executor_user_id (the caller passes config.executor_user_id). When the
+        # transport was constructed with one too, they MUST agree (single
+        # identity); a mismatch is a programming error and fails closed.
+        expected = executor_user_id or self._executor_user_id
+        if self._executor_user_id and executor_user_id and \
+                self._executor_user_id != executor_user_id:
+            raise TaskControllerValidationError(
+                "executor identity mismatch: transport binds "
+                f"{self._executor_user_id!r} but read asked for {executor_user_id!r}"
+            )
+        if not expected:
+            # No identity bound anywhere — a live read cannot distinguish the
+            # Executor from a human/Controller reply. Fail closed.
+            raise TaskControllerValidationError(
+                "read_thread_replies requires a bound executor_user_id"
+            )
         resp = self._client.conversations_replies(channel=channel, ts=root_ts)
         items = resp.get("messages", []) or []
         out: list[ThreadReply] = []
@@ -874,9 +903,8 @@ class SlackWebApiTransport:
             # Lossless integer ordering — no float, no lexicographic compare.
             if since_ts is not None and _ts_key_pilot(ts) <= _ts_key_pilot(since_ts):
                 continue
-            # Executor actor filtering: when an identity is bound, accept only
-            # Executor-authored messages. A human/Controller reply is ignored.
-            if self._executor_user_id and msg.get("user") != self._executor_user_id:
+            # Executor actor filtering: accept only Executor-authored messages.
+            if msg.get("user") != expected:
                 continue
             raw = msg.get("text") or ""
             if not raw.strip():
@@ -1192,8 +1220,12 @@ class MvpPilot:
             pre_dispatch_ts = dispatch_ts
 
         def reader(last_seen_ts: str | None) -> Sequence[ThreadReply]:
+            # Pass the single authoritative Executor identity on every read so the
+            # transport filters strictly to the Executor's replies. No hardcoded
+            # ID; config.executor_user_id is the source of truth for the run.
             return self.config.slack.read_thread_replies(
-                self.config.channel, root_ts, last_seen_ts
+                self.config.channel, root_ts, last_seen_ts,
+                self.config.executor_user_id,
             )
 
         # Default live sleeper: REAL 60s wait via injected default. Tests pass
@@ -1206,7 +1238,7 @@ class MvpPilot:
             update_rootcard=self.apply_observation,
             sleeper=live_sleeper,
             last_seen_ts=pre_dispatch_ts,
-            max_polls=max_polls if max_polls is not None else 1,
+            max_polls=max_polls,
             poll_interval_seconds=POLL_INTERVAL_SECONDS,
         )
         return outcome

@@ -27,6 +27,7 @@ from taskcontroller.mvp.monitoring import (
     MalformedReportError,
     ThreadReply,
     REASON_BOUNDARY,
+    REASON_MAX_POLLS,
     POLL_INTERVAL_SECONDS,
 )
 from taskcontroller.mvp.pilot import (
@@ -70,14 +71,20 @@ class FakeSlack(SlackTransport):
 
     The Executor reply is enqueued by the fake *as a separate actor* via
     ``enqueue_executor_reply``; ``read_thread_replies`` filters strictly newer
-    than the cursor and never returns the root or the Controller command.
+    than the cursor and never returns the root or the Controller command. The
+    fake models the WP5 actor-filter contract itself: ``read_thread_replies``
+    drops any reply authored by a non-Executor actor when an ``executor_user_id``
+    is supplied (mirroring ``SlackWebApiTransport``). Author metadata is tracked
+    by the fake transport only — it is never placed into ``ThreadReply.payload``.
     """
 
-    def __init__(self):
+    def __init__(self, executor_user_id="U0BKE3KDY65"):
         self.creates = 0
         self.updates = 0
         self.root_ts = "100.0"
-        self._executor_replies: dict[str, list[ThreadReply]] = {}
+        self._executor_user_id = executor_user_id
+        # Each entry: {"reply": ThreadReply, "user": str}
+        self._replies: dict[str, list[dict]] = {}
 
     def create_root(self, channel, blocks):
         self.creates += 1
@@ -94,17 +101,35 @@ class FakeSlack(SlackTransport):
 
     def enqueue_executor_reply(self, root_ts, report: ExecutorReport) -> str:
         """Simulate the Executor (separate actor) posting its own reply."""
-        ts = str(float(root_ts) + 0.1 + len(self._executor_replies.get(root_ts, [])) * 0.001)
-        self._executor_replies.setdefault(root_ts, []).append(
-            ThreadReply(ts=ts, payload=report.to_dict())
+        ts = str(float(root_ts) + 0.1 + len(self._replies.get(root_ts, [])) * 0.001)
+        self._replies.setdefault(root_ts, []).append(
+            {"reply": ThreadReply(ts=ts, payload=report.to_dict()),
+             "user": self._executor_user_id}
         )
         return ts
 
-    def read_thread_replies(self, channel, root_ts, since_ts):
-        items = self._executor_replies.get(root_ts, [])
-        if since_ts is None:
-            return list(items)
-        return [r for r in items if pilot_module._ts_key_pilot(r.ts) > pilot_module._ts_key_pilot(since_ts)]
+    def enqueue_other_reply(self, root_ts, text: str, user: str) -> str:
+        """Simulate a NON-Executor actor (human/Controller) posting in the thread."""
+        ts = str(float(root_ts) + 0.1 + len(self._replies.get(root_ts, [])) * 0.001)
+        self._replies.setdefault(root_ts, []).append(
+            {"reply": ThreadReply(ts=ts, payload={"raw_text": text}), "user": user}
+        )
+        return ts
+
+    def read_thread_replies(self, channel, root_ts, since_ts, executor_user_id=None):
+        entries = self._replies.get(root_ts, [])
+        expected = executor_user_id or self._executor_user_id
+        out = []
+        for entry in entries:
+            r = entry["reply"]
+            if since_ts is not None and pilot_module._ts_key_pilot(r.ts) <= pilot_module._ts_key_pilot(since_ts):
+                continue
+            # Fake transport actor filtering (mirrors SlackWebApiTransport): drop
+            # replies whose author is not the expected Executor.
+            if expected and entry["user"] != expected:
+                continue
+            out.append(r)
+        return out
 
 
 class FakeHermes(HermesExecutorClient):
@@ -430,7 +455,7 @@ class TestLiveSlackMediatedTopology:
         cmd_ts = pilot.dispatch_current()
         assert cmd_ts > root
         slack.enqueue_executor_reply(root, parse_hermes_thread_update(self._authority_reply("S1")))
-        replies = slack.read_thread_replies(pilot.config.channel, root, cmd_ts)
+        replies = slack.read_thread_replies(pilot.config.channel, root, cmd_ts, pilot.config.executor_user_id)
         assert len(replies) == 1
         assert replies[0].payload["subtask_id"] == "S1"
 
@@ -445,7 +470,7 @@ class TestLiveSlackMediatedTopology:
         outcome = pilot_module.run_monitoring_loop(
             pilot._selected_contract(),
             read_replies=lambda last_seen_ts: slack.read_thread_replies(
-                pilot.config.channel, root, last_seen_ts),
+                pilot.config.channel, root, last_seen_ts, pilot.config.executor_user_id),
             update_rootcard=pilot.apply_observation,
             sleeper=FakeSleeper(),
             last_seen_ts=cmd_ts,
@@ -551,7 +576,7 @@ class TestMaterialObservationUpdatesSameRoot:
         outcome = pilot_module.run_monitoring_loop(
             pilot._selected_contract(),
             read_replies=lambda last_seen_ts: slack.read_thread_replies(
-                pilot.config.channel, root, last_seen_ts),
+                pilot.config.channel, root, last_seen_ts, pilot.config.executor_user_id),
             update_rootcard=pilot.apply_observation,
             sleeper=FakeSleeper(),
             last_seen_ts=cmd_ts,
@@ -728,7 +753,7 @@ class TestSlackWebApiTransportWrapper:
             _FakeMsg("100.7", authority, "U0BKE3KDY65"),
         ]
         transport = self._make_transport(messages, executor_user_id="U0BKE3KDY65")
-        replies = transport.read_thread_replies("C", "100.0", "100.0")
+        replies = transport.read_thread_replies("C", "100.0", "100.0", executor_user_id="U0BKE3KDY65")
         assert len(replies) == 1
         assert replies[0].payload["status"] == "RUNNING"
 
@@ -747,7 +772,7 @@ class TestSlackWebApiTransportWrapper:
         ]
         # transport bound to a DIFFERENT executor id -> nothing returned
         transport = self._make_transport(messages, executor_user_id="UOTHER")
-        replies = transport.read_thread_replies("C", "100.0", "100.0")
+        replies = transport.read_thread_replies("C", "100.0", "100.0", executor_user_id="UOTHER")
         assert replies == []
 
     def test_dispatch_command_mentions_executor(self):
@@ -830,7 +855,7 @@ class TestTimestampOrderingLossless:
                 return _Resp()
 
         transport = SlackWebApiTransport(_Client(), executor_user_id="U0BKE3KDY65")
-        replies = transport.read_thread_replies("C", "100.0", "100.0")
+        replies = transport.read_thread_replies("C", "100.0", "100.0", executor_user_id="U0BKE3KDY65")
         assert len(replies) == 1  # the 100.9 reply is newer than 100.0
 
 
@@ -847,7 +872,7 @@ class TestLiveLoopDefaultCadence:
             f"{subtask_id} · {after}"
         )
 
-    def test_run_defaults_to_real_60s_sleeper_until_boundary(self):
+    def test_run_defaults_to_real_60s_sleeper_until_boundary(self, monkeypatch):
         slack = FakeSlack()
         contracts = [_contract("S1", after=WAIT_CONTROLLER), _contract("S2"), _contract("S3")]
         pilot = _build_pilot(contracts, slack, active_subtask_id="S1",
@@ -857,16 +882,15 @@ class TestLiveLoopDefaultCadence:
         slack.enqueue_executor_reply(root, parse_hermes_thread_update(self._authority_reply("S1", "RUNNING", "WAIT_CONTROLLER")))
 
         # Patch the live sleeper to capture cadence without real sleeping.
+        # monkeypatch restores the EXACT original module-global callable on exit,
+        # so no test leaves pilot_module._live_sleeper mutated (no runtime leak).
         captured = []
 
         def fake_live_sleeper(seconds):
             captured.append(seconds)
 
-        pilot_module._live_sleeper = fake_live_sleeper
-        try:
-            outcome = pilot.run(max_polls=None)
-        finally:
-            pilot_module._live_sleeper = lambda s: time.sleep(s)
+        monkeypatch.setattr(pilot_module, "_live_sleeper", fake_live_sleeper)
+        outcome = pilot.run(max_polls=None)
         assert outcome.verdict == WAIT_CONTROLLER
         assert captured == [POLL_INTERVAL_SECONDS]
 
@@ -991,20 +1015,22 @@ class TestMalformedReplyFailClosed:
                              executor_user_id="U0BKE3KDY65")
         root = pilot.ensure_root()
         cmd_ts = pilot.dispatch_current()
-        # A non-canonical, non-JSON Executor text reply must fail closed.
-        slack._executor_replies.setdefault(root, []).append(
-            ThreadReply(ts=str(float(root) + 0.1), payload={"__raw_text__":
-                "random chatter, not a valid executor update"})
+        # An Executor-authored but non-canonical, non-JSON reply must fail closed
+        # (never silently downgraded to CONTINUE). Use the fake's Executor-enqueue
+        # so the actor filter accepts it, then parse_hermes_reply rejects it.
+        slack.enqueue_executor_reply(root, ExecutorReport(
+            subtask_id="S1", status="RUNNING", completed=("u",),
+            evidence=("e",), finding_risk=(), next_action="x", after="CONTINUE",
+        ))
+        # Corrupt the stored payload to non-parseable text via a fresh entry:
+        slack._replies[root][-1]["reply"] = ThreadReply(
+            ts=str(float(root) + 0.1), payload={"__raw_text__": "random chatter"}
         )
 
         def reader(last_seen_ts):
-            items = slack.read_thread_replies(pilot.config.channel, root, last_seen_ts)
-            out = []
-            for r in items:
-                raw = r.payload.get("__raw_text__", "")
-                payload = parse_hermes_reply(raw).to_dict()
-                out.append(ThreadReply(ts=r.ts, payload=payload))
-            return out
+            return slack.read_thread_replies(
+                pilot.config.channel, root, last_seen_ts, pilot.config.executor_user_id
+            )
 
         with pytest.raises(MalformedReportError):
             pilot_module.run_monitoring_loop(
@@ -1051,7 +1077,7 @@ class TestBlockedFailedRenderAsError:
         outcome = pilot_module.run_monitoring_loop(
             pilot._selected_contract(),
             read_replies=lambda last_seen_ts: slack.read_thread_replies(
-                pilot.config.channel, root, last_seen_ts),
+                pilot.config.channel, root, last_seen_ts, pilot.config.executor_user_id),
             update_rootcard=pilot.apply_observation,
             sleeper=FakeSleeper(),
             last_seen_ts=cmd_ts,
@@ -1065,3 +1091,296 @@ class TestBlockedFailedRenderAsError:
         task = plan["tasks"][0]
         assert task["status"] == "error"
         assert task["details"]["type"] == "rich_text"
+
+# --------------------------------------------------------------------------- #7 unbounded loop + single identity
+class TestUnboundedLiveLoop:
+    """INTERCEPT #7: max_polls=None must be genuinely unbounded (poll until boundary),
+    and the WP4 read path must filter by the single authoritative Executor identity.
+    """
+
+    def _authority_reply(self, subtask_id="S1", status="RUNNING", after="CONTINUE"):
+        return (
+            f"🟡 EXECUTOR UPDATE · {subtask_id}/3\n"
+            f"Status: {status}\n"
+            "Phase: x\n\n"
+            "Completed\n- u\n\n"
+            "Evidence\n- e\n\n"
+            "Next\n→ await\n\n"
+            f"{subtask_id} · {after}"
+        )
+
+    def test_max_polls_none_polls_twice_when_first_empty(self):
+        """First poll empty; second poll carries the boundary -> loop returns it."""
+        slack = FakeSlack()
+        contracts = [_contract("S1", after=WAIT_CONTROLLER), _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(contracts, slack, active_subtask_id="S1",
+                             executor_user_id="U0BKE3KDY65")
+        root = pilot.ensure_root()
+        cmd_ts = pilot.dispatch_current()
+
+        # Inject the Executor reply only on the SECOND poll read.
+        polls = {"n": 0}
+
+        def reader(last_seen_ts):
+            polls["n"] += 1
+            items = slack.read_thread_replies(pilot.config.channel, root, last_seen_ts, pilot.config.executor_user_id)
+            if polls["n"] < 2:
+                return []  # first poll sees nothing
+            slack.enqueue_executor_reply(
+                root, parse_hermes_thread_update(self._authority_reply("S1", "RUNNING", "WAIT_CONTROLLER")))
+            return slack.read_thread_replies(pilot.config.channel, root, last_seen_ts, pilot.config.executor_user_id)
+
+        sleeper = FakeSleeper()
+        outcome = pilot_module.run_monitoring_loop(
+            pilot._selected_contract(),
+            read_replies=reader,
+            update_rootcard=pilot.apply_observation,
+            sleeper=sleeper,
+            last_seen_ts=cmd_ts,
+            max_polls=None,
+        )
+        assert outcome.verdict == WAIT_CONTROLLER
+        assert polls["n"] == 2
+        assert len(sleeper.calls) == 2
+        assert slack.updates == 1  # same root, material update only once
+
+    def test_max_polls_none_respects_boundary_from_first_poll(self):
+        slack = FakeSlack()
+        contracts = [_contract("S1", after=WAIT_CONTROLLER), _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(contracts, slack, active_subtask_id="S1",
+                             executor_user_id="U0BKE3KDY65")
+        root = pilot.ensure_root()
+        cmd_ts = pilot.dispatch_current()
+        slack.enqueue_executor_reply(root, parse_hermes_thread_update(self._authority_reply("S1", "RUNNING", "WAIT_CONTROLLER")))
+        sleeper = FakeSleeper()
+        outcome = pilot_module.run_monitoring_loop(
+            pilot._selected_contract(),
+            read_replies=lambda ts: slack.read_thread_replies(pilot.config.channel, root, ts, pilot.config.executor_user_id),
+            update_rootcard=pilot.apply_observation,
+            sleeper=sleeper,
+            last_seen_ts=cmd_ts,
+            max_polls=None,
+        )
+        assert outcome.verdict == WAIT_CONTROLLER
+        assert len(sleeper.calls) == 1
+
+    def test_max_polls_one_exits_after_first_empty_poll(self):
+        slack = FakeSlack()
+        contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(contracts, slack, active_subtask_id="S1",
+                             executor_user_id="U0BKE3KDY65")
+        root = pilot.ensure_root()
+        cmd_ts = pilot.dispatch_current()
+
+        polls = {"n": 0}
+
+        def reader(last_seen_ts):
+            polls["n"] += 1
+            return []  # always empty -> bounded loop must give up after poll 1
+
+        sleeper = FakeSleeper()
+        outcome = pilot_module.run_monitoring_loop(
+            pilot._selected_contract(),
+            read_replies=reader,
+            update_rootcard=pilot.apply_observation,
+            sleeper=sleeper,
+            last_seen_ts=cmd_ts,
+            max_polls=1,
+        )
+        assert outcome.reason == REASON_MAX_POLLS
+        assert polls["n"] == 1
+        assert len(sleeper.calls) == 1
+
+    def test_run_default_none_is_unbounded(self):
+        slack = FakeSlack()
+        contracts = [_contract("S1", after=WAIT_CONTROLLER), _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(contracts, slack, active_subtask_id="S1",
+                             executor_user_id="U0BKE3KDY65")
+        root = pilot.ensure_root()
+        cmd_ts = pilot.dispatch_current()
+        reads = {"n": 0}
+
+        def deferred_read(channel, root_ts, since_ts, executor_user_id=None):
+            reads["n"] += 1
+            if reads["n"] < 2:
+                return []  # first poll: nothing yet
+            slack.enqueue_executor_reply(
+                root, parse_hermes_thread_update(self._authority_reply("S1", "RUNNING", "WAIT_CONTROLLER")))
+            return original_read(channel, root_ts, since_ts, executor_user_id)
+
+        original_read = slack.read_thread_replies
+        slack.read_thread_replies = deferred_read
+        outcome = pilot.run(max_polls=None, sleeper=FakeSleeper())
+        assert outcome.verdict == WAIT_CONTROLLER
+        assert reads["n"] == 2
+
+
+class TestSingleExecutorIdentity:
+    """Addendum to INTERCEPT #7: one authoritative Executor identity for the run.
+    Identity lives at the WP5 transport boundary (SlackTransport.read_thread_replies
+    takes executor_user_id); MvpPilot.run passes exactly config.executor_user_id.
+    A missing identity or a mismatch between the transport-bound id and the
+    read-passed id fails closed. No transport metadata leaks into the report
+    payload (ThreadReply.payload stays the validated ExecutorReport mapping).
+    """
+
+    def _authority_reply(self, subtask_id="S1", status="RUNNING", after="CONTINUE"):
+        return (
+            f"🟡 EXECUTOR UPDATE · {subtask_id}/3\n"
+            f"Status: {status}\n"
+            "Phase: x\n\n"
+            "Completed\n- u\n\n"
+            "Evidence\n- e\n\n"
+            "Next\n→ await\n\n"
+            f"{subtask_id} · {after}"
+        )
+
+    def _fake_transport(self, messages):
+        """A concrete WP5 transport that honors the authoritative actor filter."""
+
+        class _Msg:
+            def __init__(self, ts, text, user):
+                self._d = {"ts": ts, "text": text, "user": user}
+
+            def get(self, k, default=None):
+                return self._d.get(k, default)
+
+        class _Resp:
+            def __init__(self, msgs):
+                self._msgs = msgs
+
+            def get(self, k, default=None):
+                return self._msgs if k == "messages" else default
+
+        class _Client:
+            def conversations_replies(self, **kwargs):
+                return _Resp(messages)
+
+        class _Transport:  # duck-typed SlackTransport (Protocol) implementation
+            def create_root(self, channel, blocks):
+                validate_slack_blocks(blocks)
+                return "100.0"
+
+            def update_root(self, channel, root_ts, blocks):
+                validate_slack_blocks(blocks)
+
+            def dispatch_command(self, channel, root_ts, text, executor_user_id):
+                return str(float(root_ts) + 0.05)
+
+            def read_thread_replies(self, channel, root_ts, since_ts, executor_user_id=None):
+                expected = executor_user_id
+                if not expected:
+                    raise TaskControllerValidationError(
+                        "read_thread_replies requires a bound executor_user_id"
+                    )
+                out = []
+                for m in messages:
+                    ts = str(m.get("ts"))
+                    if ts == root_ts:
+                        continue
+                    if since_ts is not None and pilot_module._ts_key_pilot(ts) <= pilot_module._ts_key_pilot(since_ts):
+                        continue
+                    if m.get("user") != expected:
+                        continue
+                    raw = m.get("text") or ""
+                    if not raw.strip():
+                        continue
+                    out.append(ThreadReply(ts=ts, payload=parse_hermes_reply(raw).to_dict()))
+                return out
+
+        return _Transport()
+
+    def test_missing_identity_fails_closed(self):
+        authority = self._authority_reply()
+        messages = [
+            _FakeMsg("100.0", "root", "UROOT"),
+            _FakeMsg("100.7", authority, "U0BKE3KDY65"),
+        ]
+        transport = self._fake_transport(messages)
+        contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(contracts, transport, active_subtask_id="S1",
+                             executor_user_id="U0BKE3KDY65")
+        root = pilot.ensure_root()
+        cmd_ts = pilot.dispatch_current()
+
+        def reader(last_seen_ts):
+            # Call WITHOUT an executor_user_id -> transport must fail closed.
+            return transport.read_thread_replies(pilot.config.channel, root, last_seen_ts)
+
+        with pytest.raises(TaskControllerValidationError):
+            pilot_module.run_monitoring_loop(
+                pilot._selected_contract(),
+                read_replies=reader,
+                update_rootcard=pilot.apply_observation,
+                sleeper=FakeSleeper(),
+                last_seen_ts=cmd_ts,
+                max_polls=1,
+            )
+
+    def test_mismatch_between_config_and_transport_fails_closed(self):
+        # SlackWebApiTransport constructed with one id, but MvpPilot.run passes a
+        # different config id on read -> the transport must fail closed on mismatch.
+        authority = self._authority_reply()
+        messages = [
+            _FakeMsg("100.0", "root", "UROOT"),
+            _FakeMsg("100.7", authority, "U0BKE3KDY65"),
+        ]
+        transport = SlackWebApiTransport(
+            _ClientWith(messages), executor_user_id="UDIFFERENT"
+        )
+        contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(contracts, transport, active_subtask_id="S1",
+                             executor_user_id="U0BKE3KDY65")
+        root = pilot.ensure_root()
+        cmd_ts = pilot.dispatch_current()
+        with pytest.raises(TaskControllerValidationError):
+            pilot.run(max_polls=1, sleeper=FakeSleeper())
+
+    def test_match_authority_identity_filters_non_executor(self):
+        # Matching identity: a non-Executor author is ignored; the Executor
+        # reply is accepted. The human/Controller message never reaches parsing.
+        authority = self._authority_reply()
+        messages = [
+            _FakeMsg("100.0", "root", "UROOT"),
+            _FakeMsg("100.5", "a human reply, not a report", "UHUMAN"),
+            _FakeMsg("100.7", authority, "U0BKE3KDY65"),
+        ]
+        transport = self._fake_transport(messages)
+        contracts = [_contract("S1"), _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(contracts, transport, active_subtask_id="S1",
+                             executor_user_id="U0BKE3KDY65")
+        root = pilot.ensure_root()
+        cmd_ts = pilot.dispatch_current()
+
+        def reader(last_seen_ts):
+            return transport.read_thread_replies(
+                pilot.config.channel, root, last_seen_ts, pilot.config.executor_user_id
+            )
+
+        outcome = pilot_module.run_monitoring_loop(
+            pilot._selected_contract(),
+            read_replies=reader,
+            update_rootcard=pilot.apply_observation,
+            sleeper=FakeSleeper(),
+            last_seen_ts=cmd_ts,
+            max_polls=None,
+        )
+        assert outcome.verdict == CONTINUE
+        assert len(outcome.observations) == 1
+        assert outcome.observations[0].subtask_id == "S1"
+
+
+class _ClientWith:
+    """Minimal conversations_replies holder for SlackWebApiTransport mismatch test."""
+
+    def __init__(self, messages):
+        self._messages = messages
+
+    def conversations_replies(self, **kwargs):
+        return {"messages": self._messages}
+
+    def chat_postMessage(self, **kwargs):
+        return {"ts": "200.0"}
+
+    def chat_update(self, **kwargs):
+        return {"ts": "100.0"}
