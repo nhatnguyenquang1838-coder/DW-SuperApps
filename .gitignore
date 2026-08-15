@@ -61,3 +61,4 @@ openclaw-workspace-state.json
 .env.gg-oauth
 .kilo/kilo.json
 .blackboxcli/
+node_modules/
