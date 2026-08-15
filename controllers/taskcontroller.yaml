@@ -1,0 +1,110 @@
+apiVersion: dw-superapps/controller/v1
+kind: WorkspaceController
+
+metadata:
+  id: taskcontroller
+  name: TaskController
+  status: active-mvp
+
+activation:
+  mode: explicit-mention
+  aliases:
+    - TaskController
+    - task controller
+    - /dw-taskcontroller
+  case_sensitive: false
+  memory_fallback_allowed: false
+  missing_required_entrypoint: BLOCKED
+
+classification:
+  power: false
+  workspace_controller: true
+  purpose: >-
+    Control and monitor one delegated Executor run with canonical host instructions,
+    a live RootCard/thread projection, contracted subtasks, incremental observation,
+    review boundaries, and bounded INTERCEPT behavior.
+
+canonical_load_order:
+  - AGENTS.md
+  - workspace.yaml
+  - controllers/taskcontroller.yaml
+  - agents/README.md
+
+host_overlays:
+  chatgpt:
+    required:
+      - agents/chatgpt-agent/agent-instructions.md
+    slack_controller:
+      required:
+        - agents/shared/slack-controller-executor-protocol.md
+        - agents/chatgpt-agent/slack-controller-mvp.md
+  hermes:
+    executor:
+      required:
+        - agents/shared/slack-controller-executor-protocol.md
+        - agents/hermes/agent-instructions.md
+
+slack:
+  required_when_transport_is_slack: true
+  connector_required: true
+  canvases_required:
+    - Slack Communication Policy
+    - Governance Behavior
+  topology:
+    controller_count: 1
+    executor_count: 1
+    rootcard_count: 1
+    thread_count: 1
+  root_semantics: live-human-snapshot
+  thread_semantics: controller-command-executor-report-evidence
+  polling:
+    mode: in-session-incremental
+    cadence_seconds: 60
+    silent: true
+    detached_scheduler_allowed: false
+  verdicts:
+    - CONTINUE
+    - WAIT_CONTROLLER
+    - TERMINAL
+    - INTERCEPT
+
+mvp:
+  protocol_bridge: taskcontroller/mvp/protocol_bridge.py
+  activation_resolver: taskcontroller/mvp/activation.py
+  full_e2e_runtime: deferred
+  explicitly_deferred:
+    - SlackTaskControllerPack
+    - LeaseManager
+    - EventRouter
+    - journal
+    - recovery
+    - checkpoint
+    - store
+
+execution_contract:
+  subtask_count_min: 3
+  subtask_count_max: 5
+  required_subtask_fields:
+    - ID
+    - Objective
+    - Allowed work
+    - Expected output
+    - Report requirement
+    - After report
+  executor_must_not_invent_plan: true
+  controller_owns:
+    - decomposition
+    - selected-plan contracting
+    - milestone timing
+    - report requirements
+    - WAIT_CONTROLLER boundaries
+    - RootCard state
+    - incremental observation
+    - report review
+    - bounded INTERCEPT
+
+integrity:
+  source_of_truth: current-repository-state
+  conversation_memory_authoritative: false
+  slack_authoritative: false
+  self_modify_agent_instructions_without_explicit_scope: forbidden
