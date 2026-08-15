@@ -50,7 +50,9 @@ from taskcontroller.mvp.pilot import (
     MvpPilot,
     MvpPilotConfig,
     SlackTransport,
+    SlackWebApiTransport,
     parse_hermes_reply,
+    parse_hermes_thread_update,
     translate_rootcard_to_blocks,
     validate_slack_blocks,
 )
@@ -149,7 +151,9 @@ __all__ = [
     "MvpPilot",
     "MvpPilotConfig",
     "SlackTransport",
+    "SlackWebApiTransport",
     "parse_hermes_reply",
+    "parse_hermes_thread_update",
     "translate_rootcard_to_blocks",
     "validate_slack_blocks",
 ]
