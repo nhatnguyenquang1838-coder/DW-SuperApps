@@ -1,6 +1,6 @@
 # DW SuperApps Agent Routing
 
-DW SuperApps is the executable control workspace for reusable AI Powers, product projects, model providers, and multiple agent hosts. Treat it as a working project, not as documentation-only reference material.
+DW SuperApps is the executable control workspace for reusable AI Powers, product projects, model providers, workspace controllers, and multiple agent hosts. Treat it as a working project, not as documentation-only reference material.
 
 ## Source of truth
 
@@ -9,12 +9,13 @@ Use this order:
 1. current repository state and exact local HEAD;
 2. root `AGENTS.md`;
 3. `workspace.yaml`;
-4. target project `AGENTS.md` when present;
-5. `manifests/powers/<power-id>.yaml`;
-6. installed package `MANIFEST.json` and validated distribution evidence;
-7. applicable runbooks and host adapters.
+4. applicable workspace controller registry under `controllers/` when a controller is selected;
+5. target project `AGENTS.md` when present;
+6. `manifests/powers/<power-id>.yaml` when a Power is selected;
+7. installed package `MANIFEST.json` and validated distribution evidence;
+8. applicable runbooks and host adapters.
 
-Repository state, package manifests, checksums, governance artifacts, and audit records are authoritative. Conversation memory and Slack are not authoritative.
+Repository state, controller registries, package manifests, checksums, governance artifacts, and audit records are authoritative. Conversation memory and Slack are not authoritative.
 
 When online, verify the current default branch and exact `main` SHA. When GitHub is explicitly unavailable, record remote verification as `SKIPPED_OFFLINE`; do not block a valid local-package workflow.
 
@@ -53,14 +54,53 @@ Existing `<project>/.dw/powers/<power-id>` paths are legacy installations. Repor
 ## Discovery
 
 1. Read `workspace.yaml`.
-2. Resolve one target project.
-3. Load only Powers enabled for that project.
-4. Read target-local instructions.
-5. Prefer the selected installed package entrypoint under `.dw/powers/<power-id>/`.
-6. Use a Power source submodule only as an explicit compatibility or development fallback.
-7. Keep generated runtime and project configuration inside the owning target project.
+2. Resolve an explicitly selected workspace controller first, when present.
+3. Resolve one target project when the task is project-scoped.
+4. Load only Powers enabled for that project.
+5. Read target-local instructions.
+6. Prefer the selected installed package entrypoint under `.dw/powers/<power-id>/`.
+7. Use a Power source submodule only as an explicit compatibility or development fallback.
+8. Keep generated runtime and project configuration inside the owning target project.
 
-Do not ask for facts already available from repository state, manifests, governance artifacts, or connected systems.
+Do not ask for facts already available from repository state, controller registries, manifests, governance artifacts, or connected systems.
+
+## Workspace controller routing
+
+Workspace controllers are host-control capabilities owned by DW-SuperApps. They are not Powers and do not use `manifests/powers/*` for activation.
+
+### TaskController
+
+`TaskController` is the canonical controller identity registered in `workspace.yaml` at `controllers[].id=taskcontroller` with registry `controllers/taskcontroller.yaml`.
+
+Any explicit user mention of `TaskController`, `task controller`, or `/dw-taskcontroller` MUST activate TaskController before the agent plans, delegates, posts a controller RootCard, or claims that TaskController is booted.
+
+Activation rules:
+
+1. verify current DW-SuperApps repository state and exact `main` when online;
+2. read this root `AGENTS.md`;
+3. read `workspace.yaml` and confirm the controller is enabled;
+4. read `controllers/taskcontroller.yaml`;
+5. read `agents/README.md`;
+6. load the current host, transport, and executor overlays declared by the controller registry;
+7. only then compile the Controller plan/contract or create/update the RootCard.
+
+Hosts may use `taskcontroller.mvp.resolve_taskcontroller_activation(...)` as the deterministic explicit-mention resolver. Conversation memory, previous-session summaries, old Slack threads, previous "booted" claims, and the mere presence of `taskcontroller/**` Python modules MUST NOT substitute for the canonical load chain.
+
+If a mandatory TaskController entrypoint is missing or unreadable, activation is `BLOCKED`. Do not fabricate a controller contract or silently fall back to remembered instructions.
+
+For ChatGPT controlling an Executor through Slack, the mandatory chain includes:
+
+- `agents/chatgpt-agent/agent-instructions.md`;
+- `agents/shared/slack-controller-executor-protocol.md`;
+- `agents/chatgpt-agent/slack-controller-mvp.md`;
+- the Slack connector plus the current `Slack Communication Policy` and `Governance Behavior` canvases;
+- `agents/hermes/agent-instructions.md` when Hermes is the Executor.
+
+The active MVP is one Controller, one Executor, one live RootCard/thread, 3–5 contracted subtasks, in-session 60-second incremental observation, `CONTINUE | WAIT_CONTROLLER | TERMINAL`, and bounded `INTERCEPT`. RootCard is the live human snapshot; Controller commands, Executor reports, milestone evidence, and corrections belong in the thread.
+
+The current MVP uses `taskcontroller/mvp/activation.py` for activation resolution and `taskcontroller/mvp/protocol_bridge.py` for verdict translation. Full-E2E surfaces including `SlackTaskControllerPack`, leases, journal, recovery, checkpoint, and multi-executor runtime remain deferred unless current repository policy explicitly activates them.
+
+Activating TaskController does not automatically activate GWC. Load GWC only when the controlled task/project requires GWC governance.
 
 ## Power routing
 
@@ -162,7 +202,7 @@ BMAD bootstrap must not place package code or host skills in the project.
 
 ## Safety
 
-- Never invent credentials, approvals, checksums, package identities, or validation evidence.
+- Never invent credentials, approvals, checksums, package identities, controller activation evidence, or validation evidence.
 - Refuse path traversal, archive symlinks, store/runtime overlap, unmanaged overwrite, and package identity mismatch.
 - In offline package mode, do not acquire supplied Powers through Git, GitHub, release URLs, `curl`, `wget`, `power-dist`, or submodules.
 - Do not install dashboards, project tasks, generated plans, secrets, tests, evals, or unrelated source content as part of Power onboarding.
