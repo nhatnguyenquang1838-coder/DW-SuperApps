@@ -56,18 +56,24 @@ def test_wakeup_signal_invalid_fields_fail_closed(overrides: dict) -> None:
         _signal(**overrides)
 
 
-def test_wakeup_announces_only_unseen_work_for_recipient_cursor() -> None:
+def test_wakeup_announces_only_unseen_sender_mailbox_work() -> None:
     cursor = MailboxCursor(
-        actor="hermes-cloud",
+        actor="controller",
         last_seen_seq=1,
-        mailbox_ref="github://nhatnguyenquang1838-coder/DW-SuperApps/issues/57#issuecomment-5308548539",
+        mailbox_ref="github://nhatnguyenquang1838-coder/DW-SuperApps/issues/57#issuecomment-5308536445",
     )
 
     assert _signal(seq=2).announces_new_work(cursor) is True
     assert _signal(seq=1).announces_new_work(cursor) is False
 
     with pytest.raises(TaskControllerValidationError):
-        _signal(recipient="codex", seq=2).announces_new_work(cursor)
+        _signal(sender="other-controller", seq=2).announces_new_work(cursor)
+
+    with pytest.raises(TaskControllerValidationError):
+        _signal(
+            mailbox_ref="github://nhatnguyenquang1838-coder/DW-SuperApps/issues/57#issuecomment-other",
+            seq=2,
+        ).announces_new_work(cursor)
 
 
 def test_wakeup_protocol_mismatch_fails_closed() -> None:

@@ -80,12 +80,20 @@ class WakeupSignal:
             raise TaskControllerValidationError("malformed wakeup_signal payload") from exc
 
     def announces_new_work(self, cursor: MailboxCursor) -> bool:
+        """Return whether this notice announces unseen state in the sender mailbox."""
+
         if not isinstance(cursor, MailboxCursor):
             raise TaskControllerValidationError(
                 "wakeup_signal.announces_new_work requires MailboxCursor"
             )
-        if cursor.actor != self.recipient:
+        # A recipient consumes the sender's mailbox. MailboxCursor.actor therefore
+        # tracks the mailbox owner / envelope sender, not the notification recipient.
+        if cursor.actor != self.sender:
             raise TaskControllerValidationError(
-                "wakeup_signal recipient does not match mailbox cursor actor"
+                "wakeup_signal sender does not match mailbox cursor actor"
+            )
+        if cursor.mailbox_ref is not None and cursor.mailbox_ref != self.mailbox_ref:
+            raise TaskControllerValidationError(
+                "wakeup_signal mailbox_ref does not match mailbox cursor"
             )
         return self.seq > cursor.last_seen_seq
