@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from taskcontroller.audit.facade import NoOpAuditFacade
 from taskcontroller.domain.values import InputRef
 from taskcontroller.errors import TaskControllerValidationError
 from taskcontroller.interaction import (
@@ -9,9 +10,11 @@ from taskcontroller.interaction import (
     EnvelopeKind,
     HumanEventKind,
     MailboxCursor,
+    audit_event_from_envelope,
     mailbox_operation,
     parse_mailbox_comment,
     project_envelope_for_human,
+    record_envelope_event,
     render_mailbox_comment,
 )
 
@@ -170,3 +173,41 @@ def test_report_projects_to_one_human_milestone_not_raw_protocol() -> None:
         "github://nhatnguyenquang1838-coder/DW-SuperApps/pull/999@abc123",
     )
     assert "protocol" not in event.detail.lower()
+
+
+def test_a2a_audit_event_is_semantic_reference_evidence() -> None:
+    envelope = _envelope()
+
+    event = audit_event_from_envelope(
+        envelope,
+        event_id="evt.a2a.7",
+        raw_payload_ref="github://nhatnguyenquang1838-coder/DW-SuperApps/issues/57#comment-123",
+    )
+
+    assert event.event_id == "evt.a2a.7"
+    assert event.run_id == envelope.run_id
+    assert event.node_id == envelope.node_id
+    assert event.actor == envelope.sender
+    assert event.source == "taskcontroller.interaction"
+    assert event.decision_kind == "A2A_REPORT"
+    assert event.sequence == envelope.seq
+    assert event.timestamp == envelope.updated_at
+    assert event.raw_payload_ref.endswith("#comment-123")
+    assert event.evidence_refs == (
+        "github://nhatnguyenquang1838-coder/DW-SuperApps@abc123/taskcontroller/domain/values.py#L1-L20",
+        "github://nhatnguyenquang1838-coder/DW-SuperApps/pull/999@abc123",
+    )
+    assert "```json" not in event.payload_summary
+    assert "execution-context" not in event.payload_summary
+    assert len(event.payload_summary) <= 300
+
+
+def test_record_envelope_event_uses_audit_facade_contract() -> None:
+    recorded = record_envelope_event(
+        NoOpAuditFacade(),
+        _envelope(),
+        event_id="evt.noop.7",
+        raw_payload_ref="comment:123",
+    )
+
+    assert recorded == 0
