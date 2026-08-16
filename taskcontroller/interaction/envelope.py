@@ -8,12 +8,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+import json
 from typing import Any
 
 from taskcontroller.domain.values import InputRef
 from taskcontroller.errors import TaskControllerValidationError
 
 A2A_PROTOCOL = "dw.taskcontroller.a2a/v1"
+MAX_REQUEST_CHARS = 4096
+MAX_STATE_BYTES = 8192
+MAX_INPUT_REFS = 16
+MAX_ARTIFACT_REFS = 16
 
 
 class EnvelopeKind(str, Enum):
@@ -70,6 +75,8 @@ class A2AEnvelope:
         normalized_inputs = tuple(self.inputs)
         if any(not isinstance(item, InputRef) for item in normalized_inputs):
             raise TaskControllerValidationError("a2a_envelope.inputs must contain InputRef values")
+        if len(normalized_inputs) > MAX_INPUT_REFS:
+            raise TaskControllerValidationError("a2a_envelope.inputs exceeds bounded reference count")
         object.__setattr__(self, "inputs", normalized_inputs)
 
         normalized_artifacts = tuple(self.artifact_refs)
@@ -77,13 +84,38 @@ class A2AEnvelope:
             raise TaskControllerValidationError(
                 "a2a_envelope.artifact_refs must contain non-empty strings"
             )
+        if len(normalized_artifacts) > MAX_ARTIFACT_REFS:
+            raise TaskControllerValidationError(
+                "a2a_envelope.artifact_refs exceeds bounded reference count"
+            )
         object.__setattr__(self, "artifact_refs", normalized_artifacts)
 
-        if self.request is not None and not isinstance(self.request, str):
-            raise TaskControllerValidationError("a2a_envelope.request must be a string or null")
+        if self.request is not None:
+            if not isinstance(self.request, str):
+                raise TaskControllerValidationError("a2a_envelope.request must be a string or null")
+            if len(self.request) > MAX_REQUEST_CHARS:
+                raise TaskControllerValidationError(
+                    f"a2a_envelope.request exceeds {MAX_REQUEST_CHARS} characters"
+                )
         if not isinstance(self.state, dict):
             raise TaskControllerValidationError("a2a_envelope.state must be an object")
-        object.__setattr__(self, "state", dict(self.state))
+        normalized_state = dict(self.state)
+        try:
+            state_bytes = len(
+                json.dumps(
+                    normalized_state,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    ensure_ascii=False,
+                ).encode("utf-8")
+            )
+        except (TypeError, ValueError) as exc:
+            raise TaskControllerValidationError("a2a_envelope.state must be JSON serializable") from exc
+        if state_bytes > MAX_STATE_BYTES:
+            raise TaskControllerValidationError(
+                f"a2a_envelope.state exceeds {MAX_STATE_BYTES} UTF-8 bytes"
+            )
+        object.__setattr__(self, "state", normalized_state)
 
     def to_dict(self) -> dict[str, Any]:
         payload: dict[str, Any] = {

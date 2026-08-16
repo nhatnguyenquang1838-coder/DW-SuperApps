@@ -80,7 +80,34 @@ Rules:
 - no full Slack/GPT conversation replay;
 - no copied repository body when an exact durable reference exists;
 - large outputs become artifact refs;
+- request is limited to 4096 characters;
+- state is limited to 8192 UTF-8 bytes;
+- at most 16 input refs and 16 artifact refs per envelope;
 - the envelope never creates approval/merge/deploy authority by itself.
+
+## Controller continuation / liveness
+
+A TaskController run is **not** the lifetime of one GPT response.
+
+Before dispatching or waking an Executor, the Controller MUST persist a `dw.taskcontroller.continuation/v1` checkpoint. The checkpoint contains only bounded continuation metadata: run/epoch/phase/next action, Controller/Executor mailbox pointers and cursors, exact head SHA, wake-up binding, and optional Human RootCard ref.
+
+For the GitHub pilot, the same checkpoint is embedded in the Controller mailbox envelope state so a fresh Controller execution can recover it through a durable shared binding. When audit persistence is configured, the checkpoint is also mirrored into the Run Ledger manifest table.
+
+Required pre-dispatch sequence:
+
+```text
+persist continuation
+→ write Controller mailbox with same checkpoint
+→ exact-readback Controller mailbox
+→ send provider wake-up
+→ poll exact Executor mailbox comment only
+```
+
+An `ACTIVE` continuation checkpoint forbids a semantic Controller final/terminal response. The Controller may stop the current host execution only at a genuine human-authority or unrecoverable blocker while leaving the durable run state truthful and recoverable.
+
+While the host execution remains alive, polling is synchronous/in-session at the configured cadence. Polling MUST fetch only the exact Executor mailbox comment referenced by the checkpoint; it MUST NOT repeatedly load the whole GitHub issue, Slack thread, or GPT conversation.
+
+For the current `hermes-cloud` provider, `slack-websocket` is a REQUIRED wake-up binding because Slack WebSocket is Hermes's trigger point. This requirement does not make Slack the command/data bus.
 
 ## Wake-up notification
 
@@ -134,7 +161,7 @@ Audit evidence must preserve at minimum:
 - mailbox/raw payload reference when available;
 - semantic summary only.
 
-Wake-up delivery may be audited as pointer metadata and delivery outcome; it does not duplicate the canonical command payload. Slack is not audit storage.
+The configured Run Ledger also stores the latest continuation manifest. Wake-up delivery may be audited as pointer metadata and delivery outcome; it does not duplicate the canonical command payload. Slack is not audit storage.
 
 ## Controller contract
 
@@ -147,6 +174,7 @@ Controller owns:
 - `CONTINUE | WAIT_CONTROLLER | TERMINAL` behavior;
 - review and bounded `INTERCEPT`;
 - mailbox cursor and human projection state;
+- durable continuation checkpoint and recovery;
 - pointer-only wake-up when the selected Executor requires it.
 
 Do not send rejected alternatives, brainstorming noise, superseded options or unrelated context to the Executor.
@@ -168,14 +196,14 @@ Tool chatter, individual file reads/edits, raw test output, repeated CI polling 
 
 ## Recovery
 
-A fresh Controller session recovers from:
+A fresh Controller execution recovers from:
 
 1. canonical repository/task/run identity;
-2. latest Controller and Executor mailbox envelopes;
-3. per-actor cursor / last-seen sequence;
+2. latest Controller mailbox envelope and its continuation checkpoint;
+3. latest Executor mailbox envelope and per-actor cursor / last-seen sequence;
 4. active contract/subtask;
 5. exact referenced PR/SHA/CI/artifact evidence;
-6. audit ledger/checkpoint when configured;
+6. audit ledger continuation manifest/checkpoint when configured;
 7. latest Slack RootCard binding for human continuity.
 
 Conversation history and Slack thread history are not required recovery inputs.
@@ -198,4 +226,4 @@ HEALTH/no-op/polling events may remain invisible unless they materially affect t
 
 ## Authority
 
-Human approval/merge/deploy authority comes from the active repository/project authority model. GitHub mailbox state, wake-up delivery, Executor completion, Slack buttons or previous messages do not create authority by themselves.
+Human approval/merge/deploy authority comes from the active repository/project authority model. GitHub mailbox state, continuation state, wake-up delivery, Executor completion, Slack buttons or previous messages do not create authority by themselves.

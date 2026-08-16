@@ -22,7 +22,8 @@ classification:
   purpose: >-
     Control and monitor bounded delegated Executor runs with deterministic
     TaskController state, reference-based Agent interaction, durable audit
-    evidence, and a Slack human control/visibility plane.
+    evidence, crash-safe continuation checkpoints, and a Slack human
+    control/visibility plane.
 
 canonical_load_order:
   - AGENTS.md
@@ -51,6 +52,11 @@ interaction:
   pilot_binding: github-reference-mailbox
   one_actor_one_mutable_mailbox: true
   context_by_reference: true
+  bounded_context:
+    request_chars_max: 4096
+    state_utf8_bytes_max: 8192
+    input_refs_max: 16
+    artifact_refs_max: 16
   canonical_ids_from_binding_ids: forbidden
   notification:
     protocol: dw.taskcontroller.wakeup/v1
@@ -60,6 +66,10 @@ interaction:
     command_payload_forbidden: true
     progress_payload_forbidden: true
     canonical_ids_from_notification_ids: forbidden
+    provider_requirements:
+      hermes-cloud:
+        wakeup_binding: slack-websocket
+        required: true
   future_bindings:
     - a2a-http
     - local-ipc
@@ -84,6 +94,7 @@ human_plane:
     mailbox_mode: in-session-incremental
     cadence_seconds: 60
     silent: true
+    exact_mailbox_comment_only: true
     detached_scheduler_allowed: false
   verdicts:
     - CONTINUE
@@ -95,20 +106,42 @@ audit:
   canonical_persistence: taskcontroller/audit/sqlite_writer.py
   facade: taskcontroller/audit/facade.py
   semantic_agent_events_recorded: true
+  continuation_manifest_kind: dw.taskcontroller.continuation/v1
   chain_of_thought_recorded: false
   slack_is_audit_storage: false
+
+resilience:
+  continuation_checkpoint: required-before-dispatch
+  active_run_semantic_final: forbidden
+  continuation_module: taskcontroller/interaction/continuation.py
+  durable_pilot_copy:
+    controller_mailbox_state: required
+    audit_manifest: required-when-audit-configured
+  pre_dispatch_order:
+    - persist-continuation
+    - write-controller-mailbox-with-checkpoint
+    - exact-mailbox-readback
+    - wake-executor
+  recovery_inputs:
+    - current-repository-and-run-identity
+    - controller-mailbox-checkpoint
+    - executor-mailbox-cursor
+    - exact-pr-sha-ci-artifact-refs
+    - audit-continuation-manifest-when-configured
+    - slack-rootcard-binding-for-human-continuity
+  conversation_history_required: false
+  slack_thread_history_required: false
 
 mvp:
   protocol_bridge: taskcontroller/mvp/protocol_bridge.py
   activation_resolver: taskcontroller/mvp/activation.py
   interaction_module: taskcontroller/interaction
+  continuation_checkpoint: taskcontroller/interaction/continuation.py
   full_e2e_runtime: deferred
   explicitly_deferred:
     - SlackTaskControllerPack
     - LeaseManager
     - EventRouter
-    - recovery
-    - checkpoint
     - multi-executor-routing
 
 execution_contract:
@@ -130,6 +163,7 @@ execution_contract:
     - WAIT_CONTROLLER boundaries
     - RootCard state
     - mailbox observation
+    - continuation checkpoint
     - wakeup notification when required
     - report review
     - bounded INTERCEPT
@@ -138,7 +172,7 @@ integrity:
   source_of_truth: current-repository-state
   conversation_memory_authoritative: false
   slack_authoritative: false
-  github_mailbox_authority: communication-binding-only
+  github_mailbox_authority: communication-binding-and-pilot-continuation-copy
   notification_binding_authority: wakeup-only
-  audit_ledger_authoritative_for_recorded_events: true
+  audit_ledger_authoritative_for_recorded-events-and-configured-continuation-manifest: true
   self_modify_agent_instructions_without_explicit_scope: forbidden
