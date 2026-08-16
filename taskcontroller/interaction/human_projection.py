@@ -48,12 +48,17 @@ class HumanEvent:
             )
 
 
-def _detail(envelope: A2AEnvelope, fallback: str) -> str:
-    # Intentionally use only the bounded semantic request. Raw envelope JSON,
-    # input ids, source refs and protocol internals stay out of human surfaces.
-    if envelope.request and envelope.request.strip():
-        return envelope.request.strip()
-    return fallback
+def _human_detail(envelope: A2AEnvelope, fallback: str) -> str:
+    """Return an explicit human-safe summary, never the machine request body."""
+
+    value = envelope.state.get("human_summary")
+    if value is None:
+        return fallback
+    if not isinstance(value, str) or not value.strip():
+        raise TaskControllerValidationError(
+            "a2a_envelope.state.human_summary must be non-empty when supplied"
+        )
+    return value.strip()
 
 
 def _status(envelope: A2AEnvelope, fallback: str) -> str:
@@ -77,7 +82,7 @@ def project_envelope_for_human(envelope: A2AEnvelope) -> HumanEvent | None:
             kind=HumanEventKind.BLOCKED.value,
             title=f"{envelope.sender} blocked",
             status=status,
-            detail=_detail(envelope, "Executor requires intervention."),
+            detail=_human_detail(envelope, "Executor requires intervention."),
             evidence_refs=evidence,
         )
 
@@ -86,7 +91,7 @@ def project_envelope_for_human(envelope: A2AEnvelope) -> HumanEvent | None:
             kind=HumanEventKind.SUBTASK_STARTED.value,
             title=f"Started {envelope.node_id}",
             status=status,
-            detail=_detail(envelope, "A bounded subtask started."),
+            detail=_human_detail(envelope, "A bounded subtask started."),
             evidence_refs=evidence,
         )
     if kind is EnvelopeKind.REPORT:
@@ -94,7 +99,7 @@ def project_envelope_for_human(envelope: A2AEnvelope) -> HumanEvent | None:
             kind=HumanEventKind.MILESTONE_REACHED.value,
             title=f"{envelope.sender} reached a milestone",
             status=status,
-            detail=_detail(envelope, "A contracted milestone was reported."),
+            detail=_human_detail(envelope, "A contracted milestone was reported."),
             evidence_refs=evidence,
         )
     if kind is EnvelopeKind.REVIEW_REQUEST:
@@ -102,7 +107,7 @@ def project_envelope_for_human(envelope: A2AEnvelope) -> HumanEvent | None:
             kind=HumanEventKind.REVIEW_REQUIRED.value,
             title="Controller review required",
             status=status,
-            detail=_detail(envelope, "Executor reached a review boundary."),
+            detail=_human_detail(envelope, "Executor reached a review boundary."),
             evidence_refs=evidence,
         )
     if kind is EnvelopeKind.CORRECTION:
@@ -110,7 +115,7 @@ def project_envelope_for_human(envelope: A2AEnvelope) -> HumanEvent | None:
             kind=HumanEventKind.CORRECTION_REQUIRED.value,
             title="Correction required",
             status=status,
-            detail=_detail(envelope, "Controller issued a bounded correction."),
+            detail=_human_detail(envelope, "Controller issued a bounded correction."),
             evidence_refs=evidence,
         )
     if kind is EnvelopeKind.TERMINAL:
@@ -118,7 +123,7 @@ def project_envelope_for_human(envelope: A2AEnvelope) -> HumanEvent | None:
             kind=HumanEventKind.TERMINAL.value,
             title=f"{envelope.sender} terminal update",
             status=status,
-            detail=_detail(envelope, "The delegated segment reached a terminal boundary."),
+            detail=_human_detail(envelope, "The delegated segment reached a terminal boundary."),
             evidence_refs=evidence,
         )
 
