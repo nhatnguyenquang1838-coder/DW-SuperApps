@@ -16,8 +16,12 @@ the composed layer's own authority (WP2 CAS, WP5 CAS, WP4 fabric preflight).
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
+import uuid
 
+from taskcontroller.audit.event import AuditEvent
+from taskcontroller.audit.facade import AuditFacade, NoOpAuditFacade
 from taskcontroller.controlplane.orchestrator import ControlPlane
 from taskcontroller.execution.orchestrator import (
     forward_signal_to_router,
@@ -43,10 +47,12 @@ class SlackTaskControllerPack:
         control_plane: ControlPlane,
         transport: FakeSlackTransport,
         host_state: TaskControllerHostState | None = None,
+        audit: AuditFacade | None = None,
     ) -> None:
         self._config = config
         self._cp = control_plane
         self._transport = transport
+        self._audit = audit or NoOpAuditFacade()
         # restart-safe: restore the binding registry from host state BEFORE any
         # materialization. This is the core invariant against duplicate roots.
         # The host owns the registry and shares the SAME object with the adapter
@@ -62,7 +68,32 @@ class SlackTaskControllerPack:
             config=config, binding_snapshot=registry.snapshot()
         )
 
+    # -- helpers ---------------------------------------------------------
+
+    def _now_iso(self) -> str:
+        return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    def _audit_event(
+        self,
+        decision_kind: str,
+        payload_summary: str,
+        before: dict[str, Any] | None = None,
+        after: dict[str, Any] | None = None,
+    ) -> None:
+        ev = AuditEvent(
+            event_id=uuid.uuid4().hex,
+            timestamp=self._now_iso(),
+            run_id=self._config.run_id,
+            source="host_pack",
+            decision_kind=decision_kind,
+            payload_summary=payload_summary,
+            before=before or {},
+            after=after or {},
+        )
+        self._audit.emit(ev)
+
     # -- projection (WP6) --------------------------------------------------
+
     def materialize(self, session_id=None, model=None, executor=None) -> dict[str, Any]:
         # refresh mutable metadata from the latest host state
         if session_id is not None:
@@ -83,9 +114,28 @@ class SlackTaskControllerPack:
             executor=self._state.executor,
             checkpoint_version=self._state.checkpoint_version,
         )
+        # emit audit: materialize
+        before_summary = {
+            "session_id": self._state.session_id,
+            "model": self._state.model,
+            "executor": self._state.executor,
+        }
+        after_summary = {
+            "session_id": self._state.session_id,
+            "model": self._state.model,
+            "executor": self._state.executor,
+            "checkpoint_version": self._state.checkpoint_version,
+        }
+        self._audit_event(
+            "AUDIT_MATERIALIZE",
+            f"materialize run={self._config.run_id} s={self._state.session_id}",
+            before=before_summary,
+            after=after_summary,
+        )
         return proj
 
     # -- routing + execution (WP3 + WP4) -----------------------------------
+
     def route_and_dispatch(self, route_registry, request, receipt_id, lease_mgr,
                            adapter_registry, node_id, now, accepted_at=None,
                            command_id=None, adapter_key=None):
@@ -97,6 +147,7 @@ class SlackTaskControllerPack:
         )
 
     # -- trusted adapter signal -> WP2 EventRouter -------------------------
+
     def forward_signal(self, signal, router, store) -> Any:
         # WP2 remains the sole acceptance authority for adapter signals
         return forward_signal_to_router(signal, router, store)
@@ -104,14 +155,24 @@ class SlackTaskControllerPack:
     def signal_to_event(self, signal):
         return signal_to_event(signal)
 
-    # -- control plane (WP5) via WP6 action mapping -------------------------
+    # -- control plane (WP5) via WP6 action mapping -----------------------
+
     def controller_action(self, action, expected_version, command_id=None,
                           new_plan_version=None) -> dict[str, Any]:
-        return self._adapter.apply_action(
+        result = self._adapter.apply_action(
             self._config.run_id, action, expected_version, command_id, new_plan_version
         )
+        # emit audit: controller_action
+        self._audit_event(
+            "AUDIT_CONTROLLER_ACTION",
+            f"controller_action run={self._config.run_id} action={action} v={expected_version}",
+            before={"action": action, "expected_version": expected_version},
+            after={"result": str(result)},
+        )
+        return result
 
     # -- rotation ----------------------------------------------------------
+
     def rotate(self, session_id=None, model=None, executor=None) -> None:
         self._state = self._state.with_metadata(
             session_id=session_id, model=model, executor=executor
@@ -120,8 +181,18 @@ class SlackTaskControllerPack:
             self._config.run_id, "SESSION_ROTATED",
             f"rotation s={session_id} m={model} e={executor}",
         )
+        # emit audit: rotate
+        self._audit_event(
+            "AUDIT_ROTATE",
+            f"rotate run={self._config.run_id} s={session_id} m={model} e={executor}",
+            before={"session_id": self._state.session_id,
+                    "model": self._state.model,
+                    "executor": self._state.executor},
+            after={"session_id": session_id, "model": model, "executor": executor},
+        )
 
-    # -- checkpoint / restore (restart-safe) -------------------------------
+    # -- checkpoint / restore (restart-safe) ------------------------------
+
     def checkpoint_host_state(self) -> TaskControllerHostState:
         snapshot = self._adapter.binding_snapshot()
         self._state = TaskControllerHostState(
@@ -131,6 +202,13 @@ class SlackTaskControllerPack:
             model=self._state.model,
             executor=self._state.executor,
             checkpoint_version=self._state.checkpoint_version + 1,
+        )
+        # emit audit: checkpoint
+        self._audit_event(
+            "AUDIT_CHECKPOINT",
+            f"checkpoint run={self._config.run_id} v={self._state.checkpoint_version}",
+            before={"checkpoint_version": self._state.checkpoint_version - 1},
+            after={"checkpoint_version": self._state.checkpoint_version},
         )
         return self._state
 
