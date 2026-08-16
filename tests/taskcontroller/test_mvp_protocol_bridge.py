@@ -35,8 +35,28 @@ from taskcontroller.mvp.protocol_bridge import (
 BRIDGE_SOURCE = Path(pb.__file__)
 
 
+def _contract(subtask_id="S1", after_report=CONTINUE, **overrides):
+    base = dict(
+        subtask_id=subtask_id,
+        objective="deliver the contracted unit of work",
+        allowed_work=("edit the contracted files",),
+        expected_output=("the contracted artifact",),
+        report_requirement=("exact evidence in the thread reply",),
+        after_report=after_report,
+    )
+    base.update(overrides)
+    return ContractedSubtask(**base)
+
+
 def _report(**overrides):
-    base = dict(subtask_id="S1", status="RUNNING", after=CONTINUE)
+    base = dict(
+        subtask_id="S1",
+        status="RUNNING",
+        completed=("contracted unit of work finished",),
+        evidence=("exact material evidence",),
+        next_action="await controller release",
+        after=CONTINUE,
+    )
     base.update(overrides)
     return ExecutorReport(**base)
 
@@ -67,11 +87,11 @@ class TestExactLiterals:
 
     def test_every_verdict_emitted_is_in_the_four(self):
         cases = [
-            (ContractedSubtask("S1", CONTINUE), _report()),
-            (ContractedSubtask("S1", WAIT_CONTROLLER), _report(after=WAIT_CONTROLLER)),
-            (ContractedSubtask("S1", TERMINAL), _report(after=TERMINAL)),
-            (ContractedSubtask("S1", CONTINUE), _report(subtask_id="S9")),
-            (ContractedSubtask("S1", CONTINUE), _report(status="BLOCKED")),
+            (_contract("S1", CONTINUE), _report()),
+            (_contract("S1", WAIT_CONTROLLER), _report(after=WAIT_CONTROLLER)),
+            (_contract("S1", TERMINAL), _report(after=TERMINAL)),
+            (_contract("S1", CONTINUE), _report(subtask_id="S9")),
+            (_contract("S1", CONTINUE), _report(status="BLOCKED")),
         ]
         for contracted, report in cases:
             assert classify_report(contracted, report).verdict in PROTOCOL_VERDICTS
@@ -82,13 +102,13 @@ class TestNormalMilestone:
     """R4B-2: normal milestone -> contracted CONTINUE."""
 
     def test_normal_milestone_continues(self):
-        v = classify_report(ContractedSubtask("S1", CONTINUE), _report())
+        v = classify_report(_contract("S1", CONTINUE), _report())
         assert v.verdict == CONTINUE
         assert v.intercept_reason is None
         assert v.subtask_id == "S1"
 
     def test_done_status_at_continue_boundary_still_continues(self):
-        v = classify_report(ContractedSubtask("S2", CONTINUE),
+        v = classify_report(_contract("S2", CONTINUE),
                             _report(subtask_id="S2", status="DONE"))
         assert v.verdict == CONTINUE
 
@@ -98,7 +118,7 @@ class TestWaitController:
     """R4B-3: contracted wait -> WAIT_CONTROLLER, zero state mutation."""
 
     def test_contracted_wait_returns_wait_controller(self):
-        v = classify_report(ContractedSubtask("S3", WAIT_CONTROLLER),
+        v = classify_report(_contract("S3", WAIT_CONTROLLER),
                             _report(subtask_id="S3", after=WAIT_CONTROLLER))
         assert v.verdict == WAIT_CONTROLLER
         assert v.runtime_mutated is False
@@ -113,14 +133,14 @@ class TestTerminalIsNotDone:
     """R4B-4: terminal report -> TERMINAL as control-segment result, not runtime DONE."""
 
     def test_contracted_terminal_returns_terminal(self):
-        v = classify_report(ContractedSubtask("S5", TERMINAL),
+        v = classify_report(_contract("S5", TERMINAL),
                             _report(subtask_id="S5", after=TERMINAL))
         assert v.verdict == TERMINAL
         assert "no DONE" in v.detail or "grants no" in v.detail
 
     def test_blocked_and_failed_end_segment_without_done(self):
         for status in ("BLOCKED", "FAILED"):
-            v = classify_report(ContractedSubtask("S5", CONTINUE),
+            v = classify_report(_contract("S5", CONTINUE),
                                 _report(subtask_id="S5", status=status))
             assert v.verdict == TERMINAL
             assert v.verdict != NodeStatus.DONE.value
@@ -149,36 +169,36 @@ class TestFiveInterceptConditions:
         }
 
     def test_scope_drift(self):
-        v = classify_report(ContractedSubtask("S1", CONTINUE), _report(subtask_id="S7"))
+        v = classify_report(_contract("S1", CONTINUE), _report(subtask_id="S7"))
         assert v.verdict == INTERCEPT
         assert v.intercept_reason == InterceptReason.SCOPE_DRIFT
 
     def test_authority_drift(self):
-        v = classify_report(ContractedSubtask("S1", CONTINUE),
+        v = classify_report(_contract("S1", CONTINUE),
                             _report(authority_required=True))
         assert v.verdict == INTERCEPT
         assert v.intercept_reason == InterceptReason.AUTHORITY_DRIFT
 
     def test_plan_drift(self):
-        v = classify_report(ContractedSubtask("S1", CONTINUE),
+        v = classify_report(_contract("S1", CONTINUE),
                             _report(after=TERMINAL))
         assert v.verdict == INTERCEPT
         assert v.intercept_reason == InterceptReason.PLAN_DRIFT
 
     def test_evidence_conflict(self):
-        v = classify_report(ContractedSubtask("S1", CONTINUE),
+        v = classify_report(_contract("S1", CONTINUE),
                             _report(evidence_conflict=True))
         assert v.verdict == INTERCEPT
         assert v.intercept_reason == InterceptReason.EVIDENCE_CONFLICT
 
     def test_material_finding(self):
-        v = classify_report(ContractedSubtask("S1", CONTINUE),
+        v = classify_report(_contract("S1", CONTINUE),
                             _report(material_finding=True))
         assert v.verdict == INTERCEPT
         assert v.intercept_reason == InterceptReason.MATERIAL_FINDING
 
     def test_explicit_drift_flags_intercept(self):
-        v = classify_report(ContractedSubtask("S1", CONTINUE),
+        v = classify_report(_contract("S1", CONTINUE),
                             _report(drift=("plan invalidated",)))
         assert v.verdict == INTERCEPT
         assert "plan invalidated" in v.detail
@@ -197,7 +217,7 @@ class TestFiveInterceptConditions:
 
     def test_scope_drift_takes_precedence_over_everything(self):
         v = classify_report(
-            ContractedSubtask("S1", CONTINUE),
+            _contract("S1", CONTINUE),
             _report(subtask_id="S9", status="BLOCKED", authority_required=True,
                     material_finding=True),
         )
@@ -209,11 +229,11 @@ class TestFailClosed:
     """R4B-6: mismatched subtask / after-report fail closed."""
 
     def test_mismatched_subtask_never_continues(self):
-        v = classify_report(ContractedSubtask("S1", CONTINUE), _report(subtask_id="S2"))
+        v = classify_report(_contract("S1", CONTINUE), _report(subtask_id="S2"))
         assert v.verdict != CONTINUE
 
     def test_mismatched_after_never_continues(self):
-        v = classify_report(ContractedSubtask("S1", WAIT_CONTROLLER),
+        v = classify_report(_contract("S1", WAIT_CONTROLLER),
                             _report(after=CONTINUE))
         assert v.verdict != CONTINUE
         assert v.intercept_reason == InterceptReason.PLAN_DRIFT
@@ -221,21 +241,21 @@ class TestFailClosed:
     def test_invalid_after_value_rejected(self):
         for bad in ("INTERCEPT", "DONE", "COMPLETE", "wait", ""):
             with pytest.raises(TaskControllerValidationError):
-                ExecutorReport(subtask_id="S1", status="RUNNING", after=bad)
+                _report(after=bad)
 
     def test_intercept_is_not_a_plannable_boundary(self):
         with pytest.raises(TaskControllerValidationError):
-            ContractedSubtask("S1", INTERCEPT)
+            _contract("S1", INTERCEPT)
 
     def test_invalid_status_rejected(self):
         with pytest.raises(TaskControllerValidationError):
-            ExecutorReport(subtask_id="S1", status="MAYBE", after=CONTINUE)
+            _report(status="MAYBE")
 
     def test_empty_subtask_id_rejected(self):
         with pytest.raises(TaskControllerValidationError):
-            ExecutorReport(subtask_id="", status="RUNNING", after=CONTINUE)
+            _report(subtask_id="")
         with pytest.raises(TaskControllerValidationError):
-            ContractedSubtask("", CONTINUE)
+            _contract("", CONTINUE)
 
     def test_non_mapping_payload_rejected(self):
         with pytest.raises(TaskControllerValidationError):
@@ -251,7 +271,7 @@ class TestAuthorityCannotBeGranted:
     """R4B-7: authority path cannot approve/merge or mutate runtime."""
 
     def test_authority_required_intercepts_never_approves(self):
-        v = classify_report(ContractedSubtask("S1", TERMINAL),
+        v = classify_report(_contract("S1", TERMINAL),
                             _report(after=TERMINAL, authority_required=True))
         assert v.verdict == INTERCEPT
         assert v.intercept_reason == InterceptReason.AUTHORITY_DRIFT
@@ -288,7 +308,7 @@ class TestInputImmutability:
             assert cls.__dataclass_params__.frozen is True
 
     def test_frozen_inputs_reject_assignment(self):
-        c = ContractedSubtask("S1", CONTINUE)
+        c = _contract("S1", CONTINUE)
         r = _report()
         with pytest.raises(dataclasses.FrozenInstanceError):
             c.after_report = TERMINAL
@@ -296,7 +316,7 @@ class TestInputImmutability:
             r.status = "FAILED"
 
     def test_inputs_byte_equivalent_before_and_after(self):
-        c = ContractedSubtask("S1", CONTINUE)
+        c = _contract("S1", CONTINUE)
         r = _report(evidence=("e1",), drift=())
         before = (copy.deepcopy(dataclasses.asdict(c)), copy.deepcopy(dataclasses.asdict(r)))
         classify_report(c, r)
@@ -304,7 +324,7 @@ class TestInputImmutability:
         assert before == after
 
     def test_classification_is_deterministic(self):
-        c = ContractedSubtask("S1", WAIT_CONTROLLER)
+        c = _contract("S1", WAIT_CONTROLLER)
         r = _report(after=WAIT_CONTROLLER)
         results = {classify_report(c, r).to_dict()["verdict"] for _ in range(25)}
         assert results == {WAIT_CONTROLLER}
@@ -381,3 +401,148 @@ class TestNoForbiddenRuntimeCoupling:
         for forbidden in ("TaskController", "ControllerRun", "TaskPlan", "Subtask",
                           "GPTTaskController", "ControlPlane", "Engine"):
             assert forbidden not in classes
+
+
+# ---------------------------------------------------------------- WP1 (#48)
+class TestCompleteControllerSubtaskContract:
+    """WP1: the typed Controller subtask contract is complete per MVP authority."""
+
+    REQUIRED = (
+        "subtask_id",
+        "objective",
+        "allowed_work",
+        "expected_output",
+        "report_requirement",
+        "after_report",
+    )
+
+    def test_all_six_contract_fields_are_typed_and_present(self):
+        names = tuple(f.name for f in dataclasses.fields(ContractedSubtask))
+        assert names == self.REQUIRED
+
+    def test_contract_round_trips_through_payload(self):
+        c = _contract("S1", WAIT_CONTROLLER)
+        assert ContractedSubtask.from_payload(c.to_dict()) == c
+        assert set(c.to_dict()) == set(self.REQUIRED)
+
+    @pytest.mark.parametrize("missing", REQUIRED)
+    def test_every_contract_field_is_mandatory(self, missing):
+        payload = _contract().to_dict()
+        payload.pop(missing)
+        with pytest.raises(TaskControllerValidationError):
+            ContractedSubtask.from_payload(payload)
+
+    @pytest.mark.parametrize(
+        "field_name", ("allowed_work", "expected_output", "report_requirement")
+    )
+    def test_list_fields_reject_empty_and_bare_string(self, field_name):
+        with pytest.raises(TaskControllerValidationError):
+            _contract(**{field_name: ()})
+        with pytest.raises(TaskControllerValidationError):
+            _contract(**{field_name: "a bare string is not a list"})
+        with pytest.raises(TaskControllerValidationError):
+            _contract(**{field_name: ("",)})
+
+    def test_blank_objective_rejected(self):
+        with pytest.raises(TaskControllerValidationError):
+            _contract(objective="   ")
+
+    def test_contract_payload_must_be_a_mapping(self):
+        with pytest.raises(TaskControllerValidationError):
+            ContractedSubtask.from_payload(["not", "a", "mapping"])
+
+    def test_complete_contract_is_still_frozen_and_carries_no_cursor(self):
+        c = _contract()
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            c.objective = "mutated"  # type: ignore[misc]
+        names = {f.name for f in dataclasses.fields(ContractedSubtask)}
+        assert not (names & {"index", "cursor", "order", "position", "next", "state"})
+
+
+class TestCompleteExecutorReport:
+    """WP1: the typed Executor report is complete per MVP authority."""
+
+    REQUIRED = (
+        "subtask_id",
+        "status",
+        "completed",
+        "evidence",
+        "next_action",
+        "after",
+    )
+
+    def test_all_report_contract_fields_are_typed_and_present(self):
+        names = tuple(f.name for f in dataclasses.fields(ExecutorReport))
+        assert names[: len(self.REQUIRED)] == self.REQUIRED
+        assert "finding_risk" in names
+
+    def test_report_round_trips_through_payload(self):
+        r = _report(finding_risk=("material risk",))
+        assert ExecutorReport.from_payload(r.to_dict()) == r
+
+    @pytest.mark.parametrize("missing", REQUIRED)
+    def test_every_required_report_field_is_mandatory(self, missing):
+        payload = _report().to_dict()
+        payload.pop(missing)
+        with pytest.raises(TaskControllerValidationError):
+            ExecutorReport.from_payload(payload)
+
+    def test_finding_risk_is_optional_only_when_not_material(self):
+        r = _report()
+        assert r.finding_risk == ()
+        assert ExecutorReport.from_payload(_report().to_dict()).finding_risk == ()
+
+    @pytest.mark.parametrize("field_name", ("completed", "evidence"))
+    def test_required_report_lists_reject_empty_and_bare_string(self, field_name):
+        with pytest.raises(TaskControllerValidationError):
+            _report(**{field_name: ()})
+        with pytest.raises(TaskControllerValidationError):
+            _report(**{field_name: "bare string"})
+
+    def test_blank_next_action_rejected(self):
+        with pytest.raises(TaskControllerValidationError):
+            _report(next_action="")
+
+    @pytest.mark.parametrize("field_name", ("finding_risk", "drift"))
+    def test_optional_lists_reject_blank_entries(self, field_name):
+        with pytest.raises(TaskControllerValidationError):
+            _report(**{field_name: ("",)})
+
+    def test_complete_report_preserves_exact_verdict_vocabulary(self):
+        """The richer contract does not widen the four literals."""
+        v = classify_report(_contract("S1", CONTINUE), _report())
+        assert v.verdict == CONTINUE
+        assert (
+            classify_report(
+                _contract("S1", CONTINUE), _report(finding_risk=("noted",))
+            ).verdict
+            == CONTINUE
+        )
+        assert (
+            classify_report(
+                _contract("S1", CONTINUE), _report(drift=("plan invalid",))
+            ).intercept_reason
+            == InterceptReason.MATERIAL_FINDING
+        )
+
+    def test_complete_report_stays_pure_and_stateless(self):
+        """WP1 must not introduce a deferred-core import or any mutation flag."""
+        source = BRIDGE_SOURCE.read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        imported = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module:
+                imported.add(node.module)
+            elif isinstance(node, ast.Import):
+                imported.update(a.name for a in node.names)
+        forbidden = (
+            "taskcontroller.runtime",
+            "taskcontroller.packs",
+            "taskcontroller.projections",
+            "taskcontroller.routing",
+            "taskcontroller.execution",
+            "taskcontroller.controlplane",
+        )
+        for mod in imported:
+            assert not mod.startswith(forbidden), mod
+        assert classify_report(_contract(), _report()).runtime_mutated is False
