@@ -52,6 +52,14 @@ interaction:
   one_actor_one_mutable_mailbox: true
   context_by_reference: true
   canonical_ids_from_binding_ids: forbidden
+  notification:
+    protocol: dw.taskcontroller.wakeup/v1
+    optional_when_executor_does_not_poll: true
+    pilot_binding: slack-wakeup
+    pointer_only: true
+    command_payload_forbidden: true
+    progress_payload_forbidden: true
+    canonical_ids_from_notification_ids: forbidden
   future_bindings:
     - a2a-http
     - local-ipc
@@ -122,6 +130,7 @@ execution_contract:
     - WAIT_CONTROLLER boundaries
     - RootCard state
     - mailbox observation
+    - wakeup notification when required
     - report review
     - bounded INTERCEPT
 
@@ -130,5 +139,6 @@ integrity:
   conversation_memory_authoritative: false
   slack_authoritative: false
   github_mailbox_authority: communication-binding-only
+  notification_binding_authority: wakeup-only
   audit_ledger_authoritative_for_recorded_events: true
   self_modify_agent_instructions_without_explicit_scope: forbidden

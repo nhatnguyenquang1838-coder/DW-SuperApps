@@ -4,6 +4,8 @@ This file is a mandatory additive instruction whenever ChatGPT presents a TaskCo
 
 **Slack is the Human Control Plane.** It is the human-facing operational surface, not the Executor progress transport, canonical run state, or audit store.
 
+A second Slack adapter may be used only when needed: **SlackWakeupBinding** sends a pointer-only notification that a newer Agent mailbox sequence exists. It does not carry the command payload and does not turn Slack into the Agent progress bus.
+
 ## Mandatory load order
 
 Read:
@@ -68,6 +70,25 @@ Do not mirror:
 - recovered transient retries;
 - low-level successful operations without semantic consequence.
 
+## Pointer-only Agent wake-up
+
+When the selected Executor cannot poll/push-subscribe to its mailbox while idle, the Controller may send `WakeupSignal` through Slack.
+
+A wake-up contains only:
+
+```text
+run_id
+recipient
+mailbox_ref
+seq
+```
+
+The Slack rendering may add a minimal label such as `MAILBOX WAKE-UP`, but MUST NOT include the command request, context body, artifacts, implementation instructions, raw A2A envelope, or progress state.
+
+The Executor reads the canonical command from `mailbox_ref`. It does not respond with tool/progress narration on Slack; its semantic result goes to its Agent mailbox. Duplicate/stale wake-ups are harmless.
+
+SlackWakeupBinding and SlackHumanControlPlane may share the Slack connector but remain separate semantics.
+
 ## Monitoring
 
 Executor progress is observed through the current Agent interaction binding (GitHub reference mailbox in the pilot), not by replaying Slack.
@@ -80,7 +101,7 @@ sleep 60s in-session when waiting
 → update RootCard / semantic timeline only if material
 ```
 
-Slack may also be read for human PAUSE/STOP/APPROVE/MERGE input. Human control input and Executor progress transport are separate concerns.
+Slack may also be read for human PAUSE/STOP/APPROVE/MERGE input. Human control input, wake-up delivery and Executor progress transport are separate concerns.
 
 No scheduler/reminder/detached automation replaces the active observation loop.
 
@@ -104,6 +125,6 @@ Full Slack thread replay and previous GPT conversation history are not required 
 
 ## MVP boundary
 
-Keep the pilot slim: one Controller, one main Executor, one GitHub mailbox comment per actor, one Slack RootCard/thread for humans, 3–5 contracted subtasks, incremental mailbox observation, semantic Slack projection and bounded intercepts.
+Keep the pilot slim: one Controller, one main Executor, one GitHub mailbox comment per actor, one Slack RootCard/thread for humans, optional pointer-only wake-up, 3–5 contracted subtasks, incremental mailbox observation, semantic Slack projection and bounded intercepts.
 
 Do not add Kafka/MSK/NATS infrastructure, multi-executor scheduling, or other Full-E2E machinery until the pilot demonstrates a concrete need.

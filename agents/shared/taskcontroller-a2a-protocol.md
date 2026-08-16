@@ -6,7 +6,7 @@ Status: active pilot contract for Controller↔Executor interaction.
 
 This protocol defines **Agent interaction semantics**, independent of transport. The first pilot binding is a GitHub reference mailbox because ChatGPT and heterogeneous Executors can already exchange durable GitHub references without introducing new infrastructure.
 
-**Slack is not the Executor progress transport.** Slack is the Human Control Plane and receives only semantic human projections.
+**Slack is not the Executor progress transport.** Slack is the Human Control Plane and receives only semantic human projections. When an idle Executor cannot poll/push-subscribe to its mailbox, Slack may also carry a separate **pointer-only wake-up notification**.
 
 ## Core invariant
 
@@ -15,7 +15,7 @@ Controller reasoning / decisions
         ↓
 TaskController A2AEnvelope
         ↓
-Communication binding
+Agent mailbox / communication binding
         ↓
 Executor
         ↓
@@ -24,6 +24,18 @@ A2AEnvelope + artifact/context refs
 Controller review
         ↓
 Audit ledger → Human semantic projection → Slack
+```
+
+An optional notification path sits beside, not inside, the data path:
+
+```text
+Controller mailbox seq advances
+        ↓
+WakeupSignal(run_id, recipient, mailbox_ref, seq)
+        ↓
+Notification binding (Slack wake-up in pilot)
+        ↓
+Executor fetches canonical payload from mailbox
 ```
 
 The communication binding may later be GitHub, A2A HTTP, local IPC, NATS, Kafka/MSK or another provider without changing the semantic contract.
@@ -70,6 +82,27 @@ Rules:
 - large outputs become artifact refs;
 - the envelope never creates approval/merge/deploy authority by itself.
 
+## Wake-up notification
+
+Use `dw.taskcontroller.wakeup/v1` and typed `WakeupSignal` only when an Executor needs an external signal to notice unseen mailbox work.
+
+The signal is **pointer-only**:
+
+```text
+run_id
+sender
+recipient
+mailbox_ref
+seq
+updated_at
+```
+
+It MUST NOT carry `request`, `inputs`, `artifact_refs`, `state`, code, context body or command payload. The Executor uses `mailbox_ref` to fetch the canonical A2AEnvelope and validates whether `seq` is newer than its mailbox cursor.
+
+Wake-up delivery is safe to duplicate. Stale/equal sequence does not announce new work. Notification message IDs are transport metadata only.
+
+In the Slack pilot, a wake-up mention is allowed only as `SlackWakeupBinding`; it does not turn Slack into the command/progress bus. After wake-up the Executor reads GitHub and reports to its mailbox. Tool/progress narration on the wake-up channel is forbidden.
+
 ## Context contract
 
 Use **context by exact reference**.
@@ -101,7 +134,7 @@ Audit evidence must preserve at minimum:
 - mailbox/raw payload reference when available;
 - semantic summary only.
 
-Slack is not audit storage.
+Wake-up delivery may be audited as pointer metadata and delivery outcome; it does not duplicate the canonical command payload. Slack is not audit storage.
 
 ## Controller contract
 
@@ -113,7 +146,8 @@ Controller owns:
 - expected evidence;
 - `CONTINUE | WAIT_CONTROLLER | TERMINAL` behavior;
 - review and bounded `INTERCEPT`;
-- mailbox cursor and human projection state.
+- mailbox cursor and human projection state;
+- pointer-only wake-up when the selected Executor requires it.
 
 Do not send rejected alternatives, brainstorming noise, superseded options or unrelated context to the Executor.
 
@@ -130,7 +164,7 @@ Executor updates its own mailbox at contracted milestones and material exception
 - blocker/failure;
 - material finding invalidating the next contracted action.
 
-Tool chatter, individual file reads/edits, raw test output, repeated CI polling and recovered transient retries remain silent.
+Tool chatter, individual file reads/edits, raw test output, repeated CI polling and recovered transient retries remain silent. The same silence rule applies after a wake-up notification.
 
 ## Recovery
 
@@ -160,8 +194,8 @@ Machine state is compacted before Slack. Normal visible events are bounded to se
 - CONTROLLER_RECOVERED;
 - TERMINAL.
 
-HEALTH/no-op/polling events may remain invisible unless they materially affect the human decision.
+HEALTH/no-op/polling events may remain invisible unless they materially affect the human decision. A wake-up notification is an Executor delivery signal, not a semantic progress event.
 
 ## Authority
 
-Human approval/merge/deploy authority comes from the active repository/project authority model. GitHub mailbox state, Executor completion, Slack buttons or previous messages do not create authority by themselves.
+Human approval/merge/deploy authority comes from the active repository/project authority model. GitHub mailbox state, wake-up delivery, Executor completion, Slack buttons or previous messages do not create authority by themselves.
