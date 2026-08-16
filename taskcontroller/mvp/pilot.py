@@ -75,6 +75,9 @@ from taskcontroller.mvp.monitoring import (
     ThreadReply,
     run_monitoring_loop,
 )
+from taskcontroller.audit.event import AuditEvent
+from taskcontroller.audit.facade import AuditFacade, NoOpAuditFacade
+from taskcontroller.audit.integrity import BoundInputSnapshot
 from taskcontroller.mvp.protocol_bridge import (
     CONTRACTED_AFTER_VALUES,
     ContractedSubtask,
@@ -998,6 +1001,7 @@ class MvpPilotConfig:
     authority_boundary: bool = False
     merge_ready: bool = False
     paused: bool = False
+    audit_facade: Any = None
     advanced_mode: bool = False
 
 
@@ -1016,6 +1020,30 @@ class MvpPilot:
     _plan: PlanBlock | None = field(default=None, init=False)
 
     # -- construction -------------------------------------------------------
+    def _build_bound_input_snapshot(self) -> BoundInputSnapshot:
+        return BoundInputSnapshot(
+            repo_refs={
+                "main": getattr(self.config, "head_sha", None) or "",
+            },
+            contract_overlays=list(self.config.contracts[0].allowed_work if self.config.contracts else []),
+            execution_contract={
+                "run_id": self.config.run_id,
+                "subtask_id": self._active_subtask_id(),
+            },
+            source_evidence=[
+                self.config.controller,
+                self.config.executor,
+            ],
+        )
+
+    def _record_audit_event(self, event: AuditEvent) -> None:
+        facade = getattr(self.config, "audit_facade", None)
+        if facade is None:
+            return
+        if isinstance(facade, NoOpAuditFacade):
+            return
+        facade.record(self.config.run_id, event)
+
     def _active_subtask_id(self) -> str:
         if self.config.active_subtask_id:
             return self.config.active_subtask_id
@@ -1069,7 +1097,18 @@ class MvpPilot:
         MUST keep the same ``root_ts`` (it cannot create a second root).
         """
         if self._root_ts is not None:
-            return self._root_ts  # already bound -> no second CREATE_ROOT
+            # Already bound -> no second CREATE_ROOT. Audit the rotation update.
+            self._record_audit_event(
+                AuditEvent(
+                    event_id=f"root-rotate-{self.config.run_id}",
+                    timestamp="2026-08-16T00:00:00Z",
+                    run_id=self.config.run_id,
+                    source="mvp.pilot",
+                    decision_kind="ROOT_UPDATE",
+                    payload_summary="root rotation / metadata update",
+                )
+            )
+            return self._root_ts
         if self.config.root_ts is not None:
             self._root_ts = self.config.root_ts
             return self._root_ts
@@ -1079,6 +1118,16 @@ class MvpPilot:
         blocks = translate_rootcard_to_blocks(self._card)
         validate_slack_blocks(blocks)
         self._root_ts = self.config.slack.create_root(self.config.channel, blocks)
+        self._record_audit_event(
+            AuditEvent(
+                event_id=f"root-create-{self.config.run_id}",
+                timestamp="2026-08-16T00:00:00Z",
+                run_id=self.config.run_id,
+                source="mvp.pilot",
+                decision_kind="ROOT_CREATE",
+                payload_summary="initial RootCard created",
+            )
+        )
         return self._root_ts
 
     # -- A. dispatch only the selected current subtask INTO the thread -----
@@ -1189,9 +1238,9 @@ class MvpPilot:
         * ``max_polls=None`` (the default) means the live loop stays active
           until a boundary verdict is reached (unbounded). A positive int is
           only for tests/debug. ``max_polls < 1``/``0``/``False`` is rejected.
-        * The live path FAILS CLOSED if no Executor identity is bound —
-          a live dispatch must address a real, configured Executor (no
-          hardcoded ID).
+        * The live path FAILS CLOSED if no Executor identity is bound — a
+          live dispatch must address a real, configured Executor (no hardcoded
+          ID).
 
         Synchronous and in-session only: no thread, no scheduler, no detached
         execution.
@@ -1224,7 +1273,9 @@ class MvpPilot:
             # transport filters strictly to the Executor's replies. No hardcoded
             # ID; config.executor_user_id is the source of truth for the run.
             return self.config.slack.read_thread_replies(
-                self.config.channel, root_ts, last_seen_ts,
+                self.config.channel,
+                root_ts,
+                last_seen_ts,
                 self.config.executor_user_id,
             )
 
