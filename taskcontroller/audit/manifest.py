@@ -8,6 +8,7 @@ from typing import Any
 @dataclass(frozen=True)
 class RunManifest:
     run_id: str
+    manifest_kind: str
     schema_version: str
     created_at: str
     updated_at: str
@@ -16,6 +17,8 @@ class RunManifest:
     def __post_init__(self) -> None:
         if not self.run_id:
             raise ValueError("run_id is required")
+        if not self.manifest_kind:
+            raise ValueError("manifest_kind is required")
         if not self.schema_version:
             raise ValueError("schema_version is required")
         if not self.created_at:

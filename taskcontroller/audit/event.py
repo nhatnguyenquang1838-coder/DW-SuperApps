@@ -19,6 +19,7 @@ class AuditEvent:
     authority_ref: str = ""
     payload_summary: str = ""
     raw_payload_ref: str = ""
+    sequence: int | None = None
 
     before: dict[str, Any] = field(default_factory=dict)
     after: dict[str, Any] = field(default_factory=dict)

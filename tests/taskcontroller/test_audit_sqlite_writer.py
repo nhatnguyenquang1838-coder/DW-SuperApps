@@ -12,6 +12,7 @@ from taskcontroller.audit.sqlite_writer import SQLiteRunLedger
 from taskcontroller.audit.manifest import RunManifest
 from taskcontroller.audit.summary import RunSummary
 from taskcontroller.audit.query import RunQuery
+from taskcontroller.audit.facade import AuditFacade, NoOpAuditFacade
 
 
 def _make_event(run_id: str, sequence: int, decision_kind: str = "TEST") -> AuditEvent:
@@ -71,6 +72,12 @@ class TestSQLiteRunLedgerAppend:
         assert ledger.append("run-a", _make_event("run-a", 1)) == 1
         assert ledger.append("run-b", _make_event("run-b", 1)) == 1
 
+    def test_run_id_mismatch_rejected(self, tmp_path: Path) -> None:
+        ledger = SQLiteRunLedger(tmp_path / "ledger.db")
+        event = _make_event("run-1", 1)
+        with pytest.raises(ValueError, match="RUN_ID_MISMATCH"):
+            ledger.append("run-other", event)
+
 
 class TestSQLiteRunLedgerReopen:
     def test_reopen_and_append(self, tmp_path: Path) -> None:
@@ -81,35 +88,50 @@ class TestSQLiteRunLedgerReopen:
         seq = ledger2.append("run-1", _make_event("run-1", 2))
         assert seq == 2
 
-    def test_reconstruct_events(self, tmp_path: Path) -> None:
+    def test_reconstruct_events_with_sequence(self, tmp_path: Path) -> None:
         db = tmp_path / "ledger.db"
         ledger1 = SQLiteRunLedger(db)
         ledger1.append("run-1", _make_event("run-1", 1))
         ledger1.append("run-1", _make_event("run-1", 2))
         ledger2 = SQLiteRunLedger(db)
         events = ledger2.events("run-1")
+        assert [e.sequence for e in events] == [1, 2]
         assert [e.event_id for e in events] == ["evt-run-1-1", "evt-run-1-2"]
 
 
-class TestSQLiteRunLedgerManifest:
-    def test_upsert_manifest(self, tmp_path: Path) -> None:
-        ledger = SQLiteRunLedger(tmp_path / "ledger.db")
-        manifest = RunManifest(
+class TestSQLiteRunLedgerManifests:
+    def test_two_manifests_survive_reopen(self, tmp_path: Path) -> None:
+        db = tmp_path / "ledger.db"
+        ledger1 = SQLiteRunLedger(db)
+        input_manifest = RunManifest(
             run_id="run-1",
+            manifest_kind="INPUT",
             schema_version="1.0",
             created_at="2026-08-16T00:00:00Z",
             updated_at="2026-08-16T00:00:00Z",
             metadata={"author": "test"},
         )
-        ledger.upsert_manifest(manifest)
-        loaded = ledger.manifest("run-1")
-        assert loaded.run_id == "run-1"
-        assert loaded.schema_version == "1.0"
-        assert loaded.metadata["author"] == "test"
+        output_manifest = RunManifest(
+            run_id="run-1",
+            manifest_kind="OUTPUT",
+            schema_version="1.0",
+            created_at="2026-08-16T00:00:01Z",
+            updated_at="2026-08-16T00:00:01Z",
+            metadata={"result": "ok"},
+        )
+        ledger1.upsert_manifest(input_manifest)
+        ledger1.upsert_manifest(output_manifest)
+
+        ledger2 = SQLiteRunLedger(db)
+        all_manifests = ledger2.manifests("run-1")
+        assert len(all_manifests) == 2
+        assert {m.manifest_kind for m in all_manifests} == {"INPUT", "OUTPUT"}
+        assert ledger2.manifest("run-1", "INPUT").metadata["author"] == "test"
+        assert ledger2.manifest("run-1", "OUTPUT").metadata["result"] == "ok"
 
     def test_missing_manifest_returns_none(self, tmp_path: Path) -> None:
         ledger = SQLiteRunLedger(tmp_path / "ledger.db")
-        assert ledger.manifest("missing") is None
+        assert ledger.manifest("missing", "INPUT") is None
 
 
 class TestSQLiteRunLedgerSummary:
@@ -149,6 +171,25 @@ class TestSQLiteRunLedgerQuery:
         SQLiteRunLedger(db).append("run-1", _make_event("run-1", 1, "A"))
         results = SQLiteRunLedger(db).query(run_id="run-1")
         assert len(results) == 1
+
+
+class TestAuditFacade:
+    def test_noop_facade_basic_contract(self) -> None:
+        facade = NoOpAuditFacade()
+        assert facade.record("run-1", _make_event("run-1", 1)) == 0
+        assert facade.events("run-1") == []
+        assert facade.list_manifests("run-1") == []
+        assert facade.load_summary("run-1") is None
+        facade.close()
+
+    def test_real_facade_wraps_ledger(self, tmp_path: Path) -> None:
+        facade = AuditFacade(tmp_path / "ledger.db")
+        seq = facade.record("run-1", _make_event("run-1", 1))
+        assert seq == 1
+        events = facade.events("run-1")
+        assert len(events) == 1
+        assert events[0].sequence == 1
+        facade.close()
 
 
 class TestDeterministicSerialization:

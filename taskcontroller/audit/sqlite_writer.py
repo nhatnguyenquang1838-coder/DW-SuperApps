@@ -60,11 +60,13 @@ class SQLiteRunLedger:
             CREATE UNIQUE INDEX IF NOT EXISTS idx_events_run_sequence ON events(run_id, sequence);
 
             CREATE TABLE IF NOT EXISTS manifests (
-                run_id TEXT PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                manifest_kind TEXT NOT NULL,
                 schema_version TEXT NOT NULL,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
-                metadata TEXT DEFAULT '{}'
+                metadata TEXT DEFAULT '{}',
+                PRIMARY KEY (run_id, manifest_kind)
             );
 
             CREATE TABLE IF NOT EXISTS run_summaries (
@@ -81,6 +83,10 @@ class SQLiteRunLedger:
         self._conn.commit()
 
     def append(self, run_id: str, event: AuditEvent, expected_sequence: int | None = None) -> int:
+        if event.run_id != run_id:
+            raise ValueError(
+                f"RUN_ID_MISMATCH arg={run_id} event.run_id={event.run_id}"
+            )
         cursor = self._conn.execute(
             "SELECT COUNT(1) FROM events WHERE run_id = ? AND event_id = ?",
             (run_id, event.event_id),
@@ -169,6 +175,7 @@ class SQLiteRunLedger:
                     authority_ref=row["authority_ref"],
                     payload_summary=row["payload_summary"],
                     raw_payload_ref=row["raw_payload_ref"],
+                    sequence=row["sequence"],
                     before=json.loads(row["before"]),
                     after=json.loads(row["after"]),
                     evidence_refs=tuple(json.loads(row["evidence_refs"])),
@@ -181,15 +188,16 @@ class SQLiteRunLedger:
     def upsert_manifest(self, manifest: Any) -> None:
         self._conn.execute(
             """
-            INSERT INTO manifests (run_id, schema_version, created_at, updated_at, metadata)
-            VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT(run_id) DO UPDATE SET
+            INSERT INTO manifests (run_id, manifest_kind, schema_version, created_at, updated_at, metadata)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(run_id, manifest_kind) DO UPDATE SET
                 schema_version = excluded.schema_version,
                 updated_at = excluded.updated_at,
                 metadata = excluded.metadata
             """,
             (
                 manifest.run_id,
+                manifest.manifest_kind,
                 manifest.schema_version,
                 manifest.created_at,
                 manifest.updated_at,
@@ -198,20 +206,39 @@ class SQLiteRunLedger:
         )
         self._conn.commit()
 
-    def manifest(self, run_id: str) -> Any | None:
+    def manifest(self, run_id: str, manifest_kind: str) -> Any | None:
         cursor = self._conn.execute(
-            "SELECT * FROM manifests WHERE run_id = ?", (run_id,)
+            "SELECT * FROM manifests WHERE run_id = ? AND manifest_kind = ?",
+            (run_id, manifest_kind),
         )
         row = cursor.fetchone()
         if row is None:
             return None
         return RunManifest(
             run_id=row["run_id"],
+            manifest_kind=row["manifest_kind"],
             schema_version=row["schema_version"],
             created_at=row["created_at"],
             updated_at=row["updated_at"],
             metadata=json.loads(row["metadata"]),
         )
+
+    def manifests(self, run_id: str) -> list[Any]:
+        cursor = self._conn.execute(
+            "SELECT * FROM manifests WHERE run_id = ? ORDER BY manifest_kind ASC",
+            (run_id,),
+        )
+        return [
+            RunManifest(
+                run_id=row["run_id"],
+                manifest_kind=row["manifest_kind"],
+                schema_version=row["schema_version"],
+                created_at=row["created_at"],
+                updated_at=row["updated_at"],
+                metadata=json.loads(row["metadata"]),
+            )
+            for row in cursor.fetchall()
+        ]
 
     def upsert_summary(self, summary: Any) -> None:
         self._conn.execute(
@@ -286,6 +313,7 @@ class SQLiteRunLedger:
                     authority_ref=row["authority_ref"],
                     payload_summary=row["payload_summary"],
                     raw_payload_ref=row["raw_payload_ref"],
+                    sequence=row["sequence"],
                     before=json.loads(row["before"]),
                     after=json.loads(row["after"]),
                     evidence_refs=tuple(json.loads(row["evidence_refs"])),
