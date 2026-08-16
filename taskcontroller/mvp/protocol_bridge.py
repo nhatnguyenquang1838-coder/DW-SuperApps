@@ -47,7 +47,7 @@ Deliberately NOT imported (deferred Full-E2E surface):
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 from taskcontroller.errors import TaskControllerValidationError
 
@@ -88,31 +88,133 @@ class InterceptReason:
     )
 
 
+def _require_text(value: Any, field_name: str) -> str:
+    """Validate one required free-text contract field (non-empty string)."""
+    if not isinstance(value, str) or not value.strip():
+        raise TaskControllerValidationError(f"{field_name} must be a non-empty string")
+    return value
+
+
+def _require_items(value: Any, field_name: str) -> tuple[str, ...]:
+    """Validate one required non-empty tuple of non-empty strings."""
+    if isinstance(value, str) or not isinstance(value, Sequence):
+        raise TaskControllerValidationError(
+            f"{field_name} must be a sequence of strings, not a bare string"
+        )
+    items = tuple(value)
+    if not items:
+        raise TaskControllerValidationError(f"{field_name} must not be empty")
+    for item in items:
+        if not isinstance(item, str) or not item.strip():
+            raise TaskControllerValidationError(
+                f"{field_name} entries must be non-empty strings"
+            )
+    return items
+
+
+def _optional_items(value: Any, field_name: str) -> tuple[str, ...]:
+    """Validate one optional tuple of non-empty strings (may be empty)."""
+    if value is None:
+        return ()
+    if isinstance(value, str) or not isinstance(value, Sequence):
+        raise TaskControllerValidationError(
+            f"{field_name} must be a sequence of strings, not a bare string"
+        )
+    items = tuple(value)
+    for item in items:
+        if not isinstance(item, str) or not item.strip():
+            raise TaskControllerValidationError(
+                f"{field_name} entries must be non-empty strings"
+            )
+    return items
+
+
 @dataclass(frozen=True)
 class ContractedSubtask:
     """The Controller-side contract for one subtask boundary.
 
-    Mirrors the five fields the MVP protocol requires, reduced to what a
-    verdict actually depends on. This is NOT a plan engine: it holds no
-    ordering, no index, no cursor, and it never advances.
+    Materializes the COMPLETE typed MVP Controller subtask contract as
+    mandated by ``agents/chatgpt-agent/slack-controller-mvp.md`` and
+    ``agents/shared/slack-controller-executor-protocol.md``::
+
+        ID
+        Objective
+        Allowed work
+        Expected output
+        Report requirement
+        After report = CONTINUE | WAIT_CONTROLLER | TERMINAL
+
+    This is NOT a plan engine: it holds no ordering, no index, no cursor, and
+    it never advances. It is a frozen, validated value object only.
     """
 
     subtask_id: str
+    objective: str
+    allowed_work: tuple[str, ...]
+    expected_output: tuple[str, ...]
+    report_requirement: tuple[str, ...]
     after_report: str
 
     def __post_init__(self) -> None:
-        if not isinstance(self.subtask_id, str) or not self.subtask_id:
-            raise TaskControllerValidationError("subtask_id must be a non-empty string")
+        _require_text(self.subtask_id, "subtask_id")
+        _require_text(self.objective, "objective")
+        object.__setattr__(
+            self, "allowed_work", _require_items(self.allowed_work, "allowed_work")
+        )
+        object.__setattr__(
+            self,
+            "expected_output",
+            _require_items(self.expected_output, "expected_output"),
+        )
+        object.__setattr__(
+            self,
+            "report_requirement",
+            _require_items(self.report_requirement, "report_requirement"),
+        )
         if self.after_report not in CONTRACTED_AFTER_VALUES:
             raise TaskControllerValidationError(
                 f"invalid contracted after_report: {self.after_report!r}; "
                 f"expected one of {CONTRACTED_AFTER_VALUES}"
             )
 
+    @classmethod
+    def from_payload(cls, payload: Mapping[str, Any]) -> "ContractedSubtask":
+        """Build from a plain mapping. Validates; defines no JSON schema."""
+        if not isinstance(payload, Mapping):
+            raise TaskControllerValidationError("contract payload must be a mapping")
+        return cls(
+            subtask_id=payload.get("subtask_id", ""),
+            objective=payload.get("objective", ""),
+            allowed_work=payload.get("allowed_work", ()),
+            expected_output=payload.get("expected_output", ()),
+            report_requirement=payload.get("report_requirement", ()),
+            after_report=payload.get("after_report", ""),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "subtask_id": self.subtask_id,
+            "objective": self.objective,
+            "allowed_work": list(self.allowed_work),
+            "expected_output": list(self.expected_output),
+            "report_requirement": list(self.report_requirement),
+            "after_report": self.after_report,
+        }
+
 
 @dataclass(frozen=True)
 class ExecutorReport:
     """One Executor thread update at a contracted milestone.
+
+    Materializes the COMPLETE typed MVP Executor report::
+
+        Subtask / milestone
+        Status
+        Completed
+        Evidence
+        Finding / Risk        # only when material
+        Next
+        After = CONTINUE | WAIT_CONTROLLER | TERMINAL
 
     ``authority_required`` carries a projection-layer authority signal (e.g. an
     ``AuthorityResult`` for APPROVE/MERGE). ``evidence_conflict`` carries a
@@ -121,20 +223,31 @@ class ExecutorReport:
 
     subtask_id: str
     status: str
+    completed: tuple[str, ...]
+    evidence: tuple[str, ...]
+    next_action: str
     after: str
-    evidence: tuple[str, ...] = field(default_factory=tuple)
+    finding_risk: tuple[str, ...] = field(default_factory=tuple)
     drift: tuple[str, ...] = field(default_factory=tuple)
     material_finding: bool = False
     authority_required: bool = False
     evidence_conflict: bool = False
 
     def __post_init__(self) -> None:
-        if not isinstance(self.subtask_id, str) or not self.subtask_id:
-            raise TaskControllerValidationError("subtask_id must be a non-empty string")
+        _require_text(self.subtask_id, "subtask_id")
         if self.status not in REPORT_STATUSES:
             raise TaskControllerValidationError(
                 f"invalid report status: {self.status!r}; expected one of {REPORT_STATUSES}"
             )
+        object.__setattr__(
+            self, "completed", _require_items(self.completed, "completed")
+        )
+        object.__setattr__(self, "evidence", _require_items(self.evidence, "evidence"))
+        _require_text(self.next_action, "next_action")
+        object.__setattr__(
+            self, "finding_risk", _optional_items(self.finding_risk, "finding_risk")
+        )
+        object.__setattr__(self, "drift", _optional_items(self.drift, "drift"))
         if self.after not in CONTRACTED_AFTER_VALUES:
             raise TaskControllerValidationError(
                 f"invalid report after value: {self.after!r}; "
@@ -149,13 +262,31 @@ class ExecutorReport:
         return cls(
             subtask_id=payload.get("subtask_id", ""),
             status=payload.get("status", ""),
+            completed=payload.get("completed", ()),
+            evidence=payload.get("evidence", ()),
+            next_action=payload.get("next_action", ""),
             after=payload.get("after", ""),
-            evidence=tuple(payload.get("evidence", ()) or ()),
-            drift=tuple(payload.get("drift", ()) or ()),
+            finding_risk=payload.get("finding_risk", ()),
+            drift=payload.get("drift", ()),
             material_finding=bool(payload.get("material_finding", False)),
             authority_required=bool(payload.get("authority_required", False)),
             evidence_conflict=bool(payload.get("evidence_conflict", False)),
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "subtask_id": self.subtask_id,
+            "status": self.status,
+            "completed": list(self.completed),
+            "evidence": list(self.evidence),
+            "finding_risk": list(self.finding_risk),
+            "next_action": self.next_action,
+            "after": self.after,
+            "drift": list(self.drift),
+            "material_finding": self.material_finding,
+            "authority_required": self.authority_required,
+            "evidence_conflict": self.evidence_conflict,
+        }
 
 
 @dataclass(frozen=True)
