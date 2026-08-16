@@ -1,8 +1,9 @@
 """Contract tests for explicit TaskController activation routing.
 
-These tests prevent a regression back to memory-driven / implicit activation.
-They intentionally test the small deterministic resolver plus the repository
-registry/instruction bindings that every host must load from current state.
+These tests prevent a regression back to memory-driven / implicit activation
+and now also lock the reference-based Agent interaction boundary: Slack is the
+human control plane while the Agent protocol uses a transport-neutral A2A
+contract with a GitHub reference mailbox as the first pilot binding.
 """
 
 from __future__ import annotations
@@ -53,7 +54,7 @@ def test_unmentioned_controller_returns_inactive_plan():
     assert plan.load_order == ()
 
 
-def test_chatgpt_slack_hermes_loads_complete_canonical_chain():
+def test_chatgpt_slack_hermes_loads_reference_a2a_and_human_plane_chain():
     plan = resolve_taskcontroller_activation(
         "TaskController: control Hermes Cloud",
         host="chatgpt",
@@ -63,16 +64,18 @@ def test_chatgpt_slack_hermes_loads_complete_canonical_chain():
     assert plan.active is True
     assert plan.memory_fallback_allowed is False
     assert plan.full_e2e_runtime_active is False
+    assert plan.interaction_binding == "github-reference-mailbox"
     assert plan.load_order == (
         "AGENTS.md",
         "workspace.yaml",
         "controllers/taskcontroller.yaml",
         "agents/README.md",
         "agents/chatgpt-agent/agent-instructions.md",
-        "agents/shared/slack-controller-executor-protocol.md",
+        "agents/shared/taskcontroller-a2a-protocol.md",
         "agents/chatgpt-agent/slack-controller-mvp.md",
         "agents/hermes/agent-instructions.md",
     )
+    assert "agents/shared/slack-controller-executor-protocol.md" not in plan.load_order
     assert plan.slack_canvases_required == (
         "Slack Communication Policy",
         "Governance Behavior",
@@ -108,12 +111,28 @@ def test_registry_forbids_memory_fallback_and_defers_full_e2e():
     assert "taskcontroller/mvp/protocol_bridge.py" in registry
 
 
+def test_registry_separates_agent_binding_from_slack_human_plane():
+    registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
+    assert "pilot_binding: github-reference-mailbox" in registry
+    assert "human_control_plane: slack" in registry
+    assert "agents/shared/taskcontroller-a2a-protocol.md" in registry
+    assert "one_actor_one_mutable_mailbox: true" in registry
+    assert "thread_semantics: controller-command-executor-report-evidence" not in registry
+
+
 def test_root_agents_contains_hard_activation_guard():
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     assert "Any explicit user mention of `TaskController`" in agents
     assert "MUST activate TaskController" in agents
     assert "MUST NOT substitute for the canonical load chain" in agents
     assert "Activating TaskController does not automatically activate GWC" in agents
+
+
+def test_root_agents_declares_slack_human_plane_and_reference_agent_binding():
+    agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+    assert "Slack is the Human Control Plane" in agents
+    assert "GitHub reference mailbox is the current Agent interaction pilot binding" in agents
+    assert "Slack thread history MUST NOT be the canonical Agent execution journal" in agents
 
 
 def test_chatgpt_overlay_blocks_boot_claim_before_load():
@@ -123,3 +142,33 @@ def test_chatgpt_overlay_blocks_boot_claim_before_load():
     assert "before planning, delegating, posting to Slack, or claiming the controller is booted" in overlay
     assert "Do not substitute conversation memory" in overlay
     assert "activation `BLOCKED`" in overlay
+
+
+def test_agent_protocol_is_reference_based_and_transport_neutral():
+    protocol = (
+        ROOT / "agents" / "shared" / "taskcontroller-a2a-protocol.md"
+    ).read_text(encoding="utf-8")
+    assert "Reference-Based Agent Interaction Protocol" in protocol
+    assert "one actor = one mutable mailbox comment" in protocol
+    assert "context by exact reference" in protocol
+    assert "Slack is not the Executor progress transport" in protocol
+    assert "A2A HTTP" in protocol
+
+
+def test_slack_overlay_is_human_projection_not_machine_journal():
+    overlay = (
+        ROOT / "agents" / "chatgpt-agent" / "slack-controller-mvp.md"
+    ).read_text(encoding="utf-8")
+    assert "Slack is the Human Control Plane" in overlay
+    assert "semantic timeline" in overlay
+    assert "Do not use Slack thread replies as the Executor progress transport" in overlay
+    assert "mailbox cursor" in overlay
+
+
+def test_hermes_reports_to_mailbox_not_slack_journal():
+    overlay = (ROOT / "agents" / "hermes" / "agent-instructions.md").read_text(
+        encoding="utf-8"
+    )
+    assert "GitHub reference mailbox" in overlay
+    assert "update its own mailbox comment in place" in overlay
+    assert "Do not use Slack as the normal progress journal" in overlay
