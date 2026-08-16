@@ -33,6 +33,7 @@ The Controller owns:
 - expected evidence;
 - `CONTINUE | WAIT_CONTROLLER | TERMINAL` boundaries;
 - mailbox cursor/observation state;
+- durable continuation checkpoint state;
 - Slack RootCard/human projection state when Slack is active;
 - report review and bounded INTERCEPT decisions.
 
@@ -45,16 +46,39 @@ Use the TaskController reference-based A2A protocol. The current pilot binding i
 Normal control loop:
 
 ```text
-publish compact command envelope / refs
+persist ACTIVE continuation checkpoint
+→ publish compact Controller mailbox envelope + exact refs + same checkpoint
+→ exact-readback Controller mailbox
+→ wake Executor when required by provider capability
 → sleep 60s in-session when waiting
-→ read mailbox state newer than the actor cursor
+→ read only the exact Executor mailbox comment newer than the actor cursor
 → validate sequence, contract, exact refs/evidence
+→ update/persist continuation state
 → record semantic audit event when audit is configured
 → CONTINUE | WAIT_CONTROLLER | INTERCEPT | TERMINAL
 → project only material human consequences to Slack
 ```
 
-Do not re-read the full Slack thread to discover Executor progress. Do not use Slack thread replies as the machine execution journal.
+Do not re-read the full GitHub issue, full Slack thread, or conversation history to discover Executor progress. Do not use Slack thread replies as the machine execution journal.
+
+## Controller liveness / continuation invariant
+
+A GPT response lifetime is not a TaskController run lifetime.
+
+Before dispatching or waking an Executor, persist a `dw.taskcontroller.continuation/v1` checkpoint. The current pilot keeps a compact durable copy in the Controller GitHub mailbox envelope and, when audit persistence is configured, mirrors it in the Run Ledger manifest table.
+
+Required pre-dispatch order:
+
+1. persist continuation checkpoint;
+2. write Controller mailbox with the same checkpoint;
+3. exact-readback the Controller mailbox;
+4. only then send the provider wake-up signal.
+
+If the checkpoint is `ACTIVE`, the Controller MUST NOT emit a semantic final/terminal response. A final response is allowed only after the checkpoint is explicitly `TERMINAL`, or when a genuine human-authority/unrecoverable blocker is reported while keeping the run continuation state truthful.
+
+On a fresh Controller execution, recover from current repository/run identity, latest Controller mailbox continuation checkpoint, Executor mailbox cursor, exact PR/SHA/CI/artifact refs, configured audit manifest, and Slack RootCard binding. Do not replay previous GPT/Slack history.
+
+For Hermes Cloud in the current pilot, wake-up capability is `slack-websocket` and is required. The Slack wake-up is pointer-only; the command body remains in the GitHub mailbox.
 
 ## Context and repository truth
 
@@ -65,6 +89,8 @@ Prefer exact durable references over copied context:
 - file + line/range;
 - review thread;
 - artifact/digest.
+
+A2A request/state are bounded. Large source, logs, conversations, or artifacts must remain behind exact refs rather than being copied into the envelope.
 
 Executor base/head mismatch is evidence conflict / `BASE_DRIFT`, not a reason to silently continue.
 
@@ -88,4 +114,4 @@ Thinking, raw tool output, individual file activity, ACKs, mailbox sequence chur
 
 ## Audit invariant
 
-When the TaskController audit facade is configured, record bounded semantic Controller/Executor events and evidence references in the Run Ledger. Do not store chain-of-thought. Slack is not audit storage.
+When the TaskController audit facade is configured, record bounded semantic Controller/Executor events, evidence references, and the continuation manifest in the Run Ledger. Do not store chain-of-thought. Slack is not audit storage.
