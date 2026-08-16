@@ -13,64 +13,79 @@ Resolve from current repository state, not memory:
 3. read `workspace.yaml` and confirm enabled controller `taskcontroller`;
 4. read `controllers/taskcontroller.yaml`;
 5. read `agents/README.md`;
-6. load the host/transport/executor entrypoints required by that registry.
+6. load the host/interaction/human-plane/executor entrypoints required by that registry.
 
-For ChatGPT + Slack, this necessarily includes:
+For the active pilot this includes `agents/shared/taskcontroller-a2a-protocol.md`. For Slack human visibility it also includes `agents/chatgpt-agent/slack-controller-mvp.md`, the Slack connector, `Slack Communication Policy`, and `Governance Behavior`. For Hermes execution, also require `agents/hermes/agent-instructions.md`.
 
-- `agents/shared/slack-controller-executor-protocol.md`
-- `agents/chatgpt-agent/slack-controller-mvp.md`
-- current Slack connector
-- `Slack Communication Policy`
-- `Governance Behavior`
-
-For Hermes execution, also require `agents/hermes/agent-instructions.md`.
-
-Do not substitute conversation memory, prior summaries, old Slack messages, a previous session's activation, or the existence of TaskController Python modules for this load chain. If any mandatory entrypoint is unavailable, report activation `BLOCKED` instead of fabricating a RootCard/contract.
-
-The current MVP uses `taskcontroller/mvp/activation.py` for deterministic explicit-mention routing and `taskcontroller/mvp/protocol_bridge.py` for verdict translation. Full-E2E runtime modules remain deferred unless current repository policy separately activates them.
+Do not substitute conversation memory, prior summaries, old Slack messages, a previous session's activation, or the existence of TaskController Python modules for this load chain. If any mandatory entrypoint is unavailable, report activation `BLOCKED`.
 
 ## Default role
 
 ChatGPT may act as analyst, planner, reviewer, orchestrator, or Controller according to the active task. Repository/project authority remains defined by root and active project/Power instructions.
 
-## Slack Controller mode
+## Controller mode
 
-When ChatGPT controls an Executor through Slack, it MUST load and follow:
+The Controller owns:
 
-1. `agents/shared/slack-controller-executor-protocol.md`
-2. `agents/chatgpt-agent/slack-controller-mvp.md`
+- task decomposition and execution planning;
+- selected-plan contract compilation;
+- subtask order and milestone/report timing;
+- expected evidence;
+- `CONTINUE | WAIT_CONTROLLER | TERMINAL` boundaries;
+- mailbox cursor/observation state;
+- Slack RootCard/human projection state when Slack is active;
+- report review and bounded INTERCEPT decisions.
 
-The Slack Controller overlay is mandatory for that run, not optional reference material.
+Do not delegate an ambiguous goal and allow the Executor to invent its own plan or reporting cadence.
 
-The Controller owns task decomposition, selected-plan contracting, milestone/report timing, WAIT points, RootCard state, report review, incremental polling, and bounded INTERCEPT decisions.
+## Agent interaction invariant
 
-The Controller must not delegate an ambiguous task and allow the Executor to invent its own plan or reporting cadence.
+Use the TaskController reference-based A2A protocol. The current pilot binding is the GitHub reference mailbox.
+
+Normal control loop:
+
+```text
+publish compact command envelope / refs
+→ sleep 60s in-session when waiting
+→ read mailbox state newer than the actor cursor
+→ validate sequence, contract, exact refs/evidence
+→ record semantic audit event when audit is configured
+→ CONTINUE | WAIT_CONTROLLER | INTERCEPT | TERMINAL
+→ project only material human consequences to Slack
+```
+
+Do not re-read the full Slack thread to discover Executor progress. Do not use Slack thread replies as the machine execution journal.
+
+## Context and repository truth
+
+Prefer exact durable references over copied context:
+
+- repo + exact base/head SHA;
+- branch / PR;
+- file + line/range;
+- review thread;
+- artifact/digest.
+
+Executor base/head mismatch is evidence conflict / `BASE_DRIFT`, not a reason to silently continue.
 
 ## GWC-active tasks
 
-When GWC is active, the Controller must not delegate write-capable execution before the required G2 authority exists. It compiles the Executor-facing contract from G0 context, the G1 selected option only, exact G2 authority, and exact current repository evidence.
+When GWC is active, the Controller must not delegate write-capable execution before required authority exists. Compile the Executor-facing contract from canonical selected context/authority only. Rejected alternatives and brainstorming noise must not be forwarded.
 
-Rejected alternatives, brainstorming noise, and superseded options must not be forwarded to the Executor.
-
-GWC is loaded only when the controlled task/project requires it; activating TaskController alone does not implicitly activate GWC.
+TaskController activation alone does not activate GWC.
 
 ## Monitoring invariant
 
-During an active Slack Controller run:
+Polling remains synchronous/in-session. Do not replace an active wait/recheck loop with a scheduler, reminder, or detached automation.
 
-```text
-sleep 60s
-→ read only new thread replies after last_seen_ts
-→ validate reports against the contracted milestone
-→ continue | review | intercept | terminal
-```
-
-Polling is silent and remains in-session. Do not replace it with a scheduler, reminder, or detached automation.
-
-Use `WAIT_CONTROLLER` only at high-value review or authority boundaries so control does not create unnecessary latency.
+Use `WAIT_CONTROLLER` only at high-value review or authority boundaries.
 
 ## Communication invariant
 
-RootCard is the concise human snapshot. Slack thread replies are the structured execution journal. Thinking, raw tool output, tool chatter, repetitive polling, and recovered transient retries stay silent.
+Slack, when active, is the Human Control Plane. RootCard is the concise human snapshot; thread replies form a compact **semantic timeline**, not the raw Agent protocol.
 
-Executor reports must follow the report requirements and subtask boundaries defined by the Controller contract.
+Thinking, raw tool output, individual file activity, ACKs, mailbox sequence churn, repetitive polling, raw CI polling and recovered transient retries stay silent.
+
+## Audit invariant
+
+When the TaskController audit facade is configured, record bounded semantic Controller/Executor events and evidence references in the Run Ledger. Do not store chain-of-thought. Slack is not audit storage.

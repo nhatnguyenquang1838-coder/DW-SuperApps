@@ -1,149 +1,109 @@
-# ChatGPT Slack Controller — MVP Mandatory Overlay
+# ChatGPT Slack Controller — Human Control Plane MVP
 
-This file is a mandatory additive instruction whenever ChatGPT acts as Controller for a Slack-mediated Executor run in DW-SuperApps.
+This file is a mandatory additive instruction whenever ChatGPT presents a TaskController run in Slack.
 
-It defines Controller planning, contracting, reporting expectations, RootCard behavior, polling, review, and bounded intercept semantics. It does not replace root `AGENTS.md`, project authority, or an active Power's governance model.
+**Slack is the Human Control Plane.** It is the human-facing operational surface, not the Executor progress transport, canonical run state, or audit store.
 
 ## Mandatory load order
 
 Read:
 
-1. root `AGENTS.md` and applicable workspace/project instructions
-2. active Power instructions when a Power is selected
-3. `agents/shared/slack-controller-executor-protocol.md`
-4. this file
-
-For Slack Controller monitoring, use the 60-second polling cadence in this overlay instead of any generic longer thread-sleep cadence. This changes monitoring cadence only, not authority.
-
-## Controller role
-
-The Controller owns:
-- task decomposition and execution planning
-- Executor Contract compilation
-- subtask order
-- milestone/report timing
-- expected evidence
-- `CONTINUE | WAIT_CONTROLLER | TERMINAL` boundaries
-- RootCard state
-- report review and bounded INTERCEPT decisions
-
-Do not send an ambiguous goal and let the Executor invent the plan or reporting schedule.
-
-## Contract compilation
-
-When GWC is active, delegate write-capable execution only after the required G2 authority exists. Compile the contract from:
-- canonical G0 context
-- G1 aligned decision using only the selected option
-- exact G2 execution/approval envelope or valid route-specific authority
-- exact current repo/base/head/branch/scope evidence
-
-Do not forward rejected alternatives, brainstorming history, superseded options, or unrelated context.
-
-When GWC is not active, use the applicable project authority model and the selected approved plan; do not invent G0/G1/G2 artifacts merely for Slack communication.
-
-## Plan and reporting contract
-
-Split the selected execution option into 3–5 meaningful subtasks.
-
-Every subtask defines:
-
-```text
-ID
-Objective
-Allowed work
-Expected output
-Report requirement
-After report = CONTINUE | WAIT_CONTROLLER | TERMINAL
-```
-
-For each subtask specify:
-- the meaningful unit of work allowed before reporting
-- the milestone that ends that unit
-- required evidence in the report
-- whether the Executor may continue or must wait
-
-Default reporting boundary is one contracted subtask/milestone. Low-level tool actions inside it are silent unless they create a material exception.
-
-Use `WAIT_CONTROLLER` only at high-value review points such as validation before delivery, material scope/architecture consequences, evidence conflict, authority boundaries, or explicit human checkpoints. Use `CONTINUE` for ordinary bounded work to avoid unnecessary latency.
-
-## Required Executor report
-
-Require structured thread replies with applicable fields:
-
-```text
-Subtask / milestone
-Status
-Completed
-Evidence
-Finding / Risk        # only when material
-Next
-After = CONTINUE | WAIT_CONTROLLER | TERMINAL
-```
-
-Require immediate reporting for scope drift, authority drift, plan drift, evidence conflict, blocker/failure, or a material finding that invalidates the next action.
-
-Thinking, tool chatter, raw output, repetitive polling and recovered transient retries stay silent.
+1. root `AGENTS.md` and applicable workspace/project instructions;
+2. active Power instructions when a Power is selected;
+3. `agents/shared/taskcontroller-a2a-protocol.md`;
+4. this file;
+5. current Slack connector + `Slack Communication Policy` + `Governance Behavior`.
 
 ## RootCard
 
-Maintain one concise RootCard per run. RootCard is the human quick view; detailed milestone evidence belongs in thread replies.
+Maintain one concise RootCard per run and update it in place.
 
 Keep visible when available:
-- human owner/watcher
-- human-readable current gate/journey when GWC is active
-- Controller and Executor identity
-- actual Executor model
-- token usage if exposed, otherwise `N/A`
-- cost only as `FREE | metered | unknown`; never infer it
-- active subtask / progress
-- branch / PR / exact HEAD / CI
-- risk/blocker
-- Now / Next
-- last material update
+
+- human owner/watcher;
+- human-readable current gate/journey when GWC is active;
+- Controller and Executor identity;
+- actual Executor model;
+- token usage if exposed, otherwise `N/A`;
+- cost only as `FREE | metered | unknown`;
+- active subtask/progress;
+- branch / PR / exact HEAD / CI;
+- risk/blocker;
+- Now / Next;
+- last material update;
+- Controller health: `ACTIVE | DISCONNECTED | RECOVERED | BLOCKED`.
 
 Contextual human actions:
-- `PAUSE` — stop before next meaningful action boundary
-- `STOP` — no new mutation starts
-- `APPROVE` — only when the active authority model requires human approval; button intent is not authority by itself
-- `MERGE` — only when the active authority model permits it and exact PR/head is bound; button intent must not bypass authority validation
+
+- `PAUSE` — stop before next meaningful action boundary;
+- `STOP` — no new mutation starts;
+- `APPROVE` — only when exact human authority exists;
+- `MERGE` — only when authority permits and exact PR/head is bound.
+
+Button intent is not authority by itself.
+
+## Semantic timeline
+
+Slack thread replies are a **semantic timeline** only. Emit human-visible updates for material events such as:
+
+- RUN_STARTED;
+- SUBTASK_STARTED;
+- MILESTONE_REACHED;
+- REVIEW_REQUIRED;
+- CORRECTION_REQUIRED;
+- BLOCKED;
+- AUTHORITY_REQUIRED;
+- CONTROLLER_RECOVERED;
+- TERMINAL.
+
+Do not use Slack thread replies as the Executor progress transport.
+
+Do not mirror:
+
+- A2A ACKs;
+- mailbox sequence changes;
+- polling heartbeats;
+- individual file/tool operations;
+- raw tests/CI output;
+- recovered transient retries;
+- low-level successful operations without semantic consequence.
 
 ## Monitoring
 
-Stay in the active run:
+Executor progress is observed through the current Agent interaction binding (GitHub reference mailbox in the pilot), not by replaying Slack.
 
 ```text
-sleep 60s
-→ read only Slack replies newer than last_seen_ts
-→ classify structured Executor reports
-→ compare actual report with expected milestone contract
-→ OK / CONTINUE: keep monitoring
-→ WAIT_CONTROLLER: review before release
-→ DRIFT: INTERCEPT
-→ TERMINAL: close the delegated control segment
+sleep 60s in-session when waiting
+→ read mailbox state newer than mailbox cursor
+→ validate contract / refs / evidence
+→ audit semantic consequence when configured
+→ update RootCard / semantic timeline only if material
 ```
 
-Rules:
-- polling is silent
-- no heartbeat / "still waiting" Slack spam
-- use incremental thread reads instead of re-reading the full thread when possible
-- no scheduler/reminder/detached automation replaces the active polling loop
-- update RootCard only on material state/evidence changes
+Slack may also be read for human PAUSE/STOP/APPROVE/MERGE input. Human control input and Executor progress transport are separate concerns.
+
+No scheduler/reminder/detached automation replaces the active observation loop.
 
 ## INTERCEPT
 
 INTERCEPT only for:
-- scope drift
-- authority drift
-- plan drift
-- evidence conflict
-- material finding that invalidates the next contracted action
 
-Do not intercept ordinary tool choice, successful retry, normal implementation progress, expected test runtime, or low-level work inside the current bounded subtask.
+- scope drift;
+- authority drift;
+- plan drift;
+- evidence conflict / base drift;
+- material finding that invalidates the next contracted action.
 
-When intercepting, state the observed drift, required correction, and whether the Executor must `WAIT`, `REPLAN`, or `REVERT_LAST`.
+Do not intercept ordinary tool choice, successful retry, normal implementation progress, expected test runtime, or low-level work inside the bounded subtask.
+
+## Recovery
+
+A fresh Controller recovers from canonical task/run identity, current mailbox envelopes/cursors, referenced PR/SHA/CI/artifacts, audit ledger/checkpoint when configured, and the existing Slack RootCard binding.
+
+Full Slack thread replay and previous GPT conversation history are not required recovery inputs.
 
 ## MVP boundary
 
-Keep the pilot slim: one Controller, one main Executor, one Slack thread, one RootCard, 3–5 subtasks, contracted milestone reports, incremental 60-second polling and bounded intercepts.
+Keep the pilot slim: one Controller, one main Executor, one GitHub mailbox comment per actor, one Slack RootCard/thread for humans, 3–5 contracted subtasks, incremental mailbox observation, semantic Slack projection and bounded intercepts.
 
-Do not add lease fencing, replay/idempotency machinery, multi-executor orchestration, durable recovery, or other Full E2E protocol logic until the pilot demonstrates a concrete need.
+Do not add Kafka/MSK/NATS infrastructure, multi-executor scheduling, or other Full-E2E machinery until the pilot demonstrates a concrete need.
