@@ -1,9 +1,10 @@
 """Contract tests for explicit TaskController activation routing.
 
 These tests prevent a regression back to memory-driven / implicit activation
-and now also lock the reference-based Agent interaction boundary: Slack is the
-human control plane while the Agent protocol uses a transport-neutral A2A
-contract with a GitHub reference mailbox as the first pilot binding.
+and lock the reference-based Agent interaction boundary: Slack is the human
+control plane while the Agent protocol uses a transport-neutral A2A contract
+with a GitHub reference mailbox as the first pilot binding. Human-plane policy
+is repository-canonical; Slack Canvases are optional projections only.
 """
 
 from __future__ import annotations
@@ -52,9 +53,12 @@ def test_unmentioned_controller_returns_inactive_plan():
     )
     assert plan.active is False
     assert plan.load_order == ()
+    assert plan.slack_canvases_required == ()
+    assert plan.slack_canvas_projections_optional == ()
+    assert plan.human_plane_policy is None
 
 
-def test_chatgpt_slack_hermes_loads_reference_a2a_and_human_plane_chain():
+def test_chatgpt_slack_hermes_loads_reference_a2a_and_repo_human_plane_policy():
     plan = resolve_taskcontroller_activation(
         "TaskController: control Hermes Cloud",
         host="chatgpt",
@@ -72,17 +76,20 @@ def test_chatgpt_slack_hermes_loads_reference_a2a_and_human_plane_chain():
         "agents/README.md",
         "agents/chatgpt-agent/agent-instructions.md",
         "agents/shared/taskcontroller-a2a-protocol.md",
+        "agents/shared/taskcontroller-human-plane-policy.md",
         "agents/chatgpt-agent/slack-controller-mvp.md",
         "agents/hermes/agent-instructions.md",
     )
     assert "agents/shared/slack-controller-executor-protocol.md" not in plan.load_order
-    assert plan.slack_canvases_required == (
+    assert plan.human_plane_policy == "agents/shared/taskcontroller-human-plane-policy.md"
+    assert plan.slack_canvases_required == ()
+    assert plan.slack_canvas_projections_optional == (
         "Slack Communication Policy",
         "Governance Behavior",
     )
 
 
-def test_chatgpt_non_slack_does_not_invent_slack_overlay():
+def test_chatgpt_non_slack_does_not_invent_slack_or_human_plane_overlay():
     plan = resolve_taskcontroller_activation(
         "TaskController inspect this plan",
         host="chatgpt",
@@ -90,7 +97,10 @@ def test_chatgpt_non_slack_does_not_invent_slack_overlay():
     assert plan.active is True
     assert "agents/chatgpt-agent/agent-instructions.md" in plan.load_order
     assert "agents/chatgpt-agent/slack-controller-mvp.md" not in plan.load_order
+    assert "agents/shared/taskcontroller-human-plane-policy.md" not in plan.load_order
     assert plan.slack_canvases_required == ()
+    assert plan.slack_canvas_projections_optional == ()
+    assert plan.human_plane_policy is None
 
 
 def test_workspace_registers_taskcontroller_as_controller_not_power():
@@ -120,6 +130,15 @@ def test_registry_separates_agent_binding_from_slack_human_plane():
     assert "thread_semantics: controller-command-executor-report-evidence" not in registry
 
 
+def test_registry_makes_repo_human_plane_policy_canonical_and_canvases_optional():
+    registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
+    assert "canonical_policy: agents/shared/taskcontroller-human-plane-policy.md" in registry
+    assert "human_plane_policy_authority: agents/shared/taskcontroller-human-plane-policy.md" in registry
+    assert "activation_blocking: false" in registry
+    assert "conflict_behavior: REPO_CANONICAL_WINS" in registry
+    assert "canvases_required:" not in registry
+
+
 def test_root_agents_contains_hard_activation_guard():
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     assert "Any explicit user mention of `TaskController`" in agents
@@ -133,15 +152,19 @@ def test_root_agents_declares_slack_human_plane_and_reference_agent_binding():
     assert "Slack is the Human Control Plane" in agents
     assert "GitHub reference mailbox is the current Agent interaction pilot binding" in agents
     assert "Slack thread history MUST NOT be the canonical Agent execution journal" in agents
+    assert "agents/shared/taskcontroller-human-plane-policy.md" in agents
+    assert "Slack Canvas projections are optional" in agents
 
 
-def test_chatgpt_overlay_blocks_boot_claim_before_load():
+def test_chatgpt_overlay_blocks_boot_claim_before_repo_load_not_canvas_projection():
     overlay = (
         ROOT / "agents" / "chatgpt-agent" / "agent-instructions.md"
     ).read_text(encoding="utf-8")
     assert "before planning, delegating, posting to Slack, or claiming the controller is booted" in overlay
     assert "Do not substitute conversation memory" in overlay
     assert "activation `BLOCKED`" in overlay
+    assert "agents/shared/taskcontroller-human-plane-policy.md" in overlay
+    assert "must not block TaskController activation" in overlay
 
 
 def test_agent_protocol_is_reference_based_and_transport_neutral():
@@ -155,6 +178,17 @@ def test_agent_protocol_is_reference_based_and_transport_neutral():
     assert "A2A HTTP" in protocol
 
 
+def test_human_plane_policy_is_repo_canonical_and_projection_safe():
+    policy = (
+        ROOT / "agents" / "shared" / "taskcontroller-human-plane-policy.md"
+    ).read_text(encoding="utf-8")
+    assert "canonical repository source of truth" in policy
+    assert "not activation entrypoints and not governance authority" in policy
+    assert "PROJECTION_UNAVAILABLE" in policy
+    assert "repository policy wins on conflict" in policy
+    assert "Failure to access Slack Canvas policy documents is not" in policy
+
+
 def test_slack_overlay_is_human_projection_not_machine_journal():
     overlay = (
         ROOT / "agents" / "chatgpt-agent" / "slack-controller-mvp.md"
@@ -163,6 +197,8 @@ def test_slack_overlay_is_human_projection_not_machine_journal():
     assert "semantic timeline" in overlay
     assert "Do not use Slack thread replies as the Executor progress transport" in overlay
     assert "mailbox cursor" in overlay
+    assert "agents/shared/taskcontroller-human-plane-policy.md" in overlay
+    assert "Slack Canvases are optional projections" in overlay
 
 
 def test_hermes_reports_to_mailbox_not_slack_journal():

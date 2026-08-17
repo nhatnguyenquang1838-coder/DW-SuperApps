@@ -22,9 +22,10 @@ The base load order starts with:
 4. this index
 5. current host overlay
 6. `agents/shared/taskcontroller-a2a-protocol.md`
-7. human-plane/executor overlays required by the registry
+7. canonical human-plane policy when a human plane is selected
+8. transport/executor overlays required by the registry
 
-If a required entrypoint is missing or cannot be read, activation is `BLOCKED`; do not synthesize a controller contract from memory.
+If a required **repository entrypoint** is missing or cannot be read, activation is `BLOCKED`; do not synthesize a controller contract from memory. External human-plane projections such as Slack Canvases are not repository entrypoints and do not block activation.
 
 ## Agent interaction pilot
 
@@ -40,16 +41,23 @@ Current Agent interaction is **reference-based A2A**:
 
 The same protocol may later bind to A2A HTTP, local IPC, NATS, Kafka/MSK, or another transport without changing Controller/Executor semantics.
 
-## Slack Human Control Plane
+## Human Control Plane
 
-When ChatGPT presents a controlled run in Slack, the mandatory additive chain includes:
+Canonical human-plane behavior is defined by:
+
+- `agents/shared/taskcontroller-human-plane-policy.md`
+
+When ChatGPT presents a controlled run in Slack, the mandatory additive repository chain includes:
 
 1. `agents/chatgpt-agent/agent-instructions.md`
 2. `agents/shared/taskcontroller-a2a-protocol.md`
-3. `agents/chatgpt-agent/slack-controller-mvp.md`
-4. current Slack connector + `Slack Communication Policy` + `Governance Behavior`
+3. `agents/shared/taskcontroller-human-plane-policy.md`
+4. `agents/chatgpt-agent/slack-controller-mvp.md`
+5. the current Slack connector for actual Slack I/O
 
 For Hermes Executor, also load `agents/hermes/agent-instructions.md`.
+
+`Slack Communication Policy` and `Governance Behavior` Canvases are optional human-readable projections of repository policy. Missing, inaccessible, stale, or conflicting Canvas content MUST NOT block TaskController activation. Repository policy wins; report projection drift only when material.
 
 Slack is the Human Control Plane: one RootCard plus a compact semantic timeline. Slack is not the Executor progress transport and not canonical run/audit state. Machine polling, ACKs, mailbox sequence churn, raw CI polling, file/tool chatter and retry noise stay out of Slack.
 

@@ -34,8 +34,17 @@ _INTERACTION_REQUIRED = (
     "agents/shared/taskcontroller-a2a-protocol.md",
 )
 
+_HUMAN_PLANE_REQUIRED = (
+    "agents/shared/taskcontroller-human-plane-policy.md",
+)
+
 _SLACK_CHATGPT_REQUIRED = (
     "agents/chatgpt-agent/slack-controller-mvp.md",
+)
+
+_SLACK_CANVAS_PROJECTIONS = (
+    "Slack Communication Policy",
+    "Governance Behavior",
 )
 
 _HERMES_EXECUTOR_REQUIRED = (
@@ -57,7 +66,11 @@ class TaskControllerActivationPlan:
     transport: str | None
     executor: str | None
     load_order: tuple[str, ...]
+    # Backward-compatible field retained intentionally. Slack Canvases are no
+    # longer activation requirements; this is therefore always empty.
     slack_canvases_required: tuple[str, ...]
+    slack_canvas_projections_optional: tuple[str, ...] = ()
+    human_plane_policy: str | None = None
     interaction_binding: str = "github-reference-mailbox"
     memory_fallback_allowed: bool = False
     full_e2e_runtime_active: bool = False
@@ -106,9 +119,12 @@ def resolve_taskcontroller_activation(
     paths.extend(_HOST_REQUIRED.get(host_id, ()))
     paths.extend(_INTERACTION_REQUIRED)
 
-    slack_canvases: tuple[str, ...] = ()
+    slack_canvas_projections: tuple[str, ...] = ()
+    human_plane_policy: str | None = None
     if transport_id == "slack":
-        slack_canvases = ("Slack Communication Policy", "Governance Behavior")
+        paths.extend(_HUMAN_PLANE_REQUIRED)
+        human_plane_policy = _HUMAN_PLANE_REQUIRED[0]
+        slack_canvas_projections = _SLACK_CANVAS_PROJECTIONS
         if host_id == "chatgpt":
             paths.extend(_SLACK_CHATGPT_REQUIRED)
 
@@ -121,5 +137,7 @@ def resolve_taskcontroller_activation(
         transport=transport_id,
         executor=executor_id,
         load_order=_dedupe(paths),
-        slack_canvases_required=slack_canvases,
+        slack_canvases_required=(),
+        slack_canvas_projections_optional=slack_canvas_projections,
+        human_plane_policy=human_plane_policy,
     )

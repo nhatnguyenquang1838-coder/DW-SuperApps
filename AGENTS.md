@@ -86,7 +86,7 @@ Activation rules:
 
 Hosts may use `taskcontroller.mvp.resolve_taskcontroller_activation(...)` as the deterministic explicit-mention resolver. Conversation memory, previous-session summaries, old Slack threads, previous "booted" claims, and the mere presence of `taskcontroller/**` Python modules MUST NOT substitute for the canonical load chain.
 
-If a mandatory TaskController entrypoint is missing or unreadable, activation is `BLOCKED`. Do not fabricate a controller contract or silently fall back to remembered instructions.
+If a mandatory **repository TaskController entrypoint** is missing or unreadable, activation is `BLOCKED`. Do not fabricate a controller contract or silently fall back to remembered instructions. External human-plane projections such as Slack Canvases are not repository entrypoints and cannot block activation.
 
 The active Agent interaction contract is reference-based A2A:
 
@@ -97,13 +97,18 @@ The active Agent interaction contract is reference-based A2A:
 - semantic Agent events are recorded to the TaskController audit ledger when audit is configured;
 - binding IDs never become canonical TaskController IDs.
 
-Slack is the Human Control Plane for active TaskController runs. For ChatGPT presenting a controlled run in Slack, the mandatory chain includes:
+TaskController human-plane behavior is canonical in `agents/shared/taskcontroller-human-plane-policy.md`.
+
+Slack is the Human Control Plane for active TaskController runs. For ChatGPT presenting a controlled run in Slack, the mandatory repository/transport chain includes:
 
 - `agents/chatgpt-agent/agent-instructions.md`;
 - `agents/shared/taskcontroller-a2a-protocol.md`;
+- `agents/shared/taskcontroller-human-plane-policy.md`;
 - `agents/chatgpt-agent/slack-controller-mvp.md`;
-- the Slack connector plus the current `Slack Communication Policy` and `Governance Behavior` canvases;
+- the Slack connector for actual Slack I/O;
 - `agents/hermes/agent-instructions.md` when Hermes is the Executor.
+
+`Slack Communication Policy` and `Governance Behavior` Slack Canvas projections are optional. Missing, inaccessible, stale, or conflicting Canvas content MUST NOT block TaskController activation. The canonical repository policy wins; projection drift may be reported as `PROJECTION_UNAVAILABLE` or `PROJECTION_STALE` when material.
 
 The active MVP is one Controller, one main Executor, one live Slack RootCard/thread for human control/visibility, 3–5 contracted subtasks, in-session incremental mailbox observation, `CONTINUE | WAIT_CONTROLLER | TERMINAL`, and bounded `INTERCEPT`. Slack thread replies are a compact semantic human timeline only. Slack thread history MUST NOT be the canonical Agent execution journal or required recovery context.
 
@@ -247,6 +252,8 @@ A multi-repository change must identify every impacted repository. One repositor
 
 ## Slack behavior
 
-Before any DW SUPER Slack communication, load the Slack connector and read the latest Slack Communication Policy and Governance Behavior canvases.
+Before any DW SUPER Slack communication, load the canonical repository policy `agents/shared/taskcontroller-human-plane-policy.md` when TaskController is active, then load the applicable Slack transport overlay and connector.
 
-Slack is an optional visibility layer generally and the Human Control Plane when TaskController Slack mode is active. It is not governance truth, canonical task/run storage, Agent progress transport, audit storage, or approval authority. Record canonical state and evidence first. Use one root task/execution message and post only semantic human updates in its thread when supported. Slack failure must never block execution or change the result.
+Slack Canvas projections such as `Slack Communication Policy` and `Governance Behavior` are optional human-readable copies. They may be checked for projection drift when available, but missing/unreadable Canvas content MUST NOT block TaskController activation or execution. Repository policy is canonical.
+
+Slack is an optional visibility layer generally and the Human Control Plane when TaskController Slack mode is active. It is not governance truth, canonical task/run storage, Agent progress transport, audit storage, or approval authority. Record canonical state and evidence first. Use one root task/execution message and post only semantic human updates in its thread when supported. Slack failure must never block execution or change the result unless Slack transport itself is the required provider wake-up binding for the selected Executor.
