@@ -16,8 +16,12 @@ the composed layer's own authority (WP2 CAS, WP5 CAS, WP4 fabric preflight).
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
+import uuid
 
+from taskcontroller.audit.event import AuditEvent
+from taskcontroller.audit.facade import AuditFacade, NoOpAuditFacade
 from taskcontroller.controlplane.orchestrator import ControlPlane
 from taskcontroller.execution.orchestrator import (
     forward_signal_to_router,
@@ -43,10 +47,12 @@ class SlackTaskControllerPack:
         control_plane: ControlPlane,
         transport: FakeSlackTransport,
         host_state: TaskControllerHostState | None = None,
+        audit: AuditFacade | NoOpAuditFacade | None = None,
     ) -> None:
         self._config = config
         self._cp = control_plane
         self._transport = transport
+        self._audit = audit or NoOpAuditFacade()
         # restart-safe: restore the binding registry from host state BEFORE any
         # materialization. This is the core invariant against duplicate roots.
         # The host owns the registry and shares the SAME object with the adapter
@@ -62,8 +68,36 @@ class SlackTaskControllerPack:
             config=config, binding_snapshot=registry.snapshot()
         )
 
+    def _metadata(self) -> dict[str, Any]:
+        return {
+            "session_id": self._state.session_id,
+            "model": self._state.model,
+            "executor": self._state.executor,
+        }
+
+    def _audit_event(
+        self,
+        decision_kind: str,
+        payload_summary: str,
+        *,
+        before: dict[str, Any] | None = None,
+        after: dict[str, Any] | None = None,
+    ) -> None:
+        event = AuditEvent(
+            event_id=uuid.uuid4().hex,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            run_id=self._config.run_id,
+            source="host_pack",
+            decision_kind=decision_kind,
+            payload_summary=payload_summary,
+            before=before or {},
+            after=after or {},
+        )
+        self._audit.record(self._config.run_id, event)
+
     # -- projection (WP6) --------------------------------------------------
     def materialize(self, session_id=None, model=None, executor=None) -> dict[str, Any]:
+        before = self._metadata()
         # refresh mutable metadata from the latest host state
         if session_id is not None:
             self._state = self._state.with_metadata(session_id=session_id, model=model, executor=executor)
@@ -82,6 +116,12 @@ class SlackTaskControllerPack:
             model=self._state.model,
             executor=self._state.executor,
             checkpoint_version=self._state.checkpoint_version,
+        )
+        self._audit_event(
+            "HOST_MATERIALIZED",
+            f"materialize run={self._config.run_id}",
+            before=before,
+            after={**self._metadata(), "checkpoint_version": self._state.checkpoint_version},
         )
         return proj
 
@@ -107,12 +147,25 @@ class SlackTaskControllerPack:
     # -- control plane (WP5) via WP6 action mapping -------------------------
     def controller_action(self, action, expected_version, command_id=None,
                           new_plan_version=None) -> dict[str, Any]:
-        return self._adapter.apply_action(
+        result = self._adapter.apply_action(
             self._config.run_id, action, expected_version, command_id, new_plan_version
         )
+        result_summary = (
+            {"result_keys": sorted(str(key) for key in result.keys())}
+            if isinstance(result, dict)
+            else {"result_type": type(result).__name__}
+        )
+        self._audit_event(
+            "HOST_CONTROLLER_ACTION",
+            f"controller action run={self._config.run_id} action={action}",
+            before={"action": action, "expected_version": expected_version},
+            after=result_summary,
+        )
+        return result
 
     # -- rotation ----------------------------------------------------------
     def rotate(self, session_id=None, model=None, executor=None) -> None:
+        before = self._metadata()
         self._state = self._state.with_metadata(
             session_id=session_id, model=model, executor=executor
         )
@@ -120,9 +173,16 @@ class SlackTaskControllerPack:
             self._config.run_id, "SESSION_ROTATED",
             f"rotation s={session_id} m={model} e={executor}",
         )
+        self._audit_event(
+            "HOST_ROTATED",
+            f"rotate run={self._config.run_id}",
+            before=before,
+            after=self._metadata(),
+        )
 
     # -- checkpoint / restore (restart-safe) -------------------------------
     def checkpoint_host_state(self) -> TaskControllerHostState:
+        previous_version = self._state.checkpoint_version
         snapshot = self._adapter.binding_snapshot()
         self._state = TaskControllerHostState(
             config=self._state.config,
@@ -130,16 +190,27 @@ class SlackTaskControllerPack:
             session_id=self._state.session_id,
             model=self._state.model,
             executor=self._state.executor,
-            checkpoint_version=self._state.checkpoint_version + 1,
+            checkpoint_version=previous_version + 1,
+        )
+        self._audit_event(
+            "HOST_CHECKPOINTED",
+            f"checkpoint run={self._config.run_id} v={self._state.checkpoint_version}",
+            before={"checkpoint_version": previous_version},
+            after={"checkpoint_version": self._state.checkpoint_version},
         )
         return self._state
 
     @classmethod
-    def restore(cls, state: TaskControllerHostState, control_plane: ControlPlane,
-                transport: FakeSlackTransport) -> "SlackTaskControllerPack":
+    def restore(
+        cls,
+        state: TaskControllerHostState,
+        control_plane: ControlPlane,
+        transport: FakeSlackTransport,
+        audit: AuditFacade | NoOpAuditFacade | None = None,
+    ) -> "SlackTaskControllerPack":
         # reconstruct a fresh host from persisted state; binding is restored into
         # the adapter's registry before any materialize
-        return cls(state.config, control_plane, transport, host_state=state)
+        return cls(state.config, control_plane, transport, host_state=state, audit=audit)
 
     def attempt_second_root(self) -> None:
         """Attempting a second root for the same task/target must fail closed.
