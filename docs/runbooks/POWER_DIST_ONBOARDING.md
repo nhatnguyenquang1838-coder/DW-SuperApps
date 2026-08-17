@@ -89,6 +89,15 @@ Before installation:
 
 Do not initialize Power submodules during normal package onboarding.
 
+## Target submodule materialization vs Power onboarding (do not conflate)
+
+- **Target product submodule** (e.g. `projects/rental-home`): materialize/fetch it and resolve its **current `main`** as the task base. Its parent gitlink pin is not the task head and must not be bumped implicitly.
+- **Power source submodule** (e.g. `projects/ua` → `Understand-Anything`): the upstream source of a managed Power. Normal onboarding installs the **managed package** from `.dw/powers/<power-id>/`; it does not execute or initialize the source submodule. Use the source submodule only as an explicit compatibility/development fallback when no built package exists.
+
+## Install/configure vs activate/use
+
+Installing and binding a Power makes it *available* to the project (per `workspace.yaml` `powers.enabled`). Activating and using it is a separate, **task-intent** decision. An installed Power is not automatically run; load only the Powers the current task requires. If a distribution identity, version, checksum, manifest, or evidence conflict is detected, report `BLOCKED_DISTRIBUTION_DRIFT` and stop — do not silently fall back to executing the raw Power source/plugin.
+
 ## Online installation
 
 Run package lifecycle commands from the DW-SuperApps root:

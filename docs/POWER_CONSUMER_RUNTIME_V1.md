@@ -52,6 +52,14 @@ DW-SuperApps/.dw/bindings/rental-home/task-me.json
 
 Normal lifecycle commands must not create `projects/rental-home/.dw/`.
 
+## Install/availability vs activate/use
+
+Installation makes a Power *available* to a project (declared by `workspace.yaml` `powers.enabled`). Activation and use are a separate **task-intent** decision: an installed Power is not automatically run. Load only the Powers the current task requires; installed-but-unneeded Powers stay available but inactive. The managed package under `DW-SuperApps/.dw/powers/<power-id>/` is the execution surface — the Power's upstream source submodule is an explicit compatibility/development fallback only, never the default.
+
+## Target project submodule vs Power source submodule
+
+A project task works against the **target product submodule** (e.g. `projects/rental-home`); its parent gitlink pin is not the task execution head and must not be bumped implicitly. The **Power source submodule** (e.g. `projects/ua` → `Understand-Anything`) is upstream Power code, not a project runtime target. Do not execute or initialize the Power source submodule during normal managed onboarding.
+
 ## Split lifecycle behavior
 
 - **Install:** writes package code to the workspace store and creates only the declared runtime root in the project.

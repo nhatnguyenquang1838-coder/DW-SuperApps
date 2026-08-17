@@ -177,6 +177,24 @@ Use `--store-root` only for tests or an explicitly external workspace layout. A 
 
 Do not claim `READY` when required configuration, host routing, doctor, dedupe, or invocation remains incomplete.
 
+## Target project submodule vs Power source submodule (binding discipline)
+
+DW-SuperApps registers two distinct submodule classes. Confusing them causes the recurring failure where a product project's *target submodule* is mistaken for a Power *source submodule*, or a Power's source is silently executed as the installed Power.
+
+- **Target project submodule** (e.g. `projects/rental-home` → `nhatnguyenquang1838-coder/rental_home`): a product codebase. For a project task, materialize/fetch this registered submodule and resolve its **current `main`** as the task execution base. The parent DW-SuperApps gitlink that pins this submodule is **not** automatically the task execution head and must **not** be bumped implicitly during task work.
+- **Power source submodule** (e.g. `projects/ua` → `Understand-Anything`): the upstream source of a managed Power's code. It is **not** a project runtime target and **not** the default execution surface. The managed installed package under `.dw/powers/<power-id>/` is the execution surface; the source submodule is an explicit compatibility/development fallback only.
+
+A project task that needs a Power does **not** execute the Power's source submodule. It installs/binds the managed package and activates the installed entrypoint.
+
+## Installed/available does not mean activated
+
+The lifecycle `DISCOVER -> PREFLIGHT -> INSTALL -> CONFIGURE -> ACTIVATE -> DOCTOR -> USE -> REPORT` separates two decisions:
+
+1. **Install/bind (availability)** is decided by the **project profile / `workspace.yaml`**: which Powers are declared `enabled` for the target project. Installing a Power does not by itself run it.
+2. **Activate/use (runtime)** is decided by the **task intent**: given the Powers available to the project, only the Powers the current task actually needs are activated. Availability does not imply activation.
+
+For any task, load only the Powers the task requires. Powers that are enabled but not required by the current intent remain available but **inactive**.
+
 ## Portable multi-host invariant
 
 The user must be able to open the DW-SuperApps root in different configured IDEs without reinstalling Powers or changing a global active-host setting.
