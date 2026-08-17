@@ -15,9 +15,9 @@ Resolve from current repository state, not memory:
 5. read `agents/README.md`;
 6. load the host/interaction/human-plane/executor entrypoints required by that registry.
 
-For the active pilot this includes `agents/shared/taskcontroller-a2a-protocol.md`. For Slack human visibility it also includes `agents/chatgpt-agent/slack-controller-mvp.md`, the Slack connector, `Slack Communication Policy`, and `Governance Behavior`. For Hermes execution, also require `agents/hermes/agent-instructions.md`.
+For the active pilot this includes `agents/shared/taskcontroller-a2a-protocol.md`. For Slack human visibility it also includes the canonical repository policy `agents/shared/taskcontroller-human-plane-policy.md`, `agents/chatgpt-agent/slack-controller-mvp.md`, and the Slack connector. `Slack Communication Policy` and `Governance Behavior` Canvases are optional projections only; missing or inaccessible Canvas content must not block TaskController activation. For Hermes execution, also require `agents/hermes/agent-instructions.md`.
 
-Do not substitute conversation memory, prior summaries, old Slack messages, a previous session's activation, or the existence of TaskController Python modules for this load chain. If any mandatory entrypoint is unavailable, report activation `BLOCKED`.
+Do not substitute conversation memory, prior summaries, old Slack messages, a previous session's activation, or the existence of TaskController Python modules for this load chain. If any mandatory **repository entrypoint** is unavailable, report activation `BLOCKED`. External projection failure is not a repository-entrypoint failure.
 
 ## Default role
 
@@ -78,7 +78,7 @@ If the checkpoint is `ACTIVE`, the Controller MUST NOT emit a semantic final/ter
 
 On a fresh Controller execution, recover from current repository/run identity, latest Controller mailbox continuation checkpoint, Executor mailbox cursor, exact PR/SHA/CI/artifact refs, configured audit manifest, and Slack RootCard binding. Do not replay previous GPT/Slack history.
 
-For Hermes Cloud in the current pilot, wake-up capability is `slack-websocket` and is required. The Slack wake-up is pointer-only; the command body remains in the GitHub mailbox.
+For Hermes Cloud in the current pilot, wake-up capability is `slack-websocket` and is required. The Slack wake-up is pointer-only; the command body remains in the GitHub mailbox. Missing Slack Canvas projections never block this wake-up; inability to reach the Slack transport itself may.
 
 ## Context and repository truth
 
@@ -107,6 +107,8 @@ Polling remains synchronous/in-session. Do not replace an active wait/recheck lo
 Use `WAIT_CONTROLLER` only at high-value review or authority boundaries.
 
 ## Communication invariant
+
+Human-plane behavior is canonical in `agents/shared/taskcontroller-human-plane-policy.md`.
 
 Slack, when active, is the Human Control Plane. RootCard is the concise human snapshot; thread replies form a compact **semantic timeline**, not the raw Agent protocol.
 
