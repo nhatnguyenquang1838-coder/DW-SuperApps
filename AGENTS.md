@@ -81,24 +81,35 @@ Activation rules:
 3. read `workspace.yaml` and confirm the controller is enabled;
 4. read `controllers/taskcontroller.yaml`;
 5. read `agents/README.md`;
-6. load the current host, transport, and executor overlays declared by the controller registry;
+6. load the current host, Agent-interaction, human-plane, and executor overlays declared by the controller registry;
 7. only then compile the Controller plan/contract or create/update the RootCard.
 
 Hosts may use `taskcontroller.mvp.resolve_taskcontroller_activation(...)` as the deterministic explicit-mention resolver. Conversation memory, previous-session summaries, old Slack threads, previous "booted" claims, and the mere presence of `taskcontroller/**` Python modules MUST NOT substitute for the canonical load chain.
 
 If a mandatory TaskController entrypoint is missing or unreadable, activation is `BLOCKED`. Do not fabricate a controller contract or silently fall back to remembered instructions.
 
-For ChatGPT controlling an Executor through Slack, the mandatory chain includes:
+The active Agent interaction contract is reference-based A2A:
+
+- `agents/shared/taskcontroller-a2a-protocol.md` defines transport-neutral Controller↔Executor semantics;
+- GitHub reference mailbox is the current Agent interaction pilot binding;
+- one actor owns one mutable mailbox comment and advances a monotonic sequence;
+- exact repo/SHA/PR/file/artifact references carry context and evidence;
+- semantic Agent events are recorded to the TaskController audit ledger when audit is configured;
+- binding IDs never become canonical TaskController IDs.
+
+Slack is the Human Control Plane for active TaskController runs. For ChatGPT presenting a controlled run in Slack, the mandatory chain includes:
 
 - `agents/chatgpt-agent/agent-instructions.md`;
-- `agents/shared/slack-controller-executor-protocol.md`;
+- `agents/shared/taskcontroller-a2a-protocol.md`;
 - `agents/chatgpt-agent/slack-controller-mvp.md`;
 - the Slack connector plus the current `Slack Communication Policy` and `Governance Behavior` canvases;
 - `agents/hermes/agent-instructions.md` when Hermes is the Executor.
 
-The active MVP is one Controller, one Executor, one live RootCard/thread, 3–5 contracted subtasks, in-session 60-second incremental observation, `CONTINUE | WAIT_CONTROLLER | TERMINAL`, and bounded `INTERCEPT`. RootCard is the live human snapshot; Controller commands, Executor reports, milestone evidence, and corrections belong in the thread.
+The active MVP is one Controller, one main Executor, one live Slack RootCard/thread for human control/visibility, 3–5 contracted subtasks, in-session incremental mailbox observation, `CONTINUE | WAIT_CONTROLLER | TERMINAL`, and bounded `INTERCEPT`. Slack thread replies are a compact semantic human timeline only. Slack thread history MUST NOT be the canonical Agent execution journal or required recovery context.
 
-The current MVP uses `taskcontroller/mvp/activation.py` for activation resolution and `taskcontroller/mvp/protocol_bridge.py` for verdict translation. Full-E2E surfaces including `SlackTaskControllerPack`, leases, journal, recovery, checkpoint, and multi-executor runtime remain deferred unless current repository policy explicitly activates them.
+A fresh Controller recovers from current repository/task/run identity, mailbox envelopes/cursors, referenced PR/SHA/CI/artifacts, audit ledger/checkpoint when configured, and the Slack RootCard binding—not by replaying prior GPT/Slack conversation history.
+
+The current MVP uses `taskcontroller/mvp/activation.py` for activation resolution, `taskcontroller/mvp/protocol_bridge.py` for verdict translation, `taskcontroller/interaction/*` for reference-based Agent interaction, and `taskcontroller/audit/*` for durable run evidence. Full-E2E surfaces including `SlackTaskControllerPack`, leases, recovery/checkpoint orchestration, and multi-executor routing remain deferred unless current repository policy explicitly activates them.
 
 Activating TaskController does not automatically activate GWC. Load GWC only when the controlled task/project requires GWC governance.
 
@@ -238,4 +249,4 @@ A multi-repository change must identify every impacted repository. One repositor
 
 Before any DW SUPER Slack communication, load the Slack connector and read the latest Slack Communication Policy and Governance Behavior canvases.
 
-Slack is an optional visibility layer, not governance truth, task storage, or approval authority. Record canonical state and evidence first. Use one root task/execution message and post later updates in its thread when supported. Slack failure must never block execution or change the result.
+Slack is an optional visibility layer generally and the Human Control Plane when TaskController Slack mode is active. It is not governance truth, canonical task/run storage, Agent progress transport, audit storage, or approval authority. Record canonical state and evidence first. Use one root task/execution message and post only semantic human updates in its thread when supported. Slack failure must never block execution or change the result.
