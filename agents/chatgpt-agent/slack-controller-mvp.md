@@ -1,6 +1,8 @@
 # ChatGPT Slack Controller — Human Control Plane MVP
 
-This file is a mandatory additive instruction whenever ChatGPT presents a TaskController run in Slack.
+This file is a mandatory additive transport overlay whenever ChatGPT presents a TaskController run in Slack.
+
+Canonical human-plane policy lives in `agents/shared/taskcontroller-human-plane-policy.md`. This Slack file defines only the Slack-specific projection/binding behavior.
 
 **Slack is the Human Control Plane.** It is the human-facing operational surface, not the Executor progress transport, canonical run state, or audit store.
 
@@ -13,8 +15,11 @@ Read:
 1. root `AGENTS.md` and applicable workspace/project instructions;
 2. active Power instructions when a Power is selected;
 3. `agents/shared/taskcontroller-a2a-protocol.md`;
-4. this file;
-5. current Slack connector + `Slack Communication Policy` + `Governance Behavior`.
+4. `agents/shared/taskcontroller-human-plane-policy.md`;
+5. this file;
+6. current Slack connector when actual Slack I/O is required.
+
+`Slack Communication Policy` and `Governance Behavior` Slack Canvases are optional projections. They may be checked for human-facing drift when available, but they are not activation entrypoints, not authority sources, and their absence must not block TaskController activation or non-Slack execution. On conflict, repository policy wins.
 
 ## RootCard
 
@@ -88,6 +93,8 @@ The Slack rendering may add a minimal label such as `MAILBOX WAKE-UP`, but MUST 
 The Executor reads the canonical command from `mailbox_ref`. It does not respond with tool/progress narration on Slack; its semantic result goes to its Agent mailbox. Duplicate/stale wake-ups are harmless.
 
 SlackWakeupBinding and SlackHumanControlPlane may share the Slack connector but remain separate semantics.
+
+For Hermes Cloud in the current pilot, Slack transport availability is required for wake-up. Slack Canvas availability is not.
 
 ## Monitoring
 
