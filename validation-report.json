@@ -9,14 +9,14 @@
         "sanity": {
           "guidance": "AGENT_GUIDANCE.md",
           "power_id": "gwc",
-          "source_sha": "520aa1968a0809001e8994192278e52a59c86c61",
+          "source_sha": "3b6c22be933036887a7ae96002e5a48677583812",
           "status": "PASS",
-          "version": "gwc-main-28-3b093806",
+          "version": "gwc-main-43-3b6c22be933036887a7ae96002e5a48677583812",
           "warnings": []
         },
         "status": "PASS",
         "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
-        "version": "gwc-main-28-3b093806"
+        "version": "gwc-main-43-3b6c22be933036887a7ae96002e5a48677583812"
       },
       "install": {
         "backup": null,
@@ -26,7 +26,7 @@
         "runtime_target": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.consumer",
         "status": "INSTALLED",
         "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
-        "version": "gwc-main-28-3b093806"
+        "version": "gwc-main-43-3b6c22be933036887a7ae96002e5a48677583812"
       },
       "manifest": {
         "apiVersion": "dw.superapps/v1",
@@ -34,38 +34,38 @@
           {
             "mode": "0644",
             "path": "AGENTS.md",
-            "sha256": "a9ca4939b26d50b18ef9ce346f000a65de391c00e294309e16d4362d9d2111b9",
-            "size": 26374
+            "sha256": "a0ef964c63caf0f2d6b1b1b3de8a69d41116ef4142b1ab5546a80f89af1b00d0",
+            "size": 23967
           },
           {
             "mode": "0600",
             "path": "AGENT_GUIDANCE.md",
-            "sha256": "f92ac9bfb4d59cd223a3aba2c60d64db757bc55eeca6986a92b2d52d306dfa58",
-            "size": 1848
+            "sha256": "99d85e31be5fa8f2bedd3bc611e9301dede48a3115989489fe34715fc2e11736",
+            "size": 1880
           },
           {
             "mode": "0600",
             "path": "POWER.yaml",
-            "sha256": "3d6a83782e96f409420aeb632b64a77944059034dd17418ed909febec3f8178d",
-            "size": 659
+            "sha256": "c84a4783281f998ac87bbff19fbb55b765077a13ec50fc38eb81e9d87726f9d5",
+            "size": 691
           },
           {
             "mode": "0600",
             "path": "SOURCE.json",
-            "sha256": "6da48b47fc12f346ae1bf2196326b3699fc8be06107d7f37fab640fd41bc9485",
+            "sha256": "32c26c6381b40d3f1356b506499d2106a1537ab067e6d0e197dfd5227f4e7303",
             "size": 196
           },
           {
             "mode": "0600",
             "path": "VERSION",
-            "sha256": "d31e4a26c5fd00116a3cddfda1055ee68700cf9a58c35a1b4c37921298823afe",
-            "size": 21
+            "sha256": "cb64f858d5c91cb4ea9bd6647b157554162f68206109a09d13496f2558e3b358",
+            "size": 53
           },
           {
             "mode": "0644",
             "path": "agents/chatgpt-agent/agent-instructions.md",
-            "sha256": "763c75daf188a800113628395fc28c6d1fa5d815a6b5cd5795fd72875f2e0e72",
-            "size": 20642
+            "sha256": "7f45852998ece250a35e296b94de49e086fa5c46e6348046d3ea277638f214cb",
+            "size": 15278
           },
           {
             "mode": "0644",
@@ -76,8 +76,8 @@
           {
             "mode": "0644",
             "path": "agents/dwc/capabilities.yaml",
-            "sha256": "19ca4fc0eeda21e711c3a7be43323c947e5b8dd14831ecfdedc37ca8eb24f62b",
-            "size": 10065
+            "sha256": "dbacc281112e523b7398353c26549bac2f3df83a305a6c75387d8f42e270bff4",
+            "size": 4196
           },
           {
             "mode": "0755",
@@ -136,8 +136,8 @@
           {
             "mode": "0644",
             "path": "core/Agent_Operating_Runtime_Contract_v1.0.md",
-            "sha256": "44ca483b4e5f1ff8f6562ce9a7d6021a45ab3f01149c1619f66dda9172f38b84",
-            "size": 9653
+            "sha256": "0d0001e1575edeb8f99fd93882f62add90b2aea38178140301a7274174e52501",
+            "size": 6917
           },
           {
             "mode": "0644",
@@ -154,8 +154,8 @@
           {
             "mode": "0644",
             "path": "core/E2E_DRAFT_PR_DELIVERY_RULE.md",
-            "sha256": "e45a706654915b1e02c0ce895420495f92999f9d62422509fa5453f812c874af",
-            "size": 17261
+            "sha256": "3df7d8a647065d5d836fd26c8cafe6346b6820096b2891c3af479f1a4a633946",
+            "size": 16695
           },
           {
             "mode": "0644",
@@ -166,8 +166,8 @@
           {
             "mode": "0644",
             "path": "core/GATE_LIFECYCLE_CONTRACT_v1.0.md",
-            "sha256": "4ac80717e4fbec6d367a6605a03b9e1a431f624092085526c25cda683e9d9923",
-            "size": 16766
+            "sha256": "cc933fb641451a65d0deb82a5100c5e872c39fe23dfe4edf277792ee4be46043",
+            "size": 16269
           },
           {
             "mode": "0644",
@@ -178,8 +178,8 @@
           {
             "mode": "0644",
             "path": "core/runbooks/GATE_G0_G1_OPERATIONAL_RUNBOOK_v1.0.md",
-            "sha256": "4905d7f48ac99ca1cdccdf954339ef64ad06ced59cafcb839b9cedc0a22f4cef",
-            "size": 15948
+            "sha256": "1304b7d9923b9e5805a0f42cf159a87dab4c6d76086467fc6929396893635fbc",
+            "size": 15645
           },
           {
             "mode": "0644",
@@ -250,20 +250,20 @@
           {
             "mode": "0644",
             "path": "projects/gwc/package.yaml",
-            "sha256": "dab57382aae973fa0c9940be231c9197608705bc484efc87f95b8b21e92f361a",
-            "size": 58526
+            "sha256": "23d03cc1fce37e619ac6776436460cb2a72f795bb89b0f781c673b32c356aca6",
+            "size": 56073
           },
           {
             "mode": "0644",
             "path": "projects/gwc/project-extension.md",
-            "sha256": "c49c67408ce3ee9a51725f6597ddbf6a059c692738d06fbb178d5033a4c26a86",
-            "size": 4607
+            "sha256": "d23ba7148409e3d2a9b420790a1c7d11d2523c9fc472fbc0d62aa5b230ccde2e",
+            "size": 3194
           },
           {
             "mode": "0644",
             "path": "projects/gwc/project-instructions.md",
-            "sha256": "c3ff5cb159213b64334a9bbe210a63b0e086608f9fa6cf7c55c136c608551a34",
-            "size": 7354
+            "sha256": "19926c310e80f9d0fda37785130d996cd02486c22ac48e80a05e1e69f8717fce",
+            "size": 5605
           },
           {
             "mode": "0644",
@@ -328,14 +328,14 @@
           {
             "mode": "0644",
             "path": "skills/gwc-g0/SKILL.md",
-            "sha256": "6dfa1365e4d230a002a5591534594fdf6dbddf28057879997bc2e309d4a703d6",
-            "size": 13267
+            "sha256": "c01ccfa87a8eee1ecd949a5dc2fc0f0235811f6ebcf718cab2e08b159d5a9ca9",
+            "size": 13113
           },
           {
             "mode": "0644",
             "path": "skills/gwc-g1/SKILL.md",
-            "sha256": "171b8aa3e5387db229c17ba98cf5388d125383b22c5308bac2566a7af262775a",
-            "size": 20049
+            "sha256": "0ebecdf16ea7c11c47735522eac376e3b769f58e989acb8345a890d82123f1f2",
+            "size": 18786
           },
           {
             "mode": "0644",
@@ -348,12 +348,6 @@
             "path": "templates/g01/g01-decision-input.template.yaml",
             "sha256": "9f25d7315b145d937ea212213a1159b6433c2567a849b8079854a7885ef213a1",
             "size": 1017
-          },
-          {
-            "mode": "0644",
-            "path": "templates/g01/g01-human-review.template.html",
-            "sha256": "a37f8cafd3bab22e2846db530fd00046a0765bcd2df109d61d35507b98527d4f",
-            "size": 2196
           },
           {
             "mode": "0644",
@@ -415,8 +409,8 @@
           "powerId": "gwc",
           "sourceRef": "HEAD",
           "sourceRepository": "nhatnguyenquang1838-coder/gwc",
-          "sourceSha": "520aa1968a0809001e8994192278e52a59c86c61",
-          "version": "gwc-main-28-3b093806"
+          "sourceSha": "3b6c22be933036887a7ae96002e5a48677583812",
+          "version": "gwc-main-43-3b6c22be933036887a7ae96002e5a48677583812"
         },
         "spec": {
           "agentGuidance": "AGENT_GUIDANCE.md",
@@ -464,245 +458,6 @@
         "status": "DETACHED"
       }
     },
-    "task-me": {
-      "doctor": {
-        "configuration": "missing",
-        "install_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store/task-me",
-        "power_id": "task-me",
-        "runtime_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.consumer/.task-me",
-        "sanity": {
-          "guidance": "AGENT_GUIDANCE.md",
-          "power_id": "task-me",
-          "source_sha": "bfa0752d9ca2c4e57cfe219c16294e728fc6a16b",
-          "status": "PASS",
-          "version": "task-me-main-bfa0752d",
-          "warnings": []
-        },
-        "status": "PASS",
-        "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
-        "version": "task-me-main-bfa0752d"
-      },
-      "install": {
-        "backup": null,
-        "install_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store/task-me",
-        "power_id": "task-me",
-        "runtime_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.consumer/.task-me",
-        "runtime_target": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.consumer",
-        "status": "INSTALLED",
-        "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
-        "version": "task-me-main-bfa0752d"
-      },
-      "manifest": {
-        "apiVersion": "dw.superapps/v1",
-        "files": [
-          {
-            "mode": "0644",
-            "path": ".kiro/skills/implementation-task-architect/SKILL.md",
-            "sha256": "79c583bbeb7bdf22c9c3ff2c4262613c3df4a1b22d5a47dd6432dd11b9480166",
-            "size": 4913
-          },
-          {
-            "mode": "0644",
-            "path": ".kiro/skills/implementation-task-architect/references/estimation.md",
-            "sha256": "03711fa22ceff23bd4e7ca0c683a9d2baf8dcd16aa03f7161f0b8a80cbd2c605",
-            "size": 462
-          },
-          {
-            "mode": "0644",
-            "path": ".kiro/skills/implementation-task-architect/references/evidence-model.md",
-            "sha256": "29c4dddf68f2b80f25a596036eb904b7b97d189e7255f124c30f98271fc5ff2e",
-            "size": 662
-          },
-          {
-            "mode": "0644",
-            "path": ".kiro/skills/implementation-task-architect/references/output-contract.md",
-            "sha256": "4e2043f563e37182c449de5c692e2c3a3cc854b8941aaf06788e396c4ae5eed7",
-            "size": 2483
-          },
-          {
-            "mode": "0644",
-            "path": ".kiro/skills/implementation-task-architect/references/runbook.md",
-            "sha256": "46e4071541b106bb234c5eb044b95f2a104eab839eb51d5963f218329c166c8f",
-            "size": 4490
-          },
-          {
-            "mode": "0644",
-            "path": ".kiro/skills/implementation-task-architect/references/task-decomposition.md",
-            "sha256": "3349431119260c02cf45394a7818ac873416f1e815d1ed7671827709676769e8",
-            "size": 798
-          },
-          {
-            "mode": "0755",
-            "path": ".kiro/skills/implementation-task-architect/scripts/validate_config.py",
-            "sha256": "3646c132484ea8a41170542f9929e0722a828b808f6e2405f563d482abe51eb4",
-            "size": 1039
-          },
-          {
-            "mode": "0755",
-            "path": ".kiro/skills/implementation-task-architect/scripts/validate_output_layout.py",
-            "sha256": "94cf86283feeae7e48558c12abf474598e07fbb120cb02bf698f6ab99d99ba54",
-            "size": 2507
-          },
-          {
-            "mode": "0600",
-            "path": "AGENT_GUIDANCE.md",
-            "sha256": "661814b8968a5542a4ca353c0c8997025701c8f30fbeb66218fb1140c2a4e74d",
-            "size": 1897
-          },
-          {
-            "mode": "0644",
-            "path": "LICENSE",
-            "sha256": "7f680a25074d3308542e25f3788af560228c35d3fb9731c4e0bba6c43f126d4d",
-            "size": 1095
-          },
-          {
-            "mode": "0600",
-            "path": "POWER.yaml",
-            "sha256": "60b72276f5ee6394b82b01255af1c9068c799f1816639432ba8ffcf42904ed0e",
-            "size": 573
-          },
-          {
-            "mode": "0600",
-            "path": "SOURCE.json",
-            "sha256": "aca37375a8ec5d914fed8e3dbdc034b9e3ff72dea7667e76f9b080344d76cb38",
-            "size": 200
-          },
-          {
-            "mode": "0600",
-            "path": "VERSION",
-            "sha256": "6d2a71e21c7428ba52e9f8acfffaebc9d24f2b09eace8f3df65d8d1174a846dc",
-            "size": 22
-          },
-          {
-            "mode": "0755",
-            "path": "bin/configure",
-            "sha256": "d6a3b625b1f547a59a72ff9d1a30a6db4db3b7aadba56fae26bf62005e447e40",
-            "size": 428
-          },
-          {
-            "mode": "0755",
-            "path": "bin/configure.ps1",
-            "sha256": "f8a37a0d550ac55e58b71c38918f0bdefec62025e239d2b71316775d242c172b",
-            "size": 274
-          },
-          {
-            "mode": "0755",
-            "path": "bin/doctor",
-            "sha256": "3d9e2a35c431bffa94f022e42fb54173842a1b26cf6e90e18710f36e887e0377",
-            "size": 425
-          },
-          {
-            "mode": "0755",
-            "path": "bin/doctor.ps1",
-            "sha256": "5b3c5f0157119c00949c07cf3e9724fcb033424fec4524f378accc4b00cd4ca3",
-            "size": 271
-          },
-          {
-            "mode": "0755",
-            "path": "bin/install",
-            "sha256": "b22793805c30387331c0001e394d4d044a3be009ecb6ad46319f0873110e1911",
-            "size": 426
-          },
-          {
-            "mode": "0755",
-            "path": "bin/install.ps1",
-            "sha256": "f9bf3f6959f82dfd13feeb584ffbcca2ad925612aa6d3dbcf1046d174ac1c7e8",
-            "size": 272
-          },
-          {
-            "mode": "0755",
-            "path": "bin/uninstall",
-            "sha256": "0bddd2eebd8b6c3644610cf03dc3ca2a49d7916f27433b22b0281920a60e892f",
-            "size": 428
-          },
-          {
-            "mode": "0755",
-            "path": "bin/uninstall.ps1",
-            "sha256": "4d68e727a10aa7ecda07a222da81bf44c67710a76abc65c06d4280f7d21f1619",
-            "size": 274
-          },
-          {
-            "mode": "0644",
-            "path": "distribution/config/task-architect.defaults.yaml",
-            "sha256": "883a2ca56a92c05bf66ce9ba788eefdd4006278a915e3f52608c1d110b870190",
-            "size": 776
-          },
-          {
-            "mode": "0644",
-            "path": "distribution/contracts/task-architect-config.schema.json",
-            "sha256": "7a0d792cf59708d156a0429c0231dd1c6d845dc65285cfcae3bd3090d1672439",
-            "size": 2696
-          },
-          {
-            "mode": "0644",
-            "path": "docs/HOST_MODE.md",
-            "sha256": "e31a409a7f40d3e93dc087ec96d872784dd84458ece8c890625c56b1b098ff06",
-            "size": 1539
-          },
-          {
-            "mode": "0644",
-            "path": "lib/power_runtime.py",
-            "sha256": "240b69cab384c871d67faef2a5a88801ee8db2356697c5316eb2b3edee95f4d7",
-            "size": 14572
-          },
-          {
-            "mode": "0644",
-            "path": "scripts/power_help.py",
-            "sha256": "0bca4decbd302b94211d3513857a5b17e21469f214b7b53768739bb52853bb69",
-            "size": 2564
-          },
-          {
-            "mode": "0644",
-            "path": "scripts/task-me-host.py",
-            "sha256": "a136db4d6e9797b95c8f31cbd2032fc64559650503950c11440afc07008da833",
-            "size": 5551
-          }
-        ],
-        "kind": "PowerPackageManifest",
-        "metadata": {
-          "powerId": "task-me",
-          "sourceRef": "HEAD",
-          "sourceRepository": "nhatnguyenquang1838-coder/task-me",
-          "sourceSha": "bfa0752d9ca2c4e57cfe219c16294e728fc6a16b",
-          "version": "task-me-main-bfa0752d"
-        },
-        "spec": {
-          "agentGuidance": "AGENT_GUIDANCE.md",
-          "entrypoints": [
-            ".kiro/skills/implementation-task-architect/SKILL.md",
-            "scripts/task-me-host.py",
-            "scripts/power_help.py"
-          ],
-          "generatedFiles": [
-            "POWER.yaml",
-            "SOURCE.json",
-            "VERSION",
-            "AGENT_GUIDANCE.md"
-          ],
-          "managedPaths": [
-            ".kiro/skills/implementation-task-architect",
-            "distribution/config",
-            "distribution/contracts",
-            "scripts/task-me-host.py",
-            "docs/HOST_MODE.md"
-          ],
-          "runtimeDataRoot": ".task-me"
-        }
-      },
-      "power_id": "task-me",
-      "runtime_data_preserved": true,
-      "status": "PASS",
-      "store_path": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store/task-me",
-      "target_path": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.consumer",
-      "uninstall": {
-        "install_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store/task-me",
-        "package_preserved": true,
-        "power_id": "task-me",
-        "removed": [],
-        "runtime_preserved": true,
-        "status": "DETACHED"
-      }
-    },
     "ua": {
       "doctor": {
         "configuration": "missing",
@@ -712,14 +467,14 @@
         "sanity": {
           "guidance": "AGENT_GUIDANCE.md",
           "power_id": "ua",
-          "source_sha": "7b6a0a931a4f5c6f21eaf4a485738098b8f84286",
+          "source_sha": "4d5fda706fc9683d097cedc947a02011f11baa38",
           "status": "PASS",
-          "version": "ua-main-f01391f7",
+          "version": "ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38",
           "warnings": []
         },
         "status": "PASS",
         "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
-        "version": "ua-main-f01391f7"
+        "version": "ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38"
       },
       "install": {
         "backup": null,
@@ -729,7 +484,7 @@
         "runtime_target": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.consumer",
         "status": "INSTALLED",
         "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
-        "version": "ua-main-f01391f7"
+        "version": "ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38"
       },
       "manifest": {
         "apiVersion": "dw.superapps/v1",
@@ -737,8 +492,8 @@
           {
             "mode": "0600",
             "path": "AGENT_GUIDANCE.md",
-            "sha256": "2b4e0309ff6b6452e6a3c66c86634d342024c86857e81f5f695e08d877fa9e3e",
-            "size": 4008
+            "sha256": "21f4ba3bb6810bc5e635ee36027bddc40fa16b9e3ffba65f3b0e9a2b34bd266f",
+            "size": 3493
           },
           {
             "mode": "0644",
@@ -749,13 +504,13 @@
           {
             "mode": "0600",
             "path": "POWER.yaml",
-            "sha256": "0e030c38f0c5716c0219c45b55c824979bd3723b21908131d7f065f6c6e14fe2",
-            "size": 1937
+            "sha256": "865e99010c0d18cfac50c521afb20eee377d247984bee86d0d7d7974275f2dd3",
+            "size": 864
           },
           {
             "mode": "0600",
             "path": "SOURCE.json",
-            "sha256": "26075146b4df47526b70a9919d80843f384f5add9818726da2c4e592d344daed",
+            "sha256": "a4db03b4d5f3867cc5db0f98e917beba4ba1a26d29d74086acc76c7d94d6cb7b",
             "size": 212
           },
           {
@@ -767,8 +522,8 @@
           {
             "mode": "0600",
             "path": "VERSION",
-            "sha256": "2c130a2a7d04088dd01e02c428518ebeac1db81ce0a5587785c0193c768ab3d6",
-            "size": 17
+            "sha256": "8d839ebe6d7e5554088a1ff1b39377058109f6f8106b0b8e23de0f4e9dbe48a5",
+            "size": 51
           },
           {
             "mode": "0755",
@@ -823,12 +578,6 @@
             "path": "lib/power_runtime.py",
             "sha256": "240b69cab384c871d67faef2a5a88801ee8db2356697c5316eb2b3edee95f4d7",
             "size": 14572
-          },
-          {
-            "mode": "0644",
-            "path": "scripts/power_help.py",
-            "sha256": "8073aba9c09b39528af207fd496e164445603959c2b959c4cb992bdca87b11b0",
-            "size": 2742
           },
           {
             "mode": "0644",
@@ -1876,552 +1625,6 @@
           },
           {
             "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/index.html",
-            "sha256": "9f9269c942d7e1cfa3fabc7759f0658d4ce93b2701a2f0c3005212b60e11fe3b",
-            "size": 705
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/package.json",
-            "sha256": "e0d64356b36013371d98f97d8b9ad389405c6995ce0a814b17cb51f1e5299bf6",
-            "size": 1218
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/public/favicon.ico",
-            "sha256": "09d2ac08d8cca9b6e1f90221f345a8c4dd0371c64a0dc52b6f96fc589b1e3d67",
-            "size": 655
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/public/favicon.svg",
-            "sha256": "6badfc6835c04a1b8128dca464ff79bd038edbb89cf68d985d2d94e7f08c9c61",
-            "size": 253
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/public/knowledge-graph.json",
-            "sha256": "fb14ed41052a1aba51e462f31f54ab5f1595af1e43b6e7268540de57c19d141a",
-            "size": 101755
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/scripts/benchmark-aggregations.mjs",
-            "sha256": "c4c13b6e139b29d9563e627c7e0615b9e5a8e3b98ec5f51d22bd586b60c883fe",
-            "size": 3426
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/scripts/benchmark-layout.mjs",
-            "sha256": "6aa754ba1f236c55bb6962c3fcc2a887e1bb6b06ab9c531bd12523d91026a3cc",
-            "size": 2705
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/App.tsx",
-            "sha256": "91db4c86cc6ad515c5244cd34a4e0a3066d8709fbfa868f0629698160e9dc681",
-            "size": 29574
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/__tests__/allNodeTypes.test.ts",
-            "sha256": "81781579ce8143deffc7363550043ee5fdf0a1f5dde3144e3ac48dc72be35564",
-            "size": 2416
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/__tests__/edgeCategories.test.ts",
-            "sha256": "e5bcc53e09c6fdb2cc68eb44a25ef17caf96ea3cddf42aecb6163d0ef0bdb1fa",
-            "size": 2651
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/__tests__/freshness.test.ts",
-            "sha256": "ed67d031dc4ad11639bf64b011e81b28be0008be1a034f4a6ecf13874ec2bf69",
-            "size": 7992
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/__tests__/store-navigation.test.ts",
-            "sha256": "f8eca15fd2f7fe1d37e1b628a2878f9c7e6fa6e878acd20fdc815608a446c76d",
-            "size": 3624
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/__tests__/vite-staleness.test.ts",
-            "sha256": "ec147f884475b27355a89b3a0fa3a69a5267b9d48521ebe98b1f438707b3cadd",
-            "size": 8063
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/Breadcrumb.tsx",
-            "sha256": "8dbb96e8a52f9fa0608f9ae5b71e413f35e81c7ec62dda815237bb7249ac1d76",
-            "size": 1640
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/CodeViewer.tsx",
-            "sha256": "bd860bf11a6f4934a7b77c5316140656e30cf1e7f6f05e720860ec5c848fb9cc",
-            "size": 14429
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/ContainerNode.tsx",
-            "sha256": "7d435864362d09e26e5a8c4a451a4cac0c8f502545f5e32bc30191bde587d7d2",
-            "size": 3195
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/CustomNode.tsx",
-            "sha256": "da949e7a7a90d2d91c5b4a0a944deb454a4088385eb3c3d07fdc4ec8b968a4ee",
-            "size": 6670
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/DiffToggle.tsx",
-            "sha256": "8fdebc9c42062806385e17a23a978ffdafc3ed2fe06590dbd55b0f2e0d593713",
-            "size": 2299
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/DomainClusterNode.tsx",
-            "sha256": "f5b146c7a1c3372900ffe4aeec878b198a1acbb96f614fd7e34722662eea9426",
-            "size": 2446
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/DomainGraphView.tsx",
-            "sha256": "e149c9786826182a60601e1b95fe1f2402c15297d55db4217c7675b555c9dc6d",
-            "size": 8550
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/ExportMenu.tsx",
-            "sha256": "fa10362f4c01210f1a47d10801aed1c872cac65d2d7ff69da493f2e972038ad1",
-            "size": 10863
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/FileExplorer.tsx",
-            "sha256": "c076fe5c2286a351837195c7fe17f545f4bdbb31322568b3822292a7376f85c5",
-            "size": 6561
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/FilterPanel.tsx",
-            "sha256": "870ee140f5cfa42218f0f926a31d4a3a0697a81b3a5738db0b79b71c2e3a20b7",
-            "size": 8732
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/FlowNode.tsx",
-            "sha256": "e566649a65e19b109ea034cf8c8914210899af00ba8cb7da75a27f9471a3f885",
-            "size": 1727
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/GraphView.tsx",
-            "sha256": "bbe93d51aa2ca31a6f0b2b84ad251ed3245d6e8a98146c916ac8b8c8cfd7d68d",
-            "size": 60606
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/KeyboardShortcutsHelp.tsx",
-            "sha256": "f98ef14aa6796b1c5332c3f4d40ae8172f1b335814de8ceee2a95e4d2e37ce54",
-            "size": 3530
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/KnowledgeGraphView.tsx",
-            "sha256": "8f8b0e400002c44bf7c5fc5a70467f4153e8ec570fbb1f387473e3a910a52ec6",
-            "size": 13186
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/LayerClusterNode.tsx",
-            "sha256": "c941812b38c9b961667cc89bf433a9ecd7f2abdda9f8e01f4d685c5e73d292b6",
-            "size": 3300
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/LayerLegend.tsx",
-            "sha256": "763bdd68a9e8c39faea5f55d661554f081d0fead7026a0f3d8d98fa5ab8d64ea",
-            "size": 3006
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/LearnPanel.tsx",
-            "sha256": "918406c775f23796112566017dd466bd18f53b959c89f48b7bf68d54a7296dd6",
-            "size": 8509
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/MobileBottomNav.tsx",
-            "sha256": "1c4ba1556b5ea7365fb49f1848bc2558335f9fd6843d7d4776588870f3fd9d4d",
-            "size": 2379
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/MobileDrawer.tsx",
-            "sha256": "9f7e88dc3cc6a9884cf7958f82f34a6534e96905bd23319719249f81133d48e7",
-            "size": 9959
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/MobileLayout.tsx",
-            "sha256": "56149fa279bc9a78565ad9763ac71582bf6f92f70e43a6888e011d11dc9fe521",
-            "size": 8277
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/NodeInfo.tsx",
-            "sha256": "59e61790180bcc136c3fc4e83741e10cee2fcf71b8931f712d1eb2f1d5c1cf1d",
-            "size": 23754
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/NodeTooltip.tsx",
-            "sha256": "cfce2561f7736cb742ce22848195d2c1168d5d5c73e5798768c92b5722549bce",
-            "size": 4632
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/OnboardingOverlay.tsx",
-            "sha256": "ceb426ec0650ecdf7e5e50181bf2c099938113cb5e019adc2ac584def78cd330",
-            "size": 6789
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/PathFinderModal.tsx",
-            "sha256": "589d720104b658a6562bc81f0cf7761f0097e0a9d173f0c12069c9399ef6ce9a",
-            "size": 11562
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/PersonaSelector.tsx",
-            "sha256": "98ef303e558c6839c1914f2222d26a044486252375c0d10b7ad919f19e5eed6a",
-            "size": 1343
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/PortalNode.tsx",
-            "sha256": "5e0626d58fbdb2baefa4c1e9ea1e7db4acbd1a17a053064a1b10468b32259cbc",
-            "size": 1944
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/ProjectOverview.tsx",
-            "sha256": "b371e43a64dd45d4348f04de88ff7e140609240fac41ddeed9713986b856d7fc",
-            "size": 10737
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/SearchBar.tsx",
-            "sha256": "789502614ffe09c4b22983239f3fefbc710d87829196433c5f4a9d615abe1a14",
-            "size": 7588
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/StalenessBanner.tsx",
-            "sha256": "4715677e0016af2dd585b3110571e1d3dd112265b1e69ef1faec95d1e3694caf",
-            "size": 7600
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/StepNode.tsx",
-            "sha256": "9bae7c6a43f45ce45cf334a90e3d66ba45e1fffaa58b19714ae584fc1f79ceae",
-            "size": 1767
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/ThemePicker.tsx",
-            "sha256": "8da4b99fd9ce1d72515b0ac57a88bb479274935edacb4d4ea750887ff4763f74",
-            "size": 6836
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/TokenGate.tsx",
-            "sha256": "270089a53b0b98f38fdf652f8630146b65bbede65ce149677f0ea3aa5fe5a938",
-            "size": 2725
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/WarningBanner.tsx",
-            "sha256": "6eb397256755ab6565215cb9c573b37480084c3d616298687db2613d9ff2cbf8",
-            "size": 10184
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/__tests__/StalenessBanner.test.ts",
-            "sha256": "d5716845d29fe2f392c559f692ecb74fc3cb93c9457847ce45defca7de3eda93",
-            "size": 4939
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/components/__tests__/structuralVisibleTypes.test.ts",
-            "sha256": "60af4c2288e22c08596b49d217f171b02e23c9d5c1adf71bd4065e81e374f621",
-            "size": 3585
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/contexts/I18nContext.tsx",
-            "sha256": "08153e94d4ae7580a9763574601a85b9813a76fe06ef97a305c71cbf65872983",
-            "size": 985
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/freshness.ts",
-            "sha256": "439cc0c3c08737f4aeeeaec49ef4705b56b9958ace28c4ed5c1f9875810752cc",
-            "size": 6522
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/hooks/useIsMobile.ts",
-            "sha256": "5875cba166ee95d078651a14b67799f4799b4275fc8dc33104b120523b252976",
-            "size": 691
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/hooks/useKeyboardShortcuts.ts",
-            "sha256": "d18b7eecc05f37d140f2d589ec08ee50a380f77ae76d12bfc2037495405abc6b",
-            "size": 2603
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/index.css",
-            "sha256": "744a73a949df21e547a908af475bb9c1c7cc06662f46814ec1261817beb48bf7",
-            "size": 6179
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/locales/en.ts",
-            "sha256": "7b90ec7543645a3b287b260d2e46eef4f4bd099167129fbc054ab09d5f5b8fab",
-            "size": 10385
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/locales/index.ts",
-            "sha256": "73e4b44f1bc89e00c8683b760d6b096beec8c8a7168bac6605b8a5bd870f538a",
-            "size": 1078
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/locales/ja.ts",
-            "sha256": "733e78c9f715737a8fcd562fa6e66a1c6fbd9814b74370b9e41379fb06bc2a4c",
-            "size": 12604
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/locales/ko.ts",
-            "sha256": "feb57b9e376da8a6a7ee1cf5fe29c4c48921f2c266f3e5710d74fe6f258fb450",
-            "size": 11189
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/locales/ru.ts",
-            "sha256": "1178ac4e3301ea678d1f0a28b0adda88f5f01664cb8ecdba2d06f539bcea56e4",
-            "size": 15060
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/locales/zh-TW.ts",
-            "sha256": "8729d272c1b5485776b62ce458ab522d1cb383abc6cc6eb29483bed7fe1d7890",
-            "size": 10115
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/locales/zh.ts",
-            "sha256": "2cfd98e814481806afc57373012f5a59e38f7ef4e7a2ed899eda90b41a120519",
-            "size": 10048
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/main.tsx",
-            "sha256": "3d31aed4164d4d47b45b8b7c824ab154420846b146875de51577e8b8d8e4a181",
-            "size": 231
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/store.ts",
-            "sha256": "89a6b542040e207aae3f3294c30222b73f8ab52583c9b1bed06146eddc3cf988",
-            "size": 27711
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/themes/ThemeContext.tsx",
-            "sha256": "38979fa20ea8b03ecf16e7c93cfb4876c6e4aec062ded4072f6f65ff79ad921a",
-            "size": 2934
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/themes/index.ts",
-            "sha256": "8b31b7d8b41e002e85e498f46bfa900ba49e7e11aa493750a1cbe2904cc4e5da",
-            "size": 320
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/themes/presets.ts",
-            "sha256": "d82700fa737c17e88c57858323151e06e00da46bd2843f174acb5c648fb2a47e",
-            "size": 6142
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/themes/theme-engine.ts",
-            "sha256": "b32bc45bbbf77311aa4d06ef0d6db0666e51ff95d16510206f24c84be1fe2218",
-            "size": 2568
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/themes/types.ts",
-            "sha256": "c4953c103643737fddfa2b4ff58f3e95a1ade34aacefd5032c878c2ef1c2259b",
-            "size": 678
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/__tests__/containers.test.ts",
-            "sha256": "c712642ae3a0cee4b03fb22b805e00cd266ff9d6e27ee9332730bf1b6ea8c690",
-            "size": 4760
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/__tests__/edgeAggregation.test.ts",
-            "sha256": "5f9ae8f87549417e15c748d9bf4d9af9c5b4b60c23609c58eb70b6b9bd12cee7",
-            "size": 2710
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/__tests__/elk-layout.test.ts",
-            "sha256": "05071140a1423570c7fe689e163db2e420dc830e481d5d64cb06ae1732e0ff04",
-            "size": 3715
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/__tests__/filters.test.ts",
-            "sha256": "4108294c0814aa7ed8b4c7ba04f58585e67dd05739f314f2c1cfbc4e27a66b82",
-            "size": 6909
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/__tests__/force-layout-client.test.ts",
-            "sha256": "3dd9931deace1bb2edccc8911ee920781e24808f3f124dac9257291cf31d4c9c",
-            "size": 2882
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/__tests__/force-layout.test.ts",
-            "sha256": "fe089c6a22d5348aaea5e7ab2c4b120df52b26582adb18ccddc75fe7061f5f43",
-            "size": 2453
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/__tests__/layerStats.test.ts",
-            "sha256": "ebab136ff5c0bbf27ba9594601caf51503e9a1a0f8b3b42636a297bf75838467",
-            "size": 3990
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/__tests__/smoke.test.ts",
-            "sha256": "005b94329b0d12f68a970e618bccd84b0d6dbfef0ffdeb496fa760f93309db00",
-            "size": 526
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/containers.ts",
-            "sha256": "d742a6055e0fddd357ede07dd3ba20dd646a576b60e5fc545153c92ffc11c530",
-            "size": 4551
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/edgeAggregation.ts",
-            "sha256": "d82b2122ea7e015206512ebc011392c691b60d295fbbf093413d9f4e1cd9d8b6",
-            "size": 5839
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/elk-layout.ts",
-            "sha256": "3963eb9d033a5872d543b628745c76858406fcea1a2bb164ee9b2a1a91071780",
-            "size": 6395
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/filters.ts",
-            "sha256": "5216d825a134b26a6f9cfa58d02fad666fb014630b665ad2591506605ba6e3d2",
-            "size": 3124
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/force-layout-client.ts",
-            "sha256": "dbaeceee8a6482a3ccf3047f39bae178660f8e9a7b7c996de0763551a13ec6bb",
-            "size": 3398
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/force-layout.ts",
-            "sha256": "60e3903bf7def43f88c0e11423fc9fb5bc3c2d2c965983a52a2362edd73f3a9c",
-            "size": 3859
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/force-layout.worker.ts",
-            "sha256": "31980e52aaab03190a9fde4796178567615a0b74671e0c61663679ce5be51e59",
-            "size": 532
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/layerStats.ts",
-            "sha256": "ab695940ab619978d3b925516c9fde2eef962affea4e2f4c9270447ab59a1158",
-            "size": 1341
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/layout.ts",
-            "sha256": "47fff016dbb9d1d6556c8e0aa6d41d2d5932528990daab654f3294f1411f8d84",
-            "size": 4393
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/layout.worker.ts",
-            "sha256": "3debd7874842bac959c2f2109635bf3f7869671789333bfa4a0f61878058fa30",
-            "size": 1174
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/utils/louvain.ts",
-            "sha256": "acc2c2a48a2b970cf1d91c4e062aad9a5aa8a7e3b72d40d2c79b17544459a045",
-            "size": 2230
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/src/vite-env.d.ts",
-            "sha256": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
-            "size": 38
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/tsconfig.app.json",
-            "sha256": "3eb2f3bbc8b70ade2c5bac9c3721ae2f54cee344de0752f9b27ca63683025301",
-            "size": 628
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/tsconfig.json",
-            "sha256": "b6d51d37a8d51b993bd758b7043fa9233eea24d34a4041198ff73c063d9ed66c",
-            "size": 71
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/vite.config.demo.ts",
-            "sha256": "5efa9bcb69224aada1fb16cd378f01a8ff7c851b8b9d06a7ab2bd517311ae306",
-            "size": 1672
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/packages/dashboard/vite.config.ts",
-            "sha256": "308cdd59979d43b3480169708c128534c87185d0861c1ac96b534b252e182919",
-            "size": 15919
-          },
-          {
-            "mode": "0644",
             "path": "understand-anything-plugin/packages/tree-sitter-dart-wasm/BUILD.md",
             "sha256": "d124dac9e36dee5a7439aec4045a08114cb195b95d7c062938b435d3129590c0",
             "size": 1548
@@ -2782,84 +1985,6 @@
           },
           {
             "mode": "0644",
-            "path": "understand-anything-plugin/skills/understand-chat/SKILL.md",
-            "sha256": "5f1da70e0849ec2f3005fc232a95ab5f4b1c09cc062ced13945ce8516ca0e5f7",
-            "size": 4772
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/skills/understand-dashboard/SKILL.md",
-            "sha256": "d12cb059d8e6139873542111ccec691b0603496675182f5ac826d5b65273331a",
-            "size": 7520
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/skills/understand-diff/SKILL.md",
-            "sha256": "fc8dc1b216ee1a480daff421c41c27218d7a0db881d35d0c22e9858de5189379",
-            "size": 5781
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/skills/understand-domain/SKILL.md",
-            "sha256": "b2c98c18b579856a70174cb93d2d25330e715a5ac411b4cc354dc8a1daeb01ae",
-            "size": 9781
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/skills/understand-domain/extract-domain-context.py",
-            "sha256": "3ae26832a8df8090b606d86839d0721cc1c316aaac28e2b8fba77ed6d7455ae7",
-            "size": 16273
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/skills/understand-explain/SKILL.md",
-            "sha256": "661389c81c9133e6cdc99ba033678300ba7a7a377031396b259a23dad39496fe",
-            "size": 5040
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/skills/understand-figma/SKILL.md",
-            "sha256": "b8f76ffb75250a265d609d597c218d1884e220618065240748f2256ef10c475d",
-            "size": 4137
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/skills/understand-figma/figma-merge.mjs",
-            "sha256": "29018498529cf26be6166639ee6e93573b7cd16dba87def29c16f78fa9100797",
-            "size": 1780
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/skills/understand-figma/figma-scan.mjs",
-            "sha256": "257a23096534bd32047a294ffbcc84019d85e85a8b7b58aeb4ad69de105a6805",
-            "size": 4326
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/skills/understand-knowledge/SKILL.md",
-            "sha256": "e2b225a82d0fc59a83b8391afe17d1ff7f84acb831d2cf716f0ab583ba09c010",
-            "size": 6191
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/skills/understand-knowledge/merge-knowledge-graph.py",
-            "sha256": "97e625234ce28bec7b1b02ec7191c70c6c75a54dda3579f7e94bc06ec10679f3",
-            "size": 17330
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/skills/understand-knowledge/parse-knowledge-base.py",
-            "sha256": "4eb78d9a8a628bb4547a0c88cb57c2b2a22ba595664736a579ad56d9e46d7249",
-            "size": 20916
-          },
-          {
-            "mode": "0644",
-            "path": "understand-anything-plugin/skills/understand-onboard/SKILL.md",
-            "sha256": "fd6618036f219e625788cc1138a02b84648f4ada2edfc90f3b6b9fe96480aecb",
-            "size": 5011
-          },
-          {
-            "mode": "0644",
             "path": "understand-anything-plugin/tsconfig.json",
             "sha256": "e883e3117f39afcf9e2cf7d612094ac51421a3bc0c29bd6a4c1a543147a6144b",
             "size": 430
@@ -2870,22 +1995,13 @@
           "powerId": "ua",
           "sourceRef": "HEAD",
           "sourceRepository": "nhatnguyenquang1838-coder/Understand-Anything",
-          "sourceSha": "7b6a0a931a4f5c6f21eaf4a485738098b8f84286",
-          "version": "ua-main-f01391f7"
+          "sourceSha": "4d5fda706fc9683d097cedc947a02011f11baa38",
+          "version": "ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38"
         },
         "spec": {
           "agentGuidance": "AGENT_GUIDANCE.md",
           "entrypoints": [
-            "understand-anything-plugin/skills/understand/SKILL.md",
-            "understand-anything-plugin/skills/understand-chat/SKILL.md",
-            "understand-anything-plugin/skills/understand-explain/SKILL.md",
-            "understand-anything-plugin/skills/understand-diff/SKILL.md",
-            "understand-anything-plugin/skills/understand-dashboard/SKILL.md",
-            "understand-anything-plugin/skills/understand-domain/SKILL.md",
-            "understand-anything-plugin/skills/understand-onboard/SKILL.md",
-            "understand-anything-plugin/skills/understand-knowledge/SKILL.md",
-            "understand-anything-plugin/skills/understand-figma/SKILL.md",
-            "scripts/power_help.py"
+            "understand-anything-plugin/skills/understand/SKILL.md"
           ],
           "generatedFiles": [
             "POWER.yaml",
@@ -2901,19 +2017,9 @@
             "understand-anything-plugin/pnpm-lock.yaml",
             "understand-anything-plugin/agents",
             "understand-anything-plugin/skills/understand",
-            "understand-anything-plugin/skills/understand-chat",
-            "understand-anything-plugin/skills/understand-explain",
-            "understand-anything-plugin/skills/understand-diff",
-            "understand-anything-plugin/skills/understand-dashboard",
-            "understand-anything-plugin/skills/understand-domain",
-            "understand-anything-plugin/skills/understand-onboard",
-            "understand-anything-plugin/skills/understand-knowledge",
-            "understand-anything-plugin/skills/understand-figma",
             "understand-anything-plugin/packages/core",
-            "understand-anything-plugin/packages/dashboard",
             "understand-anything-plugin/packages/tree-sitter-dart-wasm",
-            "understand-anything-plugin/packages/tree-sitter-swift-wasm",
-            "scripts/power_help.py"
+            "understand-anything-plugin/packages/tree-sitter-swift-wasm"
           ],
           "runtimeDataRoot": ".ua"
         }
@@ -2936,5 +2042,5 @@
   "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist",
   "store_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.store",
   "target_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.kilo/staging/power-dist/.consumer",
-  "validated_at": "2026-08-03T04:44:03.587873+00:00"
+  "validated_at": "2026-08-17T08:36:08.130385+00:00"
 }
