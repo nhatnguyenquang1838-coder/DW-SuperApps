@@ -185,7 +185,7 @@ def test_human_plane_policy_is_repo_canonical_and_projection_safe():
     assert "canonical repository source of truth" in policy
     assert "not activation entrypoints and not governance authority" in policy
     assert "PROJECTION_UNAVAILABLE" in policy
-    assert "REPO" not in policy or "repository policy wins" in policy
+    assert "repository policy wins on conflict" in policy
     assert "Failure to access Slack Canvas policy documents is not" in policy
 
 
