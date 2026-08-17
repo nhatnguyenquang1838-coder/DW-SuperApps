@@ -5,21 +5,31 @@ This facade provides the contract surface later MVP code will call.
 """
 from __future__ import annotations
 
+import logging
 from pathlib import Path
-from typing import Any
 
 from taskcontroller.audit.event import AuditEvent
 from taskcontroller.audit.manifest import RunManifest
-from taskcontroller.audit.summary import RunSummary
 from taskcontroller.audit.sqlite_writer import SQLiteRunLedger
+from taskcontroller.audit.structured_log import log_audit_event
+from taskcontroller.audit.summary import RunSummary
 
 
 class AuditFacade:
-    def __init__(self, db_path: Path | str) -> None:
+    def __init__(self, db_path: Path | str, logger: logging.Logger | None = None) -> None:
         self._ledger = SQLiteRunLedger(db_path)
+        self._logger = logger
 
     def record(self, run_id: str, event: AuditEvent) -> int:
-        return self._ledger.append(run_id, event)
+        revision = self._ledger.append(run_id, event)
+        if self._logger is not None:
+            try:
+                log_audit_event(self._logger, event)
+            except Exception:
+                # Structured logging is a best-effort projection only. A logger
+                # failure must never roll back or invalidate durable audit state.
+                pass
+        return revision
 
     def events(self, run_id: str) -> list[AuditEvent]:
         return self._ledger.events(run_id)
