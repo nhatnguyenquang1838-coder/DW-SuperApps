@@ -4,11 +4,11 @@
   "powers": {
     "gwc": {
       "sourceRepository": "nhatnguyenquang1838-coder/gwc",
-      "providerHeadSha": "3b0938065e71e699d327d041f5b6023ed30a29dc",
+      "providerHeadSha": "3b6c22be933036887a7ae96002e5a48677583812",
       "distributionRepository": "nhatnguyenquang1838-coder/gwc",
       "distributionRef": "power-dist",
-      "publishedSourceSha": "3b0938065e71e699d327d041f5b6023ed30a29dc",
-      "packageVersion": "gwc-main-28-3b093806",
+      "publishedSourceSha": "3b6c22be933036887a7ae96002e5a48677583812",
+      "packageVersion": "gwc-main-43-3b6c22be933036887a7ae96002e5a48677583812",
       "runtimeDataRoot": ".gwc",
       "entrypoints": [
         "skills/gwc-g0/SKILL.md",
@@ -36,19 +36,18 @@
     },
     "ua": {
       "sourceRepository": "nhatnguyenquang1838-coder/Understand-Anything",
-      "providerHeadSha": "f01391f7d1658d84b8ee6f34fb08399cd8fc3f62",
+      "providerHeadSha": "4d5fda706fc9683d097cedc947a02011f11baa38",
       "distributionRepository": "nhatnguyenquang1838-coder/Understand-Anything",
       "distributionRef": "power-dist",
-      "publishedSourceSha": "f01391f7d1658d84b8ee6f34fb08399cd8fc3f62",
-      "packageVersion": "ua-main-f01391f7",
+      "publishedSourceSha": "4d5fda706fc9683d097cedc947a02011f11baa38",
+      "packageVersion": "ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38",
       "runtimeDataRoot": ".ua",
       "entrypoints": [
         "understand-anything-plugin/skills/understand/SKILL.md"
       ],
       "guidanceMode": "legacy-optional",
       "status": "CURRENT",
-      "publicationState": "release-and-branch",
-      "note": "Local source integration pin; remote publication was not checked (SKIPPED_OFFLINE)."
+      "publicationState": "release-and-branch"
     },
     "bmad": {
       "sourceRepository": "nhatnguyenquang1838-coder/BMAD-METHOD",
