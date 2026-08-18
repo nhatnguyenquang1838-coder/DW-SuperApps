@@ -1,7 +1,7 @@
 run_id: taskcontroller-development-bootstrap-20260818
 repository: nhatnguyenquang1838-coder/DW-SuperApps
 base_sha: 3f9c81d7c13098ce502dfa48c82d1d92f82e34ee
-status: SPEC_READY_AWAITING_G2
+status: SPEC_REPAIR_READY_AWAITING_G2_R2
 tasks:
 - task_id: SCRUM-553
   path: tasks/SCRUM-553-taskcontroller-development-bootstrap-transitive-authority
