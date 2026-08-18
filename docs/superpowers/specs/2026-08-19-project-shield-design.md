@@ -582,11 +582,13 @@ Documents/refs ───────────► Claims ─► Finding
 Reviews ────────────────────────────► Finding
 ```
 
-Evidence status vocabulary may use the existing GWC-compatible semantics:
+Evidence status vocabulary for Shield is:
 
 ```text
 PROVEN | PARTIAL | MISSING | STALE | CONFLICT
 ```
+
+This preserves the established GWC-style evidence states while making conflict explicit for Shield reconciliation.
 
 ### 8.3 Systemic promotion
 
@@ -884,7 +886,7 @@ Example:
 
 ```text
 Health       CRITICAL
-Exposure     CONTAINED/LIMITED
+Exposure     LIMITED
 Protection   EFFECTIVE
 ```
 
