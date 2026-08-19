@@ -1,0 +1,81 @@
+{
+  "repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+  "exact_base_sha": "3f9c81d7c13098ce502dfa48c82d1d92f82e34ee",
+  "base_ref": "main",
+  "github_issue": "https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/issues/67",
+  "jira": "https://nhatnguyenquang1838.atlassian.net/browse/SCRUM-553",
+  "source_evidence": [
+    {
+      "kind": "repo-file",
+      "path": "taskcontroller/execution/dispatch.py",
+      "ref": "3f9c81d7c13098ce502dfa48c82d1d92f82e34ee",
+      "identity_policy": "re-materialize exact blob/tree SHA at fresh implementation bootstrap before using as implementation evidence"
+    },
+    {
+      "kind": "repo-file",
+      "path": "taskcontroller/execution/types.py",
+      "ref": "3f9c81d7c13098ce502dfa48c82d1d92f82e34ee",
+      "identity_policy": "re-materialize exact blob/tree SHA at fresh implementation bootstrap before using as implementation evidence"
+    },
+    {
+      "kind": "repo-file",
+      "path": "taskcontroller/interaction/continuation.py",
+      "ref": "3f9c81d7c13098ce502dfa48c82d1d92f82e34ee",
+      "identity_policy": "re-materialize exact blob/tree SHA at fresh implementation bootstrap before using as implementation evidence"
+    },
+    {
+      "kind": "repo-file",
+      "path": "taskcontroller/mvp/pilot.py",
+      "ref": "3f9c81d7c13098ce502dfa48c82d1d92f82e34ee",
+      "identity_policy": "re-materialize exact blob/tree SHA at fresh implementation bootstrap before using as implementation evidence"
+    },
+    {
+      "kind": "repo-file",
+      "path": "tests/taskcontroller/",
+      "ref": "3f9c81d7c13098ce502dfa48c82d1d92f82e34ee",
+      "identity_policy": "re-materialize exact blob/tree SHA at fresh implementation bootstrap before using as implementation evidence"
+    }
+  ],
+  "governance_evidence": [
+    {
+      "kind": "gg-instruction",
+      "section": "1A. DEVELOPMENT TASK BOOTSTRAP — SPEC-DRIVEN SESSION BOUNDARY",
+      "revision": "AIroW378s9uStEwtFnvQaj1S2wArsLm2VxPoWJBILypyqVzhDBla3SpEr2Yjv7kX1PTpVqTjwsEffXmVs7TiEUnJHliLX8WteE4OaTFWLYk"
+    },
+    {
+      "kind": "gwc-validator-bundle",
+      "version": "1.16.0",
+      "sha256": "15191523ce650f9136e4b32916841cfe20c24279de83e9cad1b2b13fd486bb29"
+    }
+  ],
+  "observed_incident": "Rental Home G4 direct merge deterministically triggered archive export/release-dist write+retention delete outside direct G4 scope.",
+  "confidence": 0.93,
+  "gg_identity": {
+    "revision": "AIroW378s9uStEwtFnvQaj1S2wArsLm2VxPoWJBILypyqVzhDBla3SpEr2Yjv7kX1PTpVqTjwsEffXmVs7TiEUnJHliLX8WteE4OaTFWLYk",
+    "version": "2026-08-18",
+    "edition": "LLM-Semantic 2.3",
+    "section": "1A. DEVELOPMENT TASK BOOTSTRAP — SPEC-DRIVEN SESSION BOUNDARY",
+    "section_sha256": "COMPUTE_AT_HANDOFF_FROM_EXACT_NORMALIZED_SECTION_TEXT"
+  },
+  "task_me_package_identity_contract": {
+    "algorithm": "sha256(sorted(relative_path + NUL + sha256(file_bytes)))",
+    "scope": "canonical task package files",
+    "exclude": [
+      "fresh-session handoff record"
+    ],
+    "bind_at": "G3 exit/fresh-session handoff"
+  },
+  "review_repair": {
+    "reviewer": "Hermes Cloud U0BNANGC3PB",
+    "reviewed_head": "0e2523353dc36702e30c4af5f11e55b62269dbc2",
+    "decision": "CHANGES_REQUIRED",
+    "resolved_findings_target": [
+      "A-1",
+      "A-2",
+      "A-3",
+      "A-4",
+      "A-5",
+      "A-6"
+    ]
+  }
+}
