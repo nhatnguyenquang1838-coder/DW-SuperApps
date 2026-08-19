@@ -1,0 +1,1 @@
+Consumes local HealthSnapshot/protection/sensor coverage and shared durable transport/store. Produces normalized fleet inputs. Must avoid exporting raw source payloads, prompts, Slack content or all local observations to Global by default.

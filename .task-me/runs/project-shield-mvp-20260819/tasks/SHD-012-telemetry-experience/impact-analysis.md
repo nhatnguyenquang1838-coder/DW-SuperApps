@@ -1,0 +1,1 @@
+Touches Shield execution boundaries and best-effort observability projection; may integrate an OpenTelemetry-compatible SDK/Collector adapter. Experience data derives from audit/traces but has independent eligibility/redaction/provenance. No current TaskController audit row is rewritten.

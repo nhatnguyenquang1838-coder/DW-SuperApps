@@ -1,0 +1,1 @@
+Planning/discovery task. Do not create runtime source. Use verified repository directories as evidence. Preserve Shield≠TaskController-kernel invariant. Output exact paths for downstream tasks and identify any compatibility adapter required; prohibit product-name branching in TaskController core.

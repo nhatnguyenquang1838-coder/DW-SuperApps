@@ -1,0 +1,1 @@
+Test crash between logical event/outbox operations, duplicate sync retry, same ID/same digest replay, same run+sequence/different digest conflict, cloud unavailable read-only continuation, cloud ACK/readback, existing SQLite integrity. Run `PYTHONPATH=. pytest tests/taskcontroller/` plus Shield persistence tests.

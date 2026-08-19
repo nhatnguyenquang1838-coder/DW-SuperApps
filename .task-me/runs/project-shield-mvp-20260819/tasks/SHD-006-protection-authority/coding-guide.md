@@ -1,0 +1,1 @@
+Semantic contract must be transport-neutral: authentication_ref may be mTLS/JWT/signed artifact/etc. Critical protection never silently expires merely because Global is unreachable. Do not add `CANCEL` as implicit Global capability. Release requires evidence-backed decision.

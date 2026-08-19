@@ -1,0 +1,1 @@
+Extend existing continuation/checkpoint/adversarial tests with Shield bounded refs. Negative: stale seq/checkpoint, terminal run recontinued, schedule tick hijacks active run, transient projection conflicts with durable state. Run `PYTHONPATH=. pytest tests/taskcontroller/`.

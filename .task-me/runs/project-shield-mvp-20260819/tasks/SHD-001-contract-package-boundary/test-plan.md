@@ -1,0 +1,1 @@
+Validate unique requirement/task IDs, DAG references and Task-Me folder layout. Review selected package root against repository conventions and PR #69 modularity constraints. Existing regression command to preserve later: `PYTHONPATH=. pytest tests/taskcontroller/`.

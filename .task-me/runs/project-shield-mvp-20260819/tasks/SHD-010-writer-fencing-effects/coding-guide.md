@@ -1,0 +1,1 @@
+Do not build a general consensus subsystem. Bind the minimum current-writer invariant to existing run/continuation identity. Mutation precondition must re-read current epoch and required shared durability. Receipt UNKNOWN is not success; reconcile exact provider state before any repeat.

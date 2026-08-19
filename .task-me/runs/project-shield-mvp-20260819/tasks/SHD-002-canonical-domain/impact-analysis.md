@@ -1,0 +1,1 @@
+Direct new Shield domain files/tests. Verified patterns: `taskcontroller/domain/models.py`, `enums.py`, `ids.py`, `serialization.py`, `values.py`. Transitive consumers: all later Shield services, persistence and projections. No existing TaskController wire contract should break.

@@ -1,0 +1,1 @@
+Do not add new A2A `kind` for Shield. Use `COMMAND/REPORT/REVIEW_REQUEST/...` plus `request.capability`. Persist continuation before dispatch/wakeup; poll exact mailbox/reference; never reconstruct authority/state from Slack/chat history.

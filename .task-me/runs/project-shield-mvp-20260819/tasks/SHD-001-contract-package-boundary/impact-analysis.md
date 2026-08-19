@@ -1,0 +1,1 @@
+Verified existing anchors: `taskcontroller/**`, `tests/taskcontroller/**`, `.kiro/**`, `.task-me/**`, architecture docs. New Shield source root does not yet exist and therefore must be discovered/decided, not presented as verified evidence. Primary impact is planning/ownership boundary; downstream implementation impact is broad but deferred.

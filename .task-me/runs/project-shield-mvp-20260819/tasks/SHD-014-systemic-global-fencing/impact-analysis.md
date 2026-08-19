@@ -1,0 +1,1 @@
+Consumes registry/heartbeat/local Finding refs and SHD-006 protection contract. High fleet blast radius: false correlation or forged directive can pause multiple projects. Use local findings as referenced evidence and track systemic Finding separately.

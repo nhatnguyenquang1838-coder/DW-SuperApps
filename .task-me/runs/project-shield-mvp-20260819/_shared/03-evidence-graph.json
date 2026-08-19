@@ -1,0 +1,8 @@
+{
+  "schema_version":"task-me.evidence-graph.v1",
+  "nodes":["PR69-DESIGN","PR69-LEARNING","PR69-EXEC-DATA","TC-DOMAIN","TC-AUDIT","TC-A2A","TC-RECOVERY","TC-CI","SDD-REQ","SDD-DESIGN"],
+  "edges":[
+    ["PR69-DESIGN","SDD-REQ","defines"],["PR69-LEARNING","SDD-REQ","refines"],["PR69-EXEC-DATA","SDD-DESIGN","hardens"],
+    ["TC-DOMAIN","SDD-DESIGN","pattern"],["TC-AUDIT","SDD-DESIGN","integration"],["TC-A2A","SDD-DESIGN","integration"],["TC-RECOVERY","SDD-DESIGN","integration"],["TC-CI","SDD-DESIGN","validation"]
+  ]
+}

@@ -1,0 +1,1 @@
+No sensor may create a canonical Finding or mutation. Preserve original source/evidence refs. Suppression suppresses triggers/incidents, never the underlying Observation. Use deterministic time/fingerprint injection in tests; avoid real network dependencies in unit tests.

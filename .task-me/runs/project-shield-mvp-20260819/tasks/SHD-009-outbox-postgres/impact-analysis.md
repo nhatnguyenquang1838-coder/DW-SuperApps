@@ -1,0 +1,1 @@
+Verified anchor: `taskcontroller/audit/**` and `tests/taskcontroller/test_audit_sqlite_writer.py`. The current append path commits locally, so implementation must introduce an explicit Unit-of-Work boundary rather than append then outbox in a second transaction. External deployment target remains provider-neutral PostgreSQL.

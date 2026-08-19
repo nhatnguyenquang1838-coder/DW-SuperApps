@@ -1,0 +1,17 @@
+schema_version: task-me.task.v2
+task_id: SHD-008
+title: Verification, HealthSnapshot, monitoring and recurrence
+status: PLANNED
+objective: Derive health/exposure/protection state and verify healed findings through technical, behavioral and operational monitoring with recurrence semantics.
+requirements: [SHIELD-REQ-008, SHIELD-REQ-015, SHIELD-REQ-017]
+design_refs: [PR69-Health-Monitoring]
+dependencies: [SHD-006, SHD-007]
+parallel_with: []
+delivery_wave: 5
+scope_in: [Shield verification/monitoring/health, meta-sensors, tests]
+scope_out: [telemetry backend, Global correlation]
+complexity: high
+risk: high
+effort_hours: {optimistic: 20, likely: 32, pessimistic: 48}
+definition_of_done: [V1/V2/V3 verification, time+event monitoring windows, recurrence reopen/rediagnose, multidimensional health, protection effectiveness, Shield FULL/DEGRADED/SAFE_MODE/OFFLINE]
+authority: REQUIRED_BEFORE_EXECUTION

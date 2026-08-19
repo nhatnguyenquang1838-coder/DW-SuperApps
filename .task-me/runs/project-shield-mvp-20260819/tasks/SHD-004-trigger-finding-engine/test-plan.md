@@ -1,0 +1,1 @@
+Test direct/threshold/persistence/absence/sequence trigger classes; exact dedupe; semantic candidate without auto-merge; evidence PROVEN/PARTIAL/MISSING/STALE/CONFLICT; duplicate/false-positive dispositions; stale Finding version rejection.

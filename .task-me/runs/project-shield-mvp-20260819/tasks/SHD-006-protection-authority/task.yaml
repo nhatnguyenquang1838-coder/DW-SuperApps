@@ -1,0 +1,17 @@
+schema_version: task-me.task.v2
+task_id: SHD-006
+title: Protection directive/receipt and authority evaluation
+status: PLANNED
+objective: Apply/release scoped protections with authenticated directive validation, exact receipt/readback, assurance classes and external authority binding.
+requirements: [SHIELD-REQ-005, SHIELD-REQ-006, SHIELD-REQ-017, SHIELD-REQ-019]
+design_refs: [PR69-Protection, PR69-Authority]
+dependencies: [SHD-004, SHD-005]
+parallel_with: [SHD-007]
+delivery_wave: 4
+scope_in: [Shield protection/policy adapters, TaskController control/execution hooks, tests]
+scope_out: [local code remediation, implicit GWC authority grant]
+complexity: high
+risk: critical
+effort_hours: {optimistic: 24, likely: 40, pessimistic: 56}
+definition_of_done: [directive auth/audience/replay checks, A1/A2/A3 receipt assurance, fail-safe expiry for critical fence, policy limit not authority, missing ACK=>UNKNOWN]
+authority: REQUIRED_BEFORE_EXECUTION

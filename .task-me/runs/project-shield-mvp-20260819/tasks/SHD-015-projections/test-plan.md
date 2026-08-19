@@ -1,0 +1,1 @@
+Test projection refresh/idempotency, Jira issue DONE while Finding MONITORING, Slack RootCard stale version, connector failure, exact ref drill-down, user control input without authority, no canonical mutation from projection callback alone.

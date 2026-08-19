@@ -1,0 +1,1 @@
+Separate deterministic trigger evaluation from semantic review providers. Severity, confidence and remediation priority are distinct. Conflicting evidence yields explicit conflict and follow-up workflow request. Global correlation is out of scope here.

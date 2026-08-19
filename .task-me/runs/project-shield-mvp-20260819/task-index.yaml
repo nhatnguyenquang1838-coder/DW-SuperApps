@@ -1,0 +1,22 @@
+schema_version: task-me.v2
+run_id: project-shield-mvp-20260819
+bound_repo: nhatnguyenquang1838-coder/DW-SuperApps
+bound_head: 1bf75ba68beaa140bc8cd2b19a9da39f3a99b90e
+status: PLANNING_REVIEW_READY
+tasks:
+  - {id: SHD-001, slug: contract-package-boundary, wave: 0}
+  - {id: SHD-002, slug: canonical-domain, wave: 1}
+  - {id: SHD-003, slug: observations-sensors, wave: 2}
+  - {id: SHD-004, slug: trigger-finding-engine, wave: 3}
+  - {id: SHD-005, slug: taskcontroller-workflow-adapter, wave: 2}
+  - {id: SHD-006, slug: protection-authority, wave: 4}
+  - {id: SHD-007, slug: diagnosis-healing, wave: 4}
+  - {id: SHD-008, slug: verification-health-recurrence, wave: 5}
+  - {id: SHD-009, slug: outbox-postgres, wave: 2}
+  - {id: SHD-010, slug: writer-fencing-effects, wave: 3}
+  - {id: SHD-011, slug: scheduled-self-review, wave: 6}
+  - {id: SHD-012, slug: telemetry-experience, wave: 6}
+  - {id: SHD-013, slug: registry-heartbeat, wave: 6}
+  - {id: SHD-014, slug: systemic-global-fencing, wave: 7}
+  - {id: SHD-015, slug: projections, wave: 6}
+  - {id: SHD-016, slug: e2e-pilot-handover, wave: 8}

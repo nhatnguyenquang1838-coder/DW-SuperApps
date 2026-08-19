@@ -1,0 +1,1 @@
+Test contradictory diagnosis evidence, stale Finding version, excluded-scope mutation, exhausted attempt budget, rollback success/failure, H2 allowed/denied actions, H3 Draft-PR handoff without merge, explicit rejection of self-weakening fixes.

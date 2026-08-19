@@ -1,0 +1,1 @@
+Do not implement independent dual-write. Preserve ordered append-only audit and uniqueness by event_id/run_id+sequence. Supabase/RDS differences stay in connection/deployment adapters. No last-write-wins for conflicting canonical rows. Cloud ACK must be exact readback, not request success alone.

@@ -1,0 +1,1 @@
+{"schema_version":"task-me.validation.v1","status":"MATERIALIZED_PENDING_LAYOUT_CHECK","checks":{"task_count":16,"requirement_coverage":"20/20","dag_declared_acyclic":true,"per_task_files_expected":8},"authority":"PLANNING_ONLY","note":"Run Task-Me validate_output_layout.py against this run after Git materialization; update report only from observed result."}

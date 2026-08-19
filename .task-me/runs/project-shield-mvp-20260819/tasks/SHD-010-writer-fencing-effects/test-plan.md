@@ -1,0 +1,1 @@
+Scenarios: hosts A/B both see seq N; B acquires newer epoch; A stale mutation rejected; crash after intent/before effect; crash after effect/before receipt; duplicate idempotency key; provider readback unavailable; local/cloud conflict. Preserve `test_checkpoint_recovery_c3.py` semantics.

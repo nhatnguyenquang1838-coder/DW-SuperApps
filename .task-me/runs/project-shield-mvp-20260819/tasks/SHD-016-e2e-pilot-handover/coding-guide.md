@@ -1,0 +1,1 @@
+Pilot changes are test/config/runbook only unless a failing scenario creates a separately planned fix task. Never patch architecture defects opportunistically inside E2E task. Bind every claim to exact SHA/run/finding/protection/receipt evidence. Production rollout is a separate governed action.

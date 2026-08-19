@@ -1,0 +1,1 @@
+Two-project and three-project fixtures: same-provider correlated noise vs independent evidence, directive auth/audience, one project PARTIAL, one unreachable, A3 critical verification, Global down after fence, no local code mutation path from Global service.

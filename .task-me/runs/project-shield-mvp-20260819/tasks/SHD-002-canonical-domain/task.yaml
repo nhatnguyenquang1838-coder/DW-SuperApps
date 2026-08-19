@@ -1,0 +1,17 @@
+schema_version: task-me.task.v2
+task_id: SHD-002
+title: Canonical Shield domain/value/serialization layer
+status: PLANNED
+objective: Implement canonical Shield objects, IDs, versions, digests and deterministic serialization without adding Shield-specific semantics to TaskController kernel enums.
+requirements: [SHIELD-REQ-002, SHIELD-REQ-004, SHIELD-REQ-015, SHIELD-REQ-019]
+design_refs: [PR69-Canonical-Model, PR69-Data-Contract]
+dependencies: [SHD-001]
+parallel_with: []
+delivery_wave: 1
+scope_in: [SHD-001 selected Shield package root, taskcontroller/domain as pattern, Shield-owned tests]
+scope_out: [sensor IO, DB provisioning, global orchestration]
+complexity: high
+risk: high
+effort_hours: {optimistic: 20, likely: 32, pessimistic: 40}
+definition_of_done: [round-trip deterministic serialization, canonical IDs/version/CAS rules, invalid/stale model tests, no TaskController enum proliferation]
+authority: REQUIRED_BEFORE_EXECUTION

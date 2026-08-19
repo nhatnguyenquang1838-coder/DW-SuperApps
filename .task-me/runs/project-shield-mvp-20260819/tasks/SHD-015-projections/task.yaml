@@ -1,0 +1,17 @@
+schema_version: task-me.task.v2
+task_id: SHD-015
+title: Human and work projection adapters
+status: PLANNED
+objective: Project canonical Shield state to Slack/Notion/Jira/GitHub without allowing projection status to become audit, authority or Finding truth.
+requirements: [SHIELD-REQ-018, SHIELD-REQ-019]
+design_refs: [PR69-Projections]
+dependencies: [SHD-006, SHD-008]
+parallel_with: [SHD-011, SHD-012, SHD-013]
+delivery_wave: 6
+scope_in: [taskcontroller/projections, Shield projection adapters, tests]
+scope_out: [canonical state ownership, workflow authority in Slack/Jira]
+complexity: medium
+risk: medium
+effort_hours: {optimistic: 16, likely: 28, pessimistic: 40}
+definition_of_done: [RootCard/status projection from exact refs, accepted Finding issue projection, issue DONE does not close Finding, Slack commands require canonical policy/authority evaluation, projection failure preserves canonical state]
+authority: REQUIRED_BEFORE_EXECUTION

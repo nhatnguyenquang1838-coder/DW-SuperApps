@@ -1,0 +1,1 @@
+Keep health, exposure and protection effectiveness separate. Event-count monitoring may satisfy policies better than arbitrary duration. Critical missing visibility yields UNKNOWN/AT_RISK. Recurrence preserves canonical Finding history and previous attempt evidence.

@@ -1,0 +1,17 @@
+schema_version: task-me.task.v2
+task_id: SHD-007
+title: Diagnosis, FixPlan, HealingAttempt and H0-H2 execution
+status: PLANNED
+objective: Implement evidence-backed diagnosis/planning and finite, fenced HealingAttempt semantics for safe bounded remediation.
+requirements: [SHIELD-REQ-007, SHIELD-REQ-019]
+design_refs: [PR69-Healing]
+dependencies: [SHD-004, SHD-005]
+parallel_with: [SHD-006]
+delivery_wave: 4
+scope_in: [Shield diagnosis/planning/healing coordination, TaskController execution adapter, tests]
+scope_out: [autonomous H4, bypass CI, self-policy mutation]
+complexity: high
+risk: critical
+effort_hours: {optimistic: 24, likely: 40, pessimistic: 56}
+definition_of_done: [supporting/contradicting diagnosis evidence, scoped FixPlan, finite attempt/replan budget, rollback contract, H0-H2 safe path, H3 governed handoff only]
+authority: REQUIRED_BEFORE_EXECUTION

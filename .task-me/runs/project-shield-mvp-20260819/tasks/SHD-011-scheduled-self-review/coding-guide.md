@@ -1,0 +1,1 @@
+Use `review_origin`, `parent_review_ref`, `review_depth` and scope/window/profile idempotency. Default max depth=1. Do not let scheduler own TaskController state. No LearningCandidate or self-review output may directly rewrite policy/authority.
