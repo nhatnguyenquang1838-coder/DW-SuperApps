@@ -1,7 +1,7 @@
 [submodule "projects/gwc"]
 	path = projects/gwc
 	url = https://github.com/nhatnguyenquang1838-coder/gwc.git
-	branch = pre-prod
+	branch = main
 [submodule "projects/ua"]
 	path = projects/ua
 	url = https://github.com/nhatnguyenquang1838-coder/Understand-Anything.git

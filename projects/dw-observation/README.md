@@ -16,7 +16,10 @@ governance, never parses Slack, and never writes to GWC.
 
 - No Slack parsing.
 - No governance mutation (no G0..G6, no approval writes, no Jira writes).
-- No GWC repo mutation (GWC is a read-only gitlink binding).
+- No GWC repo mutation. GWC is bound as **app-owned read-only metadata** to
+  `nhatnguyenquang1838-coder/gwc@pre-prod@10deaa4d…` (DurableEvent schema). The
+  root `projects/gwc` Power integration pin and `.gitmodules` are owned by the
+  Power manifest / compatibility lock and are out of this app's scope.
 - No deploy / release / production config / secrets.
 
 ## Layout

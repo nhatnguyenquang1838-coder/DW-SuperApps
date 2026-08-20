@@ -13,11 +13,15 @@ metadata:
   source_of_truth: workspace.yaml
 
 bindings:
-  # GWC is a read-only gitlink to pre-prod; GWC repo mutation is EXCLUDED.
-  # (gitlink itself is managed in .gitmodules / projects/gwc, not here.)
+  # App-owned GWC binding (metadata only). The Observatory's logical
+  # governance/runtime source is nhatnguyenquang1838-coder/gwc at the pre-prod
+  # ref, pinned to SHA 10deaa4d... This is APP METADATA and is read-only; it
+  # does NOT repurpose or mutate the root projects/gwc Power integration pin
+  # (that gitlink and .gitmodules are owned by the Power manifest / compatibility
+  # lock and are out of this app's scope).
   gwc:
-    path: projects/gwc
-    target_ref: gwc/pre-prod
+    repository: nhatnguyenquang1838-coder/gwc
+    ref: pre-prod
     target_sha: 10deaa4d9b9f8cf8ef51ee6d89671fefa41e3662
     mode: read-only
 
@@ -37,9 +41,7 @@ constraints:
   - deterministic_only: true         # reduce() has no wall-clock/random dependence
   - read_only_projection: true       # events carry read_only_projection=true
   - scoped_writes_only:             # allowed file scopes
-      - projects/dw-observation/**
-      - .gitmodules                  # gwc pre-prod binding only
-      - projects/gwc                # gitlink only
+      - projects/dw-observation/**   # this app is the SOLE scoped-write surface
 
 envelope:
   # Canonical #71 v1 event envelope (explicit fields, no opaque data).
