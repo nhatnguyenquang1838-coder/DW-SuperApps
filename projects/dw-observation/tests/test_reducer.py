@@ -128,8 +128,48 @@ def test_reducer_projection_snapshot_is_observation_only():
         _ev(sequence=0, event_type="run_started", outcome=None,
             source_event_id="evt:R-1:0", occurred_at="2026-08-21T09:00:00Z"),
         _ev(sequence=6, event_type="projection_snapshot", outcome=None, summary="snap",
-            source_event_id="evt:R-1:6", occurred_at="2026-08-21T19:00:01Z"),
+            source_event_id="evt:R-1:6", source_system="taskcontroller",
+            occurred_at="2026-08-21T19:00:01Z"),
     ]
     proj = reduce(events)
     assert proj.nodes == {}
     assert proj.gates == {}
+
+
+def test_gate_failed_projects_to_failed_not_released():
+    e = _ev(sequence=1, gate="G2-X", event_type="gate_failed", outcome=None,
+            actor="Bot", source_event_id="evt:R-1:fail", occurred_at="2026-08-21T18:30:00Z")
+    proj = reduce([e])
+    assert proj.gates["G2-X"].status == "failed"
+    assert proj.gates["G2-X"].released_by == "Bot"
+
+
+def test_gate_passed_projects_to_passed():
+    e = _ev(sequence=1, gate="G2-X", event_type="gate_passed", outcome=None,
+            actor="Bot", source_event_id="evt:R-1:pass", occurred_at="2026-08-21T18:30:00Z")
+    proj = reduce([e])
+    assert proj.gates["G2-X"].status == "passed"
+
+
+def test_forward_jump_is_gap_not_out_of_order():
+    # 0 -> 3 is a forward non-contiguous jump: GAP only, never OUT_OF_ORDER.
+    e0 = _ev(sequence=0, event_type="run_started", outcome=None,
+             source_event_id="evt:R-1:0", occurred_at="2026-08-21T09:00:00Z")
+    e3 = _ev(sequence=3, gate="G2-X", event_type="gate_released", outcome=None,
+             actor="Ctrl", source_event_id="evt:R-1:3", occurred_at="2026-08-21T18:27:00Z")
+    proj = reduce([e0, e3])
+    kinds = [a.kind for a in proj.anomalies]
+    assert "GAP" in kinds
+    assert "OUT_OF_ORDER" not in kinds
+
+
+def test_source_sequence_regression_is_out_of_order():
+    # 3 -> 2 regresses on SOURCE SEQUENCE: OUT_OF_ORDER (and not a gap).
+    e3 = _ev(sequence=3, gate="G2-X", event_type="gate_released", outcome=None,
+             actor="Ctrl", source_event_id="evt:R-1:3", occurred_at="2026-08-21T18:27:00Z")
+    e2 = _ev(sequence=2, gate="G2-X", event_type="gate_approved", outcome=None,
+             actor="Human", source_event_id="evt:R-1:2", occurred_at="2026-08-21T18:26:00Z")
+    proj = reduce([e3, e2])
+    kinds = [a.kind for a in proj.anomalies]
+    assert "OUT_OF_ORDER" in kinds
+    assert "GAP" not in kinds  # regression is not a forward jump

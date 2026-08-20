@@ -9,7 +9,7 @@
   "gates": {
     "G2_EXECUTION": {
       "gate": "G2_EXECUTION",
-      "status": "approved",
+      "status": "passed",
       "approved_by": {"kind": "chatgpt", "id": "agent-hermes-mac", "execution_mode": "local_agent"},
       "released_by": null,
       "authority_ref": null,

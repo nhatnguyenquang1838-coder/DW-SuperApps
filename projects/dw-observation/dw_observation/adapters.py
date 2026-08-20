@@ -29,11 +29,23 @@ Source bindings (per Controller exact-source contract):
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
-from .events import RunProjectionEvent, compute_digest
+from .events import RunProjectionEvent
+
+
+def compute_digest(record: Dict[str, Any]) -> str:
+    """Deterministic digest of the complete source record (stable, canonical).
+
+    Used only when the source does not already provide a digest. The adapter
+    never fabricates identity/timestamps; this is a content fingerprint for
+    provenance only.
+    """
+    canonical = json.dumps(record, sort_keys=True, separators=(",", ":"), default=str)
+    return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 # ---------------------------------------------------------------------------
@@ -166,10 +178,12 @@ class GwcAdapter:
         if outcome is None:
             raise ValueError("DurableEvent.outcome is required")
 
-        # Preserve exact values. structured actor preserved unmodified.
-        payload = record.get("payload") or {}
         evidence_refs: List[str] = list(record.get("evidence_refs") or [])
 
+        # before/after must stay NULL unless the SOURCE explicitly carries
+        # semantically named before/after state. GWC DurableEvent only defines
+        # `payload: object`; payload is NOT post-state, so it must not be
+        # mapped to `after`. Payload is preserved via source_digest/evidence.
         summary = record.get("summary") or _durable_summary(event_type, gate, outcome, node_id)
 
         source_digest = record.get("source_digest") or compute_digest(record)
@@ -188,7 +202,7 @@ class GwcAdapter:
             actor=actor,  # exact (structured object preserved)
             summary=summary,
             before=None,  # DurableEvent has no before/after fields
-            after=payload if payload else None,
+            after=None,   # payload is NOT post-state; do not overload `after`
             evidence_refs=evidence_refs,
             authority_ref=record.get("authority_ref"),
             source_digest=source_digest,

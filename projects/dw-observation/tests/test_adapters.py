@@ -121,6 +121,23 @@ def test_gwc_adapter_from_json_list():
     assert events[0].actor == {"kind": "chatgpt", "id": "x"}
 
 
+def test_gwc_adapter_does_not_map_payload_to_after():
+    record = {
+        "event_id": "evt_payload", "run_id": "r", "sequence": 0, "event_type": "run_started",
+        "occurred_at_utc": "2026-08-21T00:00:00Z", "actor": {"kind": "chatgpt", "id": "x"},
+        "gate": "G2_EXECUTION", "node_id": "m0", "outcome": "success",
+        "payload": {"runtime_version": "1.0", "node_version": "1.0"},
+        "evidence_refs": ["gwc://x"],
+    }
+    e = GwcAdapter().from_durable_event(record)
+    # payload must NOT populate `after`; before/after stay NULL.
+    assert e.after is None
+    assert e.before is None
+    # payload is preserved via source_digest/evidence, not `after`.
+    assert e.source_digest is not None and e.source_digest.startswith("sha256:")
+    assert e.evidence_refs == ["gwc://x"]
+
+
 def test_gwc_adapter_is_read_only_no_scan():
     """Adapter maps records directly; it does NOT scan .gwc/tasks/*/g4/*.yaml
     nor fabricate gate_approved events."""
