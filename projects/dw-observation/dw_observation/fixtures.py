@@ -6,65 +6,61 @@ loader routes each source record through the real adapter (TaskControllerAdapter
 or GwcAdapter) so the projection event carries the source-computed digest —
 provenance semantics are preserved (source_event_id / source_digest / actor /
 before / after survive source -> adapter -> projection exactly).
+
+Routing is EXPLICIT: each fixture must declare a top-level
+``source_system: "taskcontroller" | "gwc"``. Heuristic guessing is intentionally
+forbidden so fixture/contract drift is caught.
 """
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from .adapters import GwcAdapter, TaskControllerAdapter
 from .events import RunProjectionEvent
 
 _FIXTURE_ROOT = Path(__file__).resolve().parent.parent / "fixtures"
 
+_KNOWN_SOURCES = ("taskcontroller", "gwc")
 
-def _detect_source(fixture: Dict[str, Any]) -> str:
-    """Infer the canonical source schema from the first event record.
 
-    AuditEvent -> 'taskcontroller'; DurableEvent -> 'gwc'.
-    """
-    events = fixture.get("events") or []
-    if events:
-        first = events[0]
-        if "decision_kind" in first or first.get("source") == "taskcontroller":
-            return "taskcontroller"
-        if first.get("artifact_type") == "durable-event" or "occurred_at_utc" in first:
-            return "gwc"
-    # Static routing fallback for known fixture names.
-    if "gwc" in fixture.get("run_id_dup_note", "") or "DurableEvent" in fixture.get("run_id_dup_note", ""):
-        return "gwc"
-    return "taskcontroller"
+def _require_source(fixture: Dict[str, Any]) -> str:
+    """Require an explicit top-level ``source_system``; no heuristic fallback."""
+    src = fixture.get("source_system")
+    if src not in _KNOWN_SOURCES:
+        raise ValueError(
+            f"fixture must declare explicit top-level source_system in {_KNOWN_SOURCES!r}, got {src!r}"
+        )
+    return src  # type: ignore[return-value]
 
 
 def load_event_stream(name: str) -> List[RunProjectionEvent]:
     """Load a golden source-record fixture and map it via the real adapter.
 
     The fixture is canonical SOURCE data (AuditEvent / DurableEvent). It is
-    routed through TaskControllerAdapter or GwcAdapter; the resulting
-    RunProjectionEvent carries the adapter-computed source_digest (never a
-    digest derived from a normalized envelope).
+    routed through TaskControllerAdapter or GwcAdapter (chosen by the explicit
+    top-level ``source_system``); the resulting RunProjectionEvent carries the
+    adapter-computed source_digest (never a digest derived from a normalized
+    envelope).
     """
     path = _FIXTURE_ROOT / f"{name}.json"
     if not path.exists():
         raise FileNotFoundError(f"fixture not found: {path}")
     fixture = json.loads(path.read_text())
-    source = _detect_source(fixture)
+    source = _require_source(fixture)
 
     if source == "gwc":
-        adapter, key = GwcAdapter(), "event_id"
+        adapter = GwcAdapter()
     else:
-        adapter, key = TaskControllerAdapter(), "event_id"
+        adapter = TaskControllerAdapter()
 
     records = fixture["events"]
-    return [
-        _map(adapter, source, rec, key)
-        for rec in records
-    ]
+    return [_map(adapter, source, rec) for rec in records]
 
 
-def _map(adapter: Any, source: str, record: Dict[str, Any], key: str) -> RunProjectionEvent:
+def _map(adapter: Any, source: str, record: Dict[str, Any]) -> RunProjectionEvent:
     if source == "gwc":
         return adapter.from_durable_event(record)  # type: ignore[attr-defined]
     return adapter.from_audit_event(record)  # type: ignore[attr-defined]

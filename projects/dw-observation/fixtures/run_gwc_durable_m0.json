@@ -1,5 +1,6 @@
 {
   "run_id": "run_dw_obs_m0_r2",
+  "source_system": "gwc",
   "run_id_dup_note": "canonical GWC DurableEvent records (exact gwc/pre-prod schema: schema_version=0.1, artifact_type=durable-event, event_id,run_id,sequence,event_type,occurred_at_utc,actor,gate,node_id,outcome,runtime_version,node_version,payload[,parent_event_id,evidence_refs]). Routed through GwcAdapter -> v1 projection. event_id / digest survive normalization verbatim; payload is NOT mapped to after.",
   "events": [
     {

@@ -1,6 +1,7 @@
 {
   "run_id": "DW-OBS-M0-20260821-R2",
-  "run_id_dup_note": "canonical TaskController AuditEvent records (exact source schema: event_id,timestamp,run_id,source,decision_kind,node_id,actor,authority_ref,payload_summary,raw_payload_ref,sequence,before,after,evidence_refs,annotations,version). Routed through TaskControllerAdapter -> v1 projection. event_id / digest survive normalization verbatim.",
+  "source_system": "taskcontroller",
+  "run_id_dup_note": "canonical TaskController AuditEvent records with FAITHFUL serialized defaults/types (node_id='', actor='', authority_ref='', payload_summary='', raw_payload_ref='', before={}, after={}, evidence_refs=list, annotations={}, version=1 integer). Routed through TaskControllerAdapter -> v1 projection. event_id / digest survive normalization verbatim.",
   "events": [
     {
       "event_id": "evt_audit_run_started_0",
@@ -8,17 +9,17 @@
       "run_id": "DW-OBS-M0-20260821-R2",
       "source": "taskcontroller",
       "decision_kind": "run_started",
-      "node_id": null,
+      "node_id": "",
       "actor": "ChatGPT TaskController",
-      "authority_ref": null,
+      "authority_ref": "",
       "payload_summary": "Run started (jira=SCRUM-555, node=M0)",
-      "raw_payload_ref": null,
+      "raw_payload_ref": "",
       "sequence": 0,
-      "before": null,
+      "before": {},
       "after": {"jira": "SCRUM-555", "node": "M0", "parent_issue": 70},
       "evidence_refs": [],
-      "annotations": null,
-      "version": "1"
+      "annotations": {},
+      "version": 1
     },
     {
       "event_id": "evt_audit_g4_lane_approved",
@@ -26,17 +27,17 @@
       "run_id": "DW-OBS-M0-20260821-R2",
       "source": "taskcontroller",
       "decision_kind": "gate_approved",
-      "node_id": null,
+      "node_id": "",
       "actor": "Human G4",
       "authority_ref": "G4-DW-OBS-LANE-20260821-R2",
       "payload_summary": "Gate G4-DW-OBS-LANE-20260821-R2 approved",
-      "raw_payload_ref": null,
+      "raw_payload_ref": "",
       "sequence": 1,
-      "before": null,
+      "before": {},
       "after": {"scope": "lane-approval"},
       "evidence_refs": [],
-      "annotations": null,
-      "version": "1"
+      "annotations": {},
+      "version": 1
     },
     {
       "event_id": "evt_audit_g2_approved",
@@ -44,17 +45,17 @@
       "run_id": "DW-OBS-M0-20260821-R2",
       "source": "taskcontroller",
       "decision_kind": "gate_approved",
-      "node_id": null,
+      "node_id": "",
       "actor": "Human G2",
       "authority_ref": "G2-DW-OBS-M0-20260821-R2",
       "payload_summary": "Gate G2-DW-OBS-M0-20260821-R2 approved",
-      "raw_payload_ref": null,
+      "raw_payload_ref": "",
       "sequence": 2,
-      "before": null,
+      "before": {},
       "after": {"scope_sha256": "8070e683d0f96c2d3e53c8382161812d6e1f7c16322a2b87b81d3d0224631c4e"},
       "evidence_refs": [],
-      "annotations": null,
-      "version": "1"
+      "annotations": {},
+      "version": 1
     },
     {
       "event_id": "evt_audit_g2_released",
@@ -62,17 +63,17 @@
       "run_id": "DW-OBS-M0-20260821-R2",
       "source": "taskcontroller",
       "decision_kind": "gate_released",
-      "node_id": null,
+      "node_id": "",
       "actor": "ChatGPT TaskController",
       "authority_ref": "G2-DW-OBS-M0-20260821-R2",
       "payload_summary": "Gate G2-DW-OBS-M0-20260821-R2 released (M0)",
-      "raw_payload_ref": null,
+      "raw_payload_ref": "",
       "sequence": 3,
-      "before": null,
+      "before": {},
       "after": {"release": "M0"},
       "evidence_refs": [],
-      "annotations": null,
-      "version": "1"
+      "annotations": {},
+      "version": 1
     },
     {
       "event_id": "evt_audit_node71_active",
@@ -82,16 +83,15 @@
       "decision_kind": "node_progress",
       "node_id": "71",
       "actor": "ChatGPT TaskController",
-     
-   "authority_ref": null,
+      "authority_ref": "",
       "payload_summary": "Node 71 -> active",
-      "raw_payload_ref": null,
+      "raw_payload_ref": "",
       "sequence": 4,
       "before": {"status": "pending"},
       "after": {"status": "active", "dag": "#71 -> #72 -> #73 -> #74 -> #75"},
       "evidence_refs": [],
-      "annotations": null,
-      "version": "1"
+      "annotations": {},
+      "version": 1
     },
     {
       "event_id": "evt_audit_node71_done",
@@ -101,15 +101,15 @@
       "decision_kind": "node_progress",
       "node_id": "71",
       "actor": "ChatGPT TaskController",
-      "authority_ref": null,
+      "authority_ref": "",
       "payload_summary": "Node 71 -> done",
-      "raw_payload_ref": null,
+      "raw_payload_ref": "",
       "sequence": 5,
       "before": {"status": "active"},
       "after": {"status": "done"},
       "evidence_refs": [],
-      "annotations": null,
-      "version": "1"
+      "annotations": {},
+      "version": 1
     },
     {
       "event_id": "evt_audit_snapshot",
@@ -117,17 +117,17 @@
       "run_id": "DW-OBS-M0-20260821-R2",
       "source": "taskcontroller",
       "decision_kind": "projection_snapshot",
-      "node_id": null,
+      "node_id": "",
       "actor": "ChatGPT TaskController",
-      "authority_ref": null,
+      "authority_ref": "",
       "payload_summary": "Projection snapshot captured",
-      "raw_payload_ref": null,
+      "raw_payload_ref": "",
       "sequence": 6,
-      "before": null,
+      "before": {},
       "after": {"captured": true},
       "evidence_refs": [],
-      "annotations": null,
-      "version": "1"
+      "annotations": {},
+      "version": 1
     }
   ]
 }
