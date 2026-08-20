@@ -1,9 +1,10 @@
-# DW Run Observatory — project profile
-# Read-only deterministic projection of DW-SuperApps / GWC execution state.
-# Binding authority remains DW-SuperApps root AGENTS.md + workspace.yaml.
+# DW Run Observatory — app metadata (NOT a workspace project/submodule).
+# DW-SuperApps is the project; Observation is a regular-source app at
+# projects/dw-observation/**. This file is app-level metadata only and must
+# not assert a separate workspace project identity or gitlink.
 
-apiVersion: dw-project/v1
-kind: ProjectProfile
+apiVersion: dw-app/v1
+kind: AppProfile
 
 metadata:
   id: dw-observation
@@ -13,6 +14,7 @@ metadata:
 
 bindings:
   # GWC is a read-only gitlink to pre-prod; GWC repo mutation is EXCLUDED.
+  # (gitlink itself is managed in .gitmodules / projects/gwc, not here.)
   gwc:
     path: projects/gwc
     target_ref: gwc/pre-prod
@@ -22,10 +24,10 @@ bindings:
 runtime:
   package: dw_observation
   entrypoints:
-    - dw_observation.events      # RunProjectionEvent v1 model + validation
-    - dw_observation.adapters    # TaskControllerAdapter, GwcAdapter (read-only)
-    - dw_observation.reducer     # deterministic reduce(events) -> Projection
-    - dw_observation.fixtures    # golden fixture loader (local JSON only)
+    - dw_observation.events        # RunProjectionEvent v1 model + validation
+    - dw_observation.adapters     # TaskControllerAdapter, GwcAdapter (read-only)
+    - dw_observation.reducer      # deterministic reduce(events) -> Projection
+    - dw_observation.fixtures     # golden fixture loader (local JSON only)
 
 constraints:
   - no_slack_parsing: true
@@ -33,11 +35,37 @@ constraints:
   - no_gwc_repo_mutation: true
   - no_deploy_release: true
   - deterministic_only: true         # reduce() has no wall-clock/random dependence
+  - read_only_projection: true       # events carry read_only_projection=true
   - scoped_writes_only:             # allowed file scopes
-      - .gitmodules
-      - workspace.yaml
-      - projects/gwc        # gitlink only
       - projects/dw-observation/**
+      - .gitmodules                  # gwc pre-prod binding only
+      - projects/gwc                # gitlink only
+
+envelope:
+  # Canonical #71 v1 event envelope (explicit fields, no opaque data).
+  schema_version: "1"
+  projection_type: run_observatory
+  required_fields:
+    - schema_version
+    - projection_type
+    - run_id
+    - sequence
+    - source_system
+    - source_event_id
+    - occurred_at
+    - gate            # nullable
+    - node_id         # nullable
+    - parent_event_id # nullable
+    - event_type
+    - outcome         # nullable
+    - actor           # nullable
+    - summary
+    - before          # nullable
+    - after           # nullable
+    - evidence_refs
+    - authority_ref   # nullable
+    - source_digest   # nullable
+    - read_only_projection   # always true
 
 tests:
   framework: pytest

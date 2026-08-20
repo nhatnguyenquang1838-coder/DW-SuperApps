@@ -15,8 +15,28 @@ def test_tc_adapter_parses_structured_run_log():
     events = TaskControllerAdapter().from_run_log(log)
     assert len(events) == 2
     assert all(e.run_id == "R-1" for e in events)
-    assert events[0].kind == "run_started"
+    assert events[0].event_type == "run_started"
     assert events[1].gate == "G2-X"
+    # v1 envelope preserved (explicit fields, no opaque data)
+    assert events[0].projection_type == "run_observatory"
+    assert events[0].read_only_projection is True
+    assert events[0].source_system == "taskcontroller"
+    assert events[0].source_event_id == "tc:R-1:0"
+
+
+def test_tc_adapter_preserves_source_identity_and_digest():
+    log = {
+        "run_id": "R-1",
+        "events": [
+            {"kind": "gate_approved", "ts": "2026-08-21T18:00:00Z", "seq": 1, "gate": "G2-X", "actor": "Human", "data": {"artifact": "g2/approval.json"}}
+        ],
+    }
+    evs = TaskControllerAdapter().from_run_log(log)
+    e = evs[0]
+    assert e.source_system == "taskcontroller"
+    assert e.source_event_id == "tc:R-1:0"
+    assert e.evidence_refs == ["g2/approval.json"]
+    assert e.source_digest is not None and e.source_digest.startswith("sha256:")
 
 
 def test_tc_adapter_rejects_malformed_event():
@@ -25,6 +45,42 @@ def test_tc_adapter_rejects_malformed_event():
     log = {"run_id": "R-1", "events": [{"kind": "bad", "ts": "2026-08-21T00:00:00Z"}]}
     with pytest.raises(ValueError):
         TaskControllerAdapter().from_run_log(log)
+
+
+def test_tc_adapter_full_v1_envelope_roundtrip():
+    log = {
+        "run_id": "R-1",
+        "events": [
+            {
+                "schema_version": "1",
+                "projection_type": "run_observatory",
+                "run_id": "R-1",
+                "sequence": 7,
+                "source_system": "taskcontroller",
+                "source_event_id": "tc:R-1:external",
+                "occurred_at": "2026-08-21T20:00:00Z",
+                "gate": "G3",
+                "node_id": "72",
+                "event_type": "node_progress",
+                "outcome": "blocked",
+                "actor": "Ctrl",
+                "before": {"status": "active"},
+                "after": {"status": "blocked"},
+                "evidence_refs": ["x.json"],
+                "authority_ref": "G3",
+                "source_digest": "sha256:deadbeef",
+                "read_only_projection": True,
+            }
+        ],
+    }
+    e = TaskControllerAdapter().from_run_log(log)[0]
+    assert e.sequence == 7
+    assert e.node_id == "72"
+    assert e.outcome == "blocked"
+    assert e.before == {"status": "active"}
+    assert e.after == {"status": "blocked"}
+    assert e.authority_ref == "G3"
+    assert e.source_digest == "sha256:deadbeef"
 
 
 def test_tc_adapter_from_json():
@@ -42,8 +98,13 @@ def test_gwc_adapter_is_read_only(tmp_path):
     adapter = GwcAdapter(tmp_path)
     evs = adapter.read_gate_states(run_id="R-9")
     assert len(evs) == 1
-    assert evs[0].kind == "gate_approved"
+    assert evs[0].event_type == "gate_approved"
     assert evs[0].gate == "G4"
+    # v1 envelope: preserves source identity + authority
+    assert evs[0].source_system == "gwc"
+    assert evs[0].source_event_id is not None and evs[0].source_event_id.startswith("gwc:")
+    assert evs[0].evidence_refs == [str((tasks / "merge-approval.yaml").relative_to(tmp_path))]
+    assert evs[0].read_only_projection is True
     # ensure no writes happened (only the file we created exists)
     assert sorted(p.name for p in tasks.iterdir()) == ["merge-approval.yaml"]
 

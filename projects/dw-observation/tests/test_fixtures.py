@@ -8,7 +8,7 @@ def test_load_event_stream_returns_typed_events():
     events = load_event_stream("run_scrum555_m0")
     assert len(events) == 7
     assert all(isinstance(e, RunProjectionEvent) for e in events)
-    assert events[0].kind == "run_started"
+    assert events[0].event_type == "run_started"
 
 
 def test_load_expected_projection_shape():
