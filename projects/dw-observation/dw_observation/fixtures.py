@@ -1,43 +1,73 @@
-"""Golden fixture loader. Local JSON only — no network, no Slack."""
+"""Golden fixture loader. Local JSON only — no network, no Slack.
+
+The golden event fixtures contain CANONICAL SOURCE records (TaskController
+AuditEvent / GWC DurableEvent), NOT normalized projection envelopes. This
+loader routes each source record through the real adapter (TaskControllerAdapter
+or GwcAdapter) so the projection event carries the source-computed digest —
+provenance semantics are preserved (source_event_id / source_digest / actor /
+before / after survive source -> adapter -> projection exactly).
+"""
 
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
+from .adapters import GwcAdapter, TaskControllerAdapter
 from .events import RunProjectionEvent
 
 _FIXTURE_ROOT = Path(__file__).resolve().parent.parent / "fixtures"
 
 
-def _derive_digest(record: Dict[str, Any]) -> str:
-    """Deterministic digest of a source record when it carries no digest.
+def _detect_source(fixture: Dict[str, Any]) -> str:
+    """Infer the canonical source schema from the first event record.
 
-    Mirrors the adapters: a canonical v1 event always carries provenance. The
-    golden fixtures are source records, so we fingerprint their canonical
-    content rather than let an event silently carry no digest.
+    AuditEvent -> 'taskcontroller'; DurableEvent -> 'gwc'.
     """
-    canonical = json.dumps(record, sort_keys=True, separators=(",", ":"), default=str)
-    return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    events = fixture.get("events") or []
+    if events:
+        first = events[0]
+        if "decision_kind" in first or first.get("source") == "taskcontroller":
+            return "taskcontroller"
+        if first.get("artifact_type") == "durable-event" or "occurred_at_utc" in first:
+            return "gwc"
+    # Static routing fallback for known fixture names.
+    if "gwc" in fixture.get("run_id_dup_note", "") or "DurableEvent" in fixture.get("run_id_dup_note", ""):
+        return "gwc"
+    return "taskcontroller"
 
 
 def load_event_stream(name: str) -> List[RunProjectionEvent]:
-    """Load a golden event stream fixture by base name (without .json)."""
+    """Load a golden source-record fixture and map it via the real adapter.
+
+    The fixture is canonical SOURCE data (AuditEvent / DurableEvent). It is
+    routed through TaskControllerAdapter or GwcAdapter; the resulting
+    RunProjectionEvent carries the adapter-computed source_digest (never a
+    digest derived from a normalized envelope).
+    """
     path = _FIXTURE_ROOT / f"{name}.json"
     if not path.exists():
         raise FileNotFoundError(f"fixture not found: {path}")
-    raw = json.loads(path.read_text())
-    events = []
-    for e in raw["events"]:
-        # Canonical v1 requires provenance; derive it when the source record
-        # did not include one (golden fixtures are source records).
-        if not e.get("source_digest"):
-            e = dict(e)
-            e["source_digest"] = _derive_digest(e)
-        events.append(RunProjectionEvent.from_dict(e))
-    return events
+    fixture = json.loads(path.read_text())
+    source = _detect_source(fixture)
+
+    if source == "gwc":
+        adapter, key = GwcAdapter(), "event_id"
+    else:
+        adapter, key = TaskControllerAdapter(), "event_id"
+
+    records = fixture["events"]
+    return [
+        _map(adapter, source, rec, key)
+        for rec in records
+    ]
+
+
+def _map(adapter: Any, source: str, record: Dict[str, Any], key: str) -> RunProjectionEvent:
+    if source == "gwc":
+        return adapter.from_durable_event(record)  # type: ignore[attr-defined]
+    return adapter.from_audit_event(record)  # type: ignore[attr-defined]
 
 
 def load_expected_projection(name: str) -> Dict[str, Any]:
