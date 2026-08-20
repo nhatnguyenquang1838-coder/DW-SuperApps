@@ -29,9 +29,10 @@ class NodeState:
 @dataclass
 class GateState:
     gate: str
-    status: str = "none"  # none | approved | released
+    status: str = "none"  # none | approved | released | passed | failed
     approved_by: Optional[object] = None  # actor (string OR structured object)
-    released_by: Optional[object] = None
+    released_by: Optional[object] = None  # actor that released the gate
+    failed_by: Optional[object] = None    # actor responsible for a failure (NOT released_by)
     authority_ref: Optional[str] = None
     last_event_seq: int = -1
 
@@ -79,6 +80,7 @@ class Projection:
                     "status": v.status,
                     "approved_by": v.approved_by,
                     "released_by": v.released_by,
+                    "failed_by": v.failed_by,
                     "authority_ref": v.authority_ref,
                     "last_event_seq": v.last_event_seq,
                 }

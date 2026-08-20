@@ -31,7 +31,7 @@ Gate semantics (source truth preserved):
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional
 
 from .events import RunProjectionEvent
 from .projection import Anomaly, GateState, NodeState, Projection
@@ -46,11 +46,18 @@ def reduce(events: Iterable[RunProjectionEvent]) -> Projection:
     proj.anomalies = []
 
     seen_identities: set = set()
-    hw_time: Optional[str] = None
-    hw_seq: int = -1
+    # High-water marks are tracked PER SOURCE SYSTEM. GWC DurableEvent sequence
+    # and TaskController AuditEvent sequence are independent source ledgers; a
+    # unified run interleaving both must not raise false GAP/OUT_OF_ORDER/STALE
+    # across the two streams. Overall supplied event order is still preserved.
+    hw_time: Dict[str, Optional[str]] = {}
+    hw_seq: Dict[str, int] = {}
 
     for idx, e in enumerate(stream):
         identity = (e.source_system, e.source_event_id)
+        src = e.source_system
+        cur_time = hw_time.get(src)
+        cur_seq = hw_seq.get(src, -1)
 
         # Explicit duplicate detection (never silently collapsed).
         if identity in seen_identities:
@@ -66,9 +73,9 @@ def reduce(events: Iterable[RunProjectionEvent]) -> Projection:
         else:
             seen_identities.add(identity)
 
-        cur_seq = e.sequence
-        # Out-of-order (regression) is decided on SOURCE SEQUENCE vs high-water.
-        if idx > 0 and cur_seq < hw_seq:
+        # Out-of-order (regression) is decided on SOURCE SEQUENCE within the
+        # same source system vs that source's high-water.
+        if idx > 0 and cur_seq >= 0 and e.sequence < cur_seq:
             proj.anomalies.append(
                 Anomaly(
                     kind="OUT_OF_ORDER",
@@ -76,13 +83,14 @@ def reduce(events: Iterable[RunProjectionEvent]) -> Projection:
                     source_system=e.source_system,
                     source_event_id=e.source_event_id,
                     message=(
-                        f"source sequence regressed at index {idx}: "
-                        f"seq={cur_seq} < high-water seq={hw_seq}"
+                        f"source sequence regressed at index {idx} ({src}): "
+                        f"seq={e.sequence} < high-water seq={cur_seq}"
                     ),
                 )
             )
-        # Stale: non-duplicate behind the running (occurred_at, sequence) mark.
-        if hw_time is not None and (e.occurred_at, cur_seq) < (hw_time, hw_seq):
+        # Stale: non-duplicate behind the running (occurred_at, sequence) mark
+        # for this source system.
+        if cur_time is not None and (e.occurred_at, e.sequence) < (cur_time, cur_seq):
             proj.anomalies.append(
                 Anomaly(
                     kind="STALE",
@@ -90,27 +98,27 @@ def reduce(events: Iterable[RunProjectionEvent]) -> Projection:
                     source_system=e.source_system,
                     source_event_id=e.source_event_id,
                     message=(
-                        f"stale event at index {idx}: "
-                        f"(occurred_at={e.occurred_at}, seq={cur_seq}) behind "
-                        f"high-water (occurred_at={hw_time}, seq={hw_seq})"
+                        f"stale event at index {idx} ({src}): "
+                        f"(occurred_at={e.occurred_at}, seq={e.sequence}) behind "
+                        f"high-water (occurred_at={cur_time}, seq={cur_seq})"
                     ),
                 )
             )
         # GAP: forward non-contiguous jump in source sequence (1 -> 3, etc.).
         # Forward jumps are GAP only; they are NOT out-of-order.
-        if idx > 0 and cur_seq > hw_seq and cur_seq != hw_seq + 1:
+        if idx > 0 and cur_seq >= 0 and e.sequence > cur_seq and e.sequence != cur_seq + 1:
             proj.anomalies.append(
                 Anomaly(
                     kind="GAP",
                     at_index=idx,
                     source_system=e.source_system,
                     source_event_id=e.source_event_id,
-                    message=f"sequence gap at index {idx}: seq={cur_seq}, prior max={hw_seq}",
+                    message=f"sequence gap at index {idx} ({src}): seq={e.sequence}, prior max={cur_seq}",
                 )
             )
-        # Update high-water mark (monotone on (occurred_at, sequence)).
-        if hw_time is None or (e.occurred_at, cur_seq) > (hw_time, hw_seq):
-            hw_time, hw_seq = e.occurred_at, cur_seq
+        # Update this source's high-water mark (monotone on (occurred_at, sequence)).
+        if cur_time is None or (e.occurred_at, e.sequence) > (cur_time, cur_seq):
+            hw_time[src], hw_seq[src] = e.occurred_at, e.sequence
 
         proj.events.append(e)
         if proj.run_id is None and e.run_id is not None:
@@ -153,12 +161,13 @@ def _apply_event(proj: Projection, e: RunProjectionEvent) -> None:
                 g.authority_ref = e.authority_ref
                 g.last_event_seq = e.sequence
     elif e.event_type == "gate_failed":
-        # Source truth: failure is NOT release.
+        # Source truth: failure is NOT release. Actor belongs in failed_by,
+        # never in released_by.
         if e.gate:
             g = proj.gates.setdefault(e.gate, GateState(gate=e.gate))
             if g.last_event_seq <= e.sequence or g.status in (None, "none"):
                 g.status = "failed"
-                g.released_by = e.actor
+                g.failed_by = e.actor
                 g.authority_ref = e.authority_ref
                 g.last_event_seq = e.sequence
     elif e.event_type in ("node_progress", "node_started", "node_completed"):

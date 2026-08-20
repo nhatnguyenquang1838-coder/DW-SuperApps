@@ -12,6 +12,7 @@
       "status": "passed",
       "approved_by": {"kind": "chatgpt", "id": "agent-hermes-mac", "execution_mode": "local_agent"},
       "released_by": null,
+      "failed_by": null,
       "authority_ref": null,
       "last_event_seq": 1
     }

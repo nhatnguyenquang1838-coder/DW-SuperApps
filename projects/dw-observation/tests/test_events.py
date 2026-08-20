@@ -1,12 +1,16 @@
 """Tests for RunProjectionEvent v1 validation and parsing."""
 
+import dataclasses
+
 from dw_observation.events import RunProjectionEvent, SCHEMA_VERSION, PROJECTION_TYPE
 
 
 def _ev(**kw):
     base = dict(
         run_id="R-1",
+        source_system="taskcontroller",
         source_event_id="evt:R-1:0",
+        source_digest="sha256:test",
         occurred_at="2026-08-21T09:00:00Z",
         event_type="run_started",
     )
@@ -19,7 +23,9 @@ def test_valid_event_roundtrip():
         {
             "run_id": "DW-OBS-M0-20260821-R2",
             "occurred_at": "2026-08-21T18:26:00Z",
+            "source_system": "taskcontroller",
             "source_event_id": "evt_real_0",
+            "source_digest": "sha256:real0",
             "gate": "G2-DW-OBS-M0-20260821-R2",  # open vocabulary: lane id accepted verbatim
             "actor": "Human",
             "event_type": "gate_approved",
@@ -31,6 +37,8 @@ def test_valid_event_roundtrip():
     assert e.actor == "Human"
     assert e.outcome == "approved"
     assert e.sequence == 0
+    assert e.source_system == "taskcontroller"
+    assert e.source_digest == "sha256:real0"
     assert e.projection_type == PROJECTION_TYPE
     assert e.read_only_projection is True
 
@@ -160,7 +168,45 @@ def test_schema_version_locked():
         _ev(occurred_at="2026-08-21T00:00:00Z", schema_version="2")
 
 
-def test_full_v1_envelope_fields_present():
+def test_frozen_envelope_rejects_post_construction_mutation():
+    import pytest
+
+    e = _ev(source_system="taskcontroller", source_digest="sha256:abc")
+    # Any post-construction mutation must be rejected (frozen envelope).
+    for attr in ("read_only_projection", "source_event_id", "run_id",
+                 "occurred_at", "source_digest", "source_system"):
+        with pytest.raises((AttributeError, dataclasses.FrozenInstanceError)):
+            setattr(e, attr, "tampered")
+
+
+def test_invalid_source_system_rejected():
+    import pytest
+
+    with pytest.raises(ValueError):
+        _ev(source_system="", source_digest="sha256:x")
+    with pytest.raises(ValueError):
+        _ev(source_system="slack", source_digest="sha256:x")
+    with pytest.raises(ValueError):
+        RunProjectionEvent.from_dict(
+            {"run_id": "R", "occurred_at": "2026-08-21T00:00:00Z",
+             "source_event_id": "e1", "event_type": "run_started",
+             "source_system": "mystery", "source_digest": "sha256:x"}
+        )
+
+
+def test_missing_digest_rejected():
+    import pytest
+
+    # direct construction: empty source_digest rejected
+    with pytest.raises(ValueError):
+        _ev(source_system="taskcontroller", source_digest="")
+    # from_dict: missing/empty source_digest rejected
+    with pytest.raises(ValueError):
+        RunProjectionEvent.from_dict(
+            {"run_id": "R", "occurred_at": "2026-08-21T00:00:00Z",
+             "source_event_id": "e1", "event_type": "run_started",
+             "source_system": "taskcontroller"}
+        )
     e = RunProjectionEvent(
         run_id="R-1",
         sequence=3,

@@ -1,12 +1,19 @@
 """RunProjectionEvent v1 — the canonical normalized event envelope for dw-observation.
 
-Read-only model. No Slack parsing, no governance mutation. Validated with
-stdlib dataclasses only (no external deps) so the contract stays reviewable.
+Immutable, read-only model (frozen dataclass). No Slack parsing, no governance
+mutation. Validated with stdlib dataclasses only (no external deps) so the
+contract stays reviewable.
 
-Hardening (Controller G2R1 semantic correction): direct construction REQUIRES
-canonical identity (`source_event_id`, `run_id`) and `occurred_at`; there is no
-epoch/empty default that could masquerade as source evidence. `from_dict` also
-rejects missing/empty identity and unknown fields.
+Hardening (Controller G2R1 semantic correction + final hardening):
+  - The envelope is FROZEN: a valid event cannot be mutated after construction
+    (no tampering with read_only_projection, identity, timestamp, evidence).
+  - Direct construction REQUIRES canonical identity (source_event_id, run_id),
+    occurred_at, and a canonical source_system (one of {taskcontroller, gwc}).
+    There is no epoch/empty default that could masquerade as source evidence.
+  - source_digest is REQUIRED (non-empty) for canonical v1 events: both adapters
+    always compute a deterministic digest, so a direct event must carry provenance.
+  - from_dict rejects missing/empty identity, unknown fields, and off-vocabulary
+    source_system / missing digest.
 """
 
 from __future__ import annotations
@@ -18,6 +25,9 @@ from typing import Any, Dict, List, Optional
 
 SCHEMA_VERSION = "1"
 PROJECTION_TYPE = "run_observatory"
+
+# Canonical source systems (per Controller exact-source contract).
+KNOWN_SOURCE_SYSTEMS = ("taskcontroller", "gwc")
 
 _ISO_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")
 
@@ -43,17 +53,19 @@ def _normalize_ts(value) -> str:
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-@dataclass
+@dataclass(frozen=True)
 class RunProjectionEvent:
     # ---- REQUIRED canonical identity + timestamp (no fabrication defaults) ----
     occurred_at: str                 # exact source timestamp (no epoch default)
     run_id: str                      # exact source run id
     source_event_id: str             # EXACT source record id (no tc:{run}:{i})
+    # ---- REQUIRED canonical source + provenance ----
+    source_system: str               # one of KNOWN_SOURCE_SYSTEMS
+    source_digest: str               # non-empty deterministic digest of source
     # ---- envelope constants (locked) ----
     schema_version: str = SCHEMA_VERSION
     projection_type: str = PROJECTION_TYPE
     sequence: int = 0
-    source_system: str = ""
     gate: Optional[str] = None       # nullable; copied from source, never inferred
     node_id: Optional[str] = None
     parent_event_id: Optional[str] = None
@@ -65,7 +77,6 @@ class RunProjectionEvent:
     after: Optional[Dict[str, Any]] = None    # NULL unless source has named after-state
     evidence_refs: List[str] = field(default_factory=list)
     authority_ref: Optional[str] = None
-    source_digest: Optional[str] = None
     read_only_projection: bool = True
 
     def __post_init__(self) -> None:
@@ -85,15 +96,23 @@ class RunProjectionEvent:
             raise ValueError("event_type is required")
         if not self.occurred_at or not str(self.occurred_at).strip():
             raise ValueError("occurred_at is required (exact source timestamp)")
+        if self.source_system not in KNOWN_SOURCE_SYSTEMS:
+            raise ValueError(
+                f"source_system must be one of {KNOWN_SOURCE_SYSTEMS!r}, got {self.source_system!r}"
+            )
+        if not self.source_digest or not str(self.source_digest).strip():
+            raise ValueError("source_digest is required (canonical v1 provenance)")
         if not isinstance(self.read_only_projection, bool) or self.read_only_projection is not True:
             raise ValueError("read_only_projection must be True")
-        self.occurred_at = _normalize_ts(self.occurred_at)
+        # Normalize timestamp in place (frozen dataclasses allow __post_init__ writes).
+        object.__setattr__(self, "occurred_at", _normalize_ts(self.occurred_at))
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "RunProjectionEvent":
         allowed = set(cls.__dataclass_fields__.keys())
         # Required canonical fields must be present and non-empty.
-        for req in ("occurred_at", "run_id", "source_event_id", "event_type"):
+        for req in ("occurred_at", "run_id", "source_event_id", "event_type",
+                    "source_system", "source_digest"):
             if req not in data or not str(data.get(req, "")).strip():
                 raise ValueError(f"missing or empty required field: {req}")
         unknown = set(data.keys()) - allowed

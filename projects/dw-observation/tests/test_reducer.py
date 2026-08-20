@@ -37,6 +37,7 @@ def _ev(**kw):
         run_id="R-1",
         source_system="taskcontroller",
         source_event_id="evt:R-1:0",
+        source_digest="sha256:test",
         occurred_at="2026-08-21T09:00:00Z",
         event_type="projection_snapshot",
         outcome=None,
@@ -141,7 +142,9 @@ def test_gate_failed_projects_to_failed_not_released():
             actor="Bot", source_event_id="evt:R-1:fail", occurred_at="2026-08-21T18:30:00Z")
     proj = reduce([e])
     assert proj.gates["G2-X"].status == "failed"
-    assert proj.gates["G2-X"].released_by == "Bot"
+    # Failure actor lands in failed_by, never in released_by.
+    assert proj.gates["G2-X"].failed_by == "Bot"
+    assert proj.gates["G2-X"].released_by is None
 
 
 def test_gate_passed_projects_to_passed():
@@ -173,3 +176,39 @@ def test_source_sequence_regression_is_out_of_order():
     kinds = [a.kind for a in proj.anomalies]
     assert "OUT_OF_ORDER" in kinds
     assert "GAP" not in kinds  # regression is not a forward jump
+
+
+def test_interleaved_tc_gwc_no_cross_source_anomalies():
+    # A unified run interleaves GWC and TaskController streams. Each has its own
+    # independent sequence ledger; the reducer must NOT raise false GAP/OUT_OF_ORDER
+    # just because the two streams don't share a contiguous global sequence.
+    tc0 = RunProjectionEvent(
+        run_id="R-1", source_system="taskcontroller", source_event_id="tc:0",
+        source_digest="sha256:tc0", occurred_at="2026-08-21T09:00:00Z",
+        sequence=0, event_type="run_started",
+    )
+    gwc0 = RunProjectionEvent(
+        run_id="R-1", source_system="gwc", source_event_id="gwc:0",
+        source_digest="sha256:gwc0", occurred_at="2026-08-21T09:01:00Z",
+        sequence=0, event_type="run_started",
+    )
+    tc1 = RunProjectionEvent(
+        run_id="R-1", source_system="taskcontroller", source_event_id="tc:1",
+        source_digest="sha256:tc1", occurred_at="2026-08-21T09:02:00Z",
+        sequence=1, event_type="gate_approved", gate="G2-X", actor="Human",
+    )
+    gwc1 = RunProjectionEvent(
+        run_id="R-1", source_system="gwc", source_event_id="gwc:1",
+        source_digest="sha256:gwc1", occurred_at="2026-08-21T09:03:00Z",
+        sequence=1, event_type="node_completed", node_id="m0", outcome="success",
+    )
+    # Interleaved order: tc0, gwc0, tc1, gwc1. Each source's sequence is
+    # contiguous within its own ledger, so no cross-source false anomalies.
+    proj = reduce([tc0, gwc0, tc1, gwc1])
+    kinds = [a.kind for a in proj.anomalies]
+    assert "GAP" not in kinds
+    assert "OUT_OF_ORDER" not in kinds
+    assert "STALE" not in kinds
+    # Both source ledgers advanced state correctly.
+    assert proj.gates["G2-X"].status == "approved"
+    assert proj.nodes["m0"].status == "success"

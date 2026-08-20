@@ -12,6 +12,7 @@
       "status": "released",
       "approved_by": "Human G2",
       "released_by": "ChatGPT TaskController",
+      "failed_by": null,
       "authority_ref": "G2-DW-OBS-M0-20260821-R2",
       "last_event_seq": 3
     },
@@ -20,6 +21,7 @@
       "status": "approved",
       "approved_by": "Human G4",
       "released_by": null,
+      "failed_by": null,
       "authority_ref": "G4-DW-OBS-LANE-20260821-R2",
       "last_event_seq": 1
     }
