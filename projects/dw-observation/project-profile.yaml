@@ -1,0 +1,47 @@
+# DW Run Observatory — project profile
+# Read-only deterministic projection of DW-SuperApps / GWC execution state.
+# Binding authority remains DW-SuperApps root AGENTS.md + workspace.yaml.
+
+apiVersion: dw-project/v1
+kind: ProjectProfile
+
+metadata:
+  id: dw-observation
+  name: DW Run Observatory
+  owner: dw-superapps
+  source_of_truth: workspace.yaml
+
+bindings:
+  # GWC is a read-only gitlink to pre-prod; GWC repo mutation is EXCLUDED.
+  gwc:
+    path: projects/gwc
+    target_ref: gwc/pre-prod
+    target_sha: 10deaa4d9b9f8cf8ef51ee6d89671fefa41e3662
+    mode: read-only
+
+runtime:
+  package: dw_observation
+  entrypoints:
+    - dw_observation.events      # RunProjectionEvent v1 model + validation
+    - dw_observation.adapters    # TaskControllerAdapter, GwcAdapter (read-only)
+    - dw_observation.reducer     # deterministic reduce(events) -> Projection
+    - dw_observation.fixtures    # golden fixture loader (local JSON only)
+
+constraints:
+  - no_slack_parsing: true
+  - no_governance_mutation: true     # G0..G6, approvals, Jira writes excluded
+  - no_gwc_repo_mutation: true
+  - no_deploy_release: true
+  - deterministic_only: true         # reduce() has no wall-clock/random dependence
+  - scoped_writes_only:             # allowed file scopes
+      - .gitmodules
+      - workspace.yaml
+      - projects/gwc        # gitlink only
+      - projects/dw-observation/**
+
+tests:
+  framework: pytest
+  command: "python -m pytest -q"
+  golden_fixtures:
+    - fixtures/run_scumm555_m0.json
+    - fixtures/projection_scrum555_m0.json

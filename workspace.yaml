@@ -112,6 +112,19 @@ projects:
           worker: ua
           output_into: g1-preflight
 
+  - id: dw-observation
+    path: projects/dw-observation
+    source: nhatnguyenquang1838-coder/DW-SuperApps
+    roles:
+      - tooling
+    description: >-
+      DW Run Observatory — read-only deterministic projection of DW-SuperApps/GWC
+      execution state. Source-of-truth binding only; never mutates governance,
+      never parses Slack, never writes to GWC.
+    governed_by: workspace.yaml
+    read_only_bindings:
+      - projects/gwc   # GWC pre-prod gitlink; GWC repo mutation excluded
+
 powers:
   - id: gwc
     project: gwc

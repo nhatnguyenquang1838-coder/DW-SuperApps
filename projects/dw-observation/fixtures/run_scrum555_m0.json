@@ -1,0 +1,57 @@
+{
+  "run_id": "DW-OBS-M0-20260821-R2",
+  "events": [
+    {
+      "kind": "run_started",
+      "ts": "2026-08-21T09:00:00Z",
+      "seq": 0,
+      "run_id": "DW-OBS-M0-20260821-R2",
+      "actor": "ChatGPT TaskController",
+      "data": {"jira": "SCRUM-555", "node": "M0", "parent_issue": 70}
+    },
+    {
+      "kind": "gate_approved",
+      "ts": "2026-08-21T09:05:00Z",
+      "seq": 1,
+      "gate": "G4-DW-OBS-LANE-20260821-R2",
+      "actor": "Human G4",
+      "data": {"scope": "lane-approval"}
+    },
+    {
+      "kind": "gate_approved",
+      "ts": "2026-08-21T18:26:00Z",
+      "seq": 2,
+      "gate": "G2-DW-OBS-M0-20260821-R2",
+      "actor": "Human G2",
+      "data": {"scope_sha256": "8070e683d0f96c2d3e53c8382161812d6e1f7c16322a2b87b81d3d0224631c4e"}
+    },
+    {
+      "kind": "gate_released",
+      "ts": "2026-08-21T18:27:00Z",
+      "seq": 3,
+      "gate": "G2-DW-OBS-M0-20260821-R2",
+      "actor": "ChatGPT TaskController",
+      "data": {"release": "M0"}
+    },
+    {
+      "kind": "node_progress",
+      "ts": "2026-08-21T18:30:00Z",
+      "seq": 4,
+      "node": "71",
+      "data": {"status": "active", "dag": "#71 -> #72 -> #73 -> #74 -> #75"}
+    },
+    {
+      "kind": "node_progress",
+      "ts": "2026-08-21T19:00:00Z",
+      "seq": 5,
+      "node": "71",
+      "data": {"status": "done"}
+    },
+    {
+      "kind": "projection_snapshot",
+      "ts": "2026-08-21T19:00:01Z",
+      "seq": 6,
+      "data": {"captured": true}
+    }
+  ]
+}
