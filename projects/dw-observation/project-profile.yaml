@@ -43,5 +43,5 @@ tests:
   framework: pytest
   command: "python -m pytest -q"
   golden_fixtures:
-    - fixtures/run_scumm555_m0.json
+    - fixtures/run_scrum555_m0.json
     - fixtures/projection_scrum555_m0.json
