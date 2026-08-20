@@ -1,0 +1,1 @@
+{"bound_head":"1bf75ba68beaa140bc8cd2b19a9da39f3a99b90e","requirements":["SHIELD-REQ-020"],"required_predecessors":["SHD-008","SHD-010","SHD-011","SHD-014","SHD-015"],"pilot_evidence_expected":["exact-head CI","run ledger refs","finding/attempt/protection receipts","recovery traces","review metrics","runbooks"]}

@@ -1,0 +1,1 @@
+Test duplicate schedule tick, POST_RUN of self-review, max depth, budget exceeded, terminal run new review vs continuation, deterministic-only success path, provider review failure, no mutation authority from review. Preserve TaskController continuation tests.

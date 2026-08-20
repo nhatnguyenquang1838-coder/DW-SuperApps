@@ -1,0 +1,17 @@
+schema_version: task-me.task.v2
+task_id: SHD-016
+title: E2E pilot, adversarial hardening and operational handover
+status: PLANNED
+objective: Prove the 90-day MVP on a non-critical primary project and bounded cross-project scenario, close/accept findings, and hand over measurable runbooks/SLIs.
+requirements: [SHIELD-REQ-020]
+design_refs: [PR69-Acceptance, PM-90-Day-Plan]
+dependencies: [SHD-008, SHD-010, SHD-011, SHD-014, SHD-015]
+parallel_with: []
+delivery_wave: 8
+scope_in: [E2E fixtures/pilot config, adversarial/chaos tests, runbooks, metrics, exit evidence]
+scope_out: [autonomous H4, production rollout without separate authority, fine-tuning/RL]
+complexity: high
+risk: high
+effort_hours: {optimistic: 32, likely: 40, pessimistic: 64}
+definition_of_done: [local closed loop proven, split-brain/authority/fencing negatives pass, scheduled review stable, two-project systemic scenario proven, pilot KPIs measured, residual risks dispositioned, runbooks and ownership accepted]
+authority: REQUIRED_BEFORE_EXECUTION

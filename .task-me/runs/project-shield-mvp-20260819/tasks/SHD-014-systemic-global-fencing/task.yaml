@@ -1,0 +1,17 @@
+schema_version: task-me.task.v2
+task_id: SHD-014
+title: Systemic correlation and Global-to-Project fencing pilot
+status: PLANNED
+objective: Correlate independent project evidence into systemic Findings and issue bounded authenticated fencing requests whose local materialization/coverage is exactly verified.
+requirements: [SHIELD-REQ-005, SHIELD-REQ-006, SHIELD-REQ-016, SHIELD-REQ-019]
+design_refs: [PR69-Global-Correlation, PR69-Emergency-Fencing]
+dependencies: [SHD-006, SHD-013]
+parallel_with: []
+delivery_wave: 7
+scope_in: [Global correlation/systemic finding/fencing workflow, local receipt integration, tests]
+scope_out: [Global code remediation, direct merge/deploy, evidence collapse across projects]
+complexity: high
+risk: critical
+effort_hours: {optimistic: 24, likely: 40, pessimistic: 56}
+definition_of_done: [evidence independence score, systemic finding refs local findings without copying ownership, authenticated directive fanout, exact A1/A2/A3 coverage, PARTIAL/UNKNOWN honest states]
+authority: REQUIRED_BEFORE_EXECUTION

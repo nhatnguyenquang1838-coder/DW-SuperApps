@@ -1,0 +1,17 @@
+schema_version: task-me.task.v2
+task_id: SHD-012
+title: Trace/span telemetry and ExperienceRecord/evaluation foundation
+status: PLANNED
+objective: Add vendor-neutral execution correlation and curated ExperienceRecords/evaluation datasets without making telemetry or ML systems canonical audit authority.
+requirements: [SHIELD-REQ-013, SHIELD-REQ-014]
+design_refs: [PR69-Telemetry-Learning]
+dependencies: [SHD-008, SHD-009]
+parallel_with: [SHD-011, SHD-013, SHD-015]
+delivery_wave: 6
+scope_in: [Shield telemetry adapter, trace context, ExperienceRecord curation, eval dataset metadata, tests]
+scope_out: [full MLflow rollout, fine-tuning, RL, raw CoT/prompt warehouse]
+complexity: medium
+risk: high
+effort_hours: {optimistic: 20, likely: 32, pessimistic: 48}
+definition_of_done: [trace/span correlation to run/node/finding/attempt, bounded redacted telemetry, ExperienceRecord eligibility/provenance, TRAIN/DEVELOPMENT/HOLDOUT isolation, no audit replacement]
+authority: REQUIRED_BEFORE_EXECUTION

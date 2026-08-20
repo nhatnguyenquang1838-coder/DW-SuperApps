@@ -1,0 +1,1 @@
+Require exact Finding version + FixPlan digest before attempt. One active mutation attempt per Finding. Same-plan automatic retry is bounded by policy. Forbidden repairs: disable tests/sensors, bypass CI/review, lower security/authority or broaden scope without review.

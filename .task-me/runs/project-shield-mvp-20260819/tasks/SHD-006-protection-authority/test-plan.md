@@ -1,0 +1,1 @@
+Cases: forged/wrong-audience/replayed/stale directive; missing ACK; A1 vs A2 vs A3 assurance; critical fence control-plane loss; unauthorized policy limit increase; exact scope/readback drift; release without evidence. Preserve TaskController adversarial suite.

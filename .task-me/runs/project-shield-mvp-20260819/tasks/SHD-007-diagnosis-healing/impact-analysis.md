@@ -1,0 +1,1 @@
+Consumes Findings and TaskController execution fabric; produces attempt/evidence for verification. High blast radius if authority or scope is wrong. Must not change tests/sensors/security/governance to make an attempt pass.

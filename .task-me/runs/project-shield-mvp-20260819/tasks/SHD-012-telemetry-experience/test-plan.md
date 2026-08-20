@@ -1,0 +1,1 @@
+Test trace correlation across bounded workflow, exporter failure, redaction, eligibility quarantine, label provenance, sealed HOLDOUT access restriction, deterministic scorer priority, duplicate experience dedupe and Run Ledger unaffected by telemetry failure.

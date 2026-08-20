@@ -1,0 +1,1 @@
+Depends on SHD-002 domain. Direct impact is new Shield observation/sensor storage and tests. Integration is initially provider-neutral; event/poll adapters may be fixtures. Downstream Trigger/Finding and Health depend on deterministic fingerprint/freshness semantics.

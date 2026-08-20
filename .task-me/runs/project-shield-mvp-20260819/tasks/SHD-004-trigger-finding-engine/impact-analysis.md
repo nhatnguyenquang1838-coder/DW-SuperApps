@@ -1,0 +1,1 @@
+Consumes SHD-003 observations and SHD-002 domain; produces canonical Findings used by protection/healing/global projection. Direct tests must cover candidate rejection and evidence conflict. No Jira/GitHub issue status may define Finding identity/lifecycle.

@@ -1,0 +1,17 @@
+schema_version: task-me.task.v2
+task_id: SHD-010
+title: Writer epoch/fencing and EffectIntent/Receipt recovery
+status: PLANNED
+objective: Prevent duplicate protected effects across host failover by enforcing shared-durable writer ownership and intent/receipt reconciliation.
+requirements: [SHIELD-REQ-010, SHIELD-REQ-011, SHIELD-REQ-017, SHIELD-REQ-019]
+design_refs: [PR69-Writer-Fencing, PR69-Effect-Recovery]
+dependencies: [SHD-009]
+parallel_with: [SHD-004]
+delivery_wave: 3
+scope_in: [Shield mutation safety, taskcontroller/runtime/execution/audit integration, tests]
+scope_out: [general consensus platform, Kafka/Raft, non-protected read-only work]
+complexity: high
+risk: critical
+effort_hours: {optimistic: 24, likely: 40, pessimistic: 56}
+definition_of_done: [monotonic epoch ownership, stale writer rejected, shared durability before protected effect, intent/receipt idempotency, missing receipt reconciles provider state]
+authority: REQUIRED_BEFORE_EXECUTION

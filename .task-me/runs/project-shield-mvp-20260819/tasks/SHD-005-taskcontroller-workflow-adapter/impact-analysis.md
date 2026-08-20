@@ -1,0 +1,1 @@
+Verified integration areas: `taskcontroller/kernel`, `interaction`, `runtime`, `execution`, `audit`; tests include continuation/recovery/controlplane suites. Changes should favor Shield-side adapter/extensions and generic hooks over Shield branches inside kernel.

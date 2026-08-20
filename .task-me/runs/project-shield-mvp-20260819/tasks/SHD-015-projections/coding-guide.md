@@ -1,0 +1,1 @@
+Never derive canonical IDs from Slack/Jira/GitHub metadata. Human STOP/PAUSE/approval input must enter normal policy/authority evaluation. Projection rendering may compact state but must preserve exact refs for drill-down. Do not duplicate evidence payloads unnecessarily.

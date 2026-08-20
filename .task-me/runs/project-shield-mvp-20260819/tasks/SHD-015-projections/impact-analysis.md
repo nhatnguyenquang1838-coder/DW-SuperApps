@@ -1,0 +1,1 @@
+Verified integration anchor: `taskcontroller/projections/**`; external connectors may be host-dependent. Projection adapters consume exact canonical IDs/versions/digests and emit references back to Shield. Failures are observable but cannot delete/change canonical Finding/evidence state.

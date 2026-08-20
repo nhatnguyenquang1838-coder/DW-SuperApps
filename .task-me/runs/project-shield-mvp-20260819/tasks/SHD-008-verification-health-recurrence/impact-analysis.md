@@ -1,0 +1,1 @@
+Consumes Findings/Protection/HealingAttempts/sensor coverage. Produces HealthSnapshots, monitoring decisions and recurrence events used by self-review/global heartbeat. Meta-sensors observe Shield itself; lack of telemetry/sensor evidence must not become HEALTHY.

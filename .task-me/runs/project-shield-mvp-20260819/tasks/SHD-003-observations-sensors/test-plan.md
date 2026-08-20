@@ -1,0 +1,1 @@
+Cases: duplicate event, later resolution as new Observation, stale critical sensor, suppression expiry, exact fingerprint recurrence, poll absence signal, meta-sensor failure. Run Shield targeted tests plus `PYTHONPATH=. pytest tests/taskcontroller/` regression.

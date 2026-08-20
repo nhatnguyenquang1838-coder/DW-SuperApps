@@ -1,0 +1,17 @@
+schema_version: task-me.task.v2
+task_id: SHD-005
+title: Bounded TaskController workflow and continuation adapter
+status: PLANNED
+objective: Materialize Shield research/review/diagnosis/heal/verify work as finite TaskController runs using existing continuation/A2A contracts.
+requirements: [SHIELD-REQ-001, SHIELD-REQ-019]
+design_refs: [PR69-Execution-Scheduling, TaskController-A2A]
+dependencies: [SHD-002]
+parallel_with: [SHD-003, SHD-009]
+delivery_wave: 2
+scope_in: [Shield workflow adapter, taskcontroller/kernel, taskcontroller/interaction, taskcontroller/runtime, tests]
+scope_out: [new TaskController A2A kinds, immortal supervisor run]
+complexity: high
+risk: high
+effort_hours: {optimistic: 24, likely: 40, pessimistic: 56}
+definition_of_done: [bounded run creation, continuation before dispatch, exact mailbox/readback binding, terminal continuation closure, recovery without chat replay]
+authority: REQUIRED_BEFORE_EXECUTION

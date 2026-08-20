@@ -1,0 +1,1 @@
+Follow the patterns in `taskcontroller/domain/*` but keep Shield lifecycle vocabularies in Shield-owned modules. Canonical object identity must not derive from Jira/GitHub IDs. Digests use canonical JSON + sha256. Do not add new A2A kinds or TaskController Node/Run statuses merely for Shield.

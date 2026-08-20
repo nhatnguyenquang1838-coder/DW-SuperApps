@@ -1,0 +1,17 @@
+schema_version: task-me.task.v2
+task_id: SHD-009
+title: Atomic ledger/outbox and shared PostgreSQL replication
+status: PLANNED
+objective: Extend the local SQLite audit boundary with atomic outbox enqueue and idempotent shared PostgreSQL sync/readback while preserving Run Ledger audit semantics.
+requirements: [SHIELD-REQ-009, SHIELD-REQ-019]
+design_refs: [PR69-Learning-Storage, PR69-Data-Contract]
+dependencies: [SHD-002]
+parallel_with: [SHD-003, SHD-005]
+delivery_wave: 2
+scope_in: [taskcontroller/audit, Shield persistence adapter, PostgreSQL schema/migration code, tests]
+scope_out: [production DB provisioning, naive dual-write, learning tables]
+complexity: high
+risk: critical
+effort_hours: {optimistic: 24, likely: 40, pessimistic: 56}
+definition_of_done: [audit+outbox same transaction, idempotent cloud upsert/readback, LOCAL_DURABLE/SHARED_DURABLE states, deterministic divergence handling, SQLite regression preserved]
+authority: REQUIRED_BEFORE_EXECUTION

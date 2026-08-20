@@ -1,0 +1,1 @@
+Add Shield domain tests for required/optional fields, deterministic round-trip, stable digest, stale CAS/version rejection, immutable attempt identity and UNKNOWN health. Preserve `PYTHONPATH=. pytest tests/taskcontroller/`; run Shield-owned test root chosen by SHD-001.

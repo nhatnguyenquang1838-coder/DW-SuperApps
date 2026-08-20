@@ -1,0 +1,1 @@
+Heartbeat payload stays normalized/bounded. Global can fetch exact deeper refs only when investigation requires them. Global outage never becomes local Shield OFFLINE automatically. Project identity/ownership is registry state, not Slack channel metadata.

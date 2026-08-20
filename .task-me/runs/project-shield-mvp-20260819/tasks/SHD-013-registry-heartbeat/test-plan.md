@@ -1,0 +1,1 @@
+Test schema/version, stale heartbeat, missing project, duplicate/reordered heartbeat, Global outage, critical sensor coverage propagation, no raw payload fields, local Shield continuing FULL/DEGRADED independent of Global state.

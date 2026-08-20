@@ -1,0 +1,1 @@
+Telemetry failure must not invalidate durable audit. Default attributes exclude secrets, credentials, unrestricted prompt/conversation and CoT. `trace_id` is correlation, not business identity. Keep MLflow/Langfuse/backends behind provider interfaces; no MVP dependency on one vendor.

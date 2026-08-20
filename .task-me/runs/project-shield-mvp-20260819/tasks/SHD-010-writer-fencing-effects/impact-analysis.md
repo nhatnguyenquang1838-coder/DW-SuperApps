@@ -1,0 +1,1 @@
+Verified anchors: TaskController runtime/recovery/execution/audit plus checkpoint recovery tests. This task is a cross-host correctness seam; a defect can duplicate protected effects. Read-only work remains permitted without mutation ownership where policy allows.

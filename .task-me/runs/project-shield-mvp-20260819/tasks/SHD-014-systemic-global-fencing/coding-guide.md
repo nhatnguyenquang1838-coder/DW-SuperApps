@@ -1,0 +1,1 @@
+Compute project breadth plus sensor/provider/evidence-source independence. Do not copy/move local evidence ownership into Global Finding. A directive sent without exact local receipt/readback remains FENCING_UNKNOWN. Global remediation requests start separate local bounded runs.

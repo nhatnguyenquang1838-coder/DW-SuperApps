@@ -1,0 +1,17 @@
+{
+  "schema_version":"task-me.source-inventory.v1",
+  "bound_head":"1bf75ba68beaa140bc8cd2b19a9da39f3a99b90e",
+  "sources":[
+    {"path":"docs/superpowers/specs/2026-08-19-project-shield-design.md","type":"architecture","hash_basis":"bound_git_head"},
+    {"path":"docs/superpowers/specs/2026-08-19-project-shield-learning-storage-addendum.md","type":"architecture","hash_basis":"bound_git_head"},
+    {"path":"docs/superpowers/specs/2026-08-19-project-shield-execution-data-contract-addendum.md","type":"architecture","hash_basis":"bound_git_head"},
+    {"path":"agents/shared/taskcontroller-a2a-protocol.md","type":"system_contract","hash_basis":"bound_git_head"},
+    {"path":"taskcontroller/domain/models.py","type":"code","git_blob":"9f6bafea87306635d68619bda5164373631e06d0"},
+    {"path":"taskcontroller/domain/enums.py","type":"code","git_blob":"b6040d0141a79a737cca67a2092c912f90fe808c"},
+    {"path":"taskcontroller/domain/ids.py","type":"code","git_blob":"56a5d7855c07d87a2915590ed109641263eef900"},
+    {"path":"tests/taskcontroller/test_audit_sqlite_writer.py","type":"test","git_blob":"ad8635ac8e5b57f3d7fd6833bd9acd11db976b13"},
+    {"path":"tests/taskcontroller/test_checkpoint_recovery_c3.py","type":"test","git_blob":"6487f408f38b1aee2550aa802abe01a6904bd457"},
+    {"path":".github/workflows/taskcontroller-validation.yml","type":"ci","git_blob":"2b200a0ac55fc90e7cb8864774c75370c6497a86"}
+  ],
+  "limitation":"Connector evidence for long architecture files is bound to exact Git head; a later Task-Me execution may enrich per-file content hashes without changing semantics."
+}

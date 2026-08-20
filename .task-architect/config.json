@@ -1,0 +1,22 @@
+{
+  "schema_version": "2.0",
+  "project": {"name": "dw-project-shield-mvp", "repository_root": ".", "default_branch": "main"},
+  "sources": {
+    "requirements": [".kiro/specs/dw-project-shield-mvp/requirements.md"],
+    "design": [".kiro/specs/dw-project-shield-mvp/design.md", "docs/superpowers/specs/2026-08-19-project-shield-*.md"],
+    "system_graph": ["docs/superpowers/specs/2026-08-16-taskcontroller-reference-a2a-design.md", "agents/shared/taskcontroller-a2a-protocol.md"],
+    "code": ["taskcontroller/**/*.py"],
+    "tests": ["tests/taskcontroller/**/*.py"],
+    "repository_context": ["AGENTS.md", ".github/workflows/taskcontroller-validation.yml"],
+    "exclude": [".git/**", "**/__pycache__/**", ".task-me/runs/**"]
+  },
+  "ua": {"enabled": true, "required": false, "root": ".ua"},
+  "analysis": {"max_file_bytes": 1000000, "max_dependency_depth": 3, "max_task_likely_hours": 40, "minimum_evidence_confidence": 0.6, "require_verified_paths": true, "require_verified_symbols": false, "allow_discovery_tasks": true},
+  "output": {
+    "root": ".task-me/runs", "language": "en", "write_mode": "output_only", "folder_mode": "per_task",
+    "run_folder_pattern": "{run_id}", "shared_folder": "_shared", "task_folder_pattern": "tasks/{task_id}-{slug}",
+    "run_files": {"task_index": "task-index.yaml", "task_dag": "task-dag.mmd", "run_summary": "RUN-SUMMARY.md"},
+    "shared_files": {"source_inventory": "01-source-inventory.json", "traceability": "02-traceability.json", "evidence_graph": "03-evidence-graph.json", "impact_analysis": "04-impact-analysis.md", "validation_report": "07-validation-report.json"},
+    "task_files": {"canonical_task": "task.yaml", "overview": "README.md", "impact": "impact-analysis.md", "implementation_plan": "implementation-plan.md", "coding_guide": "coding-guide.md", "test_plan": "test-plan.md", "evidence": "evidence.json", "decisions": "decisions.md"}
+  }
+}

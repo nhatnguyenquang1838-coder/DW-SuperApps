@@ -1,0 +1,1 @@
+Touches all implemented Shield capabilities and selected non-critical pilot integration surfaces. High coordination impact but no new architecture should be invented here; uncovered design defects become explicit findings/replan items. Production environment remains excluded absent separate authority.

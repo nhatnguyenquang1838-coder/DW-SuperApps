@@ -1,0 +1,17 @@
+schema_version: task-me.task.v2
+task_id: SHD-013
+title: Shield Registry and project heartbeat/coverage
+status: PLANNED
+objective: Register Project Shields and publish normalized bounded heartbeat/coverage required for fleet health without exporting raw logs/prompts.
+requirements: [SHIELD-REQ-015, SHIELD-REQ-016, SHIELD-REQ-017]
+design_refs: [PR69-Hybrid-Topology, PR69-Global-Health]
+dependencies: [SHD-009, SHD-012]
+parallel_with: [SHD-011, SHD-015]
+delivery_wave: 6
+scope_in: [Global registry/heartbeat contracts, local heartbeat projection, tests]
+scope_out: [global local-code remediation, raw telemetry replication]
+complexity: medium
+risk: high
+effort_hours: {optimistic: 16, likely: 28, pessimistic: 40}
+definition_of_done: [project registry identity/owner/capability/mode, normalized heartbeat, missing heartbeat observation, fleet coverage states, local Shield continues if Global unavailable]
+authority: REQUIRED_BEFORE_EXECUTION

@@ -1,0 +1,17 @@
+schema_version: task-me.task.v2
+task_id: SHD-004
+title: Trigger and Finding evidence/reconciliation engine
+status: PLANNED
+objective: Convert observations into clusters/candidates and only promote evidence-validated reconciled canonical Findings.
+requirements: [SHIELD-REQ-003, SHIELD-REQ-004, SHIELD-REQ-019]
+design_refs: [PR69-Finding-Engine]
+dependencies: [SHD-003]
+parallel_with: [SHD-010]
+delivery_wave: 3
+scope_in: [Shield trigger/finding/reconciliation services, tests]
+scope_out: [issue projection, healing execution]
+complexity: high
+risk: high
+effort_hours: {optimistic: 24, likely: 40, pessimistic: 56}
+definition_of_done: [trigger outcomes deterministic, candidate lifecycle, evidence graph states, duplicate/semantic correlation, conflict requires research/review, canonical finding versioned]
+authority: REQUIRED_BEFORE_EXECUTION

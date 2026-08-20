@@ -1,0 +1,1 @@
+High-risk boundary touching Shield policy/protection, TaskController control/execution and external authority adapters. Existing adversarial/controlplane tests are verified anchors. No change may reduce GWC/readback checks or create direct Global remediation authority.

@@ -1,0 +1,17 @@
+schema_version: task-me.task.v2
+task_id: SHD-011
+title: Scheduled self-review workflow and anti-recursion guards
+status: PLANNED
+objective: Trigger bounded POST_RUN/project self-review runs without converting active Controller polling into detached cron execution or creating recursive review storms.
+requirements: [SHIELD-REQ-012, SHIELD-REQ-014]
+design_refs: [PR69-Self-Review]
+dependencies: [SHD-008, SHD-010]
+parallel_with: [SHD-012, SHD-013, SHD-015]
+delivery_wave: 6
+scope_in: [Shield review trigger/profile/workflow, TaskController adapter, tests]
+scope_out: [model training, replacing active wait/readback, uncontrolled recurring executor]
+complexity: medium
+risk: high
+effort_hours: {optimistic: 16, likely: 28, pessimistic: 40}
+definition_of_done: [POST_RUN/project review profiles, origin/depth/idempotency key, finite budget, terminal self-review does not recursively spawn itself, outputs findings/learning candidates only]
+authority: REQUIRED_BEFORE_EXECUTION

@@ -1,0 +1,1 @@
+Test successful attempt without closure, recurrence during monitoring, relevant deployment resets window, protection PARTIAL, critical sensor loss→UNKNOWN, SAFE_MODE mutation restriction, Global-unavailable local continuity, negative verification of guard preservation.

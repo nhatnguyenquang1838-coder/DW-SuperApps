@@ -1,0 +1,1 @@
+{"bound_head":"1bf75ba68beaa140bc8cd2b19a9da39f3a99b90e","architecture_refs":["ADR-SHIELD-002","ADR-SHIELD-005","ADR-SHIELD-010","ADR-SHIELD-023"],"verified_test_area":"tests/taskcontroller/test_controlplane_adversarial.py@6df2b20d339023655be6d74b8761db4790c68deb"}

@@ -1,0 +1,17 @@
+schema_version: task-me.task.v2
+task_id: SHD-003
+title: Observation Store and sensor ingestion/dedupe
+status: PLANNED
+objective: Ingest event/poll/meta sensor signals into immutable Observations with health/freshness/fingerprint and noise controls.
+requirements: [SHIELD-REQ-002, SHIELD-REQ-003, SHIELD-REQ-017]
+design_refs: [PR69-Sensors, PR69-Trigger-Inputs]
+dependencies: [SHD-002]
+parallel_with: [SHD-005, SHD-009]
+delivery_wave: 2
+scope_in: [Shield sensor/observation services, Shield tests]
+scope_out: [Finding promotion, external healing]
+complexity: high
+risk: medium
+effort_hours: {optimistic: 20, likely: 32, pessimistic: 40}
+definition_of_done: [append-only observations, event/poll/meta adapters, deterministic fingerprints, dedupe/debounce/suppression evidence, critical sensor health states]
+authority: REQUIRED_BEFORE_EXECUTION

@@ -1,0 +1,17 @@
+schema_version: task-me.task.v2
+task_id: SHD-001
+title: Freeze SDD contracts and decide Shield package boundary
+status: PLANNED
+objective: Verify repository conventions, freeze SDD IDs, and record the exact new Shield package/test/config boundaries before runtime source creation.
+requirements: [SHIELD-REQ-001, SHIELD-REQ-018, SHIELD-REQ-019]
+design_refs: [PR69-ADR-001..044]
+dependencies: []
+parallel_with: []
+delivery_wave: 0
+scope_in: [.kiro/specs/dw-project-shield-mvp, docs/superpowers/specs, taskcontroller, tests/taskcontroller]
+scope_out: [runtime implementation, merge, deploy, database provisioning]
+complexity: medium
+risk: medium
+effort_hours: {optimistic: 8, likely: 16, pessimistic: 24}
+definition_of_done: [package boundary decision recorded, requirement/design IDs stable, downstream tasks have exact target roots, no runtime mutation before authority]
+authority: NONE_PLANNING_ONLY

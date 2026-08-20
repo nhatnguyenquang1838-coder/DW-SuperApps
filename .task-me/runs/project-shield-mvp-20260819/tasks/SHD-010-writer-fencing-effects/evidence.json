@@ -1,0 +1,1 @@
+{"bound_head":"1bf75ba68beaa140bc8cd2b19a9da39f3a99b90e","architecture_refs":["execution-data-contract §5","execution-data-contract §6"],"verified_tests":["tests/taskcontroller/test_checkpoint_recovery_c3.py@6487f408f38b1aee2550aa802abe01a6904bd457"],"verified_areas":["taskcontroller/runtime","taskcontroller/execution","taskcontroller/audit"]}

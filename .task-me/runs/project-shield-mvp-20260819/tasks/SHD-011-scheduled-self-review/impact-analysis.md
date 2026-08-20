@@ -1,0 +1,1 @@
+Consumes Health/Findings/Attempts and TaskController bounded-run adapter. Produces review artifacts, Findings/LearningCandidates/PolicyProposals. Needs deterministic idempotency to prevent duplicate review cost and recursive POST_RUN chains.
