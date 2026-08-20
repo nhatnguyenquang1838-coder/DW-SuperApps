@@ -1,4 +1,9 @@
-"""Deterministic reducer tests + golden fixture replay."""
+"""Deterministic reducer tests + golden fixture replay.
+
+Replay contract: the reducer consumes the exact supplied order and never
+silently reorders or hides duplicate/out-of-order/stale/gap — those are
+recorded explicitly in ``proj.anomalies``.
+"""
 
 from dw_observation.reducer import reduce
 from dw_observation.events import RunProjectionEvent
@@ -15,9 +20,15 @@ def _as_dict(proj):
         "last_event_at": proj.last_event_at,
         "nodes": {k: v.status for k, v in proj.nodes.items()},
         "gates": {
-            k: {"status": v.status, "approved_by": v.approved_by, "released_by": v.released_by}
+            k: {
+                "status": v.status,
+                "approved_by": v.approved_by,
+                "released_by": v.released_by,
+                "authority_ref": v.authority_ref,
+            }
             for k, v in proj.gates.items()
         },
+        "anomalies": [(a.kind, a.at_index) for a in proj.anomalies],
     }
 
 
@@ -25,37 +36,13 @@ def _ev(**kw):
     base = dict(
         run_id="R-1",
         source_system="taskcontroller",
-        source_event_id="tc:R-1:0",
+        source_event_id="evt:R-1:0",
         occurred_at="2026-08-21T09:00:00Z",
         event_type="projection_snapshot",
-        outcome="captured",
+        outcome=None,
     )
     base.update(kw)
     return RunProjectionEvent(**base)
-
-
-def test_reducer_is_deterministic_regardless_of_input_order():
-    a = _ev(sequence=5, node_id="71", event_type="node_progress", outcome="done", source_event_id="tc:R-1:5", occurred_at="2026-08-21T19:00:00Z")
-    b = _ev(sequence=0, event_type="run_started", outcome="started", source_event_id="tc:R-1:0", occurred_at="2026-08-21T09:00:00Z")
-    c = _ev(sequence=3, gate="G2-X", event_type="gate_released", outcome="released", actor="Ctrl", source_event_id="tc:R-1:3", occurred_at="2026-08-21T18:27:00Z")
-
-    p1 = reduce([a, b, c])
-    p2 = reduce([c, b, a])
-    assert _as_dict(p1) == _as_dict(p2)
-    # event ordering normalized by (occurred_at, sequence)
-    assert [e.sequence for e in p1.events] == [0, 3, 5]
-
-
-def test_reducer_gate_released_preserves_approved_by():
-    events = [
-        _ev(sequence=2, gate="G2-X", event_type="gate_approved", outcome="approved", actor="Human G2", source_event_id="tc:R-1:2", occurred_at="2026-08-21T18:26:00Z"),
-        _ev(sequence=3, gate="G2-X", event_type="gate_released", outcome="released", actor="Ctrl", source_event_id="tc:R-1:3", occurred_at="2026-08-21T18:27:00Z"),
-    ]
-    proj = reduce(events)
-    g = proj.gates["G2-X"]
-    assert g.status == "released"
-    assert g.approved_by == "Human G2"
-    assert g.released_by == "Ctrl"
 
 
 def test_reducer_golden_fixture_replay():
@@ -67,39 +54,82 @@ def test_reducer_golden_fixture_replay():
     assert proj.last_event_at == expected["last_event_at"]
     assert proj.to_dict()["nodes"] == expected["nodes"]
     assert proj.to_dict()["gates"] == expected["gates"]
+    # clean golden stream -> no anomalies
+    assert proj.anomalies == []
+
+
+def test_reducer_gwc_durable_golden_replay():
+    events = load_event_stream("run_gwc_durable_m0")
+    proj = reduce(events)
+    expected = load_expected_projection("projection_gwc_durable_m0")
+    assert proj.to_dict()["nodes"] == expected["nodes"]
+    assert proj.to_dict()["gates"] == expected["gates"]
+    # node_completed advances node state; structured actor preserved in gate
+    assert proj.gates["G2_EXECUTION"].approved_by == {
+        "kind": "chatgpt",
+        "id": "agent-hermes-mac",
+        "execution_mode": "local_agent",
+    }
+    assert proj.anomalies == []
+
+
+def test_reducer_preserves_supplied_order_not_sorted():
+    # Deliberately NOT in (occurred_at, sequence) order; reduce must keep it.
+    a = _ev(sequence=5, node_id="71", event_type="node_progress", outcome="done",
+            source_event_id="evt:R-1:5", occurred_at="2026-08-21T19:00:00Z")
+    b = _ev(sequence=0, event_type="run_started", outcome=None,
+            source_event_id="evt:R-1:0", occurred_at="2026-08-21T09:00:00Z")
+    c = _ev(sequence=3, gate="G2-X", event_type="gate_released", outcome=None,
+            actor="Ctrl", source_event_id="evt:R-1:3", occurred_at="2026-08-21T18:27:00Z")
+    proj = reduce([a, b, c])
+    # No silent reorder: events remain in supplied order.
+    assert [e.source_event_id for e in proj.events] == ["evt:R-1:5", "evt:R-1:0", "evt:R-1:3"]
+    # State still computed correctly (node 71 done, G2-X released).
+    assert proj.nodes["71"].status == "done"
+    assert proj.gates["G2-X"].status == "released"
+
+
+def test_reducer_detects_duplicate_explicitly_not_silent():
+    e1 = _ev(sequence=1, gate="G2-X", event_type="gate_approved", outcome=None,
+             actor="Human", source_event_id="evt:R-1:dup", occurred_at="2026-08-21T18:00:00Z")
+    e2 = _ev(sequence=1, gate="G2-X", event_type="gate_approved", outcome=None,
+             actor="Human", source_event_id="evt:R-1:dup", occurred_at="2026-08-21T18:00:00Z")
+    proj = reduce([e1, e2])
+    # BOTH events retained (not collapsed) and a DUPLICATE anomaly recorded.
+    assert len(proj.events) == 2
+    assert ("DUPLICATE", 1) in [(a.kind, a.at_index) for a in proj.anomalies]
+    assert proj.gates["G2-X"].status == "approved"
+
+
+def test_reducer_detects_stale_explicitly():
+    newer = _ev(sequence=3, gate="G2-X", event_type="gate_released", outcome=None,
+                actor="Ctrl", source_event_id="evt:R-1:3", occurred_at="2026-08-21T18:27:00Z")
+    older = _ev(sequence=2, gate="G2-X", event_type="gate_approved", outcome=None,
+                actor="Human", source_event_id="evt:R-1:2", occurred_at="2026-08-21T18:26:00Z")
+    # older delivered after newer (stale): recorded, state stays released.
+    proj = reduce([newer, older])
+    assert ("STALE", 1) in [(a.kind, a.at_index) for a in proj.anomalies]
+    assert proj.gates["G2-X"].status == "released"
+
+
+def test_reducer_detects_gap_explicitly():
+    e0 = _ev(sequence=0, event_type="run_started", outcome=None,
+             source_event_id="evt:R-1:0", occurred_at="2026-08-21T09:00:00Z")
+    e3 = _ev(sequence=3, gate="G2-X", event_type="gate_released", outcome=None,
+             actor="Ctrl", source_event_id="evt:R-1:3", occurred_at="2026-08-21T18:27:00Z")
+    proj = reduce([e0, e3])
+    # gap recorded; reduction still keys on explicit sequence.
+    assert any(a.kind == "GAP" for a in proj.anomalies)
+    assert proj.gates["G2-X"].status == "released"
 
 
 def test_reducer_projection_snapshot_is_observation_only():
     events = [
-        _ev(sequence=0, event_type="run_started", outcome="started", source_event_id="tc:R-1:0", occurred_at="2026-08-21T09:00:00Z"),
-        _ev(sequence=6, event_type="projection_snapshot", outcome="captured", summary="snap", source_event_id="tc:R-1:6", occurred_at="2026-08-21T19:00:01Z"),
+        _ev(sequence=0, event_type="run_started", outcome=None,
+            source_event_id="evt:R-1:0", occurred_at="2026-08-21T09:00:00Z"),
+        _ev(sequence=6, event_type="projection_snapshot", outcome=None, summary="snap",
+            source_event_id="evt:R-1:6", occurred_at="2026-08-21T19:00:01Z"),
     ]
     proj = reduce(events)
     assert proj.nodes == {}
     assert proj.gates == {}
-
-
-def test_reducer_duplicate_source_identity_collapsed():
-    # Two events with the same (source_system, source_event_id) -> one record.
-    e1 = _ev(sequence=1, gate="G2-X", event_type="gate_approved", outcome="approved", actor="Human", source_event_id="tc:R-1:dup", occurred_at="2026-08-21T18:00:00Z")
-    e2 = _ev(sequence=1, gate="G2-X", event_type="gate_approved", outcome="approved", actor="Human", source_event_id="tc:R-1:dup", occurred_at="2026-08-21T18:00:00Z")
-    proj = reduce([e1, e2])
-    assert len(proj.events) == 1  # duplicate collapsed
-    assert proj.gates["G2-X"].status == "approved"
-
-
-def test_reducer_stale_event_does_not_regress_state():
-    # Newer release then an older approval arrives late (stale): state stays released.
-    newer = _ev(sequence=3, gate="G2-X", event_type="gate_released", outcome="released", actor="Ctrl", source_event_id="tc:R-1:3", occurred_at="2026-08-21T18:27:00Z")
-    older = _ev(sequence=2, gate="G2-X", event_type="gate_approved", outcome="approved", actor="Human", source_event_id="tc:R-1:2", occurred_at="2026-08-21T18:26:00Z")
-    proj = reduce([newer, older])  # older delivered after newer (stale)
-    assert proj.gates["G2-X"].status == "released"
-
-
-def test_reducer_gap_in_sequence_ok():
-    # Missing sequence 2; reduction keys on explicit sequence, not contiguity.
-    e0 = _ev(sequence=0, event_type="run_started", outcome="started", source_event_id="tc:R-1:0", occurred_at="2026-08-21T09:00:00Z")
-    e3 = _ev(sequence=3, gate="G2-X", event_type="gate_released", outcome="released", actor="Ctrl", source_event_id="tc:R-1:3", occurred_at="2026-08-21T18:27:00Z")
-    proj = reduce([e0, e3])
-    assert proj.gates["G2-X"].status == "released"
-    assert [e.sequence for e in proj.events] == [0, 3]

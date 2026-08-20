@@ -25,8 +25,8 @@ runtime:
   package: dw_observation
   entrypoints:
     - dw_observation.events        # RunProjectionEvent v1 model + validation
-    - dw_observation.adapters     # TaskControllerAdapter, GwcAdapter (read-only)
-    - dw_observation.reducer      # deterministic reduce(events) -> Projection
+    - dw_observation.adapters     # TaskControllerAdapter (AuditEvent), GwcAdapter (DurableEvent); read-only
+    - dw_observation.reducer      # deterministic reduce(events) -> Projection (explicit-order + anomalies)
     - dw_observation.fixtures     # golden fixture loader (local JSON only)
 
 constraints:
@@ -43,29 +43,41 @@ constraints:
 
 envelope:
   # Canonical #71 v1 event envelope (explicit fields, no opaque data).
+  # Vocabularies (event_type / outcome / gate) are OPEN: the envelope carries
+  # canonical source values verbatim (GWC DurableEvent event_types/gates/
+  # outcomes, TC AuditEvent decision_kind). The "never invent gate/outcome"
+  # discipline lives in the adapters, which copy source values and leave them
+  # NULL when the source does not provide them.
   schema_version: "1"
   projection_type: run_observatory
   required_fields:
     - schema_version
     - projection_type
     - run_id
-    - sequence
+    - sequence            # real source ledger sequence (not synthesized index)
     - source_system
-    - source_event_id
-    - occurred_at
-    - gate            # nullable
-    - node_id         # nullable
-    - parent_event_id # nullable
-    - event_type
-    - outcome         # nullable
-    - actor           # nullable
+    - source_event_id     # EXACT source record id (no tc:{run_id}:{index})
+    - occurred_at         # exact source timestamp (no epoch fabrication)
+    - gate                # nullable; copied from source, never inferred
+    - node_id             # nullable
+    - parent_event_id     # nullable
+    - event_type          # open vocabulary (source decision/event kind)
+    - outcome             # nullable; open vocabulary, copied from source
+    - actor               # exact source actor (string OR structured object)
     - summary
-    - before          # nullable
-    - after           # nullable
+    - before              # nullable
+    - after               # nullable
     - evidence_refs
-    - authority_ref   # nullable
-    - source_digest   # nullable
-    - read_only_projection   # always true
+    - authority_ref       # nullable
+    - source_digest       # nullable; deterministic digest if absent
+    - read_only_projection # always true
+
+replay:
+  # Reducer consumes the exact supplied order; never silently reorders or
+  # hides duplicate/out-of-order/stale/gap. Those are recorded explicitly as
+  # typed anomalies in Projection.anomalies.
+  explicit_anomalies: true
+  anomalies: [DUPLICATE, OUT_OF_ORDER, STALE, GAP]
 
 tests:
   framework: pytest

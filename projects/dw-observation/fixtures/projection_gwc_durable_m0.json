@@ -1,0 +1,19 @@
+{
+  "run_id": "run_dw_obs_m0_r2",
+  "started_at": "2026-08-21T09:00:00Z",
+  "last_event_at": "2026-08-21T19:00:01Z",
+  "anomalies": [],
+  "nodes": {
+    "m0": {"node": "m0", "status": "success", "last_event_seq": 3}
+  },
+  "gates": {
+    "G2_EXECUTION": {
+      "gate": "G2_EXECUTION",
+      "status": "approved",
+      "approved_by": {"kind": "chatgpt", "id": "agent-hermes-mac", "execution_mode": "local_agent"},
+      "released_by": null,
+      "authority_ref": null,
+      "last_event_seq": 1
+    }
+  }
+}

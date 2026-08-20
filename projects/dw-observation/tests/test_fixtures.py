@@ -9,6 +9,21 @@ def test_load_event_stream_returns_typed_events():
     assert len(events) == 7
     assert all(isinstance(e, RunProjectionEvent) for e in events)
     assert events[0].event_type == "run_started"
+    # source_event_id is the EXACT source id (no tc:{run_id}:{index})
+    assert events[0].source_event_id == "evt_audit_run_started_0"
+
+
+def test_load_gwc_durable_event_stream():
+    events = load_event_stream("run_gwc_durable_m0")
+    assert len(events) == 5
+    assert all(isinstance(e, RunProjectionEvent) for e in events)
+    assert all(e.source_system == "gwc" for e in events)
+    # canonical GWC vocabulary preserved verbatim
+    assert events[2].event_type == "node_started"
+    assert events[2].gate == "G2_EXECUTION"
+    assert events[2].outcome == "success"
+    # structured actor preserved exactly
+    assert events[2].actor == {"kind": "chatgpt", "id": "agent-hermes-mac", "execution_mode": "local_agent"}
 
 
 def test_load_expected_projection_shape():

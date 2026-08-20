@@ -1,116 +1,137 @@
-"""Tests for read-only adapters (no mutation, no Slack parsing)."""
+"""Tests for read-only adapters (no mutation, no Slack parsing, no fabrication)."""
 
 from dw_observation.adapters import TaskControllerAdapter, GwcAdapter
 from dw_observation.events import RunProjectionEvent
 
 
-def test_tc_adapter_parses_structured_run_log():
-    log = {
-        "run_id": "R-1",
-        "events": [
-            {"kind": "run_started", "ts": "2026-08-21T09:00:00Z", "seq": 0},
-            {"kind": "gate_approved", "ts": "2026-08-21T18:00:00Z", "seq": 1, "gate": "G2-X", "actor": "Human"},
-        ],
+# --- TaskController adapter: binds to canonical AuditEvent -----------------
+def test_tc_adapter_maps_audit_event_identity():
+    record = {
+        "event_id": "evt_audit_g2_approved",
+        "run_id": "DW-OBS-M0-20260821-R2",
+        "sequence": 2,
+        "source": "taskcontroller",
+        "decision_kind": "gate_approved",
+        "timestamp": "2026-08-21T18:26:00Z",
+        "actor": "Human G2",
+        "authority_ref": "G2-DW-OBS-M0-20260821-R2",
+        "payload_summary": "Gate G2 approved",
+        "before": None,
+        "after": {"scope_sha256": "abc"},
+        "evidence_refs": [],
     }
-    events = TaskControllerAdapter().from_run_log(log)
-    assert len(events) == 2
-    assert all(e.run_id == "R-1" for e in events)
-    assert events[0].event_type == "run_started"
-    assert events[1].gate == "G2-X"
-    # v1 envelope preserved (explicit fields, no opaque data)
-    assert events[0].projection_type == "run_observatory"
-    assert events[0].read_only_projection is True
-    assert events[0].source_system == "taskcontroller"
-    assert events[0].source_event_id == "tc:R-1:0"
-
-
-def test_tc_adapter_preserves_source_identity_and_digest():
-    log = {
-        "run_id": "R-1",
-        "events": [
-            {"kind": "gate_approved", "ts": "2026-08-21T18:00:00Z", "seq": 1, "gate": "G2-X", "actor": "Human", "data": {"artifact": "g2/approval.json"}}
-        ],
-    }
-    evs = TaskControllerAdapter().from_run_log(log)
-    e = evs[0]
+    e = TaskControllerAdapter().from_audit_event(record)
     assert e.source_system == "taskcontroller"
-    assert e.source_event_id == "tc:R-1:0"
-    assert e.evidence_refs == ["g2/approval.json"]
+    assert e.source_event_id == "evt_audit_g2_approved"  # exact, not tc:{run}:{i}
+    assert e.occurred_at == "2026-08-21T18:26:00Z"
+    assert e.event_type == "gate_approved"  # decision_kind verbatim
+    assert e.actor == "Human G2"
+    assert e.authority_ref == "G2-DW-OBS-M0-20260821-R2"
+    assert e.outcome is None  # not guessed from decision_kind
+    assert e.gate is None     # not inferred
+    assert e.read_only_projection is True
     assert e.source_digest is not None and e.source_digest.startswith("sha256:")
 
 
-def test_tc_adapter_rejects_malformed_event():
+def test_tc_adapter_rejects_missing_required_fields():
     import pytest
 
-    log = {"run_id": "R-1", "events": [{"kind": "bad", "ts": "2026-08-21T00:00:00Z"}]}
+    # missing event_id -> cannot fabricate source identity
     with pytest.raises(ValueError):
-        TaskControllerAdapter().from_run_log(log)
+        TaskControllerAdapter().from_audit_event({"run_id": "R", "sequence": 0,
+                                                  "decision_kind": "run_started",
+                                                  "timestamp": "2026-08-21T00:00:00Z"})
+    # missing sequence -> cannot synthesize index
+    with pytest.raises(ValueError):
+        TaskControllerAdapter().from_audit_event({"event_id": "e1", "run_id": "R",
+                                                  "decision_kind": "run_started",
+                                                  "timestamp": "2026-08-21T00:00:00Z"})
+    # missing timestamp -> cannot fabricate occurred_at
+    with pytest.raises(ValueError):
+        TaskControllerAdapter().from_audit_event({"event_id": "e1", "run_id": "R",
+                                                  "sequence": 0, "decision_kind": "run_started"})
 
 
-def test_tc_adapter_full_v1_envelope_roundtrip():
-    log = {
-        "run_id": "R-1",
-        "events": [
-            {
-                "schema_version": "1",
-                "projection_type": "run_observatory",
-                "run_id": "R-1",
-                "sequence": 7,
-                "source_system": "taskcontroller",
-                "source_event_id": "tc:R-1:external",
-                "occurred_at": "2026-08-21T20:00:00Z",
-                "gate": "G3",
-                "node_id": "72",
-                "event_type": "node_progress",
-                "outcome": "blocked",
-                "actor": "Ctrl",
-                "before": {"status": "active"},
-                "after": {"status": "blocked"},
-                "evidence_refs": ["x.json"],
-                "authority_ref": "G3",
-                "source_digest": "sha256:deadbeef",
-                "read_only_projection": True,
-            }
-        ],
-    }
-    e = TaskControllerAdapter().from_run_log(log)[0]
-    assert e.sequence == 7
-    assert e.node_id == "72"
-    assert e.outcome == "blocked"
-    assert e.before == {"status": "active"}
-    assert e.after == {"status": "blocked"}
-    assert e.authority_ref == "G3"
-    assert e.source_digest == "sha256:deadbeef"
-
-
-def test_tc_adapter_from_json():
-    text = '{"run_id":"R-2","events":[{"kind":"run_started","ts":"2026-08-21T00:00:00Z","seq":0}]}'
+def test_tc_adapter_from_json_list():
+    text = ('[{"event_id":"e1","run_id":"R-2","sequence":0,"decision_kind":"run_started",'
+            '"timestamp":"2026-08-21T00:00:00Z"},'
+            '{"event_id":"e2","run_id":"R-2","sequence":1,"decision_kind":"node_progress",'
+            '"timestamp":"2026-08-21T00:01:00Z","node_id":"71","outcome":"done"}]')
     events = TaskControllerAdapter().from_json(text)
-    assert isinstance(events[0], RunProjectionEvent)
-    assert events[0].run_id == "R-2"
+    assert len(events) == 2
+    assert all(isinstance(e, RunProjectionEvent) for e in events)
+    assert events[1].node_id == "71"
+    assert events[1].outcome == "done"
 
 
-def test_gwc_adapter_is_read_only(tmp_path):
-    """GwcAdapter must not raise/modify; it only scans existing artifacts."""
-    tasks = tmp_path / ".gwc" / "tasks" / "t1" / "g4"
-    tasks.mkdir(parents=True)
-    (tasks / "merge-approval.yaml").write_text("ok: true\n")
-    adapter = GwcAdapter(tmp_path)
-    evs = adapter.read_gate_states(run_id="R-9")
-    assert len(evs) == 1
-    assert evs[0].event_type == "gate_approved"
-    assert evs[0].gate == "G4"
-    # v1 envelope: preserves source identity + authority
-    assert evs[0].source_system == "gwc"
-    assert evs[0].source_event_id is not None and evs[0].source_event_id.startswith("gwc:")
-    assert evs[0].evidence_refs == [str((tasks / "merge-approval.yaml").relative_to(tmp_path))]
-    assert evs[0].read_only_projection is True
-    # ensure no writes happened (only the file we created exists)
-    assert sorted(p.name for p in tasks.iterdir()) == ["merge-approval.yaml"]
+# --- GWC adapter: binds to canonical DurableEvent --------------------------
+def test_gwc_adapter_maps_durable_event():
+    record = {
+        "schema_version": "0.1",
+        "artifact_type": "durable-event",
+        "event_id": "evt_a1b2c3d4_run_started",
+        "run_id": "run_dw_obs_m0_r2",
+        "sequence": 0,
+        "event_type": "run_started",
+        "occurred_at_utc": "2026-08-21T09:00:00Z",
+        "actor": {"kind": "chatgpt", "id": "agent-hermes-mac", "execution_mode": "local_agent"},
+        "gate": "G2_EXECUTION",
+        "node_id": "m0",
+        "outcome": "success",
+        "evidence_refs": ["gwc://runs/run_dw_obs_m0_r2/start"],
+    }
+    e = GwcAdapter().from_durable_event(record)
+    assert e.source_system == "gwc"
+    assert e.source_event_id == "evt_a1b2c3d4_run_started"  # exact
+    assert e.occurred_at == "2026-08-21T09:00:00Z"          # not 1970 placeholder
+    assert e.event_type == "run_started"                    # canonical GWC verbatim
+    assert e.gate == "G2_EXECUTION"
+    assert e.outcome == "success"
+    # structured actor preserved exactly (NOT coerced to "gwc-fastlane")
+    assert e.actor == {"kind": "chatgpt", "id": "agent-hermes-mac", "execution_mode": "local_agent"}
+    assert e.evidence_refs == ["gwc://runs/run_dw_obs_m0_r2/start"]
+    assert e.read_only_projection is True
 
 
-def test_gwc_adapter_missing_root_raises():
+def test_gwc_adapter_rejects_fabricated_placeholder_paths():
     import pytest
 
-    with pytest.raises(FileNotFoundError):
-        GwcAdapter("/nonexistent/path/xyz")
+    # missing occurred_at_utc -> must reject, never fall back to epoch
+    with pytest.raises(ValueError):
+        GwcAdapter().from_durable_event({
+            "event_id": "e1", "run_id": "r", "sequence": 0, "event_type": "run_started",
+            "actor": {"kind": "chatgpt", "id": "x"}, "gate": "G2_EXECUTION",
+            "node_id": "m0", "outcome": "success",
+        })
+    # missing actor -> must reject, never fabricate "gwc-fastlane"
+    with pytest.raises(ValueError):
+        GwcAdapter().from_durable_event({
+            "event_id": "e1", "run_id": "r", "sequence": 0, "event_type": "run_started",
+            "occurred_at_utc": "2026-08-21T00:00:00Z", "gate": "G2_EXECUTION",
+            "node_id": "m0", "outcome": "success",
+        })
+
+
+def test_gwc_adapter_from_json_list():
+    text = ('[{"event_id":"e1","run_id":"r","sequence":0,"event_type":"run_started",'
+            '"occurred_at_utc":"2026-08-21T00:00:00Z","actor":{"kind":"chatgpt","id":"x"},'
+            '"gate":"G2_EXECUTION","node_id":"m0","outcome":"success"}]')
+    events = GwcAdapter().from_json(text)
+    assert events[0].source_event_id == "e1"
+    assert events[0].actor == {"kind": "chatgpt", "id": "x"}
+
+
+def test_gwc_adapter_is_read_only_no_scan():
+    """Adapter maps records directly; it does NOT scan .gwc/tasks/*/g4/*.yaml
+    nor fabricate gate_approved events."""
+    adapter = GwcAdapter()
+    record = {
+        "event_id": "evt_x", "run_id": "r", "sequence": 0, "event_type": "run_started",
+        "occurred_at_utc": "2026-08-21T00:00:00Z", "actor": {"kind": "chatgpt", "id": "x"},
+        "gate": "G2_EXECUTION", "node_id": "m0", "outcome": "success",
+    }
+    evs = adapter.from_durable_event(record)
+    assert evs.event_type == "run_started"  # verbatim, NOT gate_approved
+    assert evs.gate == "G2_EXECUTION"
+    # no read_gate_states / yaml-scan method exists anymore
+    assert not hasattr(adapter, "read_gate_states")
