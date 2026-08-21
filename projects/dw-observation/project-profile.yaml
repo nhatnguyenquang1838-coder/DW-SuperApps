@@ -1,0 +1,89 @@
+# DW Run Observatory — app metadata (NOT a workspace project/submodule).
+# DW-SuperApps is the project; Observation is a regular-source app at
+# projects/dw-observation/**. This file is app-level metadata only and must
+# not assert a separate workspace project identity or gitlink.
+
+apiVersion: dw-app/v1
+kind: AppProfile
+
+metadata:
+  id: dw-observation
+  name: DW Run Observatory
+  owner: dw-superapps
+  source_of_truth: workspace.yaml
+
+bindings:
+  # App-owned GWC binding (metadata only). The Observatory's logical
+  # governance/runtime source is nhatnguyenquang1838-coder/gwc at the pre-prod
+  # ref, pinned to SHA 10deaa4d... This is APP METADATA and is read-only; it
+  # does NOT repurpose or mutate the root projects/gwc Power integration pin
+  # (that gitlink and .gitmodules are owned by the Power manifest / compatibility
+  # lock and are out of this app's scope).
+  gwc:
+    repository: nhatnguyenquang1838-coder/gwc
+    ref: pre-prod
+    target_sha: 10deaa4d9b9f8cf8ef51ee6d89671fefa41e3662
+    mode: read-only
+
+runtime:
+  package: dw_observation
+  entrypoints:
+    - dw_observation.events        # RunProjectionEvent v1 model + validation
+    - dw_observation.adapters     # TaskControllerAdapter (AuditEvent), GwcAdapter (DurableEvent); read-only
+    - dw_observation.reducer      # deterministic reduce(events) -> Projection (explicit-order + anomalies)
+    - dw_observation.fixtures     # golden fixture loader (local JSON only)
+
+constraints:
+  - no_slack_parsing: true
+  - no_governance_mutation: true     # G0..G6, approvals, Jira writes excluded
+  - no_gwc_repo_mutation: true
+  - no_deploy_release: true
+  - deterministic_only: true         # reduce() has no wall-clock/random dependence
+  - read_only_projection: true       # events carry read_only_projection=true
+  - scoped_writes_only:             # allowed file scopes
+      - projects/dw-observation/**   # this app is the SOLE scoped-write surface
+
+envelope:
+  # Canonical #71 v1 event envelope (explicit fields, no opaque data).
+  # Vocabularies (event_type / outcome / gate) are OPEN: the envelope carries
+  # canonical source values verbatim (GWC DurableEvent event_types/gates/
+  # outcomes, TC AuditEvent decision_kind). The "never invent gate/outcome"
+  # discipline lives in the adapters, which copy source values and leave them
+  # NULL when the source does not provide them.
+  schema_version: "1"
+  projection_type: run_observatory
+  required_fields:
+    - schema_version
+    - projection_type
+    - run_id
+    - sequence            # real source ledger sequence (not synthesized index)
+    - source_system
+    - source_event_id     # EXACT source record id (no tc:{run_id}:{index})
+    - occurred_at         # exact source timestamp (no epoch fabrication)
+    - gate                # nullable; copied from source, never inferred
+    - node_id             # nullable
+    - parent_event_id     # nullable
+    - event_type          # open vocabulary (source decision/event kind)
+    - outcome             # nullable; open vocabulary, copied from source
+    - actor               # exact source actor (string OR structured object)
+    - summary
+    - before              # nullable
+    - after               # nullable
+    - evidence_refs
+    - authority_ref       # nullable
+    - source_digest       # nullable; deterministic digest if absent
+    - read_only_projection # always true
+
+replay:
+  # Reducer consumes the exact supplied order; never silently reorders or
+  # hides duplicate/out-of-order/stale/gap. Those are recorded explicitly as
+  # typed anomalies in Projection.anomalies.
+  explicit_anomalies: true
+  anomalies: [DUPLICATE, OUT_OF_ORDER, STALE, GAP]
+
+tests:
+  framework: pytest
+  command: "python -m pytest -q"
+  golden_fixtures:
+    - fixtures/run_scrum555_m0.json
+    - fixtures/projection_scrum555_m0.json
