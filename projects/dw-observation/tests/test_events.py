@@ -299,6 +299,82 @@ def test_reader_cannot_see_source_mutation_after_todict_roundtrip():
     assert e2.actor == {"kind": "chatgpt", "id": "x"}
 
 
+# ===== G3 seq=6: TRUE nested immutability (Fix A hardened) =====
+
+def test_direct_nested_mutation_of_actor_is_rejected():
+    import pytest
+
+    e = _ev(
+        occurred_at="2026-08-21T00:00:00Z",
+        actor={"kind": "chatgpt", "id": "x"},
+    )
+    with pytest.raises((TypeError, AttributeError)):
+        e.actor["id"] = "TAMPERED"
+
+
+def test_direct_nested_mutation_of_before_after_is_rejected():
+    import pytest
+
+    e = _ev(
+        occurred_at="2026-08-21T00:00:00Z",
+        before={"status": "active"},
+        after={"status": "done"},
+    )
+    with pytest.raises((TypeError, AttributeError)):
+        e.before["status"] = "TAMPERED"
+    with pytest.raises((TypeError, AttributeError)):
+        e.after["status"] = "TAMPERED"
+
+
+def test_direct_mutation_of_evidence_refs_is_rejected():
+    import pytest
+
+    e = _ev(
+        occurred_at="2026-08-21T00:00:00Z",
+        evidence_refs=["artifacts/run.json"],
+    )
+    with pytest.raises((TypeError, AttributeError)):
+        e.evidence_refs.append("TAMPERED")
+    with pytest.raises((TypeError, AttributeError)):
+        e.evidence_refs[0] = "TAMPERED"
+
+
+def test_todict_returns_mutable_json_compatible_copy():
+    e = _ev(
+        occurred_at="2026-08-21T00:00:00Z",
+        actor={"kind": "chatgpt", "id": "x"},
+        before={"status": "active"},
+        after={"status": "done"},
+        evidence_refs=["artifacts/run.json"],
+    )
+    d = e.to_dict()
+    # to_dict output is ordinary mutable JSON containers the caller may use freely.
+    assert isinstance(d["actor"], dict)
+    assert isinstance(d["before"], dict)
+    assert isinstance(d["after"], dict)
+    assert isinstance(d["evidence_refs"], list)
+    d["actor"]["id"] = "CALLEE-MUTATED"
+    d["before"]["status"] = "CALLEE-MUTATED"
+    d["after"]["status"] = "CALLEE-MUTATED"
+    d["evidence_refs"].append("CALLEE-MUTATED")
+    # Mutating the returned copy does NOT change the frozen event.
+    assert e.actor == {"kind": "chatgpt", "id": "x"}
+    assert e.before == {"status": "active"}
+    assert e.after == {"status": "done"}
+    assert e.evidence_refs == ["artifacts/run.json"]
+
+
+def test_structured_gwc_actor_fidelity_preserved():
+    e = _ev(
+        occurred_at="2026-08-21T00:00:00Z",
+        actor={"kind": "chatgpt", "id": "agent-hermes-mac", "execution_mode": "local_agent"},
+    )
+    # Structured actor preserved exactly (not coerced), immutable internally.
+    assert e.actor == {"kind": "chatgpt", "id": "agent-hermes-mac", "execution_mode": "local_agent"}
+    d = e.to_dict()
+    assert d["actor"] == {"kind": "chatgpt", "id": "agent-hermes-mac", "execution_mode": "local_agent"}
+
+
 # ===== G3 fix B: reject timezone-naive ISO timestamps =====
 
 def test_timezone_naive_iso_timestamp_rejected():

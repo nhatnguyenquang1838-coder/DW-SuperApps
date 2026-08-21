@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from .events import RunProjectionEvent
+from .events import RunProjectionEvent, _thaw
 
 
 @dataclass
@@ -91,8 +90,9 @@ class Projection:
 
     @staticmethod
     def _event_to_dict(e: RunProjectionEvent) -> dict:
-        # Deep-copy nested mutables so the projection dict cannot alias the
-        # frozen event's nested objects (defense-in-depth with events.to_dict).
+        # Thaw the event's immutable internal forms into fresh JSON-compatible
+        # containers (consistent with events.to_dict); callers may mutate the
+        # returned copy without affecting the frozen event.
         return {
             "schema_version": e.schema_version,
             "projection_type": e.projection_type,
@@ -106,11 +106,11 @@ class Projection:
             "parent_event_id": e.parent_event_id,
             "event_type": e.event_type,
             "outcome": e.outcome,
-            "actor": copy.deepcopy(e.actor),
+            "actor": _thaw(e.actor),
             "summary": e.summary,
-            "before": copy.deepcopy(e.before),
-            "after": copy.deepcopy(e.after),
-            "evidence_refs": copy.deepcopy(e.evidence_refs),
+            "before": _thaw(e.before),
+            "after": _thaw(e.after),
+            "evidence_refs": _thaw(e.evidence_refs),
             "authority_ref": e.authority_ref,
             "source_digest": e.source_digest,
             "read_only_projection": e.read_only_projection,

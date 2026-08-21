@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import copy
 import re
+import types
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -58,6 +59,61 @@ def _normalize_ts(value) -> str:
             f"epoch; got naive timestamp {value!r}"
         )
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _freeze(value):
+    """Recursively freeze a JSON-compatible value into an immutable form.
+
+    dict -> types.MappingProxyType, list/tuple -> FrozenList (immutable tuple
+    subclass), with nested containers frozen the same way. Scalars pass through.
+    The resulting object rejects in-place mutation (e.g. proxy['k']=x,
+    frozen.append(x), frozen[i]=x) and a FrozenList still compares equal to a
+    plain list so existing equality/serialization expectations hold.
+    """
+    if isinstance(value, dict):
+        return types.MappingProxyType({k: _freeze(v) for k, v in value.items()})
+    if isinstance(value, (list, tuple)):
+        return FrozenList(_freeze(v) for v in value)
+    return value
+
+
+class FrozenList(tuple):
+    """Immutable sequence that behaves like a tuple but compares equal to a list.
+
+    Provides true nested immutability for event sequences (e.g. evidence_refs):
+    .append / __setitem__ raise, yet == [..] (a plain list) is True so existing
+    equality and JSON-serialization expectations are preserved.
+    """
+
+    __slots__ = ()
+
+    def __eq__(self, other):
+        if isinstance(other, (list, tuple)):
+            return list(self) == list(other)
+        return NotImplemented
+
+    def __ne__(self, other):
+        result = self.__eq__(other)
+        if result is NotImplemented:
+            return result
+        return not result
+
+    def __hash__(self):
+        return tuple.__hash__(self)
+
+
+def _thaw(value):
+    """Return a fresh, mutable JSON-compatible copy of a frozen (or any) value.
+
+    MappingProxyType -> dict, tuple -> list, recursively. Used by to_dict() so
+    callers receive ordinary mutable JSON-compatible containers while the stored
+    event representation stays immutable.
+    """
+    if isinstance(value, types.MappingProxyType):
+        return {k: _thaw(v) for k, v in value.items()}
+    if isinstance(value, tuple):
+        return [_thaw(v) for v in value]
+    return value
 
 
 @dataclass(frozen=True)
@@ -113,13 +169,15 @@ class RunProjectionEvent:
             raise ValueError("read_only_projection must be True")
         # Normalize timestamp in place (frozen dataclasses allow __post_init__ writes).
         object.__setattr__(self, "occurred_at", _normalize_ts(self.occurred_at))
-        # Deep immutability: isolate nested mutable fields from the caller's
-        # source objects so later mutation of the source cannot alter this
-        # frozen event, and so structured actor copies are independent.
-        object.__setattr__(self, "actor", copy.deepcopy(self.actor))
-        object.__setattr__(self, "before", copy.deepcopy(self.before))
-        object.__setattr__(self, "after", copy.deepcopy(self.after))
-        object.__setattr__(self, "evidence_refs", copy.deepcopy(self.evidence_refs))
+        # True nested immutability (Fix A, seq=6): store actor/before/after/
+        # evidence_refs as immutable internal forms (MappingProxyType / tuple) so
+        # direct in-place mutation (e.actor['id']=x, e.before['status']=x,
+        # e.evidence_refs.append(x)) fails, not merely alias-isolation. Input is
+        # still deeply isolated from the caller's source objects.
+        object.__setattr__(self, "actor", _freeze(copy.deepcopy(self.actor)))
+        object.__setattr__(self, "before", _freeze(copy.deepcopy(self.before)))
+        object.__setattr__(self, "after", _freeze(copy.deepcopy(self.after)))
+        object.__setattr__(self, "evidence_refs", _freeze(copy.deepcopy(self.evidence_refs)))
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "RunProjectionEvent":
@@ -135,8 +193,10 @@ class RunProjectionEvent:
         return cls(**data)
 
     def to_dict(self) -> Dict[str, Any]:
-        # Return DEEP copies of nested mutable fields so callers cannot mutate
-        # this frozen event through the returned mapping (deep immutability).
+        # Return FRESH JSON-compatible copies (thaw the immutable internal forms)
+        # so callers get ordinary mutable containers and cannot mutate the event
+        # through the returned mapping. Nested immutability is preserved because
+        # every returned container is a new object.
         return {
             "schema_version": self.schema_version,
             "projection_type": self.projection_type,
@@ -150,11 +210,11 @@ class RunProjectionEvent:
             "parent_event_id": self.parent_event_id,
             "event_type": self.event_type,
             "outcome": self.outcome,
-            "actor": copy.deepcopy(self.actor),
+            "actor": _thaw(self.actor),
             "summary": self.summary,
-            "before": copy.deepcopy(self.before),
-            "after": copy.deepcopy(self.after),
-            "evidence_refs": copy.deepcopy(self.evidence_refs),
+            "before": _thaw(self.before),
+            "after": _thaw(self.after),
+            "evidence_refs": _thaw(self.evidence_refs),
             "authority_ref": self.authority_ref,
             "source_digest": self.source_digest,
             "read_only_projection": self.read_only_projection,
