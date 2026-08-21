@@ -78,9 +78,13 @@ class Projection:
                 k: {
                     "gate": v.gate,
                     "status": v.status,
-                    "approved_by": v.approved_by,
-                    "released_by": v.released_by,
-                    "failed_by": v.failed_by,
+                    # Gate actors may be a structured GWC actor stored as an immutable
+                    # MappingProxyType on the source event; thaw to a fresh ordinary
+                    # JSON-compatible dict so projection output stays serializable and
+                    # callers can mutate the copy without touching stored state.
+                    "approved_by": _thaw(v.approved_by),
+                    "released_by": _thaw(v.released_by),
+                    "failed_by": _thaw(v.failed_by),
                     "authority_ref": v.authority_ref,
                     "last_event_seq": v.last_event_seq,
                 }

@@ -212,3 +212,59 @@ def test_interleaved_tc_gwc_no_cross_source_anomalies():
     # Both source ledgers advanced state correctly.
     assert proj.gates["G2-X"].status == "approved"
     assert proj.nodes["m0"].status == "success"
+
+
+# ===== G3 seq=7: projection serialization must be JSON-compatible (thaw gate actors) =====
+
+def test_projection_gate_actor_is_ordinary_dict_and_json_serializable():
+    import json
+
+    structured = {"kind": "chatgpt", "id": "agent-hermes-mac", "execution_mode": "local_agent"}
+    e = _ev(
+        sequence=1, gate="G2-X", event_type="gate_approved", outcome=None,
+        actor=structured, source_event_id="evt:R-1:approve",
+        occurred_at="2026-08-21T18:00:00Z",
+    )
+    proj = reduce([e])
+    d = proj.to_dict()
+    gate = d["gates"]["G2-X"]
+    # The gate actor in serialized output is an ORDINARY dict (not MappingProxyType).
+    assert gate["approved_by"] == structured
+    assert isinstance(gate["approved_by"], dict)
+    assert type(gate["approved_by"]) is dict  # not types.MappingProxyType
+    # And the whole projection serializes cleanly to JSON.
+    blob = json.dumps(d)
+    assert "agent-hermes-mac" in blob
+
+
+def test_mutating_serialized_gate_actor_does_not_mutate_stored_state():
+    structured = {"kind": "chatgpt", "id": "agent-hermes-mac", "execution_mode": "local_agent"}
+    e = _ev(
+        sequence=1, gate="G2-X", event_type="gate_approved", outcome=None,
+        actor=structured, source_event_id="evt:R-1:approve",
+        occurred_at="2026-08-21T18:00:00Z",
+    )
+    proj = reduce([e])
+    d = proj.to_dict()
+    # Mutating the serialized copy must NOT touch the stored GateState or event.
+    d["gates"]["G2-X"]["approved_by"]["id"] = "TAMPERED"
+    assert proj.gates["G2-X"].approved_by == structured
+    assert e.actor == structured
+
+
+def test_projection_event_actor_json_serializable_after_thaw():
+    import json
+
+    structured = {"kind": "chatgpt", "id": "agent-hermes-mac", "execution_mode": "local_agent"}
+    e = _ev(
+        sequence=1, gate="G2-X", event_type="gate_approved", outcome=None,
+        actor=structured, source_event_id="evt:R-1:approve",
+        occurred_at="2026-08-21T18:00:00Z",
+    )
+    proj = reduce([e])
+    d = proj.to_dict()
+    # Each event's actor is also an ordinary dict and the full dict serializes.
+    assert isinstance(d["events"][0]["actor"], dict)
+    assert type(d["events"][0]["actor"]) is dict
+    json.dumps(d)  # must not raise
+
