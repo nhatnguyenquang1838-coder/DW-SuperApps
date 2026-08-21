@@ -83,7 +83,11 @@ function normalizeEvent(raw: Json): NormalizedEvent {
     gate: asString(raw.gate),
     nodeId: asString(raw.node_id),
     before: (raw.before as Json) ?? {},
-    after: (raw.after as Json) ?? ((raw.payload as Json) ?? {}),
+    // G3 seq=8: `after` uses ONLY an explicit `after` field. GWC `payload` is a
+    // distinct source field and must NOT be silently mapped into `after` (that
+    // would fabricate an after-state for GWC DurableEvent records). When absent,
+    // `after` is empty — never payload.
+    after: (raw.after as Json) ?? {},
     evidenceRefs: asArray(raw.evidence_refs)
       .map((r) => (typeof r === "string" ? r : JSON.stringify(r)))
       .filter((r) => r.length > 0),

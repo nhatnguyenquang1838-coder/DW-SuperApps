@@ -29,6 +29,19 @@ describe("observatory data layer", () => {
     expect(e0.evidenceRefs).toContain("gwc://runs/run_dw_obs_m0_r2/start");
   });
 
+  it("GWC semantic regression: payload is NOT mapped into after", () => {
+    // run_gwc_durable_m0 GWC events carry `payload` but NO `after`.
+    // The normalizer must NOT fabricate an after-state from payload.
+    const run = getRun("run_dw_obs_m0_r2")!;
+    for (const e of run.events) {
+      expect(e.after).toEqual({});
+      expect(JSON.stringify(e.after)).not.toContain("scope");
+      expect(JSON.stringify(e.after)).not.toContain("run started");
+    }
+    // Sanity: before also stays empty for GWC events lacking `before`.
+    expect(run.events[0].before).toEqual({});
+  });
+
   it("renders controller/executor as explicit UNKNOWN (not inferred)", () => {
     const run = getRun("DW-OBS-M0-20260821-R2")!;
     expect(run.controller).toBe(UNKNOWN);
