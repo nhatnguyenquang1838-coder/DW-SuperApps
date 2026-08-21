@@ -1,64 +1,62 @@
-// Read-only DAG view: renders observed gates/nodes as recorded in the
-// projection. No edges are inferred; only explicitly recorded state is shown.
-export default function DagView({
-  gates,
-  nodes,
-}: {
+"use client";
+
+import { ReactFlow, Background, Controls } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import { useMemo } from "react";
+
+type Props = {
   gates: Record<string, Record<string, unknown>>;
   nodes: Record<string, Record<string, unknown>>;
-}) {
-  const gateEntries = Object.entries(gates);
-  const nodeEntries = Object.entries(nodes);
+};
+
+// G3 correction #1: React Flow DAG, read-only.
+// - nodesAreDraggable=false, nodesConnectable=false, elementsSelectable=false,
+//   edgesFocusable=false, zoomOnDoubleClick=false, panOnDrag only (no editing).
+// - NO edges are invented: absent relationships stay absent (no inferred edge).
+//   Gates and DAG nodes are rendered as isolated nodes.
+export default function DagView({ gates, nodes }: Props) {
+  const rfNodes = useMemo(() => {
+    const items: Array<{ id: string; type: string; label: string; sub: string }> = [];
+    for (const [name, g] of Object.entries(gates)) {
+      const status = typeof g.status === "string" ? (g.status as string) : "unknown";
+      items.push({ id: `gate:${name}`, type: "gate", label: name, sub: status });
+    }
+    for (const [name, n] of Object.entries(nodes)) {
+      const status = typeof n.status === "string" ? (n.status as string) : "unknown";
+      items.push({ id: `node:${name}`, type: "node", label: name, sub: status });
+    }
+    return items.map((it, i) => ({
+      id: it.id,
+      position: { x: 40 + (i % 3) * 260, y: 40 + Math.floor(i / 3) * 110 },
+      data: { label: `${it.type === "gate" ? "GATE " : "NODE "}${it.label} · ${it.sub}` },
+      // read-only: no draggable/connectable flags -> React Flow defaults are
+      // overridden below via props; keep node data immutable.
+    }));
+  }, [gates, nodes]);
 
   return (
     <div className="rounded-lg border border-edge bg-panel p-4">
-      <h2 className="mb-3 text-base font-semibold">Read-only DAG</h2>
-
-      <h3 className="mb-1 text-sm text-muted">Gates</h3>
-      {gateEntries.length === 0 ? (
-        <p className="mb-3 text-sm text-muted">—</p>
-      ) : (
-        <ul className="mb-4 space-y-1">
-          {gateEntries.map(([name, g]) => (
-            <li
-              key={name}
-              className="flex items-center gap-3 rounded border border-edge/60 bg-surface px-3 py-1.5 text-sm"
-            >
-              <span className="code font-medium">{name}</span>
-              <span className="rounded bg-edge px-2 py-0.5 text-xs">
-                {(g.status as string) ?? "—"}
-              </span>
-              {g.approved_by ? (
-                <span className="text-xs text-muted">
-                  approved_by:{" "}
-                  {typeof g.approved_by === "object"
-                    ? JSON.stringify(g.approved_by)
-                    : String(g.approved_by)}
-                </span>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <h3 className="mb-1 text-sm text-muted">Nodes</h3>
-      {nodeEntries.length === 0 ? (
-        <p className="text-sm text-muted">—</p>
-      ) : (
-        <ul className="space-y-1">
-          {nodeEntries.map(([name, n]) => (
-            <li
-              key={name}
-              className="flex items-center gap-3 rounded border border-edge/60 bg-surface px-3 py-1.5 text-sm"
-            >
-              <span className="code font-medium">{name}</span>
-              <span className="rounded bg-edge px-2 py-0.5 text-xs">
-                {(n.status as string) ?? "—"}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+      <h2 className="mb-1 text-base font-semibold">Read-only DAG</h2>
+      <p className="mb-3 text-xs text-muted">
+        Rendered from explicitly recorded gates/nodes. No edges are inferred.
+        Non-draggable · non-connectable · non-editable.
+      </p>
+      <div style={{ height: 320 }} className="rounded border border-edge/60 bg-surface">
+        <ReactFlow
+          nodes={rfNodes}
+          edges={[]}
+          fitView
+          nodesDraggable={false}
+          nodesConnectable={false}
+          elementsSelectable={false}
+          zoomOnDoubleClick={false}
+          preventScrolling={false}
+          proOptions={{ hideAttribution: true }}
+        >
+          <Background />
+          <Controls showInteractive={false} />
+        </ReactFlow>
+      </div>
     </div>
   );
 }

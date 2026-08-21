@@ -12,6 +12,7 @@ export default function RunsPage() {
         <thead>
           <tr className="border-b border-edge text-left text-muted">
             <th className="py-2 pr-4">Run</th>
+            <th className="py-2 pr-4">Source</th>
             <th className="py-2 pr-4">Started</th>
             <th className="py-2 pr-4">Last event</th>
             <th className="py-2 pr-4">Events</th>
@@ -23,15 +24,18 @@ export default function RunsPage() {
           {runs.map((r) => (
             <tr key={r.runId} className="border-b border-edge/50">
               <td className="py-2 pr-4">
-                <a className="code" href={`/runs/${r.runId}`}>
+                <a className="code" href={`/runs/${encodeURIComponent(r.runId)}`}>
                   {r.runId}
                 </a>
               </td>
+              <td className="py-2 pr-4">{r.sourceSystem}</td>
               <td className="py-2 pr-4 code">{r.startedAt ?? "—"}</td>
               <td className="py-2 pr-4 code">{r.lastEventAt ?? "—"}</td>
               <td className="py-2 pr-4">{r.eventCount}</td>
               <td className="py-2 pr-4">{r.anomalyCount}</td>
-              <td className="py-2 pr-4">{r.gates.join(", ") || "—"}</td>
+              <td className="py-2 pr-4">
+                {Object.keys(r.gates).join(", ") || "—"}
+              </td>
             </tr>
           ))}
         </tbody>
