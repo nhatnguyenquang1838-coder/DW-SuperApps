@@ -240,3 +240,88 @@ def test_missing_digest_rejected():
     assert e.authority_ref == "G2-X"
     assert e.source_digest == "sha256:abc"
     assert e.read_only_projection is True
+
+
+# ===== G3 fix A: deep immutability of nested actor/before/after/evidence_refs =====
+
+def test_nested_fields_isolated_from_mutable_source_alias():
+    # The event must NOT alias the caller's mutable source objects.
+    src_before = {"status": "active"}
+    src_after = {"status": "done"}
+    src_actor = {"kind": "chatgpt", "id": "x"}
+    src_evidence = ["artifacts/run.json"]
+    e = _ev(
+        occurred_at="2026-08-21T00:00:00Z",
+        before=src_before,
+        after=src_after,
+        actor=src_actor,
+        evidence_refs=src_evidence,
+    )
+    # Mutating the source aliases after construction must NOT affect the event.
+    src_before["status"] = "TAMPERED"
+    src_after["status"] = "TAMPERED"
+    src_actor["id"] = "TAMPERED"
+    src_evidence.append("TAMPERED")
+    assert e.before == {"status": "active"}
+    assert e.after == {"status": "done"}
+    assert e.actor == {"kind": "chatgpt", "id": "x"}
+    assert e.evidence_refs == ["artifacts/run.json"]
+
+
+def test_todict_returns_independent_nested_copies():
+    e = _ev(
+        occurred_at="2026-08-21T00:00:00Z",
+        before={"status": "active"},
+        after={"status": "done"},
+        actor={"kind": "chatgpt", "id": "x"},
+        evidence_refs=["artifacts/run.json"],
+    )
+    d = e.to_dict()
+    # Mutating the returned dict must NOT mutate the frozen event.
+    d["before"]["status"] = "TAMPERED"
+    d["after"]["status"] = "TAMPERED"
+    d["actor"]["id"] = "TAMPERED"
+    d["evidence_refs"].append("TAMPERED")
+    assert e.before == {"status": "active"}
+    assert e.after == {"status": "done"}
+    assert e.actor == {"kind": "chatgpt", "id": "x"}
+    assert e.evidence_refs == ["artifacts/run.json"]
+
+
+def test_reader_cannot_see_source_mutation_after_todict_roundtrip():
+    src_actor = {"kind": "chatgpt", "id": "x"}
+    e = _ev(occurred_at="2026-08-21T00:00:00Z", actor=src_actor)
+    _ = e.to_dict()
+    # A second event built from the same source alias is independent.
+    e2 = _ev(occurred_at="2026-08-21T00:00:00Z", actor=src_actor)
+    src_actor["id"] = "TAMPERED"
+    assert e.actor == {"kind": "chatgpt", "id": "x"}
+    assert e2.actor == {"kind": "chatgpt", "id": "x"}
+
+
+# ===== G3 fix B: reject timezone-naive ISO timestamps =====
+
+def test_timezone_naive_iso_timestamp_rejected():
+    import pytest
+
+    # No offset and no 'Z' -> naive; must NOT be silently treated as UTC.
+    with pytest.raises(ValueError):
+        _ev(occurred_at="2026-08-21T09:00:00")
+
+
+def test_timezone_aware_offset_accepted():
+    e = _ev(occurred_at="2026-08-21T12:00:00+02:00")
+    assert e.occurred_at == "2026-08-21T10:00:00Z"
+
+
+def test_trailing_z_accepted():
+    e = _ev(occurred_at="2026-08-21T09:00:00Z")
+    assert e.occurred_at == "2026-08-21T09:00:00Z"
+
+
+def test_numeric_epoch_accepted():
+    import datetime as _dt
+
+    epoch = int(_dt.datetime(2026, 8, 21, 10, 0, 0, tzinfo=_dt.timezone.utc).timestamp())
+    e = _ev(occurred_at=epoch)
+    assert e.occurred_at == "2026-08-21T10:00:00Z"

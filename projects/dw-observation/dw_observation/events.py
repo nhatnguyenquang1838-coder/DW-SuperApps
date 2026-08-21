@@ -18,6 +18,7 @@ Hardening (Controller G2R1 semantic correction + final hardening):
 
 from __future__ import annotations
 
+import copy
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -35,8 +36,10 @@ _ISO_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")
 def _normalize_ts(value) -> str:
     """Return an ISO-8601 UTC 'Z' string.
 
-    Accepts an ISO string (with or without offset) or a numeric Unix epoch
-    (seconds). Raises ValueError on anything else — no silent epoch fallback.
+    Accepts an ISO string (with explicit offset or trailing 'Z') or a numeric
+    Unix epoch (seconds). Rejects timezone-NAIVE ISO strings (no offset and not
+    'Z') — assuming UTC for a naive time would fabricate timezone provenance,
+    which violates the exact-source contract. Raises ValueError otherwise.
     """
     if isinstance(value, (int, float)):
         dt = datetime.fromtimestamp(float(value), tz=timezone.utc)
@@ -49,7 +52,11 @@ def _normalize_ts(value) -> str:
     except ValueError:
         raise ValueError(f"invalid occurred_at timestamp: {value!r}")
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        # Naive ISO string: explicit timezone is required; never assume UTC.
+        raise ValueError(
+            f"occurred_at must be timezone-aware (offset or 'Z') or a numeric "
+            f"epoch; got naive timestamp {value!r}"
+        )
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
@@ -106,6 +113,13 @@ class RunProjectionEvent:
             raise ValueError("read_only_projection must be True")
         # Normalize timestamp in place (frozen dataclasses allow __post_init__ writes).
         object.__setattr__(self, "occurred_at", _normalize_ts(self.occurred_at))
+        # Deep immutability: isolate nested mutable fields from the caller's
+        # source objects so later mutation of the source cannot alter this
+        # frozen event, and so structured actor copies are independent.
+        object.__setattr__(self, "actor", copy.deepcopy(self.actor))
+        object.__setattr__(self, "before", copy.deepcopy(self.before))
+        object.__setattr__(self, "after", copy.deepcopy(self.after))
+        object.__setattr__(self, "evidence_refs", copy.deepcopy(self.evidence_refs))
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "RunProjectionEvent":
@@ -121,6 +135,8 @@ class RunProjectionEvent:
         return cls(**data)
 
     def to_dict(self) -> Dict[str, Any]:
+        # Return DEEP copies of nested mutable fields so callers cannot mutate
+        # this frozen event through the returned mapping (deep immutability).
         return {
             "schema_version": self.schema_version,
             "projection_type": self.projection_type,
@@ -134,11 +150,11 @@ class RunProjectionEvent:
             "parent_event_id": self.parent_event_id,
             "event_type": self.event_type,
             "outcome": self.outcome,
-            "actor": self.actor,
+            "actor": copy.deepcopy(self.actor),
             "summary": self.summary,
-            "before": self.before,
-            "after": self.after,
-            "evidence_refs": self.evidence_refs,
+            "before": copy.deepcopy(self.before),
+            "after": copy.deepcopy(self.after),
+            "evidence_refs": copy.deepcopy(self.evidence_refs),
             "authority_ref": self.authority_ref,
             "source_digest": self.source_digest,
             "read_only_projection": self.read_only_projection,

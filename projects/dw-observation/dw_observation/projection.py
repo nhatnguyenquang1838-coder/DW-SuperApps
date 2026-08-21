@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
@@ -90,6 +91,8 @@ class Projection:
 
     @staticmethod
     def _event_to_dict(e: RunProjectionEvent) -> dict:
+        # Deep-copy nested mutables so the projection dict cannot alias the
+        # frozen event's nested objects (defense-in-depth with events.to_dict).
         return {
             "schema_version": e.schema_version,
             "projection_type": e.projection_type,
@@ -103,11 +106,11 @@ class Projection:
             "parent_event_id": e.parent_event_id,
             "event_type": e.event_type,
             "outcome": e.outcome,
-            "actor": e.actor,
+            "actor": copy.deepcopy(e.actor),
             "summary": e.summary,
-            "before": e.before,
-            "after": e.after,
-            "evidence_refs": e.evidence_refs,
+            "before": copy.deepcopy(e.before),
+            "after": copy.deepcopy(e.after),
+            "evidence_refs": copy.deepcopy(e.evidence_refs),
             "authority_ref": e.authority_ref,
             "source_digest": e.source_digest,
             "read_only_projection": e.read_only_projection,
