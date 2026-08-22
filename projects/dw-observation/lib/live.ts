@@ -25,6 +25,11 @@ export interface ProjectionEvent {
   // sequence are excluded from live sequencing (gap/stale logic) but are still
   // retained as observation records.
   sequence?: number;
+  // Durable global cross-source order, assigned by Postgres (projection_ordinal
+  // BIGINT GENERATED ALWAYS AS IDENTITY). Used for historical ORDER BY only.
+  projection_ordinal?: number;
+  // Provenance timestamp (data only; NOT used for ordering).
+  occurred_at?: string;
   [key: string]: unknown;
 }
 
@@ -43,9 +48,15 @@ export interface EventStore {
 }
 
 // Supabase Realtime Broadcast transport (subscribe only). Never publishes.
+// The transport reports connection STATUS to the client via onStatus so the
+// client can gate LIVE on its durable-history readiness latch.
 export interface RealtimeTransport {
   subscribe(topic: string, onMessage: (payload: unknown) => void): void;
   close(): void;
+  // Connection-status callback. The transport attaches its listeners BEFORE
+  // calling subscribe() and reports SUBSCRIBED/CHANNEL_ERROR/etc. The client
+  // decides whether SUBSCRIBED implies LIVE (it does NOT — durable latch rules).
+  onStatus?: (status: string, suggestedState: LiveState) => void;
 }
 
 export type ReceiveKind =
@@ -53,7 +64,8 @@ export type ReceiveKind =
   | "DUPLICATE"
   | "GAP"
   | "STALE"
-  | "REJECTED";
+  | "REJECTED"
+  | "BUFFERED";
 
 export interface ReceiveResult {
   kind: ReceiveKind;
@@ -72,6 +84,24 @@ function highWaterOf(events: ProjectionEvent[]): Record<string, number> {
   return hw;
 }
 
+// Global durable ordering (seq=16 correction): ordered by the durable global
+// projection_ordinal (assigned by Postgres at insert), so mixed TC/GWC
+// interleaving is preserved exactly as recorded. occurred_at is NOT used for
+// ordering. Events without a projection_ordinal keep their relative position.
+export function globalDurableOrder(events: ProjectionEvent[]): ProjectionEvent[] {
+  return events.slice().sort((a, b) => {
+    const oa = typeof a.projection_ordinal === "number" ? a.projection_ordinal : Number.MAX_SAFE_INTEGER;
+    const ob = typeof b.projection_ordinal === "number" ? b.projection_ordinal : Number.MAX_SAFE_INTEGER;
+    if (oa !== ob) return oa - ob;
+    // Stable tiebreaker: per-source sequence, then identity.
+    if (a.source_system !== b.source_system)
+      return a.source_system < b.source_system ? -1 : 1;
+    const sa = typeof a.sequence === "number" ? a.sequence : -1;
+    const sb = typeof b.sequence === "number" ? b.sequence : -1;
+    return sa - sb;
+  });
+}
+
 export class LiveProjectionClient {
   readonly runId: string;
   private store: EventStore;
@@ -81,15 +111,24 @@ export class LiveProjectionClient {
   highWater: Record<string, number> = {};
   anomalies: LiveAnomaly[] = [];
   lastError?: string;
+
   // Optional change listener: invoked after every state mutation (bootstrap,
   // replay, live frame, resync, transport-down) so a UI binding (e.g. the
   // React hook) can re-render. Keeps the client framework-agnostic.
   onChange?: () => void;
+
+  // F1: explicit transport status listener (registered via setStatusListener
+  // BEFORE bindTransport). SUBSCRIBED does NOT force canonical LIVE.
+  private statusListener?: (status: string, suggestedState: LiveState) => void;
+
+  // --- Readiness latch (F2): LIVE requires BOTH durable history ready AND the
+  // transport connected. Neither alone forces LIVE. ---
+  private durableReady = false; // bootstrap()/resync() completed with data-or-allowed-empty
+  private transportReady = false; // transport reported SUBSCRIBED
+
   // Frames received before historical bootstrap completes are buffered (not
   // dropped) and replayed once the snapshot is ready. This closes the
-  // bootstrap/subscription/reconnect frame-loss window (G3 rework item 4):
-  // subscribing before bootstrap() means a frame can arrive while projection
-  // is still null, and we must not silently reject it.
+  // bootstrap/subscription/reconnect frame-loss window.
   private bootstrapped = false;
   private preBootstrapBuffer: unknown[] = [];
 
@@ -97,48 +136,148 @@ export class LiveProjectionClient {
     this.store = store;
     this.transport = transport;
     this.runId = runId;
+    // Wire the status listener immediately (F1): a SUBSCRIBED/CHANNEL_ERROR
+    // transition can arrive before or without an explicit bindTransport(), so
+    // it must never be missed. handleStatus owns the transportReady latch; the
+    // external statusListener (registered via setStatusListener) is forwarded.
+    this.transport.onStatus = (status, suggested) => {
+      this.handleStatus(status);
+      this.statusListener?.(status, suggested);
+    };
+  }
+
+  // Recompute the effective state from the readiness latch. LIVE only when both
+  // durable history and the transport are ready AND we have at least one event.
+  private recomputeState(): void {
+    if (this.events.length === 0) {
+      // No data: never present LIVE. Degrade honestly.
+      this.state = this.durableReady
+        ? "PROJECTION_UNAVAILABLE"
+        : "UNAVAILABLE";
+      return;
+    }
+    if (this.durableReady && this.transportReady) {
+      this.state = "LIVE";
+    } else if (this.durableReady && !this.transportReady) {
+      // Durable history present but transport not yet connected: we still show
+      // the snapshot; the projection is available but not live-streaming.
+      this.state = "PROJECTION_UNAVAILABLE";
+    } else {
+      this.state = "CATCHING_UP";
+    }
   }
 
   // Historical catch-up (bootstrap + reconnect). Source of truth.
   async bootstrap(): Promise<void> {
     const loaded = await this.store.loadAll(this.runId);
-    this.events = loaded.slice();
+    this.events = globalDurableOrder(loaded.slice());
     this.highWater = highWaterOf(this.events);
-    // SECURITY/DEGRADATION RULE (G3_R2 intercept): an empty store means the
-    // durable read was missing or denied. We must NOT present a fixture-backed
-    // or falsely LIVE state. Seed PROJECTION_UNAVAILABLE so the UI degrades
-    // honestly instead of implying a live projection that does not exist.
-    this.state = this.events.length > 0 ? "LIVE" : "PROJECTION_UNAVAILABLE";
-    this.lastError = this.events.length > 0 ? undefined : "historical store empty or read denied";
-    // Mark ready, then replay any frames buffered during the bootstrap gap so
-    // none are silently dropped (frame-loss window closure).
+    this.durableReady = true;
     this.bootstrapped = true;
+
     const buffered = this.preBootstrapBuffer;
     this.preBootstrapBuffer = [];
+    this.recomputeState();
+    this.lastError =
+      this.events.length > 0 ? undefined : "historical store empty or read denied";
+
     for (const frame of buffered) {
       this.receiveLive(frame);
     }
     this.emitChange();
   }
 
-  // Reconnect flow: historical catch-up -> sequence reconcile -> resume LIVE.
+  // Reconnect flow (F3): real durable resync -> reconcile -> resume LIVE.
+  // Triggered on GAP or transport reconnect. Returns true on success.
   async resync(): Promise<boolean> {
     try {
       const fresh = await this.store.loadAll(this.runId);
-      this.events = fresh.slice();
+      // Reconcile: durable source of truth replaces the in-memory list; any
+      // buffered live frames that arrived during the gap are re-applied after.
+      const buffered = this.preBootstrapBuffer;
+      this.preBootstrapBuffer = [];
+      this.events = globalDurableOrder(fresh.slice());
       this.highWater = highWaterOf(this.events);
-      this.state = "LIVE";
-      this.lastError = undefined;
+      this.durableReady = true;
+      // F4: an empty resync must NOT present LIVE.
+      this.recomputeState();
+      this.lastError =
+        this.events.length > 0 ? undefined : "historical store empty or read denied";
+      for (const frame of buffered) {
+        this.receiveLive(frame);
+      }
+      this.emitChange();
       return true;
     } catch (err) {
       this.state = this.events.length > 0 ? "PROJECTION_UNAVAILABLE" : "UNAVAILABLE";
       this.lastError = `durable store unreachable during resync: ${String(err)}`;
+      this.emitChange();
       return false;
     }
   }
 
+  // F1: explicit status-listener registration. The host/hook MUST call this
+  // BEFORE bindTransport()/subscribe so the initial SUBSCRIBED/CHANNEL_ERROR
+  // transition is never missed. SUBSCRIBED alone does NOT force canonical LIVE
+  // — the client gates LIVE on its durable-history readiness latch.
+  setStatusListener(cb: (status: string, suggestedState: LiveState) => void): void {
+    this.statusListener = cb;
+  }
+
   bindTransport(): void {
+    // Attach the status listener BEFORE subscribe (F1) so we never miss the
+    // initial SUBSCRIBED/CHANNEL_ERROR transition. The client owns the internal
+    // transportReady latch (handleStatus); it ALSO forwards to the external
+    // statusListener if one was registered.
+    this.transport.onStatus = (status, suggested) => {
+      this.handleStatus(status);
+      this.statusListener?.(status, suggested);
+    };
     this.transport.subscribe(this.runId, (payload) => this.receiveLive(payload));
+  }
+
+  // Internal: update the readiness latch from transport status. SUBSCRIBED sets
+  // transportReady; channel errors clear it. SUBSCRIBED alone does NOT force
+  // LIVE — recomputeState() gates LIVE on BOTH durableReady AND transportReady.
+  private handleStatus(status: string): void {
+    if (status === "SUBSCRIBED") {
+      this.transportReady = true;
+    } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+      this.transportReady = false;
+    }
+    this.recomputeState();
+    this.emitChange();
+  }
+
+  // Normalize a real Supabase Broadcast envelope (F9, protocol per seq=16):
+  //   { type: "broadcast", event: "projection_event", payload: <ProjectionEvent> }
+  // topic (the channel) is "observatory:<run_id>" — distinct from the event
+  // name. We extract payload as the canonical ProjectionEvent. Two legacy/
+  // inline shapes are also accepted for test ergonomics:
+  //   { event: <ProjectionEvent> }            (event field IS the event object)
+  //   <ProjectionEvent>                        (message itself is the event)
+  private normalizeEnvelope(message: unknown): ProjectionEvent | null {
+    if (!message || typeof message !== "object") return null;
+    const m = message as { type?: unknown; event?: unknown; payload?: unknown };
+    // Real Broadcast envelope: event === "projection_event", payload is the event.
+    if (
+      (m.type === "broadcast" || m.type === undefined) &&
+      m.event === "projection_event" &&
+      m.payload &&
+      typeof m.payload === "object"
+    ) {
+      return m.payload as ProjectionEvent;
+    }
+    // Legacy inline shape: { event: <ProjectionEvent> } — the event field holds
+    // the ProjectionEvent object directly.
+    if (m.event && typeof m.event === "object" && (m.event as ProjectionEvent).source_system) {
+      return m.event as ProjectionEvent;
+    }
+    // Bare ProjectionEvent: the message itself is the event.
+    if ((message as ProjectionEvent).source_system) {
+      return message as ProjectionEvent;
+    }
+    return null;
   }
 
   receiveLive(message: unknown): ReceiveResult {
@@ -146,15 +285,14 @@ export class LiveProjectionClient {
     // rejecting them — they are replayed once bootstrap() completes.
     if (!this.bootstrapped) {
       this.preBootstrapBuffer.push(message);
-      return { kind: "APPENDED", appended: false };
+      return { kind: "BUFFERED", appended: false };
     }
-    const envelope = (message as { event?: unknown })?.event;
-    if (!envelope || typeof envelope !== "object") {
-      this.lastError = "live frame missing 'event' envelope";
+    const evt = this.normalizeEnvelope(message);
+    if (!evt) {
+      this.lastError = "live frame missing valid envelope";
       this.emitChange();
       return { kind: "REJECTED" };
     }
-    const evt = envelope as ProjectionEvent;
     if (!evt.source_system || !evt.source_event_id) {
       this.lastError = "invalid live envelope (missing source identity)";
       this.emitChange();
@@ -181,17 +319,21 @@ export class LiveProjectionClient {
     }
 
     if (seq === null) {
-      // No source sequence: keep as observation-only, do not mutate sequence
-      // high-water or state. Record nothing anomalous (it is a valid record).
+      // No source sequence: keep as observation-only, appended to the end (not
+      // sorted into the durable ordinal stream). Preserves the record without
+      // mutating high-water or reordering sequenced events.
       this.events.push(evt);
-      this.state = "LIVE";
+      this.recomputeState();
       this.lastError = undefined;
       this.emitChange();
       return { kind: "APPENDED", appended: true };
     }
 
     const expected = hw + 1;
-    if (seq > expected) {
+    // Only treat as a GAP when we actually have a known baseline for this
+    // source (hw >= 0). A first-seen source with no durable history has no
+    // intermediate events to detect a gap against, so the frame appends.
+    if (hw >= 0 && seq > expected) {
       const anomaly: LiveAnomaly = {
         kind: "GAP",
         at_index: this.events.length,
@@ -200,15 +342,18 @@ export class LiveProjectionClient {
         message: `live sequence gap at (${src}): seq=${seq} expected next ${expected}; awaiting historical catch-up`,
       };
       this.anomalies.push(anomaly);
+      // F3: a GAP means we are missing intermediate durable history — go to
+      // CATCHING_UP and trigger a REAL durable resync to reconcile.
       this.state = "CATCHING_UP";
       this.emitChange();
+      void this.resync();
       return { kind: "GAP", anomaly };
     }
 
     const prev = this.events.length;
-    this.events.push(evt);
+    this.events = globalDurableOrder([...this.events, evt]);
     this.highWater[src] = Math.max(hw, seq);
-    this.state = "LIVE";
+    this.recomputeState();
     this.lastError = undefined;
 
     // Stale: non-duplicate behind the high-water mark for this source.
@@ -235,7 +380,8 @@ export class LiveProjectionClient {
   }
 
   markTransportDown(): void {
-    this.state = this.events.length > 0 ? "PROJECTION_UNAVAILABLE" : "UNAVAILABLE";
+    this.transportReady = false;
+    this.recomputeState();
     this.lastError = "realtime transport unavailable";
     this.emitChange();
   }

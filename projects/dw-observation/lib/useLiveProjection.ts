@@ -65,22 +65,18 @@ export function useLiveProjection(
     // transport-down) re-renders the view via this single callback.
     client.onChange = sync;
 
-    // 1) Bind transport FIRST so the handler is live before any snapshot.
-    // If the transport reports connection status, surface it to the view
-    // (e.g. a RealtimeChannelError -> PROJECTION_UNAVAILABLE) without failing
-    // the canonical runtime.
-    if (typeof (transport as unknown as { onStatus?: unknown }).onStatus === "function") {
-      (transport as unknown as { onStatus: (s: string, st: LiveState) => void }).onStatus = (
-        _status,
-        state
-      ) => {
-        if (state === "PROJECTION_UNAVAILABLE") {
-          client.state = "PROJECTION_UNAVAILABLE";
-          client.lastError = "realtime channel unavailable";
-          sync();
-        }
-      };
-    }
+    // 1) Register the transport status listener EXPLICITLY (F1) and BEFORE
+    // bindTransport() so the initial SUBSCRIBED/CHANNEL_ERROR transition is
+    // never missed. SUBSCRIBED alone does NOT force LIVE — the client gates LIVE
+    // on its durable-history readiness latch.
+    client.setStatusListener((_status, state) => {
+      if (state === "PROJECTION_UNAVAILABLE") {
+        client.state = "PROJECTION_UNAVAILABLE";
+        client.lastError = "realtime channel unavailable";
+        sync();
+      }
+    });
+
     client.bindTransport();
 
     // 2) Historical catch-up from the durable store (source of truth).

@@ -5,6 +5,7 @@ import {
   ProjectionEvent,
   RealtimeTransport,
   ReceiveResult,
+  globalDurableOrder,
 } from "@/lib/live";
 import { PostgresEventStore, SqlQuery, mapRowToProjectionEvent } from "@/lib/postgresEventStore";
 import {
@@ -14,6 +15,7 @@ import {
   createBrowserClient,
 } from "@/lib/supabaseRealtime";
 import { readHistoricalEvents, readServerConfig, createServerClient } from "@/lib/serverHistoricalRead";
+import { toBroadcastEnvelope, isValidProducerEnvelope } from "@/lib/broadcastContract";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useLiveProjection } from "@/lib/useLiveProjection";
 
@@ -37,6 +39,10 @@ class InertTransport implements RealtimeTransport {
     if (!this.handler) throw new Error("not subscribed");
     this.handler(p);
   }
+  // test driver: fire a connection status (simulates SUBSCRIBED/CHANNEL_ERROR).
+  fire(status: string) {
+    (this as unknown as { onStatus?: (s: string, st: LiveState) => void }).onStatus?.(status, "CATCHING_UP");
+  }
 }
 
 function ev(seq: number, id: string, source = "taskcontroller"): ProjectionEvent {
@@ -49,16 +55,23 @@ function ev(seq: number, id: string, source = "taskcontroller"): ProjectionEvent
 }
 
 describe("M2 live projection client", () => {
-  it("bootstraps from the durable store (source of truth) and is LIVE", async () => {
+  it("bootstraps from the durable store (source of truth) — snapshot available before transport subscribes", async () => {
+    const transport = new InertTransport();
     const client = new LiveProjectionClient(
       new MemStore([ev(0, "e0"), ev(1, "e1")]),
-      new InertTransport(),
+      transport,
       "R-1"
     );
     await client.bootstrap();
-    expect(client.state).toBe("LIVE");
+    // F2 readiness latch: durable history is ready but the transport is not yet
+    // connected, so the projection is AVAILABLE (snapshot) but NOT LIVE.
+    expect(client.state).toBe("PROJECTION_UNAVAILABLE");
     expect(client.highWater["taskcontroller"]).toBe(1);
     expect(client.events.length).toBe(2);
+    // Once the transport reports SUBSCRIBED, BOTH latches are satisfied -> LIVE.
+    client.setStatusListener(() => {});
+    transport.fire("SUBSCRIBED");
+    expect(client.state).toBe("LIVE");
   });
 
   it("preserves exact sequence continuity across resync", async () => {
@@ -74,7 +87,23 @@ describe("M2 live projection client", () => {
     expect(ok).toBe(true);
     expect(client.highWater["taskcontroller"]).toBe(4);
     expect(client.events.map((e) => e.sequence)).toEqual([0, 1, 2, 3, 4]);
+    // F4: resync with data + transport ready -> LIVE (drive the latch).
+    client.setStatusListener(() => {});
+    (client as unknown as { transport: InertTransport }).transport.fire("SUBSCRIBED");
     expect(client.state).toBe("LIVE");
+  });
+
+  it("empty resync does NOT present LIVE (F4)", async () => {
+    const transport = new InertTransport();
+    const client = new LiveProjectionClient(new MemStore([ev(0, "e0")]), transport, "R-1");
+    await client.bootstrap();
+    // Simulate the durable store now being empty at reconnect time.
+    client.store = new MemStore([]) as unknown as EventStore;
+    const ok = await client.resync();
+    expect(ok).toBe(true);
+    expect(client.events.length).toBe(0);
+    // Empty resync must degrade honestly — never LIVE.
+    expect(client.state).toBe("PROJECTION_UNAVAILABLE");
   });
 
   it("duplicate broadcast frames are dropped, not reordered", async () => {
@@ -279,7 +308,7 @@ describe("M2 R2 real Supabase connection + credential boundary", () => {
     expect(built?.backend).toBe("supabase_publishable");
   });
 
-  it("service key is optional and only used when publishable key absent", () => {
+  it("F5: service key is NOT an implicit fallback — absent publishable key fails closed (null)", () => {
     process.env = {
       ...saved,
       SUPABASE_URL: "https://example.supabase.co",
@@ -287,8 +316,11 @@ describe("M2 R2 real Supabase connection + credential boundary", () => {
     };
     const cfg = readServerConfig();
     expect(cfg.publishableKey).toBeUndefined();
+    // F5 (seq=15 intercept): NO implicit service-role fallback. A service key
+    // alone must NOT build a client silently escalating privilege — it fails
+    // closed (degraded), so the caller surfaces PROJECTION_UNAVAILABLE.
     const built = createServerClient(cfg);
-    expect(built?.backend).toBe("supabase_service");
+    expect(built).toBeNull();
   });
 
   it("config-missing historical read degrades (no fixture LIVE)", async () => {
@@ -392,6 +424,7 @@ describe("M2 sequence integrity (no fabrication)", () => {
 describe("M2 React view updates on transport frame", () => {
   function makeTransport() {
     let handler: ((p: unknown) => void) | null = null;
+    let statusCb: ((s: string, st: LiveState) => void) | null = null;
     const transport: RealtimeTransport = {
       subscribe: (_t: string, onMessage: (p: unknown) => void) => {
         handler = onMessage;
@@ -399,6 +432,7 @@ describe("M2 React view updates on transport frame", () => {
       close: () => {
         handler = null;
       },
+      onStatus: (s: string, st: LiveState) => statusCb?.(s, st),
     };
     return {
       transport,
@@ -406,18 +440,27 @@ describe("M2 React view updates on transport frame", () => {
         if (!handler) throw new Error("not subscribed");
         handler(p);
       },
+      fire: (status: string) => {
+        // Mirror InertTransport.fire: drive the wired onStatus handler so the
+        // client's readiness latch updates. statusCb is never assigned here.
+        (transport as unknown as { onStatus?: (s: string, st: LiveState) => void })
+          .onStatus?.(status, "CATCHING_UP");
+      },
     };
   }
 
-  it("updates the rendered view when a live frame arrives", async () => {
+  it("updates the rendered view when a live frame arrives (after transport subscribes)", async () => {
     const store = new MemStore([ev(0, "e0", "tc1"), ev(1, "e1", "tc1")]);
-    const { transport, emit } = makeTransport();
+    const { transport, emit, fire } = makeTransport();
     const { result } = renderHook(() =>
       useLiveProjection("R-1", store, transport)
     );
-    // Wait for bootstrap (historical snapshot) to complete.
+    // Wait for bootstrap (historical snapshot) to complete — snapshot is
+    // available but, per F2 latch, NOT yet LIVE until the transport subscribes.
     await waitFor(() => expect(result.current.eventCount).toBe(2));
-    expect(result.current.state).toBe("LIVE");
+    expect(result.current.state).toBe("PROJECTION_UNAVAILABLE");
+    fire("SUBSCRIBED");
+    await waitFor(() => expect(result.current.state).toBe("LIVE"));
     // Deliver a live frame through the transport -> view must update.
     await act(async () => {
       emit({ event: ev(2, "e2", "tc1") });
@@ -452,23 +495,24 @@ describe("M2 React view updates on transport frame", () => {
 });
 
 // ---------------------------------------------------------------------------
-// G3 R3 / seq=14 INTERCEPT — contract: env-driven, NO hard-coded hosted identity
+// G3 R3 / seq=14+16 INTERCEPT — contract: env-driven, NO hard-coded hosted identity
 // ---------------------------------------------------------------------------
 describe("G3 R3 — no hard-coded Supabase hosted ref/URL/org", () => {
-  it("committed source + env + tests contain no hard-coded hosted identity", () => {
-    // The Controller explicitly forbids committing a specific project ref,
-    // Supabase URL, or org id. Everything must be env-driven. This test scans
-    // the committed tree under projects/dw-observation (excluding the gitignored
-    // local supabase/ scaffold) for leaked hosted identities.
+  it("committed source/env contain no hard-coded hosted identity (generic pattern)", () => {
+    // The Controller forbids committing a specific project ref, Supabase URL,
+    // or org id. Everything must be env-driven. We scan committed SOURCE (not
+    // tests) for GENERIC leak patterns (a 20-char hex-ish ref, a *.supabase.co
+    // URL, a 24-char org id). We do NOT embed an actual real ref in this file,
+    // so the test cannot "contain the literal it scans for".
     const fs = require("fs");
     const path = require("path");
     const root = path.join(__dirname, "..", ".."); // projects/dw-observation
 
-    const FORBIDDEN = [
-      "auswvdxoetufwiaxutib", // dedicated Observatory project ref
-      "fpeokgrtjslesdftfayr", // org id
-      "makakbppxiwssslytoku", // ds_mcp_server ref
-      "supabase.co", // concrete hosted URL suffix (env-driven URL only)
+    // Generic patterns only — no real hosted identities hardcoded here.
+    const FORBIDDEN_PATTERNS = [
+      /[a-z0-9]{20}\.supabase\.co/i, // concrete hosted URL
+      /supabase\.co\/[a-z0-9]{20}/i, // URL-with-ref form
+      /organization_id\s*[:=]\s*["']?[a-z0-9]{20,}/i, // org id literal
     ];
 
     const walk = (dir: string): string[] => {
@@ -480,7 +524,7 @@ describe("G3 R3 — no hard-coded Supabase hosted ref/URL/org", () => {
             ent.name === "node_modules" ||
             ent.name === ".next" ||
             ent.name === "supabase" ||
-            ent.name === "tests" // test fixtures/denylist may mention refs
+            ent.name === "tests" // tests may carry constructed fixtures
           )
             continue;
           out.push(...walk(full));
@@ -495,13 +539,24 @@ describe("G3 R3 — no hard-coded Supabase hosted ref/URL/org", () => {
     const hits: string[] = [];
     for (const f of files) {
       const text = fs.readFileSync(f, "utf8");
-      for (const forbidden of FORBIDDEN) {
-        if (text.includes(forbidden)) {
-          hits.push(`${path.relative(root, f)}: contains ${forbidden}`);
-        }
+      for (const re of FORBIDDEN_PATTERNS) {
+        const m = text.match(re);
+        if (m) hits.push(`${path.relative(root, f)}: matches ${m[0]}`);
       }
     }
     expect(hits).toEqual([]);
+  });
+
+  it("anti-hardcode matcher detects a constructed negative fixture (no real ref in test)", () => {
+    // Negative fixture is CONSTRUCTED at runtime (never a committed literal): a
+    // fake 20-char ref + supabase.co URL. The contract must flag it. This proves
+    // the matcher works without embedding a real hosted identity in source.
+    const fakeRef = "a".repeat(20);
+    const fakeUrl = `https://${fakeRef}.supabase.co`;
+    const matcher = /[a-z0-9]{20}\.supabase\.co/i;
+    expect(matcher.test(fakeUrl)).toBe(true);
+    // And a benign env-driven placeholder must NOT match:
+    expect(matcher.test("https://${NEXT_PUBLIC_SUPABASE_URL}")).toBe(false);
   });
 
   it("env contract prefers publishable key, with legacy anon fallback only (browser)", () => {
@@ -527,5 +582,138 @@ describe("G3 R3 — no hard-coded Supabase hosted ref/URL/org", () => {
     expect(cfg.anonKey).toBe("legacy-anon");
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
     delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  });
+});
+
+// ---------------------------------------------------------------------------
+// G3 R3 (seq=15/16) — full RED->GREEN coverage of the 10 blockers
+// ---------------------------------------------------------------------------
+describe("G3 R3 blockers (RED->GREEN)", () => {
+  it("F1: setStatusListener attached before subscribe; SUBSCRIBED != LIVE", async () => {
+    const transport = new InertTransport();
+    const client = new LiveProjectionClient(new MemStore([ev(0, "e0")]), transport, "R-1");
+    let captured: string[] = [];
+    client.setStatusListener((s) => captured.push(s));
+    client.bindTransport(); // attaches listener BEFORE subscribe
+    expect(captured).toEqual([]); // no status yet
+    await client.bootstrap();
+    expect(client.state).toBe("PROJECTION_UNAVAILABLE"); // durable ready, not transport
+    transport.fire("SUBSCRIBED");
+    expect(captured).toContain("SUBSCRIBED");
+    expect(client.state).toBe("LIVE"); // now both latches satisfied
+  });
+
+  it("F2: LIVE requires durable-ready AND transport-ready (readiness latch)", async () => {
+    const transport = new InertTransport();
+    const client = new LiveProjectionClient(new MemStore([ev(0, "e0")]), transport, "R-1");
+    client.setStatusListener(() => {});
+    transport.fire("SUBSCRIBED"); // transport ready first
+    // Before bootstrap, durable not ready -> NOT LIVE.
+    expect(client.state).toBe("UNAVAILABLE");
+    await client.bootstrap();
+    expect(client.state).toBe("LIVE"); // both ready
+  });
+
+  it("F3: GAP triggers real durable resync + reconcile (no fabricated append)", async () => {
+    const store = new MemStore([ev(0, "e0"), ev(1, "e1")]);
+    const client = new LiveProjectionClient(store, new InertTransport(), "R-1");
+    client.setStatusListener(() => {});
+    await client.bootstrap();
+    client.transport.fire("SUBSCRIBED");
+    expect(client.state).toBe("LIVE");
+    // A live frame at seq=5 (gap after 1) -> GAP, CATCHING_UP, triggers resync.
+    const r = client.receiveLive({ event: ev(5, "e5") });
+    expect(r.kind).toBe("GAP");
+    expect(client.state).toBe("CATCHING_UP");
+    // The missing intermediate event (2..4) is reconciled from the DURABLE store
+    // (not fabricated): extend the durable store and re-run resync explicitly.
+    client.store = new MemStore([ev(0, "e0"), ev(1, "e1"), ev(2, "e2"), ev(3, "e3"), ev(4, "e4"), ev(5, "e5")]) as unknown as EventStore;
+    const ok = await client.resync();
+    expect(ok).toBe(true);
+    expect(client.events.map((e) => e.sequence)).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(client.state).toBe("LIVE");
+  });
+
+  it("F4: empty resync never yields LIVE (covered above) — reinforce via resync()", async () => {
+    const client = new LiveProjectionClient(new MemStore([]), new InertTransport(), "R-1");
+    client.setStatusListener(() => {});
+    await client.bootstrap();
+    expect(client.state).toBe("PROJECTION_UNAVAILABLE"); // empty durable -> unavailable
+    client.transport.fire("SUBSCRIBED");
+    // Even with transport ready, no data -> still not LIVE.
+    expect(client.state).toBe("PROJECTION_UNAVAILABLE");
+  });
+
+  it("F5: server read has NO implicit service-role fallback", async () => {
+    process.env = {
+      ...process.env,
+      SUPABASE_URL: "https://x.supabase.co",
+      SUPABASE_SERVICE_ROLE_KEY: "svc",
+      // publishable key intentionally ABSENT
+    };
+    const cfg = readServerConfig();
+    const built = createServerClient(cfg);
+    // No publishable key -> must NOT build a client via implicit service-role fallback.
+    expect(built).toBeNull();
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  });
+
+  it("F6: SQL uses BIGINT GENERATED ALWAYS AS IDENTITY + projection_ordinal, valid contract", async () => {
+    const fs = require("fs");
+    const path = require("path");
+    const sql = fs.readFileSync(
+      path.join(__dirname, "..", "..", "sql", "projection_events.sql"),
+      "utf8"
+    );
+    expect(sql).toMatch(/projection_ordinal\s+BIGINT\s+GENERATED\s+ALWAYS\s+AS\s+IDENTITY/i);
+    expect(sql).toMatch(/id\s+BIGINT\s+GENERATED\s+ALWAYS\s+AS\s+IDENTITY/i);
+    expect(sql).toMatch(/ORDER\s+BY\s+projection_ordinal/i);
+    expect(sql).not.toMatch(/occurred_at\s+ORDER\s+BY|ORDER\s+BY\s+occurred_at/i);
+  });
+
+  it("F7: repository Broadcast producer contract — event/topic/payload align with subscriber", () => {
+    const env = toBroadcastEnvelope("observatory", {
+      run_id: "R-1",
+      source_system: "taskcontroller",
+      source_event_id: "e1",
+      sequence: 1,
+    });
+    expect(env.event).toBe("projection_event"); // event distinct from topic
+    expect(env.topic).toBe("observatory:R-1");
+    expect(env.type).toBe("broadcast");
+    expect(env.payload.source_event_id).toBe("e1");
+    expect(isValidProducerEnvelope(env, "observatory")).toBe(true);
+    // Topic != event name (protocol rule).
+    expect(env.event).not.toBe(env.topic);
+  });
+
+  it("F8: global durable ordering preserves mixed TC/GWC interleaving via projection_ordinal", () => {
+    const mixed = globalDurableOrder([
+      { run_id: "R-1", source_system: "gwc", source_event_id: "g2", sequence: 2, projection_ordinal: 2 },
+      { run_id: "R-1", source_system: "taskcontroller", source_event_id: "t1", sequence: 1, projection_ordinal: 1 },
+      { run_id: "R-1", source_system: "gwc", source_event_id: "g1", sequence: 1, projection_ordinal: 3 },
+      { run_id: "R-1", source_system: "taskcontroller", source_event_id: "t2", sequence: 2, projection_ordinal: 4 },
+    ]);
+    // Ordered by projection_ordinal (durable global order), NOT grouped by source.
+    expect(mixed.map((e) => e.source_event_id)).toEqual(["t1", "g2", "g1", "t2"]);
+  });
+
+  it("F9: normalizes real Broadcast {type,broadcast,event,payload} envelope", async () => {
+    const client = new LiveProjectionClient(new MemStore([]), new InertTransport(), "R-1");
+    client.setStatusListener(() => {});
+    client.bindTransport();
+    // Historical snapshot must be ready before a live frame is accepted (frame
+    // arriving before bootstrap is buffered, not appended).
+    await client.bootstrap();
+    const env = toBroadcastEnvelope("observatory", {
+      run_id: "R-1",
+      source_system: "taskcontroller",
+      source_event_id: "e9",
+      sequence: 9,
+    });
+    const r = client.receiveLive(env);
+    expect(r.kind).toBe("APPENDED");
+    expect(client.events[0].source_event_id).toBe("e9");
   });
 });

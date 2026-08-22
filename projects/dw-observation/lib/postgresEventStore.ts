@@ -16,12 +16,12 @@ export interface SqlQuery {
 }
 
 const SELECT_BY_RUN = `
-  SELECT run_id, source_system, source_event_id, sequence, event_type,
-         occurred_at, gate, node_id, actor, outcome, before, after,
+  SELECT run_id, source_system, source_event_id, sequence, projection_ordinal,
+         event_type, occurred_at, gate, node_id, actor, outcome, before, after,
          evidence_refs, authority_ref, source_digest, read_only_projection
   FROM projection_events
   WHERE run_id = $1
-  ORDER BY source_system, sequence`;
+  ORDER BY projection_ordinal`;
 
 export function mapRowToProjectionEvent(row: Record<string, unknown>): ProjectionEvent {
   const seq = row.sequence;
@@ -32,6 +32,11 @@ export function mapRowToProjectionEvent(row: Record<string, unknown>): Projectio
     // Never fabricate a sequence: if the stored sequence is missing/non-numeric
     // we EXCLUDE it from live sequencing rather than emitting a fake 0.
     ...(typeof seq === "number" ? { sequence: seq } : {}),
+    // Durable global cross-source order (assigned by Postgres). Used for
+    // historical ORDER BY only; never fabricated by the observer.
+    ...(typeof row.projection_ordinal === "number"
+      ? { projection_ordinal: row.projection_ordinal as number }
+      : {}),
     event_type: row.event_type != null ? String(row.event_type) : "",
     occurred_at: row.occurred_at != null ? String(row.occurred_at) : "",
     gate: row.gate != null ? String(row.gate) : undefined,

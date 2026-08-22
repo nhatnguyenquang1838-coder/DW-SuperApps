@@ -98,7 +98,7 @@ export class SupabaseRealtimeTransport implements RealtimeTransport {
   private closed = false;
   // Surfaced to the observer via onStatus so the UI shows connection health.
   status: ChannelStatus = "idle";
-  onStatus?: (status: ChannelStatus, state: LiveState) => void;
+  onStatus?: (status: string, state: LiveState) => void;
 
   // Optional injected client (test seam). When omitted, the real browser client
   // is created from NEXT_PUBLIC_* publishable credentials.
@@ -125,7 +125,7 @@ export class SupabaseRealtimeTransport implements RealtimeTransport {
     });
     this.channel = channel;
 
-    channel.on("broadcast", { event: this.topic }, (payload) =>
+    channel.on("broadcast", { event: "projection_event" }, (payload) =>
       onMessage(payload)
     );
     channel.on("system", { event: "disconnect" }, () => {
@@ -145,14 +145,20 @@ export class SupabaseRealtimeTransport implements RealtimeTransport {
       };
       const s = map[String(status)] ?? "idle";
       this.status = s;
+      // F1: report the connection status to the client. We do NOT force LIVE —
+      // the client gates LIVE on its durable-history readiness latch. The
+      // suggestedState here is intentionally neutral ("CATCHING_UP"); the
+      // client recomputes the effective state from its latch.
       if (s === "subscribed") {
-        this.onStatus?.("subscribed", "LIVE");
+        this.onStatus?.("SUBSCRIBED", "CATCHING_UP");
       } else if (s === "channel_error") {
-        this.onStatus?.("channel_error", "PROJECTION_UNAVAILABLE");
+        this.onStatus?.("CHANNEL_ERROR", "PROJECTION_UNAVAILABLE");
       } else if (s === "timed_out") {
-        this.onStatus?.("timed_out", "PROJECTION_UNAVAILABLE");
+        this.onStatus?.("TIMED_OUT", "PROJECTION_UNAVAILABLE");
       } else if (s === "closed") {
-        this.onStatus?.("closed", "PROJECTION_UNAVAILABLE");
+        this.onStatus?.("CLOSED", "PROJECTION_UNAVAILABLE");
+      } else {
+        this.onStatus?.(s, "CATCHING_UP");
       }
     });
   }

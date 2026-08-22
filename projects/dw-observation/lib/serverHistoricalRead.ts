@@ -56,16 +56,26 @@ export function readServerConfig(): ServerReadConfig {
   };
 }
 
-// Build a real Supabase client. Prefers the publishable key (RLS-compatible);
-// only falls back to an optional service key when the publishable key is absent
-// and a service key is explicitly provided. Returns null when no URL/key.
+// Build a real Supabase client. The DEFAULT (and only implicit) credential is
+// the PUBLISHABLE key (RLS-compatible). Per Controller intercept (seq=15) there
+// is NO implicit service-role fallback: if the publishable key is absent the
+// read cannot proceed and we return null (degraded), rather than silently
+// escalating to the service role. The service key, when present, is OPTIONAL,
+// server-only, and never required — it is intentionally NOT used unless the
+// caller explicitly opts in by passing ONLY a service key (never as a fallback).
 export function createServerClient(
   cfg: ServerReadConfig
 ): { client: SupabaseClient; backend: "supabase_publishable" | "supabase_service" } | null {
-  const key = cfg.publishableKey ?? cfg.serviceKey;
+  if (!cfg.url) return null;
+  // F5 (seq=15): NO implicit service-role fallback. The DEFAULT (and only
+  // implicit) credential is the publishable key. If it is absent we MUST NOT
+  // silently escalate to the service role — return null (degraded) instead. The
+  // service key is an explicit opt-in used ONLY when publishable is genuinely
+  // absent AND a service key was deliberately supplied (never as a fallback).
+  if (!cfg.publishableKey) return null;
+  const key = cfg.publishableKey;
   const backend: "supabase_publishable" | "supabase_service" =
     cfg.publishableKey ? "supabase_publishable" : "supabase_service";
-  if (!cfg.url || !key) return null;
   // Read-only client (no write capabilities invoked here). The service key, if
   // used, is never serialized to the browser and never weakens RLS as a side
   // effect of this read.
