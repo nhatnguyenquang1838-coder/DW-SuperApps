@@ -4,6 +4,7 @@ import RootCard from "@/components/RootCard";
 import DagView from "@/components/DagView";
 import Timeline from "@/components/Timeline";
 import EvidenceInspector from "@/components/EvidenceInspector";
+import LiveProjectionPane from "@/components/LiveProjectionPane";
 
 export default function RunDetailPage({
   params,
@@ -28,6 +29,8 @@ export default function RunDetailPage({
         anomalies={run.anomalies}
         unknownSentinel={UNKNOWN}
       />
+
+      <LiveProjectionPane runId={params.runId} />
 
       <p className="text-xs text-muted">
         This is a read-only historical projection. No authority, gate, or live
