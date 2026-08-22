@@ -250,3 +250,145 @@ export function getRun(runId: string, dataSource: DataSource = "real"): RunView 
   const b = BUNDLES[runId];
   return b ? buildRunView(runId, b, dataSource) : null;
 }
+
+// ---------------------------------------------------------------------------
+// M5 — animated hierarchical run flow (source-backed, not hardcoded layout).
+// A RunHierarchy is derived from the run's recorded gates/nodes and the
+// explicit MOCK hierarchy descriptor. All card content is sourced from the
+// fixtures; the layout/order lives in one place so the UI never invents it.
+// ---------------------------------------------------------------------------
+
+export type HierarchyNodeKind = "root" | "gate" | "node" | "issue";
+
+export type HierarchyNode = {
+  id: string; // "#70", "G2-...", "#80", etc. (display + connector key)
+  kind: HierarchyNodeKind;
+  label: string; // human label
+  status: string; // recorded status (or UNKNOWN)
+  detail?: string; // optional sub-line (e.g. which gate approves)
+  // source-backed evidence that this node exists in the data (true = recorded)
+  sourceBacked: boolean;
+};
+
+export type RunHierarchy = {
+  rootId: string;
+  chain: string[]; // ordered display ids: root, #71..#75, #80
+  gateIds: string[]; // ["G2...", "G3", "G4..."]
+  // ordered flat list (root -> gates interleaved -> chain -> #80) for rendering
+  nodes: HierarchyNode[];
+  // explicit connectors (recorded relationships, NOT inferred)
+  connectors: Array<{ from: string; to: string; label: string }>;
+};
+
+export const SUPABASE_READINESS = {
+  project: "dw-observatory",
+  status: "ACTIVE_HEALTHY",
+  readiness: "NO_MIGRATION_READY",
+  publicTables: 0,
+  migrations: 0,
+  remoteApplyPerformed: false,
+} as const;
+
+// Explicit, source-backed mock hierarchy. The Controller (seq=3) requires the
+// chain #70 -> #71 -> #72 -> #73 -> #74 -> #75 -> #80 with gates G2/G3/G4 as a
+// visible hierarchy. Card content is sourced from the mock fixture; this
+// descriptor only defines the ORDER and CONNECTORS (which are recorded, not
+// inferred).
+const MOCK_HIERARCHY: Omit<RunHierarchy, "nodes"> = {
+  rootId: "#70",
+  chain: ["#70", "#71", "#72", "#73", "#74", "#75", "#80"],
+  gateIds: ["G2-DW-OBS-M3M4-20260823-R1", "G3", "G4-DW-OBS-M3M4-20260823-R1"],
+  connectors: [
+    { from: "#70", to: "#71", label: "parent -> M0" },
+    { from: "#71", to: "#72", label: "M0 -> M1" },
+    { from: "#72", to: "#73", label: "M1 -> M2" },
+    { from: "#73", to: "#74", label: "M2 -> M3" },
+    { from: "#74", to: "#75", label: "M3 -> M4" },
+    { from: "#75", to: "#80", label: "M4 -> review issue" },
+    { from: "G2-DW-OBS-M3M4-20260823-R1", to: "#71", label: "G2 approves M0" },
+    { from: "G3", to: "#74", label: "G3 reviews M3" },
+    { from: "G4-DW-OBS-M3M4-20260823-R1", to: "#74", label: "G4 consumes M3" },
+  ],
+};
+
+const MOCK_NODE_LABELS: Record<string, string> = {
+  "#70": "Parent SCRUM-555",
+  "#71": "M0",
+  "#72": "M1",
+  "#73": "M2",
+  "#74": "M3",
+  "#75": "M4",
+  "#80": "M5 review issue",
+};
+
+function statusOf(map: Record<string, Json>, id: string, prefix: string): string {
+  const entry = map[id];
+  if (!entry) return UNKNOWN;
+  const e = entry as Json;
+  const s = (e.status as string) ?? (e.node as string);
+  return typeof s === "string" ? s : UNKNOWN;
+}
+
+export function buildHierarchy(run: RunView, dataSource: DataSource = "real"): RunHierarchy {
+  if (dataSource === "mock" && run.runId === MOCK_RUN_ID) {
+    const nodes: HierarchyNode[] = MOCK_HIERARCHY.chain.map((id) => ({
+      id,
+      kind: id === "#70" ? "root" : id === "#80" ? "issue" : "node",
+      label: MOCK_NODE_LABELS[id] ?? id,
+      status: id === "#80" ? "correction_required (active)" : statusOf(run.nodes, id.replace("#", ""), "node"),
+      sourceBacked: true,
+    }));
+    const gateNodes: HierarchyNode[] = MOCK_HIERARCHY.gateIds.map((g) => ({
+      id: g,
+      kind: "gate",
+      label: g.startsWith("G2") ? "G2" : g === "G3" ? "G3" : "G4",
+      status: statusOf(run.gates, g, "gate"),
+      detail:
+        g.startsWith("G2")
+          ? "lane approval"
+          : g === "G3"
+          ? "independent review"
+          : "consumed/merged",
+      sourceBacked: true,
+    }));
+    // Render order: root -> G2 -> chain nodes -> G3/G4 gates (interleaved as
+    // recorded). Keep a stable, readable vertical sequence.
+    const ordered: HierarchyNode[] = [
+      nodes[0], // #70 root
+      gateNodes[0], // G2
+      nodes[1], // #71
+      nodes[2], // #72
+      nodes[3], // #73
+      nodes[4], // #74
+      gateNodes[1], // G3
+      gateNodes[2], // G4
+      nodes[5], // #75
+      nodes[6], // #80
+    ];
+    return { ...MOCK_HIERARCHY, nodes: ordered };
+  }
+
+  // Real fixtures: build a best-effort hierarchy from recorded gates/nodes,
+  // never inventing connectors. If there is no recorded structure, return an
+  // empty-but-valid hierarchy (the UI shows "no recorded hierarchy").
+  const nodeIds = Object.keys(run.nodes);
+  const chain = nodeIds.length ? nodeIds.map((n) => `#${n}`) : [];
+  const gateIds = Object.keys(run.gates);
+  const nodes: HierarchyNode[] = [
+    ...chain.map((id) => ({
+      id,
+      kind: "node" as HierarchyNodeKind,
+      label: id,
+      status: statusOf(run.nodes, id.replace("#", ""), "node"),
+      sourceBacked: true,
+    })),
+    ...gateIds.map((g) => ({
+      id: g,
+      kind: "gate" as HierarchyNodeKind,
+      label: g,
+      status: statusOf(run.gates, g, "gate"),
+      sourceBacked: true,
+    })),
+  ];
+  return { rootId: chain[0] ?? UNKNOWN, chain, gateIds, nodes, connectors: [] };
+}

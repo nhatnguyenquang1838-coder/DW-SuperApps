@@ -8,7 +8,7 @@
 
 import { notFound } from "next/navigation";
 import type { ProjectionEvent } from "@/lib/live";
-import { getRun, UNKNOWN, DAG_EDGES } from "@/lib/observatory";
+import { getRun, UNKNOWN, DAG_EDGES, buildHierarchy, SUPABASE_READINESS } from "@/lib/observatory";
 import { readHistoricalEvents } from "@/lib/serverHistoricalRead";
 import { getMockProjectionEvents, MOCK_BACKEND } from "@/lib/mockDataSource";
 import RootCard from "@/components/RootCard";
@@ -18,6 +18,7 @@ import EvidenceInspector from "@/components/EvidenceInspector";
 import LiveProjectionPane from "@/components/LiveProjectionPane";
 import ReplayPane from "@/components/ReplayPane";
 import ReviewPane from "@/components/ReviewPane";
+import AnimatedRunFlow from "@/components/AnimatedRunFlow";
 
 export default async function RunDetailPage({
   params,
@@ -39,6 +40,12 @@ export default async function RunDetailPage({
     notFound();
   }
 
+  // M5 (seq=3) — source-backed hierarchical flow. All cards/connectors are
+  // derived from the run's recorded gates/nodes + the explicit mock descriptor.
+  const hierarchy = buildHierarchy(run, dataSource);
+  // Active card = the correction-required / open node (#80 in mock mode).
+  const activeId = dataSource === "mock" && run.runId === "DW-OBS-M5-20260823-MOCK" ? "#80" : undefined;
+
   let historicalEvents: ProjectionEvent[] = [];
   let storeDegraded = false;
   let backend: "supabase_publishable" | "supabase_service" | "none" | "mock" =
@@ -56,7 +63,9 @@ export default async function RunDetailPage({
 
   return (
     <section className="space-y-6">
-      <RootCard run={run} unknownSentinel={UNKNOWN} />
+      <RootCard run={run} unknownSentinel={UNKNOWN} supabaseReadiness={SUPABASE_READINESS} />
+
+      <AnimatedRunFlow hierarchy={hierarchy} activeId={activeId} />
 
       <DagView gates={run.gates} nodes={run.nodes} edges={DAG_EDGES[run.runId]} />
 
