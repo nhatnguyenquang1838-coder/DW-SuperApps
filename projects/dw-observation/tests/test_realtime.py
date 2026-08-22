@@ -21,6 +21,7 @@ from dw_observation.realtime import (
     Observer,
     REMOTE_DB_MUTATION,
     ResyncReport,
+    SupabaseRealtimeTransport,
 )
 
 
@@ -107,9 +108,10 @@ def test_duplicate_broadcast_does_not_reorder_or_inflate_state():
     obs.bootstrap()
     obs.bind_transport()
 
-    # Re-deliver an already-projected identity (broadcast redelivery).
+    # Re-deliver an already-projected identity (broadcast redelivery). Use the
+    # canonical envelope: event == "projection_event", payload == <object>.
     dup = _ev(sequence=1, node_id="71", outcome="done", source_event_id="e1")
-    r1 = obs.receive_live({"event": dup.to_dict()})
+    r1 = obs.receive_live({"event": "projection_event", "payload": dup.to_dict()})
     assert r1.kind == "DUPLICATE"
     # Canonical state unchanged: still 2 events, node 71 still done, no anomaly.
     assert len(obs.projection.events) == 2
@@ -128,9 +130,10 @@ def test_stale_live_event_does_not_silently_reorder():
     )
     obs = Observer(store, FakeRealtimeTransport(), "R-1")
     obs.bootstrap()
-    # A stale, lower-sequence frame arrives after high-water=2.
+    # A stale, lower-sequence frame arrives after high-water=2. Use the canonical
+    # envelope (event == "projection_event", payload == <object>).
     stale = _ev(sequence=1, node_id="71", outcome="active", source_event_id="e1")
-    r = obs.receive_live({"event": stale.to_dict()})
+    r = obs.receive_live({"event": "projection_event", "payload": stale.to_dict()})
     # STALE recorded; the canonical projection retains supplied order and the
     # later 'done' (seq 2) still dominates node state (monotone, no regress).
     assert r.kind == "STALE"
@@ -149,7 +152,7 @@ def test_gap_withheld_awaiting_catch_up():
     obs.bootstrap()
     # Live frame jumps to seq 2 (missing seq 1): gap detected, frame withheld.
     gap = _ev(sequence=2, node_id="71", outcome="active", source_event_id="e2")
-    r = obs.receive_live({"event": gap.to_dict()})
+    r = obs.receive_live({"event": "projection_event", "payload": gap.to_dict()})
     assert r.kind == "GAP"
     assert obs.state.value == "CATCHING_UP"
     # Frame not appended into canonical projection.
@@ -183,7 +186,7 @@ def test_transport_failure_does_not_fail_canonical_runtime():
     # The transport double raises on emit while down; the observer's bound
     # handler must not crash the canonical runtime.
     try:
-        transport.emit({"event": _ev(sequence=2, source_event_id="e2").to_dict()})
+        transport.emit({"event": "projection_event", "payload": _ev(sequence=2, source_event_id="e2").to_dict()})
     except Exception:
         pass  # transport outage must not crash the observer
     obs.mark_transport_down()
@@ -213,3 +216,63 @@ def test_store_unreachable_on_resync_degrades_gracefully():
     assert report.ok is False
     assert report.state.value == "UNAVAILABLE"
     assert "postgres unreachable" in (report.error or "")
+
+
+# ---------------------------------------------------------------------------
+# R4_B5 — Python M2 adapter must align with the canonical TS/Supabase contract:
+#   topic   = "observatory:<run_id>"   (channel topic, NOT the event name)
+#   event   = "projection_event"       (fixed string event name)
+#   payload = <RunProjectionEvent>      (the canonical envelope object)
+# The old incompatible envelope ({"event": <object>}) is no longer canonical.
+# ---------------------------------------------------------------------------
+def test_realtime_subscribes_on_fixed_projection_event_with_observatory_topic():
+    captured = {}
+
+    class FakeChannel:
+        def on(self, kind, filt, cb=None):
+            captured.setdefault(kind, []).append((filt, cb))
+
+        def unsubscribe(self):
+            pass
+
+    ch = FakeChannel()
+    transport = SupabaseRealtimeTransport(ch)  # type: ignore[arg-type]
+    transport.subscribe("observatory:R-1", lambda p: None)
+    # Must bind a 'broadcast' listener on the FIXED event name, NOT the topic.
+    (filt, _cb) = captured["broadcast"][0]
+    assert filt == {"event": "projection_event"}
+    assert "R-1" not in str(filt)  # topic is not the event name
+
+
+def test_receive_live_accepts_canonical_event_string_payload_envelope():
+    store = InMemoryEventStore()
+    store.ingest("R-1", [_ev(sequence=0, source_event_id="e0")])
+    obs = Observer(store, FakeRealtimeTransport(), "R-1")
+    obs.bootstrap()
+    # Canonical frame: event == "projection_event" (string); object under payload.
+    frame = {
+        "type": "broadcast",
+        "event": "projection_event",
+        "topic": "observatory:R-1",
+        "payload": _ev(sequence=1, source_event_id="e1").to_dict(),
+    }
+    r = obs.receive_live(frame)
+    assert r.kind == "APPENDED"
+    assert len(obs.projection.events) == 2
+
+
+def test_receive_live_rejects_old_incompatible_event_as_object_envelope():
+    store = InMemoryEventStore()
+    store.ingest("R-1", [_ev(sequence=0, source_event_id="e0")])
+    obs = Observer(store, FakeRealtimeTransport(), "R-1")
+    obs.bootstrap()
+    # Old/drifted envelope: {"event": <ProjectionEvent object>} where event is a
+    # dict. The canonical contract now requires event to be the STRING
+    # "projection_event" and the object under payload. The old shape is no
+    # longer accepted as canonical (it would silently map a projection object to
+    # the wrong field), so it must be REJECTED.
+    frame = {"event": _ev(sequence=1, source_event_id="e1").to_dict()}
+    r = obs.receive_live(frame)
+    assert r.kind == "REJECTED"
+    assert len(obs.projection.events) == 1
+

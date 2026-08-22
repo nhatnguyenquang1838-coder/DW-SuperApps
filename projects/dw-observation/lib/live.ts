@@ -84,22 +84,26 @@ function highWaterOf(events: ProjectionEvent[]): Record<string, number> {
   return hw;
 }
 
-// Global durable ordering (seq=16 correction): ordered by the durable global
-// projection_ordinal (assigned by Postgres at insert), so mixed TC/GWC
-// interleaving is preserved exactly as recorded. occurred_at is NOT used for
-// ordering. Events without a projection_ordinal keep their relative position.
+// Global durable ordering (seq=16 + R4_B6 correction): ordered ONLY by the
+// durable global projection_ordinal (assigned by Postgres at insert), so mixed
+// TC/GWC interleaving is preserved exactly as recorded. Events WITHOUT a
+// projection_ordinal keep their RELATIVE INPUT ORDER — they are NEVER reordered
+// or source-grouped. occurred_at is NOT used for ordering. The durable DB
+// history (which always carries projection_ordinal) therefore never falls back
+// to per-source grouping.
 export function globalDurableOrder(events: ProjectionEvent[]): ProjectionEvent[] {
-  return events.slice().sort((a, b) => {
-    const oa = typeof a.projection_ordinal === "number" ? a.projection_ordinal : Number.MAX_SAFE_INTEGER;
-    const ob = typeof b.projection_ordinal === "number" ? b.projection_ordinal : Number.MAX_SAFE_INTEGER;
-    if (oa !== ob) return oa - ob;
-    // Stable tiebreaker: per-source sequence, then identity.
-    if (a.source_system !== b.source_system)
-      return a.source_system < b.source_system ? -1 : 1;
-    const sa = typeof a.sequence === "number" ? a.sequence : -1;
-    const sb = typeof b.sequence === "number" ? b.sequence : -1;
-    return sa - sb;
+  const indexed = events.map((e, i) => ({ e, i }));
+  indexed.sort((A, B) => {
+    const oa = A.e.projection_ordinal;
+    const ob = B.e.projection_ordinal;
+    const ha = typeof oa === "number";
+    const hb = typeof ob === "number";
+    if (ha && hb) return oa - ob; // both durable -> order by ordinal
+    if (ha !== hb) return ha ? -1 : 1; // ordinal events precede no-ordinal
+    // Neither has an ordinal: keep INPUT order (stable) — no source grouping.
+    return A.i - B.i;
   });
+  return indexed.map((x) => x.e);
 }
 
 export class LiveProjectionClient {
@@ -125,6 +129,9 @@ export class LiveProjectionClient {
   // transport connected. Neither alone forces LIVE. ---
   private durableReady = false; // bootstrap()/resync() completed with data-or-allowed-empty
   private transportReady = false; // transport reported SUBSCRIBED
+  // Distinguishes the INITIAL subscribe from a RECONNECT (after a prior
+  // disconnect/error). A reconnect must durable-resync before LIVE (R4_B2).
+  private hasConnected = false;
 
   // Frames received before historical bootstrap completes are buffered (not
   // dropped) and replayed once the snapshot is ready. This closes the
@@ -239,13 +246,46 @@ export class LiveProjectionClient {
   // Internal: update the readiness latch from transport status. SUBSCRIBED sets
   // transportReady; channel errors clear it. SUBSCRIBED alone does NOT force
   // LIVE — recomputeState() gates LIVE on BOTH durableReady AND transportReady.
-  private handleStatus(status: string): void {
+  // A SUBSCRIBED arrival AFTER a prior disconnect/error is a RECONNECT and must
+  // perform a durable resync (store.loadAll) before LIVE (R4_B2). Status casing
+  // is normalized defensively (R4_B3) so a lowercase "closed" still clears the
+  // latch even if a transport forgets to normalize at its boundary.
+  private handleStatus(rawStatus: string): void {
+    const status = String(rawStatus).toUpperCase();
     if (status === "SUBSCRIBED") {
-      this.transportReady = true;
+      if (!this.hasConnected) {
+        // Initial subscribe: transport is up; LIVE still gated on durable latch.
+        this.hasConnected = true;
+        this.transportReady = true;
+      } else {
+        // Reconnect after a prior disconnect/error: MUST durable-resync before
+        // promoting to LIVE. Enter CATCHING_UP and defer LIVE until the resync
+        // succeeds — single loadAll, NO busy-loop.
+        this.state = "CATCHING_UP";
+        this.transportReady = false;
+        this.durableReady = false; // require fresh durable confirmation
+        this.emitChange();
+        void this.reconnectResync();
+        return;
+      }
     } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
       this.transportReady = false;
     }
     this.recomputeState();
+    this.emitChange();
+  }
+
+  // Reconnect reconcile: real durable resync, then promote to LIVE ONLY after
+  // the durable store is successfully re-read. If the store is unreachable the
+  // observer stays degraded and never falsely presents LIVE (R4_B2/B3).
+  private async reconnectResync(): Promise<void> {
+    const ok = await this.resync();
+    if (ok) {
+      this.transportReady = true;
+      this.recomputeState();
+    } else {
+      this.transportReady = false;
+    }
     this.emitChange();
   }
 

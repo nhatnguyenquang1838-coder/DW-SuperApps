@@ -339,15 +339,14 @@ describe("M2 R2 real Supabase connection + credential boundary", () => {
       SUPABASE_READ_PUBLISHABLE_KEY: "pub-key",
     };
     // Inject a fake Supabase client whose select() simulates an RLS denial.
+    // The production path issues exactly one .order("projection_ordinal").
     const fakeClient = {
       from: () => ({
         select: () => ({
           eq: () => ({
             order: () => ({
-              order: () => ({
-                then: (cb: (r: { data: null; error: { message: string } }) => unknown) =>
-                  cb({ data: null, error: { message: "permission denied" } }),
-              }),
+              then: (cb: (r: { data: null; error: { message: string } }) => unknown) =>
+                cb({ data: null, error: { message: "permission denied" } }),
             }),
           }),
         }),
@@ -715,5 +714,217 @@ describe("G3 R3 blockers (RED->GREEN)", () => {
     const r = client.receiveLive(env);
     expect(r.kind).toBe("APPENDED");
     expect(client.events[0].source_event_id).toBe("e9");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// R4 G3 rework (seq=18) — independent semantic review blockers.
+// Tests-first; each block maps to a controller R4 finding.
+// ---------------------------------------------------------------------------
+describe("R4 G3 rework (seq=18)", () => {
+  // B1: production historical read must SELECT projection_ordinal and ORDER ONLY
+  // BY projection_ordinal (not source_system/sequence). A mixed TC1->GWC1->TC2
+  // stream must survive the real server-read path in canonical global order.
+  it("B1: serverHistoricalRead orders ONLY by projection_ordinal (captured builder; mixed TC1->GWC1->TC2)", async () => {
+    process.env = {
+      ...process.env,
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_READ_PUBLISHABLE_KEY: "pub-key",
+    };
+    const capturedCols: string[] = [];
+    // Capture the production query-builder's .order() calls verbatim.
+    const orders: Array<[string, unknown]> = [];
+    // Return rows in an order that is NOT source-grouped (mixed TC/gwc) but each
+    // carries projection_ordinal, so we can confirm the read path follows the
+    // DB's ordinal order and does NOT re-sort by source_system/sequence.
+    const rows = [
+      { run_id: "R-1", source_system: "taskcontroller", source_event_id: "TC1", sequence: 1, projection_ordinal: 1, event_type: "a", occurred_at: "2026-08-22T09:00:00Z", source_digest: "x" },
+      { run_id: "R-1", source_system: "gwc", source_event_id: "GWC1", sequence: 2, projection_ordinal: 2, event_type: "a", occurred_at: "2026-08-22T09:00:00Z", source_digest: "x" },
+      { run_id: "R-1", source_system: "taskcontroller", source_event_id: "TC2", sequence: 3, projection_ordinal: 3, event_type: "a", occurred_at: "2026-08-22T09:00:00Z", source_digest: "x" },
+    ];
+    const fakeClient = {
+      from: () => ({
+        select: (cols: string) => {
+          capturedCols.push(cols);
+          return {
+            eq: () => ({
+              // Record every .order(col, opts) the production path issues.
+              order: (col: string, opts?: unknown) => {
+                orders.push([col, opts]);
+                return Promise.resolve({ data: rows, error: null });
+              },
+            }),
+          };
+        },
+      }),
+    } as unknown as import("@supabase/supabase-js").SupabaseClient;
+    const result = await readHistoricalEvents("R-1", fakeClient);
+    // (1) The production path MUST call .order() exactly ONCE, on projection_ordinal.
+    expect(orders).toEqual([["projection_ordinal", { ascending: true }]]);
+    // (2) It must NOT order by source_system or sequence.
+    expect(orders.length).toBe(1);
+    expect(orders.every(([c]) => c === "projection_ordinal")).toBe(true);
+    expect(capturedCols[0]).toContain("projection_ordinal");
+    // (3) Mixed-source rows survive the real server-read path in canonical
+    // (projection_ordinal) order — TC1 -> GWC1 -> TC2, NOT grouped by source.
+    expect(result.events.map((e) => e.source_event_id)).toEqual(["TC1", "GWC1", "TC2"]);
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_READ_PUBLISHABLE_KEY;
+  });
+
+  // B2: a reconnect (SUBSCRIBED after a prior disconnect) must perform a durable
+  // resync and only return LIVE after the durable store is successfully
+  // re-read. No busy-loop.
+  it("B2: reconnect triggers durable resync before LIVE (deterministic)", async () => {
+    let loadCount = 0;
+    const store: EventStore = {
+      async loadAll() {
+        loadCount++;
+        return [ev(0, "e0"), ev(1, "e1")];
+      },
+    };
+    const transport = new InertTransport();
+    const client = new LiveProjectionClient(store, transport, "R-1");
+    client.setStatusListener(() => {});
+    await client.bootstrap();
+    transport.fire("SUBSCRIBED"); // initial subscribe -> LIVE
+    expect(client.state).toBe("LIVE");
+    // Simulate a transport drop (disconnect clears readiness).
+    transport.fire("CLOSED");
+    expect(client.state).toBe("PROJECTION_UNAVAILABLE");
+    // Reconnect arrives: must NOT immediately promote to LIVE; must resync first.
+    transport.fire("SUBSCRIBED");
+    expect(client.state).toBe("CATCHING_UP");
+    // Allow the async resync to complete (single loadAll, no busy-loop).
+    await new Promise((r) => setTimeout(r, 0));
+    expect(loadCount).toBe(2); // bootstrap + exactly one reconnect resync
+    expect(client.state).toBe("LIVE");
+  });
+
+  it("B2: reconnect with an unreachable durable store stays degraded (never false LIVE)", async () => {
+    let failNext = false;
+    const store: EventStore = {
+      async loadAll() {
+        if (failNext) throw new Error("postgres unreachable");
+        return [ev(0, "e0"), ev(1, "e1")];
+      },
+    };
+    const transport = new InertTransport();
+    const client = new LiveProjectionClient(store, transport, "R-1");
+    client.setStatusListener(() => {});
+    await client.bootstrap();
+    transport.fire("SUBSCRIBED");
+    expect(client.state).toBe("LIVE");
+    transport.fire("CLOSED");
+    failNext = true; // durable store dies during reconnect
+    transport.fire("SUBSCRIBED");
+    await new Promise((r) => setTimeout(r, 0));
+    expect(client.state).toBe("PROJECTION_UNAVAILABLE");
+  });
+
+  // B3: a disconnect (lowercase "closed" from the transport) must clear
+  // transportReady and must NOT later promote LIVE without a successful
+  // reconnect+resync. The transport must NORMALIZE casing to uppercase.
+  it("B3: disconnect (lowercase closed) clears transport readiness; reconnect requires resync", async () => {
+    // Drive the transport boundary: simulate the system disconnect emitting
+    // 'closed' (the bug) and assert the client's transportReady latch is cleared.
+    const transport = new InertTransport();
+    const client = new LiveProjectionClient(new MemStore([ev(0, "e0")]), transport, "R-1");
+    client.setStatusListener(() => {});
+    await client.bootstrap();
+    transport.fire("SUBSCRIBED");
+    expect(client.state).toBe("LIVE");
+    // Lowercase disconnect (as the old transport emitted) — must still clear.
+    transport.fire("closed");
+    expect(client.state).toBe("PROJECTION_UNAVAILABLE");
+    // A later SUBSCRIBED without resync must NOT present LIVE (reconnect path
+    // requires durable resync first).
+    transport.fire("SUBSCRIBED");
+    expect(client.state).toBe("CATCHING_UP");
+    await new Promise((r) => setTimeout(r, 0));
+    expect(client.state).toBe("LIVE");
+  });
+
+  it("B3: SupabaseRealtimeTransport normalizes disconnect to uppercase CLOSED", () => {
+    let got: string | null = null;
+    const channel = {
+      on: (_type: string, _filter: { event: string }, _cb?: unknown) => {},
+      subscribe: (_cb?: unknown) => {},
+      unsubscribe: () => {},
+    };
+    // The disconnect system handler is registered via channel.on("system", ...).
+    // Re-create the binding minimally to capture the status callback.
+    const capturedSystem: Record<string, (p: unknown) => void> = {};
+    const chan = {
+      on: (type: string, filter: { event: string }, cb: (p: unknown) => void) => {
+        if (type === "system") capturedSystem[filter.event] = cb;
+      },
+      subscribe: (_cb?: unknown) => {},
+      unsubscribe: () => {},
+    };
+    const fakeClient = { channel: () => chan } as never;
+    const transport = new SupabaseRealtimeTransport("observatory:R-1", fakeClient);
+    transport.onStatus = (s) => (got = s);
+    // The disconnect handler is registered inside subscribe(); drive it so the
+    // system "disconnect" listener is bound.
+    transport.subscribe("observatory:R-1", () => {});
+    // Simulate a system disconnect (Supabase emits lowercase "closed" status).
+    capturedSystem["disconnect"]?.("closed");
+    // Must be normalized to canonical uppercase "CLOSED".
+    expect(got).toBe("CLOSED");
+    void channel;
+  });
+
+  // B4: repository SQL producer contract must contain an EXECUTABLE
+  // realtime.send()/trigger function (not just comments), aligned with
+  // topic=observatory:<run_id> and event=projection_event.
+  it("B4: projection_events.sql has an executable realtime broadcast producer (trigger fn + topic/event)", () => {
+    const fs = require("fs");
+    const path = require("path");
+    const sql = fs.readFileSync(
+      path.join(__dirname, "..", "..", "sql", "projection_events.sql"),
+      "utf8"
+    );
+    // (1) Executable producer function using realtime.send(payload, event, topic, flag).
+    expect(sql).toMatch(/realtime\.send\s*\(/i);
+    expect(sql).toMatch(/CREATE\s+OR\s+REPLACE\s+FUNCTION/i);
+    // (2) The realtime.send(...) call must live INSIDE the executable function
+    // body (between $$ ... $$), NOT inside a -- comment line.
+    const fnBlock = sql.match(/CREATE\s+OR\s+REPLACE\s+FUNCTION[\s\S]*?\$\$[\s\S]*?\$\$/i);
+    expect(fnBlock).not.toBeNull();
+    expect(fnBlock![0]).toMatch(/realtime\.send\s*\(/i);
+    // (3) Topic/event alignment: observatory:<run_id> topic, projection_event event.
+    expect(sql).toMatch(/'observatory:'\s*\|\|\s*NEW\.run_id/i);
+    expect(sql).toMatch(/projection_event/i);
+    // (4) It must be a trigger (AFTER INSERT) so the producer fires per durable row.
+    expect(sql).toMatch(/CREATE\s+TRIGGER/i);
+    expect(sql).toMatch(/AFTER\s+INSERT\s+ON\s+projection_events/i);
+    // (5) Still repository-only: must NOT contain remote RLS/policy/Realtime config.
+    expect(sql).not.toMatch(/create\s+policy/i);
+    expect(sql).not.toMatch(/alter\s+publication/i);
+  });
+
+  // B6: missing-ordinal events must NOT be reordered / source-grouped. They
+  // keep their input/relative order (or require ordinal before canonical
+  // ordering). Mixed-source test.
+  it("B6: globalDurableOrder preserves input order for no-ordinal events (no source-grouping)", () => {
+    const mixed = globalDurableOrder([
+      { run_id: "R-1", source_system: "gwc", source_event_id: "g1", sequence: 1 }, // no ordinal
+      { run_id: "R-1", source_system: "taskcontroller", source_event_id: "t1", sequence: 1 }, // no ordinal
+      { run_id: "R-1", source_system: "taskcontroller", source_event_id: "t2", sequence: 2 }, // no ordinal
+    ]);
+    // Input order preserved exactly — NOT grouped by source_system.
+    expect(mixed.map((e) => e.source_event_id)).toEqual(["g1", "t1", "t2"]);
+  });
+
+  it("B6: durable rows (with ordinal) are never reordered by source grouping", () => {
+    // Mixed TC/GWC where source_system ordering would differ from ordinal order.
+    const mixed = globalDurableOrder([
+      { run_id: "R-1", source_system: "taskcontroller", source_event_id: "tA", sequence: 5, projection_ordinal: 1 },
+      { run_id: "R-1", source_system: "gwc", source_event_id: "gB", sequence: 1, projection_ordinal: 2 },
+      { run_id: "R-1", source_system: "taskcontroller", source_event_id: "tC", sequence: 9, projection_ordinal: 3 },
+    ]);
+    // Ordered strictly by projection_ordinal, never by source_system.
+    expect(mixed.map((e) => e.source_event_id)).toEqual(["tA", "gB", "tC"]);
   });
 });

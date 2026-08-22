@@ -129,35 +129,34 @@ export class SupabaseRealtimeTransport implements RealtimeTransport {
       onMessage(payload)
     );
     channel.on("system", { event: "disconnect" }, () => {
-      this.status = "closed";
-      this.onStatus?.("closed", "PROJECTION_UNAVAILABLE");
+      this.status = "closed"; // internal lowercase status field
+      // Normalize at the transport boundary: report the canonical UPPERCASE
+      // external status so the client's readiness latch is cleared correctly
+      // (handleStatus only clears transportReady for "CLOSED", not "closed").
+      this.onStatus?.("CLOSED", "PROJECTION_UNAVAILABLE");
     });
 
     channel.subscribe((status) => {
-      // Map the Supabase REALTIME_SUBSCRIBE_STATES (uppercase) onto our
-      // lowercase ChannelStatus.
-      const map: Record<string, ChannelStatus> = {
-        SUBSCRIBED: "subscribed",
-        CHANNEL_ERROR: "channel_error",
-        TIMED_OUT: "timed_out",
-        CLOSED: "closed",
-        JOINED: "subscribed",
-      };
-      const s = map[String(status)] ?? "idle";
-      this.status = s;
-      // F1: report the connection status to the client. We do NOT force LIVE —
-      // the client gates LIVE on its durable-history readiness latch. The
-      // suggestedState here is intentionally neutral ("CATCHING_UP"); the
-      // client recomputes the effective state from its latch.
-      if (s === "subscribed") {
+      // Normalize at the transport boundary: Supabase REALTIME_SUBSCRIBE_STATES
+      // arrive (e.g. SUBSCRIBED/CHANNEL_ERROR/TIMED_OUT/CLOSED/JOINED). We
+      // always surface the canonical UPPERCASE external status so the client
+      // gating logic is case-insensitive to source casing. LIVE is NEVER forced
+      // here — the client recomputes from its durable-history readiness latch.
+      const s = String(status).toUpperCase();
+      if (s === "SUBSCRIBED" || s === "JOINED") {
+        this.status = "subscribed";
         this.onStatus?.("SUBSCRIBED", "CATCHING_UP");
-      } else if (s === "channel_error") {
+      } else if (s === "CHANNEL_ERROR") {
+        this.status = "channel_error";
         this.onStatus?.("CHANNEL_ERROR", "PROJECTION_UNAVAILABLE");
-      } else if (s === "timed_out") {
+      } else if (s === "TIMED_OUT") {
+        this.status = "timed_out";
         this.onStatus?.("TIMED_OUT", "PROJECTION_UNAVAILABLE");
-      } else if (s === "closed") {
+      } else if (s === "CLOSED") {
+        this.status = "closed";
         this.onStatus?.("CLOSED", "PROJECTION_UNAVAILABLE");
       } else {
+        this.status = "idle";
         this.onStatus?.(s, "CATCHING_UP");
       }
     });

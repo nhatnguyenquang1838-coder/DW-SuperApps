@@ -104,14 +104,19 @@ export async function readHistoricalEvents(
   const { client, backend } = built;
 
   // Real SELECT against the durable projection_events table. Read-only.
+  // Canonical historical ORDER BY the durable global projection_ordinal ONLY
+  // (seq=16 / R4_B1): mixed TC/GWC interleaving is preserved exactly as
+  // recorded. We do NOT order by source_system/sequence — that would
+  // source-group / reorder the global cross-source order. projection_ordinal is
+  // selected so the observer's globalDurableOrder() can confirm the durable
+  // source ordering independently.
   const { data, error } = await client
     .from("projection_events")
     .select(
-      "run_id, source_system, source_event_id, sequence, event_type, occurred_at, gate, node_id, actor, outcome, before, after, evidence_refs, authority_ref, source_digest"
+      "run_id, source_system, source_event_id, sequence, projection_ordinal, event_type, occurred_at, gate, node_id, actor, outcome, before, after, evidence_refs, authority_ref, source_digest"
     )
     .eq("run_id", runId)
-    .order("source_system", { ascending: true })
-    .order("sequence", { ascending: true });
+    .order("projection_ordinal", { ascending: true });
 
   if (error) {
     // Read denied (e.g. RLS) degrades the observer; it must not throw nor fall

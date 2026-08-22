@@ -146,8 +146,15 @@ class SupabaseRealtimeTransport(RealtimeTransport):
 
     def subscribe(self, topic: str, on_message: Any) -> None:
         # A Supabase channel is already topic-scoped; we only attach a broadcast
-        # listener. ``topic`` is accepted for interface parity and ignored here.
-        self._channel.on("broadcast", {"event": topic}, lambda payload: on_message(payload))
+        # listener. ``topic`` is the canonical channel topic ("observatory:<run_id>")
+        # and the Broadcast event is the FIXED name "projection_event" (per
+        # seq=16/R4_B5 contract), DISTINCT from the topic. The producer envelope
+        # carries the ProjectionEvent under ``payload`` (see broadcastContract.ts).
+        self._channel.on(
+            "broadcast",
+            {"event": "projection_event"},
+            lambda payload: on_message(payload),
+        )
 
     def close(self) -> None:
         try:
@@ -257,14 +264,41 @@ class Observer:
         GAP (out-of-order forward jump -> withhold, await resync), STALE (behind
         high-water, non-duplicate), and APPENDED (normal). Invalid/out-of-run
         frames are REJECTED without mutating canonical state.
+
+        Canonical envelope (seq=16 / R4_B5): the producer ships a Supabase
+        Broadcast frame shaped as
+            {"type": "broadcast", "event": "projection_event",
+             "topic": "observatory:<run_id>", "payload": <RunProjectionEvent>}
+        so ``message["event"]`` is the STRING "projection_event" and the actual
+        event object lives under ``message["payload"]``. We also accept the bare
+        ``{"payload": <RunProjectionEvent>}`` and a legacy ``{"event": <object>}``
+        shape for test ergonomics, but the canonical contract is event==string /
+        payload==object.
         """
         if self.projection is None:
             self.state = LiveState.UNAVAILABLE
             return ReceiveResult(kind="REJECTED")
 
-        payload = message.get("event") if isinstance(message, dict) else None
+        # R4_B5: do NOT treat message["event"] as the ProjectionEvent object when
+        # it is the canonical string event name ("projection_event"). The
+        # canonical envelope is {event: "projection_event", payload: <object>};
+        # the legacy {"event": <object>} shape is intentionally NOT accepted
+        # (it would silently map a projection object to the wrong field) — it is
+        # rejected.
+        event_field = message.get("event") if isinstance(message, dict) else None
+        if isinstance(event_field, str):
+            payload = message.get("payload")
+        elif isinstance(message, dict) and isinstance(message.get("payload"), dict):
+            payload = message.get("payload")
+        else:
+            # Bare RunProjectionEvent object as the message itself (or the
+            # deprecated {"event": <object>} shape) — only the bare object is
+            # tolerated for direct-call ergonomics; the object-in-"event" shape
+            # is rejected.
+            payload = message if isinstance(message, dict) else None
+
         if not isinstance(payload, dict):
-            self.last_error = "live frame missing 'event' envelope"
+            self.last_error = "live frame missing valid envelope"
             return ReceiveResult(kind="REJECTED")
 
         try:
