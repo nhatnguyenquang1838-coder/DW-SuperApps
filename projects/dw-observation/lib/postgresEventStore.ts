@@ -1,20 +1,17 @@
-// M2 — Postgres durable projection event store (read-only).
+// M2 — durable projection event store (read-only adapter).
 //
-// Repository-only production binding for the durable store described in
-// sql/projection_events.sql. Read-only: it performs SELECTs only and never
-// mutates the database. The actual Postgres client (e.g. `pg` / `postgres`)
-// is injected as a minimal query function so this module stays framework- and
-// driver-agnostic, dependency-free, and fully unit-testable offline.
-//
-// Historical replay is the source of truth. Realtime Broadcast (lib/live.ts
-// RealtimeTransport) is a separate transport and is never canonical history.
+// Repository-only, framework-agnostic adapter over the durable store. The actual
+// read is performed by a real backend (lib/serverHistoricalRead.ts -> Supabase
+// service-role SELECT, or a host-injected SqlQuery). This adapter performs NO
+// remote mutation; it only maps rows. There is intentionally NO dummy empty
+// fallback query path — the store requires a genuine read function.
 
 import { EventStore, ProjectionEvent } from "@/lib/live";
 
 export interface SqlQuery {
-  // Minimal, dependency-free query surface. The host supplies an implementation
-  // backed by `pg`, `postgres`, or an edge runtime binding. The observer only
-  // ever reads; no INSERT/UPDATE/DELETE is issued here (remote_db_mutation=false).
+  // Minimal, dependency-free query surface for hosts that prefer a raw driver
+  // (pg / postgres / edge runtime). The observer only ever reads; no
+  // INSERT/UPDATE/DELETE is issued here (remote_db_mutation = false).
   query: (text: string, params: unknown[]) => Promise<Array<Record<string, unknown>>>;
 }
 
@@ -32,9 +29,8 @@ export function mapRowToProjectionEvent(row: Record<string, unknown>): Projectio
     run_id: String(row.run_id),
     source_system: String(row.source_system),
     source_event_id: String(row.source_event_id),
-    // Map the canonical source sequence. We never fabricate a value: if the
-    // stored sequence is missing/non-numeric we EXCLUDE it from live sequencing
-    // rather than emitting a fake 0 (see G3 rework item 3).
+    // Never fabricate a sequence: if the stored sequence is missing/non-numeric
+    // we EXCLUDE it from live sequencing rather than emitting a fake 0.
     ...(typeof seq === "number" ? { sequence: seq } : {}),
     event_type: row.event_type != null ? String(row.event_type) : "",
     occurred_at: row.occurred_at != null ? String(row.occurred_at) : "",
@@ -53,10 +49,23 @@ export function mapRowToProjectionEvent(row: Record<string, unknown>): Projectio
 }
 
 export class PostgresEventStore implements EventStore {
-  constructor(private readonly sql: SqlQuery, private readonly runId: string) {}
+  // `read` performs the real historical read for a run. It is supplied by the
+  // host (server-side Supabase SELECT or an injected SqlQuery) — never a dummy.
+  constructor(
+    private readonly read: (runId: string) => Promise<ProjectionEvent[]>,
+    private readonly runId: string
+  ) {}
 
-  async loadAll(_runId: string = this.runId): Promise<ProjectionEvent[]> {
-    const rows = await this.sql.query(SELECT_BY_RUN, [this.runId]);
-    return rows.map(mapRowToProjectionEvent);
+  // Convenience factory: build from a real SqlQuery binding (host driver).
+  static fromSql(sql: SqlQuery, runId: string): PostgresEventStore {
+    return new PostgresEventStore(async (id) => {
+      const rows = await sql.query(SELECT_BY_RUN, [id]);
+      return rows.map(mapRowToProjectionEvent);
+    }, runId);
+  }
+
+  async loadAll(): Promise<ProjectionEvent[]> {
+    // Genuine read through the injected backend. No empty-fallback path.
+    return this.read(this.runId);
   }
 }

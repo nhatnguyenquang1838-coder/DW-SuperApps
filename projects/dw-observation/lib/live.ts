@@ -104,8 +104,12 @@ export class LiveProjectionClient {
     const loaded = await this.store.loadAll(this.runId);
     this.events = loaded.slice();
     this.highWater = highWaterOf(this.events);
-    this.state = "LIVE";
-    this.lastError = undefined;
+    // SECURITY/DEGRADATION RULE (G3_R2 intercept): an empty store means the
+    // durable read was missing or denied. We must NOT present a fixture-backed
+    // or falsely LIVE state. Seed PROJECTION_UNAVAILABLE so the UI degrades
+    // honestly instead of implying a live projection that does not exist.
+    this.state = this.events.length > 0 ? "LIVE" : "PROJECTION_UNAVAILABLE";
+    this.lastError = this.events.length > 0 ? undefined : "historical store empty or read denied";
     // Mark ready, then replay any frames buffered during the bootstrap gap so
     // none are silently dropped (frame-loss window closure).
     this.bootstrapped = true;

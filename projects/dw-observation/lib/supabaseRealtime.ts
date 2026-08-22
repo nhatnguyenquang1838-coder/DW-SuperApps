@@ -1,52 +1,53 @@
-// M2 — browser Supabase Realtime Broadcast subscriber (transport only).
+// M2 — browser Supabase Realtime Broadcast transport (transport only).
 //
-// Production wiring for the RealtimeTransport interface (lib/live.ts). This is
-// the actual #73 browser binding: it subscribes to a Supabase Realtime channel
-// and forwards `broadcast` frames to the observer. It NEVER publishes and
-// performs NO remote mutation (Broadcast is transport only, not canonical
-// history). The Supabase client is injected so the module stays dependency-free
-// and unit-testable; it is a boundary contract, not a live connection here.
+// REAL connection code (R2 / G3_R2): uses @supabase/supabase-js directly.
+// - The browser Supabase client is constructed here from the public URL +
+//   publishable anon key (NEXT_PUBLIC_* — safe to ship to the browser).
+// - A real Realtime Broadcast channel is created and subscribed; its lifecycle
+//   (SUBSCRIBED / CHANNEL_ERROR / TIMED_OUT / CLOSED) is surfaced to the
+//   projection state so the UI reflects connection health.
+// - It NEVER publishes and performs NO remote mutation (Broadcast is transport
+//   only, not canonical history). The durable store remains the source of truth.
 //
-// Environment contract (host supplies, never committed as secrets):
-//   NEXT_PUBLIC_SUPABASE_URL        - Supabase project URL
-//   NEXT_PUBLIC_SUPABASE_ANON_KEY   - Supabase anon/public key (read/broadcast)
+// Environment contract (browser-safe, no secrets):
+//   NEXT_PUBLIC_SUPABASE_URL                  - Supabase project URL
+//   NEXT_PUBLIC_SUPABASE_ANON_KEY             - publishable anon key (read/broadcast)
 //   NEXT_PUBLIC_OBSERVATORY_REALTIME_TOPIC_PREFIX (optional) - channel prefix
 //
-// Usage (host app):
-//   const client = createClient(url, anonKey);
-//   const channel = client.channel(`observatory:${runId}`);
-//   const transport = new SupabaseRealtimeTransport(channel, `observatory:${runId}`);
-//   const obs = new LiveProjectionClient(store, transport, runId);
-//   await obs.bootstrap();
-//   obs.bindTransport();  // listens for broadcast frames
+// Server-only secrets (Supabase service role / DB URL) live in a SEPARATE env
+// namespace (SUPABASE_SERVICE_ROLE_KEY / DATABASE_URL) and are read ONLY by the
+// server historical-read module (lib/serverHistoricalRead.ts) — never imported
+// into this browser bundle.
 
-import { RealtimeTransport } from "@/lib/live";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { RealtimeTransport, LiveState } from "@/lib/live";
 
-export interface SupabaseRealtimeChannel {
-  on: (
-    type: "broadcast",
-    filter: { event: string },
-    cb: (payload: { event?: unknown }) => void
-  ) => unknown;
-  subscribe?: (cb?: (status: string) => void) => unknown;
-  unsubscribe: () => unknown;
-}
+export type ChannelStatus =
+  | "idle"
+  | "connecting"
+  | "subscribed"
+  | "channel_error"
+  | "timed_out"
+  | "closed";
 
-export interface SupabaseClientLike {
-  channel: (topic: string) => SupabaseRealtimeChannel;
-}
-
-export function readRealtimeConfig(): {
+export interface SupabaseBrowserConfig {
   url?: string;
   anonKey?: string;
   topicPrefix: string;
-} {
-  // Read-only env contract. No secrets are embedded; missing values mean the
-  // transport stays inert (the observer degrades, never fails).
+}
+
+export function readBrowserConfig(): SupabaseBrowserConfig {
+  // Browser-safe: only NEXT_PUBLIC_* values. Missing -> transport degrades
+  // (no connection attempted; observer stays read-only from snapshot).
   return {
-    url: (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_SUPABASE_URL) || undefined,
+    url:
+      (typeof process !== "undefined" &&
+        process.env?.NEXT_PUBLIC_SUPABASE_URL) ||
+      undefined,
     anonKey:
-      (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY) || undefined,
+      (typeof process !== "undefined" &&
+        process.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY) ||
+      undefined,
     topicPrefix:
       (typeof process !== "undefined" &&
         process.env?.NEXT_PUBLIC_OBSERVATORY_REALTIME_TOPIC_PREFIX) ||
@@ -58,28 +59,103 @@ export function realtimeTopic(topicPrefix: string, runId: string): string {
   return `${topicPrefix}:${runId}`;
 }
 
-export class SupabaseRealtimeTransport implements RealtimeTransport {
-  // Bound channel + topic. `subscribe()` attaches the broadcast listener and
-  // (if present) initiates the channel subscription; it never publishes.
-  constructor(
-    private readonly channel: SupabaseRealtimeChannel,
-    private readonly topic: string
-  ) {}
+// Thin wrapper around the real Supabase Realtime channel so the transport can
+// report connection status to the projection observer.
+export interface ObservableChannel {
+  on: (
+    type: "broadcast" | "system",
+    filter: { event: string },
+    cb: (payload: unknown) => void
+  ) => void;
+  subscribe: (cb: (status: ChannelStatus) => void) => void;
+  unsubscribe: () => void;
+}
 
+// Build a real browser Supabase client. Returns null when browser env is
+// absent (caller degrades to inert transport). The client never holds a
+// server secret.
+export function createBrowserClient(
+  cfg: SupabaseBrowserConfig
+): SupabaseClient | null {
+  if (!cfg.url || !cfg.anonKey) return null;
+  return createClient(cfg.url, cfg.anonKey, {
+    realtime: { params: { eventsPerSecond: 5 } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+export class SupabaseRealtimeTransport implements RealtimeTransport {
+  private channel: ReturnType<SupabaseClient["channel"]> | null = null;
+  private client: SupabaseClient | null = null;
+  private closed = false;
+  // Surfaced to the observer via onStatus so the UI shows connection health.
+  status: ChannelStatus = "idle";
+  onStatus?: (status: ChannelStatus, state: LiveState) => void;
+
+  // Optional injected client (test seam). When omitted, the real browser client
+  // is created from NEXT_PUBLIC_* publishable credentials.
+  constructor(private readonly topic: string, private readonly clientOverride?: SupabaseClient) {}
+
+  // Real channel lifecycle: create the browser client, open a Broadcast
+  // channel, bind the broadcast listener, and subscribe. Connection status is
+  // reported through onStatus so the projection state reflects it.
   subscribe(_topic: string, onMessage: (payload: unknown) => void): void {
-    this.channel.on("broadcast", { event: this.topic }, (payload) =>
+    if (this.closed) return;
+    const client = this.clientOverride ?? createBrowserClient(readBrowserConfig());
+    this.client = client;
+    if (!client) {
+      // No browser env: stay inert (snapshot-only). Degrade, never fail.
+      this.status = "idle";
+      this.onStatus?.("idle", "PROJECTION_UNAVAILABLE");
+      return;
+    }
+    this.status = "connecting";
+    this.onStatus?.("connecting", "CATCHING_UP");
+
+    const channel = client.channel(this.topic, {
+      config: { broadcast: { self: false } },
+    });
+    this.channel = channel;
+
+    channel.on("broadcast", { event: this.topic }, (payload) =>
       onMessage(payload)
     );
-    // Initiate the channel subscription if the binding exposes it. Subscribing
-    // does not publish anything; it only begins receiving broadcast frames.
-    if (typeof this.channel.subscribe === "function") {
-      this.channel.subscribe();
-    }
+    channel.on("system", { event: "disconnect" }, () => {
+      this.status = "closed";
+      this.onStatus?.("closed", "PROJECTION_UNAVAILABLE");
+    });
+
+    channel.subscribe((status) => {
+      // Map the Supabase REALTIME_SUBSCRIBE_STATES (uppercase) onto our
+      // lowercase ChannelStatus.
+      const map: Record<string, ChannelStatus> = {
+        SUBSCRIBED: "subscribed",
+        CHANNEL_ERROR: "channel_error",
+        TIMED_OUT: "timed_out",
+        CLOSED: "closed",
+        JOINED: "subscribed",
+      };
+      const s = map[String(status)] ?? "idle";
+      this.status = s;
+      if (s === "subscribed") {
+        this.onStatus?.("subscribed", "LIVE");
+      } else if (s === "channel_error") {
+        this.onStatus?.("channel_error", "PROJECTION_UNAVAILABLE");
+      } else if (s === "timed_out") {
+        this.onStatus?.("timed_out", "PROJECTION_UNAVAILABLE");
+      } else if (s === "closed") {
+        this.onStatus?.("closed", "PROJECTION_UNAVAILABLE");
+      }
+    });
   }
 
   close(): void {
+    this.closed = true;
+    this.status = "closed";
     try {
-      this.channel.unsubscribe();
+      this.channel?.unsubscribe();
+      this.client?.removeChannel(this.channel!);
+      this.client?.realtime?.disconnect?.();
     } catch {
       // Tearing down must never fail the observer's canonical runtime.
     }

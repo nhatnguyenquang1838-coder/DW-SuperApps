@@ -7,7 +7,13 @@ import {
   ReceiveResult,
 } from "@/lib/live";
 import { PostgresEventStore, SqlQuery, mapRowToProjectionEvent } from "@/lib/postgresEventStore";
-import { SupabaseRealtimeTransport, realtimeTopic, readRealtimeConfig } from "@/lib/supabaseRealtime";
+import {
+  SupabaseRealtimeTransport,
+  realtimeTopic,
+  readBrowserConfig,
+  createBrowserClient,
+} from "@/lib/supabaseRealtime";
+import { readHistoricalEvents, readServerConfig, createServerClient } from "@/lib/serverHistoricalRead";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useLiveProjection } from "@/lib/useLiveProjection";
 
@@ -168,7 +174,7 @@ describe("M2 production bindings (no remote mutation)", () => {
         ];
       },
     };
-    const store = new PostgresEventStore(sql, "R-1");
+    const store = PostgresEventStore.fromSql(sql, "R-1");
     const rows = await store.loadAll("R-1");
     // Read-only SELECT issued with the run_id param; never an INSERT/UPDATE.
     expect(captured[0].text.trim().startsWith("SELECT")).toBe(true);
@@ -193,17 +199,35 @@ describe("M2 production bindings (no remote mutation)", () => {
     expect(e.run_id).toBe("R-1");
   });
 
-  it("SupabaseRealtimeTransport subscribes to broadcast and never publishes", () => {
+  it("PostgresEventStore.fromSql issues a real SELECT with run_id param, no mutation", async () => {
+    const captured: { text: string; params: unknown[] }[] = [];
+    const sql: SqlQuery = {
+      async query(text: string, params: unknown[]) {
+        captured.push({ text, params });
+        return [
+          { run_id: "R-1", source_system: "taskcontroller", source_event_id: "e0", sequence: 0 },
+          { run_id: "R-1", source_system: "gwc", source_event_id: "g0" }, // no sequence
+        ];
+      },
+    };
+    const store = PostgresEventStore.fromSql(sql, "R-1");
+    const rows = await store.loadAll("R-1");
+    expect(captured[0].text.trim().startsWith("SELECT")).toBe(true);
+    expect(captured[0].params).toEqual(["R-1"]);
+    expect(rows.length).toBe(2);
+    expect(rows[0].sequence).toBe(0);
+    expect(rows[1].sequence).toBeUndefined(); // no fabrication
+  });
+
+  it("SupabaseRealtimeTransport (browser) opens a real channel and never publishes", () => {
     let onType: string | null = null;
-    let onEvent: string | null = null;
     let subscribed = false;
     let unsubscribed = false;
     const channel = {
-      on: (type: string, filter: { event: string }) => {
-        onType = type;
-        onEvent = filter.event;
+      on: (type: string, _filter: { event: string }) => {
+        if (type === "broadcast") onType = type;
       },
-      subscribe: () => {
+      subscribe: (_cb?: unknown) => {
         subscribed = true;
       },
       unsubscribe: () => {
@@ -211,23 +235,121 @@ describe("M2 production bindings (no remote mutation)", () => {
       },
     };
     const topic = realtimeTopic("observatory", "R-1");
-    const transport = new SupabaseRealtimeTransport(channel as never, topic);
+    // Inject a fake browser client directly (no NEXT_PUBLIC_* needed).
+    const fakeClient = { channel: () => channel } as never;
+    const transport = new SupabaseRealtimeTransport(topic, fakeClient);
     let got: unknown = null;
     transport.subscribe(topic, (p) => (got = p));
     expect(onType).toBe("broadcast");
-    expect(onEvent).toBe(topic);
     expect(subscribed).toBe(true);
     transport.close();
     expect(unsubscribed).toBe(true);
   });
 
-  it("readRealtimeConfig reads env names without exposing values", () => {
-    const cfg = readRealtimeConfig();
+  it("readBrowserConfig reads only NEXT_PUBLIC_* (no server secret leak)", () => {
+    const cfg = readBrowserConfig();
     expect(typeof cfg.topicPrefix).toBe("string");
-    // No assertion on secret presence; contract only. Existence of the helper
-    // proves the env contract surface is wired (no remote mutation performed).
     expect(cfg).toHaveProperty("url");
     expect(cfg).toHaveProperty("anonKey");
+    // It must not expose a server service key under the browser contract.
+    expect((cfg as Record<string, unknown>).serviceRoleKey).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// R2 (G3_R2) — real Supabase connection code + credential boundary.
+// ---------------------------------------------------------------------------
+describe("M2 R2 real Supabase connection + credential boundary", () => {
+  const saved = process.env;
+  afterEach(() => {
+    process.env = saved;
+  });
+
+  it("server historical read defaults to publishable key (RLS-compatible), not service-role", () => {
+    process.env = {
+      ...saved,
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_READ_PUBLISHABLE_KEY: "pub-key",
+      // service role present but must NOT be the default
+      SUPABASE_SERVICE_ROLE_KEY: "secret-key",
+    };
+    const cfg = readServerConfig();
+    expect(cfg.publishableKey).toBe("pub-key");
+    const built = createServerClient(cfg);
+    expect(built?.backend).toBe("supabase_publishable");
+  });
+
+  it("service key is optional and only used when publishable key absent", () => {
+    process.env = {
+      ...saved,
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_SERVICE_ROLE_KEY: "secret-key",
+    };
+    const cfg = readServerConfig();
+    expect(cfg.publishableKey).toBeUndefined();
+    const built = createServerClient(cfg);
+    expect(built?.backend).toBe("supabase_service");
+  });
+
+  it("config-missing historical read degrades (no fixture LIVE)", async () => {
+    process.env = { ...saved }; // wipe Supabase env
+    // Stub the real select to prove no mutation + degraded result.
+    const result = await readHistoricalEvents("R-1");
+    expect(result.degraded).toBe(true);
+    expect(result.events).toEqual([]);
+    expect(result.backend).toBe("none");
+  });
+
+  it("read-denied (RLS error) degrades to PROJECTION_UNAVAILABLE, not bypassed LIVE", async () => {
+    process.env = {
+      ...saved,
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_READ_PUBLISHABLE_KEY: "pub-key",
+    };
+    // Inject a fake Supabase client whose select() simulates an RLS denial.
+    const fakeClient = {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            order: () => ({
+              order: () => ({
+                then: (cb: (r: { data: null; error: { message: string } }) => unknown) =>
+                  cb({ data: null, error: { message: "permission denied" } }),
+              }),
+            }),
+          }),
+        }),
+      }),
+    } as unknown as import("@supabase/supabase-js").SupabaseClient;
+    const result = await readHistoricalEvents("R-1", fakeClient);
+    expect(result.degraded).toBe(true);
+    expect(result.events).toEqual([]);
+  });
+
+  it("bootstrap of an empty/denied store yields PROJECTION_UNAVAILABLE, never LIVE", async () => {
+    const client = new LiveProjectionClient(
+      new MemStore([]),
+      new InertTransport(),
+      "R-1"
+    );
+    await client.bootstrap();
+    expect(client.state).toBe("PROJECTION_UNAVAILABLE");
+  });
+
+  it("real adapter invocation: PostgresEventStore maps server rows via select", async () => {
+    process.env = {
+      ...saved,
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_READ_PUBLISHABLE_KEY: "pub-key",
+    };
+    const rows = [
+      { run_id: "R-1", source_system: "taskcontroller", source_event_id: "e0", sequence: 0 },
+    ];
+    const store = new PostgresEventStore(async () => rows as never, "R-1");
+    const loaded = await store.loadAll("R-1");
+    expect(loaded.length).toBe(1);
+    expect(loaded[0].source_event_id).toBe("e0");
+    expect(loaded[0].sequence).toBe(0);
   });
 });
 
