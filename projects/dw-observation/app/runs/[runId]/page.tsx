@@ -18,7 +18,7 @@ import EvidenceInspector from "@/components/EvidenceInspector";
 import LiveProjectionPane from "@/components/LiveProjectionPane";
 import ReplayPane from "@/components/ReplayPane";
 import ReviewPane from "@/components/ReviewPane";
-import AnimatedRunFlow from "@/components/AnimatedRunFlow";
+import RunGraphView from "@/components/RunGraphView";
 
 export default async function RunDetailPage({
   params,
@@ -65,7 +65,7 @@ export default async function RunDetailPage({
     <section className="space-y-6">
       <RootCard run={run} unknownSentinel={UNKNOWN} supabaseReadiness={SUPABASE_READINESS} />
 
-      <AnimatedRunFlow hierarchy={hierarchy} activeId={activeId} />
+      <RunGraphView hierarchy={hierarchy} activeId={activeId} />
 
       <DagView gates={run.gates} nodes={run.nodes} edges={DAG_EDGES[run.runId]} />
 
