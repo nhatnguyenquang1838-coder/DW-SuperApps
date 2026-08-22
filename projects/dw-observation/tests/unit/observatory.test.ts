@@ -3,10 +3,42 @@ import { listRuns, getRun, UNKNOWN } from "@/lib/observatory";
 
 // Deterministic fixture rendering + explicit-unknown behaviour.
 describe("observatory data layer", () => {
-  it("lists both merged M0 projection runs deterministically", () => {
+  it("lists both merged M0 projection runs plus the deterministic mock review run", () => {
     const runs = listRuns();
     const ids = runs.map((r) => r.runId).sort();
-    expect(ids).toEqual(["DW-OBS-M0-20260821-R2", "run_dw_obs_m0_r2"].sort());
+    expect(ids).toEqual(
+      ["DW-OBS-M0-20260821-R2", "DW-OBS-M5-20260823-MOCK", "run_dw_obs_m0_r2"].sort()
+    );
+  });
+
+  it("mock review run carries explicit M0-M4 metadata in mock mode (not UNKNOWN)", () => {
+    const run = getRun("DW-OBS-M5-20260823-MOCK", "mock")!;
+    expect(run.lane).toBe("DW Run Observatory");
+    expect(run.task).toBe("SCRUM-555");
+    expect(run.controller).toBe("ChatGPT TaskController");
+    expect(run.executor).toBe("Hermes Mac");
+    expect(run.branch).toBe("auto/SCRUM-555-dw-observation-m3m4-r1");
+    expect(run.pr).toBe("#79");
+    expect(run.exactHead).toBe("5e59c889039968f606d52906c5433a21a4751bd9");
+    expect(run.ci).toBe("Validate workspace #32589399526 = SUCCESS");
+    expect(run.risk).toBe("none (local review / explicit demo anomaly only)");
+    expect(run.blocker).toBe("none");
+    expect(run.now).toBe("terminal complete / M5 local review");
+    expect(run.next).toBe("human review mock UI + Supabase migration proposal");
+    // Mock run also carries the full node set and G2/G3/G4 gate lifecycle.
+    expect(Object.keys(run.nodes).sort()).toEqual(["70", "71", "72", "73", "74", "75"]);
+    expect(Object.keys(run.gates)).toEqual([
+      "G2-DW-OBS-M3M4-20260823-R1",
+      "G3",
+      "G4-DW-OBS-M3M4-20260823-R1",
+    ]);
+  });
+
+  it("mock metadata is NOT applied in real mode (fixtures stay UNKNOWN)", () => {
+    const run = getRun("DW-OBS-M5-20260823-MOCK")!;
+    expect(run.controller).toBe(UNKNOWN);
+    expect(run.lane).toBe(UNKNOWN);
+    expect(run.branch).toBe(UNKNOWN);
   });
 
   it("normalizes taskcontroller run events with before/after/evidence_refs", () => {

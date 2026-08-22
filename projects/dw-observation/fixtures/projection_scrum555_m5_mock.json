@@ -1,0 +1,38 @@
+{
+  "run_id": "DW-OBS-M5-20260823-MOCK",
+  "started_at": "2026-08-21T09:00:00Z",
+  "last_event_at": "2026-08-23T18:06:00Z",
+  "anomalies": [
+    {
+      "kind": "DUPLICATE",
+      "source_system": "taskcontroller",
+      "source_event_id": "evt_m5_duplicate_marker",
+      "message": "DEMO_ANOMALY: duplicate source_event_id intentionally included to exercise anomaly visuals; not canonical."
+    }
+  ],
+  "gates": {
+    "G2-DW-OBS-M3M4-20260823-R1": {
+      "status": "approved/released",
+      "approvedBy": "Human G2",
+      "authorityRef": "G2-DW-OBS-M3M4-20260823-R1"
+    },
+    "G3": {
+      "status": "PASS review",
+      "approvedBy": "Human G3",
+      "authorityRef": "G3-PASS-5000742465"
+    },
+    "G4-DW-OBS-M3M4-20260823-R1": {
+      "status": "consumed/merged",
+      "approvedBy": "Human G4",
+      "authorityRef": "G4-DW-OBS-M3M4-20260823-R1"
+    }
+  },
+  "nodes": {
+    "70": { "last_event_seq": 13, "node": "70", "status": "parent closed/completed", "label": "Parent SCRUM-555" },
+    "71": { "last_event_seq": 2, "node": "71", "status": "closed/completed", "label": "M0" },
+    "72": { "last_event_seq": 4, "node": "72", "status": "closed/completed", "label": "M1" },
+    "73": { "last_event_seq": 6, "node": "73", "status": "closed/completed", "label": "M2" },
+    "74": { "last_event_seq": 11, "node": "74", "status": "closed/completed", "label": "M3" },
+    "75": { "last_event_seq": 12, "node": "75", "status": "closed/completed", "label": "M4" }
+  }
+}

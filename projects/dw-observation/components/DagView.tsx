@@ -1,20 +1,23 @@
 "use client";
 
-import { ReactFlow, Background, Controls } from "@xyflow/react";
+import { ReactFlow, Background, Controls, type Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useMemo } from "react";
 
 type Props = {
   gates: Record<string, Record<string, unknown>>;
   nodes: Record<string, Record<string, unknown>>;
+  // Explicit DAG edges (recorded relationships only — NOT inferred). When
+  // absent, the DAG renders isolated nodes with no edges (read-only).
+  edges?: Array<{ from: string; to: string; label: string }>;
 };
 
 // G3 correction #1: React Flow DAG, read-only.
 // - nodesAreDraggable=false, nodesConnectable=false, elementsSelectable=false,
 //   edgesFocusable=false, zoomOnDoubleClick=false, panOnDrag only (no editing).
 // - NO edges are invented: absent relationships stay absent (no inferred edge).
-//   Gates and DAG nodes are rendered as isolated nodes.
-export default function DagView({ gates, nodes }: Props) {
+//   When the caller supplies explicit edges (mock mode), they are rendered as-is.
+export default function DagView({ gates, nodes, edges = [] }: Props) {
   const rfNodes = useMemo(() => {
     const items: Array<{ id: string; type: string; label: string; sub: string }> = [];
     for (const [name, g] of Object.entries(gates)) {
@@ -34,17 +37,31 @@ export default function DagView({ gates, nodes }: Props) {
     }));
   }, [gates, nodes]);
 
+  const rfEdges = useMemo<Edge[]>(
+    () =>
+      edges.map((e, i) => ({
+        id: `edge:${i}`,
+        source: e.from,
+        target: e.to,
+        label: e.label,
+        animated: false,
+        style: { stroke: "#94a3b8" },
+      })),
+    [edges]
+  );
+
   return (
     <div className="rounded-lg border border-edge bg-panel p-4">
       <h2 className="mb-1 text-base font-semibold">Read-only DAG</h2>
       <p className="mb-3 text-xs text-muted">
-        Rendered from explicitly recorded gates/nodes. No edges are inferred.
-        Non-draggable · non-connectable · non-editable.
+        Rendered from explicitly recorded gates/nodes. Edges shown only when
+        explicitly recorded (never inferred). Non-draggable · non-connectable ·
+        non-editable.
       </p>
       <div style={{ height: 320 }} className="rounded border border-edge/60 bg-surface">
         <ReactFlow
           nodes={rfNodes}
-          edges={[]}
+          edges={rfEdges}
           fitView
           nodesDraggable={false}
           nodesConnectable={false}
