@@ -690,3 +690,111 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   M5 — Login Epic GWC Runtime Graph (Controller seq=4/5/6)
+   Scoped under .leg-* to avoid collisions.
+   ============================================================ */
+.leg-root {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px;
+  color: #e6e9f0;
+}
+.leg-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 12px; }
+.leg-header h1 { font-size: 20px; margin: 0; }
+.leg-header p { margin: 4px 0 0; color: #9aa3b5; font-size: 13px; max-width: 720px; }
+.leg-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.leg-chip { font-size: 11px; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #c8d0e0; }
+
+.leg-epic { border: 1px solid rgba(255,255,255,0.10); border-radius: 12px; padding: 12px; margin-bottom: 12px; background: rgba(255,255,255,0.02); }
+.leg-epic h2 { font-size: 14px; margin: 0 0 10px; }
+.leg-epic-cards { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; }
+.leg-epic-pair { display: flex; align-items: center; gap: 8px; }
+.leg-run-card { min-width: 180px; text-align: left; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10); border-radius: 10px; padding: 10px; cursor: pointer; color: inherit; }
+.leg-run-card:hover { border-color: rgba(108,169,255,0.6); }
+.leg-run-card.active { border-color: #6ca9ff; background: rgba(108,169,255,0.12); }
+.leg-run-idx { font-size: 11px; color: #8a93a6; }
+.leg-run-id { font-weight: 600; font-size: 13px; }
+.leg-run-kind { font-size: 11px; color: #9aa3b5; text-transform: capitalize; }
+.leg-run-summary { font-size: 11px; color: #9aa3b5; margin-top: 4px; }
+.leg-run-arrow { color: #6ca9ff; font-size: 18px; }
+
+.leg-main { display: grid; grid-template-columns: 1fr 360px; gap: 12px; align-items: stretch; }
+.leg-graph-col { min-width: 0; }
+.leg-run-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.leg-run-head h2 { font-size: 14px; margin: 0; }
+.leg-follow { display: flex; align-items: center; gap: 8px; }
+.leg-follow button { font-size: 12px; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.04); color: inherit; cursor: pointer; }
+.leg-follow button.on { border-color: #6ca9ff; color: #8fd0ff; }
+.leg-follow button.off { opacity: 0.7; }
+.leg-follow-note { font-size: 11px; color: #9aa3b5; }
+
+.leg-canvas-wrap { position: relative; height: 560px; border: 1px solid rgba(255,255,255,0.10); border-radius: 12px; overflow: hidden; background: #0d1018; }
+.leg-zoombar { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; z-index: 5; }
+.leg-zoombar button { font-size: 12px; padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.14); background: rgba(20,24,34,0.9); color: #e6e9f0; cursor: pointer; }
+
+.leg-gate-cluster { border-radius: 12px; padding: 8px; box-sizing: border-box; }
+.leg-gate-label { font-weight: 700; font-size: 13px; color: #ffd34d; }
+.leg-gate-sub { font-size: 11px; color: #c8d0e0; }
+.leg-gate-summary { font-size: 10px; color: #9aa3b5; margin-top: 2px; }
+.leg-gate-meta { font-size: 10px; color: #8a93a6; margin-top: 4px; display: flex; gap: 8px; }
+.leg-gate-done { border-left: 3px solid #3fb950; }
+.leg-gate-active { border-left: 3px solid #ffd34d; }
+.leg-gate-future { border-left: 3px solid #4a5161; }
+
+.leg-node { width: 320px; background: rgba(20,24,34,0.95); border: 1px solid rgba(255,255,255,0.14); border-radius: 10px; padding: 8px 10px; font-size: 12px; }
+.leg-node-done { opacity: 0.6; }
+.leg-node-active { border-color: #ffd34d; box-shadow: 0 0 0 2px rgba(255,211,77,0.4); opacity: 1; }
+.leg-node-future { opacity: 0.85; }
+.leg-node.selected { outline: 2px solid #6ca9ff; }
+.leg-node-top { display: flex; justify-content: space-between; font-size: 10px; color: #9aa3b5; }
+.leg-state { font-weight: 700; }
+.leg-node-title { font-weight: 600; margin-top: 2px; }
+.leg-node-id { font-size: 10px; color: #8a93a6; }
+.leg-node-purpose { font-size: 11px; color: #b9c1d4; margin: 4px 0; }
+.leg-node-meta { display: flex; flex-wrap: wrap; gap: 6px; font-size: 10px; color: #9aa3b5; }
+
+.leg-side { min-width: 0; }
+.leg-details { border: 1px solid rgba(255,255,255,0.10); border-radius: 12px; padding: 12px; background: rgba(255,255,255,0.02); height: 560px; overflow: auto; }
+.leg-current-id { font-size: 12px; color: #8a93a6; }
+.leg-current-name { font-size: 15px; font-weight: 600; }
+.leg-current-purpose { font-size: 12px; color: #b9c1d4; margin: 4px 0; }
+.leg-current-meta { font-size: 11px; color: #9aa3b5; }
+.leg-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px 0; }
+.leg-tab { font-size: 11px; padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: inherit; cursor: pointer; }
+.leg-tab.active { border-color: #6ca9ff; color: #8fd0ff; }
+.leg-pane { font-size: 12px; }
+.leg-field { margin-bottom: 10px; }
+.leg-field > span { display: block; font-size: 10px; text-transform: uppercase; color: #8a93a6; margin-bottom: 4px; }
+.leg-open { display: block; width: 100%; text-align: left; font-size: 11px; padding: 5px 8px; margin-bottom: 4px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.03); color: #c8d0e0; cursor: pointer; }
+.leg-open:hover { border-color: #6ca9ff; }
+.leg-event { font-size: 12px; margin-bottom: 4px; padding-left: 8px; border-left: 2px solid rgba(255,255,255,0.12); }
+.leg-event b { font-weight: 500; }
+.leg-raw { font-size: 10px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; }
+
+.leg-player { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 12px; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.10); border-radius: 12px; background: rgba(255,255,255,0.02); }
+.leg-controls { display: flex; gap: 6px; }
+.leg-btn { font-size: 14px; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.06); color: inherit; cursor: pointer; }
+.leg-primary { background: rgba(108,169,255,0.2); }
+.leg-live { color: #ff7b72; border-color: rgba(255,123,114,0.5); }
+.leg-scrub { flex: 1; min-width: 220px; }
+.leg-scrub-info { display: flex; justify-content: space-between; font-size: 11px; color: #9aa3b5; margin-bottom: 4px; }
+.leg-scrub input[type=range] { width: 100%; }
+.leg-selects { display: flex; gap: 6px; }
+.leg-selects select { font-size: 12px; padding: 4px 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.14); background: rgba(20,24,34,0.9); color: #e6e9f0; }
+
+.leg-minimap { position: absolute; left: 10px; bottom: 10px; display: flex; gap: 4px; z-index: 5; background: rgba(20,24,34,0.85); padding: 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12); }
+.leg-mini-gate { font-size: 10px; padding: 3px 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.04); color: #c8d0e0; cursor: pointer; }
+.leg-mini-gate.active { border-color: #ffd34d; color: #ffd34d; }
+
+.leg-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 50; }
+.leg-modal { width: min(680px, 92vw); max-height: 80vh; overflow: auto; background: #11151f; border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; }
+.leg-modal-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.leg-modal-title { font-family: monospace; font-size: 12px; color: #8fd0ff; }
+.leg-close { font-size: 12px; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.06); color: inherit; cursor: pointer; }
+.leg-modal-body { padding: 14px; font-family: monospace; font-size: 12px; white-space: pre-wrap; color: #c8d0e0; }
+
+@media (max-width: 1000px) {
+  .leg-main { grid-template-columns: 1fr; }
+}

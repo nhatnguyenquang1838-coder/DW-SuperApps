@@ -52,10 +52,10 @@ export default function RunsPage() {
           Local review-only playground. No real data, no Supabase, no mutations.
         </p>
         <a
-          href="/runs/sim-g0g6"
+          href="/runs/login-epic"
           className="mt-3 inline-block rounded border border-accent/50 bg-accent/10 px-3 py-1.5 text-sm text-accent transition-colors hover:bg-accent/20"
         >
-          G0→G6 simulated run →
+          Open Login Epic GWC Runtime Graph →
         </a>
       </div>
     </section>
