@@ -8,7 +8,7 @@
 
 import { notFound } from "next/navigation";
 import type { ProjectionEvent } from "@/lib/live";
-import { getRun, UNKNOWN } from "@/lib/observatory";
+import { getRun, UNKNOWN, DAG_EDGES } from "@/lib/observatory";
 import { readHistoricalEvents } from "@/lib/serverHistoricalRead";
 import { getMockProjectionEvents, MOCK_BACKEND } from "@/lib/mockDataSource";
 import RootCard from "@/components/RootCard";
@@ -24,11 +24,6 @@ export default async function RunDetailPage({
 }: {
   params: { runId: string };
 }) {
-  const run = getRun(params.runId);
-  if (!run) {
-    notFound();
-  }
-
   // M5 — explicit data-source switch (OBSERVATORY_DATA_SOURCE=mock|real).
   //   * mock: deterministic, derived from the SAME in-repo fixtures the M0
   //     surfaces render, with zero Supabase calls. The whole screen
@@ -38,6 +33,11 @@ export default async function RunDetailPage({
   //     LIVE). This is the default when the env is unset/unknown.
   const dataSource =
     process.env.OBSERVATORY_DATA_SOURCE === "mock" ? "mock" : "real";
+
+  const run = getRun(params.runId, dataSource);
+  if (!run) {
+    notFound();
+  }
 
   let historicalEvents: ProjectionEvent[] = [];
   let storeDegraded = false;
@@ -58,7 +58,7 @@ export default async function RunDetailPage({
     <section className="space-y-6">
       <RootCard run={run} unknownSentinel={UNKNOWN} />
 
-      <DagView gates={run.gates} nodes={run.nodes} />
+      <DagView gates={run.gates} nodes={run.nodes} edges={DAG_EDGES[run.runId]} />
 
       <Timeline events={run.events} unknownSentinel={UNKNOWN} />
 

@@ -2,6 +2,8 @@ import runScrum555 from "@/fixtures/run_scrum555_m0.json";
 import projectionScrum555 from "@/fixtures/projection_scrum555_m0.json";
 import runGwcDurable from "@/fixtures/run_gwc_durable_m0.json";
 import projectionGwcDurable from "@/fixtures/projection_gwc_durable_m0.json";
+import runScrum555M5Mock from "@/fixtures/run_scrum555_m5_mock.json";
+import projectionScrum555M5Mock from "@/fixtures/projection_scrum555_m5_mock.json";
 
 // ---------------------------------------------------------------------------
 // Read-only historical data layer for the DW Run Observatory M1 UI.
@@ -22,6 +24,11 @@ import projectionGwcDurable from "@/fixtures/projection_gwc_durable_m0.json";
 // ---------------------------------------------------------------------------
 
 export const UNKNOWN = "—";
+
+// M5 — explicit data-source flag so the mock-reviewed run can carry source-backed
+// M0-M4 metadata (lane/task/controller/executor/branch/PR/HEAD/CI/...) WITHOUT
+// corrupting the real fixtures, which remain genuinely UNKNOWN.
+export type DataSource = "real" | "mock";
 
 type Json = Record<string, unknown>;
 
@@ -124,7 +131,61 @@ export type RunView = {
 
 type Bundle = { run: Json; projection: Json };
 
-function buildRunView(runId: string, b: Bundle): RunView {
+// M5 — explicit, source-backed M0-M4 metadata for the deterministic mock review
+// run. This is the ONLY place mock values live; real fixtures remain genuinely
+// UNKNOWN. Approved values are taken from the Controller's correction (seq=2):
+// lane DW Run Observatory, task SCRUM-555, controller ChatGPT TaskController,
+// executor Hermes Mac, branch auto/SCRUM-555-dw-observation-m3m4-r1, PR #79,
+// exactHead 5e59c889039968f606d52906c5433a21a4751bd9, CI Validate workspace
+// #32589399526 = SUCCESS, now "terminal complete / M5 local review", next
+// "human review mock UI + Supabase migration proposal".
+type MockMeta = {
+  lane: string;
+  task: string;
+  controller: string;
+  executor: string;
+  branch: string;
+  pr: string;
+  exactHead: string;
+  ci: string;
+  risk: string;
+  blocker: string;
+  now: string;
+  next: string;
+};
+
+const MOCK_RUN_ID = "DW-OBS-M5-20260823-MOCK";
+const MOCK_META: MockMeta = {
+  lane: "DW Run Observatory",
+  task: "SCRUM-555",
+  controller: "ChatGPT TaskController",
+  executor: "Hermes Mac",
+  branch: "auto/SCRUM-555-dw-observation-m3m4-r1",
+  pr: "#79",
+  exactHead: "5e59c889039968f606d52906c5433a21a4751bd9",
+  ci: "Validate workspace #32589399526 = SUCCESS",
+  risk: "none (local review / explicit demo anomaly only)",
+  blocker: "none",
+  now: "terminal complete / M5 local review",
+  next: "human review mock UI + Supabase migration proposal",
+};
+
+// Explicit DAG edges for the mock run (NOT inferred). Only recorded relationships
+// are shown; the DAG shape is consumed from here, never invented from node ids.
+export const DAG_EDGES: Record<string, Array<{ from: string; to: string; label: string }>> = {
+  [MOCK_RUN_ID]: [
+    { from: "node:70", to: "node:71", label: "parent -> M0" },
+    { from: "node:71", to: "node:72", label: "M0 -> M1" },
+    { from: "node:72", to: "node:73", label: "M1 -> M2" },
+    { from: "node:73", to: "node:74", label: "M2 -> M3" },
+    { from: "node:74", to: "node:75", label: "M3 -> M4" },
+    { from: "gate:G2-DW-OBS-M3M4-20260823-R1", to: "node:71", label: "G2 approves M0" },
+    { from: "gate:G3", to: "node:74", label: "G3 reviews M3" },
+    { from: "gate:G4-DW-OBS-M3M4-20260823-R1", to: "node:74", label: "G4 consumes M3" },
+  ],
+};
+
+function buildRunView(runId: string, b: Bundle, dataSource: DataSource = "real"): RunView {
   const run = b.run;
   const proj = b.projection;
   const rawEvents = asArray(run.events).map((e) => (e as Json));
@@ -134,28 +195,28 @@ function buildRunView(runId: string, b: Bundle): RunView {
   const anomalies = asArray(proj.anomalies).map((a) => a as Json);
 
   // Controller/executor are NOT inferred from generic actor/source (per
-  // Controller seq=7 clarification). They remain explicit UNKNOWN unless the
-  // fixture carries a dedicated controller/executor field (it does not).
-  const controller = UNKNOWN;
-  const executor = UNKNOWN;
+  // Controller seq=7 clarification). They remain explicit UNKNOWN in real
+  // fixtures. In mock mode the approved M0-M4 metadata is applied explicitly.
+  const controller = dataSource === "mock" && runId === MOCK_RUN_ID ? MOCK_META.controller : UNKNOWN;
+  const executor = dataSource === "mock" && runId === MOCK_RUN_ID ? MOCK_META.executor : UNKNOWN;
 
   return {
     runId: asString(proj.run_id, runId),
     sourceSystem: asString(run.source_system),
     startedAt: (proj.started_at as string | null) ?? null,
     lastEventAt: (proj.last_event_at as string | null) ?? null,
-    lane: UNKNOWN,
-    task: UNKNOWN,
+    lane: dataSource === "mock" && runId === MOCK_RUN_ID ? MOCK_META.lane : UNKNOWN,
+    task: dataSource === "mock" && runId === MOCK_RUN_ID ? MOCK_META.task : UNKNOWN,
     controller,
     executor,
-    branch: UNKNOWN,
-    pr: UNKNOWN,
-    exactHead: UNKNOWN,
-    ci: UNKNOWN,
-    risk: UNKNOWN,
-    blocker: UNKNOWN,
-    now: UNKNOWN,
-    next: UNKNOWN,
+    branch: dataSource === "mock" && runId === MOCK_RUN_ID ? MOCK_META.branch : UNKNOWN,
+    pr: dataSource === "mock" && runId === MOCK_RUN_ID ? MOCK_META.pr : UNKNOWN,
+    exactHead: dataSource === "mock" && runId === MOCK_RUN_ID ? MOCK_META.exactHead : UNKNOWN,
+    ci: dataSource === "mock" && runId === MOCK_RUN_ID ? MOCK_META.ci : UNKNOWN,
+    risk: dataSource === "mock" && runId === MOCK_RUN_ID ? MOCK_META.risk : UNKNOWN,
+    blocker: dataSource === "mock" && runId === MOCK_RUN_ID ? MOCK_META.blocker : UNKNOWN,
+    now: dataSource === "mock" && runId === MOCK_RUN_ID ? MOCK_META.now : UNKNOWN,
+    next: dataSource === "mock" && runId === MOCK_RUN_ID ? MOCK_META.next : UNKNOWN,
     eventCount: events.length,
     anomalyCount: anomalies.length,
     events,
@@ -175,13 +236,17 @@ const BUNDLES: Record<string, Bundle> = {
     run: runGwcDurable as Json,
     projection: projectionGwcDurable as Json,
   },
+  [MOCK_RUN_ID]: {
+    run: runScrum555M5Mock as Json,
+    projection: projectionScrum555M5Mock as Json,
+  },
 };
 
-export function listRuns(): RunView[] {
-  return Object.keys(BUNDLES).map((id) => buildRunView(id, BUNDLES[id]));
+export function listRuns(dataSource: DataSource = "real"): RunView[] {
+  return Object.keys(BUNDLES).map((id) => buildRunView(id, BUNDLES[id], dataSource));
 }
 
-export function getRun(runId: string): RunView | null {
+export function getRun(runId: string, dataSource: DataSource = "real"): RunView | null {
   const b = BUNDLES[runId];
-  return b ? buildRunView(runId, b) : null;
+  return b ? buildRunView(runId, b, dataSource) : null;
 }

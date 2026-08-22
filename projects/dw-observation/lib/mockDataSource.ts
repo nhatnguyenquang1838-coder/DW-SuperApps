@@ -20,11 +20,16 @@ import { getRun } from "@/lib/observatory";
 /**
  * Build the deterministic mock ProjectionEvent[] for a run.
  *
+ * In mock mode, the M5 review run (DW-OBS-M5-20260823-MOCK) replays its full
+ * material event stream (G2/G3/G4 lifecycle, node progresses, CI, PR, G4 merge,
+ * issue closure, Supabase boundary) so the M3/M4 panes derive from the SAME
+ * events the M0 surfaces render — never PROJECTION_UNAVAILABLE.
+ *
  * Returns [] when the runId is unknown to the fixture bundles (so the M3/M4
  * panes simply have nothing to show rather than fabricating a LIVE state).
  */
 export function getMockProjectionEvents(runId: string): ProjectionEvent[] {
-  const run = getRun(runId);
+  const run = getRun(runId, "mock");
   if (!run) return [];
 
   return run.events.map((e) => {
