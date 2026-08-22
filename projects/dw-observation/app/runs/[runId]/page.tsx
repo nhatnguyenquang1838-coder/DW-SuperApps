@@ -14,6 +14,8 @@ import DagView from "@/components/DagView";
 import Timeline from "@/components/Timeline";
 import EvidenceInspector from "@/components/EvidenceInspector";
 import LiveProjectionPane from "@/components/LiveProjectionPane";
+import ReplayPane from "@/components/ReplayPane";
+import ReviewPane from "@/components/ReviewPane";
 
 export default async function RunDetailPage({
   params,
@@ -47,6 +49,20 @@ export default async function RunDetailPage({
       <LiveProjectionPane
         runId={params.runId}
         initialEvents={historical.events}
+        storeDegraded={historical.degraded}
+      />
+
+      {/* M3 — deterministic replay: one cursor drives every surface. */}
+      <ReplayPane
+        runId={params.runId}
+        events={historical.events}
+        storeDegraded={historical.degraded}
+      />
+
+      {/* M4 — review intelligence derived from the same immutable history. */}
+      <ReviewPane
+        runId={params.runId}
+        events={historical.events}
         storeDegraded={historical.degraded}
       />
 
