@@ -45,6 +45,19 @@ export default function RunsPage() {
           </a>
         ))}
       </div>
+
+      <div className="mt-6 rounded-lg border border-edge bg-panel p-4">
+        <h2 className="text-sm font-semibold text-accent">Simulated visualizations</h2>
+        <p className="mt-1 text-xs text-muted">
+          Local review-only playground. No real data, no Supabase, no mutations.
+        </p>
+        <a
+          href="/runs/sim-g0g6"
+          className="mt-3 inline-block rounded border border-accent/50 bg-accent/10 px-3 py-1.5 text-sm text-accent transition-colors hover:bg-accent/20"
+        >
+          G0→G6 simulated run →
+        </a>
+      </div>
     </section>
   );
 }
