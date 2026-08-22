@@ -1,57 +1,233 @@
-import type { SimGate, SimTask, ReplayMode } from "@/lib/simRun";
+import type { SimGate, SimNode, Selection, HistoryEvent, Checkpoint } from "@/lib/simRun";
 
 type Props = {
-  task: SimTask;
+  selection: Selection;
   gate: SimGate;
-  mode: ReplayMode;
-  timelineLength: number;
-  cursor: number;
+  node: SimNode | undefined; // undefined when selection.kind === "gate"
+  onOpenArtifact: (path: string, kind: string) => void;
 };
 
-/**
- * Right-hand detail panel. Pure presentational: shows the selected task's
- * node family, node id, authority boundary, reads/writes artifacts, option,
- * catalog path, and the replay behavior for the active mode.
- */
-export default function Inspector({ task, gate, mode, timelineLength, cursor }: Props) {
-  const ix = gate.tasks.findIndex((t) => t.task_id === task.task_id);
-  const replayNote =
-    mode === "REPLAY"
-      ? `Clicking this card rewinds cursor to task index ${ix + 1}/${timelineLength}.`
-      : "LIVE mode: click selects details only; cursor stays at latest state.";
+function EventList({ events, tag }: { events: HistoryEvent[]; tag: string }) {
   return (
-    <div className="sr-body" data-testid="sr-inspector">
-      <div className="sr-current">
-        <div className="sr-current-id">{task.task_id} · {task.node_id}</div>
-        <div className="sr-current-name">{task.task_title}</div>
-        <div className="sr-current-desc">{task.details}</div>
-      </div>
-      <Field label="Gate" value={`${gate.id} · ${gate.label}`} />
-      <Field label="Node family / Node id" value={`${task.family} / ${task.node_id}`} mono />
-      <Field label="Node type / Authority boundary" value={`${task.node_type} / ${task.authority_boundary}`} />
-      <Field label="Reads evidence" value={task.reads.join("\n")} list />
-      <Field label="Writes artifacts" value={task.writes.join("\n")} mono list />
-      <Field label="Primary artifact" value={task.artifact} mono />
-      <Field label="Option / decision" value={task.option} />
-      <Field label="Catalog / source path" value={task.catalog_path} mono />
-      <Field label="Replay behavior" value={replayNote} />
+    <>
+      {events.map((e) => (
+        <div className="sr-event" key={e.event_id}>
+          <b>
+            {tag} · {e.type}
+          </b>
+          <div>
+            {e.event_id} · {e.actor} · {e.outcome} · {(e.evidence ?? []).join(", ")}
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function CheckpointList({ checkpoints }: { checkpoints: Checkpoint[] }) {
+  return (
+    <>
+      {checkpoints.map((c) => (
+        <div className="sr-event" key={c.checkpoint_id}>
+          <b>{c.checkpoint_id}</b>
+          <div>
+            rev={c.revision} · lease={c.lease_owner} · fencing={c.fencing_token} ·
+            status={c.status}
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function ClickList({
+  paths,
+  kind,
+  onOpen,
+}: {
+  paths: string[];
+  kind: string;
+  onOpen: (path: string, kind: string) => void;
+}) {
+  if (!paths.length) return <div className="sr-field">No entries.</div>;
+  return (
+    <div className="sr-click-list">
+      {paths.map((p) => (
+        <button
+          key={p}
+          className="sr-open-btn"
+          onClick={() => onOpen(p, kind)}
+        >
+          {p}
+        </button>
+      ))}
     </div>
   );
 }
 
-function Field({ label, value, mono, list }: { label: string; value: string; mono?: boolean; list?: boolean }) {
+/**
+ * Right-hand inspector panel. Tabs: Overview / Artifacts / Runbook / History /
+ * Raw. When a NODE is selected, History splits into TaskController History,
+ * Executor History and Checkpoints. Artifacts/read/impl-refs open a modal.
+ */
+export default function Inspector({ selection, gate, node, onOpenArtifact }: Props) {
+  const id = node ? `${node.node_label ?? node.node_id} · ${node.node_id}` : gate.id;
+  const title = node ? node.title : gate.label;
+  const desc = node ? node.description : gate.summary;
+
   return (
-    <div className="sr-field">
-      <div className="sr-label">{label}</div>
-      {list ? (
-        <ul className={["sr-value", mono ? "sr-mono" : ""].join(" ")}>
-          {value.split("\n").map((v, i) => (
-            <li key={i}>{v}</li>
-          ))}
-        </ul>
-      ) : (
-        <div className={["sr-value", mono ? "sr-mono" : ""].join(" ")}>{value}</div>
-      )}
+    <div className="sr-inspector-body">
+      <div className="sr-current">
+        <div className="sr-current-id">{id}</div>
+        <div className="sr-current-name">{title}</div>
+        <div className="sr-current-desc">{desc}</div>
+      </div>
+
+      <div className="sr-tabs">
+        {["overview", "artifacts", "runbook", "history", "raw"].map((t) => (
+          <button key={t} className="sr-tab" data-tab={t}>
+            {t[0].toUpperCase() + t.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Overview */}
+      <div className="sr-tab-pane" data-pane="overview">
+        {node ? (
+          <>
+            <div className="sr-field">
+              <div className="sr-label">Gate</div>
+              <div className="sr-value">
+                {gate.id} · {gate.label}
+              </div>
+            </div>
+            <div className="sr-field">
+              <div className="sr-label">Family / Node type</div>
+              <div className="sr-value sr-mono">
+                {node.family} / {node.node_type}
+              </div>
+            </div>
+            <div className="sr-field">
+              <div className="sr-label">Authority boundary</div>
+              <div className="sr-value">{node.authority_boundary}</div>
+            </div>
+            <div className="sr-field">
+              <div className="sr-label">Source status / maturity</div>
+              <div className="sr-value">
+                {node.source_status ?? "—"} / {node.maturity ?? "—"}
+              </div>
+            </div>
+            <div className="sr-field">
+              <div className="sr-label">Declared gates</div>
+              <div className="sr-value">{(node.declared_gates ?? []).join(", ")}</div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="sr-field">
+              <div className="sr-label">Gate artifacts</div>
+              <div className="sr-value">{gate.gate_artifacts.length}</div>
+            </div>
+            <div className="sr-field">
+              <div className="sr-label">Runtime nodes in this simulated run</div>
+              <div className="sr-value">{gate.nodes.length}</div>
+            </div>
+            <div className="sr-field">
+              <div className="sr-label">Gate history</div>
+              <div className="sr-value">
+                TaskController {gate.taskcontroller_history.length} · Executor{" "}
+                {gate.executor_history.length}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Artifacts */}
+      <div className="sr-tab-pane" data-pane="artifacts" hidden>
+        {node ? (
+          <>
+            <div className="sr-field">
+              <div className="sr-label">Reads</div>
+              <ClickList
+                paths={node.reads}
+                kind="read"
+                onOpen={onOpenArtifact}
+              />
+            </div>
+            <div className="sr-field">
+              <div className="sr-label">Artifacts produced / observed</div>
+              <ClickList
+                paths={node.artifacts}
+                kind="artifact"
+                onOpen={onOpenArtifact}
+              />
+            </div>
+            <div className="sr-field">
+              <div className="sr-label">Implementation refs</div>
+              <ClickList
+                paths={node.implementation_refs ?? []}
+                kind="implementation-ref"
+                onOpen={onOpenArtifact}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="sr-field">
+            <div className="sr-label">Gate artifacts</div>
+            <ClickList
+              paths={gate.gate_artifacts}
+              kind="gate-artifact"
+              onOpen={onOpenArtifact}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Runbook */}
+      <div className="sr-tab-pane" data-pane="runbook" hidden>
+        {node ? (
+          node.runbook.map((s, i) => (
+            <div className="sr-event" key={i}>
+              <b>
+                {i + 1}. {s}
+              </b>
+              <div>Node task/runbook step for {node.node_id}</div>
+            </div>
+          ))
+        ) : (
+          <div className="sr-event">
+            <b>Gate runbook</b>
+            <div>Open gate → execute node sequence → validate artifacts → close gate / advance boundary.</div>
+          </div>
+        )}
+      </div>
+
+      {/* History */}
+      <div className="sr-tab-pane" data-pane="history" hidden>
+        {node ? (
+          <>
+            <h3 className="sr-h3">TaskController History</h3>
+            <EventList events={node.taskcontroller_history} tag="TC" />
+            <h3 className="sr-h3">Executor History</h3>
+            <EventList events={node.executor_history} tag="Executor" />
+            <h3 className="sr-h3">Checkpoints</h3>
+            <CheckpointList checkpoints={node.checkpoints} />
+          </>
+        ) : (
+          <>
+            <EventList events={gate.taskcontroller_history} tag="TC" />
+            <EventList events={gate.executor_history} tag="Executor" />
+          </>
+        )}
+      </div>
+
+      {/* Raw */}
+      <div className="sr-tab-pane" data-pane="raw" hidden>
+        <pre className="sr-raw">
+          {JSON.stringify(node ?? gate, null, 2)}
+        </pre>
+      </div>
     </div>
   );
 }

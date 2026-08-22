@@ -1,58 +1,83 @@
 import { describe, it, expect } from "vitest";
 import { simRunG0G6 } from "@/fixtures/simRunG0G6";
 import {
-  activeGateIdAt,
   buildTimeline,
   clampCursor,
-  findTask,
-  selectedTaskAt,
-  taskStateAt,
+  getGate,
+  getNode,
+  activeGateIdAt,
+  isGateActiveAt,
+  nodeStateAt,
+  selectedNodeAt,
+  timelineLength,
 } from "@/lib/simRun";
 
 const RUN = simRunG0G6;
 
-describe("lib/simRun — pure replay engine", () => {
-  it("buildTimeline flattens 7 gates x 28 tasks in order", () => {
+describe("simRun (corrected node-architect model)", () => {
+  it("exposes 7 gates and 54 runtime node cards", () => {
+    expect(RUN.gates).toHaveLength(7);
+    const total = RUN.gates.reduce((n, g) => n + g.nodes.length, 0);
+    expect(total).toBe(54);
+  });
+
+  it("derives a 54-step replay timeline ordered by node.sequence", () => {
     const tl = buildTimeline(RUN);
-    expect(tl.length).toBe(28);
-    expect(tl[0]).toMatchObject({ gate_id: "G0_CONTEXT", task_id: "G0-T01" });
-    expect(tl[27]).toMatchObject({ gate_id: "G6_PRODUCTION_DATA", task_id: "G6-T03" });
-    // strictly increasing in gate/task order
-    const ids = tl.map((t) => t.task_id);
-    expect(new Set(ids).size).toBe(28);
+    expect(tl).toHaveLength(54);
+    const seqs = tl.map((s) => s.sequence);
+    expect(seqs).toEqual([...seqs].sort((a, b) => a - b));
+    // first node is G0 intake_context.source-resolution, last is G6 unknown-write-reconciliation
+    expect(tl[0]).toMatchObject({
+      gate_id: "G0_CONTEXT",
+      node_id: "intake_context.source-resolution",
+    });
+    expect(tl[53]).toMatchObject({
+      gate_id: "G6_PRODUCTION_DATA",
+      node_id: "failure_recovery.unknown-write-reconciliation",
+    });
   });
 
-  it("taskStateAt derives done/active/future from cursor", () => {
-    expect(taskStateAt(RUN, "G0-T01", 0)).toBe("active");
-    expect(taskStateAt(RUN, "G0-T01", 1)).toBe("done");
-    expect(taskStateAt(RUN, "G6-T03", 0)).toBe("future");
-    expect(taskStateAt(RUN, "G3-T02", 15)).toBe("active"); // index 15 in timeline
-    expect(taskStateAt(RUN, "G3-T02", 16)).toBe("done");
+  it("nodeStateAt is done/active/future relative to cursor", () => {
+    // assign gate families per corrected architect
+    expect(nodeStateAt(RUN, "G0_CONTEXT", "intake_context.source-resolution", 0)).toBe(
+      "active",
+    );
+    expect(nodeStateAt(RUN, "G0_CONTEXT", "intake_context.source-resolution", 5)).toBe(
+      "done",
+    );
+    expect(nodeStateAt(RUN, "G6_PRODUCTION_DATA", "lifecycle.g6-production-approval", 0)).toBe(
+      "future",
+    );
   });
 
-  it("activeGateIdAt tracks the gate of the cursor task", () => {
+  it("activeGateIdAt / isGateActiveAt track the cursor's gate", () => {
     expect(activeGateIdAt(RUN, 0)).toBe("G0_CONTEXT");
-    expect(activeGateIdAt(RUN, 27)).toBe("G6_PRODUCTION_DATA");
-    expect(activeGateIdAt(RUN, 4)).toBe("G1_ALIGNMENT"); // G1-T01
+    expect(isGateActiveAt(RUN, "G0_CONTEXT", 0)).toBe(true);
+    expect(isGateActiveAt(RUN, "G2_EXECUTION", 0)).toBe(false);
+    // G2 starts at sequence 19 -> index 18
+    expect(activeGateIdAt(RUN, 18)).toBe("G2_EXECUTION");
   });
 
-  it("findTask resolves gate+task for any task_id", () => {
-    const r = findTask(RUN, "G4-T02");
-    expect(r?.gate.id).toBe("G4_MERGE");
-    expect(r?.task.node_id).toBe("lifecycle.g4-merge-approval");
-    expect(findTask(RUN, "NOPE")).toBeNull();
+  it("getGate / getNode resolve by id", () => {
+    expect(getGate(RUN, "G0_CONTEXT")?.label).toContain("Context");
+    expect(
+      getNode(RUN, "G2_EXECUTION", "package-export-governance-tree-build")?.family,
+    ).toBe("package_export");
   });
 
-  it("selectedTaskAt falls back to cursor task when requested invalid", () => {
-    expect(selectedTaskAt(RUN, 5, undefined)).toBe("G1-T02");
-    expect(selectedTaskAt(RUN, 5, "G2-T03")).toBe("G2-T03");
-    expect(selectedTaskAt(RUN, 5, "MISSING")).toBe("G1-T02");
+  it("selectedNodeAt falls back to the cursor's node", () => {
+    const sel = selectedNodeAt(RUN, 10);
+    expect(sel).toEqual({
+      kind: "node",
+      gateId: "G1_ALIGNMENT",
+      nodeId: "gate_authority.evidence-artifact-map",
+    });
   });
 
-  it("clampCursor keeps cursor in [0, length-1]", () => {
-    expect(clampCursor(-5, 28)).toBe(0);
-    expect(clampCursor(100, 28)).toBe(27);
-    expect(clampCursor(10, 28)).toBe(10);
-    expect(clampCursor(0, 0)).toBe(0);
+  it("clampCursor keeps cursor within [0, len-1]", () => {
+    expect(clampCursor(RUN, -5)).toBe(0);
+    expect(clampCursor(RUN, 999)).toBe(53);
+    expect(clampCursor(RUN, 20)).toBe(20);
+    expect(timelineLength(RUN)).toBe(54);
   });
 });

@@ -1,69 +1,92 @@
 import { useState } from "react";
-import type { SimGate, SimTask, TaskState } from "@/lib/simRun";
-import TaskCard from "./TaskCard";
+import type {
+  SimGate,
+  SimNode,
+  NodeState,
+  Selection,
+  SimRun,
+} from "@/lib/simRun";
+import { nodeStateAt } from "@/lib/simRun";
+import NodeCard from "./NodeCard";
 import Connector from "./Connector";
 
 type Props = {
   gate: SimGate;
-  isActive: boolean; // the gate containing the cursor's current task
+  run: SimRun;
   cursor: number;
-  selectedTaskId: string;
-  taskState: (taskId: string) => TaskState;
-  onSelect: (taskId: string) => void;
+  active: boolean;
+  selection: Selection;
+  onSelectNode: (gateId: string, nodeId: string) => void;
+  onSelectGate: (gateId: string) => void;
 };
 
 /**
- * One gate container: header (id/label/summary/count) + horizontal row of
- * task cards joined by connectors. Collapsible via the header click.
+ * Gate container: holds its node cards + connectors. Collapsible. The header
+ * click selects the gate summary (alt-click) or toggles collapse.
  */
 export default function GateContainer({
   gate,
-  isActive,
+  run,
   cursor,
-  selectedTaskId,
-  taskState,
-  onSelect,
+  active,
+  selection,
+  onSelectNode,
+  onSelectGate,
 }: Props) {
   const [collapsed, setCollapsed] = useState(false);
+
   return (
     <section
-      data-testid="sr-gate"
+      className={`sr-gate${collapsed ? " collapsed" : ""}${active ? " active" : ""}`}
       data-gate-id={gate.id}
-      data-active={isActive ? "true" : "false"}
-      className={["sr-gate", isActive ? "sr-gate-active" : "", collapsed ? "sr-gate-collapsed" : ""].join(" ")}
     >
-      <div className="sr-gate-head" onClick={() => setCollapsed((c) => !c)}>
+      <div
+        className="sr-gate-head"
+        onClick={(e) => {
+          if (e.altKey) onSelectGate(gate.id);
+          else setCollapsed((c) => !c);
+        }}
+      >
         <div>
           <div className="sr-gate-id">{gate.id}</div>
           <div className="sr-gate-label">{gate.label}</div>
         </div>
         <div className="sr-gate-summary">{gate.summary}</div>
-        <div className="sr-gate-meta">
-          <span className="sr-count">{gate.tasks.length} TASKS</span>
-          <span className="sr-chev">▼</span>
+        <div className="sr-gate-history">
+          <span className="sr-count">{gate.nodes.length} NODES</span>
+          <span className="sr-count">{gate.gate_artifacts.length} ARTIFACTS</span>
+          <span className="sr-count">
+            {gate.taskcontroller_history.length} TC EVENTS
+          </span>
+          <span className="sr-count">
+            {gate.executor_history.length} EXEC EVENTS
+          </span>
+        </div>
+        <span className="sr-chev">▼</span>
+      </div>
+      <div className="sr-gate-body">
+        <div className="sr-nodes">
+          {gate.nodes.map((n: SimNode, i: number) => {
+            const state: NodeState = nodeStateAt(run, gate.id, n.node_id, cursor);
+            const sel =
+              selection.kind === "node" &&
+              selection.gateId === gate.id &&
+              selection.nodeId === n.node_id;
+            return (
+              <div className="sr-node-wrap" key={n.node_id}>
+                <NodeCard
+                  gateId={gate.id}
+                  node={n}
+                  state={state}
+                  selected={sel}
+                  onSelect={onSelectNode}
+                />
+                {i < gate.nodes.length - 1 && <Connector state={state} />}
+              </div>
+            );
+          })}
         </div>
       </div>
-      {!collapsed && (
-        <div className="sr-gate-body">
-          <div className="sr-cards" data-testid="sr-gate-cards">
-            {gate.tasks.map((task: SimTask, i: number) => {
-              const state = taskState(task.task_id);
-              const next = gate.tasks[i + 1];
-              return (
-                <div className="sr-card-wrap" key={task.task_id}>
-                  <TaskCard
-                    task={task}
-                    state={state}
-                    selected={selectedTaskId === task.task_id}
-                    onSelect={onSelect}
-                  />
-                  {next && <Connector fromState={state} toState={taskState(next.task_id)} />}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </section>
   );
 }

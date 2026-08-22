@@ -1,12 +1,10 @@
-import type { TaskState } from "@/lib/simRun";
+import type { NodeState } from "@/lib/simRun";
 
 /**
- * Connector between two adjacent task cards inside a gate. Driven by the two
- * cards' replay states: done -> green, active -> animated flow, future -> idle.
+ * Animated connector between two adjacent node cards inside a gate.
+ * Driven by the two cards' replay states: done -> green, active -> flowing,
+ * future -> neutral. Pure presentational; no logic.
  */
-export default function Connector({ fromState, toState }: { fromState: TaskState; toState: TaskState }) {
-  const filled = fromState === "done";
-  const flowing = fromState === "active" || toState === "active";
-  const cls = ["sr-connector", filled ? "sr-connector-done" : "", flowing ? "sr-connector-active" : ""].join(" ");
-  return <div data-testid="sr-connector" className={cls} aria-hidden="true" />;
+export default function Connector({ state }: { state: NodeState }) {
+  return <div className={`sr-connector ${state}`} aria-hidden="true" />;
 }
