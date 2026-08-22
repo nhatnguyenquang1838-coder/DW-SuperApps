@@ -39,15 +39,23 @@ export interface SupabaseBrowserConfig {
 export function readBrowserConfig(): SupabaseBrowserConfig {
   // Browser-safe: only NEXT_PUBLIC_* values. Missing -> transport degrades
   // (no connection attempted; observer stays read-only from snapshot).
+  //
+  // Env contract (per Controller intercept, seq=14): the PUBLISHABLE key is the
+  // primary browser credential; the legacy ANON key is a fallback only. Both
+  // are PUBLIC/publishable credentials — safe to ship to the browser. No
+  // project ref / URL / org id is ever hard-coded; the URL comes from env too.
+  const url =
+    (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_SUPABASE_URL) ||
+    undefined;
+  const publishableKey =
+    (typeof process !== "undefined" &&
+      process.env?.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) ||
+    (typeof process !== "undefined" &&
+      process.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY) || // legacy fallback only
+    undefined;
   return {
-    url:
-      (typeof process !== "undefined" &&
-        process.env?.NEXT_PUBLIC_SUPABASE_URL) ||
-      undefined,
-    anonKey:
-      (typeof process !== "undefined" &&
-        process.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY) ||
-      undefined,
+    url,
+    anonKey: publishableKey,
     topicPrefix:
       (typeof process !== "undefined" &&
         process.env?.NEXT_PUBLIC_OBSERVATORY_REALTIME_TOPIC_PREFIX) ||

@@ -10,3 +10,8 @@ next-env.d.ts
 .env
 .env.local
 .env.*.local
+
+# Local Supabase CLI scaffold (supabase init/link state). Purely local dev
+# tooling — contains no app code and must never be committed. The hosted
+# project ref/org id live only under its gitignored .temp/ dir.
+supabase/

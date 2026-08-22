@@ -450,3 +450,82 @@ describe("M2 React view updates on transport frame", () => {
     await waitFor(() => expect(result.current.eventCount).toBe(2));
   });
 });
+
+// ---------------------------------------------------------------------------
+// G3 R3 / seq=14 INTERCEPT — contract: env-driven, NO hard-coded hosted identity
+// ---------------------------------------------------------------------------
+describe("G3 R3 — no hard-coded Supabase hosted ref/URL/org", () => {
+  it("committed source + env + tests contain no hard-coded hosted identity", () => {
+    // The Controller explicitly forbids committing a specific project ref,
+    // Supabase URL, or org id. Everything must be env-driven. This test scans
+    // the committed tree under projects/dw-observation (excluding the gitignored
+    // local supabase/ scaffold) for leaked hosted identities.
+    const fs = require("fs");
+    const path = require("path");
+    const root = path.join(__dirname, "..", ".."); // projects/dw-observation
+
+    const FORBIDDEN = [
+      "auswvdxoetufwiaxutib", // dedicated Observatory project ref
+      "fpeokgrtjslesdftfayr", // org id
+      "makakbppxiwssslytoku", // ds_mcp_server ref
+      "supabase.co", // concrete hosted URL suffix (env-driven URL only)
+    ];
+
+    const walk = (dir: string): string[] => {
+      const out: string[] = [];
+      for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, ent.name);
+        if (ent.isDirectory()) {
+          if (
+            ent.name === "node_modules" ||
+            ent.name === ".next" ||
+            ent.name === "supabase" ||
+            ent.name === "tests" // test fixtures/denylist may mention refs
+          )
+            continue;
+          out.push(...walk(full));
+        } else if (/\.(ts|tsx|js|json|md|example|sql)$/.test(ent.name)) {
+          out.push(full);
+        }
+      }
+      return out;
+    };
+
+    const files = walk(root);
+    const hits: string[] = [];
+    for (const f of files) {
+      const text = fs.readFileSync(f, "utf8");
+      for (const forbidden of FORBIDDEN) {
+        if (text.includes(forbidden)) {
+          hits.push(`${path.relative(root, f)}: contains ${forbidden}`);
+        }
+      }
+    }
+    expect(hits).toEqual([]);
+  });
+
+  it("env contract prefers publishable key, with legacy anon fallback only (browser)", () => {
+    process.env = {
+      ...process.env,
+      NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "pub-key",
+    };
+    const cfg = readBrowserConfig();
+    expect(cfg.url).toBe("https://example.supabase.co");
+    expect(cfg.anonKey).toBe("pub-key"); // publishable primary, not anon
+    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  });
+
+  it("browser falls back to legacy anon key only when publishable absent", () => {
+    process.env = {
+      ...process.env,
+      NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "legacy-anon",
+    };
+    const cfg = readBrowserConfig();
+    expect(cfg.anonKey).toBe("legacy-anon");
+    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  });
+});
