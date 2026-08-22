@@ -896,12 +896,71 @@ describe("R4 G3 rework (seq=18)", () => {
     // (3) Topic/event alignment: observatory:<run_id> topic, projection_event event.
     expect(sql).toMatch(/'observatory:'\s*\|\|\s*NEW\.run_id/i);
     expect(sql).toMatch(/projection_event/i);
-    // (4) It must be a trigger (AFTER INSERT) so the producer fires per durable row.
+    // (4) R4.1 BLOCKER FIX: the FIRST argument to realtime.send(...) MUST be the
+    // RAW ProjectionEvent jsonb (the columns of NEW), NOT a nested Broadcast
+    // envelope ({type,event,topic,payload}). Supabase wraps the first arg as
+    // callback.payload, so passing a nested envelope makes the subscriber
+    // receive payload.payload and risk REJECTED. Assert the first arg is a
+    // jsonb_build_object of ROW COLUMNS (starts with 'run_id') and that
+    // realtime.send is NOT handed a nested 'type','event','topic' envelope.
+    const sendMatch = sql.match(/realtime\.send\s*\(([\s\S]*?),\s*'projection_event'/i);
+    expect(sendMatch).not.toBeNull();
+    const firstArg = sendMatch![1];
+    // The first arg must carry the ProjectionEvent identity columns at top level.
+    expect(firstArg).toMatch(/run_id/i);
+    expect(firstArg).toMatch(/source_system/i);
+    expect(firstArg).toMatch(/source_event_id/i);
+    // It must NOT be a nested Broadcast wrapper (no 'type','event','topic' keys
+    // inside the first arg).
+    expect(firstArg).not.toMatch(/'type'\s*,\s*'broadcast'/i);
+    expect(firstArg).not.toMatch(/'event'\s*,\s*'projection_event'/i);
+    expect(firstArg).not.toMatch(/'topic'\s*,\s*'observatory:'/i);
+    // (5) It must be a trigger (AFTER INSERT) so the producer fires per durable row.
     expect(sql).toMatch(/CREATE\s+TRIGGER/i);
     expect(sql).toMatch(/AFTER\s+INSERT\s+ON\s+projection_events/i);
-    // (5) Still repository-only: must NOT contain remote RLS/policy/Realtime config.
+    // (6) Still repository-only: must NOT contain remote RLS/policy/Realtime config.
     expect(sql).not.toMatch(/create\s+policy/i);
     expect(sql).not.toMatch(/alter\s+publication/i);
+  });
+
+  // R4.1 — simulate the EXACT callback Supabase delivers for a row inserted by
+  // the SQL producer. Supabase wraps realtime.send(payload) into:
+  //   { type:'broadcast', event:'projection_event', payload: <first_arg> }
+  // so <first_arg> is what the subscriber receives as `payload`. The producer
+  // must pass the RAW ProjectionEvent (row columns) as that first arg, so the
+  // subscriber gets the ProjectionEvent at payload top-level (NOT payload.payload).
+  it("R4.1: real Supabase callback from SQL producer APPENDS without .payload.payload", async () => {
+    const client = new LiveProjectionClient(
+      new MemStore([]),
+      new InertTransport(),
+      "R-1"
+    );
+    client.setStatusListener(() => {});
+    client.bindTransport();
+    await client.bootstrap();
+
+    // The RAW ProjectionEvent is what realtime.send() is called with (row cols),
+    // and it is what arrives as `payload` in the delivered callback frame.
+    const rawProjectionEvent = {
+      run_id: "R-1",
+      source_system: "taskcontroller",
+      source_event_id: "e1",
+      sequence: 1,
+      projection_ordinal: 1,
+      event_type: "node_update",
+      occurred_at: "2026-08-22T00:00:00Z",
+    };
+    // Faithful Supabase-delivered callback wrapper.
+    const deliveredFrame = {
+      type: "broadcast",
+      event: "projection_event", // fixed event name (== what channel.on binds)
+      payload: rawProjectionEvent, // == first arg to realtime.send (raw PE)
+    };
+    const r = client.receiveLive(deliveredFrame);
+    expect(r.kind).toBe("APPENDED");
+    // The ProjectionEvent is at payload top-level — no .payload.payload nesting.
+    expect(client.events[0].source_event_id).toBe("e1");
+    expect((client.events[0] as ProjectionEvent).source_system).toBe("taskcontroller");
   });
 
   // B6: missing-ordinal events must NOT be reordered / source-grouped. They

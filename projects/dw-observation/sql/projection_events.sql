@@ -76,9 +76,22 @@ CREATE INDEX IF NOT EXISTS idx_projection_events_run_src_seq
 -- binds channel.on('broadcast', { event: 'projection_event' }, ...) on the
 -- 'observatory:<run_id>' topic and reads payload as the ProjectionEvent.
 
--- Executable producer function: builds the canonical Broadcast payload from the
--- freshly inserted durable row and ships it over realtime.send(). The topic is
--- the channel ('observatory:' || run_id); the event is the fixed
+-- Executable producer function: builds the canonical RAW ProjectionEvent jsonb
+-- from the freshly inserted durable row and ships it as the payload of
+-- realtime.send().
+--
+-- CRITICAL (R4.1 blocker fix): the FIRST argument to realtime.send() is the
+-- RAW ProjectionEvent (the row columns as jsonb), NOT a nested Broadcast
+-- envelope. Supabase Database Broadcast wraps the first argument into the
+-- delivered callback frame as `payload`:
+--   { type: 'broadcast', event: <event>, payload: <first_arg> }
+-- so <first_arg> is exactly what the subscriber receives as `payload`. If we
+-- instead passed a nested {type,event,topic,payload} envelope, the subscriber
+-- would receive `payload.payload` and the live ProjectionEvent would NOT be at
+-- top-level (risk of REJECTED because source_system/source_event_id would be
+-- missing at the top level).
+--
+-- The topic is the channel ('observatory:' || run_id); the event is the fixed
 -- 'projection_event' name. is_private=false keeps the broadcast readable by any
 -- authenticated subscriber in the run's topic (transport-only; not canonical
 -- history). This function performs NO mutation beyond the Broadcast send — the
@@ -90,31 +103,29 @@ AS $$
 DECLARE
   payload jsonb;
 BEGIN
+  -- RAW ProjectionEvent jsonb (row columns) — this is the object the
+  -- subscriber receives as the callback `payload` (top-level source identity).
   payload := jsonb_build_object(
-    'type', 'broadcast',
-    'event', 'projection_event',
-    'topic', 'observatory:' || NEW.run_id,
-    'payload', jsonb_build_object(
-      'run_id', NEW.run_id,
-      'source_system', NEW.source_system,
-      'source_event_id', NEW.source_event_id,
-      'sequence', NEW.sequence,
-      'projection_ordinal', NEW.projection_ordinal,
-      'event_type', NEW.event_type,
-      'occurred_at', NEW.occurred_at,
-      'gate', NEW.gate,
-      'node_id', NEW.node_id,
-      'actor', NEW.actor,
-      'outcome', NEW.outcome,
-      'before', NEW.before,
-      'after', NEW.after,
-      'evidence_refs', NEW.evidence_refs,
-      'authority_ref', NEW.authority_ref,
-      'source_digest', NEW.source_digest,
-      'read_only_projection', NEW.read_only_projection
-    )
+    'run_id', NEW.run_id,
+    'source_system', NEW.source_system,
+    'source_event_id', NEW.source_event_id,
+    'sequence', NEW.sequence,
+    'projection_ordinal', NEW.projection_ordinal,
+    'event_type', NEW.event_type,
+    'occurred_at', NEW.occurred_at,
+    'gate', NEW.gate,
+    'node_id', NEW.node_id,
+    'actor', NEW.actor,
+    'outcome', NEW.outcome,
+    'before', NEW.before,
+    'after', NEW.after,
+    'evidence_refs', NEW.evidence_refs,
+    'authority_ref', NEW.authority_ref,
+    'source_digest', NEW.source_digest,
+    'read_only_projection', NEW.read_only_projection
   );
   -- Supabase Database Broadcast: realtime.send(payload, event, topic, is_private)
+  -- payload = RAW ProjectionEvent jsonb (row columns) — NOT a nested envelope.
   -- topic = 'observatory:' || run_id ; event = 'projection_event'.
   PERFORM realtime.send(payload, 'projection_event', 'observatory:' || NEW.run_id, false);
   RETURN NEW;

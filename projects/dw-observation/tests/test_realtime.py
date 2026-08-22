@@ -261,6 +261,45 @@ def test_receive_live_accepts_canonical_event_string_payload_envelope():
     assert len(obs.projection.events) == 2
 
 
+def test_receive_live_r41_sql_producer_payload_appends():
+    # R4.1: the SQL realtime.send producer must pass the RAW ProjectionEvent
+    # (row columns) as the first argument. Supabase wraps it into the delivered
+    # callback frame as `payload`, so the subscriber receives the ProjectionEvent
+    # at frame.payload (top-level), NOT frame.payload.payload.
+    store = InMemoryEventStore()
+    store.ingest("R-1", [_ev(sequence=0, source_event_id="e0")])
+    obs = Observer(store, FakeRealtimeTransport(), "R-1")
+    obs.bootstrap()
+    # The RAW ProjectionEvent is what realtime.send() is called with (row cols),
+    # and it is what arrives as `payload` in the delivered frame.
+    raw_projection_event = _ev(
+        sequence=1,
+        source_event_id="e1",
+        node_id="71",
+        outcome="active",
+    ).to_dict()
+    delivered = {
+        "type": "broadcast",
+        "event": "projection_event",
+        "payload": raw_projection_event,
+    }
+    r = obs.receive_live(delivered)
+    assert r.kind == "APPENDED"
+    # The ProjectionEvent is at payload top-level — no .payload.payload nesting.
+    assert obs.projection.events[-1].source_event_id == "e1"
+    assert obs.projection.events[-1].source_system == "taskcontroller"
+    # Sanity: a NESTED (wrong) envelope would NOT place identity at top level and
+    # must be rejected — proving the producer contract must be raw, not nested.
+    nested = {
+        "type": "broadcast",
+        "event": "projection_event",
+        "payload": {"type": "broadcast", "event": "projection_event",
+                    "payload": raw_projection_event},
+    }
+    r2 = obs.receive_live(nested)
+    assert r2.kind == "REJECTED"
+
+
 def test_receive_live_rejects_old_incompatible_event_as_object_envelope():
     store = InMemoryEventStore()
     store.ingest("R-1", [_ev(sequence=0, source_event_id="e0")])
