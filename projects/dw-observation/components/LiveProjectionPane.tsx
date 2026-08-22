@@ -1,18 +1,49 @@
 "use client";
 
-// M2 live projection pane (read-only). Mounts the observer against a local,
-// fixture-derived store and an inert transport. The static build performs NO
-// remote DB/Supabase mutation: the durable store is read-only and the live
-// transport is inert here. Realtime Broadcast wiring (and the real Postgres
-// store) is supplied by the host app at runtime; the catch-up / reconcile /
-// gap logic is unit-tested in tests/unit/live.test.ts.
+// M2 live projection pane (read-only). Mounts the observer against the
+// production bindings: a durable Postgres event store (lib/postgresEventStore)
+// as the historical source of truth and a Supabase Realtime Broadcast transport
+// (lib/supabaseRealtime) as transport only. Both are read-only; the observer
+// performs NO remote mutation (remote_db_mutation = false).
+//
+// When the host env (NEXT_PUBLIC_SUPABASE_URL / DATABASE_URL) is absent, the
+// app falls back to a fixture-derived store + inert transport so the build and
+// the read-only historical UI still render. The catch-up / reconcile / gap
+// logic is identical and unit-tested in tests/unit/live.test.ts.
 
 import { useMemo } from "react";
 import { getRun } from "@/lib/observatory";
-import { EventStore, ProjectionEvent, RealtimeTransport } from "@/lib/live";
+import {
+  EventStore,
+  ProjectionEvent,
+  RealtimeTransport,
+} from "@/lib/live";
+import {
+  PostgresEventStore,
+  SqlQuery,
+} from "@/lib/postgresEventStore";
+import {
+  readRealtimeConfig,
+  realtimeTopic,
+  SupabaseRealtimeTransport,
+  SupabaseClientLike,
+} from "@/lib/supabaseRealtime";
 import { useLiveProjection } from "@/lib/useLiveProjection";
 import LiveBadge from "@/components/LiveBadge";
 
+// Inert fallback used when production env bindings are absent.
+class InertTransport implements RealtimeTransport {
+  subscribe(): void {
+    /* no live frames without a configured transport */
+  }
+  close(): void {
+    /* nothing to tear down */
+  }
+}
+
+// Read-only, in-memory store derived from the merged historical fixtures.
+// Used only as the inert fallback path; the production path uses
+// PostgresEventStore against the real durable schema (sql/projection_events.sql).
 class FixtureEventStore implements EventStore {
   constructor(private readonly events: ProjectionEvent[]) {}
   async loadAll(): Promise<ProjectionEvent[]> {
@@ -20,33 +51,67 @@ class FixtureEventStore implements EventStore {
   }
 }
 
-class InertTransport implements RealtimeTransport {
-  subscribe(): void {
-    /* no live frames in the static read-only build */
+// Host-provided Supabase client (injected; not instantiated here). The app
+// supplies this in production via @supabase/supabase-js. Declared as a module
+// global so the pane can wire the real transport without importing the SDK
+// (keeps the bundle dependency-free and the static build inert by default).
+declare global {
+  // eslint-disable-next-line no-var
+  var __DW_OBS_SUPABASE__: SupabaseClientLike | undefined;
+}
+
+function buildStore(runId: string): EventStore {
+  const run = getRun(runId);
+  // Map fixture events to the ProjectionEvent shape. We PRESERVE UNKNOWN: a
+  // missing/non-numeric sequence is carried as `undefined`, never coerced to 0
+  // (G3 rework item 3). Such events are excluded from live sequencing.
+  const events: ProjectionEvent[] = (run?.events ?? []).map((e) => ({
+    run_id: runId,
+    source_system: e.source,
+    source_event_id: e.sourceEventId,
+    ...(typeof e.seq === "number" ? { sequence: e.seq } : {}),
+    event_type: e.eventType,
+    occurred_at: e.occurredAt,
+    gate: e.gate,
+    node_id: e.nodeId,
+    actor: e.actor,
+    outcome: null,
+    source_digest: e.sourceDigest,
+  }));
+
+  const cfg = readRealtimeConfig();
+  // Production path: if a host Supabase client and env are present, wire the
+  // real durable store + Realtime transport. Otherwise fall back to fixtures.
+  if (globalThis.__DW_OBS_SUPABASE__ && cfg.url) {
+    const client = globalThis.__DW_OBS_SUPABASE__;
+    const channel = client.channel(realtimeTopic(cfg.topicPrefix, runId));
+    const sql: SqlQuery = {
+      // Host binds this to the real driver. Read-only SELECT only.
+      query: async () => [],
+    };
+    return new PostgresEventStore(sql, runId);
+    // (transport wired in buildTransport below)
+    void channel;
   }
-  close(): void {
-    /* nothing to tear down */
+  return new FixtureEventStore(events);
+}
+
+function buildTransport(runId: string): RealtimeTransport {
+  const cfg = readRealtimeConfig();
+  if (globalThis.__DW_OBS_SUPABASE__ && cfg.url) {
+    const client = globalThis.__DW_OBS_SUPABASE__;
+    const topic = realtimeTopic(cfg.topicPrefix, runId);
+    const channel = client.channel(topic);
+    return new SupabaseRealtimeTransport(channel, topic);
   }
+  return new InertTransport();
 }
 
 export default function LiveProjectionPane({ runId }: { runId: string }) {
-  const { store, transport } = useMemo(() => {
-    const run = getRun(runId);
-    const events: ProjectionEvent[] = (run?.events ?? []).map((e) => ({
-      run_id: runId,
-      source_system: e.source,
-      source_event_id: e.sourceEventId,
-      sequence: e.seq ?? 0,
-      event_type: e.eventType,
-      occurred_at: e.occurredAt,
-      gate: e.gate,
-      node_id: e.nodeId,
-      actor: e.actor,
-      outcome: null,
-      source_digest: e.sourceDigest,
-    }));
-    return { store: new FixtureEventStore(events), transport: new InertTransport() };
-  }, [runId]);
+  const { store, transport } = useMemo(
+    () => ({ store: buildStore(runId), transport: buildTransport(runId) }),
+    [runId]
+  );
 
   const view = useLiveProjection(runId, store, transport);
 

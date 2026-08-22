@@ -5,3 +5,8 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
+
+# Local env (never commit real values; .env.example is the contract)
+.env
+.env.local
+.env.*.local
