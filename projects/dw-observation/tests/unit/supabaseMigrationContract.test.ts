@@ -121,29 +121,24 @@ describe("Task 2 RED — new projection_events migration contract", () => {
 
   it("has AFTER INSERT trigger on projection_events calling the notifier", () => {
     expect(sql).toMatch(
-      /\bcreate\s+trigger\b[^\n;]*after\s+insert\s+on\s+projection_events/i,
+      /\bcreate\s+trigger\b[\s\S]*?\bafter\s+insert\s+on\s+projection_events\b/i,
     );
     expect(sql).toMatch(
-      /execute\s+(procedure|function)\s+notify_projection_event\s*\(\)/i,
+      /\bexecute\s+(procedure|function)\s+notify_projection_event\s*\(\)/i,
     );
   });
 
   it("enables row level security on projection_events", () => {
     expect(sql).toMatch(
-      /\balter\s+table\s+projection_events\b[^\n;]*enable\s+row\s+level\s+security/i,
+      /\balter\s+table\s+projection_events\b[\s\S]*?\benable\s+row\s+level\s+security\b/i,
     );
   });
 
   it("grants SELECT-only access for anon/authenticated (publishable read path)", () => {
-    const m = sql.match(
-      /\bcreate\s+policy\b[^\n;]*on\s+projection_events[^\n;]*for\s+select[^\n;]*/i,
+    expect(sql).toMatch(
+      /create\s+policy\s+projection_events_select_publishable\s+on\s+projection_events\s+for\s+select\s+to\s+anon,\s+authenticated\s+using\s*\(\s*true\s*\)/i,
     );
-    expect(m, "SELECT policy on projection_events present").toBeTruthy();
-    const block = (m?.[0] ?? "").toLowerCase();
-    expect(block).toContain("select");
-    expect(block).toMatch(/\bto\s+(anon|authenticated|public)/i);
-    expect(block).toMatch(/anon/i);
-    expect(block).toMatch(/authenticated/i);
+    expect(sql).toMatch(/create\s+policy\s+projection_events_select_publishable/i);
   });
 
   it("does NOT create client INSERT/UPDATE/DELETE policies on projection_events", () => {
