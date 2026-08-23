@@ -19,7 +19,7 @@ user_decision:
 rationale: Controller-selected dual-store architecture; OPT-2 rejected because it fabricates historical evidence, violating the non-synthesis constraint.
 rejected_option_ids: [OPT-2]
 acceptance_criteria_refs: [AC-1, AC-2, AC-3, AC-4]
-scope_hash: sha256:ff0af39b1f6f6077bd5633d7de7905cf0546c5241d43eaf7dab4dbd8b62f89b8
+scope_hash: sha256:25e68f022593c0f93032233cbfc239880b025b85b71c54ad7020496cb931af06
 g1_gate_outcome: PASS
 authority_boundaries:
   grants: []

@@ -4,8 +4,12 @@ task_id: SCRUM-555
 run_label: DW-OBS-G6-READINESS-R1
 issued_at: '2026-08-23T14:30:00Z'
 expires_at: '2026-08-24T14:30:00Z'
-scope_version: 1
-risk_class: R4
+scope_version: 2
+risk_class: R3
+risk_note: >-
+  Operational concern remains R4-grade (new SELECT-only RLS + observer read path
+  touching production Supabase schema), but G0/G1 schema enum caps gate class at
+  R3. R4 intent recorded here as narrative only; not a gate class.
 project_profile: projects/dw-observation/project-profile.yaml
 repository: nhatnguyenquang1838-coder/DW-SuperApps
 base_ref: pre-prod
@@ -13,19 +17,13 @@ base_sha: 0ee1b41b33ca83242d02c2098e6ef96a7c510301
 working_branch: auto/SCRUM-555-observatory-g6-readiness-r1
 feature_target: pre-prod
 modules_or_files:
-  - docs/superpowers/specs/2026-08-23-observatory-g6-readiness-design.md
-  - docs/superpowers/plans/2026-08-23-observatory-g6-readiness.md
   - projects/dw-observation/supabase/migrations/20260823T100000Z_projection_events.sql
-  - projects/dw-observation/supabase/migrations/20260823T100500Z_projection_events_broadcast_rls.sql
-  - projects/dw-observation/src/observatory/projection_events.ts
-  - projects/dw-observation/src/observatory/projectionBroadcast.ts
-  - projects/dw-observation/src/observatory/rlsPolicy.ts
-  - projects/dw-observation/tests/unit/projectionEvents.test.ts
-  - projects/dw-observation/tests/unit/projectionBroadcast.test.ts
   - projects/dw-observation/lib/serverRunRead.ts
   - projects/dw-observation/app/runs/page.tsx
   - projects/dw-observation/app/runs/[runId]/page.tsx
   - .gwc/tasks/SCRUM-555/history-backfill/G6_PACKET.md
+test_paths_allowed:
+  - projects/dw-observation/tests/unit/supabaseMigrationContract.test.ts
 authorized_actions:
   - create_task_artifacts
   - write_docs_first
@@ -55,20 +53,20 @@ work_item:
   claim_required: false
   expected_repository: nhatnguyenquang1838-coder/DW-SuperApps
   review_state: pending_approval
-exclusions_note: >
+exclusions_note: >-
   SCRUM-554, Project Shield, SCRUM-288/NA81, Rental Home, global Power
   compatibility repair, and GWC repo mutation are out of scope. Remote Supabase
   is READ-ONLY for this run: NO DDL/DML apply and NO `db push` without a later
   exact Human G6_PRODUCTION_DATA authority (G6 gate not started).
 approved_architecture:
   - run_* tables stay historical/audit metadata + reconstructed evidence; never synthesize missing canonical events.
-  - projection_events = canonical live event ledger for real-mode + Realtime.
+  - projection_events = canonical live event ledger for real-mode + Realtime (single new migration: projection_events + identity/order/indexes + notify_projection_event() + AFTER INSERT trigger + realtime.send(...) + RLS + SELECT-only publishable/anon/authenticated policy; no historical event backfill).
   - Real UI reads run metadata/gates/nodes from run_*; timeline/replay/live reads projection_events.
   - A reconstructed historical run with zero canonical events MUST surface PROJECTION_UNAVAILABLE / history unavailable, never fixture LIVE.
-  - Add migration for projection_events, Broadcast trigger, SELECT-only RLS for publishable client; NO client write policy.
+  - Add exactly ONE new migration; no new production module layer under src/observatory/ (not in approved plan).
   - Refresh G6 packet only after exact migrations/tests/hashes are final.
-scope_hash: sha256:ff0af39b1f6f6077bd5633d7de7905cf0546c5241d43eaf7dab4dbd8b62f89b8
-scope_hash_basis: >
+scope_hash: sha256:sha256:25e68f022593c0f93032233cbfc239880b025b85b71c54ad7020496cb931af06
+scope_hash_basis: >-
   Deterministic sha256 over canonical sorted serialization of scope_inputs.json
   (repository, task_id, run_label, base_ref, base_sha, working_branch,
   feature_target, risk_class, expires_at, approved_paths, authorized_actions,

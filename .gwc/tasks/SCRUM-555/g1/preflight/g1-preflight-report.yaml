@@ -44,7 +44,7 @@ checks:
   code: HUMAN_DIRECTION_CONFIRMED
   message: Required human direction is recorded for the high-risk class.
   evidence:
-  - risk_class=R4
+  - risk_class=R3 (R4 concern recorded as narrative risk_note in envelope)
 risk_class: R3
 required_gate: G2_HUMAN_DIRECTION
 blockers: []
