@@ -1,8 +1,18 @@
 import { RunView, UNKNOWN } from "@/lib/observatory";
 
+type SupabaseReadiness = {
+  project: string;
+  status: string;
+  readiness: string;
+  publicTables: number;
+  migrations: number;
+  remoteApplyPerformed: boolean;
+};
+
 type Props = {
   run: RunView;
   unknownSentinel: string;
+  supabaseReadiness?: SupabaseReadiness;
 };
 
 function Field({ label, value }: { label: string; value: string | null }) {
@@ -17,7 +27,7 @@ function Field({ label, value }: { label: string; value: string | null }) {
 // G3 correction #2: complete RootCard. Every labeled field is source-backed
 // when present in the fixture; absent fields render the explicit UNKNOWN
 // sentinel (never inferred).
-export default function RootCard({ run, unknownSentinel }: Props) {
+export default function RootCard({ run, unknownSentinel, supabaseReadiness }: Props) {
   return (
     <div className="rounded-lg border border-edge bg-panel p-4">
       <div className="flex items-center justify-between">
@@ -50,6 +60,17 @@ export default function RootCard({ run, unknownSentinel }: Props) {
             {run.eventCount} / {run.anomalyCount}
           </dd>
         </div>
+        {supabaseReadiness && (
+          <div className="col-span-2 sm:col-span-4">
+            <dt className="text-muted">Supabase readiness</dt>
+            <dd className="code">
+              {supabaseReadiness.project} · {supabaseReadiness.status} ·{" "}
+              {supabaseReadiness.readiness} · tables={supabaseReadiness.publicTables}{" "}
+              migrations={supabaseReadiness.migrations}{" "}
+              remoteApply={String(supabaseReadiness.remoteApplyPerformed)}
+            </dd>
+          </div>
+        )}
       </dl>
     </div>
   );

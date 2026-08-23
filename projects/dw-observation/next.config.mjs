@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  // M1 is a read-only historical UI; no server actions, no output export needed.
-  // Keep framework defaults. Observatory is a self-contained app under projects/dw-observation.
+  // Next.js dev indicator is the localhost "badge" that floats over the app and
+  // overlaps UI panels (the Vite/Next equivalent of the HMR error overlay).
+  // Disabled so the in-IDE web preview panels never collide with it.
+  devIndicator: false,
 };
 
 export default nextConfig;
