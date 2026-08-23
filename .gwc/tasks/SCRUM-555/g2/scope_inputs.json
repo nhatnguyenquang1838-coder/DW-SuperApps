@@ -17,7 +17,8 @@
     ".gwc/tasks/SCRUM-555/history-backfill/G6_PACKET.md"
   ],
   "test_paths_allowed": [
-    "projects/dw-observation/tests/unit/supabaseMigrationContract.test.ts"
+    "projects/dw-observation/tests/unit/supabaseMigrationContract.test.ts",
+    "projects/dw-observation/tests/unit/serverRunRead.test.ts"
   ],
   "authorized_actions": [
     "create_task_artifacts",

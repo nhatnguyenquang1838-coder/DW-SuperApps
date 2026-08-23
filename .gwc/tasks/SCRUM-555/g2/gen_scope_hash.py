@@ -25,6 +25,7 @@ canon = {
     "risk_class": scope["risk_class"],
     "expires_at": scope["expires_at"],
     "approved_paths": sorted(scope["approved_paths"]),
+    "test_paths_allowed": sorted(scope.get("test_paths_allowed", [])),
     "authorized_actions": sorted(scope["authorized_actions"]),
     "excluded_actions": sorted(scope["excluded_actions"]),
 }

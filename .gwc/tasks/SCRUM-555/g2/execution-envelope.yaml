@@ -24,6 +24,7 @@ modules_or_files:
   - .gwc/tasks/SCRUM-555/history-backfill/G6_PACKET.md
 test_paths_allowed:
   - projects/dw-observation/tests/unit/supabaseMigrationContract.test.ts
+  - projects/dw-observation/tests/unit/serverRunRead.test.ts
 authorized_actions:
   - create_task_artifacts
   - write_docs_first
@@ -65,9 +66,9 @@ approved_architecture:
   - A reconstructed historical run with zero canonical events MUST surface PROJECTION_UNAVAILABLE / history unavailable, never fixture LIVE.
   - Add exactly ONE new migration; no new production module layer under src/observatory/ (not in approved plan).
   - Refresh G6 packet only after exact migrations/tests/hashes are final.
-scope_hash: sha256:sha256:25e68f022593c0f93032233cbfc239880b025b85b71c54ad7020496cb931af06
+scope_hash: sha256:3fabfceb591e95c552685245f9bf49576cd356bfc712a5738f2401311b4286d3
 scope_hash_basis: >-
   Deterministic sha256 over canonical sorted serialization of scope_inputs.json
   (repository, task_id, run_label, base_ref, base_sha, working_branch,
-  feature_target, risk_class, expires_at, approved_paths, authorized_actions,
-  excluded_actions). Computed by g2/gen_scope_hash.py; NOT a hash of this YAML.
+  feature_target, risk_class, expires_at, approved_paths, test_paths_allowed,
+  authorized_actions, excluded_actions). Computed by g2/gen_scope_hash.py; NOT a hash of this YAML.
