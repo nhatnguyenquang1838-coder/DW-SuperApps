@@ -65,8 +65,14 @@ const EVIDENCE = {
     "78": "edb91060017ea02685718a1fadf1dbb7acddbee7",
     "79": "a992fa4824db17434f6bdf8aabe8d6f435cc5767",
   } as Record<string, string>,
-  // terminal-mailbox receipts (authoritative issue threads)
+  // terminal-mailbox receipts (authoritative issue threads + exact comment ids)
   mailbox: { "76": "71", "77": "72", "78": "73", "79": "70" } as Record<string, string>,
+  mailboxComment: {
+    "76": { id: "5370838035", ts: "2026-08-21T14:03:22Z", ref: "github:issue/71#issuecomment-5370838035" },
+    "77": { id: "5370849202", ts: "2026-08-21T14:04:08Z", ref: "github:issue/72#issuecomment-5370849202" },
+    "78": { id: "5373867605", ts: "2026-08-21T18:42:23Z", ref: "github:issue/73#issuecomment-5373867605" },
+    "79": { id: "5381850075", ts: "2026-08-22T18:08:14Z", ref: "github:issue/70#issuecomment-5381850075" },
+  } as Record<string, { id: string; ts: string; ref: string }>,
 };
 
 type RunKind = "observed_real" | "simulated_fixture" | "golden_fixture" | "reconstructed_history";
@@ -176,6 +182,7 @@ function buildReconstructed(): { runs: RunsRow[]; gates: GateRow[]; nodes: NodeR
     const mergedAt = pr.merged;
     const ci = EVIDENCE.ci[d.ci_run_id];
     const mailboxIssue = EVIDENCE.mailbox[String(d.pr_number)];
+    const mb = EVIDENCE.mailboxComment[String(d.pr_number)];
 
     runs.push({
       run_id: d.run_id, run_kind: "reconstructed_history", source_system: "taskcontroller",
@@ -183,14 +190,14 @@ function buildReconstructed(): { runs: RunsRow[]; gates: GateRow[]; nodes: NodeR
       scope_hash: d.scope_hash, base_sha: d.base_sha, head_sha: d.head_sha, merge_sha: d.merge_sha,
       base_branch: "pre-prod", branch: d.branch, pr_number: d.pr_number, ci_run_id: d.ci_run_id,
       ci_status: ci?.status, started_at: pr.created, completed_at: mergedAt,
-      reconstruction_basis: `PR #${d.pr_number} (merged ${mergedAt}) + terminal mailbox issue #${mailboxIssue}`,
-      source_refs: [`github:pull/${d.pr_number}`, `github:issue/${mailboxIssue}`, `github:actions:run/${d.ci_run_id}`],
+      reconstruction_basis: `PR #${d.pr_number} (merged ${mergedAt}) + terminal mailbox ${mb.ref}`,
+      source_refs: [`github:pull/${d.pr_number}`, `github:issue/${mailboxIssue}`, mb.ref, `github:actions:run/${d.ci_run_id}`],
       confidence: "HIGH", evidence_quality: "STRONG",
       reconstructed_by: "TaskController/Hermes", reconstructed_at: RECONSTRUCTED_AT,
       payload: { milestone: d.milestone, approval_id: d.approval_id },
     });
 
-    // normalized sources: github_pr, github_issue, ci_run, reconstruction, controller_mailbox
+    // normalized sources: github_pr, github_issue (generic, issue-created ts), ci_run, reconstruction, controller_mailbox (exact comment)
     sources.push({
       source_id: `pr-${d.run_id}`, run_id: d.run_id, source_system: "github", source_kind: "github_pr",
       capture_provenance_verified: true, source_ref: `github:pull/${d.pr_number}`, occurred_at: mergedAt,
@@ -212,12 +219,12 @@ function buildReconstructed(): { runs: RunsRow[]; gates: GateRow[]; nodes: NodeR
       occurred_at: RECONSTRUCTED_AT, evidence_refs: [`PR #${d.pr_number}`, `issue #${mailboxIssue}`],
     });
     sources.push({
-      source_id: `mailbox-${d.run_id}`, run_id: d.run_id, source_system: "repo_governance",
+      source_id: `mailbox-${d.run_id}`, run_id: d.run_id, source_system: "github",
       source_kind: "controller_mailbox", capture_provenance_verified: true,
-      source_ref: `github:issue/${mailboxIssue}`, occurred_at: iss,
+      source_ref: mb.ref, occurred_at: mb.ts,
       authority_ref: d.approval_id,
       evidence_refs: [
-        `terminal mailbox issue #${mailboxIssue}`,
+        `terminal mailbox comment ${mb.ref}`,
         `run_id=${d.run_id}`, `approval_id=${d.approval_id}`,
         `scope_hash=${d.scope_hash ?? "n/a"}`, `head_sha=${d.head_sha}`,
         `ci_run=${d.ci_run_id}`, `merge_sha=${d.merge_sha}`,
@@ -240,7 +247,7 @@ function buildReconstructed(): { runs: RunsRow[]; gates: GateRow[]; nodes: NodeR
     }
 
     // Artifacts: context->issue ts; delivery->PR merge ts; CI->CI run ts (real, all runs); alignment->PR merge ts
-    const ciRefs = [`github:actions:run/${d.ci_run_id}`, `github:issue/${mailboxIssue}`];
+    const ciRefs = [`github:actions:run/${d.ci_run_id}`, `github:issue/${mailboxIssue}`, mb.ref];
     const baseArts: Array<Pick<ArtifactRow, "artifact_type" | "reconstruction_basis" | "source_occurred_at" | "source_refs" | "confidence" | "evidence_quality">> = [
       {
         artifact_type: "reconstructed_context_evidence",

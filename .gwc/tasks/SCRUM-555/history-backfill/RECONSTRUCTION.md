@@ -44,7 +44,11 @@ Deterministic digest: `ee63a3b9c926392ca45b5ea37073266ceb5afc52dc1e892a4c6c3f3ef
 - `run_nodes` (3): M0 node `71`, M3M4 nodes `74`,`75`. `run_nodes.gate_id` nullable FK.
 
 ## run_sources provenance (23 rows)
-Per run (×4): `github_pr` + `github_issue` + `ci_run`(real) + `reconstruction` + `controller_mailbox` (pointing to authoritative issue thread with run_id/approval_id/scope_hash/head_sha/ci_run/merge_sha).
+Per run (×4): `github_pr` + `github_issue`(generic, issue-created ts) + `ci_run`(real) + `reconstruction` + `controller_mailbox`(binding the EXACT canonical receipt comment, `source_system='github'`, `occurred_at`=proven comment ts):
+- M0: `github:issue/71#issuecomment-5370838035` (M0 TERMINAL, `2026-08-21T14:03:22Z`)
+- M1: `github:issue/72#issuecomment-5370849202` (`2026-08-21T14:04:08Z`)
+- M2: `github:issue/73#issuecomment-5373867605` (`2026-08-21T18:42:23Z`)
+- M3M4: `github:issue/70#issuecomment-5381850075` (`2026-08-22T18:08:14Z`)
 - M3M4 adds `repo_governance` evidence-file row (path + full 64-hex digest).
 - 2 `golden_fixture` (M0 canonical run, preserving each `source_run_id`).
 Total = 5×3 + 6 + 2 = 23.

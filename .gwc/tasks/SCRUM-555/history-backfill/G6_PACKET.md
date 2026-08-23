@@ -10,7 +10,7 @@
 - DDL: `20260823T080000Z_observatory_history.sql`
   - SHA-256: `ef880051d8fb7caf40005206d1200c3824509f8084ec771324866ee29500e185`
 - DML (deterministic, idempotent `ON CONFLICT DO NOTHING`): `20260823T090000Z_observatory_backfill_dml.sql`
-  - SHA-256: `df59a43c3cd6c6522a4b9ae71a148070c0c21c66682849878c6e3669ae3fa0ba`
+  - SHA-256: `5bcee0d6ea6a34b0b8cef91ff5a860ff2289a0f23ff9386a92105ee62aff23df`
 - Tables: `runs`(4), `run_events`(0), `run_gates`(3), `run_nodes`(3),
   `run_artifacts`(17), `run_checkpoints`(0), `run_edges`(0), `run_sources`(23).
 - `run_kind`: `observed_real|simulated_fixture|golden_fixture|reconstructed_history`.
@@ -48,9 +48,15 @@ Linear chain (base → head → merge):
 - Original `M3-M4-EVIDENCE.md`: `source_occurred_at=NULL`, `effective_at`=merge; full 64-hex SHA-256.
 
 ## Terminal-mailbox source refs
-Each reconstructed run has a `controller_mailbox` `run_sources` row (source_kind) pointing to the
-authoritative issue thread (#71 M0, #72 M1, #73 M2, #70 M3M4) carrying
-`run_id/approval_id/scope_hash/head_sha/ci_run/merge_sha`. CI artifacts reference both the ci_run and mailbox sources.
+Each reconstructed run has a `controller_mailbox` `run_sources` row with `source_system='github'`
+(pointing to the EXACT canonical receipt comment, not the generic issue container):
+- M0: `github:issue/71#issuecomment-5370838035` (M0 TERMINAL, `2026-08-21T14:03:22Z`)
+- M1: `github:issue/72#issuecomment-5370849202` (`2026-08-21T14:04:08Z`)
+- M2: `github:issue/73#issuecomment-5373867605` (`2026-08-21T18:42:23Z`)
+- M3M4: `github:issue/70#issuecomment-5381850075` (`2026-08-22T18:08:14Z`)
+`occurred_at` = the actual proven comment timestamp (retrieved from GitHub), NOT issue.created_at.
+The generic `github_issue` source (issue-created ts) is kept SEPARATELY for issue-context reconstruction.
+CI artifacts reference both the `ci_run` source and the exact mailbox comment ref.
 
 ## Exact remote-apply command (supabase 2.111.0)
 DML lives under `supabase/migrations/` → `supabase db push --linked --include-all` applies BOTH.
