@@ -1,76 +1,24 @@
 # Agent Instruction Index
 
-This directory contains DW-SuperApps agent overlays. Root `AGENTS.md`, `workspace.yaml`, controller registries, project instructions, installed Power instructions, exact repository state, and TaskController audit evidence remain authoritative.
+This directory contains DW-SuperApps agent overlays. Root `AGENTS.md`, workspace/project instructions, installed Power instructions, and exact repository state remain authoritative.
 
-## TaskController explicit activation
+## Slack Controller–Executor MVP
 
-`TaskController` is a first-class **workspace controller**, not a Power.
+When ChatGPT is acting as Controller for a Slack-mediated Executor run, the following additive instruction chain is **mandatory**:
 
-Any explicit user mention of one of these aliases activates it:
-
-- `TaskController`
-- `task controller`
-- `/dw-taskcontroller`
-
-On activation, do not rely on conversation memory, a prior "booted" claim, or Slack history. Resolve the current repository and load the canonical chain declared by `controllers/taskcontroller.yaml`.
-
-The base load order starts with:
-
-1. root `AGENTS.md`
-2. `workspace.yaml`
-3. `controllers/taskcontroller.yaml`
-4. this index
-5. current host overlay
-6. `agents/shared/taskcontroller-a2a-protocol.md`
-7. canonical human-plane policy when a human plane is selected
-8. transport/executor overlays required by the registry
-
-If a required **repository entrypoint** is missing or cannot be read, activation is `BLOCKED`; do not synthesize a controller contract from memory. External human-plane projections such as Slack Canvases are not repository entrypoints and do not block activation.
-
-## Agent interaction pilot
-
-Current Agent interaction is **reference-based A2A**:
-
-- semantic protocol: `dw.taskcontroller.a2a/v1`;
-- pilot binding: GitHub reference mailbox;
-- one actor = one mutable mailbox comment;
-- context/evidence by exact reference;
-- Controller observes monotonically increasing per-actor mailbox sequence/cursor;
-- TaskController audit ledger records semantic events when configured;
-- binding IDs never become canonical TaskController IDs.
-
-The same protocol may later bind to A2A HTTP, local IPC, NATS, Kafka/MSK, or another transport without changing Controller/Executor semantics.
-
-## Human Control Plane
-
-Canonical human-plane behavior is defined by:
-
-- `agents/shared/taskcontroller-human-plane-policy.md`
-
-When ChatGPT presents a controlled run in Slack, the mandatory additive repository chain includes:
-
-1. `agents/chatgpt-agent/agent-instructions.md`
-2. `agents/shared/taskcontroller-a2a-protocol.md`
-3. `agents/shared/taskcontroller-human-plane-policy.md`
+1. root `AGENTS.md` + applicable workspace/project/Power instructions
+2. `agents/chatgpt-agent/agent-instructions.md`
+3. `agents/shared/slack-controller-executor-protocol.md`
 4. `agents/chatgpt-agent/slack-controller-mvp.md`
-5. the current Slack connector for actual Slack I/O
 
-For Hermes Executor, also load `agents/hermes/agent-instructions.md`.
+For Hermes Executor, load:
 
-`Slack Communication Policy` and `Governance Behavior` Canvases are optional human-readable projections of repository policy. Missing, inaccessible, stale, or conflicting Canvas content MUST NOT block TaskController activation. Repository policy wins; report projection drift only when material.
+1. applicable project/Power and normal coding-agent/GWC lifecycle when GWC is active
+2. `agents/shared/slack-controller-executor-protocol.md`
+3. `agents/hermes/agent-instructions.md`
 
-Slack is the Human Control Plane: one RootCard plus a compact semantic timeline. Slack is not the Executor progress transport and not canonical run/audit state. Machine polling, ACKs, mailbox sequence churn, raw CI polling, file/tool chatter and retry noise stay out of Slack.
+The MVP is intentionally slim: one Controller, one Executor, one RootCard/thread, 3–5 contracted subtasks, milestone-based reporting, in-session 60-second incremental polling, explicit `CONTINUE | WAIT_CONTROLLER | TERMINAL` behavior, and bounded intercepts.
 
-## Controller / Executor boundary
+The GPT Controller owns decomposition, report timing, expected milestone evidence, WAIT points, review and intercept decisions. The Executor must not invent a different plan or arbitrary reporting cadence.
 
-The Controller owns decomposition, selected-plan contracting, report timing, expected evidence, WAIT points, RootCard state, mailbox observation, review and bounded INTERCEPT decisions.
-
-The Executor follows the bounded contract, verifies exact repository/base/head assumptions in its own environment, updates its mailbox at contracted milestones/material exceptions, and does not invent a different plan or authority.
-
-## Recovery
-
-A fresh Controller recovers from current repository/task/run identity, mailbox envelopes/cursors, referenced PR/SHA/CI/artifacts, audit ledger/checkpoint when configured, and the Slack RootCard binding. Conversation history and full Slack thread replay are not recovery requirements.
-
-## GWC boundary
-
-TaskController activation does not automatically activate GWC. Load GWC only when the controlled task/project requires that governance model.
+Full E2E sequencing/replay/recovery/multi-executor logic is deferred until pilot acceptance.
