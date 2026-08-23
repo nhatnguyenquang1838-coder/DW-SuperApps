@@ -1,0 +1,51 @@
+schema_version: '1.0'
+artifact_type: g1-preflight-report
+generated_at: '2026-08-23T14:30:00Z'
+trace:
+  project_id: dw-observation
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: SCRUM-555
+  base_sha: 0ee1b41b33ca83242d02c2098e6ef96a7c510301
+  g0_snapshot: ../../g0/context-snapshot.yaml
+repository_state:
+  base_ref: pre-prod
+  base_sha: 0ee1b41b33ca83242d02c2098e6ef96a7c510301
+  profile_path: projects/dw-observation/project-profile.yaml
+  connector: DWC
+checks:
+- id: REPO_IDENTITY
+  status: PASS
+  code: REPOSITORY_VERIFIED
+  message: Repository identity and base evidence are verified.
+  evidence:
+  - nhatnguyenquang1838-coder/DW-SuperApps@0ee1b41b33ca83242d02c2098e6ef96a7c510301
+  - pre-prod branch confirmed via git ls-remote
+- id: REQUIRED_SOURCES
+  status: PASS
+  code: REQUIRED_SOURCES_AVAILABLE
+  message: All required sources are available.
+  evidence:
+  - AGENTS.md
+  - projects/dw-observation/project-profile.yaml
+- id: TASK_TRACEABILITY
+  status: PASS
+  code: SCRUM_555_LANE_CLAIMED
+  message: Bounded change has the SCRUM-555 DW Observatory lane.
+  evidence:
+  - SCRUM-555
+- id: INTAKE_COMPLETENESS
+  status: PASS
+  code: G1_INTAKE_READY
+  message: Problem, scope, non-goals, and verifiable acceptance criteria are complete.
+  evidence:
+  - g1/intake/g1-intake-brief.yaml
+- id: RISK_GATE
+  status: PASS
+  code: HUMAN_DIRECTION_CONFIRMED
+  message: Required human direction is recorded for the high-risk class.
+  evidence:
+  - risk_class=R4
+risk_class: R3
+required_gate: G2_HUMAN_DIRECTION
+blockers: []
+outcome: PASS

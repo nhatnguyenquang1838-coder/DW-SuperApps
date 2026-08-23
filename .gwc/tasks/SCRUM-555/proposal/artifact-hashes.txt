@@ -1,0 +1,30 @@
+# Artifact hashes — DW-OBS-G6-READINESS-R1
+# scope_hash is canonical (deterministic over scope_inputs.json), NOT a hash of the envelope.
+
+scope_hash: sha256:ff0af39b1f6f6077bd5633d7de7905cf0546c5241d43eaf7dab4dbd8b62f89b8
+SCOPE_INPUTS sha256: 832b0337539e056dabf565aa49e4a4852135cdcebeb2c1bbfcb500804490e5cb
+
+# G0/G1 canonical artifacts
+G0_CONTEXT   sha256: afe67ad4c7e0672361f36ecda97199eb7c35878838799c3768a4b58bd4149180
+G1_INTAKE    sha256: 6df6adb17f1fc66937ab44ef1237cb4f665a5425c746d625e361c89ad8001fef
+G1_PREFLIGHT sha256: 27b2ebf24c89534e7a201e392df1d2bbea439f857791da7f1f9bbf79b48a45b1
+G1_OPTIONS   sha256: 55ad763860b749c664b40f068cab6ea6dbc32edd424b9785160f7d74dadd72e6
+G1_DECISION  sha256: f6095de113cbcd8affe75df3b2f95ea86c89f17bf9b99d52262a947797846a84
+
+# G2 envelope
+G2_ENVELOPE  sha256: 02f0725f75946eb7eb15adf2d8d8e419c85da6695478a7226c439d97aa78e1ad
+
+# Proposal artifacts
+WRITTEN_PROPOSAL sha256: d08fd25aba6c26fd94c6bcb6c0a9f9d3c012c3c1fdf756370c28268e097cc87a
+CHANGE_PLAN     sha256: 6a26858c883fbb4ab37405350decb0a09898d3a6473e2ca8173d509591aae5b9
+
+# Diagram provenance: overview.mmd (Mermaid source) -> detailed.svg (hand-authored) -> detailed.png (real derived)
+OVERVIEW_MMD  sha256: 7001bf4d21c95a0ecf0029f7c3c3bb33e066f44476d32498cf5cec22b3d8dd01
+DETAILED_SVG  sha256: e9a8be2a9b5cf761c9cdaddfe5bf34127b4f6b55671b74abe8665dbdc29252e8
+DETAILED_PNG  sha256: d19083e0ba7e58be3c6f704ac003332751641ffa02e1d901302ae6f92f12f49b   (real bytes: 34371, PNG 640x640 RGBA)
+PNG_DERIVATION: qlmanage -t -s 640 -o pngout detailed.svg  (macOS Quick Look, OFFLINE renderer)
+SVG_SOURCE: hand-authored detailed.svg (visual source == approved architecture)
+PNG_STATUS: REAL_DERIVED_OK
+
+# NOTE on overview.mmd: Mermaid source authored; no Mermaid->PNG rasterizer available offline.
+# detailed.png is the real derived visual artifact (SVG->PNG via qlmanage). No placeholder/fabricated bytes.

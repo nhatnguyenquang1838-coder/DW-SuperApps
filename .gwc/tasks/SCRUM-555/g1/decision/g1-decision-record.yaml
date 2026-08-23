@@ -1,0 +1,51 @@
+schema_version: '1.0'
+artifact_type: g1-decision-record
+generated_at: '2026-08-23T14:35:00Z'
+trace:
+  project_id: dw-observation
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: SCRUM-555
+  base_sha: 0ee1b41b33ca83242d02c2098e6ef96a7c510301
+  g0_snapshot: ../../g0/context-snapshot.yaml
+options_ref: ../brainstorming/g1-options.yaml
+preflight_ref: ../preflight/g1-preflight-report.yaml
+status: ACCEPTED
+selected_option_id: OPT-1
+user_decision:
+  actor: user
+  decided_at: '2026-08-23T14:35:00+07:00'
+  source: Controller approved G6-readiness design (dual-store projection_events + SELECT-only RLS)
+  explicit: true
+rationale: Controller-selected dual-store architecture; OPT-2 rejected because it fabricates historical evidence, violating the non-synthesis constraint.
+rejected_option_ids: [OPT-2]
+acceptance_criteria_refs: [AC-1, AC-2, AC-3, AC-4]
+scope_hash: sha256:ff0af39b1f6f6077bd5633d7de7905cf0546c5241d43eaf7dab4dbd8b62f89b8
+g1_gate_outcome: PASS
+authority_boundaries:
+  grants: []
+  excluded: [G4_MERGE, G5_DEPLOY, G6_PRODUCTION]
+subagent_distribution_plan:
+  task_decomposition:
+  - sub_task_id: SUB-TASK-1
+    description: Docs (spec + plan) first, committed separately.
+    dependencies: []
+  - sub_task_id: SUB-TASK-2
+    description: TDD SQL contract test (RED) then projection_events migration + RLS (GREEN).
+    dependencies: [SUB-TASK-1]
+  - sub_task_id: SUB-TASK-3
+    description: serverRunRead adapter + app/runs pages; truthful unavailable history.
+    dependencies: [SUB-TASK-2]
+  - sub_task_id: SUB-TASK-4
+    description: Refresh G6_PACKET.md; full Vitest + typecheck + validator; push DRAFT PR to pre-prod.
+    dependencies: [SUB-TASK-3]
+  agent_allocation:
+  - sub_task_id: SUB-TASK-1
+    skill_id: doc-authoring
+  - sub_task_id: SUB-TASK-2
+    skill_id: supabase-migration-tdd
+  - sub_task_id: SUB-TASK-3
+    skill_id: ts-adapter-tdd
+  - sub_task_id: SUB-TASK-4
+    skill_id: gwc-governance-delivery
+  execution_order: [SUB-TASK-1, SUB-TASK-2, SUB-TASK-3, SUB-TASK-4]
+  summary: Single local agent (Hermes/DWA) execution under TaskController; no subagent clobber.

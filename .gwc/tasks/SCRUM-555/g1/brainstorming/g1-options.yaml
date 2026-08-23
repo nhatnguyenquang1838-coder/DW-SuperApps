@@ -1,0 +1,36 @@
+schema_version: '1.0'
+artifact_type: g1-options
+generated_at: '2026-08-23T14:30:00Z'
+trace:
+  project_id: dw-observation
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: SCRUM-555
+  base_sha: 0ee1b41b33ca83242d02c2098e6ef96a7c510301
+  g0_snapshot: ../../g0/context-snapshot.yaml
+options:
+- id: OPT-1
+  title: Dual-store with projection_events canonical ledger + SELECT-only RLS
+  description: Add projection_events migration (broadcast trigger, SELECT-only RLS), server read adapter reading run_* metadata, and UI handling PROJECTION_UNAVAILABLE. No remote apply.
+  benefits:
+  - Real-mode deployable without fabricating history
+  - Publishable-key reads only; no client writes
+  tradeoffs:
+  - Adds one migration + adapter surface
+  - Extra UI branch for unavailable history
+  risks:
+  - RLS misconfiguration (mitigated by contract test)
+  constraint_fit: FIT
+- id: OPT-2
+  title: Keep run_* only, render history from fixtures
+  description: Skip projection_events; reuse existing run_* and present reconstructed events as LIVE.
+  benefits:
+  - Smaller change surface
+  tradeoffs:
+  - Violates the never-fixture-LIVE and never-synthesize-events constraints
+  risks:
+  - Fabricated historical evidence (rejected by Controller)
+  constraint_fit: NOT_FIT
+recommended_option_id: OPT-1
+recommendation_rationale: Controller-selected dual-store architecture; OPT-2 rejected because it fabricates historical evidence.
+decision_required: true
+status: READY

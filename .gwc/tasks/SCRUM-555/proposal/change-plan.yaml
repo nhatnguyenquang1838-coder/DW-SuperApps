@@ -1,0 +1,57 @@
+schema_version: '1.0'
+artifact_type: change-plan
+task_id: SCRUM-555
+run_label: DW-OBS-G6-READINESS-R1
+base_sha: 0ee1b41b33ca83242d02c2098e6ef96a7c510301
+working_branch: auto/SCRUM-555-observatory-g6-readiness-r1
+steps:
+- id: S1
+  action: write_docs
+  files:
+  - docs/superpowers/specs/2026-08-23-observatory-g6-readiness-design.md
+  - docs/superpowers/plans/2026-08-23-observatory-g6-readiness.md
+  description: Docs first (plan header, architecture, constraints). Commit separately.
+  depends_on: []
+- id: S2
+  action: add_contract_test_red
+  files:
+  - projects/dw-observation/tests/unit/supabaseMigrationContract.test.ts
+  description: RED test reading committed migration SQL; assert projection_events schema, indexes, trigger, SELECT-only RLS; old hashes unchanged. Run only this test; capture RED.
+  depends_on: [S1]
+- id: S3
+  action: add_migration_green
+  files:
+  - projects/dw-observation/supabase/migrations/20260823T100000Z_projection_events.sql
+  - projects/dw-observation/supabase/migrations/20260823T100500Z_projection_events_broadcast_rls.sql
+  description: New migration after 20260823T090000Z; projection_events + broadcast trigger + hardened SELECT-only RLS. Re-run GREEN.
+  depends_on: [S2]
+- id: S4
+  action: add_adapter_code
+  files:
+  - projects/dw-observation/lib/serverRunRead.ts
+  - projects/dw-observation/src/observatory/projection_events.ts
+  - projects/dw-observation/src/observatory/projectionBroadcast.ts
+  - projects/dw-observation/src/observatory/rlsPolicy.ts
+  - projects/dw-observation/app/runs/page.tsx
+  - projects/dw-observation/app/runs/[runId]/page.tsx
+  description: Server read adapter sharing publishable-key boundary; RED tests then implement; map exact metadata; PROJECTION_UNAVAILABLE for zero events.
+  depends_on: [S3]
+- id: S5
+  action: refresh_g6_packet
+  files:
+  - .gwc/tasks/SCRUM-555/history-backfill/G6_PACKET.md
+  description: Refresh G6_PACKET to current truth after code stabilizes.
+  depends_on: [S4]
+- id: S6
+  action: verify_and_push
+  files: []
+  description: Full Vitest + strict typecheck + workspace validator + SQL contract test. Push branch, open DRAFT PR to pre-prod. HOLD for G3.
+  depends_on: [S5]
+risk_class: R4
+excluded_actions:
+- merge
+- deploy
+- db_push
+- remote_supabase_ddl_apply
+- remote_supabase_dml_apply
+- gwc_repo_mutation
