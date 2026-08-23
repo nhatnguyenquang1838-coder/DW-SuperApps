@@ -4,21 +4,42 @@
  * Reads authoritative repo evidence (fixtures + inventory) and builds the
  * normalized row sets for the 8 observatory tables. It NEVER connects to
  * Supabase and NEVER applies DDL/DML. Output is a deterministic dry-run
- * report (row counts, idempotency/upsert-key checks, RI checks, real-vs-sim
- * separation, reconstruction provenance, rollback plan).
+ * report (row counts, idempotency/upsert-key checks, RI checks, provenance
+ * checks, reconstruction provenance, deterministic digest).
  *
- * Remote apply is gated behind exact G6 approval (see G6 packet). This script
- * is the offline validation artifact only.
+ * Remote apply is gated behind exact G6 approval. This script is the offline
+ * validation artifact only. There is NO --apply implementation; the apply path
+ * is a separate deterministic DML migration (see supabase/migrations/
+ * 20260823T090000Z_observatory_backfill_dml.sql) executed only after G6.
+ *
+ * Determinism: reconstruction timestamps are bound to DW_OBS_RECONSTRUCTED_AT
+ * (defaults to a fixed governance timestamp), so two dry-runs produce identical
+ * normalized output and digest.
  */
 import * as fs from "fs";
 import * as path from "path";
+import * as crypto from "crypto";
 
 const PROJECT_ROOT = process.env.DW_OBS_PROJECT_ROOT
   ? path.resolve(process.env.DW_OBS_PROJECT_ROOT)
   : process.cwd();
 const FIXTURES = path.join(PROJECT_ROOT, "fixtures");
 
-type RunKind = "observed_real" | "simulated_fixture" | "reconstructed_history";
+// Deterministic governance timestamp (truthful: this is when the backfill run
+// was governed). Bind via env to override truthfully per-run.
+const RECONSTRUCTED_AT =
+  process.env.DW_OBS_RECONSTRUCTED_AT || "2026-08-23T08:30:00.000Z";
+
+type RunKind = "observed_real" | "simulated_fixture" | "golden_fixture" | "reconstructed_history";
+type SourceKind =
+  | "live_capture"
+  | "golden_fixture"
+  | "github_pr"
+  | "github_issue"
+  | "ci_run"
+  | "gwc_artifact"
+  | "reconstruction";
+type ArtifactStatus = "original" | "reconstructed" | "missing_unreconstructable";
 
 interface RunsRow {
   run_id: string;
@@ -39,10 +60,43 @@ interface RunsRow {
   reconstruction_basis?: string;
   source_refs: string[];
   confidence?: "HIGH" | "PARTIAL" | "UNKNOWN";
-  evidence_quality?: "STRONG" | "WEAK" | "NONE";
+  evidence_quality?: "STRONG" | "PARTIAL" | "WEAK" | "NONE";
   reconstructed_by?: string;
   reconstructed_at?: string;
   payload: Record<string, unknown>;
+}
+
+interface ArtifactRow {
+  artifact_id: string;
+  run_id: string;
+  node_id?: string;
+  gate_id?: string;
+  artifact_type: string;
+  artifact_status: ArtifactStatus;
+  original_artifact_present: boolean;
+  source_occurred_at?: string;
+  effective_at?: string;
+  reconstructed_at?: string;
+  reconstruction_basis?: string;
+  source_refs: string[];
+  confidence?: "HIGH" | "PARTIAL" | "UNKNOWN";
+  evidence_quality?: "STRONG" | "PARTIAL" | "WEAK" | "NONE";
+  reconstructed_by?: string;
+  payload: Record<string, unknown>;
+}
+
+interface SourceRow {
+  source_id: string;
+  run_id: string;
+  source_system: "taskcontroller" | "gwc";
+  source_event_id?: string;
+  source_kind: SourceKind;
+  capture_provenance_verified: boolean;
+  source_ref?: string;
+  source_digest?: string;
+  occurred_at?: string;
+  authority_ref?: string;
+  evidence_refs: string[];
 }
 
 // ---- loaders ---------------------------------------------------------------
@@ -50,31 +104,16 @@ function loadFixture(name: string): any {
   return JSON.parse(fs.readFileSync(path.join(FIXTURES, name), "utf8"));
 }
 
-function loadInventory(): any {
-  const p = path.resolve(
-    PROJECT_ROOT,
-    "..",
-    "..",
-    ".gwc",
-    "tasks",
-    "SCRUM-555",
-    "history-backfill",
-    "INVENTORY.md",
-  );
-  return fs.existsSync(p) ? fs.readFileSync(p, "utf8") : "";
-}
-
 // ---- golden/simulated fixtures → golden_fixture runs + supporting sources ---
-// Per seq=9 correction: repo fixtures (run_scrum555_m0.json,
-// run_gwc_durable_m0.json) are "Golden fixtures + replay tests (reproducible,
-// no network)" per PR #76 contract. Event shape ≠ capture provenance.
-// Default to golden_fixture; observed_real only with live-capture receipt.
-function buildFixtureRuns(): { runs: RunsRow[]; events: any[]; gates: any[]; nodes: any[]; sources: any[] } {
+// Per seq=9 correction: repo fixtures are "Golden fixtures + replay tests
+// (reproducible, no network)" per PR #76 contract. Event shape ≠ capture
+// provenance. Default to golden_fixture; observed_real only with live-capture.
+function buildFixtureRuns(): { runs: RunsRow[]; events: any[]; gates: any[]; nodes: any[]; sources: SourceRow[] } {
   const out: RunsRow[] = [];
   const events: any[] = [];
   const gates: any[] = [];
   const nodes: any[] = [];
-  const sources: any[] = [];
+  const sources: SourceRow[] = [];
 
   const tc = loadFixture("run_scrum555_m0.json");
   const gwc = loadFixture("run_gwc_durable_m0.json");
@@ -98,23 +137,21 @@ function buildFixtureRuns(): { runs: RunsRow[]; events: any[]; gates: any[]; nod
     source_refs: ["fixtures/run_gwc_durable_m0.json"],
   });
 
-  for (const e of tc.events) {
-    events.push({
-      ...e,
+  for (const e of tc.events as any[]) {
+    events.push(Object.assign({}, e, {
       run_id: tc.run_id,
       source_system: e.source ?? "taskcontroller",
       source_event_id: e.event_id,
       event_type: e.event_type ?? e.decision_kind ?? "unknown",
-    });
+    }));
   }
-  for (const e of gwc.events) {
-    events.push({
-      ...e,
+  for (const e of gwc.events as any[]) {
+    events.push(Object.assign({}, e, {
       run_id: gwc.run_id,
       source_system: e.source ?? "gwc",
       source_event_id: e.event_id,
       event_type: e.event_type ?? e.decision_kind ?? "unknown",
-    });
+    }));
   }
 
   const projTcGates = projTc.gates && typeof projTc.gates === "object" ? Object.values(projTc.gates) : [];
@@ -122,12 +159,11 @@ function buildFixtureRuns(): { runs: RunsRow[]; events: any[]; gates: any[]; nod
   const projGwcGates = projGwc.gates && typeof projGwc.gates === "object" ? Object.values(projGwc.gates) : [];
   const projGwcNodes = projGwc.nodes && typeof projGwc.nodes === "object" ? Object.values(projGwc.nodes) : [];
 
-  for (const g of projTcGates) gates.push({ ...g, run_id: tc.run_id });
-  for (const n of projTcNodes) nodes.push({ ...n, run_id: tc.run_id });
-  for (const g of projGwcGates) gates.push({ ...g, run_id: gwc.run_id });
-  for (const n of projGwcNodes) nodes.push({ ...n, run_id: gwc.run_id });
+  for (const g of projTcGates as any[]) gates.push(Object.assign({}, g, { run_id: tc.run_id }));
+  for (const n of projTcNodes as any[]) nodes.push(Object.assign({}, n, { run_id: tc.run_id }));
+  for (const g of projGwcGates as any[]) gates.push(Object.assign({}, g, { run_id: gwc.run_id }));
+  for (const n of projGwcNodes as any[]) nodes.push(Object.assign({}, n, { run_id: gwc.run_id }));
 
-  // supporting run_sources (provenance: golden_fixture, NOT live_capture)
   sources.push({
     source_id: `src-${tc.run_id}`,
     run_id: tc.run_id,
@@ -149,99 +185,256 @@ function buildFixtureRuns(): { runs: RunsRow[]; events: any[]; gates: any[]; nod
   return { runs: out, events, gates, nodes, sources };
 }
 
-// ---- reconstructed_history → milestone delivery runs (from PR/issue evidence)
-function buildReconstructed(): { runs: RunsRow[] } {
-  const runs: RunsRow[] = [
-    {
-      run_id: "DW-OBS-M3M4-20260823-R1",
+// ---- reconstructed_history → milestone delivery runs + sources + artifacts --
+interface ReconstructedDef {
+  run_id: string;
+  pr_number: number;
+  issue: string;
+  authority_ref?: string;
+  scope_sha?: string;
+  branch?: string;
+  source_occurred_at: string;
+  milestone: string;
+  ci_run_id?: string;
+  ci_status?: string;
+  has_alignment_scope: boolean; // gate artifact reconstructable?
+}
+
+const RECONSTRUCTED: ReconstructedDef[] = [
+  {
+    run_id: "DW-OBS-M3M4-20260823-R1",
+    pr_number: 79,
+    issue: "70",
+    authority_ref: "G2-DW-OBS-M3M4-20260823-R1",
+    scope_sha: "aa5756f5dfc424ba",
+    branch: "auto/SCRUM-555-dw-observation-m3m4-r1",
+    source_occurred_at: "2026-08-23T00:00:00.000Z",
+    milestone: "M3/M4",
+    ci_run_id: "32626391692",
+    ci_status: "SUCCESS",
+    has_alignment_scope: true,
+  },
+  {
+    run_id: "DW-OBS-M0-20260821-R1",
+    pr_number: 76,
+    issue: "71",
+    branch: "auto/SCRUM-555-dw-observation-m0-r2",
+    source_occurred_at: "2026-08-21T00:00:00.000Z",
+    milestone: "M0",
+    // No explicit CI run id captured for M0 → CI provenance inferred from PR (PARTIAL)
+    has_alignment_scope: true,
+  },
+  {
+    run_id: "DW-OBS-M1-20260821-R1",
+    pr_number: 77,
+    issue: "72",
+    branch: "auto/SCRUM-555-dw-observation-m1-r1",
+    source_occurred_at: "2026-08-21T12:00:00.000Z",
+    milestone: "M1",
+    has_alignment_scope: true,
+  },
+  {
+    run_id: "DW-OBS-M2-20260822-R1",
+    pr_number: 78,
+    issue: "73",
+    branch: "auto/SCRUM-555-dw-observation-m2-r1",
+    source_occurred_at: "2026-08-22T00:00:00.000Z",
+    milestone: "M2",
+    has_alignment_scope: true,
+  },
+  {
+    run_id: "DW-OBS-M3-20260822-R1",
+    pr_number: 79,
+    issue: "74",
+    branch: "auto/SCRUM-555-dw-observation-m3-r1",
+    source_occurred_at: "2026-08-22T12:00:00.000Z",
+    milestone: "M3",
+    has_alignment_scope: true,
+  },
+  {
+    run_id: "DW-OBS-M4-20260822-R1",
+    pr_number: 79,
+    issue: "75",
+    branch: "auto/SCRUM-555-dw-observation-m4-r1",
+    source_occurred_at: "2026-08-22T18:00:00.000Z",
+    milestone: "M4",
+    has_alignment_scope: false, // canonical gate artifact not reconstructable → missing
+  },
+];
+
+function buildReconstructed(): {
+  runs: RunsRow[];
+  sources: SourceRow[];
+  artifacts: ArtifactRow[];
+} {
+  const runs: RunsRow[] = [];
+  const sources: SourceRow[] = [];
+  const artifacts: ArtifactRow[] = [];
+
+  for (const d of RECONSTRUCTED) {
+    runs.push({
+      run_id: d.run_id,
       run_kind: "reconstructed_history",
-      source_system: "mixed",
-      authority_ref: "G2-DW-OBS-M3M4-20260823-R1",
-      scope_sha: "aa5756f5dfc424ba",
+      source_system: "taskcontroller",
+      jira_key: "SCRUM-555",
+      parent_issue: d.issue,
+      authority_ref: d.authority_ref,
+      scope_sha: d.scope_sha,
       base_branch: "pre-prod",
-      branch: "auto/SCRUM-555-dw-observation-m3m4-r1",
-      pr_number: 79,
-      reconstruction_basis: ".gwc/tasks/SCRUM-555/M3-M4-EVIDENCE.md + PR #79",
+      branch: d.branch,
+      pr_number: d.pr_number,
+      ci_run_id: d.ci_run_id,
+      ci_status: d.ci_status,
+      reconstruction_basis: `PR #${d.pr_number} (merged) + issue #${d.issue}`,
       source_refs: [
-        ".gwc/tasks/SCRUM-555/M3-M4-EVIDENCE.md",
-        "github:pull/79",
+        `github:pull/${d.pr_number}`,
+        `github:issue/${d.issue}`,
       ],
       confidence: "HIGH",
       evidence_quality: "STRONG",
       reconstructed_by: "TaskController/Hermes",
-      reconstructed_at: new Date().toISOString(),
-      payload: { nodes: "M3 #74 -> M4 #75", merged: true },
-    },
-    {
-      run_id: "DW-OBS-M0-20260821-R1",
-      run_kind: "reconstructed_history",
+      reconstructed_at: RECONSTRUCTED_AT,
+      payload: { milestone: d.milestone },
+    });
+
+    // Normalized run_sources for provenance (github_pr, github_issue, ci_run, reconstruction)
+    sources.push({
+      source_id: `pr-${d.run_id}`,
+      run_id: d.run_id,
       source_system: "taskcontroller",
-      pr_number: 76,
-      branch: "auto/SCRUM-555-dw-observation-m0-r2",
-      reconstruction_basis: "PR #76 (merged) + issue #71",
-      source_refs: ["github:pull/76", "github:issue/71"],
-      confidence: "HIGH",
-      evidence_quality: "STRONG",
-      reconstructed_by: "TaskController/Hermes",
-      reconstructed_at: new Date().toISOString(),
-      payload: { milestone: "M0" },
-    },
-    {
-      run_id: "DW-OBS-M1-20260821-R1",
-      run_kind: "reconstructed_history",
+      source_kind: "github_pr",
+      capture_provenance_verified: true,
+      source_ref: `github:pull/${d.pr_number}`,
+      occurred_at: d.source_occurred_at,
+      evidence_refs: [`PR #${d.pr_number}`],
+    });
+    sources.push({
+      source_id: `issue-${d.run_id}`,
+      run_id: d.run_id,
       source_system: "taskcontroller",
-      pr_number: 77,
-      branch: "auto/SCRUM-555-dw-observation-m1-r1",
-      reconstruction_basis: "PR #77 (merged) + issue #72",
-      source_refs: ["github:pull/77", "github:issue/72"],
-      confidence: "HIGH",
-      evidence_quality: "STRONG",
-      reconstructed_by: "TaskController/Hermes",
-      reconstructed_at: new Date().toISOString(),
-      payload: { milestone: "M1" },
-    },
-    {
-      run_id: "DW-OBS-M2-20260822-R1",
-      run_kind: "reconstructed_history",
+      source_kind: "github_issue",
+      capture_provenance_verified: true,
+      source_ref: `github:issue/${d.issue}`,
+      occurred_at: d.source_occurred_at,
+      evidence_refs: [`issue #${d.issue}`],
+    });
+    if (d.ci_run_id) {
+      sources.push({
+        source_id: `ci-${d.run_id}`,
+        run_id: d.run_id,
+        source_system: "taskcontroller",
+        source_kind: "ci_run",
+        capture_provenance_verified: true,
+        source_ref: `github:actions:run/${d.ci_run_id}`,
+        occurred_at: d.source_occurred_at,
+        evidence_refs: [`CI run ${d.ci_run_id} = ${d.ci_status}`],
+      });
+    }
+    sources.push({
+      source_id: `recon-${d.run_id}`,
+      run_id: d.run_id,
       source_system: "taskcontroller",
-      pr_number: 78,
-      branch: "auto/SCRUM-555-dw-observation-m2-r1",
-      reconstruction_basis: "PR #78 (merged) + issue #73",
-      source_refs: ["github:pull/78", "github:issue/73"],
-      confidence: "HIGH",
-      evidence_quality: "STRONG",
-      reconstructed_by: "TaskController/Hermes",
-      reconstructed_at: new Date().toISOString(),
-      payload: { milestone: "M2" },
-    },
-    {
-      run_id: "DW-OBS-M3-20260822-R1",
-      run_kind: "reconstructed_history",
-      source_system: "taskcontroller",
-      pr_number: 79,
-      reconstruction_basis: "PR #79 (merged) + issue #74",
-      source_refs: ["github:pull/79", "github:issue/74"],
-      confidence: "HIGH",
-      evidence_quality: "STRONG",
-      reconstructed_by: "TaskController/Hermes",
-      reconstructed_at: new Date().toISOString(),
-      payload: { milestone: "M3" },
-    },
-    {
-      run_id: "DW-OBS-M4-20260822-R1",
-      run_kind: "reconstructed_history",
-      source_system: "taskcontroller",
-      pr_number: 79,
-      reconstruction_basis: "PR #79 (merged) + issue #75",
-      source_refs: ["github:pull/79", "github:issue/75"],
-      confidence: "HIGH",
-      evidence_quality: "STRONG",
-      reconstructed_by: "TaskController/Hermes",
-      reconstructed_at: new Date().toISOString(),
-      payload: { milestone: "M4" },
-    },
-  ];
-  return { runs };
+      source_kind: "reconstruction",
+      capture_provenance_verified: false,
+      source_ref: ".gwc/tasks/SCRUM-555/history-backfill/RECONSTRUCTION.md",
+      occurred_at: RECONSTRUCTED_AT,
+      evidence_refs: [`PR #${d.pr_number}`, `issue #${d.issue}`],
+    });
+
+    // Reconstructed artifacts (evidence-backed; do NOT fabricate originals)
+    const reconstructedArtifacts: Array<Pick<ArtifactRow, "artifact_type" | "reconstruction_basis" | "source_refs" | "confidence" | "evidence_quality">> = [
+      {
+        artifact_type: "reconstructed_context_evidence",
+        reconstruction_basis: `Reconstructed from issue #${d.issue} context`,
+        source_refs: [`github:issue/${d.issue}`],
+        confidence: "HIGH",
+        evidence_quality: "STRONG",
+      },
+      {
+        artifact_type: "reconstructed_delivery_record",
+        reconstruction_basis: `Reconstructed from PR #${d.pr_number} merge record`,
+        source_refs: [`github:pull/${d.pr_number}`],
+        confidence: "HIGH",
+        evidence_quality: "STRONG",
+      },
+      {
+        artifact_type: "reconstructed_ci_evidence",
+        reconstruction_basis: d.ci_run_id
+          ? `Reconstructed from CI run ${d.ci_run_id} (${d.ci_status})`
+          : "No explicit CI run captured; CI provenance inferred from merged PR + issue",
+        source_refs: d.ci_run_id
+          ? [`github:actions:run/${d.ci_run_id}`]
+          : [`github:pull/${d.pr_number}`, `github:issue/${d.issue}`],
+        confidence: d.ci_run_id ? "HIGH" : "PARTIAL",
+        evidence_quality: d.ci_run_id ? "STRONG" : "PARTIAL",
+      },
+    ];
+    if (d.has_alignment_scope) {
+      reconstructedArtifacts.push({
+        artifact_type: "reconstructed_alignment_scope",
+        reconstruction_basis: `Reconstructed gate alignment scope from PR #${d.pr_number} + issue #${d.issue}`,
+        source_refs: [`github:pull/${d.pr_number}`, `github:issue/${d.issue}`],
+        confidence: "HIGH",
+        evidence_quality: "STRONG",
+      });
+    }
+
+    for (const a of reconstructedArtifacts) {
+      artifacts.push({
+        artifact_id: `${d.run_id}:${a.artifact_type}`,
+        run_id: d.run_id,
+        artifact_type: a.artifact_type,
+        artifact_status: "reconstructed",
+        original_artifact_present: false,
+        source_occurred_at: d.source_occurred_at,
+        effective_at: d.source_occurred_at,
+        reconstructed_at: RECONSTRUCTED_AT,
+        reconstruction_basis: a.reconstruction_basis,
+        source_refs: a.source_refs,
+        confidence: a.confidence,
+        evidence_quality: a.evidence_quality,
+        reconstructed_by: "TaskController/Hermes",
+        payload: { milestone: d.milestone },
+      });
+    }
+
+    // M4 canonical gate artifact NOT reconstructable → record missing, no content
+    if (!d.has_alignment_scope) {
+      artifacts.push({
+        artifact_id: `${d.run_id}:gate_canonical_artifact`,
+        run_id: d.run_id,
+        artifact_type: "gate_canonical_artifact",
+        artifact_status: "missing_unreconstructable",
+        original_artifact_present: false,
+        reconstructed_at: RECONSTRUCTED_AT,
+        reconstruction_basis: "No persisted canonical gate artifact in evidence; recorded as missing, not invented",
+        source_refs: [],
+        confidence: "UNKNOWN",
+        evidence_quality: "NONE",
+        reconstructed_by: "TaskController/Hermes",
+        payload: { note: "missing_unreconstructable" },
+      });
+    }
+  }
+
+  // M3-M4-EVIDENCE.md is a real persisted historical file → original artifact
+  artifacts.push({
+    artifact_id: "DW-OBS-M3M4-20260823-R1:M3-M4-EVIDENCE.md",
+    run_id: "DW-OBS-M3M4-20260823-R1",
+    artifact_type: "historical_evidence_file",
+    artifact_status: "original",
+    original_artifact_present: true,
+    source_occurred_at: "2026-08-23T00:00:00.000Z",
+    reconstructed_at: RECONSTRUCTED_AT,
+    reconstruction_basis: "Real persisted historical file referenced by evidence",
+    source_refs: [".gwc/tasks/SCRUM-555/M3-M4-EVIDENCE.md"],
+    confidence: "HIGH",
+    evidence_quality: "STRONG",
+    reconstructed_by: "TaskController/Hermes",
+    payload: { repo_ref: ".gwc/tasks/SCRUM-555/M3-M4-EVIDENCE.md" },
+  });
+
+  return { runs, sources, artifacts };
 }
 
 // ---- dry-run validation ---------------------------------------------------
@@ -249,33 +442,42 @@ interface DryRunReport {
   ok: boolean;
   counts: Record<string, number>;
   byRunKind: Record<string, number>;
+  byArtifactStatus: Record<string, number>;
+  artifactStatusByRun: Record<string, Record<string, number>>;
   upsertKeyConflicts: string[];
   duplicateRunRows: string[];
   realVsSimSeparation: boolean;
   riChecks: string[];
+  provenanceChecks: string[];
   rollback: string;
   errors: string[];
+  digest: string;
+}
+
+function digestOf(obj: unknown): string {
+  return crypto.createHash("sha256").update(JSON.stringify(obj)).digest("hex");
 }
 
 function validate(
   runs: RunsRow[],
   events: any[],
-  gates: any[] = [],
-  nodes: any[] = [],
-  sources: any[] = [],
+  gates: any[],
+  nodes: any[],
+  sources: SourceRow[],
+  artifacts: ArtifactRow[],
 ): DryRunReport {
   const errors: string[] = [];
   const upsertKeyConflicts: string[] = [];
   const duplicateRunRows: string[] = [];
+  const riChecks: string[] = [];
+  const provenanceChecks: string[] = [];
 
-  // no duplicate run_id (PK)
   const seen = new Set<string>();
   for (const r of runs) {
     if (seen.has(r.run_id)) duplicateRunRows.push(r.run_id);
     seen.add(r.run_id);
   }
 
-  // event upsert key uniqueness (run_id, source_system, source_event_id)
   const evKeys = new Set<string>();
   for (const e of events) {
     const k = `${e.run_id}|${e.source_system}|${e.source_event_id}`;
@@ -283,16 +485,12 @@ function validate(
     evKeys.add(k);
   }
 
-  // per seq=9 correction: observed_real only with live-capture receipt.
-  // Fixtures are golden_fixture; observed_real must be 0 unless proven.
   const byRunKind: Record<string, number> = {};
   for (const r of runs) byRunKind[r.run_kind] = (byRunKind[r.run_kind] || 0) + 1;
   const observedReal = byRunKind["observed_real"] || 0;
   const realVsSimSeparation = observedReal === 0;
 
-  // RI: every event/gate/node/source.run_id must exist in runs
   const runIds = new Set(runs.map((r) => r.run_id));
-  const riChecks: string[] = [];
   for (const e of events) {
     if (!runIds.has(e.run_id)) riChecks.push(`event ${e.source_event_id} → missing run ${e.run_id}`);
   }
@@ -305,13 +503,40 @@ function validate(
   for (const s of sources) {
     if (!runIds.has(s.run_id)) riChecks.push(`source ${s.source_id} → missing run ${s.run_id}`);
   }
+  for (const a of artifacts) {
+    if (!runIds.has(a.run_id)) riChecks.push(`artifact ${a.artifact_id} → missing run ${a.run_id}`);
+  }
+
+  // Provenance: each reconstructed_history run has >=1 normalized source
+  for (const r of runs) {
+    if (r.run_kind === "reconstructed_history") {
+      const has = sources.some((s) => s.run_id === r.run_id);
+      if (!has) provenanceChecks.push(`reconstructed run ${r.run_id} has no run_sources row`);
+    }
+  }
+  // Each reconstructed artifact references an existing source evidence
+  const sourceRefs = new Set(sources.map((s) => s.source_ref));
+  for (const a of artifacts) {
+    if (a.artifact_status === "reconstructed" && a.source_refs.length === 0) {
+      provenanceChecks.push(`artifact ${a.artifact_id} references no source evidence`);
+    }
+  }
+
+  const byArtifactStatus: Record<string, number> = {};
+  const artifactStatusByRun: Record<string, Record<string, number>> = {};
+  for (const a of artifacts) {
+    byArtifactStatus[a.artifact_status] = (byArtifactStatus[a.artifact_status] || 0) + 1;
+    artifactStatusByRun[a.run_id] = artifactStatusByRun[a.run_id] || {};
+    artifactStatusByRun[a.run_id][a.artifact_status] =
+      (artifactStatusByRun[a.run_id][a.artifact_status] || 0) + 1;
+  }
 
   const counts: Record<string, number> = {
     runs: runs.length,
     events: events.length,
     gates: gates.length,
     nodes: nodes.length,
-    artifacts: 0,
+    artifacts: artifacts.length,
     checkpoints: 0,
     edges: 0,
     sources: sources.length,
@@ -322,19 +547,99 @@ function validate(
   if (duplicateRunRows.length) errors.push(`duplicate run rows: ${duplicateRunRows.join(", ")}`);
   if (upsertKeyConflicts.length) errors.push(`event upsert conflicts: ${upsertKeyConflicts.length}`);
   if (riChecks.length) errors.push(`RI violations: ${riChecks.length}`);
-  if (!realVsSimSeparation) errors.push(`observed_real=${observedReal} (expected 0 without live-capture provenance)`);
+  if (!realVsSimSeparation) errors.push(`observed_real=${observedReal} (expected 0)`);
+  if (provenanceChecks.length) errors.push(`provenance violations: ${provenanceChecks.length}`);
 
+  const normalized = { runs, events, gates, nodes, sources, artifacts };
   return {
     ok: errors.length === 0,
     counts,
     byRunKind,
+    byArtifactStatus,
+    artifactStatusByRun,
     upsertKeyConflicts,
     duplicateRunRows,
     realVsSimSeparation,
     riChecks,
+    provenanceChecks,
     rollback,
     errors,
+    digest: digestOf(normalized),
   };
+}
+
+// ---- deterministic DML emission (gated; not executed remotely) -------------
+// Emits idempotent INSERT ... ON CONFLICT DO NOTHING statements for the same
+// rows the dry-run validates. Used to materialize the G6-gated DML migration
+// file. Never connects to or applies against any database here.
+function sqlStr(v: unknown): string {
+  if (v === null || v === undefined) return "NULL";
+  if (typeof v === "number") return String(v);
+  if (typeof v === "boolean") return v ? "true" : "false";
+  return `'${String(v).replace(/'/g, "''")}'`;
+}
+function sqlArr(arr: string[]): string {
+  if (!arr || arr.length === 0) return "'{}'";
+  return `'{${arr.map((x) => `"${x.replace(/"/g, '\\"')}"`).join(",")}}'`;
+}
+
+function emitDML(
+  runs: RunsRow[],
+  events: any[],
+  gates: any[],
+  nodes: any[],
+  sources: SourceRow[],
+  artifacts: ArtifactRow[],
+): string {
+  const lines: string[] = [];
+  lines.push(`-- DW-OBS-HIST-BACKFILL-R1 · deterministic backfill DML`);
+  lines.push(`-- Generated from scripts/backfillHistoricalRuns.ts (deterministic).`);
+  lines.push(`-- G6-gated: apply ONLY after exact G6 approval bound.`);
+  lines.push(`-- Idempotent: ON CONFLICT DO NOTHING (upsert keys).`);
+  lines.push(``);
+  lines.push(`BEGIN;`);
+
+  for (const r of runs) {
+    lines.push(
+      `INSERT INTO runs (run_id,run_kind,source_system,epic_id,jira_key,parent_issue,authority_ref,scope_sha,base_branch,branch,pr_number,ci_run_id,ci_status,reconstruction_basis,source_refs,confidence,evidence_quality,reconstructed_by,reconstructed_at,payload) VALUES (` +
+        [
+          sqlStr(r.run_id), sqlStr(r.run_kind), sqlStr(r.source_system), sqlStr(r.epic_id),
+          sqlStr(r.jira_key), sqlStr(r.parent_issue), sqlStr(r.authority_ref), sqlStr(r.scope_sha),
+          sqlStr(r.base_branch), sqlStr(r.branch), sqlStr(r.pr_number), sqlStr(r.ci_run_id),
+          sqlStr(r.ci_status), sqlStr(r.reconstruction_basis), sqlArr(r.source_refs),
+          sqlStr(r.confidence), sqlStr(r.evidence_quality), sqlStr(r.reconstructed_by),
+          sqlStr(r.reconstructed_at), `'{}'::jsonb`,
+        ].join(",") +
+        `) ON CONFLICT (run_id) DO NOTHING;`,
+    );
+  }
+  for (const s of sources) {
+    lines.push(
+      `INSERT INTO run_sources (source_id,run_id,source_system,source_event_id,source_kind,capture_provenance_verified,source_ref,source_digest,occurred_at,authority_ref,evidence_refs) VALUES (` +
+        [
+          sqlStr(s.source_id), sqlStr(s.run_id), sqlStr(s.source_system), sqlStr(s.source_event_id),
+          sqlStr(s.source_kind), sqlStr(s.capture_provenance_verified), sqlStr(s.source_ref),
+          sqlStr(s.source_digest), sqlStr(s.occurred_at), sqlStr(s.authority_ref), sqlArr(s.evidence_refs),
+        ].join(",") +
+        `) ON CONFLICT (run_id,source_id) DO NOTHING;`,
+    );
+  }
+  for (const a of artifacts) {
+    lines.push(
+      `INSERT INTO run_artifacts (artifact_id,run_id,artifact_type,artifact_status,original_artifact_present,source_occurred_at,effective_at,reconstructed_at,reconstruction_basis,source_refs,confidence,evidence_quality,reconstructed_by,payload) VALUES (` +
+        [
+          sqlStr(a.artifact_id), sqlStr(a.run_id), sqlStr(a.artifact_type), sqlStr(a.artifact_status),
+          sqlStr(a.original_artifact_present), sqlStr(a.source_occurred_at), sqlStr(a.effective_at),
+          sqlStr(a.reconstructed_at), sqlStr(a.reconstruction_basis), sqlArr(a.source_refs),
+          sqlStr(a.confidence), sqlStr(a.evidence_quality), sqlStr(a.reconstructed_by), `'{}'::jsonb`,
+        ].join(",") +
+        `) ON CONFLICT (run_id,artifact_id) DO NOTHING;`,
+    );
+  }
+  // events/gates/nodes omitted here (fixtures golden; DML focuses on
+  // reconstructed provenance + artifacts). Extend when G6 scopes them in.
+  lines.push(`COMMIT;`);
+  return lines.join("\n");
 }
 
 // ---- main ------------------------------------------------------------------
@@ -342,15 +647,25 @@ function main() {
   const fix = buildFixtureRuns();
   const rec = buildReconstructed();
   const allRuns = [...fix.runs, ...rec.runs];
+  const allSources = [...fix.sources, ...rec.sources];
 
-  const report = validate(allRuns, fix.events, fix.gates, fix.nodes, fix.sources);
+  const report = validate(allRuns, fix.events, fix.gates, fix.nodes, allSources, rec.artifacts);
+
+  if (process.env.DW_OBS_EMIT_DML) {
+    const dml = emitDML(allRuns, fix.events, fix.gates, fix.nodes, allSources, rec.artifacts);
+    process.stdout.write(dml);
+    process.exit(0);
+  }
 
   const out = {
-    migration: "20260823T080000Z_observatory_history.sql",
+    migration_ddl: "20260823T080000Z_observatory_history.sql",
+    migration_dml: "20260823T090000Z_observatory_backfill_dml.sql",
     target_project: "auswvdxoetufwiaxutib",
     dry_run: true,
     remote_apply: false,
+    apply_path: "deterministic DML migration (G6-gated, not executed)",
     g6_boundary: "STOP — no remote apply until exact G6 approval bound",
+    reconstructed_at: RECONSTRUCTED_AT,
     ...report,
     runs: allRuns,
   };

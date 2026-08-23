@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS runs (
   reconstruction_basis   TEXT,
   source_refs        TEXT[]   NOT NULL DEFAULT '{}',
   confidence         TEXT      CHECK (confidence IN (NULL,'HIGH','PARTIAL','UNKNOWN')),
-  evidence_quality   TEXT      CHECK (evidence_quality IN (NULL,'STRONG','WEAK','NONE')),
+  evidence_quality   TEXT      CHECK (evidence_quality IN (NULL,'STRONG','PARTIAL','WEAK','NONE')),
   reconstructed_by   TEXT,
   reconstructed_at   TIMESTAMPTZ,
   payload            JSONB     NOT NULL DEFAULT '{}'::jsonb,
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS run_artifacts (
   reconstruction_basis  TEXT,
   source_refs           TEXT[]      NOT NULL DEFAULT '{}',
   confidence            TEXT        CHECK (confidence IN (NULL,'HIGH','PARTIAL','UNKNOWN')),
-  evidence_quality      TEXT        CHECK (evidence_quality IN (NULL,'STRONG','WEAK','NONE')),
+  evidence_quality      TEXT        CHECK (evidence_quality IN (NULL,'STRONG','PARTIAL','WEAK','NONE')),
   reconstructed_by      TEXT,
   payload               JSONB       NOT NULL DEFAULT '{}'::jsonb,
   created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),   -- ingestion time, NEVER backdated
