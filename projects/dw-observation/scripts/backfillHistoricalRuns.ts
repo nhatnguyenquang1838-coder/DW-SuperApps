@@ -64,12 +64,17 @@ function loadInventory(): any {
   return fs.existsSync(p) ? fs.readFileSync(p, "utf8") : "";
 }
 
-// ---- observed_real → runs + events + nodes + gates -------------------------
-function buildObservedReal(): { runs: RunsRow[]; events: any[]; gates: any[]; nodes: any[] } {
+// ---- golden/simulated fixtures → golden_fixture runs + supporting sources ---
+// Per seq=9 correction: repo fixtures (run_scrum555_m0.json,
+// run_gwc_durable_m0.json) are "Golden fixtures + replay tests (reproducible,
+// no network)" per PR #76 contract. Event shape ≠ capture provenance.
+// Default to golden_fixture; observed_real only with live-capture receipt.
+function buildFixtureRuns(): { runs: RunsRow[]; events: any[]; gates: any[]; nodes: any[]; sources: any[] } {
   const out: RunsRow[] = [];
   const events: any[] = [];
   const gates: any[] = [];
   const nodes: any[] = [];
+  const sources: any[] = [];
 
   const tc = loadFixture("run_scrum555_m0.json");
   const gwc = loadFixture("run_gwc_durable_m0.json");
@@ -78,18 +83,18 @@ function buildObservedReal(): { runs: RunsRow[]; events: any[]; gates: any[]; no
 
   out.push({
     run_id: tc.run_id,
-    run_kind: "observed_real",
+    run_kind: "golden_fixture",
     source_system: "taskcontroller",
     jira_key: "SCRUM-555",
     parent_issue: "70",
-    payload: { source: "fixtures/run_scrum555_m0.json", events: tc.events.length },
+    payload: { source: "fixtures/run_scrum555_m0.json", events: tc.events.length, note: "golden fixture, not live capture" },
     source_refs: ["fixtures/run_scrum555_m0.json"],
   });
   out.push({
     run_id: gwc.run_id,
-    run_kind: "observed_real",
+    run_kind: "golden_fixture",
     source_system: "gwc",
-    payload: { source: "fixtures/run_gwc_durable_m0.json", events: gwc.events.length },
+    payload: { source: "fixtures/run_gwc_durable_m0.json", events: gwc.events.length, note: "golden fixture, not live capture" },
     source_refs: ["fixtures/run_gwc_durable_m0.json"],
   });
 
@@ -112,7 +117,6 @@ function buildObservedReal(): { runs: RunsRow[]; events: any[]; gates: any[]; no
     });
   }
 
-  // projection fixtures → gates + nodes (object maps keyed by id)
   const projTcGates = projTc.gates && typeof projTc.gates === "object" ? Object.values(projTc.gates) : [];
   const projTcNodes = projTc.nodes && typeof projTc.nodes === "object" ? Object.values(projTc.nodes) : [];
   const projGwcGates = projGwc.gates && typeof projGwc.gates === "object" ? Object.values(projGwc.gates) : [];
@@ -122,7 +126,27 @@ function buildObservedReal(): { runs: RunsRow[]; events: any[]; gates: any[]; no
   for (const n of projTcNodes) nodes.push({ ...n, run_id: tc.run_id });
   for (const g of projGwcGates) gates.push({ ...g, run_id: gwc.run_id });
   for (const n of projGwcNodes) nodes.push({ ...n, run_id: gwc.run_id });
-  return { runs: out, events, gates, nodes };
+
+  // supporting run_sources (provenance: golden_fixture, NOT live_capture)
+  sources.push({
+    source_id: `src-${tc.run_id}`,
+    run_id: tc.run_id,
+    source_system: "taskcontroller",
+    source_kind: "golden_fixture",
+    capture_provenance_verified: false,
+    source_ref: "fixtures/run_scrum555_m0.json",
+    evidence_refs: ["PR #76 (M0 contract: Golden fixtures + replay tests)"],
+  });
+  sources.push({
+    source_id: `src-${gwc.run_id}`,
+    run_id: gwc.run_id,
+    source_system: "gwc",
+    source_kind: "golden_fixture",
+    capture_provenance_verified: false,
+    source_ref: "fixtures/run_gwc_durable_m0.json",
+    evidence_refs: ["PR #76 (M0 contract: Golden fixtures + replay tests)"],
+  });
+  return { runs: out, events, gates, nodes, sources };
 }
 
 // ---- reconstructed_history → milestone delivery runs (from PR/issue evidence)
@@ -238,6 +262,7 @@ function validate(
   events: any[],
   gates: any[] = [],
   nodes: any[] = [],
+  sources: any[] = [],
 ): DryRunReport {
   const errors: string[] = [];
   const upsertKeyConflicts: string[] = [];
@@ -258,11 +283,14 @@ function validate(
     evKeys.add(k);
   }
 
-  // real-vs-sim separation: no simulated_fixture rows present
-  const sim = runs.filter((r) => r.run_kind === "simulated_fixture");
-  const realVsSimSeparation = sim.length === 0;
+  // per seq=9 correction: observed_real only with live-capture receipt.
+  // Fixtures are golden_fixture; observed_real must be 0 unless proven.
+  const byRunKind: Record<string, number> = {};
+  for (const r of runs) byRunKind[r.run_kind] = (byRunKind[r.run_kind] || 0) + 1;
+  const observedReal = byRunKind["observed_real"] || 0;
+  const realVsSimSeparation = observedReal === 0;
 
-  // RI: every event.run_id / gate.run_id / node.run_id must exist in runs
+  // RI: every event/gate/node/source.run_id must exist in runs
   const runIds = new Set(runs.map((r) => r.run_id));
   const riChecks: string[] = [];
   for (const e of events) {
@@ -274,9 +302,9 @@ function validate(
   for (const n of nodes) {
     if (!runIds.has(n.run_id)) riChecks.push(`node ${n.node_id ?? "?"} → missing run ${n.run_id}`);
   }
-
-  const byRunKind: Record<string, number> = {};
-  for (const r of runs) byRunKind[r.run_kind] = (byRunKind[r.run_kind] || 0) + 1;
+  for (const s of sources) {
+    if (!runIds.has(s.run_id)) riChecks.push(`source ${s.source_id} → missing run ${s.run_id}`);
+  }
 
   const counts: Record<string, number> = {
     runs: runs.length,
@@ -286,7 +314,7 @@ function validate(
     artifacts: 0,
     checkpoints: 0,
     edges: 0,
-    sources: 0,
+    sources: sources.length,
   };
 
   const rollback = `DROP TABLE IF EXISTS run_sources, run_edges, run_checkpoints, run_artifacts, run_events, run_nodes, run_gates, runs CASCADE;`;
@@ -294,7 +322,7 @@ function validate(
   if (duplicateRunRows.length) errors.push(`duplicate run rows: ${duplicateRunRows.join(", ")}`);
   if (upsertKeyConflicts.length) errors.push(`event upsert conflicts: ${upsertKeyConflicts.length}`);
   if (riChecks.length) errors.push(`RI violations: ${riChecks.length}`);
-  if (!realVsSimSeparation) errors.push("simulated_fixture rows present (separation violated)");
+  if (!realVsSimSeparation) errors.push(`observed_real=${observedReal} (expected 0 without live-capture provenance)`);
 
   return {
     ok: errors.length === 0,
@@ -311,11 +339,11 @@ function validate(
 
 // ---- main ------------------------------------------------------------------
 function main() {
-  const obs = buildObservedReal();
+  const fix = buildFixtureRuns();
   const rec = buildReconstructed();
-  const allRuns = [...obs.runs, ...rec.runs];
+  const allRuns = [...fix.runs, ...rec.runs];
 
-  const report = validate(allRuns, obs.events, obs.gates, obs.nodes);
+  const report = validate(allRuns, fix.events, fix.gates, fix.nodes, fix.sources);
 
   const out = {
     migration: "20260823T080000Z_observatory_history.sql",

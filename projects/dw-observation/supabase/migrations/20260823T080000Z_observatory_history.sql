@@ -15,7 +15,7 @@
 CREATE TABLE IF NOT EXISTS runs (
   run_id            TEXT        PRIMARY KEY,
   run_kind          TEXT        NOT NULL
-                      CHECK (run_kind IN ('observed_real','simulated_fixture','reconstructed_history')),
+                      CHECK (run_kind IN ('observed_real','simulated_fixture','golden_fixture','reconstructed_history')),
   source_system     TEXT        NOT NULL
                       CHECK (source_system IN ('taskcontroller','gwc','mixed')),
   epic_id           TEXT,
@@ -175,6 +175,11 @@ CREATE TABLE IF NOT EXISTS run_sources (
   run_id             TEXT        NOT NULL REFERENCES runs(run_id) ON DELETE CASCADE,
   source_system      TEXT        NOT NULL CHECK (source_system IN ('taskcontroller','gwc')),
   source_event_id    TEXT,
+  source_kind        TEXT        NOT NULL
+                        CHECK (source_kind IN ('live_capture','golden_fixture','github_pr','github_issue','ci_run','gwc_artifact','reconstruction')),
+  capture_provenance_verified BOOLEAN NOT NULL DEFAULT false,
+  source_ref         TEXT,
+  source_digest     TEXT,
   occurred_at        TIMESTAMPTZ,
   authority_ref      TEXT,
   evidence_refs      TEXT[]      NOT NULL DEFAULT '{}',
