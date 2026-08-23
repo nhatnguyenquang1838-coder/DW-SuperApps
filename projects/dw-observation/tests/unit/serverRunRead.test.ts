@@ -51,10 +51,22 @@ function makeClient(
     return {
       select: (cols: string) => {
         calls.push({ table, op: "select", cols });
+        // Model the real Supabase PostgrestFilterBuilder: a thenable builder
+        // that also exposes .eq()/.order()/.limit()/.maybeSingle(). This is a
+        // harness-fidelity fix (the earlier draft only returned {eq}) so
+        // production code can use natural query shapes; assertions unchanged.
+        const read = async () => ({ data: t.data, error: t.error });
+        const maybeSingle = async () => ({
+          data: Array.isArray(t.data) ? (t.data[0] ?? null) : null,
+          error: t.error,
+        });
         return {
-          eq: () => ({
-            order: async () => ({ data: t.data, error: t.error }),
-          }),
+          eq: () => ({ order: read, maybeSingle }),
+          order: read,
+          limit: read,
+          maybeSingle,
+          then: (resolve: (v: { data: Row[] | null; error: unknown }) => void) =>
+            resolve({ data: t.data, error: t.error }),
         };
       },
       insert: () => {
