@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dw-observation"
+version = "0.1.0"
+description = "DW Run Observatory — read-only deterministic projection of DW-SuperApps/GWC execution state"
+requires-python = ">=3.9"
+dependencies = []
+
+[tool.setuptools]
+py-modules = ["dw_observation"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

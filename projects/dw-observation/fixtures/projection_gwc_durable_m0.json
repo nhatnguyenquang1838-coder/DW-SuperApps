@@ -1,0 +1,28 @@
+{
+  "anomalies": [],
+  "gates": {
+    "G2_EXECUTION": {
+      "approved_by": {
+        "execution_mode": "local_agent",
+        "id": "agent-hermes-mac",
+        "kind": "chatgpt"
+      },
+      "authority_ref": null,
+      "failed_by": null,
+      "gate": "G2_EXECUTION",
+      "last_event_seq": 1,
+      "released_by": null,
+      "status": "passed"
+    }
+  },
+  "last_event_at": "2026-08-21T19:00:01Z",
+  "nodes": {
+    "m0": {
+      "last_event_seq": 3,
+      "node": "m0",
+      "status": "success"
+    }
+  },
+  "run_id": "run_dw_obs_m0_r2",
+  "started_at": "2026-08-21T09:00:00Z"
+}

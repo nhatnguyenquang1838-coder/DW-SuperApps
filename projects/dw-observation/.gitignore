@@ -1,0 +1,17 @@
+# Next.js / pnpm (app-local, projects/dw-observation)
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+
+# Local env (never commit real values; .env.example is the contract)
+.env
+.env.local
+.env.*.local
+
+# Local Supabase CLI scaffold (supabase init/link state). Purely local dev
+# tooling — contains no app code and must never be committed. The hosted
+# project ref/org id live only under its gitignored .temp/ dir.
+supabase/

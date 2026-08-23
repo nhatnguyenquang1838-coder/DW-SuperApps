@@ -1,0 +1,14 @@
+{
+  "anomalies": [],
+  "gates": {},
+  "last_event_at": "2026-08-21T19:00:01Z",
+  "nodes": {
+    "71": {
+      "last_event_seq": 5,
+      "node": "71",
+      "status": "done"
+    }
+  },
+  "run_id": "DW-OBS-M0-20260821-R2",
+  "started_at": "2026-08-21T09:00:00Z"
+}
