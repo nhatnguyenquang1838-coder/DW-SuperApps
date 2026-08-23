@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0",
-  "checkedAt": "2026-07-30T23:32:43+07:00",
+  "checkedAt": "2026-08-23T20:54:39+07:00",
   "powers": {
     "gwc": {
       "sourceRepository": "nhatnguyenquang1838-coder/gwc",
@@ -12,7 +12,8 @@
       "runtimeDataRoot": ".gwc",
       "entrypoints": [
         "skills/gwc-g0/SKILL.md",
-        "skills/gwc-g1/SKILL.md"
+        "skills/gwc-g1/SKILL.md",
+        "tools/power_help.py"
       ],
       "guidanceMode": "legacy-optional",
       "status": "CURRENT",
