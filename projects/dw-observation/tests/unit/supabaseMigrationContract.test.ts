@@ -41,18 +41,25 @@ const DML_FILE = path.join(
   "20260823T090000Z_observatory_backfill_dml.sql",
 );
 
-// Raw-file SHA256 of the two existing migrations at the approved base
-// (pre-prod@0ee1b41b). Used to prove the migration contract test does not
-// silently drift the existing DDL/DML bytes.
+// Canonical immutable migration SHA-256 per .gwc/tasks/SCRUM-555/history-backfill/
+// G6_PACKET.md. These are the git blob (LF) bytes at the approved base
+// pre-prod@0ee1b41b (verified: `git show HEAD:<path> | shasum -a 256` reproduces
+// them exactly). The working tree may be checked out with CRLF (core.autocrlf=true),
+// so we LF-normalize content before hashing to reproduce the canonical repo bytes
+// deterministically across environments.
 const EXPECTED_DDL_SHA256 =
-  "346d805c224075503abce772257e283e6d10c35ccff981e234c64eea7ada4361";
+  "ef880051d8fb7caf40005206d1200c3824509f8084ec771324866ee29500e185";
 const EXPECTED_DML_SHA256 =
-  "f5255eeae820861ab143ea9e3327a725728647a4f28c939685a809e30e5a5c0f";
+  "5bcee0d6ea6a34b0b8cef91ff5a860ff2289a0f23ff9386a92105ee62aff23df";
 
+// Hash the canonical (LF-normalized) file content. Reproduces the git blob
+// SHA-256 the G6 packet binds, regardless of CRLF/LF checkout (cross-environment
+// deterministic). Does NOT change repository EOL config.
 function sha256File(p: string): Promise<string> {
-  return fs.readFile(p).then((b) =>
-    crypto.createHash("sha256").update(b).digest("hex"),
-  );
+  return fs.readFile(p, "utf8").then((text) => {
+    const lf = text.replace(/\r\n?/g, "\n");
+    return crypto.createHash("sha256").update(lf).digest("hex");
+  });
 }
 
 let sql = "";
@@ -149,13 +156,13 @@ describe("Task 2 RED — new projection_events migration contract", () => {
   });
 });
 
-describe("Guard — existing migration bytes unchanged", () => {
-  it("DDL 20260823T080000Z_observatory_history.sql sha256 unchanged", async () => {
+describe("Guard — existing migration bytes unchanged (canonical G6 hashes)", () => {
+  it("DDL 20260823T080000Z_observatory_history.sql sha256 == canonical ef880051…", async () => {
     const s = await sha256File(DDL_FILE);
     expect(s).toBe(EXPECTED_DDL_SHA256);
   });
 
-  it("DML 20260823T090000Z_observatory_backfill_dml.sql sha256 unchanged", async () => {
+  it("DML 20260823T090000Z_observatory_backfill_dml.sql sha256 == canonical 5bcee0d6…", async () => {
     const s = await sha256File(DML_FILE);
     expect(s).toBe(EXPECTED_DML_SHA256);
   });
