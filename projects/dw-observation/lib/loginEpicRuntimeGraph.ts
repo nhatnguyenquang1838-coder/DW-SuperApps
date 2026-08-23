@@ -222,6 +222,17 @@ export function buildRouteEdges(run: LoginEpicRun): RuntimeEdgeModel[] {
   return edges;
 }
 
+/**
+ * Id of the active route edge at the current cursor (the one that animates).
+ * Returns null at the last node (no outgoing edge). Deterministic source of truth
+ * for the `runtime-active-edge` marker rendered by RuntimeEdge.
+ */
+export function getActiveRouteEdgeId(run: LoginEpicRun, cursor: number): string | null {
+  const c = clampCursor(run, cursor);
+  if (c < 0 || c >= run.route.length - 1) return null;
+  return `route-${c}`;
+}
+
 /** Deterministic synthetic artifact preview (no real secrets/config). */
 export function makeArtifactPreview(args: {
   run: LoginEpicRun;
@@ -241,6 +252,91 @@ export function makeArtifactPreview(args: {
     status: "simulated",
     source_basis: "controller-transferred reference fixture (no real secrets)",
   };
+
+  // Enriched, realistic source-code previews for the Login Capability deliverables.
+  // Keyed by the file's trailing path segment so both node-agnostic and node-scoped
+  // opens render the same deterministic content.
+  const seg = path.split("/").pop() ?? path;
+  const SOURCE_PREVIEWS: Record<string, string> = {
+    "page.tsx": `// app/login/page.tsx (simulated source-code write preview)
+// Purpose: ${node?.purpose ?? "Render the login route entry screen"}
+// Boundary: ${node?.boundary ?? "product/ui"}
+import LoginShell from "@/components/auth/LoginShell";
+
+export default function LoginPage() {
+  return <LoginShell />;
+}`,
+    "LoginShell.tsx": `// components/auth/LoginShell.tsx (simulated source-code write preview)
+// Purpose: ${node?.purpose ?? "Compose the login screen shell"}
+// Boundary: ${node?.boundary ?? "product/ui"}
+import LoginForm from "@/components/auth/LoginForm";
+
+export function LoginShell() {
+  return (
+    <main className="login-shell">
+      <h1>Sign in</h1>
+      <LoginForm />
+    </main>
+  );
+}`,
+    "LoginForm.tsx": `// components/auth/LoginForm.tsx (simulated source-code write preview)
+// Purpose: ${node?.purpose ?? "Login form state machine"}
+// Boundary: ${node?.boundary ?? "product/ui"}
+"use client";
+import { useState } from "react";
+import { loginClient } from "@/lib/api/loginClient";
+
+export function LoginForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  return (
+    <form onSubmit={async (e) => {
+      e.preventDefault();
+      await loginClient.signIn({ email, password });
+    }}>
+      <input aria-label="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <input aria-label="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      <button type="submit">Sign in</button>
+    </form>
+  );
+}`,
+    "login.ts": `// lib/contracts/login.ts (simulated source-code write preview)
+// Purpose: ${node?.purpose ?? "Login API contract types"}
+// Boundary: ${node?.boundary ?? "shared/contract"}
+export interface LoginRequest { email: string; password: string; }
+export interface LoginResponse { token: string; expiresIn: number; }
+export const LOGIN_ENDPOINT = "/api/login" as const;`,
+    "route.ts": `// app/api/login/route.ts (simulated source-code write preview)
+// Purpose: ${node?.purpose ?? "Login API route handler"}
+// Boundary: ${node?.boundary ?? "backend/api"}
+import { login } from "@/lib/contracts/login";
+import { json } from "@/lib/http";
+
+export async function POST(req: Request) {
+  const body = await req.json();
+  const res = await login(body);
+  return json(res, { status: 200 });
+}`,
+    "loginClient.ts": `// lib/api/loginClient.ts (simulated source-code write preview)
+// Purpose: ${node?.purpose ?? "Login API client"}
+// Boundary: ${node?.boundary ?? "client/api"}
+import { LOGIN_ENDPOINT, type LoginRequest, type LoginResponse } from "@/lib/contracts/login";
+
+export const loginClient = {
+  async signIn(req: LoginRequest): Promise<LoginResponse> {
+    const r = await fetch(LOGIN_ENDPOINT, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(req),
+    });
+    return r.json();
+  },
+};`,
+  };
+  if (seg in SOURCE_PREVIEWS && (suffix === "ts" || suffix === "tsx")) {
+    return SOURCE_PREVIEWS[seg];
+  }
+
   if (suffix === "yaml" || suffix === "yml") {
     return [
       `path: ${base.path}`,
@@ -263,3 +359,4 @@ export function makeArtifactPreview(args: {
   }
   return JSON.stringify({ ...base, node_title: node?.title }, null, 2);
 }
+

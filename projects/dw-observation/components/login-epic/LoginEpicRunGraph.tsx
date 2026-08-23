@@ -7,7 +7,7 @@ import type {
   LoginEpicRun,
   ReplayMode,
 } from "@/lib/loginEpicRuntimeGraph";
-import { getRun, clampCursor, getActiveRoute, makeArtifactPreview } from "@/lib/loginEpicRuntimeGraph";
+import { getRun, clampCursor, getActiveRoute, getRouteIndex, makeArtifactPreview } from "@/lib/loginEpicRuntimeGraph";
 import EpicRunRail from "./EpicRunRail";
 import RuntimeGraphCanvas from "./RuntimeGraphCanvas";
 import RuntimePlayer from "./RuntimePlayer";
@@ -86,10 +86,16 @@ export default function LoginEpicRunGraph({ epic }: { epic: LoginEpicRuntimeFixt
 
   const onSelectNode = useCallback(
     (nodeId: string) => {
+      // REPLAY click-to-rewind: clicking a node sets cursor to its route index.
+      // LIVE_SIM click only inspects (no rewind) so the running stream continues.
+      if (mode === "REPLAY") {
+        const ix = getRouteIndex(run, nodeId);
+        if (ix >= 0) setCursor(clampCursor(run, ix));
+      }
       setSelection({ kind: "node", id: nodeId });
       setDetailTab("overview");
     },
-    [],
+    [mode, run],
   );
 
   const onOpenArtifact = useCallback(
@@ -139,6 +145,7 @@ export default function LoginEpicRunGraph({ epic }: { epic: LoginEpicRuntimeFixt
             <div className="leg-follow">
               <button
                 data-testid="runtime-follow-cursor"
+                data-follow={followCursor ? "on" : "off"}
                 className={followCursor ? "on" : "off"}
                 onClick={() => setFollowCursor((v) => !v)}
               >
@@ -155,6 +162,7 @@ export default function LoginEpicRunGraph({ epic }: { epic: LoginEpicRuntimeFixt
               followCursor={followCursor}
               onSelectNode={onSelectNode}
               onOpenArtifact={onOpenArtifact}
+              onUserViewportInteract={() => setFollowCursor(false)}
             />
           </ReactFlowProvider>
         </div>

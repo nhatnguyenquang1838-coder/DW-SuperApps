@@ -49,6 +49,7 @@ export default function RuntimeGraphCanvas({
   followCursor,
   onSelectNode,
   onOpenArtifact,
+  onUserViewportInteract,
 }: {
   run: LoginEpicRun;
   cursor: number;
@@ -56,6 +57,7 @@ export default function RuntimeGraphCanvas({
   followCursor: boolean;
   onSelectNode: (nodeId: string) => void;
   onOpenArtifact: (path: string, kind: string) => void;
+  onUserViewportInteract: () => void;
 }) {
   const rf = useReactFlow();
 
@@ -142,7 +144,10 @@ export default function RuntimeGraphCanvas({
     return [...gateEdges, ...routeEdges];
   }, [run, cursor, active]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Follow cursor: center viewport on the active node.
+  // Follow cursor: center viewport on the active node. Programmatic setCenter is
+  // wrapped in the `programmaticMove` flag so onMoveStart (which also fires for
+  // programmatic moves) does NOT disable Follow — only genuine user pan/zoom does.
+  const programmaticMove = useRef(false);
   const prevActive = useRef<string | null>(null);
   useEffect(() => {
     if (!followCursor) return;
@@ -151,7 +156,11 @@ export default function RuntimeGraphCanvas({
     prevActive.current = activeNodeId;
     const node = rfNodes.find((n) => n.id === activeNodeId);
     if (node) {
-      const t = setTimeout(() => rf.setCenter(node.position.x + 100, node.position.y + 60, { zoom: 0.85, duration: 400 }), 60);
+      programmaticMove.current = true;
+      rf.setCenter(node.position.x + 100, node.position.y + 60, { zoom: 0.85, duration: 400 });
+      const t = setTimeout(() => {
+        programmaticMove.current = false;
+      }, 480);
       return () => clearTimeout(t);
     }
   }, [followCursor, active.node_id, rfNodes, rf]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -178,6 +187,12 @@ export default function RuntimeGraphCanvas({
         elementsSelectable
         onNodeClick={(_, n) => {
           if (n.type === "runtimeNode") onSelectNode(n.id);
+        }}
+        onMoveStart={(_, viewport) => {
+          if (!viewport) return;
+          // Genuine user pan/zoom disables Follow. Programmatic setCenter sets
+          // programmaticMove=true so it does NOT disable Follow here.
+          if (!programmaticMove.current) onUserViewportInteract();
         }}
         proOptions={{ hideAttribution: true }}
       >

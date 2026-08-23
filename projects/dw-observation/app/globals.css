@@ -746,6 +746,14 @@ a {
 .leg-node { width: 320px; background: rgba(20,24,34,0.95); border: 1px solid rgba(255,255,255,0.14); border-radius: 10px; padding: 8px 10px; font-size: 12px; }
 .leg-node-done { opacity: 0.6; }
 .leg-node-active { border-color: #ffd34d; box-shadow: 0 0 0 2px rgba(255,211,77,0.4); opacity: 1; }
+/* Deterministic active-edge animation marker (RuntimeEdge forwards className="runtime-active-edge"). */
+@keyframes runtime-edge-dash { to { stroke-dashoffset: -20; } }
+.react-flow__edge.runtime-active-edge .react-flow__edge-path {
+  stroke: #ffd34d !important;
+  stroke-width: 3 !important;
+  stroke-dasharray: 6 4 !important;
+  animation: runtime-edge-dash 0.8s linear infinite;
+}
 .leg-node-future { opacity: 0.85; }
 .leg-node.selected { outline: 2px solid #6ca9ff; }
 .leg-node-top { display: flex; justify-content: space-between; font-size: 10px; color: #9aa3b5; }
