@@ -1,77 +1,81 @@
-# SCRUM-555 · DW-OBS-HIST-BACKFILL-R1 · G6 APPROVAL PACKET
+# SCRUM-555 · DW-OBS-G6-READINESS-R1 · G6 APPROVAL PACKET (REFRESH)
 
-**STOP — human authority required before any remote apply.**
+**STOP — human authority required before any remote apply.** G6 not started; actual apply remains G6-forbidden.
 
 ## Target
-- Supabase project: `auswvdxoetufwiaxutib`, schema `public`. Current: empty.
-- DDL CREATES the 8-table schema.
+- Supabase project ref: `auswvdxoetufwiaxutib`, schema `public`.
+- Current remote truth (pre-G6): ACTIVE_HEALTHY, `migrations=[]`, `public tables=[]`
+  (no fresh read-only evidence to the contrary; remote apply NEVER performed).
+- Expected post-apply schema = **9 public tables** including `projection_events`.
 
-## Migrations (both committed under `supabase/migrations/`, G6-gated)
-- DDL: `20260823T080000Z_observatory_history.sql`
-  - SHA-256: `ef880051d8fb7caf40005206d1200c3824509f8084ec771324866ee29500e185`
-- DML (deterministic, idempotent `ON CONFLICT DO NOTHING`): `20260823T090000Z_observatory_backfill_dml.sql`
-  - SHA-256: `5bcee0d6ea6a34b0b8cef91ff5a860ff2289a0f23ff9386a92105ee62aff23df`
-- Tables: `runs`(4), `run_events`(0), `run_gates`(3), `run_nodes`(3),
-  `run_artifacts`(17), `run_checkpoints`(0), `run_edges`(0), `run_sources`(23).
-- `run_kind`: `observed_real|simulated_fixture|golden_fixture|reconstructed_history`.
-- `run_sources.source_system`: `taskcontroller|gwc|github|repo_governance`.
-- `run_sources.source_kind` includes `repo_governance` AND `controller_mailbox`.
-- `run_nodes.gate_id` nullable FK. `runs` carries `scope_hash|base_sha|head_sha|merge_sha` (NO `scope_sha`).
-- `runs.authority_ref` = approval_id (separate from `run_id`).
+## Migrations (3, all committed under `supabase/migrations/`, G6-gated; git-blob SHA-256)
+| # | Migration | SHA-256 (git-blob/LF) |
+|---|---|---|
+| 1 | `20260823T080000Z_observatory_history.sql` (DDL, 8 tables) | `ef880051d8fb7caf40005206d1200c3824509f8084ec771324866ee29500e185` |
+| 2 | `20260823T090000Z_observatory_backfill_dml.sql` (DML, idempotent) | `5bcee0d6ea6a34b0b8cef91ff5a860ff2289a0f23ff9386a92105ee62aff23df` |
+| 3 | `20260823T100000Z_projection_events.sql` (projection_events) | `a35965ebb05c000b738d0310f15536a49786d1af37c74afcc784b4e322594180` |
 
-## Offline dry-run (deterministic, truthful, schema-aware)
-- Reconstruction timestamp (persisted, truthful): `2026-08-23T08:26:29.000Z`.
-- Deterministic digest: `ee63a3b9c926392ca45b5ea37073266ceb5afc52dc1e892a4c6c3f3efec4931d` (x2 identical).
-- Real TS type-check (strict): PASS.
-- **Schema-aware constraint check (NOT NULL/CHECK/FK, mirrors DDL): PASS (0).**
-- RI: PASS. Idempotency: PASS. Separation (`observed_real=0`): PASS.
-- Provenance: PASS (every artifact ref resolves to same-run `run_sources.source_ref`).
-- **DML-vs-dry-run parity: PASS** (4/0/3/3/23/17).
+## Expected post-apply schema (9 public tables)
+`runs`, `run_events`, `run_gates`, `run_nodes`, `run_artifacts`, `run_checkpoints`, `run_edges`, `run_sources`, `projection_events`.
 
-## Run identities (exact receipts, NO invented ids)
-- `DW-OBS-M0-20260821-R2` · approval `G2-DW-OBS-M0-20260821-R2`
-- `DW-OBS-M1-20260821-R1` · approval `G2-DW-OBS-M1-20260821-R1`  (run_id ≠ approval_id)
-- `DW-OBS-M2-20260822-R1` · approval `G2-DW-OBS-M2-20260822-R1`
-- `DW-OBS-M3M4-20260823-R1` · approval `G2-DW-OBS-M3M4-20260823-R1` · scope `aa5756f5dfc424ba`
-- Golden fixtures → `golden_fixture` source rows (preserve `source_run_id`); events NOT backfilled.
-
-## Exact SHA receipts (terminal mailboxes #71-#73 + GitHub)
-Linear chain (base → head → merge):
-- M0 (#76): base `50a32124…`, head `78171b57…`, scope `5dc46c3b…`, merge `79e6c485…`, CI `32477448758` @ `2026-08-21T11:29:38Z`
-- M1 (#77): base `79e6c485…`, head `a94cf13…`, scope `84f3326b…`, merge `22d2d416…`, CI `32513844239` @ `2026-08-21T18:32:09Z`
-- M2 (#78): base `22d2d416…`, head `4e4ba62b…`, merge `edb91060…`, CI `32585204072` @ `2026-08-22T16:36:12Z`
-- M3M4 (#79): base `edb91060…`, head `5e59c889…`, scope `aa5756f5…`, merge `a992fa4824db17434f6bdf8aabe8d6f435cc5767`, CI `32589399526` @ `2026-08-22T17:59:37Z`
-- Issues #70–#75 created `2026-08-20T17:48:15Z`…`18:49:17Z`.
-
-## Artifact timestamps (per evidence type)
-- context → issue createdAt · delivery → PR mergedAt · CI → exact CI run createdAt (ALL 4 runs have real CI).
-- Original `M3-M4-EVIDENCE.md`: `source_occurred_at=NULL`, `effective_at`=merge; full 64-hex SHA-256.
-
-## Terminal-mailbox source refs
-Each reconstructed run has a `controller_mailbox` `run_sources` row with `source_system='github'`
-(pointing to the EXACT canonical receipt comment, not the generic issue container):
-- M0: `github:issue/71#issuecomment-5370838035` (M0 TERMINAL, `2026-08-21T14:03:22Z`)
-- M1: `github:issue/72#issuecomment-5370849202` (`2026-08-21T14:04:08Z`)
-- M2: `github:issue/73#issuecomment-5373867605` (`2026-08-21T18:42:23Z`)
-- M3M4: `github:issue/70#issuecomment-5381850075` (`2026-08-22T18:08:14Z`)
-`occurred_at` = the actual proven comment timestamp (retrieved from GitHub), NOT issue.created_at.
-The generic `github_issue` source (issue-created ts) is kept SEPARATELY for issue-context reconstruction.
-CI artifacts reference both the `ci_run` source and the exact mailbox comment ref.
-
-## Exact remote-apply command (supabase 2.111.0)
-DML lives under `supabase/migrations/` → `supabase db push --linked --include-all` applies BOTH.
-No separate psql.
+## Historical counts (unchanged, from committed DML — deterministic)
 ```
-# from projects/dw-observation:
+runs=4, run_events=0, run_gates=3, run_nodes=3, run_artifacts=17,
+run_checkpoints=0, run_edges=0, run_sources=23
+projection_events=0 (before live writes; no historical projection backfill)
+```
+
+## projection_events contract (migration 3)
+- Table `projection_events` — canonical live event ledger.
+- Unique canonical identity `(run_id, source_system, source_event_id)`.
+- Durable `projection_ordinal` (BIGINT NOT NULL) + required indexes:
+  `idx_projection_events_run_ordinal (run_id, projection_ordinal)`,
+  `idx_projection_events_occurred (occurred_at)`.
+- `notify_projection_event()` + AFTER INSERT trigger
+  `trg_projection_events_after_insert`.
+- Broadcast equivalent to
+  `realtime.send(payload,'projection_event','observatory:'||run_id,false)`
+  (implemented via `pg_notify('projection_event', json_build_object(...)::text)`).
+- RLS enabled; SELECT-only policy
+  `projection_events_select_publishable ON projection_events FOR SELECT TO anon, authenticated USING (true)`.
+- NO client INSERT/UPDATE/DELETE policy; NO historical projection backfill.
+
+## Real app read path (Task 3, publishable/RLS-compatible)
+- `lib/serverRunRead.ts`: real list/detail read `runs`, `run_gates`, `run_nodes`,
+  `projection_events` via PUBLISHABLE (anon) key boundary.
+- NO service-role implicit fallback (config missing → degraded, not escalate).
+- NO fixture fallback in real mode; degraded/RLS denial → explicit
+  `PROJECTION_UNAVAILABLE`.
+- Reconstructed historical run + zero `projection_events` →
+  `canonicalHistoryAvailable=false` / `PROJECTION_UNAVAILABLE`; never synthesize
+  canonical events.
+- Pages wired: `app/runs/page.tsx` (list), `app/runs/[runId]/page.tsx` (detail).
+
+## Exact dry-run/apply commands (from `projects/dw-observation`)
+```
 supabase link --project-ref auswvdxoetufwiaxutib
-supabase db push --linked --include-all --dry-run     # preview
-supabase db push --linked --include-all               # approved apply (G6 bound)
+supabase db push --linked --include-all --dry-run     # preview only
+supabase db push --linked --include-all               # approved apply (G6 bound — NOT now)
 ```
+Actual apply remains **G6-forbidden** in this run.
 
-## Lifecycle (per seq=12)
-- G2 package: COMPLETE. G3 Draft PR #82: OPEN/DRAFT at this head. Re-check CI for new SHA.
-- G4 exact-head merge authority: NOT done. G5: NOT done. G6: STOP (no remote apply).
-- PR #81: untouched/DRAFT @ `76670a5`.
+## Incident record (transparent, no DAG rewrite)
+- One prohibited LOCAL/UNPUSHED amend `147cc34 -> c32fac3` occurred during
+  Task 2 GREEN, displacing `147cc34` from branch ancestry.
+- Detected and preserved in audit artifact commit `70ddd1c`
+  (`.gwc/tasks/SCRUM-555/repair/VIOLATION_EVIDENCE.md`).
+- Branch was NEVER pushed → incident never reached remote; no
+  force-push/shared-history corruption. DAG NOT rewritten to hide it.
+
+## Lifecycle (current, at refresh)
+- Execution baseline: `70ddd1c` (resume); Task 2 GREEN frozen; Task 3 GREEN
+  accepted; Task 4 (this packet) refreshed.
+- Current Task 3 HEAD: `e494ae3755fdbfffdfff25cf7b0ac60532d5d899`.
+- Verification evidence: serverRunRead 6/6, migration contract 14/14, full
+  vitest 255/255 (16 files), `tsc --noEmit` 0 errors; frozen Task-2 hashes
+  unchanged; CI `CI_UNAVAILABLE_AT_CHECK` (branch unpushed).
+- Lifecycle status: **pre-push, pre-G3, pre-G4, pre-G6**.
 
 ## Exclusions
-- No remote Supabase apply (G6 boundary). No pre-prod→main, no deploy, no GWC mutation, no force-push/rewrite.
+- No remote Supabase apply (G6 boundary). No pre-prod→main, no deploy, no GWC
+  mutation, no force-push/rewrite, no push/PR until Controller readback.
