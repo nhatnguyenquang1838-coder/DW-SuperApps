@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS run_edges (
 CREATE TABLE IF NOT EXISTS run_sources (
   source_id          TEXT        NOT NULL,
   run_id             TEXT        NOT NULL REFERENCES runs(run_id) ON DELETE CASCADE,
-  source_system      TEXT        NOT NULL CHECK (source_system IN ('taskcontroller','gwc')),
+  source_system      TEXT        NOT NULL CHECK (source_system IN ('taskcontroller','gwc','github','repo_governance')),
   source_event_id    TEXT,
   source_kind        TEXT        NOT NULL
                         CHECK (source_kind IN ('live_capture','golden_fixture','github_pr','github_issue','ci_run','gwc_artifact','reconstruction')),

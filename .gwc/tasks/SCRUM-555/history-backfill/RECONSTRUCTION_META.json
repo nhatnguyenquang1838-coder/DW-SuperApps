@@ -1,0 +1,6 @@
+{
+  "reconstructed_at": "2026-08-23T08:26:29.000Z",
+  "note": "Truthful timestamp of the governed DW-OBS-HIST-BACKFILL-R1 reconstruction activity (seq=10 correction run). Persisted so the dry-run/DML is deterministic AND truthful. Do not edit to a rounded/arbitrary value.",
+  "governed_run": "DW-OBS-HIST-BACKFILL-R1",
+  "controller_seq": 10
+}
