@@ -1,0 +1,67 @@
+approval_id: G2-SCRUM-555-OBS-G6-READINESS-R1
+authority_gate: G2_EXECUTION
+task_id: SCRUM-555
+run_label: DW-OBS-G6-READINESS-R1
+issued_at: '2026-08-23T14:30:00Z'
+expires_at: '2026-08-24T14:30:00Z'
+scope_version: 1
+risk_class: R4
+project_profile: projects/dw-observation/project-profile.yaml
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: pre-prod
+base_sha: 0ee1b41b33ca83242d02c2098e6ef96a7c510301
+working_branch: auto/SCRUM-555-observatory-g6-readiness-r1
+feature_target: pre-prod
+modules_or_files:
+  - docs/superpowers/specs/2026-08-23-observatory-g6-readiness-design.md
+  - docs/superpowers/plans/2026-08-23-observatory-g6-readiness.md
+  - projects/dw-observation/supabase/migrations/20260823T100000Z_projection_events.sql
+  - projects/dw-observation/supabase/migrations/20260823T100500Z_projection_events_broadcast_rls.sql
+  - projects/dw-observation/src/observatory/projection_events.ts
+  - projects/dw-observation/src/observatory/projectionBroadcast.ts
+  - projects/dw-observation/src/observatory/rlsPolicy.ts
+  - projects/dw-observation/tests/unit/projectionEvents.test.ts
+  - projects/dw-observation/tests/unit/projectionBroadcast.test.ts
+  - .gwc/tasks/SCRUM-555/g6/observatory-readiness-packet.md
+authorized_actions:
+  - create_task_artifacts
+  - write_docs_first
+  - implement_migrations
+  - run_sandboxed_validation
+  - run_baseline_tests
+  - push_working_branch
+  - open_or_update_draft_pr
+excluded_actions:
+  - merge
+  - deploy
+  - production_data_read
+  - production_data_write
+  - production_config_change
+  - credential_rotation
+  - protected_main_write
+  - branch_delete
+  - force_push
+  - gwc_repo_mutation
+  - db_push
+  - remote_supabase_ddl_apply
+  - remote_supabase_dml_apply
+work_item:
+  provider: DW Run Observatory
+  id: SCRUM-555
+  lane: DW-OBS-G6-READINESS-R1
+  claim_required: false
+  expected_repository: nhatnguyenquang1838-coder/DW-SuperApps
+  review_state: pending_approval
+exclusions_note: >
+  SCRUM-554, Project Shield, SCRUM-288/NA81, Rental Home, global Power
+  compatibility repair, and GWC repo mutation are out of scope. Remote Supabase
+  is READ-ONLY for this run: NO DDL/DML apply and NO `db push` without a later
+  exact Human G6 authority (G6_PRODUCTION_DATA gate not started).
+approved_architecture:
+  - run_* tables stay historical/audit metadata + reconstructed evidence; never synthesize missing canonical events.
+  - projection_events = canonical live event ledger for real-mode + Realtime.
+  - Real UI reads run metadata/gates/nodes from run_*; timeline/replay/live reads projection_events.
+  - A reconstructed historical run with zero canonical events MUST surface PROJECTION_UNAVAILABLE / history unavailable, never fixture LIVE.
+  - Add migration for projection_events, Broadcast trigger, SELECT-only RLS for publishable client; NO client write policy.
+  - Refresh G6 packet only after exact migrations/tests/hashes are final.
+scope_hash: sha256:51e53aa255ab2210c8e0a659b274779465b1b664b817d64da00fffc9c222d714
