@@ -1,0 +1,55 @@
+schema_version: '1.0'
+artifact_type: g1-intake-brief
+generated_at: '2026-08-24T00:55:00Z'
+trace:
+  project_id: dw-observation
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: SCRUM-555
+  base_sha: 0ee1b41b33ca83242d02c2098e6ef96a7c510301
+  g0_snapshot: ../../g0/context-snapshot.yaml
+problem:
+  statement: An unauthorized `git commit --amend` displaced pre-amend commit 147cc34361dde16e129220898445eb0766c87687 from the working-branch ancestry, replacing it with sibling c32fac34440e0f33a65c87e0c42b1c6a05acf783 and leaving 147cc34 reflog-only. G2 explicitly excluded branch-history rewrite; lineage must be restored.
+  why_now: The current branch ancestry 19a8d718 -> c32fac3 no longer contains 147cc34. Functional Task 2 GREEN is intact, but governance audit lineage is broken and must be repaired additively without another history rewrite.
+desired_outcome: One additive non-force two-parent reconciliation commit, parent1=current c32fac34440e0f33a65c87e0c42b1c6a05acf783, parent2=displaced 147cc34361dde16e129220898445eb0766c87687, final tree byte-identical to current c32fac3 tree c9800138823ba4bb01d689eb99316645f9c2aa35; restores reachability/audit lineage only, zero application/test/migration content change.
+stakeholders:
+  requester: user
+  affected:
+  - DW Run Observatory / SCRUM-555 governance audit
+scope:
+  in_scope:
+  - Materialize remediation authority candidate (g0/g1/g2 + violation evidence) only
+  - One additive two-parent reconciliation commit once exact Human repair token is received
+  - Preserve all existing commits; no rewrite
+  non_goals:
+  - Change any application/test/migration content or semantics
+  - Amend/reset/rebase/cherry-pick/force-push/history rewrite
+  - Push/PR/merge/deploy/G6/remote Supabase DDL/DML/GWC mutation
+  - Alter current active .gwc/tasks/SCRUM-555/g2/** packet
+constraints:
+- No branch mutation until exact Human repair token
+- Zero content change; final tree identical to c32fac3 tree
+- No repository EOL config change
+assumptions:
+- Displaced commit 147cc34361dde16e129220898445eb0766c87687 remains reachable via reflog
+- Current head c32fac34440e0f33a65c87e0c42b1c6a05acf783 is the branch tip
+risks:
+- id: RISK-1
+  description: Reconciliation commit could inadvertently change tree/content semantics.
+  impact: high
+  mitigation: Final tree must be byte-identical to c9800138823ba4bb01d689eb99316645f9c2aa35; post-reconciliation tests/hashes must remain identical.
+- id: RISK-2
+  description: Another rewrite attempt could compound the deviation.
+  impact: high
+  mitigation: Only additive non-force reconciliation is authorized; no reset/rebase/cherry-pick.
+acceptance_criteria:
+- id: AC-1
+  statement: Repair candidate passes validate_g01.py --workspace .gwc/tasks/SCRUM-555/repair --gate G2_EXECUTION.
+  verifiable: true
+- id: AC-2
+  statement: Reconciliation commit restores 147cc34 to branch ancestry with final tree byte-identical to c9800138823ba4bb01d689eb99316645f9c2aa35.
+  verifiable: true
+- id: AC-3
+  statement: Post-reconciliation targeted 14/14, full 249/249, typecheck 0 errors, old/new migration hashes unchanged.
+  verifiable: true
+unresolved_questions: []
+status: READY

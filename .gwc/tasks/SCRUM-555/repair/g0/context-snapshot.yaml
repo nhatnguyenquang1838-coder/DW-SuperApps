@@ -1,0 +1,38 @@
+schema_version: '1.0'
+artifact_type: g0-context-snapshot
+generated_at: '2026-08-24T00:55:00Z'
+project:
+  id: dw-observation
+  name: DW Run Observatory
+  profile_path: projects/dw-observation/project-profile.yaml
+repository:
+  full_name: nhatnguyenquang1838-coder/DW-SuperApps
+  base_ref: pre-prod
+  base_sha: 0ee1b41b33ca83242d02c2098e6ef96a7c510301
+  protected_branches:
+  - main
+  - pre-prod
+  connector: DWC
+  write_enabled: true
+constraints:
+- Lineage remediation ONLY — restore reachability/audit lineage; zero content change
+- No branch mutation until exact Human repair token
+- No amend/reset/rebase/cherry-pick/force-push/history rewrite
+- No push/PR until Controller readback
+- No merge/deploy/G6/remote Supabase DDL/DML/GWC mutation
+applicable_policies:
+- id: GWC_CORE
+  path: core/Coding_Project_Governance_v1.0.md
+  ref: main
+  source_sha: ea3e44ac2d948b8439e9768bea4f5dda8474a34e914592130965083792a5ee48
+sources:
+- path: AGENTS.md
+  required: true
+  status: AVAILABLE
+  source_sha: 317d1044bafe2c89e91264d03780494fdca6af4e
+- path: projects/dw-observation/project-profile.yaml
+  required: true
+  status: AVAILABLE
+  source_sha: aa44d6fae0ca402a2463fd862d835f44f3ae95f1
+status: READY
+blockers: []

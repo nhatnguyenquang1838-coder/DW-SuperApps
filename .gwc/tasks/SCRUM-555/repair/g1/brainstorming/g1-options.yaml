@@ -1,0 +1,47 @@
+schema_version: '1.0'
+artifact_type: g1-options
+generated_at: '2026-08-24T00:55:00Z'
+trace:
+  project_id: dw-observation
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: SCRUM-555
+  base_sha: 0ee1b41b33ca83242d02c2098e6ef96a7c510301
+  g0_snapshot: ../../g0/context-snapshot.yaml
+options:
+- id: OPT-1
+  title: Additive non-force two-parent lineage reconciliation
+  description: One additive reconciliation commit with parent1=c32fac34440e0f33a65c87e0c42b1c6a05acf783 and parent2=147cc34361dde16e129220898445eb0766c87687, final tree byte-identical to current c32fac3 tree. Restores audit lineage without any content change.
+  benefits:
+  - Restores displaced commit reachability/audit lineage
+  - No history rewrite; purely additive
+  - Zero application/test/migration semantic change
+  tradeoffs:
+  - Adds one reconciliation commit to branch history
+  - Requires exact Human repair authority token
+  risks:
+  - Tree/content drift (mitigated by byte-identical final tree + post-checks)
+  constraint_fit: FIT
+- id: OPT-2
+  title: Silent acceptance of lineage deviation
+  description: Accept the amend as-is and continue without restoring 147cc34 lineage.
+  benefits:
+  - No additional history action
+  tradeoffs:
+  - Leaves governance audit lineage broken; G2 deviation silently absorbed
+  risks:
+  - Compounds governance deviation; unacceptable under FAIL-CLOSED
+  constraint_fit: NOT_FIT
+- id: OPT-3
+  title: Further history rewrite
+  description: Use reset/rebase/cherry-pick to reconstruct ancestry.
+  benefits:
+  - Could restore a clean-looking history
+  tradeoffs:
+  - Directly violates the explicit no-history-rewrite exclusion
+  risks:
+  - Another unauthorized rewrite; worsens the deviation
+  constraint_fit: NOT_FIT
+recommended_option_id: OPT-1
+recommendation_rationale: OPT-1 restores audit lineage additively with zero content change and no rewrite, satisfying all exclusions; OPT-2 and OPT-3 are rejected (silent acceptance and further rewrite both violate governance).
+decision_required: true
+status: READY
