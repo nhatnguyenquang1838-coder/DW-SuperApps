@@ -16,6 +16,7 @@ import {
   buildGateEdges,
   buildRouteEdges,
   makeArtifactPreview,
+  shouldDisableFollowOnMove,
 } from "@/lib/loginEpicRuntimeGraph";
 
 const fixture = loadLoginEpicFixture();
@@ -116,6 +117,107 @@ describe("Login Epic makeArtifactPreview enrichment (blocker #5)", () => {
   it("non-login source file is not enriched", () => {
     const out = makeArtifactPreview({ run: r0, path: "lib/other.ts", cursor: 0 });
     expect(out).not.toContain("simulated source-code write preview");
+  });
+
+  // Blocker #3: approved UX must be username / password / CTA "Login" (not email / Sign in).
+  it("LoginForm preview uses approved UX (username, password, CTA Login)", () => {
+    const out = makeArtifactPreview({ run: r0, path: "components/auth/LoginForm.tsx", cursor: 0 });
+    expect(out).toContain("username");
+    expect(out).toContain("password");
+    expect(out).toContain("Login"); // CTA text
+    expect(out).not.toContain("email");
+    expect(out).not.toContain("Sign in");
+  });
+  it("LoginShell preview heading is Login (approved UX)", () => {
+    const out = makeArtifactPreview({ run: r0, path: "components/auth/LoginShell.tsx", cursor: 0 });
+    expect(out).toContain("<h1>Login</h1>");
+    expect(out).not.toContain("Sign in");
+  });
+
+  // Blocker #4: the six snippets form one coherent import/export graph.
+  describe("source preview import/export contract (blocker #4)", () => {
+    const preview = (p: string) => makeArtifactPreview({ run: r0, path: p, cursor: 0 });
+    it("page.tsx default-exports LoginPage and imports named LoginShell", () => {
+      const out = preview("app/login/page.tsx");
+      expect(out).toMatch(/import \{ LoginShell \} from "@\/components\/auth\/LoginShell"/);
+      expect(out).toMatch(/export default function LoginPage/);
+    });
+    it("LoginShell named-exports LoginShell and imports named LoginForm", () => {
+      const out = preview("components/auth/LoginShell.tsx");
+      expect(out).toMatch(/import \{ LoginForm \} from "@\/components\/auth\/LoginForm"/);
+      expect(out).toMatch(/export function LoginShell/);
+    });
+    it("LoginForm named-exports LoginForm and imports loginClient", () => {
+      const out = preview("components/auth/LoginForm.tsx");
+      expect(out).toMatch(/import \{ loginClient \} from "@\/lib\/api\/loginClient"/);
+      expect(out).toMatch(/export function LoginForm/);
+    });
+    it("login.ts exports login() + LoginRequest + LOGIN_ENDPOINT", () => {
+      const out = preview("lib/contracts/login.ts");
+      expect(out).toMatch(/export interface LoginRequest/);
+      expect(out).toMatch(/export async function login\(/);
+      expect(out).toMatch(/export const LOGIN_ENDPOINT/);
+    });
+    it("route.ts imports the named login + LoginRequest from contracts", () => {
+      const out = preview("app/api/login/route.ts");
+      expect(out).toMatch(/import \{ login, type LoginRequest \} from "@\/lib\/contracts\/login"/);
+    });
+    it("loginClient.ts imports LOGIN_ENDPOINT + types from contracts and exports loginClient", () => {
+      const out = preview("lib/api/loginClient.ts");
+      expect(out).toMatch(/import \{ LOGIN_ENDPOINT, type LoginRequest, type LoginResponse \} from "@\/lib\/contracts\/login"/);
+      expect(out).toMatch(/export const loginClient/);
+    });
+  });
+});
+
+describe("Login Epic gate completion semantics (blocker #1)", () => {
+  const r0 = fixture.runs[0];
+  const gates = r0.gates;
+  // Pick a cursor that sits inside G2_EXECUTION (gates[2]) so G0/G1 are done,
+  // G2 active, G3-G6 future. Use the route index of a G2 node + 1.
+  const g2 = gates[2]; // G2_EXECUTION
+  const g2FirstIdx = getRouteIndex(r0, g2.nodes[0].id); // first G2 node index
+  const cursorInG2 = g2FirstIdx + 1;
+
+  it("at cursor inside G2: G0/G1=done, G2=active, later=future", () => {
+    expect(getGateState(r0, "G0_CONTEXT", cursorInG2)).toBe("done");
+    expect(getGateState(r0, "G1_ALIGNMENT", cursorInG2)).toBe("done");
+    expect(getGateState(r0, "G2_EXECUTION", cursorInG2)).toBe("active");
+    expect(getGateState(r0, "G3_PR", cursorInG2)).toBe("future");
+    expect(getGateState(r0, "G4_MERGE", cursorInG2)).toBe("future");
+    expect(getGateState(r0, "G5_DEPLOY", cursorInG2)).toBe("future");
+    expect(getGateState(r0, "G6_PRODUCTION", cursorInG2)).toBe("future");
+  });
+
+  it("at cursor inside G0: only G0 active, rest future", () => {
+    const c = 0;
+    expect(getGateState(r0, "G0_CONTEXT", c)).toBe("active");
+    expect(getGateState(r0, "G1_ALIGNMENT", c)).toBe("future");
+    expect(getGateState(r0, "G6_PRODUCTION", c)).toBe("future");
+  });
+
+  it("at last node: all gates done, G6 active", () => {
+    const c = r0.route.length - 1;
+    expect(getGateState(r0, "G0_CONTEXT", c)).toBe("done");
+    expect(getGateState(r0, "G5_DEPLOY", c)).toBe("done");
+    expect(getGateState(r0, "G6_PRODUCTION", c)).toBe("active");
+  });
+
+  it("prior completed gate never regresses to future as cursor advances", () => {
+    for (let c = 0; c < r0.route.length; c++) {
+      const g0 = getGateState(r0, "G0_CONTEXT", c);
+      // G0 can only be active (at its own cursor) or done — never future once we pass it.
+      if (c > 0) expect(g0).not.toBe("future");
+    }
+  });
+});
+
+describe("Login Epic viewport follow decision (blocker #5)", () => {
+  it("genuine user move disables Follow", () => {
+    expect(shouldDisableFollowOnMove(false)).toBe(true);
+  });
+  it("programmatic setCenter preserves Follow", () => {
+    expect(shouldDisableFollowOnMove(true)).toBe(false);
   });
 });
 

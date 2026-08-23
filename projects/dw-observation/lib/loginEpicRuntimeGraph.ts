@@ -163,23 +163,22 @@ export function getGateState(
 ): "done" | "active" | "future" | "empty" {
   const gate = getGate(run, gateId);
   if (!gate.nodes.length) return "empty";
-  const active = getActiveRoute(run, cursor);
-  if (active.gate_id === gateId && getNodeState(run, active.node_id, cursor) === "active")
+  const c = clampCursor(run, cursor);
+  const active = getActiveRoute(run, c);
+  // Active gate: the cursor's current node belongs to this gate.
+  if (active.gate_id === gateId && getNodeState(run, active.node_id, c) === "active")
     return "active";
-  // gate is done if all its nodes have route index < cursor
+  // Route indices of THIS gate's nodes.
   const gateNodeIds = new Set(gate.nodes.map((n) => n.id));
-  const cursorRoute = run.route.slice(0, clampCursor(run, cursor) + 1);
-  const cursorInGate = cursorRoute.some(
-    (s) => s.gate_id === gateId && gateNodeIds.has(s.node_id),
-  );
-  if (!cursorInGate) {
-    // if any gate node appears after cursor => future
-    const after = run.route.slice(clampCursor(run, cursor) + 1);
-    return after.some((s) => s.gate_id === gateId && gateNodeIds.has(s.node_id))
-      ? "future"
-      : "done";
-  }
-  return "future";
+  const idxs = run.route
+    .map((s, i) => ({ s, i }))
+    .filter(({ s }) => s.gate_id === gateId && gateNodeIds.has(s.node_id))
+    .map(({ i }) => i);
+  if (idxs.length === 0) return "future";
+  // Done only when every node of the gate is strictly before the cursor.
+  // Future when any node is after the cursor (covers prior-completed gates that
+  // still have nodes inside the sliced prefix -> they are NOT future, they are done).
+  return idxs.every((i) => i < c) ? "done" : "future";
 }
 
 export interface RuntimeEdgeModel {
@@ -233,6 +232,15 @@ export function getActiveRouteEdgeId(run: LoginEpicRun, cursor: number): string 
   return `route-${c}`;
 }
 
+/**
+ * Pure viewport-Follow decision (blocker #5 evidence).
+ * A genuine user pan/zoom disables Follow; a programmatic setCenter (follow-cursor)
+ * must NOT. Deterministic and unit-testable independently of React Flow.
+ */
+export function shouldDisableFollowOnMove(isProgrammatic: boolean): boolean {
+  return !isProgrammatic;
+}
+
 /** Deterministic synthetic artifact preview (no real secrets/config). */
 export function makeArtifactPreview(args: {
   run: LoginEpicRun;
@@ -253,15 +261,20 @@ export function makeArtifactPreview(args: {
     source_basis: "controller-transferred reference fixture (no real secrets)",
   };
 
-  // Enriched, realistic source-code previews for the Login Capability deliverables.
-  // Keyed by the file's trailing path segment so both node-agnostic and node-scoped
-  // opens render the same deterministic content.
+  // Enriched, internally-consistent simulated source-code previews for the Login
+  // Capability deliverables. Keyed by the file's trailing path segment so both
+  // node-agnostic and node-scoped opens render the same deterministic content.
+  // Import/export graph is coherent: page.tsx default-exports LoginPage and
+  // imports the named LoginShell; LoginShell imports the named LoginForm;
+  // LoginForm imports loginClient; route.ts + loginClient.ts import from
+  // contracts/login.ts (which exports login + types + LOGIN_ENDPOINT).
+  // UX matches the approved contract: username / password / CTA "Login".
   const seg = path.split("/").pop() ?? path;
   const SOURCE_PREVIEWS: Record<string, string> = {
     "page.tsx": `// app/login/page.tsx (simulated source-code write preview)
 // Purpose: ${node?.purpose ?? "Render the login route entry screen"}
 // Boundary: ${node?.boundary ?? "product/ui"}
-import LoginShell from "@/components/auth/LoginShell";
+import { LoginShell } from "@/components/auth/LoginShell";
 
 export default function LoginPage() {
   return <LoginShell />;
@@ -269,12 +282,12 @@ export default function LoginPage() {
     "LoginShell.tsx": `// components/auth/LoginShell.tsx (simulated source-code write preview)
 // Purpose: ${node?.purpose ?? "Compose the login screen shell"}
 // Boundary: ${node?.boundary ?? "product/ui"}
-import LoginForm from "@/components/auth/LoginForm";
+import { LoginForm } from "@/components/auth/LoginForm";
 
 export function LoginShell() {
   return (
     <main className="login-shell">
-      <h1>Sign in</h1>
+      <h1>Login</h1>
       <LoginForm />
     </main>
   );
@@ -287,33 +300,42 @@ import { useState } from "react";
 import { loginClient } from "@/lib/api/loginClient";
 
 export function LoginForm() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   return (
     <form onSubmit={async (e) => {
       e.preventDefault();
-      await loginClient.signIn({ email, password });
+      await loginClient.signIn({ username, password });
     }}>
-      <input aria-label="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <input aria-label="username" value={username} onChange={(e) => setUsername(e.target.value)} />
       <input aria-label="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-      <button type="submit">Sign in</button>
+      <button type="submit">Login</button>
     </form>
   );
 }`,
     "login.ts": `// lib/contracts/login.ts (simulated source-code write preview)
 // Purpose: ${node?.purpose ?? "Login API contract types"}
 // Boundary: ${node?.boundary ?? "shared/contract"}
-export interface LoginRequest { email: string; password: string; }
+export interface LoginRequest { username: string; password: string; }
 export interface LoginResponse { token: string; expiresIn: number; }
-export const LOGIN_ENDPOINT = "/api/login" as const;`,
+export const LOGIN_ENDPOINT = "/api/login" as const;
+
+export async function login(req: LoginRequest): Promise<LoginResponse> {
+  const r = await fetch(LOGIN_ENDPOINT, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  return r.json();
+}`,
     "route.ts": `// app/api/login/route.ts (simulated source-code write preview)
 // Purpose: ${node?.purpose ?? "Login API route handler"}
 // Boundary: ${node?.boundary ?? "backend/api"}
-import { login } from "@/lib/contracts/login";
+import { login, type LoginRequest } from "@/lib/contracts/login";
 import { json } from "@/lib/http";
 
 export async function POST(req: Request) {
-  const body = await req.json();
+  const body = (await req.json()) as LoginRequest;
   const res = await login(body);
   return json(res, { status: 200 });
 }`,

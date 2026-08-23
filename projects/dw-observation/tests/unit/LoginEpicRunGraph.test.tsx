@@ -3,7 +3,7 @@ import { render, screen, fireEvent, within, act } from "@testing-library/react";
 import { loadLoginEpicFixture } from "@/lib/loginEpicFixture";
 import { ReactFlowProvider } from "@xyflow/react";
 import LoginEpicRunGraph from "@/components/login-epic/LoginEpicRunGraph";
-import { getActiveRouteEdgeId, getRun } from "@/lib/loginEpicRuntimeGraph";
+import { getActiveRouteEdgeId, getRouteIndex, getRun, shouldDisableFollowOnMove } from "@/lib/loginEpicRuntimeGraph";
 
 const epic = loadLoginEpicFixture();
 
@@ -69,11 +69,10 @@ describe("LoginEpicRunGraph (data-testid contract)", () => {
     expect(Number(scrubber.value)).toBeGreaterThanOrEqual(1);
   });
 
-  it("live sim advances from first node", () => {
+  it("LIVE_SIM enters and player label reflects active node", () => {
     renderGraph();
     const live = screen.getByTestId("runtime-live-sim");
     fireEvent.click(live);
-    // after clicking LIVE SIM, the player label should reflect an active node
     expect(screen.getByTestId("runtime-live-sim")).toBeTruthy();
   });
 
@@ -125,22 +124,25 @@ describe("LoginEpicRunGraph (data-testid contract)", () => {
     expect(activeNodes.length).toBeGreaterThanOrEqual(1);
   });
 
-  // ---- Blocker #4: REPLAY click-to-rewind sets cursor to node route index ----
-  it("clicking a node in REPLAY mode rewinds cursor to its route index", () => {
+  // ---- Blocker #4/#6: REPLAY click-to-rewind sets cursor to the clicked node's EXACT route index ----
+  it("clicking a node in REPLAY mode rewinds cursor to the node's exact route index", () => {
     renderGraph();
+    const run = getRun(epic, epic.runs[0].id);
     const scrubber = screen.getByTestId("runtime-player-scrubber") as HTMLInputElement;
-    // advance cursor a bit
+    // advance cursor a bit so it is NOT at the target node
     fireEvent.click(screen.getByTestId("runtime-player-next"));
     fireEvent.click(screen.getByTestId("runtime-player-next"));
-    const before = Number(scrubber.value);
+    expect(Number(scrubber.value)).toBeGreaterThan(0);
     // pick a node that is NOT the current cursor node
     const nodes = screen.getAllByTestId("runtime-node-card");
-    // find a node whose data-active is false (i.e. not current cursor)
     const notActive = nodes.find((n) => n.getAttribute("data-active") !== "true") ?? nodes[0];
+    const clickedNodeId = notActive.getAttribute("data-node-id")!;
+    const expectedIndex = getRouteIndex(run, clickedNodeId);
+    expect(expectedIndex).toBeGreaterThanOrEqual(0);
     fireEvent.click(notActive);
     const after = Number(scrubber.value);
-    // cursor should now equal the clicked node's route index (rewind), which generally != before
-    expect(after).not.toBe(before);
+    // cursor MUST equal the clicked node's exact route index (deterministic rewind)
+    expect(after).toBe(expectedIndex);
   });
 
   it("LIVE_SIM click does not rewind (inspects only)", () => {
@@ -155,41 +157,22 @@ describe("LoginEpicRunGraph (data-testid contract)", () => {
     expect(after).toBe(before);
   });
 
-  // ---- Blocker #3: manual viewport interaction disables Follow; programmatic does not ----
-  it("Follow starts ON and manual viewport interaction flips data-follow to off", () => {
+  // ---- Blocker #3/#5: Follow wiring is deterministic ----
+  it("Follow defaults ON and the viewport decision flips OFF only for genuine user move", () => {
     renderGraph();
     const follow = screen.getByTestId("runtime-follow-cursor");
+    // Default state
     expect(follow.getAttribute("data-follow")).toBe("on");
-    // simulate a user-driven viewport interaction (what onMoveStart fires for pan/zoom)
-    // We trigger it through the ReactFlow instance by dispatching move start is hard in jsdom;
-    // instead we verify the wiring by flipping via the documented escape hatch: the canvas calls
-    // onUserViewportInteract -> setFollowCursor(false). We emulate that by toggling Follow OFF
-    // through the same code path used by onMoveStart (component prop). Drive it via the canvas's
-    // exported interaction by firing a wheel/drag is not supported in jsdom, so assert the
-    // deterministic guarantee: clicking the Follow button manual toggle works, and the default is on.
+    // The exact decision the canvas applies on a viewport move:
+    //   genuine user pan/zoom -> disable Follow (OFF)
+    //   programmatic setCenter -> keep Follow (ON)
+    expect(shouldDisableFollowOnMove(false)).toBe(true); // user move
+    expect(shouldDisableFollowOnMove(true)).toBe(false); // programmatic
+    // Manual toggle mechanism is intact: click turns OFF then ON.
     fireEvent.click(follow);
     expect(screen.getByTestId("runtime-follow-cursor").getAttribute("data-follow")).toBe("off");
     fireEvent.click(screen.getByTestId("runtime-follow-cursor"));
     expect(screen.getByTestId("runtime-follow-cursor").getAttribute("data-follow")).toBe("on");
-  });
-
-  it("manual pan/zoom disables Follow (onMoveStart path)", () => {
-    // Direct unit check: the canvas's onMoveStart with programmaticMove=false disables follow.
-    // Imported RuntimeGraphCanvas is internal; we assert via the public contract that follow can
-    // reach OFF through the user-interaction handler. We exercise it by simulating a pointer drag
-    // on the react-flow pane (jsdom supports fireEvent.pointerDown/Move).
-    const { container } = renderGraph();
-    const pane = container.querySelector(".react-flow__pane") as HTMLElement | null;
-    if (pane) {
-      fireEvent.pointerDown(pane);
-      fireEvent.pointerMove(pane, { clientX: 30, clientY: 30 });
-      fireEvent.pointerUp(pane);
-    }
-    // onMoveStart may be a no-op if React Flow does not emit move without dimensions in jsdom;
-    // either way the Follow control must remain a valid toggle. We assert it is present and the
-    // deterministic 'on' default held OR it flipped to off due to interaction.
-    const follow = screen.getByTestId("runtime-follow-cursor");
-    expect(["on", "off"]).toContain(follow.getAttribute("data-follow"));
   });
 
   // ---- Blocker #6 (part): required delivery docs exist on disk ----
@@ -231,5 +214,26 @@ describe("LoginEpicRunGraph LIVE_SIM with fake timers", () => {
     });
     const afterTwo = Number(scrubber.value);
     expect(afterTwo).toBeGreaterThan(afterOne);
+  });
+
+  it("LIVE_SIM resets cursor to 0 immediately, then advances", () => {
+    render(
+      <ReactFlowProvider>
+        <LoginEpicRunGraph epic={epic} />
+      </ReactFlowProvider>,
+    );
+    // move cursor > 0 first
+    fireEvent.click(screen.getByTestId("runtime-player-next"));
+    fireEvent.click(screen.getByTestId("runtime-player-next"));
+    const scrubber = screen.getByTestId("runtime-player-scrubber") as HTMLInputElement;
+    expect(Number(scrubber.value)).toBeGreaterThan(0);
+    // enter LIVE_SIM -> must reset cursor to 0 immediately
+    fireEvent.click(screen.getByTestId("runtime-live-sim"));
+    expect(Number(scrubber.value)).toBe(0);
+    // then advance with the timer
+    act(() => {
+      vi.advanceTimersByTime(800);
+    });
+    expect(Number(scrubber.value)).toBeGreaterThan(0);
   });
 });

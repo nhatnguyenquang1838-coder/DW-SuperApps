@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -14,33 +14,26 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
-import type {
-  LoginEpicRun,
-  GateId,
-  RuntimeNode,
-  NodeState,
-} from "@/lib/loginEpicRuntimeGraph";
+import type { LoginEpicRun, GateId, RuntimeNode, NodeState } from "@/lib/loginEpicRuntimeGraph";
 import {
   getActiveRoute,
   getNodeState,
   getGateState,
-  buildGateEdges,
-  buildRouteEdges,
   makeArtifactPreview,
+  shouldDisableFollowOnMove,
 } from "@/lib/loginEpicRuntimeGraph";
+import { computeRunLayout, type DisplayDir, type DisplayForm } from "@/lib/loginEpicLayout";
 import GateClusterNode from "./GateClusterNode";
 import RuntimeNodeCard from "./RuntimeNodeCard";
 import RuntimeEdge from "./RuntimeEdge";
+import FamilyBandNode from "./FamilyBandNode";
 
 const nodeTypes: NodeTypes = {
   gateCluster: GateClusterNode,
   runtimeNode: RuntimeNodeCard,
+  familyBand: FamilyBandNode,
 };
 const edgeTypes: EdgeTypes = { runtimeEdge: RuntimeEdge };
-
-const GATE_W = 360;
-const GATE_GAP = 120;
-const NODE_GAP_Y = 14;
 
 export default function RuntimeGraphCanvas({
   run,
@@ -60,93 +53,124 @@ export default function RuntimeGraphCanvas({
   onUserViewportInteract: () => void;
 }) {
   const rf = useReactFlow();
+  const [dir, setDir] = useState<DisplayDir>(
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("dir") === "TD" ? "TD" : "LR",
+  );
+  const [form, setForm] = useState<DisplayForm>(
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("form") === "stack" ? "stack" : "grid",
+  );
+  const [group, setGroup] = useState<boolean>(
+    typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("group") !== "0" : true,
+  );
 
-  // Build nodes: one gate-cluster node per gate (positioned) + runtime node cards inside.
+  const layout = useMemo(
+    () => computeRunLayout(run, { dir, form, group }),
+    [run, dir, form, group],
+  );
+
+  // Build React Flow nodes: gate boxes first (background), then family bands, then node cards.
   const rfNodes: RFNode[] = useMemo(() => {
     const out: RFNode[] = [];
-    run.gates.forEach((gate, gi) => {
-      const gx = 40 + gi * (GATE_W + GATE_GAP);
-      const gy = 40;
-      const gateState = getGateState(run, gate.id, cursor);
+    // gate background boxes
+    layout.gates.forEach((g) => {
+      const state = getGateState(run, g.id, cursor);
       out.push({
-        id: `gate-${gate.id}`,
+        id: `gate-${g.id}`,
         type: "gateCluster",
-        position: { x: gx, y: gy },
-        data: { gate, state: gateState },
+        position: { x: g.x, y: g.y },
+        data: {
+          gateId: g.id,
+          gateLabel: run.gates.find((x) => x.id === g.id)?.label ?? g.id,
+          gateSummary: run.gates.find((x) => x.id === g.id)?.summary ?? "",
+          boundary: g.boundary,
+          headerH: g.headerH,
+          nodeCount: run.gates.find((x) => x.id === g.id)?.nodes.length ?? 0,
+          artifactCount: run.gates.find((x) => x.id === g.id)?.gateArtifacts.length ?? 0,
+          state,
+        },
         draggable: false,
         selectable: false,
+        zIndex: 0,
         style: {
-          width: GATE_W,
-          height: 520,
+          width: g.w,
+          height: g.h,
           background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.10)",
+          border: "1px solid rgba(255,255,255,0.12)",
           borderRadius: 12,
         },
       });
-      gate.nodes.forEach((n: RuntimeNode, ni) => {
-        const state: NodeState = getNodeState(run, n.id, cursor);
-        const nx = gx + 16;
-        const ny = gy + 70 + ni * (150 + NODE_GAP_Y);
+      // family group bands
+      g.families.forEach((f) => {
         out.push({
-          id: n.id,
-          type: "runtimeNode",
-          position: { x: nx, y: ny },
-          data: {
-            node: n,
-            state,
-            active: state === "active",
-            selected: selection.kind === "node" && selection.id === n.id,
-            onOpen: (path: string, kind: string) => onOpenArtifact(path, kind),
-          },
+          id: `fam-${g.id}-${f.family}`,
+          type: "familyBand",
+          position: { x: f.x, y: f.y },
+          data: { family: f.family, boundary: g.boundary },
           draggable: false,
-          selectable: true,
-        });
+          selectable: false,
+          zIndex: 1,
+          style: { width: f.w, height: f.h },
+        } as RFNode);
+      });
+    });
+    // node cards
+    layout.nodes.forEach((ln) => {
+      const n = run.gates.flatMap((g) => g.nodes).find((x) => x.id === ln.id) as RuntimeNode;
+      const state: NodeState = getNodeState(run, n.id, cursor);
+      out.push({
+        id: n.id,
+        type: "runtimeNode",
+        position: { x: ln.x, y: ln.y },
+        data: {
+          node: n,
+          state,
+          active: state === "active",
+          selected: selection.kind === "node" && selection.id === n.id,
+          boundary: n.boundary,
+          onOpen: (path: string, kind: string) => onOpenArtifact(path, kind),
+        },
+        draggable: false,
+        selectable: true,
+        zIndex: 2,
       });
     });
     return out;
-  }, [run, cursor, selection]);
+  }, [layout, run, cursor, selection]);
 
-  // Determine active gate for minimap + label.
-  const active = getActiveRoute(run, cursor);
-  const activeGateId: GateId | null = active ? active.gate_id : null;
-
-  // Build edges: gate dependency arrows (G0->G6) + route arrows (run.route).
+  // Build edges: route spine + fanout, with active highlight.
   const rfEdges: RFEdge[] = useMemo(() => {
-    const gateEdges = buildGateEdges(run).map((e) => ({
-      id: e.id,
-      source: e.source,
-      target: e.target,
-      type: "runtimeEdge",
-      animated: false,
-      markerEnd: { type: MarkerType.ArrowClosed, width: 18, height: 18 },
-      style: { stroke: "#6ca9ff", strokeWidth: 2 },
-      data: { kind: "gate" },
-    }));
     const active = getActiveRoute(run, cursor);
-    const routeEdges = buildRouteEdges(run).map((e, i) => {
-      const isActive = i === cursor;
+    const routeIds = new Set(run.route.map((r) => r.node_id));
+    return layout.edges.map((e): RFEdge => {
+      const isRoute = e.kind === "route";
+      const isActive = isRoute && routeIds.has(active.node_id)
+        ? e.source === run.route[cursor]?.node_id && e.target === run.route[cursor + 1]?.node_id
+        : false;
+      // simpler active: connect cursor node to next
+      const activeRoute = isRoute && e.source === active.node_id;
       return {
         id: e.id,
         source: e.source,
         target: e.target,
         type: "runtimeEdge",
-        animated: isActive,
-        markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
+        animated: false,
+        zIndex: 0,
+        markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14 },
         style: {
-          stroke: isActive ? "#ffd34d" : "#8a93a6",
-          strokeWidth: isActive ? 3 : 1.5,
-          opacity: isActive ? 1 : 0.6,
+          stroke: e.kind === "fanout" ? "rgba(140,147,166,0.25)" : isRoute ? "#8a93a6" : "#6ca9ff",
+          strokeWidth: e.kind === "fanout" ? 1 : 1.5,
+          strokeDasharray: e.kind === "fanout" ? "3 4" : undefined,
         },
-        data: { kind: "route", active: isActive },
-        className: isActive ? "runtime-active-edge" : "",
+        data: { kind: e.kind, active: activeRoute },
+        className: activeRoute ? "runtime-active-edge" : "",
       } as RFEdge;
     });
-    return [...gateEdges, ...routeEdges];
-  }, [run, cursor, active]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [layout, run, cursor]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Follow cursor: center viewport on the active node. Programmatic setCenter is
-  // wrapped in the `programmaticMove` flag so onMoveStart (which also fires for
-  // programmatic moves) does NOT disable Follow — only genuine user pan/zoom does.
+  const active = getActiveRoute(run, cursor);
+  const activeGateId: GateId | null = active ? active.gate_id : null;
+
+  // Follow cursor: center viewport on the active node.
   const programmaticMove = useRef(false);
   const prevActive = useRef<string | null>(null);
   useEffect(() => {
@@ -157,7 +181,7 @@ export default function RuntimeGraphCanvas({
     const node = rfNodes.find((n) => n.id === activeNodeId);
     if (node) {
       programmaticMove.current = true;
-      rf.setCenter(node.position.x + 100, node.position.y + 60, { zoom: 0.85, duration: 400 });
+      rf.setCenter(node.position.x + 100, node.position.y + 60, { zoom: 0.8, duration: 400 });
       const t = setTimeout(() => {
         programmaticMove.current = false;
       }, 480);
@@ -166,21 +190,30 @@ export default function RuntimeGraphCanvas({
   }, [followCursor, active.node_id, rfNodes, rf]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onCenterGate = (gateId: GateId) => {
-    const gate = run.gates.find((g) => g.id === gateId);
-    if (!gate || !gate.nodes[0]) return;
-    const node = rfNodes.find((n) => n.id === gate.nodes[0].id);
-    if (node) rf.setCenter(node.position.x + 100, node.position.y + 60, { zoom: 0.85, duration: 400 });
+    const g = layout.gates.find((x) => x.id === gateId);
+    if (g) rf.setCenter(g.x + g.w / 2, g.y + g.h / 2, { zoom: 0.7, duration: 400 });
   };
 
   return (
     <div className="leg-canvas-wrap" data-testid="runtime-graph-canvas">
+      <div className="leg-layout-bar">
+        <span className="leg-layout-label">Layout</span>
+        <button data-testid="layout-lr" className={dir === "LR" ? "on" : ""} onClick={() => setDir("LR")}>LR</button>
+        <button data-testid="layout-td" className={dir === "TD" ? "on" : ""} onClick={() => setDir("TD")}>TD</button>
+        <span className="leg-layout-sep" />
+        <button data-testid="layout-stack" className={form === "stack" ? "on" : ""} onClick={() => setForm("stack")}>Stack</button>
+        <button data-testid="layout-grid" className={form === "grid" ? "on" : ""} onClick={() => setForm("grid")}>Grid</button>
+        <span className="leg-layout-sep" />
+        <button data-testid="layout-group" className={group ? "on" : ""} onClick={() => setGroup((v) => !v)}>Group</button>
+      </div>
+
       <ReactFlow
         nodes={rfNodes}
         edges={rfEdges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        minZoom={0.2}
+        minZoom={0.15}
         maxZoom={2}
         nodesDraggable={false}
         nodesConnectable={false}
@@ -190,9 +223,7 @@ export default function RuntimeGraphCanvas({
         }}
         onMoveStart={(_, viewport) => {
           if (!viewport) return;
-          // Genuine user pan/zoom disables Follow. Programmatic setCenter sets
-          // programmaticMove=true so it does NOT disable Follow here.
-          if (!programmaticMove.current) onUserViewportInteract();
+          if (shouldDisableFollowOnMove(programmaticMove.current)) onUserViewportInteract();
         }}
         proOptions={{ hideAttribution: true }}
       >
@@ -219,7 +250,6 @@ export default function RuntimeGraphCanvas({
   );
 }
 
-// Local import kept at bottom to avoid a circular appearance at top.
 import MiniMap from "./MiniMap";
 function MiniMapWrapper(props: {
   run: LoginEpicRun;
@@ -229,5 +259,4 @@ function MiniMapWrapper(props: {
   return <MiniMap {...props} />;
 }
 
-// re-export to keep preview helper discoverable for tests
 export { makeArtifactPreview };

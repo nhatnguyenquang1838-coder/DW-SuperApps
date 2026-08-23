@@ -204,7 +204,10 @@ export default function LoginEpicRunGraph({ epic }: { epic: LoginEpicRuntimeFixt
         onNext={() => setCursor((c) => clampCursor(run, c + 1))}
         onLast={() => setCursor(len - 1)}
         onScrub={(c) => setCursor(clampCursor(run, c))}
-        onMode={(m) => setMode(m)}
+        onMode={(m) => {
+          if (m === "LIVE_SIM") setCursor(0); // contract: enter LIVE SIM -> reset to node 1 -> then advance
+          setMode(m);
+        }}
         onSpeed={(ms) => setSpeed(ms)}
       />
 

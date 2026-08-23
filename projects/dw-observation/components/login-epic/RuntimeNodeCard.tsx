@@ -13,15 +13,17 @@ export default function RuntimeNodeCard({
     state: NodeState;
     active: boolean;
     selected: boolean;
+    boundary: string;
     onOpen: (path: string, kind: string) => void;
   };
 }) {
-  const { node, state, active, selected } = data;
+  const { node, state, active, selected, boundary } = data;
   return (
     <div
       className={`leg-node leg-node-${state}${selected ? " selected" : ""}`}
       data-testid="runtime-node-card"
       data-node-id={node.id}
+      data-boundary={boundary}
       data-active={active ? "true" : "false"}
     >
       <Handle type="target" position={Position.Left} />
@@ -32,6 +34,7 @@ export default function RuntimeNodeCard({
       <div className="leg-node-title">{node.title}</div>
       <div className="leg-node-id">{node.id}</div>
       <div className="leg-node-purpose">{node.purpose}</div>
+      <div className="leg-node-boundary">⌖ {boundary}</div>
       <div className="leg-node-meta">
         <span>{node.artifacts.length} art</span>
         <span>{node.fileReads.length} rd</span>
