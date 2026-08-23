@@ -16,25 +16,21 @@ steps:
   action: add_contract_test_red
   files:
   - projects/dw-observation/tests/unit/supabaseMigrationContract.test.ts
-  description: RED test reading committed migration SQL; assert projection_events schema, indexes, trigger, SELECT-only RLS; old hashes unchanged. Run only this test; capture RED.
+  description: RED test reading committed migration SQL; assert projection_events schema, unique event identity, projection_ordinal, indexes, notify_projection_event(), AFTER INSERT trigger, exact realtime.send semantics, SELECT-only RLS; old migration hashes unchanged; no historical backfill. Run only this test; capture RED.
   depends_on: [S1]
 - id: S3
   action: add_migration_green
   files:
   - projects/dw-observation/supabase/migrations/20260823T100000Z_projection_events.sql
-  - projects/dw-observation/supabase/migrations/20260823T100500Z_projection_events_broadcast_rls.sql
-  description: New migration after 20260823T090000Z; projection_events + broadcast trigger + hardened SELECT-only RLS. Re-run GREEN.
+  description: Exactly ONE new migration after 20260823T090000Z; projection_events + broadcast trigger + hardened SELECT-only RLS (broadcast + RLS folded into this single file). Re-run GREEN.
   depends_on: [S2]
 - id: S4
   action: add_adapter_code
   files:
   - projects/dw-observation/lib/serverRunRead.ts
-  - projects/dw-observation/src/observatory/projection_events.ts
-  - projects/dw-observation/src/observatory/projectionBroadcast.ts
-  - projects/dw-observation/src/observatory/rlsPolicy.ts
   - projects/dw-observation/app/runs/page.tsx
   - projects/dw-observation/app/runs/[runId]/page.tsx
-  description: Server read adapter sharing publishable-key boundary; RED tests then implement; map exact metadata; PROJECTION_UNAVAILABLE for zero events.
+  description: Server read adapter sharing publishable-key boundary; RED test (serverRunRead.test.ts) then implement; map exact metadata; PROJECTION_UNAVAILABLE for zero events. No new src/observatory/* module layer.
   depends_on: [S3]
 - id: S5
   action: refresh_g6_packet
@@ -47,7 +43,11 @@ steps:
   files: []
   description: Full Vitest + strict typecheck + workspace validator + SQL contract test. Push branch, open DRAFT PR to pre-prod. HOLD for G3.
   depends_on: [S5]
-risk_class: R4
+risk_class: R3
+risk_note: Operational concern remains R4-grade (new SELECT-only RLS + observer read path touching production Supabase schema); recorded as narrative only, gate class is R3.
+allowed_test_paths:
+- projects/dw-observation/tests/unit/supabaseMigrationContract.test.ts
+- projects/dw-observation/tests/unit/serverRunRead.test.ts
 excluded_actions:
 - merge
 - deploy

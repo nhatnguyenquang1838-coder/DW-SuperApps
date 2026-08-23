@@ -18,7 +18,7 @@ historical run with zero canonical events surfaces `PROJECTION_UNAVAILABLE`, nev
 2. `projection_events` = canonical live event ledger for real-mode + Realtime.
 3. Real UI reads run metadata/gates/nodes from `run_*`; timeline/replay/live reads `projection_events`.
 4. Reconstructed run with zero canonical events → `PROJECTION_UNAVAILABLE` / history unavailable.
-5. Migration for `projection_events`, Broadcast trigger, SELECT-only RLS for publishable client; no client write.
+5. Exactly ONE new migration for `projection_events`, broadcast trigger + hardened SELECT-only RLS for publishable client; no client write. No new `src/observatory/*` module layer.
 
 ## Stack
 Next.js / TypeScript / Vitest / Supabase / Postgres. No new npm dependencies.
@@ -30,9 +30,11 @@ Next.js / TypeScript / Vitest / Supabase / Postgres. No new npm dependencies.
 
 ## Deliverables (TDD, docs first)
 - Docs: `docs/superpowers/specs/2026-08-23-observatory-g6-readiness-design.md`, `.../plans/...`
-- Migration `20260823T100000Z_projection_events.sql` + `20260823T100500Z_projection_events_broadcast_rls.sql`
+- Exactly ONE new migration `20260823T100000Z_projection_events.sql` (projection_events + broadcast trigger + SELECT-only RLS)
 - Adapter `lib/serverRunRead.ts`; UI `app/runs/page.tsx`, `app/runs/[runId]/page.tsx`
-- Contract test `tests/unit/supabaseMigrationContract.test.ts` (RED then GREEN)
+- Contract tests (RED then GREEN):
+  - `tests/unit/supabaseMigrationContract.test.ts` (migration contract)
+  - `tests/unit/serverRunRead.test.ts` (real run metadata adapter)
 - Refresh `G6_PACKET.md` after code stabilizes.
 
 ## Acceptance
@@ -41,3 +43,7 @@ AC-1 migration cols/indexes/trigger/SELECT-only RLS; old 8-table DDL/DML hashes 
 AC-2 real-mode reads run_* via publishable key, no mutation, exact mapping.
 AC-3 zero-event reconstructed run → PROJECTION_UNAVAILABLE, never fixture LIVE.
 AC-4 full Vitest + strict typecheck + SQL contract test pass; no old migration hash drift.
+
+## Risk
+Gate class **R3**. Operational concern remains R4-grade (new SELECT-only RLS + observer read path
+touching production Supabase schema); recorded as narrative only, not a gate class.
