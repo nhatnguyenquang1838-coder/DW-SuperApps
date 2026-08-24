@@ -1,9 +1,14 @@
-"""MVP Controller monitoring loop — in-session 60s polling (NO GWC, NO transport).
+"""LEGACY COMPATIBILITY ONLY — historical Slack thread monitoring engine.
 
-Authority
----------
-``agents/shared/slack-controller-executor-protocol.md`` defines the Controller
-monitoring loop exactly as::
+The active TaskController machine runtime is ``taskcontroller/runtime/session.py``
+and uses ``dw.taskcontroller.a2a/v1`` mailboxes plus continuation cursors. This
+module is retained only for compatibility tests/callers and MUST NOT be selected
+as the active TaskController command, progress, polling, or recovery transport.
+
+Historical authority preserved below for compatibility
+------------------------------------------------------
+``agents/shared/slack-controller-executor-protocol.md`` defined the former
+Controller monitoring loop as::
 
     send contract / command
     -> sleep 60s in-session
@@ -16,13 +21,13 @@ monitoring loop exactly as::
 
     Polling itself produces no Slack message.
 
-This module is that loop's engine. It is NOT a scheduler, NOT a reminder, NOT a
-background job, and NOT a live Slack/Hermes adapter (#52 binds concrete
-adapters). Every side effect — sleeping, reading replies, updating the RootCard —
-is a narrow injected callable, so the engine itself performs no I/O.
+This compatibility engine is NOT a scheduler, NOT a reminder, NOT a background
+job, and NOT the active A2A host adapter. Every side effect — sleeping, reading
+replies, updating the RootCard — remains a narrow injected callable so old
+compatibility behavior stays deterministic.
 
-Hard rules upheld here
-----------------------
+Compatibility rules preserved here
+----------------------------------
 1. IN-SESSION ONLY. ``run_monitoring_loop`` is a plain synchronous call that
    returns a boundary. No thread, no task, no process, no detached execution, no
    scheduler/reminder/automation import.
@@ -41,8 +46,8 @@ Hard rules upheld here
    and ``TERMINAL`` all return immediately. ``TERMINAL`` closes the delegated
    control segment only: it is NOT runtime ``DONE`` and grants no
    ``APPROVE`` / ``MERGE`` authority.
-8. NO DEFERRED FULL-E2E DEPENDENCY. Nothing from ``controlplane`` / ``runtime`` /
-   ``projections`` / ``routing`` / ``execution`` / ``packs`` is imported.
+8. This compatibility module imports no active A2A runtime so legacy callers
+   cannot silently become a second machine-transport implementation.
 """
 
 from __future__ import annotations
@@ -98,7 +103,7 @@ class ThreadReply:
 
 
 class ReplyReader(Protocol):
-    """Reads thread replies. Implementations are bound in #52, not here."""
+    """Reads thread replies. Implementations are compatibility adapters only."""
 
     def __call__(self, last_seen_ts: str | None) -> Sequence[ThreadReply]:
         ...
@@ -147,7 +152,6 @@ class LoopObservation:
         if not isinstance(self.report, ExecutorReport):
             raise TaskControllerValidationError("report must be an ExecutorReport")
 
-    # -- material fields, delegated (no copies, no drift) --------------------
     @property
     def subtask_id(self) -> str:
         return self.report.subtask_id
@@ -177,7 +181,6 @@ class LoopObservation:
         return self.report.after
 
     def to_dict(self) -> dict[str, Any]:
-        """Deterministic projection, including the complete report."""
         return {
             "poll": self.poll,
             "reply_ts": self.reply_ts,
@@ -192,15 +195,12 @@ class LoopObservation:
 
 
 class MalformedReportError(TaskControllerValidationError):
-    """A reply could not be validated as a complete ExecutorReport.
-
-    Fail closed: the loop raises instead of treating the poll as ``CONTINUE``.
-    """
+    """A reply could not be validated as a complete ExecutorReport."""
 
 
 @dataclass(frozen=True)
 class LoopOutcome:
-    """The result of one in-session monitoring segment."""
+    """The result of one in-session compatibility monitoring segment."""
 
     verdict: str | None
     reason: str
@@ -217,24 +217,20 @@ class LoopOutcome:
         if isinstance(self.polls, bool) or not isinstance(self.polls, int) or self.polls < 0:
             raise TaskControllerValidationError("polls must be a non-negative int")
 
-    # -- boundary semantics --------------------------------------------------
     @property
     def is_boundary(self) -> bool:
         return self.verdict in BOUNDARY_VERDICTS
 
     @property
     def delegated_segment_closed(self) -> bool:
-        """True only for TERMINAL: the delegated control segment is closed."""
         return self.verdict == TERMINAL
 
     @property
     def runtime_done(self) -> bool:
-        """TERMINAL is never runtime DONE. Structurally always False."""
         return False
 
     @property
     def grants_authority(self) -> bool:
-        """No loop outcome ever grants APPROVE/MERGE authority."""
         return False
 
     def to_dict(self) -> dict[str, Any]:
@@ -251,13 +247,6 @@ class LoopOutcome:
         }
 
 
-# --------------------------------------------------------------------------
-# The loop
-# --------------------------------------------------------------------------
-#: Every ExecutorReport field the MVP RootCard actually surfaces. A change in
-#: ANY of these is material: status feeds progress, completed feeds progress,
-#: evidence feeds the last material update, finding_risk feeds risk/blocker, and
-#: next_action feeds Next.
 MATERIAL_REPORT_FIELDS = (
     "status",
     "completed",
@@ -270,17 +259,7 @@ MATERIAL_REPORT_FIELDS = (
 def material_signature(
     report: ExecutorReport, verdict: ProtocolVerdict
 ) -> tuple[Any, ...]:
-    """Deterministic material-change signature for one classified report.
-
-    Covers every user-visible/material ``ExecutorReport`` field
-    (:data:`MATERIAL_REPORT_FIELDS`) plus the verdict, its intercept reason and
-    its detail — i.e. everything the MVP RootCard can render.
-
-    Deliberately a normalized tuple of primitives: NOT object identity, NOT
-    ``repr``, NOT JSON/pickle. Two reports that carry the same material content
-    produce the same signature regardless of object identity or field order in
-    the source payload, so an identical repeated report stays deduped.
-    """
+    """Deterministic material-change signature for one classified report."""
     if not isinstance(report, ExecutorReport):
         raise TaskControllerValidationError("report must be an ExecutorReport")
     if not isinstance(verdict, ProtocolVerdict):
@@ -300,19 +279,11 @@ def material_signature(
 
 
 def _ts_key(ts: str) -> tuple[int, int, int, str]:
-    """Lossless ordering key for a reply ts.
-
-    Slack-style ``ts`` values are numeric strings, so a plain lexicographic
-    compare is WRONG (``"99.0" > "100.0"``). ``float()`` would order correctly at
-    present Slack scale but is lossy in principle, so canonical
-    ``seconds.microseconds`` is split and compared as EXACT INTEGERS. Non-numeric
-    values fall back to a stable lexicographic bucket.
-    """
+    """Lossless ordering key for a reply ts."""
     if isinstance(ts, str):
         candidate = ts.strip()
         seconds, _, fraction = candidate.partition(".")
         if seconds.isdigit() and (fraction == "" or fraction.isdigit()):
-            # Normalize the fractional part so 1.5 and 1.500000 compare equal.
             micros = int((fraction + "000000")[:6]) if fraction else 0
             return (0, int(seconds), micros, "")
     return (1, 0, 0, ts if isinstance(ts, str) else repr(ts))
@@ -356,22 +327,10 @@ def run_monitoring_loop(
     poll_interval_seconds: int = POLL_INTERVAL_SECONDS,
     update_rootcard: RootCardUpdater = _no_update,
 ) -> LoopOutcome:
-    """Run the in-session Controller monitoring loop.
+    """Run the historical in-session Slack-thread compatibility loop.
 
-    Each poll: sleep the cadence, read only replies newer than ``last_seen_ts``,
-    validate each as a complete ``ExecutorReport``, classify it against the
-    active contracted subtask, and act on the verdict:
-
-    * ``CONTINUE``        -> keep monitoring (next poll)
-    * ``WAIT_CONTROLLER`` -> return the review boundary immediately
-    * ``INTERCEPT``       -> return the bounded drift/correction boundary
-    * ``TERMINAL``        -> close the delegated control segment only
-
-    Purely in-session and synchronous. Malformed replies raise
-    ``MalformedReportError`` (fail closed). Returns when a boundary verdict is
-    reached. When ``max_polls`` is ``None`` the loop is unbounded (synchronous
-    in-session polling until WAIT_CONTROLLER / INTERCEPT / TERMINAL); a positive
-    int bounds it as a test/debug budget. No scheduler, no background task.
+    Active TaskController hosts must instead use ``taskcontroller/runtime/session.py``.
+    This function remains deterministic for compatibility callers/tests.
     """
     if not isinstance(contracted, ContractedSubtask):
         raise TaskControllerValidationError("contracted must be a ContractedSubtask")
@@ -400,9 +359,6 @@ def run_monitoring_loop(
     last_signature: tuple[Any, ...] | None = None
 
     if max_polls is None:
-        # Unbounded: synchronous in-session polling until a boundary verdict is
-        # reached. Bounded only by WAIT_CONTROLLER / INTERCEPT / TERMINAL. No
-        # scheduler, no background task.
         poll = 0
         while True:
             poll += 1
@@ -445,7 +401,6 @@ def run_monitoring_loop(
         for poll in range(1, max_polls + 1):
             sleeper(poll_interval_seconds)
             replies = _newer_replies(read_replies(cursor), cursor)
-            # Silent poll: nothing new -> no observation, no update, no message.
             if not replies:
                 continue
             for reply in replies:
