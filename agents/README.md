@@ -2,23 +2,38 @@
 
 This directory contains DW-SuperApps agent overlays. Root `AGENTS.md`, workspace/project instructions, installed Power instructions, and exact repository state remain authoritative.
 
-## Slack Controller–Executor MVP
+## TaskController A2A — active interaction path
 
-When ChatGPT is acting as Controller for a Slack-mediated Executor run, the following additive instruction chain is **mandatory**:
+Any explicit TaskController activation uses the reference-based A2A interaction path. The mandatory composition is:
 
-1. root `AGENTS.md` + applicable workspace/project/Power instructions
-2. `agents/chatgpt-agent/agent-instructions.md`
-3. `agents/shared/slack-controller-executor-protocol.md`
-4. `agents/chatgpt-agent/slack-controller-mvp.md`
+1. root `AGENTS.md` + applicable workspace/project/Power instructions;
+2. `controllers/taskcontroller.yaml`;
+3. `agents/chatgpt-agent/agent-instructions.md` for ChatGPT Controller;
+4. `agents/shared/taskcontroller-a2a-protocol.md`;
+5. `agents/shared/taskcontroller-human-plane-policy.md` when Slack is used as the Human Control Plane;
+6. `agents/chatgpt-agent/slack-controller-mvp.md` for ChatGPT's Slack Human Plane projection;
+7. `agents/hermes/agent-instructions.md` when Hermes is the Executor.
 
-For Hermes Executor, load:
+TaskController boot must materialize/recover the Controller mailbox, Executor mailbox and continuation checkpoint and exact-read the Controller mailbox before first Executor dispatch. Missing mailbox boot is fail-closed; Slack is not a machine-transport fallback.
 
-1. applicable project/Power and normal coding-agent/GWC lifecycle when GWC is active
-2. `agents/shared/slack-controller-executor-protocol.md`
-3. `agents/hermes/agent-instructions.md`
+The active machine path is:
 
-The MVP is intentionally slim: one Controller, one Executor, one RootCard/thread, 3–5 contracted subtasks, milestone-based reporting, in-session 60-second incremental polling, explicit `CONTINUE | WAIT_CONTROLLER | TERMINAL` behavior, and bounded intercepts.
+```text
+Controller mailbox
+→ pointer-only wake-up when required
+→ Executor consumes newer Controller seq
+→ bounded execution
+→ Executor updates its own mailbox comment in place
+→ Controller polls exact Executor mailbox/cursor
+→ semantic Human Plane projection to Slack
+```
 
-The GPT Controller owns decomposition, report timing, expected milestone evidence, WAIT points, review and intercept decisions. The Executor must not invent a different plan or arbitrary reporting cadence.
+Slack is the Human Control Plane only. Tool chatter, command payloads, normal Executor progress, continuation state and recovery state do not belong in Slack.
 
-Full E2E sequencing/replay/recovery/multi-executor logic is deferred until pilot acceptance.
+## Legacy Slack Controller–Executor MVP
+
+`agents/shared/slack-controller-executor-protocol.md` is retained only for historical/explicit legacy compatibility. It is NOT part of the active `dw.taskcontroller.a2a/v1` load chain and MUST NOT be loaded as a competing machine transport when TaskController A2A is active.
+
+## GWC
+
+GWC remains opt-in. Activating TaskController does not activate GWC; load GWC governance only when the controlled task actually requires it.
