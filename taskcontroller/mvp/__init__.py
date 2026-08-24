@@ -1,12 +1,15 @@
-"""MVP TaskController package (NO GWC, no runtime state, no schema authority).
+"""TaskController compatibility package (NO GWC activation side effect).
 
-The active current-main surface contains two small deterministic pieces:
+The active TaskController machine runtime is ``taskcontroller/runtime/session.py``.
+It boots/recoveries the A2A Controller + Executor mailboxes and continuation
+checkpoint before dispatch, then polls only the exact bound Executor mailbox.
 
-- ``activation``: explicit TaskController mention -> canonical host load plan.
-- ``protocol_bridge``: contracted Executor report -> MVP controller verdict.
-
-The richer TaskController core remains a dormant Full-E2E library unless current
-repository policy explicitly activates it.
+This ``taskcontroller.mvp`` package retains deterministic activation,
+protocol-bridge, RootCard/action helpers, and the historical Slack thread
+monitoring/pilot APIs for backward compatibility. ``monitoring`` and ``pilot``
+are compatibility-only surfaces and MUST NOT be selected as the active
+TaskController machine transport while ``dw.taskcontroller.a2a/v1`` is active.
+Slack remains the Human Control Plane / pointer-only wake-up surface.
 """
 
 from taskcontroller.mvp.activation import (
