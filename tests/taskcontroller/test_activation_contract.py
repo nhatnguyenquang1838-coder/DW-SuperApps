@@ -112,11 +112,14 @@ def test_workspace_registers_taskcontroller_as_controller_not_power():
     assert "activation: explicit-mention" in workspace
 
 
-def test_registry_forbids_memory_fallback_and_defers_full_e2e():
+def test_registry_forbids_memory_fallback_and_activates_a2a_runtime():
     registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
     assert "memory_fallback_allowed: false" in registry
     assert "missing_required_entrypoint: BLOCKED" in registry
-    assert "full_e2e_runtime: deferred" in registry
+    assert "runtime_session: taskcontroller/runtime/session.py" in registry
+    assert "full_e2e_runtime: active" in registry
+    assert "full_e2e_runtime: deferred" not in registry
+    assert "legacy_slack_pilot: compatibility-only" in registry
     assert "taskcontroller/mvp/activation.py" in registry
     assert "taskcontroller/mvp/protocol_bridge.py" in registry
 
