@@ -5,6 +5,16 @@ transport-neutral A2A envelopes, crash-safe continuation checkpoints, and a
 host-provided mailbox backend. Slack is deliberately absent from machine
 transport: hosts may emit pointer-only wakeups only after a successful mailbox
 write/readback boundary.
+
+Recovery is fail-closed except for two typed, monotonic crash windows created by
+the required persist-before-dispatch ordering:
+
+* an Executor observation was durably recorded but the Controller mailbox copy
+  was not yet refreshed — recovery repairs that mailbox forward;
+* a new Controller command checkpoint was durably recorded but the command never
+  materialized in the Controller mailbox — recovery rolls the durable checkpoint
+  back to the last materialized review/control boundary rather than fabricating
+  a command that no Executor could have read.
 """
 
 from __future__ import annotations
@@ -151,14 +161,7 @@ def _refresh_controller_checkpoint(
     session: TaskControllerRuntimeSession,
     checkpoint: ControllerContinuation,
 ) -> A2AEnvelope:
-    """Rewrite the same Controller mailbox with a newer bounded checkpoint.
-
-    Executor observations advance continuation state without creating a new
-    Controller command. Therefore the Controller envelope keeps its sender seq,
-    kind, request, and refs while only the bounded continuation/updated_at moves.
-    Exact readback makes the mailbox and durable continuation agree before the
-    observation is returned to the host.
-    """
+    """Rewrite the same Controller mailbox with a newer bounded checkpoint."""
 
     if checkpoint.controller_seq != session.controller_envelope.seq:
         raise TaskControllerValidationError(
@@ -175,6 +178,69 @@ def _refresh_controller_checkpoint(
         checkpoint=checkpoint,
     )
     return refreshed
+
+
+def _same_recovery_identity(
+    materialized: ControllerContinuation,
+    durable: ControllerContinuation,
+) -> bool:
+    """Identity fields that may never be reconciled across a mismatch."""
+
+    return (
+        materialized.run_id == durable.run_id
+        and materialized.controller_epoch == durable.controller_epoch
+        and materialized.status == durable.status == ContinuationStatus.ACTIVE.value
+        and materialized.controller_mailbox_ref == durable.controller_mailbox_ref
+        and materialized.executor_actor == durable.executor_actor
+        and materialized.executor_mailbox_ref == durable.executor_mailbox_ref
+        and materialized.wakeup_binding == durable.wakeup_binding
+        and materialized.exact_head_sha == durable.exact_head_sha
+        and materialized.human_root_ref == durable.human_root_ref
+    )
+
+
+def _is_interrupted_observation_refresh(
+    materialized: ControllerContinuation,
+    durable: ControllerContinuation,
+    envelope: A2AEnvelope,
+) -> bool:
+    """Durable REVIEW is exactly one observed Executor report ahead."""
+
+    return (
+        _same_recovery_identity(materialized, durable)
+        and materialized.phase == ContinuationPhase.WAIT_EXECUTOR.value
+        and materialized.next_action == "POLL_EXECUTOR"
+        and durable.phase == ContinuationPhase.REVIEW_EXECUTOR.value
+        and durable.next_action == "REVIEW_EXECUTOR"
+        and materialized.controller_seq == durable.controller_seq == envelope.seq
+        and durable.last_seen_executor_seq == materialized.last_seen_executor_seq + 1
+        and durable.last_seen_executor_seq == materialized.expected_executor_seq
+        and durable.expected_executor_seq == durable.last_seen_executor_seq + 1
+    )
+
+
+def _is_unmaterialized_dispatch(
+    materialized: ControllerContinuation,
+    durable: ControllerContinuation,
+    envelope: A2AEnvelope,
+) -> bool:
+    """Persisted dispatch is one Controller seq ahead of the actual mailbox."""
+
+    return (
+        _same_recovery_identity(materialized, durable)
+        and materialized.phase
+        in {
+            ContinuationPhase.REVIEW_EXECUTOR.value,
+            ContinuationPhase.WAIT_CONTROLLER.value,
+            ContinuationPhase.PRE_DISPATCH.value,
+        }
+        and durable.phase == ContinuationPhase.WAIT_EXECUTOR.value
+        and durable.next_action == "POLL_EXECUTOR"
+        and durable.controller_seq == materialized.controller_seq + 1
+        and envelope.seq == materialized.controller_seq
+        and durable.last_seen_executor_seq == materialized.last_seen_executor_seq
+        and durable.expected_executor_seq == durable.last_seen_executor_seq + 1
+    )
 
 
 def boot_taskcontroller_session(
@@ -374,32 +440,71 @@ def recover_taskcontroller_session(
     run_id: str,
     controller_actor: str,
 ) -> TaskControllerRuntimeSession:
-    """Recover ACTIVE state from durable continuation + exact Controller mailbox."""
+    """Recover ACTIVE state and reconcile only known monotonic crash windows."""
 
     checkpoint = recover_continuation(continuation_store, run_id)
     if checkpoint is None:
         raise _mailbox_boot_failure("continuation checkpoint missing during recovery")
     if checkpoint.status != ContinuationStatus.ACTIVE.value:
         raise TaskControllerValidationError("cannot recover terminal TaskController session as active")
+
     body = mailbox_backend.read_mailbox(checkpoint.controller_mailbox_ref)
     try:
         envelope = parse_mailbox_comment(body)
         embedded = continuation_from_envelope(envelope)
     except TaskControllerValidationError as exc:
         raise _mailbox_boot_failure("controller mailbox recovery readback invalid", exc) from exc
+    if embedded is None:
+        raise _mailbox_boot_failure("controller mailbox continuation missing during recovery")
     if envelope.sender != controller_actor:
         raise _mailbox_boot_failure("controller mailbox actor mismatch during recovery")
     if envelope.recipient != checkpoint.executor_actor:
         raise _mailbox_boot_failure("controller mailbox executor mismatch during recovery")
     if envelope.state.get("head_sha") != checkpoint.exact_head_sha:
         raise _mailbox_boot_failure("controller mailbox exact head mismatch during recovery")
-    if embedded != checkpoint:
-        raise _mailbox_boot_failure("controller mailbox continuation differs during recovery")
-    return TaskControllerRuntimeSession(
-        controller_actor=controller_actor,
-        checkpoint=checkpoint,
-        controller_envelope=envelope,
-    )
+
+    if embedded == checkpoint:
+        return TaskControllerRuntimeSession(
+            controller_actor=controller_actor,
+            checkpoint=checkpoint,
+            controller_envelope=envelope,
+        )
+
+    if _is_interrupted_observation_refresh(embedded, checkpoint, envelope):
+        stale_session = TaskControllerRuntimeSession(
+            controller_actor=controller_actor,
+            checkpoint=embedded,
+            controller_envelope=envelope,
+        )
+        refreshed = _refresh_controller_checkpoint(
+            mailbox_backend,
+            session=stale_session,
+            checkpoint=checkpoint,
+        )
+        return TaskControllerRuntimeSession(
+            controller_actor=controller_actor,
+            checkpoint=checkpoint,
+            controller_envelope=refreshed,
+        )
+
+    if _is_unmaterialized_dispatch(embedded, checkpoint, envelope):
+        # The newer command checkpoint was persisted, but the command body never
+        # became the actor's mailbox record. No safe wake-up can have followed a
+        # failed exact-readback boundary, so restore the last materialized
+        # review/control boundary rather than inventing missing command content.
+        persist_continuation(continuation_store, embedded)
+        rolled_back = recover_continuation(continuation_store, run_id)
+        if rolled_back != embedded:
+            raise _mailbox_boot_failure(
+                "unmaterialized dispatch rollback persistence/readback failed"
+            )
+        return TaskControllerRuntimeSession(
+            controller_actor=controller_actor,
+            checkpoint=embedded,
+            controller_envelope=envelope,
+        )
+
+    raise _mailbox_boot_failure("controller mailbox continuation differs during recovery")
 
 
 __all__ = [
