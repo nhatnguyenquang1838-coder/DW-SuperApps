@@ -154,7 +154,11 @@ def test_poll_reads_only_bound_executor_mailbox_and_accepts_exact_expected_seq(t
         session=session,
     )
 
-    assert backend.calls[before:] == [("read", backend.refs["hermes-cloud"])]
+    assert backend.calls[before:] == [
+        ("read", backend.refs["hermes-cloud"]),
+        ("write", backend.refs["controller"]),
+        ("read", backend.refs["controller"]),
+    ]
     assert observation.status == "OBSERVED"
     assert observation.envelope == executor_envelope
     assert observation.session.checkpoint.last_seen_executor_seq == 1
