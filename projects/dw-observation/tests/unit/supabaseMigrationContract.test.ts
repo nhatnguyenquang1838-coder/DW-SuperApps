@@ -106,6 +106,21 @@ describe("Task 2 RED — new projection_events migration contract", () => {
     expect(sql).toMatch(/\bcreate\s+index\b[^\n;]*on\s+projection_events/i);
   });
 
+  it("enforces strict deterministic per-run ordering via UNIQUE (run_id, projection_ordinal)", () => {
+    // Projection ordinal must be strictly deterministic within a single run:
+    // no two events in the same run may share the same ordinal. A non-unique
+    // index on (run_id, projection_ordinal) does NOT enforce this - it only
+    // speeds lookups. We require a UNIQUE index (or equivalent UNIQUE
+    // constraint) so that inserting a second event with an already-used
+    // ordinal in the same run fails at the DB level. The canonical contract
+    // is: UNIQUE INDEX on (run_id, projection_ordinal). This is IN ADDITION
+    // to the canonical event-identity UNIQUE (run_id, source_system,
+    // source_event_id) - both must be present.
+    const uniqueOnOrdinal = /\bUNIQUE\s+INDEX\b[^\n;]*ON\s+projection_events[^\n;]*\(\s*RUN_ID\s*,\s*PROJECTION_ORDINAL\s*\)/i;
+    const uniqueConstraintOnOrdinal = /\bCONSTRAINT\b[^\n;]*\bUNIQUE\b[^\n;]*\(\s*RUN_ID\s*,\s*PROJECTION_ORDINAL\s*\)/i;
+    expect(uniqueOnOrdinal.test(sql) || uniqueConstraintOnOrdinal.test(sql)).toBe(true);
+  });
+
   it("defines notify_projection_event() function", () => {
     expect(sql).toMatch(
       /\bcreate\s+(or\s+replace\s+)?function\b[^\n;]*notify_projection_event\b/i,

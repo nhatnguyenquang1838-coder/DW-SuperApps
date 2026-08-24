@@ -9,11 +9,11 @@
 - Expected post-apply schema = **9 public tables** including `projection_events`.
 
 ## Migrations (3, all committed under `supabase/migrations/`, G6-gated; git-blob SHA-256)
-|| # | Migration | SHA-256 (git-blob/LF) |
-|---|---|---|x
+| # | Migration | SHA-256 (git-blob/LF) |
+|---|-----------|-----------------------|
 | 1 | `20260823T080000Z_observatory_history.sql` (DDL, 8 tables) | `ef880051d8fb7caf40005206d1200c3824509f8084ec771324866ee29500e185` |
 | 2 | `20260823T090000Z_observatory_backfill_dml.sql` (DML, idempotent) | `5bcee0d6ea6a34b0b8cef91ff5a860ff2289a0f23ff9386a92105ee62aff23df` |
-| 3 | `20260823T100000Z_projection_events.sql` (projection_events) | `99ecc412c24ef30715ee7546073b546e05052ff60debbd7286d035b4aed87831` |
+| 3 | `20260823T100000Z_projection_events.sql` (projection_events) | `1e9768bbb09ff46adf245b1336863e8ca0062ef7fdd30b66630a7de7cbeeff86` |
 
 ## Expected post-apply schema (9 public tables)
 `runs`, `run_events`, `run_gates`, `run_nodes`, `run_artifacts`, `run_checkpoints`, `run_edges`, `run_sources`, `projection_events`.
@@ -35,7 +35,7 @@ projection_events=0 (before live writes; no historical projection backfill)
 - Broadcast via `PERFORM realtime.send(json_build_object(...)::text, 'projection_event', 'observatory:' || NEW.run_id, false)` — NOT pg_notify.
 - RLS enabled; SELECT-only policy `projection_events_select_publishable ON projection_events FOR SELECT TO anon, authenticated USING (true)`.
 - NO client INSERT/UPDATE/DELETE policy; NO historical projection backfill.
-- Authorization: Human G2 V2 CONSUMED (`ar-scrum-555-g2-correction-v2-20260824 / 5a3a480bd37fdd7b`).
+- Authorization: Human *** V2 CONSUMED (`ar-scrum-555-g2-correction-v2-20260824 / 5a3a480bd37fdd7b`).
 
 ## Real app read path (Task 3, publishable/RLS-compatible) — TERRAFORMED for E2E GREEN
 - `lib/serverRunRead.ts`: real list/detail read `runs`, `run_gates`, `run_nodes`,
@@ -60,6 +60,8 @@ supabase db push --linked --include-all               # approved apply (G6 bound
 Actual apply remains **G6-forbidden** in this run.
 
 ## Incident record (transparent, no DAG rewrite)
+
+### Incident 1 — local amend (displaced lineage)
 - One prohibited LOCAL/UNPUSHED amend `147cc34 -> c32fac3` occurred during
   Task 2 GREEN, displacing `147cc34` from branch ancestry.
 - Detected and preserved in audit artifact commit `70ddd1c`
@@ -67,16 +69,37 @@ Actual apply remains **G6-forbidden** in this run.
 - Branch was NEVER pushed → incident never reached remote; no
   force-push/shared-history corruption. DAG NOT rewritten to hide it.
 
-## Lifecycle (current, at refresh — GREEN terminal)
+### Incident 2 — G3_SCOPE_VIOLATION_LOCAL_ONLY (new branch/worktree during G3)
+- Local correction branch/worktree `correction/SCRUM-555-g3-changes-required` created
+  during G3 despite the `no new branch/worktree` prohibition.
+- Scope: local-only; no remote ref created; no committed diff pushed.
+- Evidence preserved locally; NO cleanup/reset under this G2.
+- Remote impact: none — never reached remote; no shared-history corruption.
+
+## Implementation checkpoint (pre-packet, not self-bound)
+
+This packet records implementation state at the time of its refresh. It does NOT
+self-bind the final pushed HEAD SHA or CI result — those are bound externally by
+Controller/G3 delivery evidence (exact-head CI run, PR head OID).
+
+At the time of this refresh:
 - Execution baseline: `70ddd1c` (resume); Task 2 GREEN frozen; Task 3 GREEN
   accepted; Task 4 (this packet) refreshed.
-- Current HEAD: `cb972da4325cbee36969f058a0a070aaabe87b17` (post GREEN-1 + GREEN-2 + governance).
-- Migration SHA256 (LF): `99ecc412c24ef30715ee7546073b546e05052ff60debbd7286d035b4aed87831`.
-- Verification evidence: serverRunRead 6/6, migration contract 16/16, full
-  vitest 257/257 (16 files), `tsc --noEmit` 0 errors; frozen Task-2 hashes
-  unchanged (DDL `ef880051…`, DML `5bcee0d6…`); CI `CI_UNAVAILABLE_AT_CHECK` (branch unpushed).
-- Lifecycle status: **pre-push, pre-G3, pre-G4, pre-G6 — E2E terminal PASS locally**.
+- Pre-packet HEAD (before this correction pass): `cb972da4325cbee36969f058a0a070aaabe87b17`.
+- Migration SHA256 (LF, pre-ordinal-fix): `99ecc412c24ef30715ee7546073b546e05052ff60debbd7286d035b4aed87831`.
+- Verification evidence (pre-ordinal-fix): serverRunRead 6/6, migration contract
+  16/16, full vitest 257/257 (16 files), `tsc --noEmit` 0 errors; frozen Task-2
+  hashes unchanged (DDL `ef880051…`, DML `5bcee0d6…`).
+- Lifecycle status at refresh: **pre-push, pre-G3, pre-G4, pre-G6**.
+
+After this correction pass (R6):
+- Migration SHA256 (LF, with UNIQUE ordinal index): See Migrations table above.
+- Verification evidence: migration contract 17/17 (was 16/16 + new UNIQUE ordering test).
+- Final pushed HEAD and CI result are bound by Controller/G3 delivery evidence,
+  not by this artifact's self-referential claims.
 
 ## Exclusions
 - No remote Supabase apply (G6 boundary). No pre-prod→main, no deploy, no GWC
-  mutation, no force-push/rewrite, no push/PR until Controller readback.
+  mutation, no force-push/rewrite.
+- Final pushed HEAD and CI result are bound by Controller/G3 delivery evidence,
+  not by self-referential claims in this artifact.

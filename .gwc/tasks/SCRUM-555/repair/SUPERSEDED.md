@@ -8,14 +8,22 @@
 - **Remote impact**: none — branch NEVER pushed; no shared-history corruption
 - **DAG**: NOT rewritten to hide the incident
 
-## Incident 2 — task run missed heartbeat (host recovery)
+## Incident 2 — G3_SCOPE_VIOLATION_LOCAL_ONLY (new branch/worktree during G3)
 
-- **Run**: SCRUM-555 TaskController E2E HOST RECOVERY R4 (`1787569433.468359`)
-- **Cause**: >2h without Hermes heartbeat; host session migrated, execution NOT restarted
-- **Preservation**: local state intact; no reset/clean/revert; this root becomes current Human Control Plane
-- **Branch**: `auto/SCRUM-555-observatory-g6-readiness-r1`
-- **Last confirmed HEAD before recovery**: `cb972da4325cbee36969f058a0a070aaabe87b17`
+- **Violation**: local correction branch/worktree `correction/SCRUM-555-g3-changes-required` created during G3 despite `no new branch/worktree` prohibition
+- **Scope**: local-only; no remote ref created; no committed diff pushed
+- **Evidence**: preserved locally; NO cleanup/reset under this G2
+- **Remote impact**: none — never reached remote; no shared-history corruption
 
+
+## Operational note — host recovery (separate from governance incident)
+
+- Run SCRUM-555 TaskController E2E HOST RECOVERY R4 (`1787569433.468359`)
+- >2h without Hermes heartbeat; host session migrated, execution NOT restarted
+- Local state preserved; no reset/clean/revert
+- This root became current Human Control Plane for the SAME execution
+- Branch: `auto/SCRUM-555-observatory-g6-readiness-r1`
+- Last confirmed HEAD before recovery: `cb972da4325cbee36969f058a0a070aaabe87b17`
 ## Human authority
 
 - **G2 V2 consumed**: `ar-scrum-555-g2-correction-v2-20260824 / 5a3a480bd37fdd7b`

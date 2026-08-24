@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS projection_events (
   CONSTRAINT uq_projection_event UNIQUE (run_id, source_system, source_event_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_projection_events_run_ordinal ON projection_events (run_id, projection_ordinal);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_projection_events_run_ordinal ON projection_events (run_id, projection_ordinal);
 CREATE INDEX IF NOT EXISTS idx_projection_events_occurred ON projection_events (occurred_at);
 
 CREATE OR REPLACE FUNCTION notify_projection_event()
