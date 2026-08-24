@@ -1,9 +1,10 @@
-"""Deterministic TaskController activation resolver for the active MVP.
+"""Deterministic TaskController activation resolver for the active A2A runtime.
 
 TaskController activation is resolved from current repository state, never from
 conversation memory. Agent interaction semantics are transport-neutral; the
-current pilot binding is a GitHub reference mailbox while Slack is the human
-control/visibility plane.
+current binding is a GitHub reference mailbox while Slack is the human
+control/visibility plane. Every active plan explicitly binds the executable
+runtime session that must boot mailboxes before first Executor dispatch.
 """
 
 from __future__ import annotations
@@ -18,6 +19,8 @@ TASKCONTROLLER_ALIASES = (
     "task controller",
     "/dw-taskcontroller",
 )
+
+TASKCONTROLLER_RUNTIME_SESSION = "taskcontroller/runtime/session.py"
 
 _BASE_LOAD_ORDER = (
     "AGENTS.md",
@@ -59,7 +62,7 @@ _ALIAS_RE = re.compile(
 
 @dataclass(frozen=True)
 class TaskControllerActivationPlan:
-    """Canonical host load plan for one explicit TaskController mention."""
+    """Canonical host load and executable-runtime plan for TaskController."""
 
     active: bool
     host: str
@@ -74,6 +77,7 @@ class TaskControllerActivationPlan:
     interaction_binding: str = "github-reference-mailbox"
     memory_fallback_allowed: bool = False
     full_e2e_runtime_active: bool = False
+    runtime_session: str | None = None
     mailbox_boot_required: bool = False
     mailbox_boot_fail_closed: bool = False
     machine_progress_transport: str | None = None
@@ -104,7 +108,7 @@ def resolve_taskcontroller_activation(
     transport: str | None = None,
     executor: str | None = None,
 ) -> TaskControllerActivationPlan:
-    """Resolve mandatory current-repository TaskController entrypoints."""
+    """Resolve mandatory current-repository TaskController entrypoints/runtime."""
 
     host_id = (host or "").strip().lower()
     transport_id = (transport or "").strip().lower() or None
@@ -145,6 +149,8 @@ def resolve_taskcontroller_activation(
         slack_canvases_required=(),
         slack_canvas_projections_optional=slack_canvas_projections,
         human_plane_policy=human_plane_policy,
+        full_e2e_runtime_active=True,
+        runtime_session=TASKCONTROLLER_RUNTIME_SESSION,
         mailbox_boot_required=True,
         mailbox_boot_fail_closed=True,
         machine_progress_transport="github-reference-mailbox",
