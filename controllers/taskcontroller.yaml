@@ -112,9 +112,23 @@ human_plane:
   root_semantics: live-human-snapshot
   thread_semantics: semantic-human-timeline
   machine_progress_transport: false
+  slack_reply_rendering:
+    preferred_surface: block_kit
+    text_format: mrkdwn
+    plain_text_fallback_required: true
+    thread_reply_only: true
+    duplicate_progress_suppressed: true
   polling:
     mailbox_mode: in-session-incremental
     cadence_seconds: 60
+    cadence_policy: progressive-backoff-on-unchanged-mailbox-seq
+    adaptive_cadence_seconds:
+      - 60
+      - 120
+      - 180
+    cadence_reset_on_new_seq: true
+    cadence_max_seconds: 180
+    in_session_sleep_required: true
     silent: true
     exact_mailbox_comment_only: true
     detached_scheduler_allowed: false
