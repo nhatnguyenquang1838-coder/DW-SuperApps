@@ -208,3 +208,44 @@ def test_hermes_reports_to_mailbox_not_slack_journal():
     assert "GitHub reference mailbox" in overlay
     assert "update its own mailbox comment in place" in overlay
     assert "Do not use Slack as the normal progress journal" in overlay
+
+
+def test_active_taskcontroller_requires_mailbox_boot_before_first_dispatch():
+    plan = resolve_taskcontroller_activation(
+        "TaskController: control Hermes Mac",
+        host="chatgpt",
+        transport="slack",
+        executor="hermes mac",
+    )
+
+    assert plan.active is True
+    assert plan.mailbox_boot_required is True
+    assert plan.mailbox_boot_fail_closed is True
+    assert plan.machine_progress_transport == "github-reference-mailbox"
+    assert plan.slack_machine_progress_allowed is False
+    assert plan.pointer_only_wakeup is True
+
+
+def test_registry_forbids_slack_machine_fallback_when_a2a_is_active():
+    registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
+
+    assert "mailbox_boot:" in registry
+    assert "required_when_active: true" in registry
+    assert "before_first_dispatch: true" in registry
+    assert "controller_mailbox_required: true" in registry
+    assert "executor_mailbox_required: true" in registry
+    assert "exact_readback_required: true" in registry
+    assert "missing_behavior: TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED" in registry
+    assert "slack_machine_transport_fallback: forbidden" in registry
+
+
+def test_active_host_overlays_do_not_load_legacy_slack_machine_protocol():
+    paths = (
+        ROOT / "agents" / "chatgpt-agent" / "agent-instructions.md",
+        ROOT / "agents" / "chatgpt-agent" / "slack-controller-mvp.md",
+        ROOT / "agents" / "hermes" / "agent-instructions.md",
+    )
+
+    for path in paths:
+        text = path.read_text(encoding="utf-8")
+        assert "agents/shared/slack-controller-executor-protocol.md" not in text
