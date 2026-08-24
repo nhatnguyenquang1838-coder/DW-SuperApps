@@ -34,6 +34,22 @@ import ReplayPane from "@/components/ReplayPane";
 import ReviewPane from "@/components/ReviewPane";
 import RunGraphView from "@/components/RunGraphView";
 
+// Normalize actor for real-mode events the same way observatory normalizes
+// fixture actors: preserve string values; for deterministic JSON objects with
+// kind/id, normalize to `kind:id` rather than dropping to UNKNOWN.
+function normalizeActor(raw: unknown): string {
+  if (typeof raw === "string") return raw;
+  if (raw && typeof raw === "object") {
+    const a = raw as Record<string, unknown>;
+    const kind = typeof a.kind === "string" ? a.kind : undefined;
+    const id = typeof a.id === "string" ? a.id : undefined;
+    const parts = [kind, id].filter((s) => s !== undefined && s !== "");
+    const joined = parts.join(":").replace(/:$/, "");
+    return joined.length > 0 ? joined : UNKNOWN;
+  }
+  return UNKNOWN;
+}
+
 // Map a canonical ProjectionEvent to the observatory NormalizedEvent shape
 // using EXACT stored values only; absent fields stay UNKNOWN (never fabricated).
 function projectionToNormalized(e: ProjectionEvent): NormalizedEvent {
@@ -45,7 +61,7 @@ function projectionToNormalized(e: ProjectionEvent): NormalizedEvent {
     eventType:
       typeof e.event_type === "string" ? (e.event_type as string) : UNKNOWN,
     source: e.source_system,
-    actor: typeof e.actor === "string" ? (e.actor as string) : UNKNOWN,
+    actor: normalizeActor(e.actor),
     gate: typeof e.gate === "string" ? (e.gate as string) : UNKNOWN,
     nodeId: typeof e.node_id === "string" ? (e.node_id as string) : UNKNOWN,
     before: (e.before as Json) ?? {},
@@ -55,7 +71,8 @@ function projectionToNormalized(e: ProjectionEvent): NormalizedEvent {
       : [],
     authorityRef:
       typeof e.authority_ref === "string" ? (e.authority_ref as string) : UNKNOWN,
-    sourceDigest: UNKNOWN,
+    sourceDigest:
+      typeof e.source_digest === "string" ? (e.source_digest as string) : UNKNOWN,
     annotations: {},
   };
 }

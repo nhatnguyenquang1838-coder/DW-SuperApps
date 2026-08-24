@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS projection_events (
   -- on the live path; NOT the cross-source historical order.
   sequence        INTEGER     NOT NULL CHECK (sequence >= 0),
   event_type      TEXT        NOT NULL,
-  occurred_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  occurred_at     TIMESTAMPTZ NOT NULL,
   gate            TEXT,
   node_id         TEXT,
   actor           JSONB,

@@ -26,6 +26,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
+import { parseOccurredAt, assertOccurredAtContract } from "./occurredAtContract";
 
 const MIGRATIONS_DIR = path.resolve(__dirname, "..", "..", "supabase", "migrations");
 const NEW_MIGRATION = path.join(
@@ -203,6 +204,17 @@ describe("Task 2 RED — new projection_events migration contract", () => {
     // Canonical identity: UNIQUE (run_id, source_system, source_event_id).
     const hasIdentity = /\bunique\b[^\n;]*\(\s*run_id\s*,\s*source_system\s*,\s*source_event_id\s*\)/i.test(sql);
     expect(hasIdentity).toBe(true);
+  });
+
+  // BLOCKER A — source timestamp fidelity (G3 independent review, seq=4).
+  // The canonical producer (TaskController/GWC) supplies `occurred_at`; Postgres
+  // must NOT fabricate it via DEFAULT now() or any other DB-generated timestamp.
+  // RED until the migration declares `occurred_at TIMESTAMPTZ NOT NULL` with NO
+  // DEFAULT (no now/current/clock_timestamp or other function call).
+  it("requires occurred_at TIMESTAMPTZ NOT NULL with NO DB-generated default", () => {
+    const spec = parseOccurredAt(sql);
+    const err = assertOccurredAtContract(spec);
+    expect(err).toBe("");
   });
 
   it("uses DB-assigned durable global ordinal — GENERATED ALWAYS AS IDENTITY", () => {

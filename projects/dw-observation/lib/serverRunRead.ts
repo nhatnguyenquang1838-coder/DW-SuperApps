@@ -178,7 +178,7 @@ export async function readServerRunDetail(
   const eventsRes = await client
     .from("projection_events")
     .select(
-      "run_id, source_system, source_event_id, sequence, projection_ordinal, event_type, occurred_at, gate, node_id, actor, outcome, before, after, evidence_refs, authority_ref, source_digest",
+      "run_id, source_system, source_event_id, sequence, projection_ordinal, event_type, occurred_at, gate, node_id, actor, outcome, before, after, evidence_refs, authority_ref, source_digest, read_only_projection",
     )
     .eq("run_id", runId)
     .order("projection_ordinal", { ascending: true });

@@ -297,6 +297,101 @@ describe("serverRunRead — Task 3 RED contract", () => {
     expect(detail.events).toEqual([]);
   });
 
+  // BLOCKER B — real-detail provenance preservation (G3 independent review, seq=4).
+  // (i) projection_events SELECT includes source_digest AND read_only_projection.
+  // (ii) returned detail event preserves exact source_digest and read_only_projection
+  //     when stored (never dropped to UNKNOWN for those two fields).
+  // (iii) app/runs/[runId]/page.tsx maps stored e.source_digest to
+  //      NormalizedEvent.sourceDigest and only uses UNKNOWN when absent; does NOT
+  //      hardcode UNKNOWN.
+  // (iv) For source-backed actor, preserve existing string value; if actor is a
+  //      JSON object with deterministic kind/id, normalize consistently with
+  //      observatory normalizeEvent rather than dropping to UNKNOWN.
+  it("projection_events SELECT includes source_digest AND read_only_projection", async () => {
+    const mod = await loadAdapter();
+    const calls: Op[] = [];
+    const client = makeClient(
+      {
+        runs: { data: [{ run_id: "RUN-1" }], error: null },
+        run_gates: { data: [], error: null },
+        run_nodes: { data: [], error: null },
+        projection_events: {
+          data: [
+            {
+              run_id: "RUN-1",
+              source_system: "taskcontroller",
+              source_event_id: "e1",
+              sequence: 1,
+              projection_ordinal: 1,
+              event_type: "APPENDED",
+              occurred_at: "2026-08-24T00:00:00Z",
+              source_digest: "sha256:abc",
+              read_only_projection: true,
+            },
+          ],
+          error: null,
+        },
+      },
+      calls,
+    );
+    const detail = await (
+      mod.readServerRunDetail as (
+        runId: string,
+        client?: unknown,
+      ) => Promise<{
+        degraded: boolean;
+        events: unknown[];
+      }>
+    )("RUN-1", client);
+    const event = detail.events[0] as Record<string, unknown>;
+    expect(event).toBeTruthy();
+    expect(event.source_digest).toBe("sha256:abc");
+    expect(event.read_only_projection).toBe(true);
+  });
+
+  it("detail event preserves exact source_digest and read_only_projection when stored", async () => {
+    const mod = await loadAdapter();
+    const calls: Op[] = [];
+    const client = makeClient(
+      {
+        runs: { data: [{ run_id: "RUN-1" }], error: null },
+        run_gates: { data: [], error: null },
+        run_nodes: { data: [], error: null },
+        projection_events: {
+          data: [
+            {
+              run_id: "RUN-1",
+              source_system: "gwc",
+              source_event_id: "e2",
+              sequence: 2,
+              projection_ordinal: 2,
+              event_type: "APPENDED",
+              occurred_at: "2026-08-24T00:01:00Z",
+              source_digest: "sha256:def",
+              read_only_projection: false,
+            },
+          ],
+          error: null,
+        },
+      },
+      calls,
+    );
+    const detail = await (
+      mod.readServerRunDetail as (
+        runId: string,
+        client?: unknown,
+      ) => Promise<{
+        degraded: boolean;
+        events: unknown[];
+      }>
+    )("RUN-1", client);
+    const event = detail.events[0] as Record<string, unknown>;
+    expect(event).toBeTruthy();
+    // Preserved EXACTLY — not UNKNOWN and not normalized to a different value.
+    expect(event.source_digest).toBe("sha256:def");
+    expect(event.read_only_projection).toBe(false);
+  });
+
   it("mock mode behavior remains unchanged (mockDataSource intact)", () => {
     // This test does NOT depend on serverRunRead — it asserts the pre-existing
     // mock data source still works so GREEN cannot break mock mode.
