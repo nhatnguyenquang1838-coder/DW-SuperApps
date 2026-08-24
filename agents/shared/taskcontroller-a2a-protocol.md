@@ -40,6 +40,35 @@ Executor fetches canonical payload from mailbox
 
 The communication binding may later be GitHub, A2A HTTP, local IPC, NATS, Kafka/MSK or another provider without changing the semantic contract.
 
+## Session boot — A2A and mailboxes first
+
+TaskController activation MUST boot the A2A interaction state before the first Executor dispatch. Boot is not complete merely because the instruction files were read or a Slack RootCard exists.
+
+Required boot state:
+
+- exactly one Controller mailbox reference for the run;
+- exactly one Executor mailbox reference for the run;
+- Controller and Executor mailbox cursors/expected sequence;
+- an ACTIVE `dw.taskcontroller.continuation/v1` checkpoint bound to the current exact head and both mailbox refs;
+- the Controller mailbox updated in place with that same checkpoint and exact-read back successfully.
+
+Required order:
+
+```text
+resolve current repository/run identity
+→ materialize or recover Controller mailbox
+→ materialize or recover Executor mailbox
+→ persist continuation checkpoint
+→ write Controller mailbox with same checkpoint
+→ exact-readback Controller mailbox/seq
+→ send pointer-only wake-up when the provider requires it
+→ poll exact Executor mailbox comment only
+```
+
+If any required mailbox/checkpoint/readback cannot be established, fail closed with `TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED`. Do not copy the command into Slack, use Slack thread progress as substitute state, or recover by replaying Slack/GPT history.
+
+Activating TaskController does not activate GWC. GWC is loaded only when the current controlled task requires its governance model.
+
 ## Pilot mailbox model
 
 For the GitHub pilot:
