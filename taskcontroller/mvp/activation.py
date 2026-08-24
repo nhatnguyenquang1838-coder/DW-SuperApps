@@ -74,6 +74,11 @@ class TaskControllerActivationPlan:
     interaction_binding: str = "github-reference-mailbox"
     memory_fallback_allowed: bool = False
     full_e2e_runtime_active: bool = False
+    mailbox_boot_required: bool = False
+    mailbox_boot_fail_closed: bool = False
+    machine_progress_transport: str | None = None
+    slack_machine_progress_allowed: bool = False
+    pointer_only_wakeup: bool = False
 
 
 def mentions_taskcontroller(text: str) -> bool:
@@ -140,4 +145,9 @@ def resolve_taskcontroller_activation(
         slack_canvases_required=(),
         slack_canvas_projections_optional=slack_canvas_projections,
         human_plane_policy=human_plane_policy,
+        mailbox_boot_required=True,
+        mailbox_boot_fail_closed=True,
+        machine_progress_transport="github-reference-mailbox",
+        slack_machine_progress_allowed=False,
+        pointer_only_wakeup=True,
     )
