@@ -112,20 +112,86 @@ describe("Task 2 RED — new projection_events migration contract", () => {
     );
   });
 
-  it("uses exact realtime.send broadcast semantics", () => {
-    // realtime.send(payload, 'projection_event', 'observatory:' || run_id, false)
-    expect(sql).toMatch(
-      /realtime\s*\.\s*send\s*\([^)]*'projection_event'[^)]*'observatory:'\s*\|\|\s*run_id[^)]*false\s*\)/i,
+  it("uses exact realtime.send broadcast semantics — NOT pg_notify, NOT comments", () => {
+    // PeopleSoft-DB-style pitfalls: pg_notify or the string
+    // "realtime.send(payload, 'projection_event', 'observatory:' || run_id, false)"
+    // sitting inside a SQL comment must NOT satisfy this assertion. We require the
+    // exact call to be a real executable statement, not a commented-out reference.
+    //
+    // Strategy: strip SQL single-line (--) and block (/* */) comments, then assert
+    // the remaining executable SQL contains the exact realtime.send shape. If the
+    // migration uses pg_notify (the current implementation), this test is GENUINELY RED
+    // because the executable SQL does not contain realtime.send at all.
+    const commentStripped = sql
+      // Remove block comments
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      // Remove single-line comments (everything from -- to end of line)
+      .replace(/--[^\n]*/g, "");
+    expect(commentStripped).toMatch(
+      /realtime\s*\.\s*send\s*\(\s*'[^']*'\s*,\s*'projection_event'\s*,\s*'observatory:'\s*\|\|\s*run_id\s*,\s*false\s*\)/i,
     );
   });
 
-  it("has AFTER INSERT trigger on projection_events calling the notifier", () => {
+  it("does NOT use pg_notify as the broadcast mechanism", () => {
+    // The intended contract is realtime.send(...), NOT pg_notify(...). A migration
+    // that implements pg_notify('projection_event', ...) but does not also contain a
+    // real realtime.send call does NOT satisfy the contract — it is RED. Comments
+    // mentioning pg_notify are irrelevant; we check executable SQL after comment
+    // stripping (same function as above, inline for independence).
+    const commentStripped = sql
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/--[^\n]*/g, "");
+    expect(commentStripped).not.toMatch(/pg_notify\s*\(/i);
+  });
+
+  it("defines full canonical ProjectionEvent columns (not a subset)", () => {
+    // Require EVERY canonical column from the approved contract, not just a few.
+    // Real pitfall: a migration that creates a table with only event_id + run_id and
+    // calls it "projection_events" must still fail — missing source_system,
+    // source_event_id, event_type, payload, projection_ordinal, occurred_at,
+    // created_at is a real functional deficiency.
+    const requiredColumns = [
+      "event_id",
+      "run_id",
+      "source_system",
+      "source_event_id",
+      "event_type",
+      "payload",
+      "projection_ordinal",
+      "occurred_at",
+      "created_at",
+    ] as const;
+    for (const col of requiredColumns) {
+      // Match column definitions like: "  event_id  TEXT ..."
+      // Allow any whitespace; stop at next column/constraint/comma/paren boundary.
+      const colPattern = new RegExp(
+        `\\b${col}\\b\\s+(TEXT|BIGINT|JSONB|TIMESTAMPTZ|INTEGER|BIGSERIAL|SMALLINT|UUID|[VARCHAR]+[\\d*]*)\\b`,
+        "i",
+      );
+      expect(sql).toMatch(colPattern);
+    }
+    // Durable global ordinal semantics: projection_ordinal must be BIGINT NOT NULL
+    // (not INTEGER, not nullable, not omitted). This enforces durable ordered
+    // replay — a SMALLINT or nullable ordinal breaks the global-ordinal contract.
     expect(sql).toMatch(
-      /\bcreate\s+trigger\b[\s\S]*?\bafter\s+insert\s+on\s+projection_events\b/i,
+      /\bprojection_ordinal\b\s+BIGINT\s+NOT\s+NULL/i,
     );
-    expect(sql).toMatch(
-      /\bexecute\s+(procedure|function)\s+notify_projection_event\s*\(\)/i,
-    );
+    // event_id must be the explicit PRIMARY KEY (canonical single-event identity),
+    // NOT merely UNIQUE. Accept both table-constraint style
+    // (`PRIMARY KEY (event_id)`) and inline column style (`event_id TEXT PRIMARY KEY`),
+    // since both make event_id the canonical single-event identity. What fails is a
+    // table that has UNIQUE on (run_id, source_system, source_event_id) but no PRIMARY
+    // KEY on event_id at all.
+    const hasTableConstraintPK = /\bPRIMARY\s+KEY\b[^\n;]*\b(event_id)\b/i.test(sql);
+    const hasInlineColumnPK = /\b(event_id)\b[^\n;]*\bPRIMARY\s+KEY\b/i.test(sql);
+    expect(hasTableConstraintPK || hasInlineColumnPK).toBe(true);
+  });
+
+  it("regression: existing migration file hashes unchanged (canonical G6)", async () => {
+    const s = await sha256File(DDL_FILE);
+    expect(s).toBe(EXPECTED_DDL_SHA256);
+    const s2 = await sha256File(DML_FILE);
+    expect(s2).toBe(EXPECTED_DML_SHA256);
   });
 
   it("enables row level security on projection_events", () => {
