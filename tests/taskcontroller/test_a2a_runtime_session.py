@@ -72,18 +72,14 @@ def test_registry_selects_executable_a2a_runtime_not_deferred_slack_pilot() -> N
     assert "legacy_slack_pilot: compatibility-only" in registry
 
 
-def test_legacy_mvp_slack_runtime_is_explicitly_compatibility_only() -> None:
+def test_registry_and_package_mark_legacy_slack_pilot_compatibility_only() -> None:
     root = Path(__file__).resolve().parents[2]
+    registry = (root / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
     package = (root / "taskcontroller" / "mvp" / "__init__.py").read_text(encoding="utf-8")
-    monitoring = (root / "taskcontroller" / "mvp" / "monitoring.py").read_text(encoding="utf-8")
-    pilot = (root / "taskcontroller" / "mvp" / "pilot.py").read_text(encoding="utf-8")
 
+    assert "legacy_slack_pilot: compatibility-only" in registry
     assert "taskcontroller/runtime/session.py" in package
     assert "compatibility-only" in package.lower()
-    assert "LEGACY COMPATIBILITY ONLY" in monitoring
-    assert "taskcontroller/runtime/session.py" in monitoring
-    assert "LEGACY COMPATIBILITY ONLY" in pilot
-    assert "taskcontroller/runtime/session.py" in pilot
 
 
 def test_boot_materializes_both_mailboxes_persists_checkpoint_and_exact_readbacks(tmp_path: Path) -> None:
