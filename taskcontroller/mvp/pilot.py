@@ -1,27 +1,58 @@
-"""LEGACY COMPATIBILITY ONLY — historical GPT→Slack→Hermes MVP pilot.
+"""WP5 (#52) MVP pilot adapter — GPT Controller → Slack → Hermes Executor → WP4 loop.
 
-The active TaskController machine runtime is ``taskcontroller/runtime/session.py``
-and uses ``dw.taskcontroller.a2a/v1`` Controller/Executor mailboxes plus a
-crash-safe continuation checkpoint. This module is retained for compatibility
-callers/tests only. It MUST NOT be selected as the active TaskController command,
-progress, polling, or recovery transport. Slack is now Human Control Plane and
-pointer-only wake-up when required.
+Authority
+---------
+Controller release WP5 binds the WP1 contract/report, WP2 RootCard, WP3 public
+actions and WP4 60s monitoring loop into one narrow in-session pilot path that
+faithfully reproduces the *live Slack-mediated* topology:
 
-Historical WP5 behavior preserved below
----------------------------------------
-The compatibility adapter binds the WP1 contract/report, WP2 RootCard, WP3
-public actions and historical WP4 60s Slack-thread monitoring loop into the
-former topology. Its deterministic APIs remain available so existing callers
-can migrate without silently becoming a second active transport.
+    GPT Controller -> one Slack RootCard/thread
+        -> Controller dispatches the selected contract/command INTO the thread
+           (addressed to the configured Hermes Executor); returns only a
+           dispatch receipt/ts, NOT the Executor report
+        -> Hermes Executor (separate actor) reads the command and posts its own
+           Executor-authored reply later in the thread
+        -> WP4 60s loop reads only the Executor-authored reply (strictly newer
+           than the pre-dispatch cursor) and classifies it
 
-Hard compatibility rules:
-1. PURE DOMAIN. No Slack SDK, no Hermes SDK, no network at import/default path.
-2. ONE ROOT. Existing RootCard semantics are preserved.
-3. ONLY THE SELECTED CURRENT SUBTASK. Legacy dispatch remains bounded.
-4. FAIL CLOSED. Malformed legacy replies are never downgraded to CONTINUE.
-5. NO HARDCODED IDENTITY. Executor identity remains configuration-bound.
-6. ACTIVE A2A EXCLUSION. Current TaskController activation/registry MUST route
-   through ``taskcontroller/runtime/session.py``, never this pilot.
+Hard rules upheld (same as every other MVP module):
+
+1. PURE DOMAIN. No Slack SDK, no Hermes SDK, no network at import or in the
+   default path. Transport is behind injected ``SlackTransport`` /
+   ``HermesExecutorClient`` protocols; the deterministic fakes are the MVP CI
+   path. Any *real* client (``SlackWebApiTransport``) is constructed with an
+   injected Web API client/duck type and never imports or stores a token.
+2. ONE ROOT. ``ensure_root`` calls ``create_root`` exactly once; every later
+   update (including model / session / executor rotation) calls ``update_root``
+   on the same bound ``root_ts``. Rotation is projection content, never a second
+   root.
+3. ONLY THE SELECTED CURRENT SUBTASK. The Controller dispatches the *single*
+   active contracted subtask and the exact reporting contract into the thread.
+   A CONTINUE never invents an uncontracted subtask. The Executor's reply is
+   classified only against the selected subtask; a reply claiming a different
+   subtask is a drift (INTERCEPT).
+3b. FULL-E2E DEFAULT OFF. Any advanced capability requires an explicit positive
+    ``advanced_mode=True`` opt-in. ``_require_advanced`` guards every such path.
+4. FAIL CLOSED. A malformed Hermes reply (JSON or canonical text) raises
+   ``MalformedReportError`` and is never downgraded to CONTINUE.
+5. NO HARDCODED IDENTITY. The Executor identity is bound through configuration
+   (``executor_user_id``); no current-user ID is hardcoded in library code.
+
+Slack Block Kit hard contract (Context7 / current Slack docs)
+------------------------------------------------------------
+WP2 emits a *domain* payload (``plan_block`` / ``task_cards`` / uppercase
+statuses) which is NOT Slack-valid. This module translates to the official
+schema at the adapter boundary and validates it:
+
+* official Plan block:    ``type="plan"``, required ``title``, optional ``tasks``
+* official Task Card:     ``type="task_card"``, required ``task_id``, ``title``,
+                          ``status``; ``details`` (if present) MUST be a
+                          ``rich_text`` entity (current Slack schema) — a raw
+                          string is invalid
+* task status exact set:  ``pending | in_progress | complete | error``
+* contextual actions:     only ``card.contextual_actions()`` are ever rendered;
+                          APPROVE only at an exact authority boundary; MERGE only
+                          when merge-ready with an exact bound PR/head
 """
 
 from __future__ import annotations
@@ -62,6 +93,10 @@ from taskcontroller.mvp.rootcard import (
     TaskCardStatus,
 )
 
+
+# ---------------------------------------------------------------------------
+# Slack status translation (adapter boundary)
+# ---------------------------------------------------------------------------
 SLACK_TASK_STATUSES = ("pending", "in_progress", "complete", "error")
 
 DOMAIN_TO_SLACK_STATUS = {
@@ -72,6 +107,7 @@ DOMAIN_TO_SLACK_STATUS = {
     TaskCardStatus.FAILED: "error",
 }
 
+#: report.status (WP1) -> domain TaskCardStatus (WP2)
 REPORT_TO_CARD_STATUS = {
     "RUNNING": TaskCardStatus.IN_PROGRESS,
     "DONE": TaskCardStatus.DONE,
@@ -98,6 +134,10 @@ def report_status_to_card_status(report_status: str) -> str:
     return REPORT_TO_CARD_STATUS[report_status]
 
 
+# ---------------------------------------------------------------------------
+# Block Kit validation (adapter boundary — never trust the domain payload)
+# ---------------------------------------------------------------------------
+#: A valid task_card ``details`` element MUST be a rich_text entity.
 def _is_rich_text_entity(value: Any) -> bool:
     return (
         isinstance(value, Mapping)
@@ -106,11 +146,24 @@ def _is_rich_text_entity(value: Any) -> bool:
     )
 
 
+#: Valid WP3 public action_ids (mirrors rootcard.PUBLIC_ROOTCARD_ACTIONS order).
 _VALID_ACTION_IDS = frozenset({"pause", "stop", "approve", "merge"})
 
 
 def validate_slack_blocks(blocks: Sequence[Mapping[str, Any]]) -> None:
-    """Validate a Block Kit payload against the historical pilot contract."""
+    """Validate a Block Kit payload against the official plan/task_card schema.
+
+    Raises ``TaskControllerValidationError`` on the first violation. Operational
+    metadata (section / context / rich_text / header) only needs a valid
+    ``type``; strict rules apply to ``plan`` and ``task_card``. A ``task_card``
+    ``details`` field, when present, MUST be a ``rich_text`` entity (a raw
+    string is invalid per the current Slack schema). Action buttons may only be
+    the four WP3 public actions. A ``rich_text`` block's child elements must be
+    valid rich_text children (``rich_text_section`` / ``rich_text_list`` /
+    ``rich_text_quote`` / ``rich_text_preformatted``); a ``rich_text`` nested
+    inside a ``rich_text`` is invalid. A ``section``'s ``fields`` list is capped
+    at 10 (the Slack limit).
+    """
     if not isinstance(blocks, (list, tuple)):
         raise TaskControllerValidationError("blocks must be a list/tuple")
     for idx, block in enumerate(blocks):
@@ -127,9 +180,12 @@ def validate_slack_blocks(blocks: Sequence[Mapping[str, Any]]) -> None:
             _validate_rich_text_block(block, idx)
 
 
+#: Valid child element types for a rich_text block (current Slack schema).
 _RICH_TEXT_CHILD_TYPES = frozenset(
     {"rich_text_section", "rich_text_list", "rich_text_quote", "rich_text_preformatted"}
 )
+
+#: Slack hard cap on a section block's ``fields`` list.
 _SECTION_FIELDS_MAX = 10
 
 
@@ -218,6 +274,7 @@ def _validate_actions_block(block: Mapping[str, Any], idx: int) -> None:
                 f"actions.elements[{j}] invalid action_id {action_id!r}; "
                 f"only WP3 public actions allowed"
             )
+        # the rendered label must be a recognised public action
         text = el.get("text")
         if not isinstance(text, Mapping) or text.get("type") != "plain_text":
             raise TaskControllerValidationError(
@@ -230,7 +287,16 @@ def _validate_actions_block(block: Mapping[str, Any], idx: int) -> None:
             )
 
 
+# ---------------------------------------------------------------------------
+# RootCard -> Slack blocks translator (WP2 domain -> official Block Kit)
+# ---------------------------------------------------------------------------
 def _rich_text_details(label: str, body: str) -> dict[str, Any]:
+    """A valid rich_text details entity for an error task_card.
+
+    ``label`` is the exact domain status (``BLOCKED`` / ``FAILED``); ``body``
+    carries the human reason. Per the current Slack schema, ``details`` MUST be
+    a rich_text entity — a raw string is invalid.
+    """
     return {
         "type": "rich_text",
         "elements": [
@@ -246,6 +312,8 @@ def _rich_text_details(label: str, body: str) -> dict[str, Any]:
 
 
 def _action_block(actions: Sequence[str]) -> dict[str, Any]:
+    """Render ONLY the supplied contextual public actions as WP3 buttons."""
+    # PUBLIC_ROOTCARD_ACTIONS preserves exact MVP API order; render in that order.
     ordered = [a for a in PUBLIC_ROOTCARD_ACTIONS if a in actions]
     return {
         "type": "actions",
@@ -263,6 +331,15 @@ def _action_block(actions: Sequence[str]) -> dict[str, Any]:
 
 
 def translate_rootcard_to_blocks(card: RootCard) -> list[dict[str, Any]]:
+    """Translate a WP2 RootCard into VALID Slack Block Kit blocks.
+
+    The WP2 domain payload (``plan_block`` / uppercase statuses / raw string
+    details) is deliberately NOT Slack-valid; this produces the official
+    ``plan`` / ``task_card`` schema with the exact status mapping, plus complete
+    operational metadata (split into multiple valid ``section`` blocks, each
+    with at most 10 ``fields`` — the Slack cap) and ONLY the contextual public
+    actions.
+    """
     if not isinstance(card, RootCard):
         raise TaskControllerValidationError("translate requires a RootCard")
 
@@ -272,6 +349,9 @@ def translate_rootcard_to_blocks(card: RootCard) -> list[dict[str, Any]]:
         "text": {"type": "plain_text", "text": f"Run {card.run_id}", "emoji": True},
     }
 
+    # -- operational metadata (complete WP2 live fields) --------------------
+    # Build the full ordered field list, then split into chunks of <=10 to
+    # respect the Slack section.fields cap (exactly 10 max).
     meta_fields: list[dict[str, str]] = [
         {"type": "mrkdwn", "text": f"*owner:* {card.human_owner}"},
         {"type": "mrkdwn", "text": f"*controller:* {card.controller}"},
@@ -306,6 +386,7 @@ def translate_rootcard_to_blocks(card: RootCard) -> list[dict[str, Any]]:
     if card.ci_status:
         meta_fields.append({"type": "mrkdwn", "text": f"*ci:* {card.ci_status}"})
 
+    # Deterministic chunking into <=10-field sections.
     meta_blocks: list[dict[str, Any]] = []
     for i in range(0, len(meta_fields), 10):
         chunk = meta_fields[i : i + 10]
@@ -317,6 +398,7 @@ def translate_rootcard_to_blocks(card: RootCard) -> list[dict[str, Any]]:
             }
         )
 
+    # -- explicit plan / task cards ----------------------------------------
     plan_block: dict[str, Any] = {
         "type": "plan",
         "title": f"Plan — Run {card.run_id}",
@@ -330,11 +412,13 @@ def translate_rootcard_to_blocks(card: RootCard) -> list[dict[str, Any]]:
             "title": card_item.objective,
             "status": slack_status,
         }
+        # Preserve the BLOCKED/FAILED distinction via a valid rich_text entity.
         if slack_status == "error":
             reason = card_item.detail or card_item.status
             task["details"] = _rich_text_details(card_item.status, reason)
         plan_block["tasks"].append(task)
 
+    # -- context: now/next/risk/delivery -----------------------------------
     context_lines = [f"*now:* {card.now}", f"*next:* {card.next}"]
     if card.risk:
         context_lines.append(f"*risk:* {card.risk}")
@@ -349,36 +433,66 @@ def translate_rootcard_to_blocks(card: RootCard) -> list[dict[str, Any]]:
     return [header, *meta_blocks, plan_block, context, _action_block(card.contextual_actions())]
 
 
+# ---------------------------------------------------------------------------
+# Transport protocols (narrow; fakes are the MVP CI path)
+# ---------------------------------------------------------------------------
 class SlackTransport(Protocol):
-    """Historical Slack transport compatibility protocol."""
+    """Narrow Slack transport: one root, in-place updates, incremental reads."""
 
     def create_root(self, channel: str, blocks: Sequence[Mapping[str, Any]]) -> str:
+        """Create the single root message; returns its ts."""
         ...
 
     def update_root(
         self, channel: str, root_ts: str, blocks: Sequence[Mapping[str, Any]]
     ) -> None:
+        """Update the bound root message in place."""
         ...
 
     def dispatch_command(
         self, channel: str, root_ts: str, text: str, executor_user_id: str
     ) -> str:
+        """Post the Controller command addressed to the Executor; returns its ts.
+
+        This is the *command* message — distinct from the Executor's later
+        reply. The WP4 loop reads only replies strictly newer than this ts.
+        """
         ...
 
     def read_thread_replies(
         self, channel: str, root_ts: str, since_ts: str | None,
         executor_user_id: str | None = None,
     ) -> list[ThreadReply]:
+        """Read thread replies strictly newer than ``since_ts``.
+
+        ``executor_user_id`` is the authoritative expected actor for the run;
+        the transport MUST filter to that actor's replies (a human/Controller
+        reply is ignored). The caller (``MvpPilot.run``) supplies exactly
+        ``config.executor_user_id`` on every read.
+        """
         ...
 
 
 class HermesExecutorClient(Protocol):
-    """Historical direct/simulated Hermes compatibility interface."""
+    """Narrow Hermes main-Executor dispatch interface.
+
+    By MVP design the Executor is a *separate actor* that reads the dispatched
+    command from the Slack thread and posts its own reply. The pilot never sees
+    the report directly through this client in the live topology; the reply is
+    observed through the Slack transport. A test-only synchronous helper may
+    still expose a direct structured reply, but it MUST NOT define the
+    production MVP topology.
+    """
 
     def dispatch(self, subtask: ContractedSubtask) -> str:
+        """Return the structured milestone reply text for one subtask (test only)."""
         ...
 
 
+# ---------------------------------------------------------------------------
+# C. Canonical human-readable Executor report parsing
+# ---------------------------------------------------------------------------
+#: Verdicts the authority final line may carry (after the ``·``).
 _AFTER_WORDS = {v.lower(): v for v in CONTRACTED_AFTER_VALUES}
 _STATUS_WORDS = {
     "running": "RUNNING",
@@ -386,6 +500,7 @@ _STATUS_WORDS = {
     "blocked": "BLOCKED",
     "failed": "FAILED",
 }
+#: Heading markers (case-insensitive, stripped) that begin a bullet section.
 _SECTION_MARKERS = {
     "status": "status",
     "phase": "phase",
@@ -399,10 +514,19 @@ _SECTION_MARKERS = {
 
 
 def _normalize_section_key(raw: str) -> str | None:
+    """Case/space-insensitive section heading lookup (e.g. 'Finding / Risk')."""
     return _SECTION_MARKERS.get(raw.strip().lower().replace(" ", ""))
 
 
 def _ts_key_pilot(ts: str) -> tuple[int, int, int, str]:
+    """Lossless integer ordering key for a Slack ``ts`` (seconds.microseconds).
+
+    Mirrors WP4 ``monitoring._ts_key``: no ``float()``, no lexicographic
+    compare. Slack ``ts`` values are numeric strings; compare the integer
+    second and the integer microsecond separately so ``"99.0" < "100.0"`` and
+    ``"1.5" == "1.500000"`` both hold exactly. Non-numeric values fall into a
+    stable lexicographic bucket so ordering never raises.
+    """
     if isinstance(ts, str):
         candidate = ts.strip()
         seconds, _, fraction = candidate.partition(".")
@@ -413,16 +537,26 @@ def _ts_key_pilot(ts: str) -> tuple[int, int, int, str]:
 
 
 def _split_header_subtask_id(header: str) -> str | None:
+    """Derive the subtask id from the authority header ``🟡 EXECUTOR UPDATE · Sx/y``.
+
+    Returns ``Sx`` (the part before ``/``) or ``None`` when the header carries
+    no ``· <id>`` token.
+    """
     if "·" not in header:
         return None
     tail = header.split("·", 1)[1].strip()
     if not tail:
         return None
+    # The subtask id is the first whitespace-free token (before any ``/``).
     token = tail.split()[0] if tail.split() else tail
     return token.split("/", 1)[0]
 
 
 def _split_final_verdict(line: str) -> str | None:
+    """Derive the After verdict from the final boundary line ``Sx · CONTINUE``.
+
+    The subtask id precedes the ``·`` and the verdict follows it.
+    """
     if "·" not in line:
         return None
     tail = line.split("·", 1)[1].strip()
@@ -433,6 +567,10 @@ def _split_final_verdict(line: str) -> str | None:
 
 
 def _split_final_subtask(line: str) -> str | None:
+    """Derive the subtask id from the final boundary line ``Sx · CONTINUE``.
+
+    The subtask id precedes the ``·`` (with optional ``/y`` denominator).
+    """
     if "·" not in line:
         return None
     head = line.split("·", 1)[0].strip()
@@ -446,6 +584,42 @@ def _collect_bullets(sections: dict[str, list[str]], key: str) -> tuple[str, ...
 
 
 def parse_hermes_thread_update(text: str) -> ExecutorReport:
+    """Parse the *authority* human-readable MVP Slack Executor update.
+
+    Authority format (emoji-prefixed header; no ``Subtask_id:`` / ``After:``
+    labels required — subtask and After come from the header and final
+    boundary line):
+
+        🟡 EXECUTOR UPDATE · Sx/y
+        Status: RUNNING|DONE|BLOCKED|FAILED
+        Phase: <phase>
+
+        Completed
+        - item
+
+        Evidence
+        - item
+
+        Finding / Risk
+        - item             # optional when material
+
+        Next
+        → exact next action
+
+        Sx · CONTINUE|WAIT_CONTROLLER|TERMINAL
+
+    Rules enforced (fail closed):
+    * the header MUST carry the canonical emoji ``🟡`` and an ``EXECUTOR UPDATE``
+      marker (case-insensitive);
+    * subtask id is derived from the header; if a final ``<id> · <AFTER>`` line
+      also names a subtask, the two MUST agree;
+    * status MUST be one of ``REPORT_STATUSES``;
+    * After MUST be one of ``CONTRACTED_AFTER_VALUES``, derived from the final
+      boundary line;
+    * ``Completed`` / ``Evidence`` MUST be non-empty; ``Finding / Risk`` is
+      optional only (may be empty). ``Next`` is parsed from the ``→`` marker.
+    JSON / colon compatibility is preserved via :func:`parse_hermes_reply`.
+    """
     if not isinstance(text, str) or not text.strip():
         raise MalformedReportError("empty Hermes thread update")
 
@@ -463,6 +637,8 @@ def parse_hermes_thread_update(text: str) -> ExecutorReport:
         )
 
     header_subtask = _split_header_subtask_id(header)
+
+    # -- parse heading (Status:/Phase:) + bullet sections ----------------
     sections: dict[str, list[str]] = {}
     current: str | None = None
     status: str | None = None
@@ -475,9 +651,12 @@ def parse_hermes_thread_update(text: str) -> ExecutorReport:
         line = raw.rstrip()
         stripped = line.strip()
         if not stripped:
+            # A blank line closes any open bullet section context.
             current = None
             continue
         low = stripped.lower()
+
+        # final boundary line: "<id> · <AFTER>" (no heading marker, has "·")
         if (
             current is None
             and ":" not in stripped
@@ -487,9 +666,12 @@ def parse_hermes_thread_update(text: str) -> ExecutorReport:
             final_after = _split_final_verdict(stripped)
             final_subtask = _split_final_subtask(stripped)
             continue
+
+        # heading line: "Key: value"
         if ":" in stripped:
             key, _, value = stripped.partition(":")
-            mapped = _normalize_section_key(key)
+            norm_key = _normalize_section_key(key)
+            mapped = norm_key
             if mapped == "status":
                 status = _STATUS_WORDS.get(value.strip().lower())
                 current = None
@@ -499,34 +681,48 @@ def parse_hermes_thread_update(text: str) -> ExecutorReport:
                 current = None
                 continue
             if mapped in ("completed", "evidence", "finding_risk", "next_action"):
+                # heading value may itself hold the content
                 if value.strip():
                     sections.setdefault(mapped, []).append(value.strip())
                 current = mapped
                 continue
+            # unknown heading -> ignore but do not break section context wrongly
             current = None
             continue
+
+        # bare section heading (no colon), e.g. "Completed" / "Evidence" /
+        # "Finding / Risk" / "Next" — opens a bullet section.
         bare = _normalize_section_key(low)
         if bare in ("completed", "evidence", "finding_risk", "next_action"):
             current = bare
             continue
+
+        # "Next → ..." bullet or heading
         if low.startswith("next"):
             rest = stripped.split("→", 1)[1].strip() if "→" in stripped else stripped[len("next"):].strip()
             if rest:
                 next_action = rest
                 current = "next_action"
                 continue
+
+        # bullet item
         if stripped.startswith("-") or stripped.startswith("•"):
             item = stripped.lstrip("-•").strip()
             if current in ("completed", "evidence", "finding_risk", "next_action") and item:
                 sections.setdefault(current, []).append(item)
             continue
+
+        # "→ exact next action" inside the Next section
         if "→" in stripped and current == "next_action":
             item = stripped.split("→", 1)[1].strip()
             if item:
                 next_action = item
             continue
+
+        # any other line: close section context
         current = None
 
+    # -- subtask agreement ------------------------------------------------
     subtask_id = header_subtask or final_subtask
     if header_subtask and final_subtask and header_subtask != final_subtask:
         raise MalformedReportError(
@@ -535,10 +731,14 @@ def parse_hermes_thread_update(text: str) -> ExecutorReport:
         )
     if not subtask_id:
         raise MalformedReportError("Hermes thread update missing subtask id")
+
+    # -- status -------------------------------------------------------------
     if status is None or status not in REPORT_STATUSES:
         raise MalformedReportError(
             f"Hermes thread update has ambiguous/missing status: {status!r}"
         )
+
+    # -- after --------------------------------------------------------------
     if final_after is None or final_after not in CONTRACTED_AFTER_VALUES:
         raise MalformedReportError(
             f"Hermes thread update has ambiguous/missing After boundary: {final_after!r}"
@@ -547,6 +747,7 @@ def parse_hermes_thread_update(text: str) -> ExecutorReport:
     completed = _collect_bullets(sections, "completed")
     evidence = _collect_bullets(sections, "evidence")
     finding_risk = _collect_bullets(sections, "finding_risk")
+
     if not completed:
         raise MalformedReportError("Hermes thread update has no Completed items")
     if not evidence:
@@ -569,10 +770,18 @@ def parse_hermes_thread_update(text: str) -> ExecutorReport:
 
 
 def parse_hermes_reply(text: str | Mapping[str, Any]) -> ExecutorReport:
+    """Parse a Hermes milestone reply into a COMPLETE WP1 ExecutorReport.
+
+    Accepts either a JSON/mapping payload or the canonical human-readable Slack
+    authority text (``🟡 EXECUTOR UPDATE · Sx/y`` …). Fail closed: incomplete or
+    ambiguous input raises ``MalformedReportError`` (never silently downgraded
+    to CONTINUE).
+    """
     if isinstance(text, Mapping):
         payload: Mapping[str, Any] = text
     elif isinstance(text, str):
         stripped = text.strip()
+        # Try the canonical human-readable form first when it has the header.
         if "🟡" in stripped and "executor update" in stripped.lower():
             return parse_hermes_thread_update(stripped)
         try:
@@ -592,8 +801,27 @@ def parse_hermes_reply(text: str | Mapping[str, Any]) -> ExecutorReport:
         raise MalformedReportError(f"incomplete Hermes reply: {exc}") from exc
 
 
+# ---------------------------------------------------------------------------
+# B. Concrete Slack Web API transport wrapper
+# ---------------------------------------------------------------------------
 class SlackWebApiTransport:
-    """Historical compatibility transport over an injected Slack Web API client."""
+    """Concrete Slack transport over an injected Web API client/duck type.
+
+    The injected ``client`` is expected to expose the standard WebClient method
+    surface (``chat_postMessage``, ``chat_update``, ``conversations_replies``).
+    No token/secret is stored or logged; the client is supplied by the caller.
+    No network call occurs at construction, and ``slack_sdk`` is never imported
+    here (the duck type only needs the method surface). CI never instantiates
+    this class; the deterministic fakes are the MVP path.
+
+    Executor actor filtering: ``read_thread_replies`` accepts the authoritative
+    ``executor_user_id`` (the run's ``config.executor_user_id``) on every call
+    and returns ONLY Executor-authored report messages (matching ``msg.user``),
+    so a human/Controller reply after dispatch can never be misparsed. A missing
+    identity fails closed. Timestamp filtering uses the lossless integer ordering
+    key (no ``float``, no lexicographic compare) — same semantics as WP4
+    ``_ts_key``. Exactly one identity governs the run.
+    """
 
     def __init__(
         self,
@@ -631,6 +859,7 @@ class SlackWebApiTransport:
         self, channel: str, root_ts: str, text: str, executor_user_id: str
     ) -> str:
         if not executor_user_id:
+            # No hardcoded identity; the live path must bind one or fail closed.
             raise TaskControllerValidationError(
                 "dispatch_command requires a bound executor_user_id"
             )
@@ -648,6 +877,10 @@ class SlackWebApiTransport:
         since_ts: str | None,
         executor_user_id: str | None = None,
     ) -> list[ThreadReply]:
+        # The authoritative actor for the run is exactly the supplied
+        # executor_user_id (the caller passes config.executor_user_id). When the
+        # transport was constructed with one too, they MUST agree (single
+        # identity); a mismatch is a programming error and fails closed.
         expected = executor_user_id or self._executor_user_id
         if self._executor_user_id and executor_user_id and \
                 self._executor_user_id != executor_user_id:
@@ -656,6 +889,8 @@ class SlackWebApiTransport:
                 f"{self._executor_user_id!r} but read asked for {executor_user_id!r}"
             )
         if not expected:
+            # No identity bound anywhere — a live read cannot distinguish the
+            # Executor from a human/Controller reply. Fail closed.
             raise TaskControllerValidationError(
                 "read_thread_replies requires a bound executor_user_id"
             )
@@ -666,22 +901,29 @@ class SlackWebApiTransport:
             ts = str(msg.get("ts", ""))
             if not ts:
                 continue
-            if ts == root_ts:
+            if ts == root_ts:  # exclude the root itself
                 continue
+            # Lossless integer ordering — no float, no lexicographic compare.
             if since_ts is not None and _ts_key_pilot(ts) <= _ts_key_pilot(since_ts):
                 continue
+            # Executor actor filtering: accept only Executor-authored messages.
             if msg.get("user") != expected:
                 continue
             raw = msg.get("text") or ""
             if not raw.strip():
                 continue
+            # The Executor reply is the canonical human-readable update; parse it
+            # into a clean mapping payload for the WP4 loop (fail closed).
             payload = parse_hermes_reply(raw).to_dict()
             out.append(ThreadReply(ts=ts, payload=payload))
         return out
 
 
+# ---------------------------------------------------------------------------
+# Advanced-mode guard (Full-E2E default OFF)
+# ---------------------------------------------------------------------------
 class AdvancedModeRequired(TaskControllerValidationError):
-    """Raised when a historical advanced capability is used without opt-in."""
+    """Raised when an advanced Full-E2E capability is used without opt-in."""
 
 
 FORBIDDEN_DEFERRED_IMPORTS = (
@@ -707,10 +949,11 @@ def module_keeps_deferred_core_out(
     path_or_source: str = __file__,
     forbidden: Sequence[str] = FORBIDDEN_DEFERRED_IMPORTS,
 ) -> bool:
+    """AST proof: this module never imports deferred Full-E2E core modules."""
     import os
 
     raw = path_or_source
-    if os.path.isfile(path_or_source):
+    if os.path.isfile(path_or_source):  # a file path -> read its source
         with open(path_or_source, "r", encoding="utf-8") as fh:
             raw = fh.read()
     tree = ast.parse(raw)
@@ -727,9 +970,12 @@ def module_keeps_deferred_core_out(
     return True
 
 
+# ---------------------------------------------------------------------------
+# The pilot engine
+# ---------------------------------------------------------------------------
 @dataclass
 class MvpPilotConfig:
-    """Configuration for one historical compatibility pilot run."""
+    """Immutable configuration for one MVP run (one root, one main Executor)."""
 
     run_id: str
     channel: str
@@ -761,13 +1007,19 @@ class MvpPilotConfig:
 
 @dataclass
 class MvpPilot:
-    """Historical compatibility pilot; not the active A2A runtime."""
+    """Binds WP1..WP4 into the live GPT→Slack→Hermes→loop path.
+
+    One root. One main Executor (configured identity, never hardcoded). Only the
+    selected current subtask is dispatched into the thread. Material
+    observations update the same RootCard in place.
+    """
 
     config: MvpPilotConfig
     _root_ts: str | None = field(default=None, init=False)
     _card: RootCard | None = field(default=None, init=False)
     _plan: PlanBlock | None = field(default=None, init=False)
 
+    # -- construction -------------------------------------------------------
     def _build_bound_input_snapshot(self) -> BoundInputSnapshot:
         return BoundInputSnapshot(
             repo_refs={
@@ -837,8 +1089,15 @@ class MvpPilot:
         )
         return card
 
+    # -- one-root invariant ------------------------------------------------
     def ensure_root(self) -> str:
+        """Establish the single root. CREATE_ROOT exactly once; else UPDATE_ROOT.
+
+        Rotation (model / session / executor) only ever calls this again and
+        MUST keep the same ``root_ts`` (it cannot create a second root).
+        """
         if self._root_ts is not None:
+            # Already bound -> no second CREATE_ROOT. Audit the rotation update.
             self._record_audit_event(
                 AuditEvent(
                     event_id=f"root-rotate-{self.config.run_id}",
@@ -871,7 +1130,9 @@ class MvpPilot:
         )
         return self._root_ts
 
+    # -- A. dispatch only the selected current subtask INTO the thread -----
     def format_command(self, subtask: ContractedSubtask) -> str:
+        """Render the Controller command text addressed to the Executor."""
         lines = [
             "EXECUTOR COMMAND",
             f"Subtask: {subtask.subtask_id}",
@@ -884,6 +1145,11 @@ class MvpPilot:
         return "\n".join(lines)
 
     def dispatch_current(self) -> str:
+        """Dispatch ONLY the selected current contracted subtask into the thread.
+
+        Returns the dispatch receipt ts of the command message — NOT the
+        Executor report. The Executor (separate actor) replies later.
+        """
         subtask = self._selected_contract()
         root_ts = self.ensure_root()
         command = self.format_command(subtask)
@@ -895,7 +1161,14 @@ class MvpPilot:
         )
         return receipt_ts
 
+    # -- map LoopObservation -> same RootCard in place ---------------------
     def apply_observation(self, observation: LoopObservation) -> None:
+        """Update the bound RootCard from a material observation, in place.
+
+        Called by the WP4 loop ONLY on a material change. Maps the WP1 report
+        fields into WP2 progress / risk / Now / Next and re-posts to the SAME
+        root. Never creates a second root.
+        """
         if self._card is None:
             self._card = self._build_initial_card()
             self._plan = self._card.plan
@@ -939,18 +1212,41 @@ class MvpPilot:
         )
         self._card = new_card
         self._plan = new_plan
-        root_ts = self.ensure_root()
+        root_ts = self.ensure_root()  # keep same root
         blocks = translate_rootcard_to_blocks(new_card)
         validate_slack_blocks(blocks)
         self.config.slack.update_root(self.config.channel, root_ts, blocks)
 
+    # -- A. convenience orchestration: live Slack-mediated topology --------
     def run(
         self,
         max_polls: int | None = None,
         sleeper: Callable[[int], None] | None = None,
     ) -> Any:
-        """Run the historical Slack-thread pilot compatibility path only."""
+        """One in-session pilot pass: ensure root, dispatch command, feed WP4.
+
+        The Controller posts the command into the thread (addressed to the
+        configured Executor) and records a pre-dispatch cursor. The WP4 loop
+        then reads ONLY Executor-authored replies strictly newer than that
+        cursor and classifies them. The Controller never fabricates the
+        Executor report.
+
+        Live default behaviour (per the in-session monitoring design):
+        * ``sleeper`` defaults to a REAL ``time.sleep(POLL_INTERVAL_SECONDS)``
+          (exactly 60s) injected through the WP4 loop — no zero-wait, no
+          single empty poll. Tests inject a fake sleeper.
+        * ``max_polls=None`` (the default) means the live loop stays active
+          until a boundary verdict is reached (unbounded). A positive int is
+          only for tests/debug. ``max_polls < 1``/``0``/``False`` is rejected.
+        * The live path FAILS CLOSED if no Executor identity is bound — a
+          live dispatch must address a real, configured Executor (no hardcoded
+          ID).
+
+        Synchronous and in-session only: no thread, no scheduler, no detached
+        execution.
+        """
         if self.config.executor_user_id is None:
+            # No hardcoded Hermes ID; a live dispatch requires a bound identity.
             raise TaskControllerValidationError(
                 "live MvpPilot.run() requires config.executor_user_id bound"
             )
@@ -964,12 +1260,18 @@ class MvpPilot:
                     "max_polls must be a positive int or None (unbounded)"
                 )
         root_ts = self.ensure_root()
+        # Pre-dispatch cursor: the loop must read replies NEWER than this.
         pre_dispatch_ts = root_ts
         dispatch_ts = self.dispatch_current()
+        # Lossless integer ordering — set cursor to the validated dispatch ts
+        # when it is strictly later than the root.
         if _ts_key_pilot(dispatch_ts) > _ts_key_pilot(pre_dispatch_ts):
             pre_dispatch_ts = dispatch_ts
 
         def reader(last_seen_ts: str | None) -> Sequence[ThreadReply]:
+            # Pass the single authoritative Executor identity on every read so the
+            # transport filters strictly to the Executor's replies. No hardcoded
+            # ID; config.executor_user_id is the source of truth for the run.
             return self.config.slack.read_thread_replies(
                 self.config.channel,
                 root_ts,
@@ -977,7 +1279,10 @@ class MvpPilot:
                 self.config.executor_user_id,
             )
 
+        # Default live sleeper: REAL 60s wait via injected default. Tests pass
+        # a fake sleeper so no unit test ever really sleeps.
         live_sleeper = sleeper if sleeper is not None else _live_sleeper
+
         outcome = run_monitoring_loop(
             self._selected_contract(),
             read_replies=reader,
@@ -991,15 +1296,25 @@ class MvpPilot:
 
 
 def _live_sleeper(seconds: int) -> None:
+    """Default live sleeper: REAL wall-clock wait (exactly 60s per poll).
+
+    Injected into the WP4 loop as the production cadence. The MVP loop is
+    synchronous and in-session; this is the only place a real sleep occurs, and
+    only on the production/default path. Tests never call this.
+    """
     import time
 
     time.sleep(seconds)
 
 
+#: Back-compat no-op (tests that want zero wait without a real sleep use a fake
+#: sleeper instead). Kept only so old call sites that passed ``sleeper=None``
+#: explicitly still default to a *real* 60s wait via ``_live_sleeper``.
 def _noop_sleeper(_: int) -> None:
     return None
 
 
+# Re-export for convenience.
 __all__ = [
     "SLACK_TASK_STATUSES",
     "DOMAIN_TO_SLACK_STATUS",
