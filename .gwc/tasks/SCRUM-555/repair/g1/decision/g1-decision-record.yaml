@@ -9,18 +9,25 @@ trace:
   g0_snapshot: ../../g0/context-snapshot.yaml
 options_ref: ../brainstorming/g1-options.yaml
 preflight_ref: ../preflight/g1-preflight-report.yaml
-status: ACCEPTED
+status: SUPERSEDED
 selected_option_id: OPT-1
 user_decision:
   actor: user
   decided_at: '2026-08-24T00:55:00+07:00'
   source: Controller authorized remediation candidate materialization; reconciliation requires exact Human repair token
   explicit: true
-rationale: OPT-1 additive non-force two-parent reconciliation restores displaced 147cc34 lineage with zero content change and no history rewrite; OPT-2 (silent acceptance) and OPT-3 (further rewrite) rejected as governance violations.
+rationale: >-
+  OPT-1 additive non-force two-parent reconciliation restores displaced 147cc34
+  lineage with zero content change and no history rewrite; OPT-2 (silent
+  acceptance) and OPT-3 (further rewrite) rejected as governance violations.
+  This decision record is SUPERSEDED by Human resume authority (G2 V2
+  ar-scrum-555-g2-correction-v2-20260824 / 5a3a480bd37fdd7b) that authorized
+  the SAME execution continuation under the existing branch —
+  not a two-parent reconciliation.
 rejected_option_ids: [OPT-2, OPT-3]
 acceptance_criteria_refs: [AC-1, AC-2, AC-3]
 scope_hash: sha256:7108a49bc355eaa432ca5337ff0e025dbb1f6504182b054a625df7588097cd99
-g1_gate_outcome: PASS
+g1_gate_outcome: REJECTED
 authority_boundaries:
   grants: []
   excluded: [G4_MERGE, G5_DEPLOY, G6_PRODUCTION]
