@@ -176,6 +176,13 @@ describe("Task 2 RED — new projection_events migration contract", () => {
     expect(sql).toMatch(
       /\bprojection_ordinal\b\s+BIGINT\s+NOT\s+NULL/i,
     );
+    // Global ordinal semantics: projection_ordinal must NOT default to 0.
+    // DEFAULT 0 breaks durable ordered replay — every new event would start at
+    // ordinal 0, collapsing the global order. The canonical contract requires
+    // either no DEFAULT or an explicit computed ordinal assignment.
+    expect(sql).not.toMatch(
+      /\bprojection_ordinal\b\s+BIGINT\s+NOT\s+NULL\s+DEFAULT\s+0\b/i,
+    );
     // event_id must be the explicit PRIMARY KEY (canonical single-event identity),
     // NOT merely UNIQUE. Accept both table-constraint style
     // (`PRIMARY KEY (event_id)`) and inline column style (`event_id TEXT PRIMARY KEY`),
