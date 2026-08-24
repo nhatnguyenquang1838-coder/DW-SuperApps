@@ -224,3 +224,37 @@ def test_recovery_uses_persisted_continuation_and_controller_mailbox_not_slack_h
     assert not hasattr(recovered, "thread_history")
     assert not hasattr(recovered, "last_seen_ts")
     audit.close()
+
+
+def test_observed_executor_report_updates_controller_mailbox_checkpoint_before_recovery(tmp_path: Path) -> None:
+    backend = FakeMailboxBackend()
+    runtime, audit, session = _boot(tmp_path, backend)
+    executor_envelope = runtime.A2AEnvelope(
+        run_id=session.checkpoint.run_id,
+        node_id="node.1",
+        sender="hermes-cloud",
+        recipient="controller",
+        seq=1,
+        kind="REPORT",
+        state={"status": "DONE", "head_sha": "a" * 40},
+        updated_at="2026-08-25T00:11:00+07:00",
+    )
+    backend.bodies[backend.refs["hermes-cloud"]] = render_mailbox_comment(executor_envelope)
+
+    observation = runtime.poll_executor_mailbox(audit, backend, session)
+    controller_envelope = parse_mailbox_comment(backend.bodies[backend.refs["controller"]])
+    embedded = continuation_from_envelope(controller_envelope)
+
+    assert embedded == observation.session.checkpoint
+    assert embedded.phase == "REVIEW_EXECUTOR"
+    assert embedded.last_seen_executor_seq == 1
+    assert controller_envelope.seq == observation.session.checkpoint.controller_seq
+
+    recovered = runtime.recover_taskcontroller_session(
+        continuation_store=audit,
+        mailbox_backend=backend,
+        run_id=session.checkpoint.run_id,
+        controller_actor="controller",
+    )
+    assert recovered == observation.session
+    audit.close()
