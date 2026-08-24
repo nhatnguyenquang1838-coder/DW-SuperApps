@@ -55,6 +55,16 @@ interaction:
   pilot_binding: github-reference-mailbox
   one_actor_one_mutable_mailbox: true
   context_by_reference: true
+  mailbox_boot:
+    required_when_active: true
+    before_first_dispatch: true
+    controller_mailbox_required: true
+    executor_mailbox_required: true
+    continuation_required: true
+    exact_readback_required: true
+    machine_progress_transport: github-reference-mailbox
+    slack_machine_transport_fallback: forbidden
+    missing_behavior: TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED
   bounded_context:
     request_chars_max: 4096
     state_utf8_bytes_max: 8192
@@ -130,10 +140,12 @@ resilience:
     controller_mailbox_state: required
     audit_manifest: required-when-audit-configured
   pre_dispatch_order:
+    - materialize-controller-mailbox
+    - materialize-executor-mailbox
     - persist-continuation
     - write-controller-mailbox-with-checkpoint
     - exact-mailbox-readback
-    - wake-executor
+    - wake-executor-pointer-only
   recovery_inputs:
     - current-repository-and-run-identity
     - controller-mailbox-checkpoint
