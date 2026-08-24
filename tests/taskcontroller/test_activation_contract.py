@@ -56,6 +56,8 @@ def test_unmentioned_controller_returns_inactive_plan():
     assert plan.slack_canvases_required == ()
     assert plan.slack_canvas_projections_optional == ()
     assert plan.human_plane_policy is None
+    assert plan.full_e2e_runtime_active is False
+    assert plan.runtime_session is None
 
 
 def test_chatgpt_slack_hermes_loads_reference_a2a_and_repo_human_plane_policy():
@@ -67,7 +69,8 @@ def test_chatgpt_slack_hermes_loads_reference_a2a_and_repo_human_plane_policy():
     )
     assert plan.active is True
     assert plan.memory_fallback_allowed is False
-    assert plan.full_e2e_runtime_active is False
+    assert plan.full_e2e_runtime_active is True
+    assert plan.runtime_session == "taskcontroller/runtime/session.py"
     assert plan.interaction_binding == "github-reference-mailbox"
     assert plan.load_order == (
         "AGENTS.md",
@@ -95,6 +98,8 @@ def test_chatgpt_non_slack_does_not_invent_slack_or_human_plane_overlay():
         host="chatgpt",
     )
     assert plan.active is True
+    assert plan.full_e2e_runtime_active is True
+    assert plan.runtime_session == "taskcontroller/runtime/session.py"
     assert "agents/chatgpt-agent/agent-instructions.md" in plan.load_order
     assert "agents/chatgpt-agent/slack-controller-mvp.md" not in plan.load_order
     assert "agents/shared/taskcontroller-human-plane-policy.md" not in plan.load_order
@@ -112,11 +117,14 @@ def test_workspace_registers_taskcontroller_as_controller_not_power():
     assert "activation: explicit-mention" in workspace
 
 
-def test_registry_forbids_memory_fallback_and_defers_full_e2e():
+def test_registry_forbids_memory_fallback_and_activates_a2a_runtime():
     registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
     assert "memory_fallback_allowed: false" in registry
     assert "missing_required_entrypoint: BLOCKED" in registry
-    assert "full_e2e_runtime: deferred" in registry
+    assert "runtime_session: taskcontroller/runtime/session.py" in registry
+    assert "full_e2e_runtime: active" in registry
+    assert "full_e2e_runtime: deferred" not in registry
+    assert "legacy_slack_pilot: compatibility-only" in registry
     assert "taskcontroller/mvp/activation.py" in registry
     assert "taskcontroller/mvp/protocol_bridge.py" in registry
 
@@ -219,6 +227,8 @@ def test_active_taskcontroller_requires_mailbox_boot_before_first_dispatch():
     )
 
     assert plan.active is True
+    assert plan.full_e2e_runtime_active is True
+    assert plan.runtime_session == "taskcontroller/runtime/session.py"
     assert plan.mailbox_boot_required is True
     assert plan.mailbox_boot_fail_closed is True
     assert plan.machine_progress_transport == "github-reference-mailbox"

@@ -4,7 +4,7 @@ kind: WorkspaceController
 metadata:
   id: taskcontroller
   name: TaskController
-  status: active-mvp-a2a-pilot
+  status: active-a2a-runtime
 
 activation:
   mode: explicit-mention
@@ -136,6 +136,7 @@ resilience:
   continuation_checkpoint: required-before-dispatch
   active_run_semantic_final: forbidden
   continuation_module: taskcontroller/interaction/continuation.py
+  runtime_session: taskcontroller/runtime/session.py
   durable_pilot_copy:
     controller_mailbox_state: required
     audit_manifest: required-when-audit-configured
@@ -161,7 +162,9 @@ mvp:
   activation_resolver: taskcontroller/mvp/activation.py
   interaction_module: taskcontroller/interaction
   continuation_checkpoint: taskcontroller/interaction/continuation.py
-  full_e2e_runtime: deferred
+  runtime_session: taskcontroller/runtime/session.py
+  full_e2e_runtime: active
+  legacy_slack_pilot: compatibility-only
   explicitly_deferred:
     - SlackTaskControllerPack
     - LeaseManager
