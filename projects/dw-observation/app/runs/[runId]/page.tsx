@@ -88,10 +88,22 @@ function runViewFromDetail(
     task: UNKNOWN,
     controller: UNKNOWN,
     executor: UNKNOWN,
-    branch: UNKNOWN,
-    pr: UNKNOWN,
-    exactHead: UNKNOWN,
-    ci: UNKNOWN,
+    branch:
+      typeof run.branch === "string"
+        ? (run.branch as string)
+        : UNKNOWN,
+    pr:
+      typeof run.pr_number === "number" || typeof run.pr_number === "string"
+        ? String(run.pr_number)
+        : UNKNOWN,
+    exactHead:
+      typeof run.head_sha === "string"
+        ? (run.head_sha as string)
+        : UNKNOWN,
+    ci:
+      typeof run.ci_status === "string"
+        ? (run.ci_status as string)
+        : UNKNOWN,
     risk: UNKNOWN,
     blocker: UNKNOWN,
     now: UNKNOWN,

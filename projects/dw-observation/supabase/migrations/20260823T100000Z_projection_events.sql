@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS projection_events (
   source_event_id    TEXT        NOT NULL,
   event_type         TEXT        NOT NULL,
   payload            JSONB       NOT NULL DEFAULT '{}'::jsonb,
-  projection_ordinal BIGINT      NOT NULL DEFAULT 0,
+  projection_ordinal BIGINT      NOT NULL,
   occurred_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT uq_projection_event UNIQUE (run_id, source_system, source_event_id)
@@ -26,16 +26,21 @@ RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  PERFORM pg_notify('projection_event', json_build_object(
-    'run_id', NEW.run_id,
-    'event_id', NEW.event_id,
-    'source_system', NEW.source_system,
-    'source_event_id', NEW.source_event_id,
-    'event_type', NEW.event_type,
-    'payload', NEW.payload,
-    'projection_ordinal', NEW.projection_ordinal,
-    'occurred_at', NEW.occurred_at
-  )::text);
+  PERFORM realtime.send(
+    json_build_object(
+      'run_id', NEW.run_id,
+      'event_id', NEW.event_id,
+      'source_system', NEW.source_system,
+      'source_event_id', NEW.source_event_id,
+      'event_type', NEW.event_type,
+      'payload', NEW.payload,
+      'projection_ordinal', NEW.projection_ordinal,
+      'occurred_at', NEW.occurred_at
+    )::text,
+    'projection_event',
+    'observatory:' || NEW.run_id,
+    false
+  );
   RETURN NEW;
 END;
 $$;

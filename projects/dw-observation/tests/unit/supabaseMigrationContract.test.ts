@@ -128,7 +128,7 @@ describe("Task 2 RED — new projection_events migration contract", () => {
       // Remove single-line comments (everything from -- to end of line)
       .replace(/--[^\n]*/g, "");
     expect(commentStripped).toMatch(
-      /realtime\s*\.\s*send\s*\(\s*'[^']*'\s*,\s*'projection_event'\s*,\s*'observatory:'\s*\|\|\s*run_id\s*,\s*false\s*\)/i,
+      /realtime\s*\.\s*send\s*\(\s*[\s\S]*?'projection_event'\s*,\s*'observatory:'\s*\|\|\s*new\.run_id\s*,\s*false\s*\)/i,
     );
   });
 

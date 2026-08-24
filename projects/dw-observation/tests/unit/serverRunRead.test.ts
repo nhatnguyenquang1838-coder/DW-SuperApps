@@ -190,6 +190,8 @@ describe("serverRunRead — Task 3 RED contract", () => {
               source_system: "taskcontroller",
               head_sha: "abc123",
               branch: "main",
+              pr_number: 86,
+              ci_status: "success",
             },
           ],
           error: null,
@@ -239,6 +241,8 @@ describe("serverRunRead — Task 3 RED contract", () => {
       source_system: "taskcontroller",
       head_sha: "abc123",
       branch: "main",
+      pr_number: 86,
+      ci_status: "success",
     });
     expect(detail.gates).toEqual([
       { gate_id: "G1", run_id: "RUN-1", gate_label: "G1", state: "PASS" },
