@@ -31,6 +31,16 @@ Keep visible when material:
 
 The RootCard is a projection, never machine authority. Human actions such as PAUSE/STOP/APPROVE/MERGE are intents whose authority must still be validated against the active repository/project contract.
 
+## Slack reply rendering
+
+For TaskController human-plane replies:
+- prefer Slack Block Kit for structure;
+- render rich text fields as `mrkdwn`;
+- always include a plain-text fallback for accessibility/notification surfaces;
+- keep lifecycle updates inside the canonical TaskController thread;
+- suppress duplicate progress replies when mailbox seq and material state are unchanged;
+- use Slack only for concise human-visible consequences, never as machine progress transport.
+
 ## A2A mailbox boot before Slack delegation
 
 Before the first Executor dispatch in a TaskController session, ChatGPT MUST have:
@@ -51,20 +61,21 @@ After a wake-up, the Executor reads the canonical command from its Agent mailbox
 
 ## Monitoring
 
-Stay in-session at the configured cadence:
+Stay in-session using adaptive polling from `controllers/taskcontroller.yaml`:
 
 ```text
-sleep
+start at 60s
 → read only the exact Executor mailbox comment named by the continuation poll target
 → compare mailbox seq to mailbox cursor
-→ stale/equal: ignore silently
-→ newer semantic result: validate against the contracted milestone
+→ stale/equal: ignore silently and back off 60s → 120s → 180s
+→ newer semantic result: validate against the contracted milestone and reset cadence to 60s
 → update continuation/cursor
 → project only material human-visible consequences to Slack
 ```
 
 Rules:
 - polling is silent;
+- 180 seconds is the maximum configured polling delay;
 - no heartbeat or waiting spam;
 - no whole Slack-thread replay for machine recovery;
 - no scheduler/reminder/detached automation replaces an active required polling loop;
