@@ -1,13 +1,10 @@
 """Executable TaskController A2A mailbox session boundary.
 
-This module is the canonical active runtime path for TaskController Agent-to-Agent
-communication.  It composes the transport-neutral A2A envelope, crash-safe
-continuation checkpoint, and a narrow host-provided mailbox backend into one
-fail-closed pre-dispatch/readback/poll/recovery contract.
-
-Slack is deliberately absent.  A host may send a pointer-only wake-up after a
-successful Controller-mailbox readback, but machine commands, progress, cursors,
-and recovery state live in the mailbox/continuation contract only.
+This is the canonical active machine-runtime path for TaskController. It binds
+transport-neutral A2A envelopes, crash-safe continuation checkpoints, and a
+host-provided mailbox backend. Slack is deliberately absent from machine
+transport: hosts may emit pointer-only wakeups only after a successful mailbox
+write/readback boundary.
 """
 
 from __future__ import annotations
@@ -51,7 +48,7 @@ class MailboxBackend(Protocol):
 
 @dataclass(frozen=True)
 class TaskControllerRuntimeSession:
-    """Bound A2A session state sufficient for dispatch, polling, and recovery."""
+    """Bound A2A state sufficient for dispatch, polling, and recovery."""
 
     controller_actor: str
     checkpoint: ControllerContinuation
@@ -81,7 +78,9 @@ class ExecutorMailboxObservation:
             raise TaskControllerValidationError("STALE mailbox result must not expose an envelope")
 
 
-def _mailbox_boot_failure(detail: str, exc: Exception | None = None) -> TaskControllerValidationError:
+def _mailbox_boot_failure(
+    detail: str, exc: Exception | None = None
+) -> TaskControllerValidationError:
     error = TaskControllerValidationError(f"{MAILBOX_BOOT_ERROR}: {detail}")
     if exc is not None:
         error.__cause__ = exc
@@ -91,7 +90,7 @@ def _mailbox_boot_failure(detail: str, exc: Exception | None = None) -> TaskCont
 def _required_mailbox_ref(mailbox_backend: MailboxBackend, actor: str) -> str:
     try:
         mailbox_ref = mailbox_backend.ensure_mailbox(actor)
-    except Exception as exc:  # host boundary: normalize to fail-closed domain error
+    except Exception as exc:
         raise _mailbox_boot_failure(f"cannot materialize mailbox for {actor}", exc) from exc
     if not isinstance(mailbox_ref, str) or not mailbox_ref.strip():
         raise _mailbox_boot_failure(f"mailbox ref missing for {actor}")
@@ -112,8 +111,6 @@ def _exact_write_readback(
     except Exception as exc:
         raise _mailbox_boot_failure("controller mailbox write/readback failed", exc) from exc
 
-    # Exact bytes are intentional: the mailbox comment is the durable binding,
-    # not merely a JSON payload that happens to parse to the same envelope.
     if readback != body:
         raise _mailbox_boot_failure("controller mailbox exact readback differs")
     try:
@@ -148,6 +145,38 @@ def _new_controller_envelope(
     return bind_continuation(envelope, checkpoint)
 
 
+def _refresh_controller_checkpoint(
+    mailbox_backend: MailboxBackend,
+    *,
+    session: TaskControllerRuntimeSession,
+    checkpoint: ControllerContinuation,
+) -> A2AEnvelope:
+    """Rewrite the same Controller mailbox with a newer bounded checkpoint.
+
+    Executor observations advance continuation state without creating a new
+    Controller command. Therefore the Controller envelope keeps its sender seq,
+    kind, request, and refs while only the bounded continuation/updated_at moves.
+    Exact readback makes the mailbox and durable continuation agree before the
+    observation is returned to the host.
+    """
+
+    if checkpoint.controller_seq != session.controller_envelope.seq:
+        raise TaskControllerValidationError(
+            "checkpoint refresh cannot change Controller command sequence"
+        )
+    refreshed = bind_continuation(
+        replace(session.controller_envelope, updated_at=checkpoint.updated_at),
+        checkpoint,
+    )
+    _exact_write_readback(
+        mailbox_backend,
+        mailbox_ref=checkpoint.controller_mailbox_ref,
+        envelope=refreshed,
+        checkpoint=checkpoint,
+    )
+    return refreshed
+
+
 def boot_taskcontroller_session(
     *,
     continuation_store: ContinuationStore,
@@ -162,15 +191,10 @@ def boot_taskcontroller_session(
     updated_at: str,
     human_root_ref: str | None = None,
 ) -> TaskControllerRuntimeSession:
-    """Materialize both mailboxes and exact-readback the first command before wake-up.
-
-    Host code MUST call this before first Executor dispatch.  A pointer-only
-    wake-up may be sent only after this function returns successfully.
-    """
+    """Materialize both mailboxes and exact-readback before first wake-up."""
 
     controller_mailbox_ref = _required_mailbox_ref(mailbox_backend, controller_actor)
     executor_mailbox_ref = _required_mailbox_ref(mailbox_backend, executor_actor)
-
     checkpoint = ControllerContinuation(
         run_id=run_id,
         controller_epoch=1,
@@ -219,7 +243,7 @@ def dispatch_taskcontroller_command(
     updated_at: str,
     kind: str = EnvelopeKind.COMMAND.value,
 ) -> TaskControllerRuntimeSession:
-    """Dispatch the next bounded command/correction through the same Controller mailbox."""
+    """Dispatch the next bounded command/correction through the same mailbox."""
 
     if not isinstance(session, TaskControllerRuntimeSession):
         raise TaskControllerValidationError("session must be TaskControllerRuntimeSession")
@@ -273,8 +297,6 @@ def _poll_ref(checkpoint: ControllerContinuation) -> str:
     if checkpoint.phase == ContinuationPhase.WAIT_EXECUTOR.value:
         return checkpoint.poll_target().mailbox_ref
     if checkpoint.phase == ContinuationPhase.REVIEW_EXECUTOR.value:
-        # A repeated read at review boundary is permitted only to prove the
-        # mutable mailbox has not advanced; a newer message is rejected below.
         return checkpoint.executor_mailbox_ref
     raise TaskControllerValidationError("session is not at an executor mailbox boundary")
 
@@ -284,7 +306,7 @@ def poll_executor_mailbox(
     mailbox_backend: MailboxBackend,
     session: TaskControllerRuntimeSession,
 ) -> ExecutorMailboxObservation:
-    """Read only the exact bound Executor mailbox and advance only exact expected seq."""
+    """Read only the exact Executor mailbox and advance only exact expected seq."""
 
     if not isinstance(session, TaskControllerRuntimeSession):
         raise TaskControllerValidationError("session must be TaskControllerRuntimeSession")
@@ -302,8 +324,7 @@ def poll_executor_mailbox(
         raise TaskControllerValidationError("executor mailbox actor mismatch")
     if envelope.recipient != session.controller_actor:
         raise TaskControllerValidationError("executor mailbox recipient mismatch")
-    head_sha = envelope.state.get("head_sha")
-    if head_sha != checkpoint.exact_head_sha:
+    if envelope.state.get("head_sha") != checkpoint.exact_head_sha:
         raise TaskControllerValidationError("executor mailbox exact head mismatch")
 
     if envelope.seq <= checkpoint.last_seen_executor_seq:
@@ -328,10 +349,16 @@ def poll_executor_mailbox(
     recovered = recover_continuation(continuation_store, advanced.run_id)
     if recovered != advanced:
         raise TaskControllerValidationError("executor observation continuation readback failed")
+
+    refreshed_controller = _refresh_controller_checkpoint(
+        mailbox_backend,
+        session=session,
+        checkpoint=advanced,
+    )
     next_session = TaskControllerRuntimeSession(
         controller_actor=session.controller_actor,
         checkpoint=advanced,
-        controller_envelope=session.controller_envelope,
+        controller_envelope=refreshed_controller,
     )
     return ExecutorMailboxObservation(
         status=POLL_OBSERVED,
@@ -347,7 +374,7 @@ def recover_taskcontroller_session(
     run_id: str,
     controller_actor: str,
 ) -> TaskControllerRuntimeSession:
-    """Recover ACTIVE machine state from continuation + exact Controller mailbox only."""
+    """Recover ACTIVE state from durable continuation + exact Controller mailbox."""
 
     checkpoint = recover_continuation(continuation_store, run_id)
     if checkpoint is None:
@@ -364,6 +391,8 @@ def recover_taskcontroller_session(
         raise _mailbox_boot_failure("controller mailbox actor mismatch during recovery")
     if envelope.recipient != checkpoint.executor_actor:
         raise _mailbox_boot_failure("controller mailbox executor mismatch during recovery")
+    if envelope.state.get("head_sha") != checkpoint.exact_head_sha:
+        raise _mailbox_boot_failure("controller mailbox exact head mismatch during recovery")
     if embedded != checkpoint:
         raise _mailbox_boot_failure("controller mailbox continuation differs during recovery")
     return TaskControllerRuntimeSession(
