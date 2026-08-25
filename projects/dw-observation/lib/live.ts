@@ -28,19 +28,8 @@ export interface ProjectionEvent {
   // Durable global cross-source order, assigned by Postgres (projection_ordinal
   // BIGINT GENERATED ALWAYS AS IDENTITY). Used for historical ORDER BY only.
   projection_ordinal?: number;
-  // Provenance timestamp (data only; NOT used for ordering). Supplied by the
-  // canonical producer (TaskController/GWC); Postgres must NOT fabricate it.
+  // Provenance timestamp (data only; NOT used for ordering).
   occurred_at?: string;
-  // Source integrity digest (TEXT NOT NULL in the canonical projection_events
-  // envelope). Preserved verbatim in real mode; absent in fixtures.
-  source_digest?: string;
-  // Read-only projection marker (BOOLEAN NOT NULL DEFAULT TRUE in canonical
-  // envelope). Preserved verbatim in real mode; absent in fixtures.
-  read_only_projection?: boolean;
-  // Source actor. May be a string (legacy) or a deterministic JSON object
-  // (kind/id) produced by the canonical source; normalized consistently in
-  // real mode rather than dropped to UNKNOWN.
-  actor?: string | object;
   [key: string]: unknown;
 }
 

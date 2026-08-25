@@ -50,11 +50,7 @@ export function mapRowToProjectionEvent(row: Record<string, unknown>): Projectio
       : [],
     authority_ref: row.authority_ref != null ? String(row.authority_ref) : undefined,
     source_digest: row.source_digest != null ? String(row.source_digest) : undefined,
-    read_only_projection:
-      row.read_only_projection != null
-        ? Boolean(row.read_only_projection)
-        : undefined,
-    };
+  };
 }
 
 export class PostgresEventStore implements EventStore {

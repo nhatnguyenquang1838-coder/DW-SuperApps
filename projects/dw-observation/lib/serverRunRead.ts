@@ -185,7 +185,18 @@ export async function readServerRunDetail(
   if (eventsRes.error) {
     return { ...degradedDetail(built.backend), run, gates, nodes };
   }
-  const events = toRows(eventsRes.data).map(mapRowToProjectionEvent);
+  const rows = toRows(eventsRes.data);
+  const events = rows.map((row) => {
+    const evt = mapRowToProjectionEvent(row);
+    // Preserve read_only_projection from the raw DB row (BLOCKER B — authorized surface).
+    // The restored postgresEventStore mapper no longer maps it; the authorized
+    // serverRunRead detail path re-injects it from the selected row so the
+    // blocker B assertions remain satisfied without touching the restored path.
+    if (row.read_only_projection != null) {
+      (evt as Record<string, unknown>).read_only_projection = Boolean(row.read_only_projection);
+    }
+    return evt;
+  });
   const canonicalHistoryAvailable = events.length > 0;
 
   return {

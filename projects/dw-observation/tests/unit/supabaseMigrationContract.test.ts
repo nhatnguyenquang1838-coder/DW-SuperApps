@@ -22,11 +22,76 @@
  *   - DML 20260823T090000Z_observatory_backfill_dml.sql sha256 = f5255eea...
  */
 
+// Inline BLOCKER A helper (occurred_at contract) — migrated from deleted
+// tests/unit/occurredAtContract.ts to keep the approved migration contract intact
+// with no separate helper module on disk.
+//
+// Canonical producer (TaskController/GWC) MUST supply source occurred_at;
+// Postgres must NOT fabricate it via DEFAULT now() or any other DB-generated
+// timestamp. We parse the raw lowercased SQL text and reject any DEFAULT on
+// occurred_at, including function-call defaults (now/current/clock...).
+interface OccurredAtSpec {
+  hasTimestampType: boolean;
+  hasNotNull: boolean;
+  hasDefault: boolean;
+  defaultExpression: string;
+  defaultIsCall: boolean;
+  rawColumnDef: string;
+}
+
+function parseOccurredAt(sql: string): OccurredAtSpec {
+  const colRe = /occurred_at\s+timestamptz\s+not\s+null(?:\s+\S+)*/i;
+  const m = sql.match(colRe);
+  if (!m) {
+    return {
+      hasTimestampType: false,
+      hasNotNull: false,
+      hasDefault: false,
+      defaultExpression: "",
+      defaultIsCall: false,
+      rawColumnDef: "",
+    };
+  }
+  const def = m[0];
+  const hasTimestampType = /timestamptz/i.test(def);
+  const hasNotNull = /\bnot\s+null\b/i.test(def);
+  const defaultM = def.match(/\bdefault\s+(.+)$/i);
+  const hasDefault = !!defaultM;
+  const defaultExpression = hasDefault ? defaultM[1].trim() : "";
+  const defaultIsCall =
+    hasDefault && /^\s*\w[\w.]*\s*\(/.test(defaultExpression);
+  return {
+    hasTimestampType,
+    hasNotNull,
+    hasDefault,
+    defaultExpression,
+    defaultIsCall,
+    rawColumnDef: def,
+  };
+}
+
+function assertOccurredAtContract(spec: OccurredAtSpec): string {
+  if (!spec.hasTimestampType) return "occurred_at must be TIMESTAMPTZ";
+  if (!spec.hasNotNull) return "occurred_at must be NOT NULL";
+  if (spec.hasDefault) {
+    if (spec.defaultIsCall) {
+      return (
+        `occurred_at must NOT have a DB-generated DEFAULT (${spec.defaultExpression}); ` +
+        "the canonical producer supplies the source timestamp"
+      );
+    }
+    return (
+      `occurred_at must NOT have any DEFAULT (${spec.defaultExpression}); ` +
+      "the canonical producer supplies the source timestamp"
+    );
+  }
+  return "";
+}
+
 import { describe, it, expect, beforeAll } from "vitest";
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
-import { parseOccurredAt, assertOccurredAtContract } from "./occurredAtContract";
 
 const MIGRATIONS_DIR = path.resolve(__dirname, "..", "..", "supabase", "migrations");
 const NEW_MIGRATION = path.join(
