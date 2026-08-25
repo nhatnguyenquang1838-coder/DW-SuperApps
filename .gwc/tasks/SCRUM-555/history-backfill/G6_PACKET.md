@@ -48,7 +48,7 @@ projection_events=0 (before live writes; no historical projection backfill)
 - RLS enabled; SELECT-only policy `projection_events_select_publishable ON
   projection_events FOR SELECT TO anon, authenticated USING (true)`.
 - NO client INSERT/UPDATE/DELETE policy; NO historical projection backfill.
-- Authorization: Human *** V2 CONSUMED (`ar-scrum-555-g2-correction-v2-20260824 / 5a3a480bd37fdd7b`); recovered under `ar-scrum-555-g2-scope-recovery-v1-20260825 / 39b4bfac184a6478`.
+- Authorization: Human G2 V2 CONSUMED (`ar-scrum-555-g2-correction-v2-20260824 / 5a3a480bd37fdd7b`); recovered under `ar-scrum-555-g2-scope-recovery-v1-20260825 / 39b4bfac184a6478`.
 
 ## Real app read path (Task 3, publishable/RLS-compatible) — TERRAFORMED for E2E GREEN
 - `lib/serverRunRead.ts`: real list/detail read `runs`, `run_gates`, `run_nodes`,
