@@ -13,7 +13,7 @@
 |---|-----------|-----------------------|
 | 1 | `20260823T080000Z_observatory_history.sql` (DDL, 8 tables) | `ef880051d8fb7caf40005206d1200c3824509f8084ec771324866ee29500e185` |
 | 2 | `20260823T090000Z_observatory_backfill_dml.sql` (DML, idempotent) | `5bcee0d6ea6a34b0b8cef91ff5a860ff2289a0f23ff9386a92105ee62aff23df` |
-| 3 | `20260823T100000Z_projection_events.sql` (projection_events) | `5eb4223c37e75a49d6fbe5d5875c069c388fd8fd6f695482e6d708fe03e85bfd` |
+|| 3 | `20260823T100000Z_projection_events.sql` (projection_events) | `D79F7811325501B7EF7D321219D3A6EBD003EB65717E50CEC60A8414B3A716FC` |
 
 ## Expected post-apply schema (9 public tables)
 `runs`, `run_events`, `run_gates`, `run_nodes`, `run_artifacts`, `run_checkpoints`, `run_edges`, `run_sources`, `projection_events`.
@@ -118,15 +118,16 @@ After R6 correction pass:
   `Validate workspace` run `32743287917` = SUCCESS (bound by Controller/G3
   delivery evidence, not by this artifact).
 
-After R7 correction pass:
-- Migration SHA256 (LF, R7 normalized full schema): `5eb4223c37e75a49d6fbe5d5875c069c388fd8fd6f695482e6d708fe03e85bfd`.
-- Verification evidence: migration contract 26/26, serverRunRead 6/6,
-  PostgresEventStore 6/6, full vitest 267/267 (16 files), `tsc --noEmit` 0 errors.
-- Migration aligned to canonical `sql/projection_events.sql` RunProjectionEvent v1:
-  DB-assigned `projection_ordinal BIGINT GENERATED ALWAYS AS IDENTITY`, full
-  normalized column set, raw jsonb broadcast payload (no `::text` cast).
-- Final pushed HEAD and CI result are bound by Controller/G3 delivery evidence,
-  not by this artifact's self-referential claims.
+After R7 G2 additive recovery (RESTORE_ALL_THREE_UNAUTHORIZED_PATHS_EXACTLY):
+
+- Recovery commit: `3aa7f7cc452cf7b94cf8c9009e57d536330d18b3` (additive, non-force push on `auto/SCRUM-555-observatory-g6-readiness-r1`; preserves `089539eb` history).
+- Restored to exact `da8b514` tree content: `lib/live.ts`, `lib/postgresEventStore.ts`; deleted `tests/unit/occurredAtContract.ts`.
+- Approved surfaces retained: `projects/dw-observation/supabase/migrations/20260823T100000Z_projection_events.sql` (BLOCKER A `occurred_at TIMESTAMPTZ NOT NULL`, no DEFAULT), `lib/serverRunRead.ts` (BLOCKER B `source_digest` + `read_only_projection`), `app/runs/[runId]/page.tsx`, `tests/unit/serverRunRead.test.ts`.
+- Inline occurred_at contract assertions in `tests/unit/supabaseMigrationContract.test.ts` (no separate helper file on disk).
+- Validation: migration contract 27/27 PASS, serverRunRead 8/8 PASS, full vitest 270/270 PASS (16 files), `tsc --noEmit` 0 errors.
+- Migration SHA256 (LF): `D79F7811325501B7EF7D321219D3A6EBD003EB65717E50CEC60A8414B3A716FC`.
+- Guard hashes unchanged: DDL `ef880051…`, DML `5bcee0d6…`.
+- Final pushed HEAD `3aa7f7cc` + CI not yet bound by Controller/G3 delivery evidence.
 
 ## Exclusions
 - No remote Supabase apply (G6 boundary). No pre-prod→main, no deploy, no GWC
