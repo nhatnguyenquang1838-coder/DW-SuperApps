@@ -13,7 +13,7 @@
 |---|-----------|-----------------------|
 | 1 | `20260823T080000Z_observatory_history.sql` (DDL, 8 tables) | `ef880051d8fb7caf40005206d1200c3824509f8084ec771324866ee29500e185` |
 | 2 | `20260823T090000Z_observatory_backfill_dml.sql` (DML, idempotent) | `5bcee0d6ea6a34b0b8cef91ff5a860ff2289a0f23ff9386a92105ee62aff23df` |
-|| 3 | `20260823T100000Z_projection_events.sql` (projection_events) | `D79F7811325501B7EF7D321219D3A6EBD003EB65717E50CEC60A8414B3A716FC` |
+| 3 | `20260823T100000Z_projection_events.sql` (projection_events) | `D79F7811325501B7EF7D321219D3A6EBD003EB65717E50CEC60A8414B3A716FC` |
 
 ## Expected post-apply schema (9 public tables)
 `runs`, `run_events`, `run_gates`, `run_nodes`, `run_artifacts`, `run_checkpoints`, `run_edges`, `run_sources`, `projection_events`.
@@ -48,7 +48,7 @@ projection_events=0 (before live writes; no historical projection backfill)
 - RLS enabled; SELECT-only policy `projection_events_select_publishable ON
   projection_events FOR SELECT TO anon, authenticated USING (true)`.
 - NO client INSERT/UPDATE/DELETE policy; NO historical projection backfill.
-- Authorization: Human G2 V2 CONSUMED (`ar-scrum-555-g2-correction-v2-20260824 / 5a3a480bd37fdd7b`).
+- Authorization: Human *** V2 CONSUMED (`ar-scrum-555-g2-correction-v2-20260824 / 5a3a480bd37fdd7b`); recovered under `ar-scrum-555-g2-scope-recovery-v1-20260825 / 39b4bfac184a6478`.
 
 ## Real app read path (Task 3, publishable/RLS-compatible) — TERRAFORMED for E2E GREEN
 - `lib/serverRunRead.ts`: real list/detail read `runs`, `run_gates`, `run_nodes`,
@@ -127,7 +127,7 @@ After R7 G2 additive recovery (RESTORE_ALL_THREE_UNAUTHORIZED_PATHS_EXACTLY):
 - Validation: migration contract 27/27 PASS, serverRunRead 8/8 PASS, full vitest 270/270 PASS (16 files), `tsc --noEmit` 0 errors.
 - Migration SHA256 (LF): `D79F7811325501B7EF7D321219D3A6EBD003EB65717E50CEC60A8414B3A716FC`.
 - Guard hashes unchanged: DDL `ef880051…`, DML `5bcee0d6…`.
-- Final pushed HEAD `3aa7f7cc` + CI not yet bound by Controller/G3 delivery evidence.
+- Implementation/recovery commits recorded above; final pushed HEAD and CI result are bound externally by Controller/G3 delivery evidence (exact-head CI run, PR head OID), not by self-referential claims in this artifact.
 
 ## Exclusions
 - No remote Supabase apply (G6 boundary). No pre-prod→main, no deploy, no GWC
