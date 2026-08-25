@@ -466,8 +466,8 @@ function main() {
     process.exit(0);
   }
   console.log(JSON.stringify({
-    migration_ddl: "20260823T080000Z_observatory_history.sql",
-    migration_dml: "20260823T090000Z_observatory_backfill_dml.sql",
+    migration_ddl: "20260823080000_observatory_history.sql",
+    migration_dml: "20260823090000_observatory_backfill_dml.sql",
     target_project: "auswvdxoetufwiaxutib", dry_run: true, remote_apply: false,
     apply_path: "supabase db push --linked --include-all (committed migration; no separate psql)",
     g6_boundary: "STOP — no remote apply until exact G6 approval bound",

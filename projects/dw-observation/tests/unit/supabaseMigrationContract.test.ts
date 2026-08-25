@@ -1,7 +1,7 @@
 /**
  * supabaseMigrationContract.test.ts
  * TASK 2 RED — contract test for the single approved new migration:
- *   projects/dw-observation/supabase/migrations/20260823T100000Z_projection_events.sql
+ *   projects/dw-observation/supabase/migrations/20260823100000_projection_events.sql
  *
  * This test binds the migration SQL file directly (no live Supabase / no network)
  * and asserts the full projection_events contract. It must be RED until the
@@ -18,8 +18,8 @@
  *   - NO client INSERT/UPDATE/DELETE policy
  *   - NO historical projection-event backfill (migration must not INSERT rows)
  * Guard (unchanged existing migrations):
- *   - DDL 20260823T080000Z_observatory_history.sql sha256 = 346d805c...
- *   - DML 20260823T090000Z_observatory_backfill_dml.sql sha256 = f5255eea...
+ *   - DDL 20260823080000_observatory_history.sql sha256 = 346d805c...
+ *   - DML 20260823090000_observatory_backfill_dml.sql sha256 = f5255eea...
  */
 
 // Inline BLOCKER A helper (occurred_at contract) — migrated from deleted
@@ -96,15 +96,15 @@ import crypto from "node:crypto";
 const MIGRATIONS_DIR = path.resolve(__dirname, "..", "..", "supabase", "migrations");
 const NEW_MIGRATION = path.join(
   MIGRATIONS_DIR,
-  "20260823T100000Z_projection_events.sql",
+  "20260823100000_projection_events.sql",
 );
 const DDL_FILE = path.join(
   MIGRATIONS_DIR,
-  "20260823T080000Z_observatory_history.sql",
+  "20260823080000_observatory_history.sql",
 );
 const DML_FILE = path.join(
   MIGRATIONS_DIR,
-  "20260823T090000Z_observatory_backfill_dml.sql",
+  "20260823090000_observatory_backfill_dml.sql",
 );
 
 // Canonical immutable migration SHA-256 per .gwc/tasks/SCRUM-555/history-backfill/
@@ -445,12 +445,12 @@ describe("Task 2 RED — new projection_events migration contract", () => {
 });
 
 describe("Guard — existing migration bytes unchanged (canonical G6 hashes)", () => {
-  it("DDL 20260823T080000Z_observatory_history.sql sha256 == canonical ef880051…", async () => {
+  it("DDL 20260823080000_observatory_history.sql sha256 == canonical ef880051…", async () => {
     const s = await sha256File(DDL_FILE);
     expect(s).toBe(EXPECTED_DDL_SHA256);
   });
 
-  it("DML 20260823T090000Z_observatory_backfill_dml.sql sha256 == canonical 5bcee0d6…", async () => {
+  it("DML 20260823090000_observatory_backfill_dml.sql sha256 == canonical 5bcee0d6…", async () => {
     const s = await sha256File(DML_FILE);
     expect(s).toBe(EXPECTED_DML_SHA256);
   });
