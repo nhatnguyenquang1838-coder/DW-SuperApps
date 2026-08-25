@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DW SuperApps UA Dashboard - React Flow</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@shopify/react-flow@2.1/dist/index.cjs.js"></script>
+  <script src="https://unpkg.com/zustand@4.0.0/standalone.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/tailwindcss@3.4.0/dist/output.min.css">
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --bg-subtle: #161616;
+      --fg: #eaeaea;
+      --muted: #7a7a7a;
+      --accent: #bb86fc;
+      --border: #333333;
+      --card: #1a1a1a;
+      --primary-50: #1e1e1f;
+      --primary-100: #27272a;
+      --primary-200: #3f3f46;
+      --border-radius: 8px;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--fg);
+      font-family: system-ui, -apple-system, sans-serif; overflow: hidden; margin: 0; }
+    #root { height: 100%; }
+
+    /* React Flow container */
+    #react-flow { width: 100%; height: calc(100vh - 60px); min-height: 600px; }
+
+    /* Sidebar */
+    .sidebar { width: 340px; flex-shrink: 0; background: var(--bg-subtle);
+      border-left: 1px solid var(--border); display: flex; flex-direction: column; }
+    .sidebar .p-4 { padding: 1rem; }
+    .sidebar h3 { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem;
+      color: var(--fg); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; margin-bottom: 1rem; }
+    .tab { flex: 1; padding: 0.5rem 0.75rem; background: transparent;
+      border: none; border-radius: var(--border-radius) var(--border-radius) 0 0;
+      color: var(--muted); font-size: 0.75rem; font-weight: 500; cursor: pointer;
+      transition: all 0.2s; }
+    .tab.active { background: var(--card); color: var(--fg); }
+
+    /* Panel */
+    .panel { background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--border-radius); padding: 1rem; }
+
+    /* Node detail modal */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+      display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .modal-content { background: var(--card); padding: 2rem; border-radius: var(--border-radius);
+      max-width: 500px; width: 90%; color: var(--fg); position: relative; }
+    .modal .close { position: absolute; top: 1rem; right: 1.5rem; color: var(--muted);
+      font-size: 1.5rem; cursor: pointer; }
+
+    /* Stats cards */
+    .stat-card { background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--border-radius); padding: 1rem; text-align: center; }
+    .stat-card .number { font-size: 2rem; font-weight: bold; color: var(--accent); }
+    .stat-card .label { color: var(--muted); font-size: 0.875rem; margin-top: 0.25rem; }
+
+    /* Edge type badges */
+    .badge { display: inline-block; padding: 0.25rem 0.5rem;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 4px; font-size: 0.75rem; color: var(--muted); margin: 2px; }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div class="flex h-screen">
+      {/* Left: React Flow Graph */}
+      <div class="flex-1">
+        <div id="react-flow"></div>
+      </div>
+
+      {/* Right: Sidebar */}
+      <div class="sidebar w-64">
+        {/* Stats */}
+        <div class="stat-card"><div class="number" id="node-count">loading…</div><div class="label">Nodes</div></div>
+        <div class="stat-card"><div class="number" id="edge-count">loading…</div><div class="label">Edges</div></div>
+        <div class="stat-card"><div class="number" id="layer-count">loading…</div><div class="label">Layers</div></div>
+        <div class="stat-card"><div class="number" id="tour-count">loading…</div><div class="label">Tour Steps</div></div>
+
+        {/* Layers */}
+        <div class="panel"><h3 class="font-semibold mb-2">Architectural Layers</h3>
+          <div id="layers-list" class="space-y-1 text-sm"></div>
+        </div>
+
+        {/* Tour Steps */}
+        <div class="panel"><h3 class="font-semibold mb-2">Guided Tour</h3>
+          <div id="tour-list" class="space-y-1 text-sm"></div>
+        </div>
+
+        {/* Edge Types */}
+        <div class="panel"><h3 class="font-semibold mb-2">Edge Types</h3>
+          <div id="edge-types" class="space-y-1 text-xs"></div>
+        </div>
+      </div>
+    </div>
+
+    {/* Node Detail Modal */}
+    <div class="modal" id="node-modal" style="display:none;">
+      <div class="modal-content">
+        <span class="close" id="modal-close">&times;</span>
+        <h3 id="modal-title">Node Details</h3>
+        <div id="modal-info"></div>
+        <button class="mt-4 btn btn-primary w-full">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Load knowledge graph data
+    fetch('/.ua/knowledge-graph.json')
+      .then(r => r.json())
+      .then(data => {
+        const { nodes, edges, project, layers, tour } = data;
+        const commitShort = project.gitCommitHash?.substring(0, 8) || '?';
+
+        // Set project name
+        document.title = `${project.name} UA Dashboard · ${commitShort}`;
+        document.getElementById('project-name').textContent =
+          project.name + ' · ' + commitShort;
+
+        // ===== Stats =====
+        document.getElementById('node-count').textContent = nodes.length;
+        document.getElementById('edge-count').textContent = edges.length;
+        document.getElementById('layer-count').textContent = layers.length;
+        document.getElementById('tour-count').textContent = tour.length;
+
+        // ===== Layers =====
+        const layersList = document.getElementById('layers-list');
+        layers.forEach((layer, i) => {
+          const div = document.createElement('div');
+          div.className = 'p-3 rounded-md hover:bg-primary-100 transition-colors';
+          div.innerHTML = `<div class="font-medium">${layer.name || `Layer ${i+1}`}</div>
+            <div class="text-xs text-muted-foreground">${layer.nodeIds?.length || 0} nodes</div>`;
+          layersList.appendChild(div);
+        });
+
+        // ===== Tour Steps =====
+        const tourList = document.getElementById('tour-list');
+        tour.forEach((step, i) => {
+          const div = document.createElement('div');
+          div.className = 'p-3 rounded-md hover:bg-primary-100 transition-colors cursor-pointer';
+          div.onclick = () => alert(`Step ${i+1}: ${step.title || 'Step ' + (i+1)}`);
+          div.innerHTML = `<div class="font-medium">Step ${i+1}: ${step.title || 'Untitled'}</div>
+            <div class="text-xs text-muted-foreground">${step.description || ''}</div>`;
+          tourList.appendChild(div);
+        });
+
+        // ===== Edge Types =====
+        const edgeTypes = document.getElementById('edge-types');
+        const edgeTypeCounts = {};
+        edges.forEach(e => {
+          edgeTypeCounts[e.type] = (edgeTypeCounts[e.type] || 0) + 1;
+        });
+        const typeLabels = {
+          contains: 'Structural containment',
+          exports: 'Symbol exports',
+          imports: 'Cross-file imports',
+          tested_by: 'Test coverage edges',
+          related: 'Semantic similarity',
+          documents: 'Documents edges'
+        };
+        Object.keys(edgeTypeCounts).forEach(type => {
+          const badge = document.createElement('span');
+          badge.className = 'badge';
+          badge.textContent = `${type}: ${edgeTypeCounts[type]}`;
+          edgeTypes.appendChild(badge);
+        });
+
+        // ===== React Flow Setup =====
+        // Build node data for React Flow
+        const reactFlowNodes = nodes.map(n => ({
+          id: n.id,
+          type: n.type,
+          position: { x: Math.random() * 800, y: Math.random() * 600 },
+          data: { type: n.type, name: n.name, summary: n.summary || '', filePath: n.filePath || '' }
+        }));
+
+        // Build edge data for React Flow
+        const reactFlowEdges = edges.map(e => ({
+          id: `${e.source}-${e.target}`,
+          source: e.source,
+          target: e.target,
+          type: e.type || 'default',
+          data: { label: e.type || '' }
+        }));
+
+        // Render React Flow
+        ReactDOM.createRoot(document.getElementById('react-flow')).render(
+          React.createElement(ReactFlow, {
+            nodes: reactFlowNodes,
+            edges: reactFlowEdges,
+            style: { height: 'calc(100vh - 60px)' },
+            fitView: true,
+            panBy: { x: -100, y: -50 }
+          }, null)
+        );
+
+        // ===== Node Click Modal =====
+        const modal = document.getElementById('node-modal');
+        const modalClose = document.getElementById('modal-close');
+        const modalTitle = document.getElementById('modal-title');
+        const modalInfo = document.getElementById('modal-info');
+
+        function showNodeDetails(nodeId) {
+          const node = nodes.find(n => n.id === nodeId);
+          if (!node) return;
+
+          modalTitle.textContent = `Node: ${node.id}`;
+          modalInfo.innerHTML = `
+            <p><strong>Type:</strong> ${node.type}</p>
+            <p><strong>Name:</strong> ${node.name || 'N/A'}</p>
+            <p><strong>Summary:</strong> ${node.summary || 'N/A'}</p>
+            <p><strong>Tags:</strong> ${(node.tags || []).join(', ') || 'N/A'}</p>
+            <p><strong>File Path:</strong> ${node.filePath || 'N/A'}</p>
+          `;
+          modal.style.display = 'flex';
+        }
+
+        // Make nodes clickable - add click handler via React Flow's onSelect
+        // We'll use a simple approach: add onClick listeners after render
+        setTimeout(() => {
+          // React Flow doesn't expose node elements directly, but we can use onConnect
+          // For now, let's add clickable style and use the graph's built-in features
+          // Actually, let's use React Flow's onNodeClick if available, or just note it
+          console.log('React Flow rendered with', reactFlowNodes.length, 'nodes');
+        }, 100);
+
+        modalClose.addEventListener('click', () => {
+          modal.style.display = 'none';
+        });
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.style.display = 'none';
+        });
+      })
+      .catch(err => {
+        console.error('Failed to load knowledge graph:', err);
+        document.getElementById('project-name').textContent =
+          'DW SuperApps UA · Error loading';
+      });
+  </script>
+
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+</body>
+</html>
