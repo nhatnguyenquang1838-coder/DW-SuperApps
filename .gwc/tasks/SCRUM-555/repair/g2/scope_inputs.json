@@ -1,0 +1,49 @@
+{
+  "repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+  "task_id": "SCRUM-555",
+  "run_label": "DW-OBS-G6-READINESS-R1-REMEDIATION",
+  "base_ref": "pre-prod",
+  "base_sha": "0ee1b41b33ca83242d02c2098e6ef96a7c510301",
+  "working_branch": "auto/SCRUM-555-observatory-g6-readiness-r1",
+  "feature_target": "pre-prod",
+  "risk_class": "R3",
+  "risk_note": "Branch-history concern is a governance/narrative risk; gate class remains R3. Repair is additive lineage reconciliation only, zero content change.",
+  "expires_at": "2026-08-24T15:30:00Z",
+  "approved_paths": [
+    ".gwc/tasks/SCRUM-555/repair/"
+  ],
+  "test_paths_allowed": [],
+  "authorized_actions": [
+    "create_task_artifacts",
+    "run_sandboxed_validation"
+  ],
+  "excluded_actions": [
+    "merge",
+    "deploy",
+    "production_data_read",
+    "production_data_write",
+    "production_config_change",
+    "credential_rotation",
+    "protected_main_write",
+    "branch_delete",
+    "force_push",
+    "gwc_repo_mutation",
+    "db_push",
+    "remote_supabase_ddl_apply",
+    "remote_supabase_dml_apply",
+    "amend",
+    "reset",
+    "rebase",
+    "cherry_pick",
+    "push_working_branch",
+    "open_or_update_draft_pr"
+  ],
+  "current_head": "c32fac34440e0f33a65c87e0c42b1c6a05acf783",
+  "displaced_pre_amend_commit": "147cc34361dde16e129220898445eb0766c87687",
+  "expected_final_tree_sha": "c9800138823ba4bb01d689eb99316645f9c2aa35",
+  "remediation_strategy": "one_additive_non_force_two_parent_reconciliation",
+  "parents": [
+    "c32fac34440e0f33a65c87e0c42b1c6a05acf783",
+    "147cc34361dde16e129220898445eb0766c87687"
+  ]
+}

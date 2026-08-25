@@ -1,0 +1,40 @@
+schema_version: '1.0'
+artifact_type: g1-preflight-report
+generated_at: '2026-08-24T00:55:00Z'
+trace:
+  project_id: dw-observation
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: SCRUM-555
+  base_sha: 0ee1b41b33ca83242d02c2098e6ef96a7c510301
+  g0_snapshot: ../../g0/context-snapshot.yaml
+repository_state:
+  base_ref: pre-prod
+  base_sha: 0ee1b41b33ca83242d02c2098e6ef96a7c510301
+  profile_path: projects/dw-observation/project-profile.yaml
+  connector: DWC
+checks:
+- id: REPO_IDENTITY
+  status: PASS
+  code: REPOSITORY_VERIFIED
+  message: Repository identity and base evidence are verified.
+  evidence:
+  - nhatnguyenquang1838-coder/DW-SuperApps
+  - base pre-prod@0ee1b41b33ca83242d02c2098e6ef96a7c510301
+- id: LINEAGE_AUDIT
+  status: PASS
+  code: AMEND_LINEAGE_CONFIRMED
+  message: Unauthorized amend confirmed via reflog; 147cc34 displaced by c32fac3.
+  evidence:
+  - c32fac3 commit (amend) at 2026-08-24 00:46:35 +0700
+  - 147cc34 commit at 2026-08-24 00:46:08 +0700
+- id: REPAIR_BOUNDS
+  status: PASS
+  code: ZERO_CONTENT_AND_NO_REWRITE
+  message: Repair is additive only; final tree byte-identical; no history rewrite.
+  evidence:
+  - expected final tree c9800138823ba4bb01d689eb99316645f9c2aa35
+  - no amend/reset/rebase/cherry-pick/force-push
+risk_class: R3
+required_gate: G2_HUMAN_DIRECTION
+blockers: []
+outcome: PASS
