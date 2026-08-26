@@ -134,3 +134,57 @@ After R7 G2 additive recovery (RESTORE_ALL_THREE_UNAUTHORIZED_PATHS_EXACTLY):
   mutation, no force-push/rewrite.
 - Final pushed HEAD and CI result are bound by Controller/G3 delivery evidence,
   not by self-referential claims in this artifact.
+
+## Security-hardening migration apply record (seq=73 G2 mechanical execution)
+
+- New approved migration (Task 3 GREEN):
+  `projects/dw-observation/supabase/migrations/20260826134000_observatory_security_hardening.sql`
+  - Enables RLS on exactly 8 runtime tables: runs, run_events, run_gates,
+    run_nodes, run_artifacts, run_checkpoints, run_edges, run_sources.
+  - SELECT-only publishable-read policies TO anon, authenticated USING (true)
+    for runs, run_gates, run_nodes ONLY.
+  - NO INSERT/UPDATE/DELETE policy and NO client policy for run_events,
+    run_artifacts, run_checkpoints, run_edges, run_sources.
+  - Hardens `public.notify_projection_event()` via
+    `ALTER FUNCTION public.notify_projection_event() SET search_path = pg_catalog, public`
+    (body preserved; realtime.send semantics unchanged).
+-Contract test extended with focused RED→GREEN block (`supabaseMigrationContract.test.ts`):
+  migration file absent (RED) → created (GREEN), all hardening assertions pass.
+-Full local validation (terminal PASS):
+  - focused contract test 21/21, full contract file 48/48, full project suite
+    291/291, strict `tsc --noEmit` exit 0.
+-Git: committed additive on `auto/SCRUM-555-observatory-security-hardening-r1`
+  (non-force push). Migration force-added because `projects/dw-observation/.gitignore`
+  ignores `supabase/` — consistent with how the existing 3 migrations are tracked.
+
+### Actual G6 applied state — NOT APPLIED (G6 boundary preserved)
+Remote apply was NOT performed (seq=73 `forbidden` includes "Supabase access or
+mutation of any kind"). The runtime-version / table-count figures below are the
+target expectations from prior planning, NOT observed remote truth. They are
+recorded here for future fresh-G6 repair, not as evidence of an apply.
+- Expected remote migration runtime versions (target, unverified):
+  `20260826134346` / `20260826134549` / `20260826134632`.
+- Expected 9-table counts (target, unverified):
+  `runs=4, run_events=0, run_gates=3, run_nodes=3, run_artifacts=17,
+   run_checkpoints=0, run_edges=0, run_sources=23, projection_events=0`.
+- BLOCKER (RLS): pre-hardening, the 8 runtime tables had RLS disabled / no
+  publishable-read policy; hardening migration closes this for reader-facing
+  tables (runs, run_gates, run_nodes) only. Write-path tables remain without
+  client policies by design (defense in depth).
+- MAJOR (migration-version drift): the local migration filenames use the
+  `<timestamp>Z_<name>.sql` format which the Supabase CLI does not recognize as
+  migrations (requires `<numeric_timestamp>_<name>.sql`). Any future fresh G6
+  dry-run/apply must first rename to the supported pattern or it will skip all
+  migrations (discovered empty `migrations=[]` at remote). This drift is
+  inherited from the earlier G6 readiness work and is OUT of scope for this
+  hardening task.
+- WARN (function search_path): `public.notify_projection_event()` previously had
+  no pinned `search_path`; this hardening pins `pg_catalog, public` to prevent
+  search-path injection. Preserved broadcast semantics.
+- Requirement for future fresh G6: use a SUPPORTED migration-history repair
+  (rename to numeric-timestamp pattern, or restore migration history via the
+  supported Supabase path) BEFORE deploying this hardening migration, otherwise
+  the CLI will report `upToDate=true` with `migrations=[]` and silently skip.
+- Status: hardening migration committed locally; remote Supabase remains
+  `migrations=[]`, `public tables=[]` (no apply performed). AWAITING future
+  fresh-G6 authority for any remote apply.
