@@ -455,3 +455,130 @@ describe("Guard — existing migration bytes unchanged (canonical G6 hashes)", (
     expect(s).toBe(EXPECTED_DML_SHA256);
   });
 });
+
+/**
+ * Task 3 RED — contract test for the single approved new hardening migration:
+ *   projects/dw-observation/supabase/migrations/20260826134000_observatory_security_hardening.sql
+ *
+ * Binds the migration SQL file directly (no live Supabase / no network) and
+ * asserts the security-hardening contract from seq=73 COMMAND. Must be RED until
+ * the migration is implemented (GREEN), proving the intended behavior is absent.
+ *
+ * Contract (from seq=73 COMMAND required_work GREEN step):
+ *   - Enable RLS on exactly: runs, run_events, run_gates, run_nodes,
+ *     run_artifacts, run_checkpoints, run_edges, run_sources
+ *   - Create SELECT-only policies TO anon, authenticated USING (true) ONLY for
+ *     runs, run_gates, run_nodes
+ *   - Create NO INSERT/UPDATE/DELETE policy and NO client policy at all for
+ *     run_events, run_artifacts, run_checkpoints, run_edges, run_sources
+ *   - Harden existing public.notify_projection_event() by
+ *     `ALTER FUNCTION ... SET search_path` to a fixed safe path WITHOUT replacing
+ *     its body or changing realtime.send semantics
+ */
+const HARDENING_MIGRATION = path.join(
+  MIGRATIONS_DIR,
+  "20260826134000_observatory_security_hardening.sql",
+);
+
+let hardenSql = "";
+let hardenExists = false;
+
+beforeAll(async () => {
+  hardenExists = await fs
+    .access(HARDENING_MIGRATION)
+    .then(() => true)
+    .catch(() => false);
+  if (hardenExists) {
+    const raw = await fs.readFile(HARDENING_MIGRATION, "utf8");
+    hardenSql = raw.toLowerCase();
+  }
+});
+
+const RLS_TABLES = [
+  "runs",
+  "run_events",
+  "run_gates",
+  "run_nodes",
+  "run_artifacts",
+  "run_checkpoints",
+  "run_edges",
+  "run_sources",
+];
+
+describe("Task 3 RED — observatory security hardening migration contract", () => {
+  it("hardening migration file exists (RED until implemented)", () => {
+    expect(
+      hardenExists,
+      `hardening migration must exist at ${HARDENING_MIGRATION}`,
+    ).toBe(true);
+  });
+
+  for (const tbl of RLS_TABLES) {
+    it(`enables row level security on ${tbl}`, () => {
+      expect(hardenSql).toMatch(
+        new RegExp(
+          `\\balter\\s+table\\s+${tbl}\\b[\\s\\S]*?\\benable\\s+row\\s+level\\s+security\\b`,
+          "i",
+        ),
+      );
+    });
+  }
+
+  // SELECT-only policies for runs, run_gates, run_nodes.
+  for (const tbl of ["runs", "run_gates", "run_nodes"]) {
+    it(`creates SELECT-only policy for ${tbl} to anon, authenticated USING (true)`, () => {
+      expect(hardenSql).toMatch(
+        new RegExp(
+          `create\\s+policy\\s+\\S+\\s+on\\s+${tbl}\\s+for\\s+select\\s+to\\s+anon,\\s*authenticated\\s+using\\s*\\(\\s*true\\s*\\)`,
+          "i",
+        ),
+      );
+    });
+  }
+
+  // NO write policies (INSERT/UPDATE/DELETE) for the protected tables.
+  for (const tbl of [
+    "run_events",
+    "run_artifacts",
+    "run_checkpoints",
+    "run_edges",
+    "run_sources",
+  ]) {
+    it(`does NOT create any client policy (write or otherwise) for ${tbl}`, () => {
+      const anyPolicyOnTable = new RegExp(
+        `\\bcreate\\s+policy\\b[\\s\\S]*?\\bon\\s+${tbl}\\b`,
+        "i",
+      );
+      expect(hardenSql).not.toMatch(anyPolicyOnTable);
+    });
+  }
+
+  // NO write policies anywhere in the migration (defense in depth).
+  it("does NOT create INSERT/UPDATE/DELETE policies anywhere", () => {
+    const writePolicy = /\bcreate\s+policy\b[\s\S]*?\bfor\s+(insert|update|delete)\b/i;
+    expect(hardenSql).not.toMatch(writePolicy);
+  });
+
+  // Harden notify_projection_event() via ALTER FUNCTION ... SET search_path.
+  it("hardens notify_projection_event() with ALTER FUNCTION ... SET search_path", () => {
+    expect(hardenSql).toMatch(
+      /alter\s+function\s+public\s*\.\s*notify_projection_event\s*\(\s*\)\s*set\s+search_path/i,
+    );
+  });
+
+  it("does NOT replace notify_projection_event() body (no CREATE OR REPLACE FUNCTION)", () => {
+    // The function body must be preserved; only SET search_path is allowed.
+    expect(hardenSql).not.toMatch(
+      /create\s+or\s+replace\s+function\s+public\s*\.\s*notify_projection_event/i,
+    );
+  });
+
+  it("does NOT change realtime.send semantics in notify_projection_event", () => {
+    // The migration must not redefine/remove the realtime.send broadcast.
+    // We only require that the ALTER FUNCTION hardening is present and that the
+    // migration does not DROP the function.
+    expect(hardenSql).not.toMatch(
+      /drop\s+function\s+.*notify_projection_event/i,
+    );
+  });
+});

@@ -1,11 +1,11 @@
 # SCRUM-555 · DW-OBS-G6-READINESS-R1 · G6 APPROVAL PACKET (REFRESHED)
 
-**STOP — human authority required before any remote apply.** G6 not started; actual apply remains G6-forbidden.
+**STOP — human authority required before any remote apply.** The 3 base G6 migrations WERE APPLIED & verified in the prior G6 step of this same governed run. Only the *new* hardening migration (seq=73) is NOT yet applied and remains G6-forbidden under this G2.
 
 ## Target
 - Supabase project ref: `auswvdxoetufwiaxutib`, schema `public`.
-- Current remote truth (pre-G6): ACTIVE_HEALTHY, `migrations=[]`, `public tables=[]`
-  (no fresh read-only evidence to the contrary; remote apply NEVER performed).
+- Prior G6 remote truth (THIS run, post base-apply, verified via post-verify): 3 base migrations applied (runtime versions `20260826134346` / `20260826134549` / `20260826134632`), 9 public tables present with counts `runs=4, run_events=0, run_gates=3, run_nodes=3, run_artifacts=17, run_checkpoints=0, run_edges=0, run_sources=23, projection_events=0`.
+  (Lineage: prior G6 in this run applied the three numeric-named migrations and post-verified exact remote state. Remote apply of BASE migrations WAS performed; remote apply of the NEW hardening migration was NOT.)
 - Expected post-apply schema = **9 public tables** including `projection_events`.
 
 ## Migrations (3, all committed under `supabase/migrations/`, G6-gated; git-blob SHA-256)
@@ -130,7 +130,64 @@ After R7 G2 additive recovery (RESTORE_ALL_THREE_UNAUTHORIZED_PATHS_EXACTLY):
 - Implementation/recovery commits recorded above; final pushed HEAD and CI result are bound externally by Controller/G3 delivery evidence (exact-head CI run, PR head OID), not by self-referential claims in this artifact.
 
 ## Exclusions
-- No remote Supabase apply (G6 boundary). No pre-prod→main, no deploy, no GWC
-  mutation, no force-push/rewrite.
+- This G2 correction makes NO remote Supabase apply. The base G6 migrations were
+  already applied & verified in the prior G6 step (see "Actual G6 applied state");
+  the NEW hardening migration is committed locally only and remains G6-forbidden
+  under this G2. No pre-prod→main, no deploy, no GWC mutation, no force-push/rewrite.
 - Final pushed HEAD and CI result are bound by Controller/G3 delivery evidence,
   not by self-referential claims in this artifact.
+
+## Security-hardening migration apply record (seq=73 G2 mechanical execution)
+
+- New approved migration (Task 3 GREEN):
+  `projects/dw-observation/supabase/migrations/20260826134000_observatory_security_hardening.sql`
+  - Enables RLS on exactly 8 runtime tables: runs, run_events, run_gates,
+    run_nodes, run_artifacts, run_checkpoints, run_edges, run_sources.
+  - SELECT-only publishable-read policies TO anon, authenticated USING (true)
+    for runs, run_gates, run_nodes ONLY.
+  - NO INSERT/UPDATE/DELETE policy and NO client policy for run_events,
+    run_artifacts, run_checkpoints, run_edges, run_sources.
+  - Hardens `public.notify_projection_event()` via
+    `ALTER FUNCTION public.notify_projection_event() SET search_path = pg_catalog, public`
+    (body preserved; realtime.send semantics unchanged).
+-Contract test extended with focused RED→GREEN block (`supabaseMigrationContract.test.ts`):
+  migration file absent (RED) → created (GREEN), all hardening assertions pass.
+-Full local validation (terminal PASS):
+  - focused contract test 21/21, full contract file 48/48, full project suite
+    291/291, strict `tsc --noEmit` exit 0.
+-Git: committed additive on `auto/SCRUM-555-observatory-security-hardening-r1`
+  (non-force push). Migration force-added because `projects/dw-observation/.gitignore`
+  ignores `supabase/` — consistent with how the existing 3 migrations are tracked.
+
+### Actual G6 applied state — BASE APPLIED (prior G6), HARDENING NOT APPLIED (G6 boundary preserved)
+
+The **three base G6 migrations WERE applied and post-verified** in the prior G6 step of this same governed run. The **new** `20260826134000_observatory_security_hardening.sql` (seq=73) has **NOT** been remotely applied and remains G6-forbidden under this G2 — it still requires a future fresh G6.
+
+- Actual applied base migrations (verified, THIS run):
+  - runtime `20260826134346` → `20260823080000_observatory_history`
+  - runtime `20260826134549` → `20260823090000_observatory_backfill_dml`
+  - runtime `20260826134632` → `20260823100000_projection_events`
+- Actual 9-table counts (verified post-apply, THIS run):
+  `runs=4, run_events=0, run_gates=3, run_nodes=3, run_artifacts=17,
+   run_checkpoints=0, run_edges=0, run_sources=23, projection_events=0`.
+- BLOCKER (RLS): pre-hardening, the 8 runtime tables had RLS disabled / no
+  publishable-read policy; hardening migration closes this for reader-facing
+  tables (runs, run_gates, run_nodes) only. Write-path tables remain without
+  client policies by design (defense in depth).
+- MAJOR (REMOTE_MIGRATION_VERSION_DRIFT): the repo numeric migration versions
+  `20260823080000 / 20260823090000 / 20260823100000` DIFFER from the
+  connector-recorded remote runtime versions
+  `20260826134346 / 20260826134549 / 20260826134632`. This is a **remote
+  migration-history identity mismatch recorded by the connector**, NOT a
+  filename-format problem — the repo filenames are already the numeric
+  Supabase-compatible pattern (`<YYYYMMDDHHMMSS>_<name>.sql`), not `T/Z` format.
+- WARN (function search_path): `public.notify_projection_event()` previously had
+  no pinned `search_path`; this hardening pins `pg_catalog, public` to prevent
+  search-path injection. Preserved broadcast semantics.
+- Requirement for future fresh G6: use a SUPPORTED migration-history
+  repair/reconciliation (resolve the connector-recorded runtime-version drift)
+  BEFORE deploying this hardening migration, then verify RLS/policies/search_path
+  and counts. Do NOT attribute the drift to `T/Z` filenames (they are numeric).
+- Status: base G6 applied & verified; hardening migration committed locally only;
+  remote Supabase still shows base migrations applied (3) and hardening NOT
+  applied. AWAITING future fresh-G6 authority for any hardening remote apply.
