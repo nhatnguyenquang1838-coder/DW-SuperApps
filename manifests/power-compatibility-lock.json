@@ -4,11 +4,11 @@
   "powers": {
     "gwc": {
       "sourceRepository": "nhatnguyenquang1838-coder/gwc",
-      "providerHeadSha": "3b6c22be933036887a7ae96002e5a48677583812",
+      "providerHeadSha": "6d46fe701ac2cfe3653099f42d48ae27990d7bde",
       "distributionRepository": "nhatnguyenquang1838-coder/gwc",
       "distributionRef": "power-dist",
-      "publishedSourceSha": "3b6c22be933036887a7ae96002e5a48677583812",
-      "packageVersion": "gwc-main-43-3b6c22be933036887a7ae96002e5a48677583812",
+      "publishedSourceSha": "6d46fe701ac2cfe3653099f42d48ae27990d7bde",
+      "packageVersion": "gwc-main-43-6d46fe701ac2cfe3653099f42d48ae27990d7bde",
       "runtimeDataRoot": ".gwc",
       "entrypoints": [
         "skills/gwc-g0/SKILL.md",

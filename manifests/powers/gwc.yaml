@@ -3,7 +3,7 @@ kind: Power
 metadata:
   id: gwc
   name: GWC
-  version: gwc-main-43-3b6c22be933036887a7ae96002e5a48677583812
+  version: gwc-main-43-6d46fe701ac2cfe3653099f42d48ae27990d7bde
   description: Governance, delivery control, approval boundaries, validation, and repository lifecycle workflows.
 spec:
   category: governance
@@ -70,6 +70,6 @@ spec:
     providerState:
       status: published
       task: DW-PDIST-02
-      sourceCommit: 3b6c22be933036887a7ae96002e5a48677583812
+      sourceCommit: 6d46fe701ac2cfe3653099f42d48ae27990d7bde
       sourceLock: distribution/power-package.yaml
-      note: Published release gwc-main-43-3b6c22be933036887a7ae96002e5a48677583812 was verified against the root gitlink; submodule remains a compatibility fallback.
+      note: Published release gwc-main-43-6d46fe701ac2cfe3653099f42d48ae27990d7bde was verified against the root gitlink; submodule remains a compatibility fallback.
