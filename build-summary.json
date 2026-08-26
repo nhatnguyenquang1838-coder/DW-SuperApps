@@ -1,26 +1,16 @@
 {
-  "built_at": "2026-08-17T08:44:46.362875+00:00",
-  "foundation_ref": "3f9c81d7c13098ce502dfa48c82d1d92f82e34ee",
+  "built_at": "2026-08-26T12:30:24.666926+00:00",
+  "foundation_ref": "8470242bfda8928662b61acb72e53e8fe4554317",
   "powers": {
     "gwc": {
-      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/gwc-gwc-main-43-3b6c22be933036887a7ae96002e5a48677583812.zip",
-      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/gwc-gwc-main-43-3b6c22be933036887a7ae96002e5a48677583812.zip.sha256",
+      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/gwc-gwc-main-43-6d46fe701ac2cfe3653099f42d48ae27990d7bde.zip",
+      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/gwc-gwc-main-43-6d46fe701ac2cfe3653099f42d48ae27990d7bde.zip.sha256",
       "power_id": "gwc",
       "recipe": "/home/runner/work/DW-SuperApps/DW-SuperApps/projects/gwc/distribution/power-package.yaml",
-      "source_epoch": 1785516126,
-      "source_sha": "3b6c22be933036887a7ae96002e5a48677583812",
-      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/gwc-gwc-main-43-3b6c22be933036887a7ae96002e5a48677583812",
-      "version": "gwc-main-43-3b6c22be933036887a7ae96002e5a48677583812"
-    },
-    "ua": {
-      "archive": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/ua-ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38.zip",
-      "checksum": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/assets/ua-ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38.zip.sha256",
-      "power_id": "ua",
-      "recipe": "/home/runner/work/DW-SuperApps/DW-SuperApps/projects/ua/distribution/power-package.yaml",
-      "source_epoch": 1785073091,
-      "source_sha": "4d5fda706fc9683d097cedc947a02011f11baa38",
-      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/ua-ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38",
-      "version": "ua-main-3-4d5fda706fc9683d097cedc947a02011f11baa38"
+      "source_epoch": 1787666187,
+      "source_sha": "6d46fe701ac2cfe3653099f42d48ae27990d7bde",
+      "staging_root": "/home/runner/work/DW-SuperApps/DW-SuperApps/.dw/distributions/staging/gwc-gwc-main-43-6d46fe701ac2cfe3653099f42d48ae27990d7bde",
+      "version": "gwc-main-43-6d46fe701ac2cfe3653099f42d48ae27990d7bde"
     }
   }
 }
