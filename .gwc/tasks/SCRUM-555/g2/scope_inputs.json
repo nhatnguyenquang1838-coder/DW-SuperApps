@@ -1,0 +1,47 @@
+{
+  "repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+  "task_id": "SCRUM-555",
+  "run_label": "DW-OBS-G6-READINESS-R1",
+  "base_ref": "pre-prod",
+  "base_sha": "0ee1b41b33ca83242d02c2098e6ef96a7c510301",
+  "working_branch": "auto/SCRUM-555-observatory-g6-readiness-r1",
+  "feature_target": "pre-prod",
+  "risk_class": "R3",
+  "risk_note": "Operational concern remains R4-grade (new SELECT-only RLS + observer read path touching production Supabase schema), but G0/G1 schema enum caps gate class at R3. R4 intent recorded here as narrative only; not a gate class.",
+  "expires_at": "2026-08-24T14:30:00Z",
+  "approved_paths": [
+    "projects/dw-observation/supabase/migrations/20260823T100000Z_projection_events.sql",
+    "projects/dw-observation/lib/serverRunRead.ts",
+    "projects/dw-observation/app/runs/page.tsx",
+    "projects/dw-observation/app/runs/[runId]/page.tsx",
+    ".gwc/tasks/SCRUM-555/history-backfill/G6_PACKET.md"
+  ],
+  "test_paths_allowed": [
+    "projects/dw-observation/tests/unit/supabaseMigrationContract.test.ts",
+    "projects/dw-observation/tests/unit/serverRunRead.test.ts"
+  ],
+  "authorized_actions": [
+    "create_task_artifacts",
+    "write_docs_first",
+    "implement_migrations",
+    "run_sandboxed_validation",
+    "run_baseline_tests",
+    "push_working_branch",
+    "open_or_update_draft_pr"
+  ],
+  "excluded_actions": [
+    "merge",
+    "deploy",
+    "production_data_read",
+    "production_data_write",
+    "production_config_change",
+    "credential_rotation",
+    "protected_main_write",
+    "branch_delete",
+    "force_push",
+    "gwc_repo_mutation",
+    "db_push",
+    "remote_supabase_ddl_apply",
+    "remote_supabase_dml_apply"
+  ]
+}

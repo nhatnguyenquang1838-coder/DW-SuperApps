@@ -1,0 +1,58 @@
+schema_version: '1.0'
+artifact_type: g1-intake-brief
+generated_at: '2026-08-23T14:30:00Z'
+trace:
+  project_id: dw-observation
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: SCRUM-555
+  base_sha: 0ee1b41b33ca83242d02c2098e6ef96a7c510301
+  g0_snapshot: ../../g0/context-snapshot.yaml
+problem:
+  statement: Make DW Observatory real Supabase mode actually deployable BEFORE any G6 remote apply, by adding a canonical live event ledger (projection_events) and read-only publishable-key access, without fabricating historical event evidence.
+  why_now: The current Observatory relies on run_* audit metadata only; real-mode historical runs have zero canonical events and must surface PROJECTION_UNAVAILABLE rather than injected fixtures.
+desired_outcome: Dual-store architecture (run_* audit metadata + projection_events canonical live ledger), SELECT-only RLS for publishable client, server read adapter that maps exact stored metadata and never synthesizes events.
+stakeholders:
+  requester: user
+  affected:
+  - DW Observatory consumers
+scope:
+  in_scope:
+  - Design/plan docs (specs + plans) as first artifacts
+  - projection_events migration + broadcast trigger + SELECT-only RLS
+  - serverRunRead adapter; app/runs pages updated for real mode
+  - Refresh G6_PACKET.md after code stabilizes
+  non_goals:
+  - Apply any migration to remote Supabase (G6 STOP)
+  - Merge to main / deploy
+  - Synthesize historical canonical events
+  - Modify GWC repo or other lanes (SCRUM-554/288/NA81, Project Shield, Rental Home)
+constraints:
+- Remote Supabase READ-ONLY during this run
+- Publishable-key-only default; no service-role fallback
+- No new npm dependencies beyond existing toolchain
+assumptions:
+- base pre-prod@0ee1b41b is the exact current pre-prod HEAD
+risks:
+- id: RISK-1
+  description: A faulty RLS policy could expose writes to the publishable key.
+  impact: high
+  mitigation: Enforce SELECT-only grants/policy; explicit NO INSERT/UPDATE/DELETE; contract test asserts absence.
+- id: RISK-2
+  description: UI could accidentally render fixture LIVE for reconstructed runs with zero canonical events.
+  impact: medium
+  mitigation: Server adapter returns canonicalHistoryAvailable=false / PROJECTION_UNAVAILABLE; component shows explicit "canonical event history unavailable".
+acceptance_criteria:
+- id: AC-1
+  statement: Migration adds projection_events with required columns, indexes, broadcast trigger, and SELECT-only RLS; existing 8 audit-table DDL/DML hashes unchanged.
+  verifiable: true
+- id: AC-2
+  statement: Real-mode list/detail read run_* metadata via publishable-key client, no mutation, exact stored mapping.
+  verifiable: true
+- id: AC-3
+  statement: Reconstructed run with zero canonical projection_events surfaces PROJECTION_UNAVAILABLE, never fixture LIVE.
+  verifiable: true
+- id: AC-4
+  statement: Full Vitest + strict typecheck + SQL contract test pass; no old migration hash drift.
+  verifiable: true
+unresolved_questions: []
+status: READY

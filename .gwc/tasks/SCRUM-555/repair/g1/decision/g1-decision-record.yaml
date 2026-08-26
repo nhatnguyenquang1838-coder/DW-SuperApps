@@ -1,0 +1,48 @@
+schema_version: '1.0'
+artifact_type: g1-decision-record
+generated_at: '2026-08-24T00:55:00Z'
+trace:
+  project_id: dw-observation
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: SCRUM-555
+  base_sha: 0ee1b41b33ca83242d02c2098e6ef96a7c510301
+  g0_snapshot: ../../g0/context-snapshot.yaml
+options_ref: ../brainstorming/g1-options.yaml
+preflight_ref: ../preflight/g1-preflight-report.yaml
+status: SUPERSEDED
+selected_option_id: OPT-1
+user_decision:
+  actor: user
+  decided_at: '2026-08-24T00:55:00+07:00'
+  source: Controller authorized remediation candidate materialization; reconciliation requires exact Human repair token
+  explicit: true
+rationale: >-
+  OPT-1 additive non-force two-parent reconciliation restores displaced 147cc34
+  lineage with zero content change and no history rewrite; OPT-2 (silent
+  acceptance) and OPT-3 (further rewrite) rejected as governance violations.
+  This decision record is SUPERSEDED by Human resume authority (G2 V2
+  ar-scrum-555-g2-correction-v2-20260824 / 5a3a480bd37fdd7b) that authorized
+  the SAME execution continuation under the existing branch —
+  not a two-parent reconciliation.
+rejected_option_ids: [OPT-2, OPT-3]
+acceptance_criteria_refs: [AC-1, AC-2, AC-3]
+scope_hash: sha256:7108a49bc355eaa432ca5337ff0e025dbb1f6504182b054a625df7588097cd99
+g1_gate_outcome: REJECTED
+authority_boundaries:
+  grants: []
+  excluded: [G4_MERGE, G5_DEPLOY, G6_PRODUCTION]
+subagent_distribution_plan:
+  task_decomposition:
+  - sub_task_id: SUB-TASK-1
+    description: Materialize schema-valid remediation candidate artifacts and validate.
+    dependencies: []
+  - sub_task_id: SUB-TASK-2
+    description: One additive two-parent reconciliation commit after exact Human token; verify tree byte-identical.
+    dependencies: [SUB-TASK-1]
+  agent_allocation:
+  - sub_task_id: SUB-TASK-1
+    skill_id: gwc-governance-delivery
+  - sub_task_id: SUB-TASK-2
+    skill_id: gwc-governance-delivery
+  execution_order: [SUB-TASK-1, SUB-TASK-2]
+  summary: Single local agent (Hermes/DWA) under TaskController; no branch mutation until exact Human repair token.

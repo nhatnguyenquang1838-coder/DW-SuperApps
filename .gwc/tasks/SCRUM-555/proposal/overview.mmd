@@ -1,0 +1,12 @@
+graph TD
+  A[DW Observatory real mode] --> B[run_* audit metadata]
+  A --> C[projection_events canonical ledger]
+  B -->|UI reads| D[run metadata / gates / nodes]
+  C -->|timeline / replay / live| E[Realtime broadcast]
+  F[Publishable key client] -->|SELECT only| B
+  F -->|SELECT only| C
+  G[Reconstructed run, zero canonical events] -->|PROJECTION_UNAVAILABLE| H[history unavailable, never fixture LIVE]
+  C -->|notify_projection_event trigger| E
+  style A fill:#1f2937,stroke:#60a5fa,color:#fff
+  style C fill:#0f172a,stroke:#34d399,color:#fff
+  style H fill:#7f1d1d,stroke:#f87171,color:#fff
