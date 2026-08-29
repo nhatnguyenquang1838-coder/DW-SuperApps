@@ -45,6 +45,9 @@ projects/*/.task-me/
 projects/*/.bmad/
 .kilo/staging/power-dist/
 
+# Workspace-rooted child-repository worktrees are local execution surfaces.
+/worktrees/
+
 # OpenClaw local workspace identity, memory, and runtime state
 # Keep AGENTS.md tracked; the paths below are private and machine/session specific.
 /BOOTSTRAP.md
