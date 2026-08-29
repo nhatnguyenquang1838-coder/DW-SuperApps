@@ -136,6 +136,36 @@ powers:
   - id: bmad
     project: bmad
     enabled: true
+
+development:
+  model: workspace-rooted-child-repository-worktrees
+  projectAnchorRoot: projects
+  worktreeRoot: worktrees
+  worktreeTemplate: worktrees/{project}/{execution_unit}
+  writableSurface: child-worktree-only
+  canonicalRunbook: docs/runbooks/ISOLATED_SUBMODULE_WORKTREE.md
+  controllerPolicy: controllers/executor-worktree-policy.md
+  executionUnit:
+    identity: repository-execution-unit
+    oneWorktree: true
+    oneBranch: true
+    oneWriter: true
+    agentIdentity: lease-or-binding-not-branch
+  base:
+    resolveRemoteBeforeCreate: true
+    requireExactSha: true
+  git:
+    directDefaultBranchWrite: forbidden
+    forcePush: forbidden
+    sharedCommonStateMutation: controller-or-repository-admin-only
+  integration:
+    childRepositoryPr: required
+    parentGitlinkPr: separate
+    parentGitlinkMutation: explicit
+    parentWriter: exclusive
+  runtime:
+    namespacePerExecutionUnit: true
+
 data_ownership:
   policy: project-owned
   roots:
