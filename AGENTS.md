@@ -51,6 +51,50 @@ Normal Power onboarding must not create `<project>/.dw/`, Power package payloads
 
 Existing `<project>/.dw/powers/<power-id>` paths are legacy installations. Report `LEGACY_TARGET_INSTALL` and preserve them. Migration or cleanup requires a separate authorized change.
 
+## Workspace-rooted child repository development
+
+For trusted local development of any registered Git submodule project, use the canonical machine-readable contract in `workspace.yaml` under `development` and the detailed runbook `docs/runbooks/ISOLATED_SUBMODULE_WORKTREE.md`.
+
+The invariant is:
+
+```text
+DW-SuperApps                         = workspace/control/integration root
+projects/<project>                  = submodule admin anchor + pinned gitlink
+worktrees/<project>/<execution-unit> = writable child-repository development surface
+```
+
+Do not edit child project source directly in `projects/<project>` and do not create standalone writable project folders elsewhere on disk as the normal development surface.
+
+For each writable repository execution unit:
+
+1. resolve the registered project from `workspace.yaml`;
+2. initialize/use `projects/<project>` only as the child repository administration anchor;
+3. fetch/resolve the exact approved remote base SHA;
+4. create one child-repository linked worktree under `worktrees/<project>/<execution-unit>`;
+5. bind one task branch and one writer to that execution unit;
+6. perform child source mutation only inside that worktree;
+7. namespace collidable runtime resources per execution unit;
+8. deliver the child repository PR first;
+9. treat any DW-SuperApps gitlink bump as a separate, explicit, serialized parent integration action and PR.
+
+Agent identity is execution/lease metadata, not durable branch identity. Parallel child worktrees are allowed, but shared Git common-state mutation and parent gitlink integration are controller/repository-admin concerns rather than ordinary Executor behavior.
+
+When TaskController is active and local repository mutation is in scope, the Executor MUST also load `controllers/executor-worktree-policy.md`; this overlay is required by `controllers/taskcontroller.yaml`. The current TaskController registry remains authoritative for whether leases or multi-executor routing are actually active.
+
+Validate the static routing contract with:
+
+```bash
+python scripts/validate_workspace_worktree_policy.py
+```
+
+On a trusted local checkout, include runtime/worktree inspection with:
+
+```bash
+python scripts/validate_workspace_worktree_policy.py --runtime
+```
+
+This worktree standard does not override `chat_connector_only` behavior. Connector-only agents use exact remote evidence and must not pretend local worktree operations were executed.
+
 ## Discovery
 
 1. Read `workspace.yaml`.
@@ -145,6 +189,10 @@ For portable IDE/host routing, adapter deduplication, or cross-host skill discov
 
 - `docs/PORTABLE_MULTI_HOST_ROUTER.md`
 
+For local child-repository source mutation, isolated worktree lifecycle, parent gitlink integration, and worktree recovery, read and execute:
+
+- `docs/runbooks/ISOLATED_SUBMODULE_WORKTREE.md`
+
 Reusable prompts:
 
 - `prompts/power-dist/onboard.md`
@@ -181,8 +229,8 @@ Do not claim `READY` when required configuration, host routing, doctor, dedupe, 
 
 DW-SuperApps registers two distinct submodule classes. Confusing them causes the recurring failure where a product project's *target submodule* is mistaken for a Power *source submodule*, or a Power's source is silently executed as the installed Power.
 
-- **Target project submodule** (e.g. `projects/rental-home` → `nhatnguyenquang1838-coder/rental_home`): a product codebase. For a project task, materialize/fetch this registered submodule and resolve its **current `main`** as the task execution base. The parent DW-SuperApps gitlink that pins this submodule is **not** automatically the task execution head and must **not** be bumped implicitly during task work.
-- **Power source submodule** (e.g. `projects/ua` → `Understand-Anything`): the upstream source of a managed Power's code. It is **not** a project runtime target and **not** the default execution surface. The managed installed package under `.dw/powers/<power-id>/` is the execution surface; the source submodule is an explicit compatibility/development fallback only.
+- **Target project submodule** (e.g. `projects/rental-home` → `nhatnguyenquang1838-coder/rental_home`): a product codebase. For a project task, materialize/fetch this registered submodule and resolve its **current `main`** as the task execution base. The parent DW-SuperApps gitlink that pins this submodule is **not** automatically the task execution head and must **not** be bumped implicitly during task work. When local source mutation is required, use the isolated child-repository worktree standard above rather than editing this anchor.
+- **Power source submodule** (e.g. `projects/ua` → `Understand-Anything`): the upstream source of a managed Power's code. It is **not** a project runtime target and **not** the default execution surface. The managed installed package under `.dw/powers/<power-id>/` is the execution surface; the source submodule is an explicit compatibility/development fallback only. If source-submodule development is explicitly in scope, use its isolated child-repository worktree under `worktrees/<project>/<execution-unit>`.
 
 A project task that needs a Power does **not** execute the Power's source submodule. It installs/binds the managed package and activates the installed entrypoint.
 
@@ -260,13 +308,14 @@ For repository modifications:
 
 1. verify repository, default branch, exact base SHA, and target files;
 2. use a dedicated branch;
-3. do not write directly to protected `main`;
-4. review the complete diff;
-5. run applicable validation;
-6. create a reviewable PR unless local-only work was explicitly requested;
-7. do not merge, deploy, or perform production operations without separate authority.
+3. for registered child-repository local development, use `worktrees/<project>/<execution-unit>` and never develop directly in `projects/<project>`;
+4. do not write directly to protected `main`;
+5. review the complete diff;
+6. run applicable validation, including `python scripts/validate_workspace_worktree_policy.py` when this workspace contract is affected;
+7. create a reviewable PR unless local-only work was explicitly requested;
+8. do not merge, deploy, or perform production operations without separate authority.
 
-A multi-repository change must identify every impacted repository. One repository's task, branch, approval, or validation does not authorize another repository.
+A multi-repository change must identify every impacted repository. One repository's task, branch, approval, or validation does not authorize another repository. Child repository delivery does not implicitly authorize a DW-SuperApps gitlink bump.
 
 ## Slack behavior
 
