@@ -48,6 +48,7 @@ host_overlays:
     executor:
       required:
         - agents/shared/taskcontroller-a2a-protocol.md
+        - controllers/executor-worktree-policy.md
         - agents/hermes/agent-instructions.md
 
 interaction:
@@ -188,6 +189,7 @@ mvp:
 execution_contract:
   subtask_count_min: 3
   subtask_count_max: 5
+  local_repository_mutation_policy: controllers/executor-worktree-policy.md
   required_subtask_fields:
     - ID
     - Objective
@@ -208,6 +210,14 @@ execution_contract:
     - wakeup notification when required
     - report review
     - bounded INTERCEPT
+  local_child_repository_binding:
+    workspace_root: DW-SuperApps
+    writable_surface: worktrees/<project>/<execution-unit>
+    project_anchor: projects/<project>
+    one_writer_per_execution_unit: true
+    exact_remote_base_sha_required: true
+    parent_gitlink_integration: explicit-and-exclusive
+    runtime_namespace_per_execution_unit: true
 
 integrity:
   source_of_truth: current-repository-state
