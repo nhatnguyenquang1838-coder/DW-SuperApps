@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hashlib
 import importlib
+import uuid
 
 import pytest
 
@@ -42,7 +44,9 @@ def _revision(models, branch, start, end, repository="nhatnguyenquang1838-coder/
     return models.SourceRevision(repository, branch, start * 40 if len(start) == 1 else start, end * 40 if len(end) == 1 else end)
 
 
-def _start(harness, models, *, campaign_id="RP-CERT-001", run_id=None, end="d", subject_branch=None):
+def _start(harness, models, *, campaign_id="RP-CERT-001", run_id=None, end="d", subject_branch=None, execution_id=None):
+    if execution_id is None:
+        execution_id = f"exec-{uuid.uuid4().hex[:10]}"
     return harness.start_run(
         campaign_id=campaign_id,
         case_id="TC-RP-001",
@@ -55,6 +59,25 @@ def _start(harness, models, *, campaign_id="RP-CERT-001", run_id=None, end="d", 
         runtime_plan_ref="plan://" + campaign_id + "/r1",
         runtime_plan_revision="r1",
         runtime_plan_digest="sha256:" + "e" * 64,
+        execution=models.ExecutionReceipt(
+            execution_id=execution_id,
+            started_at="2026-09-02T00:00:00+07:00",
+            completed_at="2026-09-02T00:30:00+07:00",
+            controller_seq_start=19,
+            controller_seq_end=20,
+            executor_seq_start=51,
+            executor_seq_end=52,
+            cursor_before="cursor-before",
+            cursor_after="cursor-after",
+            step_receipt_digests=("step://1",),
+            local_validation_receipts=(),
+            ci_run_refs=(),
+            authority_refs=(),
+            harness_sha=_revision(models, "runtime-lab/" + campaign_id, "a", end).end_sha,
+            harness_is_runtime=True,
+            execution_receipt_digest="sha256:"
+            + hashlib.sha256((execution_id or "exec").encode()).hexdigest(),
+        ),
     )
 
 
@@ -87,7 +110,7 @@ def test_cross_campaign_branch_reuse_fails_closed():
         _start(harness, models, campaign_id="RP-CERT-002", end="f", subject_branch="prove/RP-CERT-001/TC-RP-001")
 
 
-def test_duplicate_run_identity_and_exact_source_tuple_are_rejected():
+def test_duplicate_run_identity_rejected_but_exact_source_repeats_are_allowed():
     mod = _harness_module()
     models = _models()
     harness = mod.LiveCertificationHarness()
@@ -96,8 +119,8 @@ def test_duplicate_run_identity_and_exact_source_tuple_are_rejected():
     _start(harness, models, run_id="run-fixed", end="d")
     with pytest.raises(mod.LiveCertificationError, match="duplicate|identity"):
         _start(harness, models, run_id="run-fixed", end="f")
-    with pytest.raises(mod.LiveCertificationError, match="duplicate|source"):
-        _start(harness, models, run_id="run-other", end="d")
+    repeated = _start(harness, models, run_id="run-other", end="d")
+    assert repeated.run_id == "run-other"
 
 
 def test_terminal_run_and_evidence_remain_immutable_after_correction():
@@ -144,5 +167,5 @@ def test_restart_replays_campaign_runs_and_branch_ownership(tmp_path):
     restored = mod.LiveCertificationHarness(store=path)
     assert restored.get_campaign("RP-CERT-001").status == "ACTIVE"
     assert restored.get_run(run.run_id).verdict == "PASS"
-    with pytest.raises(mod.LiveCertificationError, match="duplicate|source"):
-        _start(restored, models, run_id="new-run", end="d")
+    next_run = _start(restored, models, run_id="new-run", end="d")
+    assert next_run.run_id == "new-run"

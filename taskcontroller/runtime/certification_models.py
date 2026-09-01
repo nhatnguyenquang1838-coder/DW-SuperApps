@@ -17,6 +17,13 @@ from typing import Any, Mapping
 
 _SHA40 = re.compile(r"^[0-9a-fA-F]{40}$")
 _SHA256_DIGEST = re.compile(r"^sha256:[0-9a-fA-F]{64}$")
+_DIGEST_ONLY = re.compile(r"^[0-9a-fA-F]{64}$")
+
+
+def _require_sha256_digest(value: str, field_name: str) -> str:
+    if not isinstance(value, str) or _SHA256_DIGEST.fullmatch(value) is None:
+        raise CertificationModelError(f"{field_name} must be sha256:<64-hex>")
+    return value.lower()
 
 
 class CertificationModelError(ValueError):
@@ -62,6 +69,10 @@ def _freeze_refs(values: tuple[str, ...], field_name: str) -> tuple[str, ...]:
     if not normalized or any(not isinstance(value, str) or not value.strip() for value in normalized):
         raise CertificationModelError(f"{field_name} is required")
     return normalized
+
+
+def _freeze_tuple(values: tuple[Any, ...]) -> tuple[Any, ...]:
+    return tuple(_deep_freeze(item) for item in values)
 
 
 @dataclass(frozen=True)
@@ -155,6 +166,109 @@ class CertificationCampaign:
 
 
 @dataclass(frozen=True)
+class ExecutionReceipt:
+    """Deeply immutable evidence that one independent execution occurred.
+
+    SourceIdentity MAY repeat across TestRuns; ExecutionIdentity (execution_id
+    and execution_receipt_digest) MUST be unique per TestRun. When
+    ``harness_is_runtime`` is true, the exact harness/revision that executed
+    and scored the run must equal the recorded runtime revision.
+    """
+
+    execution_id: str
+    started_at: str
+    completed_at: str
+    controller_seq_start: int
+    controller_seq_end: int
+    executor_seq_start: int
+    executor_seq_end: int
+    cursor_before: str
+    cursor_after: str
+    step_receipt_digests: tuple[str, ...]
+    local_validation_receipts: tuple[str, ...]
+    ci_run_refs: tuple[tuple[str, str, str, str, str], ...]
+    authority_refs: tuple[str, ...]
+    harness_sha: str
+    harness_is_runtime: bool
+    execution_receipt_digest: str
+
+    def __post_init__(self) -> None:
+        for field_name in (
+            "execution_id",
+            "started_at",
+            "completed_at",
+            "cursor_before",
+            "cursor_after",
+        ):
+            _require_text(getattr(self, field_name), field_name)
+        for field_name in (
+            "controller_seq_start",
+            "controller_seq_end",
+            "executor_seq_start",
+            "executor_seq_end",
+        ):
+            if not isinstance(getattr(self, field_name), int) or getattr(self, field_name) < 0:
+                raise CertificationModelError(f"{field_name} must be a non-negative integer")
+        object.__setattr__(self, "step_receipt_digests", _freeze_tuple(self.step_receipt_digests))
+        object.__setattr__(self, "local_validation_receipts", _freeze_tuple(self.local_validation_receipts))
+        object.__setattr__(self, "authority_refs", _freeze_tuple(self.authority_refs))
+        object.__setattr__(self, "harness_sha", _require_sha(self.harness_sha, "harness_sha"))
+        object.__setattr__(
+            self,
+            "execution_receipt_digest",
+            _require_sha256_digest(self.execution_receipt_digest, "execution_receipt_digest"),
+        )
+        if not isinstance(self.harness_is_runtime, bool):
+            raise CertificationModelError("harness_is_runtime must be a boolean")
+        normalized_ci = tuple(
+            (str(run_id), str(attempt), str(head_sha), str(conclusion), str(workflow))
+            for run_id, attempt, head_sha, conclusion, workflow in self.ci_run_refs
+        )
+        object.__setattr__(self, "ci_run_refs", normalized_ci)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "execution_id": self.execution_id,
+            "started_at": self.started_at,
+            "completed_at": self.completed_at,
+            "controller_seq_start": self.controller_seq_start,
+            "controller_seq_end": self.controller_seq_end,
+            "executor_seq_start": self.executor_seq_start,
+            "executor_seq_end": self.executor_seq_end,
+            "cursor_before": self.cursor_before,
+            "cursor_after": self.cursor_after,
+            "step_receipt_digests": list(self.step_receipt_digests),
+            "local_validation_receipts": list(self.local_validation_receipts),
+            "ci_run_refs": [list(item) for item in self.ci_run_refs],
+            "authority_refs": list(self.authority_refs),
+            "harness_sha": self.harness_sha,
+            "harness_is_runtime": self.harness_is_runtime,
+            "execution_receipt_digest": self.execution_receipt_digest,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: Mapping[str, Any]) -> "ExecutionReceipt":
+        return cls(
+            execution_id=str(payload["execution_id"]),
+            started_at=str(payload["started_at"]),
+            completed_at=str(payload["completed_at"]),
+            controller_seq_start=int(payload["controller_seq_start"]),
+            controller_seq_end=int(payload["controller_seq_end"]),
+            executor_seq_start=int(payload["executor_seq_start"]),
+            executor_seq_end=int(payload["executor_seq_end"]),
+            cursor_before=str(payload["cursor_before"]),
+            cursor_after=str(payload["cursor_after"]),
+            step_receipt_digests=tuple(payload["step_receipt_digests"]),
+            local_validation_receipts=tuple(payload["local_validation_receipts"]),
+            ci_run_refs=tuple(tuple(item) for item in payload.get("ci_run_refs", [])),
+            authority_refs=tuple(payload["authority_refs"]),
+            harness_sha=str(payload["harness_sha"]),
+            harness_is_runtime=bool(payload["harness_is_runtime"]),
+            execution_receipt_digest=str(payload["execution_receipt_digest"]),
+        )
+
+
+@dataclass(frozen=True)
 class TestRun:
     run_id: str
     campaign_id: str
@@ -170,6 +284,7 @@ class TestRun:
     model: str
     verdict: str
     evidence: Mapping[str, object] = field(default_factory=dict)
+    execution: ExecutionReceipt | None = None
     legacy: bool = False
 
     def __post_init__(self) -> None:
@@ -195,6 +310,41 @@ class TestRun:
         if not isinstance(self.evidence, Mapping):
             raise CertificationModelError("evidence must be a mapping")
         object.__setattr__(self, "evidence", _deep_freeze(dict(self.evidence)))
+        if self.execution is None:
+            if not self.legacy:
+                raise CertificationModelError("execution identity (ExecutionReceipt) is required")
+            object.__setattr__(
+                self,
+                "execution",
+                ExecutionReceipt(
+                    execution_id=f"legacy-{self.run_id}",
+                    started_at="legacy",
+                    completed_at="legacy",
+                    controller_seq_start=0,
+                    controller_seq_end=0,
+                    executor_seq_start=0,
+                    executor_seq_end=0,
+                    cursor_before="legacy",
+                    cursor_after="legacy",
+                    step_receipt_digests=("legacy://" + self.run_id,),
+                    local_validation_receipts=(),
+                    ci_run_refs=(),
+                    authority_refs=(),
+                    harness_sha=self.runtime.end_sha,
+                    harness_is_runtime=False,
+                    execution_receipt_digest=_require_sha256_digest(
+                        "sha256:" + hashlib.sha256(f"legacy:{self.run_id}".encode()).hexdigest(),
+                        "execution_receipt_digest",
+                    ),
+                ),
+            )
+        if not isinstance(self.execution, ExecutionReceipt):
+            raise CertificationModelError("execution must be an ExecutionReceipt")
+        if self.execution.harness_is_runtime and self.execution.harness_sha != self.runtime.end_sha:
+            raise CertificationModelError(
+                "runtime/harness self-hosting mismatch: harness_sha "
+                f"{self.execution.harness_sha} != recorded runtime {self.runtime.end_sha}"
+            )
 
     @property
     def digest(self) -> str:
@@ -217,6 +367,7 @@ class TestRun:
             "model": self.model,
             "verdict": self.verdict,
             "legacy": self.legacy,
+            "execution": self.execution.to_dict() if self.execution is not None else None,
             "evidence": _plain(self.evidence),
         }
 

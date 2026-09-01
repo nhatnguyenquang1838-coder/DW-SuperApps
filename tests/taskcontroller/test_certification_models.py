@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import importlib
 import json
 from types import MappingProxyType
@@ -36,6 +37,27 @@ def _case(models):
     )
 
 
+def _execution(models, *, execution_id="exec-001"):
+    return models.ExecutionReceipt(
+        execution_id=execution_id,
+        started_at="2026-09-02T00:00:00+07:00",
+        completed_at="2026-09-02T00:30:00+07:00",
+        controller_seq_start=19,
+        controller_seq_end=20,
+        executor_seq_start=51,
+        executor_seq_end=52,
+        cursor_before="cursor-before",
+        cursor_after="cursor-after",
+        step_receipt_digests=("step://1",),
+        local_validation_receipts=("pnpm-test://sha256:" + "2" * 64,),
+        ci_run_refs=(),
+        authority_refs=(),
+        harness_sha="a" * 40,
+        harness_is_runtime=True,
+        execution_receipt_digest="sha256:" + hashlib.sha256(execution_id.encode()).hexdigest(),
+    )
+
+
 def _run(models, evidence=None):
     revision = _revision(models)
     return models.TestRun(
@@ -53,6 +75,7 @@ def _run(models, evidence=None):
         model="current-hermes-model",
         verdict="PASS",
         evidence=evidence or {"ci": {"runs": [33544981514], "status": "SUCCESS"}},
+        execution=_execution(models),
     )
 
 

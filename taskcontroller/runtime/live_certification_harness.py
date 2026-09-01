@@ -12,6 +12,7 @@ from typing import Any, Mapping
 
 from .certification_models import (
     CertificationCampaign,
+    ExecutionReceipt,
     RuntimeCorrection,
     RuntimeFinding,
     SourceRevision,
@@ -141,6 +142,8 @@ class LiveCertificationHarness:
         self._corrections: dict[str, RuntimeCorrection] = {}
         self._campaign_branches: dict[tuple[str, str], str] = {}
         self._source_tuples: set[tuple[Any, ...]] = set()
+        self._execution_ids: set[str] = set()
+        self._execution_receipt_digests: set[str] = set()
         if self._store is not None and self._store.exists():
             self._detect_and_load_store()
 
@@ -207,6 +210,13 @@ class LiveCertificationHarness:
 
     @staticmethod
     def _cert_run_from_dict(payload: Mapping[str, Any]) -> CampaignTestRun:
+        execution_payload = payload.get("execution")
+        legacy = bool(payload.get("legacy", False))
+        # Historical RUN events written before seq20 have no ExecutionIdentity.
+        # They remain readable (immutable evidence) and are excluded from new
+        # stability by the replay-resistant evaluator; derive synthetic legacy.
+        if execution_payload is None and not legacy:
+            legacy = True
         return CampaignTestRun(
             run_id=payload["run_id"],
             campaign_id=payload["campaign_id"],
@@ -222,7 +232,8 @@ class LiveCertificationHarness:
             model=payload["model"],
             verdict=payload["verdict"],
             evidence=payload.get("evidence", {}),
-            legacy=bool(payload.get("legacy", False)),
+            execution=ExecutionReceipt.from_dict(execution_payload) if execution_payload else None,
+            legacy=legacy,
         )
 
     @staticmethod
@@ -307,6 +318,7 @@ class LiveCertificationHarness:
         runtime_plan_ref: str = "",
         runtime_plan_revision: str = "",
         runtime_plan_digest: str = "",
+        execution: Any | None = None,
         # Compatibility-only W7 arguments:
         case: TestCase | None = None,
         branch: str | None = None,
@@ -378,6 +390,12 @@ class LiveCertificationHarness:
             raise LiveCertificationError(f"duplicate run identity {run_id!r}")
         if not runtime_plan_ref or not runtime_plan_revision or not runtime_plan_digest:
             raise LiveCertificationError("runtime plan identity is required")
+        if not isinstance(execution, ExecutionReceipt):
+            raise LiveCertificationError("a unique ExecutionReceipt is required for a new run")
+        if execution.execution_id in self._execution_ids:
+            raise LiveCertificationError(f"duplicate execution_id {execution.execution_id!r}")
+        if execution.execution_receipt_digest in self._execution_receipt_digests:
+            raise LiveCertificationError("duplicate execution_receipt_digest is not allowed")
         run = CampaignTestRun(
             run_id=run_id,
             campaign_id=campaign_id,
@@ -393,12 +411,15 @@ class LiveCertificationHarness:
             model=model,
             verdict="PENDING",
             evidence={},
+            execution=execution,
         )
         source_tuple = self._source_tuple(run)
-        if source_tuple in self._source_tuples:
-            raise LiveCertificationError("duplicate exact source tuple")
+        # Repeated exact source identities are required for W8 stability; the
+        # run_id + ExecutionIdentity guards above are the uniqueness boundaries.
         self._cert_runs[run_id] = run
         self._source_tuples.add(source_tuple)
+        self._execution_ids.add(execution.execution_id)
+        self._execution_receipt_digests.add(execution.execution_receipt_digest)
         self._append_event("RUN_STARTED", run_id, run.to_dict())
         return run
 
