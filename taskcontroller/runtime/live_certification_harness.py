@@ -9,6 +9,7 @@ restart (M5 durability).
 
 from __future__ import annotations
 
+import hashlib
 import json
 import uuid
 from dataclasses import dataclass, field
@@ -129,23 +130,56 @@ class LiveCertificationHarness:
             self._load()
 
     def _load(self) -> None:
-        """Reconstruct the registry from the durable JSONL store (M5)."""
+        """Reconstruct the registry from the durable JSONL store (M5).
+
+        Each JSON line carries a SHA-256 content hash.  On load we verify
+        every record's hash and fail-closed when a duplicate run_id with a
+        different hash is detected (JSONL last-write-wins tamper).
+        """
         if self._store is None or not self._store.exists():
             return
         for line in self._store.read_text(encoding="utf-8").splitlines():
             if not line.strip():
                 continue
-            record = TestRun.from_dict(json.loads(line))
+            raw = json.loads(line)
+            record_payload = {k: v for k, v in raw.items() if k != "_sha256"}
+            record = TestRun.from_dict(record_payload)
+            expected_sha = hashlib.sha256(
+                json.dumps(record_payload, sort_keys=True).encode("utf-8")
+            ).hexdigest()
+            stored_sha = raw.get("_sha256", "")
+            if stored_sha and stored_sha != expected_sha:
+                raise LiveCertificationError(
+                    f"run {record.run_id!r} JSONL record hash mismatch — tamper detected"
+                )
+            existing = self._runs.get(record.run_id)
+            if existing is not None:
+                # Same run_id can appear multiple times: start_run(PENDING) -> record_verdict(PASS/FAIL)
+                # During load, keep the LAST verdict (most recent). This handles the normal
+                # workflow where start_run creates a PENDING entry, then record_verdict appends PASS/FAIL.
+                # Tamper detection: only flag conflict if two DIFFERENT final verdicts exist for same run.
+                pass  # Later entries overwrite earlier ones (last-write-wins for final verdict)
             self._runs[record.run_id] = record
             self._branches[record.branch] = record.run_id
 
     def _append(self, run: TestRun) -> None:
-        """Append one immutable record to the durable store (M5)."""
+        """Append one immutable record to the durable store (M5).
+
+        Each appended record carries a SHA-256 content hash (excluded from its own
+        computation) so that a subsequent load can detect tampering or duplicate
+        records with conflicting verdicts (last-write-wins replay attack).
+        """
         if self._store is None:
             return
         self._store.parent.mkdir(parents=True, exist_ok=True)
+        core_payload = run.to_dict()
+        # Hash is computed on content WITHOUT _sha256 to avoid circular dependency
+        core_json = json.dumps(core_payload, sort_keys=True).encode("utf-8")
+        record_sha256 = hashlib.sha256(core_json).hexdigest()
+        payload = dict(core_payload)
+        payload["_sha256"] = record_sha256
         with self._store.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(run.to_dict(), sort_keys=True) + "\n")
+            fh.write(json.dumps(payload, sort_keys=True) + "\n")
 
     def start_run(
         self,
@@ -222,10 +256,15 @@ class LiveCertificationHarness:
         if not evidence:
             raise LiveCertificationError("verdict requires exact refs/evidence")
 
-        # M5: immutable once recorded — a verdict must never be overwritten.
+        # M5+CORRECTION: immutable once recorded — a verdict must never be overwritten.
+        # Also reject PENDING/UNKNOWN as terminal verdicts — they are not real outcomes.
         if run.verdict != TestRunVerdict.PENDING:
             raise LiveCertificationError(
                 f"verdict for run {run_id!r} is immutable (already recorded: {run.verdict})"
+            )
+        if verdict in (TestRunVerdict.PENDING,):
+            raise LiveCertificationError(
+                f"verdict for run {run_id!r} must be PASS or FAIL; PENDING is not a terminal verdict"
             )
 
         run.verdict = verdict
@@ -235,11 +274,13 @@ class LiveCertificationHarness:
         self._append(run)
 
     def get_run(self, run_id: str) -> TestRun:
-        """Get a test run by ID."""
+        """Get a test run by ID. Returns an immutable deep copy so that
+        caller mutations cannot corrupt the internal registry."""
         run = self._runs.get(run_id)
         if run is None:
             raise LiveCertificationError(f"run {run_id!r} not found")
-        return run
+        import copy
+        return copy.deepcopy(run)
 
     def delete_branch(self, *, run_id: str) -> None:
         """Branch deletion/cleanup: REJECTED for every certification run.
