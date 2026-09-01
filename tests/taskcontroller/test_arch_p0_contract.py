@@ -311,6 +311,7 @@ def test_arch_p0_e_w4_to_w5_real_read_and_effectful_actions(gwc_root: Path):
     read_cursor = RunCursor("run-real-w5-read", plan.runtime_plan_ref, plan.runtime_plan_digest, plan.revision, read_id)
     read_result = ClosedLoopRuntimeExecutor(plan.to_dict(), read_cursor).execute_step(
         read_id, {}, requested_action="reconcile_pr_head_state", sequence=1,
+        outcome_resolver=lambda _step, _payload: "CONTINUE",
     )
     assert read_result["authority_revalidated"] is False
 
@@ -328,10 +329,24 @@ def test_arch_p0_e_w4_to_w5_real_read_and_effectful_actions(gwc_root: Path):
     effect_cursor = RunCursor("run-real-w5-effect", plan.runtime_plan_ref, plan.runtime_plan_digest, plan.revision, effect_id)
     effect_result = ClosedLoopRuntimeExecutor(
         plan.to_dict(), effect_cursor, authority_context=authority_context, authority_checker=authority,
-    ).execute_step(effect_id, {}, requested_action=effect_action, sequence=1, side_effect=lambda: observed.append({"effect": "ran"}))
+    ).execute_step(effect_id, {}, requested_action=effect_action, sequence=1, outcome_resolver=lambda _step, _payload: "CONTINUE", side_effect=lambda: observed.append({"effect": "ran"}))
     assert effect_result["authority_revalidated"] is True
     assert any(entry.get("effect") == "ran" for entry in observed)
     assert observed[0]["base_sha"] == "a" * 40
+
+
+def test_arch_p0_i_live_gwc_terminal_progression(gwc_root: Path):
+    plan = _run_live_producer(gwc_root)
+    terminal_id = "validation_quality.ci-evidence-capture"
+    step = plan.step(terminal_id)
+    assert step.terminal is True
+    cursor = RunCursor("run-real-terminal", plan.runtime_plan_ref, plan.runtime_plan_digest, plan.revision, terminal_id)
+    result = ClosedLoopRuntimeExecutor(plan.to_dict(), cursor).execute_step(
+        terminal_id, {}, requested_action="capture_ci_evidence", sequence=1,
+    )
+    assert result["current_step"] == "terminal"
+    assert result["is_terminal"] is True
+    assert result["evidence"][terminal_id]["status"] == "TERMINAL"
 
 
 def test_arch_p0_f_fresh_executor_rehydrates_state(tmp_path):

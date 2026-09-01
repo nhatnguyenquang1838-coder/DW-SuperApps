@@ -392,3 +392,30 @@ def test_compile_preserves_distinct_kind_routes_with_condition_ids():
     # Round-trip preserves both routes + condition discriminators.
     restored = RuntimePlan.from_dict(json.loads(json.dumps(plan.to_dict())))
     assert restored == plan
+
+
+def test_compile_preserves_canonical_terminal_marker_through_round_trip():
+    payload = _blueprint()
+    payload["topology"] = [
+        {
+            "action": "inspect",
+            "node_id": "reference.inspect",
+            "next": "validate",
+        },
+        {
+            "action": "validate",
+            "node_id": "validation.validate",
+            "terminal": True,
+            "edges": [],
+        },
+    ]
+    plan = _compile(payload)
+    step = plan.step("validate")
+    assert step.terminal is True
+    assert step.edges == {}
+    serialized = plan.to_dict()
+    assert serialized["steps"]["validate"]["terminal"] is True
+    assert serialized["steps"]["validate"]["edges"] == {}
+    restored = RuntimePlan.from_dict(json.loads(json.dumps(serialized)))
+    assert restored == plan
+    assert restored.runtime_plan_digest == plan.runtime_plan_digest

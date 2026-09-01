@@ -150,6 +150,16 @@ def compile_blueprint(
                 f"topology references undeclared action: {action}"
             )
 
+        terminal_marker = topo.get("terminal", False)
+        if not isinstance(terminal_marker, bool):
+            raise TaskControllerValidationError(
+                "topology.terminal must be a bool"
+            )
+        if terminal_marker and (topo.get("next") or topo.get("edges")):
+            raise TaskControllerValidationError(
+                "terminal topology must preserve canonical edges: []"
+            )
+
         edge_map: dict[str, PlanEdge] = {}
 
         # seq=13 M1 interop: compile explicit route semantics from blueprint.
@@ -240,12 +250,13 @@ def compile_blueprint(
                         outcome=outcome.upper(), target=target, kind=kind, runtime_executable=True
                     )
 
-        if edge_map:
+        if edge_map or terminal_marker:
             step = steps[action]
             steps[action] = RuntimePlanStep(
                 step_id=step.step_id,
                 semantic_action=step.semantic_action,
                 edges=edge_map,
+                terminal=terminal_marker,
                 route_evidence=tuple(edge.to_dict() for edge in edge_map.values()),
                 node_binding=step.node_binding,
                 allowed_inputs=step.allowed_inputs,

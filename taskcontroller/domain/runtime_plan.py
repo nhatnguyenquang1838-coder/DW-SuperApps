@@ -171,6 +171,7 @@ class RuntimePlanStep:
     step_id: str
     semantic_action: str
     edges: Mapping[str, PlanEdge] | None = None
+    terminal: bool = False
     route_evidence: Sequence[Mapping[str, Any]] = ()
     node_binding: Mapping[str, Any] | None = None
     allowed_inputs: tuple[str, ...] = ()
@@ -216,6 +217,12 @@ class RuntimePlanStep:
                 )
             normalized[outcome] = bound
         object.__setattr__(self, "edges", MappingProxyType(normalized))
+        if not isinstance(self.terminal, bool):
+            raise TaskControllerValidationError("step.terminal must be a bool")
+        if self.terminal and normalized:
+            raise TaskControllerValidationError(
+                "terminal step must preserve canonical edges: []"
+            )
         object.__setattr__(self, "route_evidence", tuple(_deep_freeze(row) for row in self.route_evidence))
 
     def to_dict(self) -> dict[str, Any]:
@@ -227,6 +234,8 @@ class RuntimePlanStep:
                 for outcome, edge in sorted(self.edges.items())
             },
         }
+        if self.terminal:
+            payload["terminal"] = True
         if self.node_binding is not None:
             payload["node_binding"] = _deep_plain(self.node_binding)
         if self.route_evidence:
@@ -259,6 +268,7 @@ class RuntimePlanStep:
                 outcome: PlanEdge.from_dict(edge)
                 for outcome, edge in raw_edges.items()
             },
+            terminal=bool(payload.get("terminal", False)),
             route_evidence=payload.get("route_evidence", ()),
             node_binding=payload.get("node_binding"),
             allowed_inputs=tuple(payload.get("allowed_inputs", ())),
@@ -559,7 +569,8 @@ class RunCursor:
             raise TaskControllerValidationError(
                 f"{BindingErrorCode.STEP_STALE}: cursor revision is stale"
             )
-        plan.step(self.current_step_id)
+        if self.current_step_id not in _FINAL_TERMINAL_TARGETS:
+            plan.step(self.current_step_id)
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -590,7 +601,14 @@ class RunCursor:
                 f"{BindingErrorCode.EDGE_NOT_ALLOWED}: edge is not declared for current step"
             )
         if edge.is_terminal:
-            return self
+            return RunCursor(
+                run_id=self.run_id,
+                runtime_plan_ref=self.runtime_plan_ref,
+                runtime_plan_digest=self.runtime_plan_digest,
+                plan_revision=self.plan_revision,
+                current_step_id="terminal",
+                attempt=self.attempt,
+            )
         if edge.is_control:
             return RunCursor(
                 run_id=self.run_id,

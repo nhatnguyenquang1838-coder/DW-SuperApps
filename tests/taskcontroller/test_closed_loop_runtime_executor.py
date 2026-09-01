@@ -119,13 +119,14 @@ def test_same_canonical_inputs_produce_same_next_result():
 
 
 def test_fresh_controller_resumes_same_run_without_transcript():
-    """Fresh Controller resumes same run/plan revision/current step without transcript replay."""
-    plan = _plan(steps={"inspect": {"allowed_actions": ["read"]}})
+    """Fresh Controller resumes a canonical terminal step without transcript replay."""
+    plan = _plan(steps={"inspect": {"allowed_actions": ["read"], "terminal": True, "edges": {}}})
     cursor = _cursor(current_step_id="inspect")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     result = executor.execute_step("inspect", {})
     assert result["runtime_plan_ref"] == "plan.test/r1"
-    assert result["current_step"] == "inspect"
+    assert result["current_step"] == "terminal"
+    assert result["is_terminal"] is True
     assert result["authority_revalidated"] is False
 
 
@@ -172,3 +173,97 @@ def test_authority_revalidated_false_without_gwc():
     with patch("taskcontroller.runtime.closed_loop_runtime_executor._GWC_VALIDATOR", False):
         with pytest.raises(ClosedLoopRuntimeError, match="AUTHORITY_REQUIRED"):
             executor.execute_step("inspect", {}, outcome="PASS")
+
+
+def test_arch_p0_h_invalid_outcome_has_zero_effect_and_state_change(tmp_path):
+    from taskcontroller.runtime.closed_loop_runtime_executor import FileRuntimeExecutionStateStore
+
+    plan = _plan(steps={
+        "inspect": {
+            "allowed_actions": ["read"],
+            "edges": {"PASS": {"target": "validate"}},
+        },
+        "validate": {"allowed_actions": ["read"]},
+    })
+    executor = ClosedLoopRuntimeExecutor(
+        plan, _cursor(current_step_id="inspect"),
+    )
+    effects: list[str] = []
+    before = executor.state.to_dict()
+    with pytest.raises(ClosedLoopRuntimeError, match="OUTCOME"):
+        executor.execute_step(
+            "inspect", {}, outcome="UNDECLARED", requested_action="read", sequence=1,
+            effect=lambda _: effects.append("effect"),
+            side_effect=lambda: effects.append("side_effect"),
+        )
+    assert effects == []
+    assert executor.state.to_dict() == before
+    assert not list(tmp_path.glob("*.json"))
+
+
+def test_arch_p0_h_non_executable_route_has_zero_effect_and_state_change(tmp_path):
+    from taskcontroller.runtime.closed_loop_runtime_executor import FileRuntimeExecutionStateStore
+
+    plan = _plan(steps={
+        "inspect": {
+            "allowed_actions": ["read"],
+            "edges": {"NEXT": {"target": "validate", "runtime_executable": False}},
+        },
+        "validate": {"allowed_actions": ["read"]},
+    })
+    executor = ClosedLoopRuntimeExecutor(
+        plan, _cursor(current_step_id="inspect"),
+    )
+    effects: list[str] = []
+    before = executor.state.to_dict()
+    with pytest.raises(ClosedLoopRuntimeError, match="non-executable"):
+        executor.execute_step(
+            "inspect", {}, outcome="NEXT", requested_action="read", sequence=1,
+            effect=lambda _: effects.append("effect"),
+            side_effect=lambda: effects.append("side_effect"),
+        )
+    assert effects == []
+    assert executor.state.to_dict() == before
+    assert not list(tmp_path.glob("*.json"))
+
+
+def test_arch_p0_h_routed_nonterminal_requires_outcome_before_effect():
+    plan = _plan(steps={
+        "inspect": {
+            "allowed_actions": ["read"],
+            "edges": {"PASS": {"target": "validate"}},
+        },
+        "validate": {"allowed_actions": ["read"]},
+    })
+    executor = ClosedLoopRuntimeExecutor(plan, _cursor(current_step_id="inspect"))
+    effects: list[str] = []
+    with pytest.raises(ClosedLoopRuntimeError, match="ROUTE_OUTCOME_REQUIRED"):
+        executor.execute_step(
+            "inspect", {}, requested_action="read", sequence=1,
+            effect=lambda _: effects.append("effect"),
+            side_effect=lambda: effects.append("side_effect"),
+        )
+    assert effects == []
+    assert executor.cursor.current_step_id == "inspect"
+    assert executor.completed_steps == ()
+    assert executor.sequence == 0
+
+
+def test_arch_p0_i_terminal_step_reaches_final_terminal_without_route_selector():
+    plan = _plan(steps={
+        "finalize": {
+            "allowed_actions": ["read"],
+            "terminal": True,
+            "edges": {},
+        },
+    })
+    executor = ClosedLoopRuntimeExecutor(plan, _cursor(current_step_id="finalize"))
+    effects: list[str] = []
+    result = executor.execute_step(
+        "finalize", {}, requested_action="read", sequence=1,
+        side_effect=lambda: effects.append("side_effect"),
+    )
+    assert effects == ["side_effect"]
+    assert result["current_step"] == "terminal"
+    assert result["is_terminal"] is True
+    assert result["completed_steps"] == ["finalize"]

@@ -225,6 +225,7 @@ class ClosedLoopRuntimeExecutor:
         sequence: int | None = None,
         outcome: str | None = None,
         requested_action: str | None = None,
+        outcome_resolver: Callable[[Mapping[str, Any], Mapping[str, Any]], str | None] | None = None,
         effect: Callable[[Mapping[str, Any]], Any] | None = None,
         side_effect: Callable[[], Any] | None = None,
     ) -> dict[str, Any]:
@@ -259,7 +260,66 @@ class ClosedLoopRuntimeExecutor:
                 raise ClosedLoopRuntimeError(f"requested_action {raw_action!r} is not allowed for {step_id}")
         else:
             action = self._normalize_action(allowed[0]) if len(allowed) == 1 else ""
-        # Unknown verbs are effectful by default.  W5 must not infer that an
+
+        edges = step_raw.get("edges") or {}
+        if not isinstance(edges, Mapping):
+            raise ClosedLoopRuntimeError(f"ROUTE_INVALID: edges for {step_id} must be a mapping")
+        terminal_step = bool(step_raw.get("terminal", False))
+        if terminal_step:
+            if edges:
+                raise ClosedLoopRuntimeError("terminal step must preserve canonical edges: []")
+            if outcome is not None:
+                raise ClosedLoopRuntimeError("terminal step does not accept a caller-selected outcome")
+            edge = None
+            resolved_outcome = None
+        else:
+            if not edges:
+                # Legacy plan payloads may contain an unmarked leaf. Canonical
+                # compiler output must use terminal:true; preserve old replay
+                # semantics here without treating a routed step as terminal.
+                edge = None
+                resolved_outcome = None
+            else:
+                if outcome_resolver is not None:
+                    resolved_outcome = outcome_resolver(step_raw, payload)
+                elif outcome is not None and len(edges) == 1:
+                    # A caller outcome is only an assertion when the topology is
+                    # unambiguous; it never selects among multiple routes.
+                    resolved_outcome = next(iter(edges))
+                else:
+                    raise ClosedLoopRuntimeError(
+                        "ROUTE_OUTCOME_REQUIRED: routed non-terminal step requires "
+                        "an executor-derived outcome"
+                    )
+                if not isinstance(resolved_outcome, str) or resolved_outcome not in edges:
+                    raise ClosedLoopRuntimeError(
+                        f"ROUTE_OUTCOME_UNRESOLVED: {resolved_outcome!r} is not declared "
+                        f"for step {step_id!r}"
+                    )
+                if outcome is not None and outcome != resolved_outcome:
+                    raise ClosedLoopRuntimeError(
+                        f"ROUTE_OUTCOME_ASSERTION_MISMATCH: caller asserted {outcome!r}, "
+                        f"resolver produced {resolved_outcome!r}"
+                    )
+                edge_raw = edges[resolved_outcome]
+                if not isinstance(edge_raw, Mapping):
+                    raise ClosedLoopRuntimeError(
+                        f"ROUTE_INVALID: edge {resolved_outcome!r} for {step_id!r} must be a mapping"
+                    )
+                edge_payload = {
+                    "outcome": resolved_outcome,
+                    "source_step_id": step_id,
+                    **edge_raw,
+                }
+                if "runtime_executable" not in edge_raw:
+                    edge_payload["runtime_executable"] = True
+                edge = PlanEdge.from_dict(edge_payload)
+                if not edge.runtime_executable and not edge.is_terminal:
+                    raise ClosedLoopRuntimeError(
+                        "ROUTE_NOT_EXECUTABLE: declared non-executable route is provenance-only"
+                    )
+
+        # Unknown verbs are effectful by default. W5 must not infer that an
         # unfamiliar node action is harmless merely because it is on a plan.
         effectful = bool(action and action not in _READ_ONLY_ACTIONS)
         if effectful and not self._revalidate_authority(action):
@@ -269,24 +329,9 @@ class ClosedLoopRuntimeExecutor:
         if side_effect is not None:
             side_effect()
 
-        edges = step_raw.get("edges") or {}
-        if outcome is not None and outcome not in edges:
-            raise ClosedLoopRuntimeError(f"outcome {outcome!r} not declared in step {step_id!r} edges")
-        edge_raw = edges.get(outcome, {}) if outcome is not None else {}
-        if outcome is not None:
-            edge_payload = {"outcome": outcome, "source_step_id": step_id, **edge_raw}
-            # Pre-route-table plans omitted this flag; preserve that legacy contract.
-            if "runtime_executable" not in edge_raw:
-                edge_payload["runtime_executable"] = True
-            edge = PlanEdge.from_dict(edge_payload)
-        else:
-            edge = None
-        if edge is not None and not edge.runtime_executable and not edge.is_terminal:
-            raise ClosedLoopRuntimeError("ROUTE_NOT_EXECUTABLE: declared non-executable route is provenance-only")
-
-        target = step_id if edge is None else edge.target
+        target = "terminal" if terminal_step else (edge.target if edge is not None else step_id)
         control_state = self._cursor.control_state
-        is_terminal = bool(edge and edge.is_terminal)
+        is_terminal = terminal_step or bool(edge and edge.is_terminal)
         if edge is not None and edge.target == "wait":
             control_state = "WAITING"
             target = step_id
@@ -295,7 +340,7 @@ class ClosedLoopRuntimeExecutor:
             target = step_id
         effective_sequence = sequence if sequence is not None else self._sequence + 1
         evidence_entry = {
-            "status": outcome or "EXECUTED",
+            "status": resolved_outcome if resolved_outcome is not None else ("TERMINAL" if terminal_step else "EXECUTED"),
             "payload": dict(payload),
             "requested_action": action or None,
             "evidence_refs": list(evidence_refs),
