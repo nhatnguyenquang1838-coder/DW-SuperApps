@@ -122,6 +122,7 @@ def build_envelope(
     binding_id: str | None,
     lease_id: str,
     adapter_key: str,
+    context: object | None = None,
 ) -> DispatchEnvelope:
     """Construct the immutable runtime-only DispatchEnvelope after preflight."""
     return DispatchEnvelope(
@@ -133,4 +134,5 @@ def build_envelope(
         lease_id=lease_id,
         fencing_token=request.fencing_token,
         adapter_key=adapter_key,
+        context=context,
     )
