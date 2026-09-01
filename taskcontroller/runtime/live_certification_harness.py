@@ -1,29 +1,33 @@
-"""Lightweight durable live-certification harness (M5).
-
-Records stable Test Cases separately from per-execution Test Runs.  Keeps
-every PASS/FAIL branch/PR as reproducible evidence — certification branches
-are NEVER deleted.  Verdicts are immutable once recorded.  The run registry
-is persisted to a JSONL store so certification evidence survives process
-restart (M5 durability).
-"""
+"""Campaign-scoped live certification facade with legacy W7 compatibility."""
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Mapping
 
+from .certification_models import (
+    CertificationCampaign,
+    RuntimeCorrection,
+    RuntimeFinding,
+    SourceRevision,
+    TestCase as CampaignTestCase,
+    TestRun as CampaignTestRun,
+)
+from .certification_store import CertificationStore, CertificationStoreError
+
 
 class LiveCertificationError(Exception):
-    """Raised when a live certification operation violates the contract."""
+    """Raised when a live certification operation violates its contract."""
 
 
+# Compatibility-only W7 records. New campaign APIs use certification_models.
 @dataclass
 class TestCase:
-    """Stable scenario/acceptance definition."""
     case_id: str
     scenario: str
     acceptance: str
@@ -31,7 +35,6 @@ class TestCase:
 
 @dataclass
 class TestRunVerdict:
-    """Verdict constants."""
     PASS = "PASS"
     FAIL = "FAIL"
     PENDING = "PENDING"
@@ -39,14 +42,12 @@ class TestRunVerdict:
 
 @dataclass
 class RunMode:
-    """Run mode constants."""
     STANDARD_REAL_RUN = "STANDARD_REAL_RUN"
     DEEP_CERTIFICATION = "DEEP_CERTIFICATION"
 
 
 @dataclass
 class TestRun:
-    """One execution with base/head SHA, branch, PR, RuntimePlan identity, executor/model, CI evidence, actual result and verdict."""
     run_id: str
     case_id: str
     scenario: str
@@ -67,7 +68,6 @@ class TestRun:
     branch_deleted: bool = False
 
     def to_dict(self) -> dict[str, Any]:
-        """Durable JSON projection (M5: restart reconstruct)."""
         return {
             "run_id": self.run_id,
             "case_id": self.case_id,
@@ -83,7 +83,7 @@ class TestRun:
             "runtime_plan_digest": self.runtime_plan_digest,
             "mode": self.mode,
             "verdict": self.verdict,
-            "evidence": dict(self.evidence),
+            "evidence": copy.deepcopy(self.evidence),
             "expected": self.expected,
             "actual": self.actual,
             "branch_deleted": self.branch_deleted,
@@ -106,7 +106,7 @@ class TestRun:
             runtime_plan_digest=payload.get("runtime_plan_digest", ""),
             mode=payload.get("mode", RunMode.STANDARD_REAL_RUN),
             verdict=payload.get("verdict", TestRunVerdict.PENDING),
-            evidence=dict(payload.get("evidence", {})),
+            evidence=copy.deepcopy(dict(payload.get("evidence", {}))),
             expected=payload.get("expected", ""),
             actual=payload.get("actual", ""),
             branch_deleted=bool(payload.get("branch_deleted", False)),
@@ -114,124 +114,414 @@ class TestRun:
 
 
 class LiveCertificationHarness:
-    """Durable live-certification harness.
+    """Campaign-scoped certification facade.
 
-    Records stable Test Cases separately from per-execution Test Runs.
-    Keeps every PASS/FAIL branch/PR as reproducible evidence.  Verdicts are
-    immutable once recorded.  Optionally persists the registry to a JSONL
-    store so evidence survives process restart.
+    The revised API persists canonical campaign events through
+    :class:`CertificationStore`. The old keyword-only ``case=...`` API remains
+    isolated as a compatibility reader/writer for v1 W7 JSONL records.
     """
 
     def __init__(self, store: str | Path | None = None) -> None:
-        self._runs: dict[str, TestRun] = {}
-        self._branches: dict[str, str] = {}  # branch -> run_id
-        self._seen_terminal_verdicts: dict[str, str] = {}  # run_id -> last terminal verdict
         self._store = Path(store) if store else None
-        if self._store is not None:
-            self._load()
+        self._event_store: CertificationStore | None = None
+        self._legacy_store_mode = False
+        self._runs: dict[str, TestRun] = {}
+        self._branches: dict[str, str] = {}
+        self._seen_terminal_verdicts: dict[str, str] = {}
+        self._campaigns: dict[str, CertificationCampaign] = {}
+        self._cases: dict[str, CampaignTestCase] = {}
+        self._cert_runs: dict[str, CampaignTestRun] = {}
+        self._findings: dict[str, RuntimeFinding] = {}
+        self._corrections: dict[str, RuntimeCorrection] = {}
+        self._campaign_branches: dict[tuple[str, str], str] = {}
+        self._source_tuples: set[tuple[Any, ...]] = set()
+        if self._store is not None and self._store.exists():
+            self._detect_and_load_store()
 
-    def _load(self) -> None:
-        """Reconstruct the registry from the durable JSONL store (M5).
+    def _detect_and_load_store(self) -> None:
+        store_path = self._store
+        if store_path is None:
+            return
+        for line in store_path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            raw = json.loads(line)
+            if "schema_version" in raw and "event_seq" in raw:
+                self._event_store = CertificationStore(store_path)
+                self._replay_events(self._event_store.replay())
+            else:
+                self._legacy_store_mode = True
+                self._load_legacy_jsonl()
+            return
 
-        Each JSON line carries a SHA-256 content hash.  On load we verify
-        every record's hash and fail-closed when a duplicate run_id with a
-        different hash is detected (JSONL last-write-wins tamper).
-        """
+    # --------------------------- revised campaign API ---------------------
+    def _ensure_event_store(self) -> CertificationStore | None:
+        if self._legacy_store_mode:
+            raise LiveCertificationError(
+                "legacy W7 JSONL store cannot accept revised campaign events"
+            )
+        if self._store is None:
+            return None
+        if self._event_store is None:
+            self._event_store = CertificationStore(self._store)
+        return self._event_store
+
+    def _append_event(self, event_type: str, aggregate_id: str, payload: Mapping[str, object]) -> None:
+        store = self._ensure_event_store()
+        if store is not None:
+            try:
+                store.append(event_type, aggregate_id, payload)
+            except CertificationStoreError as exc:
+                raise LiveCertificationError(str(exc)) from exc
+
+    def create_campaign(self, campaign: CertificationCampaign) -> CertificationCampaign:
+        if not isinstance(campaign, CertificationCampaign):
+            raise LiveCertificationError("CertificationCampaign required")
+        if campaign.campaign_id in self._campaigns:
+            raise LiveCertificationError(f"campaign {campaign.campaign_id!r} already exists")
+        self._campaigns[campaign.campaign_id] = campaign
+        for branch in (campaign.runtime_branch, campaign.proving_branch):
+            key = ("nhatnguyenquang1838-coder/DW-SuperApps", branch)
+            owner = self._campaign_branches.get(key)
+            if owner is not None and owner != campaign.campaign_id:
+                raise LiveCertificationError(f"branch {branch!r} already owned by campaign {owner!r}")
+            self._campaign_branches[key] = campaign.campaign_id
+        self._append_event("CAMPAIGN_CREATED", campaign.campaign_id, campaign.to_dict())
+        return campaign
+
+    def register_case(self, case: CampaignTestCase) -> CampaignTestCase:
+        if not isinstance(case, CampaignTestCase):
+            raise LiveCertificationError("versioned Campaign TestCase required")
+        existing = self._cases.get(case.case_id)
+        if existing is not None and existing != case:
+            raise LiveCertificationError(f"case {case.case_id!r} already registered with another revision")
+        self._cases[case.case_id] = case
+        self._append_event("CASE_REGISTERED", case.case_id, case.to_dict())
+        return case
+
+    @staticmethod
+    def _cert_run_from_dict(payload: Mapping[str, Any]) -> CampaignTestRun:
+        return CampaignTestRun(
+            run_id=payload["run_id"],
+            campaign_id=payload["campaign_id"],
+            case_id=payload["case_id"],
+            case_revision=payload["case_revision"],
+            runtime=SourceRevision(**payload["runtime"]),
+            subject=SourceRevision(**payload["subject"]),
+            gwc_sha=payload["gwc_sha"],
+            runtime_plan_ref=payload["runtime_plan_ref"],
+            runtime_plan_revision=payload["runtime_plan_revision"],
+            runtime_plan_digest=payload["runtime_plan_digest"],
+            executor=payload["executor"],
+            model=payload["model"],
+            verdict=payload["verdict"],
+            evidence=payload.get("evidence", {}),
+            legacy=bool(payload.get("legacy", False)),
+        )
+
+    @staticmethod
+    def _campaign_from_dict(payload: Mapping[str, Any]) -> CertificationCampaign:
+        return CertificationCampaign(**payload)
+
+    @staticmethod
+    def _case_from_dict(payload: Mapping[str, Any]) -> CampaignTestCase:
+        return CampaignTestCase(
+            case_id=payload["case_id"],
+            revision=payload["revision"],
+            scenario=payload["scenario"],
+            acceptance=payload["acceptance"],
+            declared_paths=tuple(payload["declared_paths"]),
+        )
+
+    def _replay_events(self, events: tuple[Any, ...]) -> None:
+        for event in events:
+            payload = event.payload
+            if event.event_type == "CAMPAIGN_CREATED":
+                campaign = self._campaign_from_dict(payload)
+                self._campaigns[campaign.campaign_id] = campaign
+                for branch in (campaign.runtime_branch, campaign.proving_branch):
+                    self._campaign_branches[("nhatnguyenquang1838-coder/DW-SuperApps", branch)] = campaign.campaign_id
+            elif event.event_type == "CASE_REGISTERED":
+                case = self._case_from_dict(payload)
+                self._cases[case.case_id] = case
+            elif event.event_type in {"RUN_STARTED", "RUN_VERDICT_RECORDED"}:
+                run = self._cert_run_from_dict(payload)
+                self._cert_runs[run.run_id] = run
+                self._campaign_branches[(run.subject.repository, run.subject.branch)] = run.campaign_id
+                self._source_tuples.add(self._source_tuple(run))
+            elif event.event_type == "FINDING_RECORDED":
+                finding = RuntimeFinding(**dict(payload))
+                self._findings[finding.finding_id] = finding
+            elif event.event_type == "CORRECTION_RECORDED":
+                correction = RuntimeCorrection(**dict(payload["correction"]))
+                self._corrections[correction.correction_id] = correction
+                for finding_id in correction.finding_ids:
+                    finding = self._findings.get(finding_id)
+                    if finding is not None:
+                        self._findings[finding_id] = replace(
+                            finding,
+                            status="RESOLVED",
+                            correction_id=correction.correction_id,
+                            correction_sha=correction.runtime_sha,
+                            regression_evidence=correction.regression_evidence,
+                            successor_run_ids=correction.successor_run_ids,
+                        )
+
+    @staticmethod
+    def _source_tuple(run: CampaignTestRun) -> tuple[Any, ...]:
+        return (
+            run.campaign_id,
+            run.case_id,
+            run.case_revision,
+            run.runtime.repository,
+            run.runtime.branch,
+            run.runtime.start_sha,
+            run.runtime.end_sha,
+            run.subject.repository,
+            run.subject.branch,
+            run.subject.start_sha,
+            run.subject.end_sha,
+            run.gwc_sha,
+            run.runtime_plan_ref,
+            run.runtime_plan_revision,
+            run.runtime_plan_digest,
+        )
+
+    def start_run(
+        self,
+        *,
+        campaign_id: str | None = None,
+        case_id: str | None = None,
+        runtime: SourceRevision | None = None,
+        subject: SourceRevision | None = None,
+        gwc_sha: str | None = None,
+        executor: str,
+        model: str,
+        run_id: str | None = None,
+        runtime_plan_ref: str = "",
+        runtime_plan_revision: str = "",
+        runtime_plan_digest: str = "",
+        # Compatibility-only W7 arguments:
+        case: TestCase | None = None,
+        branch: str | None = None,
+        base_sha: str | None = None,
+        head_sha: str | None = None,
+        pr_id: str = "",
+        mode: str = RunMode.STANDARD_REAL_RUN,
+    ) -> CampaignTestRun | TestRun:
+        if campaign_id is None and runtime is None and subject is None:
+            return self._start_legacy_run(
+                case=case,
+                branch=branch,
+                base_sha=base_sha,
+                head_sha=head_sha,
+                executor=executor,
+                model=model,
+                pr_id=pr_id,
+                runtime_plan_ref=runtime_plan_ref,
+                runtime_plan_digest=runtime_plan_digest,
+                mode=mode,
+            )
+        if campaign_id is None or case_id is None or runtime is None or subject is None or gwc_sha is None:
+            raise LiveCertificationError("campaign, case, runtime, subject and GWC identity are required")
+        campaign = self._campaigns.get(campaign_id)
+        if campaign is None:
+            raise LiveCertificationError(f"campaign {campaign_id!r} not found")
+        case_record = self._cases.get(case_id)
+        if case_record is None:
+            raise LiveCertificationError(f"versioned case {case_id!r} not found")
+        if case_record.case_id != campaign.test_case_id or case_record.revision != campaign.test_case_revision:
+            raise LiveCertificationError("case does not match campaign revision")
+        if not executor or not model:
+            raise LiveCertificationError("executor and model identity are required")
+        if gwc_sha != campaign.gwc_sha:
+            raise LiveCertificationError("GWC source binding does not match campaign")
+        branch_key = (subject.repository, subject.branch)
+        owner = self._campaign_branches.get(branch_key)
+        if owner is not None and owner != campaign_id:
+            raise LiveCertificationError(f"branch {subject.branch!r} already owned by campaign {owner!r}")
+        self._campaign_branches[branch_key] = campaign_id
+        run_id = run_id or f"run-{uuid.uuid4().hex[:8]}"
+        if run_id in self._cert_runs:
+            raise LiveCertificationError(f"duplicate run identity {run_id!r}")
+        if not runtime_plan_ref or not runtime_plan_revision or not runtime_plan_digest:
+            raise LiveCertificationError("runtime plan identity is required")
+        run = CampaignTestRun(
+            run_id=run_id,
+            campaign_id=campaign_id,
+            case_id=case_id,
+            case_revision=case_record.revision,
+            runtime=runtime,
+            subject=subject,
+            gwc_sha=gwc_sha,
+            runtime_plan_ref=runtime_plan_ref,
+            runtime_plan_revision=runtime_plan_revision,
+            runtime_plan_digest=runtime_plan_digest,
+            executor=executor,
+            model=model,
+            verdict="PENDING",
+            evidence={},
+        )
+        source_tuple = self._source_tuple(run)
+        if source_tuple in self._source_tuples:
+            raise LiveCertificationError("duplicate exact source tuple")
+        self._cert_runs[run_id] = run
+        self._source_tuples.add(source_tuple)
+        self._append_event("RUN_STARTED", run_id, run.to_dict())
+        return run
+
+    def record_finding(self, *, campaign_id: str, discovered_by_run_id: str, invariant_id: str,
+                       severity: str, expected: str, actual: str,
+                       reproduction_refs: tuple[str, ...], finding_id: str | None = None) -> RuntimeFinding:
+        if campaign_id not in self._campaigns:
+            raise LiveCertificationError(f"campaign {campaign_id!r} not found")
+        if discovered_by_run_id not in self._cert_runs:
+            raise LiveCertificationError(f"run {discovered_by_run_id!r} not found")
+        finding = RuntimeFinding(
+            finding_id=finding_id or f"finding-{uuid.uuid4().hex[:8]}",
+            campaign_id=campaign_id,
+            discovered_by_run_id=discovered_by_run_id,
+            invariant_id=invariant_id,
+            severity=severity,
+            expected=expected,
+            actual=actual,
+            reproduction_refs=reproduction_refs,
+            status="OPEN",
+        )
+        if finding.finding_id in self._findings:
+            raise LiveCertificationError("duplicate finding identity")
+        self._findings[finding.finding_id] = finding
+        self._append_event("FINDING_RECORDED", finding.finding_id, finding.to_dict())
+        return finding
+
+    def record_correction(self, *, correction_id: str, finding_ids: tuple[str, ...], runtime_sha: str,
+                          regression_evidence: tuple[str, ...], successor_run_ids: tuple[str, ...]) -> RuntimeCorrection:
+        correction = RuntimeCorrection(
+            correction_id=correction_id,
+            finding_ids=finding_ids,
+            runtime_sha=runtime_sha,
+            regression_evidence=regression_evidence,
+            successor_run_ids=successor_run_ids,
+        )
+        if correction_id in self._corrections:
+            raise LiveCertificationError("duplicate correction identity")
+        for finding_id in correction.finding_ids:
+            finding = self._findings.get(finding_id)
+            if finding is None:
+                raise LiveCertificationError(f"finding {finding_id!r} not found")
+            self._findings[finding_id] = replace(
+                finding,
+                status="RESOLVED",
+                correction_id=correction.correction_id,
+                correction_sha=correction.runtime_sha,
+                regression_evidence=correction.regression_evidence,
+                successor_run_ids=correction.successor_run_ids,
+            )
+        self._corrections[correction_id] = correction
+        self._append_event(
+            "CORRECTION_RECORDED",
+            correction_id,
+            {"correction": correction.to_dict(), "finding_ids": list(finding_ids)},
+        )
+        return correction
+
+    def get_campaign(self, campaign_id: str) -> CertificationCampaign:
+        try:
+            return self._campaigns[campaign_id]
+        except KeyError as exc:
+            raise LiveCertificationError(f"campaign {campaign_id!r} not found") from exc
+
+    def get_finding(self, finding_id: str) -> RuntimeFinding:
+        try:
+            return self._findings[finding_id]
+        except KeyError as exc:
+            raise LiveCertificationError(f"finding {finding_id!r} not found") from exc
+
+    # ------------------------- revised verdict API ------------------------
+    def record_verdict(
+        self,
+        run_id: str,
+        verdict: str,
+        evidence: Mapping[str, object],
+        expected: str = "",
+        actual: str = "",
+        notion_data: dict[str, Any] | None = None,
+    ) -> None:
+        if run_id in self._cert_runs:
+            if notion_data is not None:
+                raise LiveCertificationError("Notion/Slack data must not be treated as machine truth")
+            run = self._cert_runs[run_id]
+            if run.verdict != "PENDING":
+                raise LiveCertificationError("verdict is immutable after terminal record")
+            if verdict not in {"PASS", "FAIL"}:
+                raise LiveCertificationError("verdict must be exactly PASS or FAIL")
+            if not evidence:
+                raise LiveCertificationError("verdict requires exact refs/evidence")
+            updated = replace(run, verdict=verdict, evidence=evidence)
+            self._cert_runs[run_id] = updated
+            self._append_event("RUN_VERDICT_RECORDED", run_id, updated.to_dict())
+            return
+        self._record_legacy_verdict(run_id, verdict, evidence, expected, actual, notion_data)
+
+    # ------------------------- legacy W7 compatibility --------------------
+    def _load_legacy_jsonl(self) -> None:
         if self._store is None or not self._store.exists():
             return
         for line in self._store.read_text(encoding="utf-8").splitlines():
             if not line.strip():
                 continue
             raw = json.loads(line)
-            record_payload = {k: v for k, v in raw.items() if k != "_sha256"}
+            record_payload = {key: value for key, value in raw.items() if key != "_sha256"}
             record = TestRun.from_dict(record_payload)
-            expected_sha = hashlib.sha256(
-                json.dumps(record_payload, sort_keys=True).encode("utf-8")
-            ).hexdigest()
+            expected_sha = hashlib.sha256(json.dumps(record_payload, sort_keys=True).encode("utf-8")).hexdigest()
             stored_sha = raw.get("_sha256", "")
-            # seq=9: fail-closed — missing/empty _sha256 is tamper/invalid.
             if not stored_sha:
-                raise LiveCertificationError(
-                    f"run {record.run_id!r} JSONL record has no _sha256 — invalid store state"
-                )
+                raise LiveCertificationError(f"run {record.run_id!r} JSONL record has no _sha256 — invalid store state")
             if stored_sha != expected_sha:
-                raise LiveCertificationError(
-                    f"run {record.run_id!r} JSONL record hash mismatch — tamper detected"
-                )
-            # seq=9: validate persisted verdict vocabulary — only PENDING/PASS/FAIL.
+                raise LiveCertificationError(f"run {record.run_id!r} JSONL record hash mismatch — tamper detected")
             if record.verdict not in (TestRunVerdict.PENDING, TestRunVerdict.PASS, TestRunVerdict.FAIL):
-                raise LiveCertificationError(
-                    f"run {record.run_id!r} JSONL record has invalid persisted verdict {record.verdict!r}"
-                )
-            # Track terminal verdicts per run_id to detect PASS<->FAIL contradiction.
-            if record.verdict not in (TestRunVerdict.PENDING,):
-                prev_terminal = self._seen_terminal_verdicts.get(record.run_id)
-                if prev_terminal is not None and prev_terminal != record.verdict:
-                    raise LiveCertificationError(
-                        f"run {record.run_id!r} JSONL contradictory terminal history: "
-                        f"{prev_terminal} then {record.verdict}"
-                    )
+                raise LiveCertificationError(f"run {record.run_id!r} JSONL record has invalid persisted verdict {record.verdict!r}")
+            if record.verdict != TestRunVerdict.PENDING:
+                previous = self._seen_terminal_verdicts.get(record.run_id)
+                if previous is not None and previous != record.verdict:
+                    raise LiveCertificationError(f"run {record.run_id!r} JSONL contradictory terminal history: {previous} then {record.verdict}")
                 self._seen_terminal_verdicts[record.run_id] = record.verdict
             self._runs[record.run_id] = record
             self._branches[record.branch] = record.run_id
 
-    def _append(self, run: TestRun) -> None:
-        """Append one immutable record to the durable store (M5).
+    def _load(self) -> None:
+        self._load_legacy_jsonl()
 
-        Each appended record carries a SHA-256 content hash (excluded from its own
-        computation) so that a subsequent load can detect tampering or duplicate
-        records with conflicting verdicts (last-write-wins replay attack).
-        """
+    def _append(self, run: TestRun) -> None:
         if self._store is None:
             return
         self._store.parent.mkdir(parents=True, exist_ok=True)
         core_payload = run.to_dict()
-        # Hash is computed on content WITHOUT _sha256 to avoid circular dependency
-        core_json = json.dumps(core_payload, sort_keys=True).encode("utf-8")
-        record_sha256 = hashlib.sha256(core_json).hexdigest()
+        record_sha256 = hashlib.sha256(json.dumps(core_payload, sort_keys=True).encode("utf-8")).hexdigest()
         payload = dict(core_payload)
         payload["_sha256"] = record_sha256
-        with self._store.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(payload, sort_keys=True) + "\n")
+        with self._store.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(payload, sort_keys=True) + "\n")
 
-    def start_run(
-        self,
-        *,
-        case: TestCase | None,
-        branch: str,
-        base_sha: str,
-        head_sha: str,
-        executor: str,
-        model: str,
-        pr_id: str = "",
-        runtime_plan_ref: str = "",
-        runtime_plan_digest: str = "",
-        mode: str = RunMode.STANDARD_REAL_RUN,
-    ) -> TestRun:
-        """Start a new test run. Requires case identity and fresh branch."""
-        # 1. Reject run without case identity.
+    def _start_legacy_run(self, *, case: TestCase | None, branch: str | None, base_sha: str | None,
+                          head_sha: str | None, executor: str, model: str, pr_id: str,
+                          runtime_plan_ref: str, runtime_plan_digest: str, mode: str) -> TestRun:
         if case is None:
             raise LiveCertificationError("case identity required")
-
-        # 2. Reject missing executor/model identity.
         if not executor:
             raise LiveCertificationError("executor identity required")
         if not model:
             raise LiveCertificationError("model identity required")
-
-        # 3. Reject reused branch identity for a new run.
-        if branch in self._branches:
-            raise LiveCertificationError(f"branch {branch!r} already used by run {self._branches[branch]}")
-
-        run_id = f"run-{uuid.uuid4().hex[:8]}"
+        if not branch or branch in self._branches:
+            raise LiveCertificationError(f"branch {branch!r} already used" if branch else "branch required")
         run = TestRun(
-            run_id=run_id,
+            run_id=f"run-{uuid.uuid4().hex[:8]}",
             case_id=case.case_id,
             scenario=case.scenario,
             acceptance=case.acceptance,
             branch=branch,
-            base_sha=base_sha,
-            head_sha=head_sha,
+            base_sha=base_sha or "",
+            head_sha=head_sha or "",
             executor=executor,
             model=model,
             pr_id=pr_id,
@@ -239,80 +529,46 @@ class LiveCertificationHarness:
             runtime_plan_digest=runtime_plan_digest,
             mode=mode,
         )
-        self._runs[run_id] = run
-        self._branches[branch] = run_id
+        self._runs[run.run_id] = run
+        self._branches[branch] = run.run_id
         self._append(run)
         return run
 
-    def record_verdict(
-        self,
-        *,
-        run_id: str,
-        verdict: str,
-        evidence: dict[str, Any],
-        expected: str = "",
-        actual: str = "",
-        notion_data: dict[str, Any] | None = None,
-    ) -> None:
-        """Record PASS/FAIL verdict with exact refs/evidence — immutable once recorded."""
-        # 4. Reject Notion/Slack data being treated as machine truth.
+    def _record_legacy_verdict(self, run_id: str, verdict: str, evidence: Mapping[str, object],
+                               expected: str, actual: str, notion_data: dict[str, Any] | None) -> None:
         if notion_data is not None:
-            raise LiveCertificationError(
-                "Notion/Slack data must not be treated as machine truth"
-            )
-
+            raise LiveCertificationError("Notion/Slack data must not be treated as machine truth")
         run = self._runs.get(run_id)
         if run is None:
             raise LiveCertificationError(f"run {run_id!r} not found")
-
-        # 5. Reject verdict without exact refs/evidence.
         if not evidence:
             raise LiveCertificationError("verdict requires exact refs/evidence")
-
-        # M5 seq=8: immutable once recorded — a verdict must never be overwritten.
         if run.verdict != TestRunVerdict.PENDING:
-            raise LiveCertificationError(
-                f"verdict for run {run_id!r} is immutable (already recorded: {run.verdict})"
-            )
-        # Strict terminal-verdict allowlist: only PASS or FAIL are accepted.
+            raise LiveCertificationError(f"verdict for run {run_id!r} is immutable (already recorded: {run.verdict})")
         if verdict not in (TestRunVerdict.PASS, TestRunVerdict.FAIL):
-            raise LiveCertificationError(
-                f"verdict for run {run_id!r} must be exactly PASS or FAIL; got {verdict!r}"
-            )
-
+            raise LiveCertificationError(f"verdict for run {run_id!r} must be exactly PASS or FAIL; got {verdict!r}")
         run.verdict = verdict
-        run.evidence = dict(evidence)
+        run.evidence = copy.deepcopy(dict(evidence))
         run.expected = expected
         run.actual = actual
+        self._seen_terminal_verdicts[run_id] = verdict
         self._append(run)
 
-    def get_run(self, run_id: str) -> TestRun:
-        """Get a test run by ID. Returns an immutable deep copy so that
-        caller mutations cannot corrupt the internal registry."""
+    def get_run(self, run_id: str) -> CampaignTestRun | TestRun:
+        if run_id in self._cert_runs:
+            return self._cert_runs[run_id]
         run = self._runs.get(run_id)
         if run is None:
             raise LiveCertificationError(f"run {run_id!r} not found")
-        import copy
         return copy.deepcopy(run)
 
     def delete_branch(self, *, run_id: str) -> None:
-        """Branch deletion/cleanup: REJECTED for every certification run.
-
-        M5: certification branches for PASS, FAIL and PENDING runs are all
-        retained as reproducible evidence — the "never delete PASS/FAIL
-        certification branches" invariant holds for every verdict.
-        """
         run = self._runs.get(run_id)
         if run is None:
             raise LiveCertificationError(f"run {run_id!r} not found")
-
-        # Branch and PR retained for PASS, FAIL and PENDING.
-        raise LiveCertificationError(
-            f"branch {run.branch!r} retained for certification run {run_id} (verdict {run.verdict})"
-        )
+        raise LiveCertificationError(f"branch {run.branch!r} retained for certification run {run_id} (verdict {run.verdict})")
 
     def get_current_state(self, *, run_id: str) -> dict[str, Any]:
-        """Get current machine state by run_id (no branch scan required)."""
         run = self._runs.get(run_id)
         if run is None:
             raise LiveCertificationError(f"run {run_id!r} not found")
