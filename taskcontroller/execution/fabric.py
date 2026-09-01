@@ -57,6 +57,7 @@ class ExecutionFabric:
         binding_id: str | None = None,
         adapter_key: str | None = None,
         context: StepContext | None = None,
+        require_plan_binding: bool = False,
     ) -> DispatchAck:
         """Preflight-correlate then invoke the adapter exactly once.
 
@@ -65,7 +66,24 @@ class ExecutionFabric:
         identical canonical envelope returns the prior ack and does NOT call the
         adapter again. Same command_id with a different envelope =>
         DuplicateCommand.
+
+        M2 fail-closed plan binding: when ``require_plan_binding`` is True
+        (semantic dispatch), a non-None StepContext carrying the exact
+        runtime_plan_ref/digest/step_id identity is mandatory BEFORE any
+        provider/adapter resolution. A supplied context that is not a
+        StepContext is rejected the same way — no semantic action may route to
+        an adapter without its RuntimePlan binding.
         """
+        # M2: plan-binding guard runs first, before any provider/adapter logic.
+        if require_plan_binding and context is None:
+            raise TaskControllerValidationError(
+                "runtime plan binding is required for semantic dispatch"
+            )
+        if context is not None and not isinstance(context, StepContext):
+            raise TaskControllerValidationError(
+                "runtime plan binding requires a StepContext"
+            )
+
         # Resolve the binding_id from the provider's bindings that matches the
         # receipt's selected binding (the receipt binding must resolve to a real
         # provider binding). Pass None when the receipt carries no binding.
@@ -150,6 +168,7 @@ class ExecutionFabric:
         return self.dispatch(
             request, receipt, provider, run_id, node_id, command_id, now,
             binding_id=binding_id, adapter_key=adapter_key, context=context,
+            require_plan_binding=True,
         )
 
     def cancel(
