@@ -1,0 +1,14 @@
+{
+  "campaign_id": "RP-CERT-001",
+  "events_sha256": "c76abc61f9cd9d3e420b20fe967a8af599fac3bfde128f4ff9de87662ea0fc11",
+  "evidence_refs": {
+    "case": "C4",
+    "gwc_sha": "43f6379158978b0c299d775cd162ad69b5a1c099",
+    "runtime_sha": "80d8b53ada517a2ae2a8349bb19a3b6c238f08dd"
+  },
+  "final_manifest_digest": "b6ca29bf94971aef20139dc3efe37c68fd19b3c35ea03eeb8fba12bcf350b71c",
+  "first_event_digest": "133608d0d8ff621b412cc7053516f1945096f6dae4281c2ba087c9214a979707",
+  "last_event_digest": "eceddee1658be8816c94c7fb93355657fca0030b0ceacecf64b762779d508be2",
+  "record_count": 8,
+  "schema_version": 1
+}
