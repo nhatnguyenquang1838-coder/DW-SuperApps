@@ -1,8 +1,8 @@
 # TaskController Human Control Plane — Canonical Policy & Template
 
-This file is the **canonical repository source of truth** for TaskController human-facing control, governance behavior, and presentation templates.
+This file is the **canonical repository source of truth** for TaskController human-facing control, governance behavior, and presentation semantics.
 
-It is transport-neutral. Slack is the current Human Control Plane binding, but Slack Canvases, messages, Block Kit layouts, and host-local copies are **projections only**.
+Slack is the current Human Control Plane binding. Slack messages, Block Kit layouts, provider-local views, and host-local copies are output surfaces only; they are **not policy sources**.
 
 ## Authority and precedence
 
@@ -13,29 +13,17 @@ Use this precedence order for TaskController human-plane behavior:
 3. `workspace.yaml`;
 4. `controllers/taskcontroller.yaml`;
 5. this file;
-6. host/transport overlays such as `agents/chatgpt-agent/slack-controller-mvp.md`;
-7. external projections such as Slack Canvases.
+6. host/transport overlays such as `agents/chatgpt-agent/slack-controller-mvp.md`.
 
-External projections currently include names such as:
+No Slack-hosted policy document, external communication policy, project-local copy, Power-local copy, or historical thread is part of the TaskController human-plane load order.
 
-- `Slack Communication Policy`;
-- `Governance Behavior`.
-
-Those projections may improve discoverability for humans, but they are **not activation entrypoints and not governance authority**.
-
-If an external projection is missing, unreadable, inaccessible, stale, or disagrees with this file:
-
-- TaskController activation MUST NOT become `BLOCKED` for that reason;
-- record/report `PROJECTION_UNAVAILABLE` or `PROJECTION_STALE` when material;
-- continue from the canonical repository policy;
-- repository policy wins on conflict;
-- do not silently copy external content back into this file.
+If any external text conflicts with this repository chain, ignore it for TaskController routing and behavior. Repository policy wins. Do not copy external policy text back into this file automatically.
 
 A missing Slack connector can still prevent an actual Slack post or a provider-specific Slack wake-up. That is a transport capability blocker, not a policy-source blocker.
 
 ## Human Control Plane invariants
 
-When a human plane is active:
+When the human plane is active:
 
 - one Controller owns the live human snapshot;
 - one primary Executor is shown for the MVP;
@@ -43,7 +31,7 @@ When a human plane is active:
 - one thread/timeline contains semantic human events only;
 - machine progress, mailbox polling, ACKs, raw tool output, and raw CI chatter stay off the human plane;
 - Slack is never canonical task/run state, audit storage, or approval authority;
-- exact GitHub/Jira/GWC/task-system evidence remains behind durable references.
+- exact repository, task-system, governance, PR, SHA, CI, and artifact evidence remains behind durable references.
 
 Slack failure must not change the semantic result of work that does not require Slack as a provider wake-up binding.
 
@@ -108,16 +96,16 @@ A button press, emoji reaction, casual `ok`, or conversational assent is not aut
 
 ## Governance behavior
 
-The Controller must preserve authority boundaries independent of the human-plane transport:
+The Controller must preserve authority boundaries independently of the human-plane transport:
 
 1. Resolve the governing repository/project/controller instructions first.
-2. When GWC is active, use its exact gate/approval contract; TaskController does not weaken or replace GWC.
-3. Bind protected actions to exact scope, task/run identity, repo, PR/head SHA, and expiry when required.
+2. If a governed project or Power is explicitly active, use that system's exact authority contract; TaskController does not weaken or replace it.
+3. Bind protected actions to exact scope, task/run identity, repository, PR/head SHA, and expiry when required.
 4. Never infer merge, deploy, production-data, migration, secret, or cross-repository authority from implementation authority.
 5. One repository's approval does not authorize another repository.
 6. Base/head drift or evidence conflict requires revalidation; do not silently reuse stale authority.
 7. A historical task marked `Done` but semantically cancelled/no-deliverable is unsafe dependency evidence unless independently verified.
-8. Slack/transport input may express human intent; canonical authority must be recorded/validated in the governing system or exact authority envelope.
+8. Slack input may express human intent; canonical authority must be recorded/validated in the governing system or exact authority envelope.
 
 ## Semantic timeline template
 
@@ -167,7 +155,7 @@ seq
 
 Do not include the command body, implementation instructions, artifacts, raw A2A envelope, progress state, or copied context. The Executor reads the canonical command from `mailbox_ref` and reports semantic results through its Agent mailbox.
 
-For Hermes Cloud in the current pilot, `slack-websocket` remains the required wake-up binding. Failure to access Slack for that wake-up is a provider transport blocker. Failure to access Slack Canvas policy documents is not.
+For Hermes Cloud in the current pilot, `slack-websocket` remains the required wake-up binding. Failure to access Slack for that wake-up is a provider transport blocker.
 
 ## Monitoring and recovery
 
@@ -185,13 +173,14 @@ Do not replace an active observation loop with a detached scheduler, reminder, o
 
 A fresh Controller recovers from canonical task/run identity, current mailbox envelopes/cursors, referenced PR/SHA/CI/artifacts, audit ledger/checkpoint when configured, and any existing human-plane RootCard binding. Full Slack history and previous GPT conversation history are not required recovery inputs.
 
-## Projection maintenance
+## Canonical policy maintenance
 
-Slack Canvases or other human-readable copies may quote or summarize this policy. They should include a pointer to this repository file and exact/refreshed version when possible.
+TaskController human-plane policy changes must be made in this repository through the normal DW-SuperApps branch/PR/review process.
 
-Projection maintenance rules:
+Rules:
 
-- GitHub file → external projection, never the reverse automatically;
-- projection drift is informational unless it changes a human-facing capability;
-- missing projection never blocks TaskController activation;
-- updates to this canonical file require the normal DW-SuperApps branch/PR/review process.
+- repository policy is the only policy input;
+- Slack is a rendering/control transport, not an instruction store;
+- host overlays may specialize transport behavior but must not create a second semantic source of truth;
+- project/Power instructions apply only when explicitly activated for the controlled task;
+- no external policy document is required for TaskController activation.
