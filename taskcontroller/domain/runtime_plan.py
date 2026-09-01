@@ -69,6 +69,11 @@ class PlanEdge:
     target: str
     kind: str = "continue"
     source_step_id: str | None = None
+    # seq=13 M1 interop: preserved compiled-route discriminator semantics.
+    condition_id: str | None = None
+    runtime_executable: bool = False
+    source_gate: str | None = None
+    target_gate: str | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.outcome, "edge.outcome")
@@ -94,6 +99,14 @@ class PlanEdge:
         }
         if self.source_step_id is not None:
             payload["source_step_id"] = self.source_step_id
+        if self.condition_id is not None:
+            payload["condition_id"] = self.condition_id
+        if self.runtime_executable:
+            payload["runtime_executable"] = True
+        if self.source_gate is not None:
+            payload["source_gate"] = self.source_gate
+        if self.target_gate is not None:
+            payload["target_gate"] = self.target_gate
         return payload
 
     @classmethod
@@ -103,6 +116,10 @@ class PlanEdge:
             target=payload["target"],
             kind=payload.get("kind", "continue"),
             source_step_id=payload.get("source_step_id"),
+            condition_id=payload.get("condition_id"),
+            runtime_executable=bool(payload.get("runtime_executable", False)),
+            source_gate=payload.get("source_gate"),
+            target_gate=payload.get("target_gate"),
         )
 
 
@@ -148,6 +165,10 @@ class RuntimePlanStep:
                     target=edge.target,
                     kind=edge.kind,
                     source_step_id=self.step_id,
+                    condition_id=edge.condition_id,
+                    runtime_executable=edge.runtime_executable,
+                    source_gate=edge.source_gate,
+                    target_gate=edge.target_gate,
                 )
             elif edge.source_step_id != self.step_id:
                 raise TaskControllerValidationError(

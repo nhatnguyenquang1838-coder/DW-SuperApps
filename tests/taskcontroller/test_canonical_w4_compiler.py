@@ -144,3 +144,149 @@ def test_compiled_plan_can_be_persisted_and_round_tripped():
 
     assert restored == plan
     assert restored.runtime_plan_digest == plan.runtime_plan_digest
+
+
+def test_compile_edges_sequence_preserves_route_semantics():
+    """seq=13 M1 interop: blueprint with list-valued edges compiles losslessly,
+    preserving kind, runtime_executable, source/target gate, and condition_id."""
+    payload = _blueprint()
+    payload["topology"] = [
+        {
+            "action": "inspect",
+            "node_id": "reference.inspect",
+            "edges": [
+                {
+                    "target": "validate",
+                    "kind": "continue",
+                    "condition_id": None,
+                    "runtime_executable": True,
+                    "source_gate": "G3_PR",
+                    "target_gate": "G3_PR",
+                },
+            ],
+        },
+        {
+            "action": "validate",
+            "node_id": "validation.validate",
+            "edges": [
+                {
+                    "target": "terminal",
+                    "kind": "terminal",
+                    "condition_id": None,
+                    "runtime_executable": False,
+                    "source_gate": "G3_PR",
+                    "target_gate": None,
+                },
+            ],
+        },
+    ]
+
+    plan = _compile(payload)
+    step = plan.step("inspect")
+    edge = step.edges["CONTINUE"]
+    assert edge.target == "validate"
+    assert edge.kind == "continue"
+    assert edge.runtime_executable is True
+    assert edge.source_gate == "G3_PR"
+    assert edge.target_gate == "G3_PR"
+    assert edge.condition_id is None
+
+
+def test_compile_fails_closed_on_ambiguous_multi_route_without_discriminator():
+    """seq=13 M1: >1 executable route of same kind without condition_id
+    must raise BLUEPRINT_ROUTE_DISCRIMINATOR_REQUIRED."""
+    payload = _blueprint()
+    payload["topology"] = [
+        {
+            "action": "inspect",
+            "node_id": "reference.inspect",
+            "edges": [
+                {
+                    "target": "validate",
+                    "kind": "continue",
+                    "condition_id": None,
+                    "runtime_executable": True,
+                    "source_gate": "G3_PR",
+                    "target_gate": "G3_PR",
+                },
+                {
+                    "target": "validate",
+                    "kind": "continue",
+                    "condition_id": None,
+                    "runtime_executable": True,
+                    "source_gate": "G3_PR",
+                    "target_gate": "G3_PR",
+                },
+            ],
+        },
+        {
+            "action": "validate",
+            "node_id": "validation.validate",
+            "edges": [
+                {
+                    "target": "terminal",
+                    "kind": "terminal",
+                    "runtime_executable": False,
+                },
+            ],
+        },
+    ]
+
+    with pytest.raises(TaskControllerValidationError, match="BLUEPRINT_ROUTE_DISCRIMINATOR_REQUIRED"):
+        _compile(payload)
+
+
+def test_compile_ci_run_capture_active_route_preserves_non_executable():
+    """seq=13 cross-repo fixture: blueprint with mixed executable/non-executable
+    routes compiles losslessly — all route semantics are preserved in the plan,
+    with runtime_executable marking each edge's executability."""
+    payload = _blueprint()
+    payload["topology"] = [
+        {
+            "action": "inspect",
+            "node_id": "reference.inspect",
+            "edges": [
+                {
+                    "target": "validate",
+                    "kind": "continue",
+                    "condition_id": None,
+                    "runtime_executable": True,
+                    "source_gate": "G3_PR",
+                    "target_gate": "G3_PR",
+                },
+                {
+                    "target": "validate",
+                    "kind": "human_required",
+                    "condition_id": None,
+                    "runtime_executable": False,
+                    "source_gate": "G3_PR",
+                    "target_gate": None,
+                },
+            ],
+        },
+        {
+            "action": "validate",
+            "node_id": "validation.validate",
+            "edges": [
+                {
+                    "target": "terminal",
+                    "kind": "terminal",
+                    "runtime_executable": False,
+                },
+            ],
+        },
+    ]
+
+    plan = _compile(payload)
+    # Executable route preserved as CONTINUE.
+    edge = plan.resolve_edge("inspect", "CONTINUE")
+    assert edge.target == "validate"
+    assert edge.kind == "continue"
+    assert edge.runtime_executable is True
+    # Non-executable route also preserved in plan with runtime_executable=False.
+    hr_edge = plan.resolve_edge("inspect", "HUMAN_REQUIRED")
+    assert hr_edge.kind == "human_required"
+    assert hr_edge.runtime_executable is False
+    # Round-trip preserves both route semantics.
+    restored = RuntimePlan.from_dict(json.loads(json.dumps(plan.to_dict())))
+    assert restored == plan

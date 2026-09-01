@@ -17,6 +17,8 @@ from taskcontroller.domain.runtime_plan import (
     RuntimePlan,
     RuntimePlanStep,
     RunbookBinding,
+    _ALLOWED_EDGE_KINDS,
+    _TERMINAL_TARGETS,
 )
 from taskcontroller.errors import TaskControllerValidationError
 
@@ -113,22 +115,82 @@ def compile_blueprint(
             )
 
         edge_map: dict[str, PlanEdge] = {}
-        next_target = topo.get("next")
-        if next_target:
-            if next_target not in declared_actions and next_target not in {"terminal", "wait", "replan"}:
-                raise TaskControllerValidationError(
-                    f"edge target not declared: {next_target}"
-                )
-            edge_map["NEXT"] = PlanEdge(outcome="NEXT", target=next_target, kind="continue")
 
+        # seq=13 M1 interop: compile explicit route semantics from blueprint.
+        # Priority: "edges" sequence (preserved route rows) over legacy scalar "next".
         raw_edges = topo.get("edges")
-        if isinstance(raw_edges, Mapping):
-            for outcome, edge in raw_edges.items():
-                target = edge.get("target")
-                kind = edge.get("kind", "continue")
-                edge_map[outcome.upper()] = PlanEdge(
-                    outcome=outcome.upper(), target=target, kind=kind
-                )
+        if isinstance(raw_edges, Sequence) and not isinstance(raw_edges, (str, bytes)):
+            # New M1 shape: list of route-row mappings with target/kind/etc.
+            route_edges: list[PlanEdge] = []
+            for row in raw_edges:
+                if not isinstance(row, Mapping):
+                    raise TaskControllerValidationError(
+                        "topology.edges items must be mappings"
+                    )
+                tgt = row.get("target")
+                if not isinstance(tgt, str) or not tgt:
+                    raise TaskControllerValidationError(
+                        "topology.edges target must be a non-empty string"
+                    )
+                kind = str(row.get("kind", "continue"))
+                if kind not in _ALLOWED_EDGE_KINDS:
+                    raise TaskControllerValidationError(
+                        f"unsupported route edge kind: {kind!r}"
+                    )
+                if tgt not in declared_actions and tgt not in _TERMINAL_TARGETS:
+                    raise TaskControllerValidationError(
+                        f"edge target not declared: {tgt}"
+                    )
+                route_edges.append(PlanEdge(
+                    outcome=kind.upper(),
+                    target=tgt,
+                    kind=kind,
+                    condition_id=row.get("condition_id"),
+                    runtime_executable=bool(row.get("runtime_executable", False)),
+                    source_gate=row.get("source_gate"),
+                    target_gate=row.get("target_gate"),
+                ))
+
+            # Fail-closed ambiguity check: if >1 executable route shares the
+            # same kind and has no declared condition_id discriminator,
+            # the caller must not silently select one.
+            executable_by_kind: dict[str, list[PlanEdge]] = {}
+            for edge in route_edges:
+                if edge.runtime_executable:
+                    executable_by_kind.setdefault(edge.kind, []).append(edge)
+            for kind, candidates in executable_by_kind.items():
+                if len(candidates) > 1 and all(
+                    e.condition_id is None for e in candidates
+                ):
+                    raise TaskControllerValidationError(
+                        "BLUEPRINT_ROUTE_DISCRIMINATOR_REQUIRED: "
+                        f"{action} has {len(candidates)} executable '{kind}' routes "
+                        "without declared condition_id discriminators"
+                    )
+
+            # Deterministic ordering: by target name for reproducibility.
+            route_edges.sort(key=lambda e: (e.kind, e.target))
+            for edge in route_edges:
+                edge_map[edge.outcome] = edge
+
+        else:
+            # Legacy scalar "next" or explicit raw_edges mapping (legacy shape).
+            next_target = topo.get("next")
+            if next_target:
+                if next_target not in declared_actions and next_target not in _TERMINAL_TARGETS:
+                    raise TaskControllerValidationError(
+                        f"edge target not declared: {next_target}"
+                    )
+                edge_map["NEXT"] = PlanEdge(outcome="NEXT", target=next_target, kind="continue")
+
+            raw_legacy_edges = topo.get("edges")
+            if isinstance(raw_legacy_edges, Mapping):
+                for outcome, edge in raw_legacy_edges.items():
+                    target = edge.get("target")
+                    kind = edge.get("kind", "continue")
+                    edge_map[outcome.upper()] = PlanEdge(
+                        outcome=outcome.upper(), target=target, kind=kind
+                    )
 
         if edge_map:
             step = steps[action]
