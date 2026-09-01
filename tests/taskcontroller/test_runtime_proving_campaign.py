@@ -87,7 +87,7 @@ def test_cross_campaign_branch_reuse_fails_closed():
         _start(harness, models, campaign_id="RP-CERT-002", end="f", subject_branch="prove/RP-CERT-001/TC-RP-001")
 
 
-def test_duplicate_run_identity_and_exact_source_tuple_are_rejected():
+def test_duplicate_run_identity_rejected_but_exact_source_repeats_are_allowed():
     mod = _harness_module()
     models = _models()
     harness = mod.LiveCertificationHarness()
@@ -96,8 +96,8 @@ def test_duplicate_run_identity_and_exact_source_tuple_are_rejected():
     _start(harness, models, run_id="run-fixed", end="d")
     with pytest.raises(mod.LiveCertificationError, match="duplicate|identity"):
         _start(harness, models, run_id="run-fixed", end="f")
-    with pytest.raises(mod.LiveCertificationError, match="duplicate|source"):
-        _start(harness, models, run_id="run-other", end="d")
+    repeated = _start(harness, models, run_id="run-other", end="d")
+    assert repeated.run_id == "run-other"
 
 
 def test_terminal_run_and_evidence_remain_immutable_after_correction():
@@ -144,5 +144,5 @@ def test_restart_replays_campaign_runs_and_branch_ownership(tmp_path):
     restored = mod.LiveCertificationHarness(store=path)
     assert restored.get_campaign("RP-CERT-001").status == "ACTIVE"
     assert restored.get_run(run.run_id).verdict == "PASS"
-    with pytest.raises(mod.LiveCertificationError, match="duplicate|source"):
-        _start(restored, models, run_id="new-run", end="d")
+    next_run = _start(restored, models, run_id="new-run", end="d")
+    assert next_run.run_id == "new-run"

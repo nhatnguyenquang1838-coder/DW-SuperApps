@@ -395,8 +395,8 @@ class LiveCertificationHarness:
             evidence={},
         )
         source_tuple = self._source_tuple(run)
-        if source_tuple in self._source_tuples:
-            raise LiveCertificationError("duplicate exact source tuple")
+        # Repeated exact source identities are required for W8 stability; the
+        # run_id guard above is the uniqueness boundary for terminal records.
         self._cert_runs[run_id] = run
         self._source_tuples.add(source_tuple)
         self._append_event("RUN_STARTED", run_id, run.to_dict())
