@@ -149,9 +149,19 @@ class LiveCertificationHarness:
                 json.dumps(record_payload, sort_keys=True).encode("utf-8")
             ).hexdigest()
             stored_sha = raw.get("_sha256", "")
-            if stored_sha and stored_sha != expected_sha:
+            # seq=9: fail-closed — missing/empty _sha256 is tamper/invalid.
+            if not stored_sha:
+                raise LiveCertificationError(
+                    f"run {record.run_id!r} JSONL record has no _sha256 — invalid store state"
+                )
+            if stored_sha != expected_sha:
                 raise LiveCertificationError(
                     f"run {record.run_id!r} JSONL record hash mismatch — tamper detected"
+                )
+            # seq=9: validate persisted verdict vocabulary — only PENDING/PASS/FAIL.
+            if record.verdict not in (TestRunVerdict.PENDING, TestRunVerdict.PASS, TestRunVerdict.FAIL):
+                raise LiveCertificationError(
+                    f"run {record.run_id!r} JSONL record has invalid persisted verdict {record.verdict!r}"
                 )
             # Track terminal verdicts per run_id to detect PASS<->FAIL contradiction.
             if record.verdict not in (TestRunVerdict.PENDING,):

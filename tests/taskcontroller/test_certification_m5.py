@@ -173,7 +173,7 @@ def test_record_verdict_rejects_arbitrary_verdict():
 
 
 def test_jsonl_rejects_pass_fail_contradiction(tmp_path: Path):
-    """seq=8: JSONL contradiction detection — PASS -> FAIL for same run_id raises on load."""
+    """seq=8/9: JSONL contradiction detection — PASS -> FAIL for same run_id raises on load."""
     store = tmp_path / "contradiction.jsonl"
     harness = LiveCertificationHarness(store=store)
     run = _run(harness)
@@ -182,7 +182,7 @@ def test_jsonl_rejects_pass_fail_contradiction(tmp_path: Path):
         verdict="PASS",
         evidence={"ci": {"run": "r1", "status": "success"}},
     )
-    # Tamper: append conflicting FAIL record for same run_id
+    # Tamper: append conflicting FAIL record for same run_id (with valid hash)
     fake = TestRun(
         run_id=run.run_id,
         case_id="TC-RP-001",
@@ -196,8 +196,11 @@ def test_jsonl_rejects_pass_fail_contradiction(tmp_path: Path):
         verdict=TestRunVerdict.FAIL,
         evidence={"ci": {"run": "r1", "status": "failed"}},
     )
+    import hashlib as hl
+    payload = fake.to_dict()
+    payload["_sha256"] = hl.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
     with store.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(fake.to_dict(), sort_keys=True) + "\n")
+        fh.write(json.dumps(payload, sort_keys=True) + "\n")
     with pytest.raises(LiveCertificationError, match="contradictory terminal history"):
         LiveCertificationHarness(store=store)
 
@@ -231,3 +234,40 @@ def test_jsonl_restart_pending_to_fail(tmp_path: Path):
     restored = LiveCertificationHarness(store=store)
     got = restored.get_run(run.run_id)
     assert got.verdict == "FAIL"
+
+
+def test_jsonl_rejects_missing_hash(tmp_path: Path):
+    """seq=9: record without _sha256 fails closed on load."""
+    store = tmp_path / "nohash.jsonl"
+    harness = LiveCertificationHarness(store=store)
+    run = _run(harness)
+    harness.record_verdict(
+        run_id=run.run_id, verdict="PASS",
+        evidence={"ci": {"run": "r1", "status": "success"}},
+    )
+    # Strip _sha256 from the stored file by rewriting it
+    lines = store.read_text(encoding="utf-8").splitlines()
+    stripped = [json.dumps({k: v for k, v in json.loads(l).items() if k != "_sha256"}, sort_keys=True) for l in lines]
+    store.write_text("\n".join(stripped) + "\n", encoding="utf-8")
+    with pytest.raises(LiveCertificationError, match="no _sha256"):
+        LiveCertificationHarness(store=store)
+
+
+def test_jsonl_rejects_invalid_persisted_verdict(tmp_path: Path):
+    """seq=9: record with UNKNOWN persisted verdict fails closed on load."""
+    import hashlib as hl
+    import uuid
+    store = tmp_path / "badverdict.jsonl"
+    bad_run_id = f"run-{uuid.uuid4().hex[:8]}"
+    bad = TestRun(
+        run_id=bad_run_id,
+        case_id="TC-RP-001", scenario="standard_real_run", acceptance="login works",
+        branch="feature/x", base_sha="0"*40, head_sha="1"*40,
+        executor="Hermes", model="gpt", verdict="UNKNOWN",
+    )
+    payload = bad.to_dict()
+    payload["_sha256"] = hl.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+    with store.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(payload, sort_keys=True) + "\n")
+    with pytest.raises(LiveCertificationError, match="invalid persisted verdict"):
+        LiveCertificationHarness(store=store)
