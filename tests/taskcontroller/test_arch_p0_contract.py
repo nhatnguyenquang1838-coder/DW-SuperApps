@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
 
 import pytest
 
@@ -20,8 +22,79 @@ from taskcontroller.runtime.closed_loop_runtime_executor import (
 )
 from taskcontroller.runtime.execution_state import FileRuntimeExecutionStateStore
 
-GWC_ROOT = Path("/Users/mac/prj/gwc.worktrees/scrum-669-r2-m1m4")
+EXPECTED_GWC_SHA = "43f6379158978b0c299d775cd162ad69b5a1c099"
 DIGEST = "sha256:" + "a" * 64
+
+
+@pytest.fixture(scope="session")
+def gwc_root() -> Path:
+    """Resolve and verify the exact read-only GWC test dependency.
+
+    The path is supplied by the test environment/CI, never inferred from a
+    workstation-specific checkout. A missing or mismatched dependency is a
+    hard test failure so the live cross-repo proof cannot become a false green.
+    """
+    raw_root = os.environ.get("GWC_ROOT", "").strip()
+    if not raw_root:
+        pytest.fail("GWC_ROOT must be set to the paired GWC checkout root")
+    root = Path(raw_root).expanduser().resolve()
+    if not root.is_dir():
+        pytest.fail(f"GWC_ROOT does not exist or is not a directory: {root}")
+    try:
+        top_level = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--show-toplevel"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        actual_sha = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError) as exc:
+        pytest.fail(f"GWC_ROOT is not a readable Git checkout: {root} ({exc})")
+    if Path(top_level).resolve() != root:
+        pytest.fail(f"GWC_ROOT Git top-level mismatch: {top_level} != {root}")
+    if actual_sha != EXPECTED_GWC_SHA:
+        pytest.fail(
+            "GWC_ROOT exact identity mismatch: "
+            f"expected {EXPECTED_GWC_SHA}, got {actual_sha}"
+        )
+    remote = subprocess.run(
+        ["git", "-C", str(root), "remote", "get-url", "origin"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    parsed = urlparse(remote if "://" in remote else f"ssh://{remote.replace(':', '/', 1)}")
+    remote_path = parsed.path.strip("/").removesuffix(".git")
+    if parsed.hostname != "github.com" or remote_path != "nhatnguyenquang1838-coder/gwc":
+        pytest.fail(
+            "GWC_ROOT remote identity mismatch: expected "
+            "github.com/nhatnguyenquang1838-coder/gwc, got "
+            f"{remote}"
+        )
+    status = subprocess.run(
+        ["git", "-C", str(root), "status", "--porcelain", "--untracked-files=all"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    if status:
+        pytest.fail(f"GWC_ROOT checkout is dirty; refusing live proof: {status}")
+    return root
+
+
+def _run_live_producer(gwc_root: Path):
+    producer = subprocess.run(
+        [sys.executable, "-c", "import json,sys; sys.path.insert(0,sys.argv[1]); from tools.node_architect.governed_execution_blueprint import produce_governed_blueprint; print(json.dumps(produce_governed_blueprint(task_id='SCRUM-668', scenario='standard_real_run', repo_root=sys.argv[1]).to_dict()))", str(gwc_root)],
+        check=True, capture_output=True, text=True,
+    )
+    blueprint = json.loads(producer.stdout)
+    assert blueprint["source_bindings"]["gwc_sha"] == EXPECTED_GWC_SHA
+    return compile_blueprint(blueprint, node_instruction_root=gwc_root)
 
 
 def _blueprint(*, effectful: bool = False) -> dict:
@@ -33,7 +106,7 @@ def _blueprint(*, effectful: bool = False) -> dict:
         "task_id": "SCRUM-668",
         "scenario": "architecture_p0",
         "source_bindings": {
-            "gwc_sha": "0f2ba5b2aeedc50d428f552fd30822f8bada04ca",
+            "gwc_sha": EXPECTED_GWC_SHA,
             "flow_ref": "core/node-architect/profile-registry.json",
             "flow_revision": "flow-r1",
             "flow_digest": DIGEST,
@@ -205,23 +278,15 @@ def test_arch_p0_d_non_executable_route_is_rejected_without_cursor_advance():
     assert executor.cursor.current_step_id == "s"
 
 
-def test_arch_p0_e_w4_can_compile_source_backed_capabilities():
-    producer = subprocess.run(
-        [sys.executable, "-c", "import json,sys; sys.path.insert(0,sys.argv[1]); from tools.node_architect.governed_execution_blueprint import produce_governed_blueprint; print(json.dumps(produce_governed_blueprint(task_id='SCRUM-668', scenario='standard_real_run', repo_root=sys.argv[1]).to_dict()))", str(GWC_ROOT)],
-        check=True, capture_output=True, text=True,
-    )
-    plan = compile_blueprint(json.loads(producer.stdout), node_instruction_root=GWC_ROOT)
+def test_arch_p0_e_w4_can_compile_source_backed_capabilities(gwc_root: Path):
+    plan = _run_live_producer(gwc_root)
     assert all(step.allowed_actions for step in plan.steps.values())
     assert all(step.allowed_inputs for step in plan.steps.values())
     assert all(step.evidence_refs for step in plan.steps.values())
 
 
-def test_arch_p0_e_w4_to_w5_real_read_and_effectful_actions():
-    producer = subprocess.run(
-        [sys.executable, "-c", "import json,sys; sys.path.insert(0,sys.argv[1]); from tools.node_architect.governed_execution_blueprint import produce_governed_blueprint; print(json.dumps(produce_governed_blueprint(task_id='SCRUM-668', scenario='standard_real_run', repo_root=sys.argv[1]).to_dict()))", str(GWC_ROOT)],
-        check=True, capture_output=True, text=True,
-    )
-    plan = compile_blueprint(json.loads(producer.stdout), node_instruction_root=GWC_ROOT)
+def test_arch_p0_e_w4_to_w5_real_read_and_effectful_actions(gwc_root: Path):
+    plan = _run_live_producer(gwc_root)
     read_id = "repo_delivery.ci-run-capture"
     read_cursor = RunCursor("run-real-w5-read", plan.runtime_plan_ref, plan.runtime_plan_digest, plan.revision, read_id)
     read_result = ClosedLoopRuntimeExecutor(plan.to_dict(), read_cursor).execute_step(
