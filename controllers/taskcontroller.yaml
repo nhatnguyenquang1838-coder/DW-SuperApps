@@ -93,18 +93,9 @@ interaction:
 human_plane:
   canonical_policy: agents/shared/taskcontroller-human-plane-policy.md
   policy_source: current-repository-state
+  external_policy_sources: forbidden
   human_control_plane: slack
   connector_required_when_active: true
-  external_projections:
-    slack_canvases:
-      optional:
-        - Slack Communication Policy
-        - Governance Behavior
-      authority: projection-only
-      missing_behavior: PROJECTION_UNAVAILABLE
-      stale_behavior: PROJECTION_STALE
-      conflict_behavior: REPO_CANONICAL_WINS
-      activation_blocking: false
   topology:
     controller_count: 1
     executor_count: 1
@@ -224,7 +215,7 @@ integrity:
   conversation_memory_authoritative: false
   slack_authoritative: false
   human_plane_policy_authority: agents/shared/taskcontroller-human-plane-policy.md
-  external_human_plane_projections_authoritative: false
+  external_human_plane_policy_sources: forbidden
   github_mailbox_authority: communication-binding-and-pilot-continuation-copy
   notification_binding_authority: wakeup-only
   audit_ledger_authoritative_for_recorded-events-and-configured-continuation-manifest: true

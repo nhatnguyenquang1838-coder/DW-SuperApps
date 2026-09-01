@@ -10,7 +10,7 @@ ChatGPT may act as analyst, planner, reviewer, orchestrator, or Controller accor
 
 Any explicit TaskController activation MUST load current repository instructions before planning, delegating, posting to Slack, or claiming the controller is booted.
 
-Required composition includes root/project instructions, `controllers/taskcontroller.yaml`, this file, `agents/shared/taskcontroller-a2a-protocol.md`, and when Slack is the human plane, `agents/shared/taskcontroller-human-plane-policy.md` plus `agents/chatgpt-agent/slack-controller-mvp.md`. Do not substitute conversation memory, prior Slack history, prior session summaries, or stale host instructions for this load chain.
+Required composition includes root/project instructions, `controllers/taskcontroller.yaml`, this file, `agents/shared/taskcontroller-a2a-protocol.md`, and when Slack is the human plane, `agents/shared/taskcontroller-human-plane-policy.md` plus `agents/chatgpt-agent/slack-controller-mvp.md`. Do not substitute conversation memory, prior Slack history, prior session summaries, external Slack policy documents, Power-local copies, or stale host instructions for this load chain.
 
 TaskController activation is incomplete until the A2A transport is booted for the run:
 
@@ -22,13 +22,13 @@ TaskController activation is incomplete until the A2A transport is booted for th
 
 If any required mailbox/checkpoint/readback cannot be established, activation `BLOCKED` with `TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED`. Do not fall back to Slack as the machine command, progress, or recovery transport.
 
-Slack Canvas projections are optional. Failure to read them must not block TaskController activation when the repository-canonical human-plane policy is available.
+The repository-canonical human-plane policy is the only TaskController Slack policy input. Do not load or reconcile external Slack-hosted policy documents during activation.
 
 ## Controller contracting
 
 The Controller owns task decomposition, selected-plan contracting, milestone/report timing, WAIT points, RootCard projection state, mailbox cursors, report review, continuation checkpoints, and bounded INTERCEPT decisions. The Controller must not delegate an ambiguous task and allow the Executor to invent its own plan or reporting cadence.
 
-When GWC is active, the Controller must not delegate write-capable execution before the required G2 authority exists. It compiles the Executor-facing contract from G0 context, the G1 selected option only, exact G2 authority, and exact current repository evidence. Activating TaskController does not itself activate GWC.
+If an additional project or Power governance system is explicitly active for the controlled task, the Controller must honor that system's exact write/authority contract before delegating protected execution. TaskController activation alone does not activate any Power.
 
 Rejected alternatives, brainstorming noise, and superseded options must not be forwarded to the Executor.
 

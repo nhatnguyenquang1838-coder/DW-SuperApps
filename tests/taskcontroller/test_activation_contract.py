@@ -4,7 +4,7 @@ These tests prevent a regression back to memory-driven / implicit activation
 and lock the reference-based Agent interaction boundary: Slack is the human
 control plane while the Agent protocol uses a transport-neutral A2A contract
 with a GitHub reference mailbox as the first pilot binding. Human-plane policy
-is repository-canonical; Slack Canvases are optional projections only.
+is repository-canonical and has no external Slack policy source.
 """
 
 from __future__ import annotations
@@ -53,8 +53,6 @@ def test_unmentioned_controller_returns_inactive_plan():
     )
     assert plan.active is False
     assert plan.load_order == ()
-    assert plan.slack_canvases_required == ()
-    assert plan.slack_canvas_projections_optional == ()
     assert plan.human_plane_policy is None
     assert plan.full_e2e_runtime_active is False
     assert plan.runtime_session is None
@@ -85,11 +83,6 @@ def test_chatgpt_slack_hermes_loads_reference_a2a_and_repo_human_plane_policy():
     )
     assert "agents/shared/slack-controller-executor-protocol.md" not in plan.load_order
     assert plan.human_plane_policy == "agents/shared/taskcontroller-human-plane-policy.md"
-    assert plan.slack_canvases_required == ()
-    assert plan.slack_canvas_projections_optional == (
-        "Slack Communication Policy",
-        "Governance Behavior",
-    )
 
 
 def test_chatgpt_non_slack_does_not_invent_slack_or_human_plane_overlay():
@@ -103,8 +96,6 @@ def test_chatgpt_non_slack_does_not_invent_slack_or_human_plane_overlay():
     assert "agents/chatgpt-agent/agent-instructions.md" in plan.load_order
     assert "agents/chatgpt-agent/slack-controller-mvp.md" not in plan.load_order
     assert "agents/shared/taskcontroller-human-plane-policy.md" not in plan.load_order
-    assert plan.slack_canvases_required == ()
-    assert plan.slack_canvas_projections_optional == ()
     assert plan.human_plane_policy is None
 
 
@@ -138,13 +129,16 @@ def test_registry_separates_agent_binding_from_slack_human_plane():
     assert "thread_semantics: controller-command-executor-report-evidence" not in registry
 
 
-def test_registry_makes_repo_human_plane_policy_canonical_and_canvases_optional():
+def test_registry_routes_human_plane_policy_only_to_dw_superapps_repo():
     registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
     assert "canonical_policy: agents/shared/taskcontroller-human-plane-policy.md" in registry
     assert "human_plane_policy_authority: agents/shared/taskcontroller-human-plane-policy.md" in registry
-    assert "activation_blocking: false" in registry
-    assert "conflict_behavior: REPO_CANONICAL_WINS" in registry
-    assert "canvases_required:" not in registry
+    assert "policy_source: current-repository-state" in registry
+    assert "external_policy_sources: forbidden" in registry
+    assert "external_human_plane_policy_sources: forbidden" in registry
+    assert "slack_canvases" not in registry
+    assert "Slack Communication Policy" not in registry
+    assert "Governance Behavior" not in registry
 
 
 def test_root_agents_contains_hard_activation_guard():
@@ -152,7 +146,7 @@ def test_root_agents_contains_hard_activation_guard():
     assert "Any explicit user mention of `TaskController`" in agents
     assert "MUST activate TaskController" in agents
     assert "MUST NOT substitute for the canonical load chain" in agents
-    assert "Activating TaskController does not automatically activate GWC" in agents
+    assert "Activating TaskController does not automatically activate any Power" in agents
 
 
 def test_root_agents_declares_slack_human_plane_and_reference_agent_binding():
@@ -161,10 +155,11 @@ def test_root_agents_declares_slack_human_plane_and_reference_agent_binding():
     assert "GitHub reference mailbox is the current Agent interaction pilot binding" in agents
     assert "Slack thread history MUST NOT be the canonical Agent execution journal" in agents
     assert "agents/shared/taskcontroller-human-plane-policy.md" in agents
-    assert "Slack Canvas projections are optional" in agents
+    assert "Slack Communication Policy" not in agents
+    assert "Governance Behavior" not in agents
 
 
-def test_chatgpt_overlay_blocks_boot_claim_before_repo_load_not_canvas_projection():
+def test_chatgpt_overlay_blocks_boot_claim_before_repo_load_and_external_policy():
     overlay = (
         ROOT / "agents" / "chatgpt-agent" / "agent-instructions.md"
     ).read_text(encoding="utf-8")
@@ -172,7 +167,8 @@ def test_chatgpt_overlay_blocks_boot_claim_before_repo_load_not_canvas_projectio
     assert "Do not substitute conversation memory" in overlay
     assert "activation `BLOCKED`" in overlay
     assert "agents/shared/taskcontroller-human-plane-policy.md" in overlay
-    assert "must not block TaskController activation" in overlay
+    assert "only TaskController Slack policy input" in overlay
+    assert "GWC" not in overlay
 
 
 def test_agent_protocol_is_reference_based_and_transport_neutral():
@@ -186,15 +182,16 @@ def test_agent_protocol_is_reference_based_and_transport_neutral():
     assert "A2A HTTP" in protocol
 
 
-def test_human_plane_policy_is_repo_canonical_and_projection_safe():
+def test_human_plane_policy_is_repo_canonical_without_external_policy_sources():
     policy = (
         ROOT / "agents" / "shared" / "taskcontroller-human-plane-policy.md"
     ).read_text(encoding="utf-8")
     assert "canonical repository source of truth" in policy
-    assert "not activation entrypoints and not governance authority" in policy
-    assert "PROJECTION_UNAVAILABLE" in policy
-    assert "repository policy wins on conflict" in policy
-    assert "Failure to access Slack Canvas policy documents is not" in policy
+    assert "No Slack-hosted policy document" in policy
+    assert "repository policy is the only policy input" in policy
+    assert "Slack Communication Policy" not in policy
+    assert "Governance Behavior" not in policy
+    assert "GWC" not in policy
 
 
 def test_slack_overlay_is_human_projection_not_machine_journal():
@@ -206,7 +203,9 @@ def test_slack_overlay_is_human_projection_not_machine_journal():
     assert "Do not use Slack thread replies as the Executor progress transport" in overlay
     assert "mailbox cursor" in overlay
     assert "agents/shared/taskcontroller-human-plane-policy.md" in overlay
-    assert "Slack Canvases are optional projections" in overlay
+    assert "Do not load Slack-hosted policy documents" in overlay
+    assert "Slack Communication Policy" not in overlay
+    assert "Governance Behavior" not in overlay
 
 
 def test_hermes_reports_to_mailbox_not_slack_journal():
@@ -259,3 +258,30 @@ def test_active_host_overlays_do_not_load_legacy_slack_machine_protocol():
     for path in paths:
         text = path.read_text(encoding="utf-8")
         assert "agents/shared/slack-controller-executor-protocol.md" not in text
+
+
+def test_active_taskcontroller_chain_has_no_gwc_or_slack_canvas_policy_dependency():
+    active_paths = (
+        ROOT / "controllers" / "taskcontroller.yaml",
+        ROOT / "agents" / "README.md",
+        ROOT / "agents" / "chatgpt-agent" / "agent-instructions.md",
+        ROOT / "agents" / "shared" / "taskcontroller-human-plane-policy.md",
+        ROOT / "agents" / "chatgpt-agent" / "slack-controller-mvp.md",
+        ROOT / "taskcontroller" / "mvp" / "activation.py",
+    )
+
+    forbidden = (
+        "Slack Communication Policy",
+        "Governance Behavior",
+        "slack_canvas_projections_optional",
+        "slack_canvases_required",
+    )
+
+    for path in active_paths:
+        text = path.read_text(encoding="utf-8")
+        for token in forbidden:
+            assert token not in text, f"{token!r} leaked into {path}"
+
+    for path in active_paths[1:5]:
+        text = path.read_text(encoding="utf-8")
+        assert "GWC" not in text, f"GWC-specific TaskController coupling leaked into {path}"
