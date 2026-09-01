@@ -81,9 +81,29 @@ def gwc_root() -> Path:
         check=True,
         capture_output=True,
         text=True,
-    ).stdout.strip()
-    if status:
-        pytest.fail(f"GWC_ROOT checkout is dirty; refusing live proof: {status}")
+    ).stdout.splitlines()
+    drift = []
+    for entry in status:
+        code, rel = entry[:2], entry[3:]
+        if code == "??" or code.strip() not in {"M"}:
+            drift.append(entry)
+            continue
+        try:
+            expected = subprocess.run(
+                ["git", "-C", str(root), "show", f"HEAD:{rel}"],
+                check=True,
+                capture_output=True,
+            ).stdout
+            actual = (root / rel).read_bytes()
+        except (OSError, subprocess.CalledProcessError) as exc:
+            pytest.fail(f"GWC_ROOT checkout cannot verify {rel}: {exc}")
+        if actual.replace(b"\r\n", b"\n") != expected.replace(b"\r\n", b"\n"):
+            drift.append(entry)
+    if drift:
+        pytest.fail(
+            "GWC_ROOT checkout has non-EOL drift; refusing live proof: "
+            + "\n".join(drift)
+        )
     return root
 
 
