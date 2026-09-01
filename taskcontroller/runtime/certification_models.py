@@ -170,6 +170,7 @@ class TestRun:
     model: str
     verdict: str
     evidence: Mapping[str, object] = field(default_factory=dict)
+    legacy: bool = False
 
     def __post_init__(self) -> None:
         for field_name in (
@@ -215,6 +216,7 @@ class TestRun:
             "executor": self.executor,
             "model": self.model,
             "verdict": self.verdict,
+            "legacy": self.legacy,
             "evidence": _plain(self.evidence),
         }
 
