@@ -34,8 +34,17 @@ def _manifest_digest(manifest: Mapping[str, Any]) -> str:
 
 
 def _events_digest(events_path: Path) -> str:
-    content = events_path.read_bytes()
-    return hashlib.sha256(content).hexdigest()
+    """Canonical digest over parsed event lines (EOL/key-order/separator safe)."""
+    lines = events_path.read_text(encoding="utf-8").splitlines()
+    canonical = []
+    for line in lines:
+        if not line.strip():
+            continue
+        canonical.append(
+            json.dumps(json.loads(line), sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+        )
+    content = "\n".join(canonical) + "\n"
+    return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
 
 def _assert_sanitized(text: str) -> None:
