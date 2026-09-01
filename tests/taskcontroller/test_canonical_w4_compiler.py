@@ -89,7 +89,8 @@ def test_compiles_pinned_w3_blueprint_to_bound_runtime_plan():
     plan = _compile(_blueprint())
 
     assert isinstance(plan, RuntimePlan)
-    assert plan.runtime_plan_ref == "implementation-plan/SCRUM-673/r1"
+    assert plan.runtime_plan_ref != "implementation-plan/SCRUM-673/r1"
+    assert plan.implementation_plan_ref == "implementation-plan/SCRUM-673/r1"
     assert plan.revision.startswith("sha256:")
     assert list(plan.steps) == ["inspect", "validate"]
     assert plan.step("inspect").semantic_action == "inspect"

@@ -164,11 +164,11 @@ def test_caller_step_id_drift_rejected():
 
 
 def test_authority_revalidated_false_without_gwc():
-    """Without GWC validator, authority_revalidated stays False (fail-closed)."""
+    """Without exact GWC authority, effectful execution is rejected fail-closed."""
     from unittest.mock import patch
     plan = _plan(steps={"inspect": {"allowed_actions": ["write"], "edges": {"PASS": {"target": "validate"}}}})
     cursor = _cursor(current_step_id="inspect")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     with patch("taskcontroller.runtime.closed_loop_runtime_executor._GWC_VALIDATOR", False):
-        result = executor.execute_step("inspect", {}, outcome="PASS")
-    assert result["authority_revalidated"] is False
+        with pytest.raises(ClosedLoopRuntimeError, match="AUTHORITY_REQUIRED"):
+            executor.execute_step("inspect", {}, outcome="PASS")

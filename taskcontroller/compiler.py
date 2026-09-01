@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from taskcontroller.domain.runtime_plan import (
@@ -18,7 +19,7 @@ from taskcontroller.domain.runtime_plan import (
     RuntimePlanStep,
     RunbookBinding,
     _ALLOWED_EDGE_KINDS,
-    _TERMINAL_TARGETS,
+    _NON_STEP_TARGETS,
 )
 from taskcontroller.errors import TaskControllerValidationError
 
@@ -35,11 +36,38 @@ def _require_text(value: Any, field: str) -> str:
     return value
 
 
+def _load_node_instruction(node: Mapping[str, Any], root: str | Path | None) -> Mapping[str, Any] | None:
+    """Dereference a pinned node instruction and verify its content digest."""
+    if not root:
+        return None
+    ref = _require_text(node.get("node_instruction_ref"), "node.node_instruction_ref")
+    path = Path(root) / ref
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        raise TaskControllerValidationError(f"node instruction unreadable: {ref}") from exc
+    actual = "sha256:" + hashlib.sha256(raw).hexdigest()
+    expected = _require_text(node.get("node_instruction_digest"), "node.node_instruction_digest")
+    if actual != expected:
+        raise TaskControllerValidationError(
+            f"node instruction digest mismatch: {ref}: expected {expected}, got {actual}"
+        )
+    try:
+        import yaml
+        loaded = yaml.safe_load(raw)
+    except Exception as exc:
+        raise TaskControllerValidationError(f"node instruction parse failed: {ref}") from exc
+    if not isinstance(loaded, Mapping) or loaded.get("node_id") != node.get("node_id"):
+        raise TaskControllerValidationError(f"node instruction identity mismatch: {ref}")
+    return loaded
+
+
 def compile_blueprint(
     payload: Mapping[str, Any],
     *,
     expected_blueprint_digest: str | None = None,
     expected_source_bindings: Mapping[str, Any] | None = None,
+    node_instruction_root: str | Path | None = None,
 ) -> RuntimePlan:
     """Compile a governed execution blueprint into a bound RuntimePlan.
 
@@ -95,10 +123,18 @@ def compile_blueprint(
     for node in raw_nodes:
         node_id = _require_text(node.get("node_id"), "node.node_id")
         action = _require_text(node.get("action"), "node.action")
+        instruction = _load_node_instruction(node, node_instruction_root)
+        capabilities = instruction or node.get("capabilities") or {}
+        allowed_actions = tuple(capabilities.get("allowed_actions", node.get("allowed_actions", ())))
+        allowed_inputs = tuple(capabilities.get("inputs", node.get("allowed_inputs", ())))
+        evidence_refs = tuple(capabilities.get("evidence_required", node.get("evidence_refs", ())))
         steps[action] = RuntimePlanStep(
             step_id=action,
             semantic_action=action,
             node_binding=node,
+            allowed_inputs=allowed_inputs,
+            allowed_actions=allowed_actions,
+            evidence_refs=evidence_refs,
         )
 
     # --- Topology → edges (fail-closed on undeclared edges) ------------------
@@ -137,7 +173,7 @@ def compile_blueprint(
                     raise TaskControllerValidationError(
                         f"unsupported route edge kind: {kind!r}"
                     )
-                if tgt not in declared_actions and tgt not in _TERMINAL_TARGETS:
+                if tgt not in declared_actions and tgt not in _NON_STEP_TARGETS:
                     raise TaskControllerValidationError(
                         f"edge target not declared: {tgt}"
                     )
@@ -189,11 +225,11 @@ def compile_blueprint(
             # Legacy scalar "next" or explicit raw_edges mapping (legacy shape).
             next_target = topo.get("next")
             if next_target:
-                if next_target not in declared_actions and next_target not in _TERMINAL_TARGETS:
+                if next_target not in declared_actions and next_target not in _NON_STEP_TARGETS:
                     raise TaskControllerValidationError(
                         f"edge target not declared: {next_target}"
                     )
-                edge_map["NEXT"] = PlanEdge(outcome="NEXT", target=next_target, kind="continue")
+                edge_map["NEXT"] = PlanEdge(outcome="NEXT", target=next_target, kind="continue", runtime_executable=True)
 
             raw_legacy_edges = topo.get("edges")
             if isinstance(raw_legacy_edges, Mapping):
@@ -201,7 +237,7 @@ def compile_blueprint(
                     target = edge.get("target")
                     kind = edge.get("kind", "continue")
                     edge_map[outcome.upper()] = PlanEdge(
-                        outcome=outcome.upper(), target=target, kind=kind
+                        outcome=outcome.upper(), target=target, kind=kind, runtime_executable=True
                     )
 
         if edge_map:
@@ -210,7 +246,11 @@ def compile_blueprint(
                 step_id=step.step_id,
                 semantic_action=step.semantic_action,
                 edges=edge_map,
+                route_evidence=tuple(edge.to_dict() for edge in edge_map.values()),
                 node_binding=step.node_binding,
+                allowed_inputs=step.allowed_inputs,
+                allowed_actions=step.allowed_actions,
+                evidence_refs=step.evidence_refs,
             )
 
     # --- Runbooks ------------------------------------------------------------
@@ -243,8 +283,9 @@ def compile_blueprint(
     plan_identity = _digest({"blueprint": blueprint, "source_bindings": source_bindings})
 
     return RuntimePlan(
-        runtime_plan_ref=blueprint.get("implementation_plan_ref", ""),
+        runtime_plan_ref=blueprint.get("runtime_plan_ref") or f"runtime-plan/{blueprint.get('task_id', 'unknown')}/{blueprint.get('blueprint_id', blueprint_digest[7:23])}",
         revision=plan_identity,
+        implementation_plan_ref=blueprint.get("implementation_plan_ref", ""),
         steps=steps,
         source_bindings=source_bindings,
         runbooks=runbooks,

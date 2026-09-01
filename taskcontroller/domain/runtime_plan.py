@@ -46,7 +46,41 @@ class BindingErrorCode:
 _ALLOWED_EDGE_KINDS = frozenset(
     {"continue", "conditional", "retry", "blocked", "human_required", "terminal"}
 )
-_TERMINAL_TARGETS = frozenset({"terminal", "wait", "replan"})
+_FINAL_TERMINAL_TARGETS = frozenset({"terminal"})
+_CONTROL_TARGETS = frozenset({"wait", "replan"})
+_NON_STEP_TARGETS = _FINAL_TERMINAL_TARGETS | _CONTROL_TARGETS
+# Backward-compatible export used by existing callers; only final terminal is
+# terminal now. WAIT and REPLAN_REQUIRED are explicit nonterminal control states.
+_TERMINAL_TARGETS = _FINAL_TERMINAL_TARGETS
+
+
+class _FrozenSequence(tuple):
+    """Immutable sequence that remains value-compatible with legacy lists."""
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, (list, tuple)):
+            return tuple(self) == tuple(other)
+        return super().__eq__(other)
+
+
+def _deep_freeze(value: Any) -> Any:
+    """Recursively freeze digest-bearing mappings and sequences."""
+    if isinstance(value, Mapping):
+        return MappingProxyType(
+            {str(key): _deep_freeze(item) for key, item in value.items()}
+        )
+    if isinstance(value, (list, tuple)):
+        return _FrozenSequence(_deep_freeze(item) for item in value)
+    return value
+
+
+def _deep_plain(value: Any) -> Any:
+    """Return a JSON-safe mutable copy of recursively frozen state."""
+    if isinstance(value, Mapping):
+        return {str(key): _deep_plain(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_deep_plain(item) for item in value]
+    return value
 
 
 def _require_text(value: Any, field: str) -> str:
@@ -57,7 +91,7 @@ def _require_text(value: Any, field: str) -> str:
 
 def _canonical(value: Any) -> bytes:
     return json.dumps(
-        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+        _deep_plain(value), sort_keys=True, separators=(",", ":"), ensure_ascii=False
     ).encode("utf-8")
 
 
@@ -84,12 +118,16 @@ class PlanEdge:
             )
         if self.source_step_id is not None:
             _require_text(self.source_step_id, "edge.source_step_id")
-        if self.target in _TERMINAL_TARGETS and self.kind != "terminal":
-            object.__setattr__(self, "kind", "terminal")
 
     @property
     def is_terminal(self) -> bool:
-        return self.target in _TERMINAL_TARGETS or self.kind == "terminal"
+        """True only for the final terminal target/kind."""
+        return self.target in _FINAL_TERMINAL_TARGETS or self.kind == "terminal"
+
+    @property
+    def is_control(self) -> bool:
+        """True for WAIT/REPLAN_REQUIRED nonterminal control boundaries."""
+        return self.target in _CONTROL_TARGETS
 
     def to_dict(self) -> dict[str, Any]:
         payload: dict[str, Any] = {
@@ -101,8 +139,7 @@ class PlanEdge:
             payload["source_step_id"] = self.source_step_id
         if self.condition_id is not None:
             payload["condition_id"] = self.condition_id
-        if self.runtime_executable:
-            payload["runtime_executable"] = True
+        payload["runtime_executable"] = self.runtime_executable
         if self.source_gate is not None:
             payload["source_gate"] = self.source_gate
         if self.target_gate is not None:
@@ -134,6 +171,7 @@ class RuntimePlanStep:
     step_id: str
     semantic_action: str
     edges: Mapping[str, PlanEdge] | None = None
+    route_evidence: Sequence[Mapping[str, Any]] = ()
     node_binding: Mapping[str, Any] | None = None
     allowed_inputs: tuple[str, ...] = ()
     allowed_actions: tuple[str, ...] = ()
@@ -148,6 +186,8 @@ class RuntimePlanStep:
                 raise TaskControllerValidationError(f"step.{name} must be a tuple of str")
         if self.node_binding is not None and not isinstance(self.node_binding, Mapping):
             raise TaskControllerValidationError("step.node_binding must be a mapping")
+        if self.node_binding is not None:
+            object.__setattr__(self, "node_binding", _deep_freeze(self.node_binding))
         raw_edges: Mapping[str, PlanEdge] = self.edges or {}
         normalized: dict[str, PlanEdge] = {}
         for outcome, edge in raw_edges.items():
@@ -176,6 +216,7 @@ class RuntimePlanStep:
                 )
             normalized[outcome] = bound
         object.__setattr__(self, "edges", MappingProxyType(normalized))
+        object.__setattr__(self, "route_evidence", tuple(_deep_freeze(row) for row in self.route_evidence))
 
     def to_dict(self) -> dict[str, Any]:
         payload: dict[str, Any] = {
@@ -187,7 +228,9 @@ class RuntimePlanStep:
             },
         }
         if self.node_binding is not None:
-            payload["node_binding"] = self.node_binding
+            payload["node_binding"] = _deep_plain(self.node_binding)
+        if self.route_evidence:
+            payload["route_evidence"] = [_deep_plain(row) for row in self.route_evidence]
         if self.allowed_inputs:
             payload["allowed_inputs"] = list(self.allowed_inputs)
         if self.allowed_actions:
@@ -195,6 +238,14 @@ class RuntimePlanStep:
         if self.evidence_refs:
             payload["evidence_refs"] = list(self.evidence_refs)
         return payload
+
+    @property
+    def executable_edges(self) -> Mapping[str, PlanEdge]:
+        """Runtime-dispatch view; route evidence remains in ``route_evidence``."""
+        return MappingProxyType({
+            outcome: edge for outcome, edge in (self.edges or {}).items()
+            if edge.runtime_executable or edge.is_terminal
+        })
 
     @classmethod
     def from_dict(cls, payload: Mapping[str, Any]) -> "RuntimePlanStep":
@@ -208,6 +259,7 @@ class RuntimePlanStep:
                 outcome: PlanEdge.from_dict(edge)
                 for outcome, edge in raw_edges.items()
             },
+            route_evidence=payload.get("route_evidence", ()),
             node_binding=payload.get("node_binding"),
             allowed_inputs=tuple(payload.get("allowed_inputs", ())),
             allowed_actions=tuple(payload.get("allowed_actions", ())),
@@ -280,6 +332,8 @@ class RuntimePlan:
     runtime_plan_ref: str
     revision: str
     steps: Mapping[str, RuntimePlanStep]
+    # W1 implementation intent is retained but is not used as runtime identity.
+    implementation_plan_ref: str = ""
     source_bindings: Mapping[str, Any] | None = None
     runbooks: Sequence[RunbookBinding] | None = None
     authority_requirements: Sequence[AuthorityRequirement] | None = None
@@ -306,13 +360,18 @@ class RuntimePlan:
                 )
             normalized[step_id] = step
         object.__setattr__(self, "steps", MappingProxyType(normalized))
+        object.__setattr__(self, "source_bindings", _deep_freeze(self.source_bindings) if self.source_bindings is not None else None)
+        if self.runbooks is not None:
+            object.__setattr__(self, "runbooks", tuple(_deep_freeze(rb) for rb in self.runbooks))
+        if self.authority_requirements is not None:
+            object.__setattr__(self, "authority_requirements", tuple(_deep_freeze(ar) for ar in self.authority_requirements))
         # M0: edge target membership — every edge target must be a declared
         # step or a terminal target (the W4 compiler gap, enforced here at
         # construction so no plan can carry a dangling edge).
         for step_id, step in normalized.items():
             for outcome, edge in step.edges.items():
                 target = edge.target
-                if target in _TERMINAL_TARGETS:
+                if target in _NON_STEP_TARGETS:
                     continue
                 if target not in normalized:
                     raise TaskControllerValidationError(
@@ -325,6 +384,7 @@ class RuntimePlan:
         payload = {
             "runtime_plan_ref": self.runtime_plan_ref,
             "revision": self.revision,
+            "implementation_plan_ref": self.implementation_plan_ref,
             "steps": {
                 step_id: self.steps[step_id].to_dict()
                 for step_id in sorted(self.steps)
@@ -344,6 +404,22 @@ class RuntimePlan:
             "scenario": self.scenario,
         }
         return "sha256:" + hashlib.sha256(_canonical(payload)).hexdigest()
+
+    def revised(self, revision: str, *, steps: Mapping[str, RuntimePlanStep] | None = None) -> "RuntimePlan":
+        """Create an immutable new runtime revision without changing intent."""
+        return RuntimePlan(
+            runtime_plan_ref=self.runtime_plan_ref,
+            revision=_require_text(revision, "revision"),
+            steps=steps if steps is not None else self.steps,
+            implementation_plan_ref=self.implementation_plan_ref,
+            source_bindings=self.source_bindings,
+            runbooks=self.runbooks,
+            authority_requirements=self.authority_requirements,
+            blueprint_id=self.blueprint_id,
+            blueprint_digest=self.blueprint_digest,
+            task_id=self.task_id,
+            scenario=self.scenario,
+        )
 
     def step(self, step_id: str) -> RuntimePlanStep:
         try:
@@ -366,6 +442,7 @@ class RuntimePlan:
         payload: dict[str, Any] = {
             "runtime_plan_ref": self.runtime_plan_ref,
             "revision": self.revision,
+            "implementation_plan_ref": self.implementation_plan_ref,
             "runtime_plan_digest": self.runtime_plan_digest,
             "steps": {
                 step_id: self.steps[step_id].to_dict()
@@ -373,15 +450,15 @@ class RuntimePlan:
             },
         }
         if self.source_bindings is not None:
-            payload["source_bindings"] = self.source_bindings
+            payload["source_bindings"] = _deep_plain(self.source_bindings)
         if self.runbooks is not None:
             payload["runbooks"] = [
-                rb.to_dict() if isinstance(rb, RunbookBinding) else rb
+                rb.to_dict() if isinstance(rb, RunbookBinding) else _deep_plain(rb)
                 for rb in self.runbooks
             ]
         if self.authority_requirements is not None:
             payload["authority_requirements"] = [
-                ar.to_dict() if isinstance(ar, AuthorityRequirement) else ar
+                ar.to_dict() if isinstance(ar, AuthorityRequirement) else _deep_plain(ar)
                 for ar in self.authority_requirements
             ]
         if self.blueprint_id:
@@ -416,6 +493,7 @@ class RuntimePlan:
         plan = cls(
             runtime_plan_ref=payload["runtime_plan_ref"],
             revision=payload["revision"],
+            implementation_plan_ref=payload.get("implementation_plan_ref", ""),
             steps={
                 step_id: RuntimePlanStep.from_dict(step)
                 for step_id, step in raw_steps.items()
@@ -452,6 +530,7 @@ class RunCursor:
     plan_revision: str
     current_step_id: str
     attempt: int = 1
+    control_state: str = "RUNNING"
 
     def __post_init__(self) -> None:
         for name in (
@@ -464,6 +543,8 @@ class RunCursor:
             _require_text(getattr(self, name), f"cursor.{name}")
         if not isinstance(self.attempt, int) or isinstance(self.attempt, bool) or self.attempt < 1:
             raise TaskControllerValidationError("cursor.attempt must be int >= 1")
+        if self.control_state not in {"RUNNING", "WAITING", "REPLAN_REQUIRED"}:
+            raise TaskControllerValidationError("cursor.control_state is invalid")
 
     def validate_against(self, plan: RuntimePlan) -> None:
         if self.runtime_plan_ref != plan.runtime_plan_ref:
@@ -488,6 +569,7 @@ class RunCursor:
             "plan_revision": self.plan_revision,
             "current_step_id": self.current_step_id,
             "attempt": self.attempt,
+            "control_state": self.control_state,
         }
 
     @classmethod
@@ -499,6 +581,7 @@ class RunCursor:
             plan_revision=str(payload["plan_revision"]),
             current_step_id=str(payload["current_step_id"]),
             attempt=int(payload.get("attempt", 1)),
+            control_state=str(payload.get("control_state", "RUNNING")),
         )
 
     def advance(self, edge: PlanEdge) -> "RunCursor":
@@ -508,6 +591,16 @@ class RunCursor:
             )
         if edge.is_terminal:
             return self
+        if edge.is_control:
+            return RunCursor(
+                run_id=self.run_id,
+                runtime_plan_ref=self.runtime_plan_ref,
+                runtime_plan_digest=self.runtime_plan_digest,
+                plan_revision=self.plan_revision,
+                current_step_id=self.current_step_id,
+                attempt=self.attempt,
+                control_state="WAITING" if edge.target == "wait" else "REPLAN_REQUIRED",
+            )
         return RunCursor(
             run_id=self.run_id,
             runtime_plan_ref=self.runtime_plan_ref,
@@ -516,6 +609,31 @@ class RunCursor:
             current_step_id=edge.target,
             attempt=self.attempt + 1 if edge.kind == "retry" else 1,
         )
+
+    def resume(self) -> "RunCursor":
+        if self.control_state != "WAITING":
+            raise TaskControllerValidationError("cursor is not waiting")
+        return RunCursor(
+            run_id=self.run_id, runtime_plan_ref=self.runtime_plan_ref,
+            runtime_plan_digest=self.runtime_plan_digest, plan_revision=self.plan_revision,
+            current_step_id=self.current_step_id, attempt=self.attempt,
+        )
+
+    def switch_to(self, plan: RuntimePlan, *, current_step_id: str | None = None) -> "RunCursor":
+        """Atomically bind this run to a new immutable RuntimePlan revision."""
+        if not isinstance(plan, RuntimePlan):
+            raise TaskControllerValidationError(f"{BindingErrorCode.PLAN_REQUIRED}: invalid replan")
+        if plan.implementation_plan_ref and self.runtime_plan_ref == plan.implementation_plan_ref:
+            raise TaskControllerValidationError(f"{BindingErrorCode.REF_MISMATCH}: implementation ref used as runtime ref")
+        step_id = current_step_id or next(iter(sorted(plan.steps)))
+        plan.step(step_id)
+        return RunCursor(
+            run_id=self.run_id, runtime_plan_ref=plan.runtime_plan_ref,
+            runtime_plan_digest=plan.runtime_plan_digest, plan_revision=plan.revision,
+            current_step_id=step_id, attempt=1,
+        )
+
+    replan = switch_to
 
 
 class FilePlanStore:
