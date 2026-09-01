@@ -459,6 +459,27 @@ class RunCursor:
             )
         plan.step(self.current_step_id)
 
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "run_id": self.run_id,
+            "runtime_plan_ref": self.runtime_plan_ref,
+            "runtime_plan_digest": self.runtime_plan_digest,
+            "plan_revision": self.plan_revision,
+            "current_step_id": self.current_step_id,
+            "attempt": self.attempt,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: Mapping[str, Any]) -> "RunCursor":
+        return cls(
+            run_id=str(payload["run_id"]),
+            runtime_plan_ref=str(payload["runtime_plan_ref"]),
+            runtime_plan_digest=str(payload["runtime_plan_digest"]),
+            plan_revision=str(payload["plan_revision"]),
+            current_step_id=str(payload["current_step_id"]),
+            attempt=int(payload.get("attempt", 1)),
+        )
+
     def advance(self, edge: PlanEdge) -> "RunCursor":
         if not isinstance(edge, PlanEdge) or edge.source_step_id != self.current_step_id:
             raise TaskControllerValidationError(
