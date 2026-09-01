@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import pytest
+
 from taskcontroller.controlplane.projection import RunProjection
 from taskcontroller.domain.enums import NodeStatus, RunStatus
 from taskcontroller.domain.models import TeamRunState
 from taskcontroller.domain.values import NodeState
+from taskcontroller.errors import TaskControllerValidationError
 from taskcontroller.projections.binding import Binding, BindingRegistry
 from taskcontroller.projections.domain import build_view
 from taskcontroller.projections.slack_renderer import (
@@ -85,12 +88,20 @@ class TestRenderRoot:
         assert op.op == "UPDATE_ROOT"
         assert op.root == "root.1"
 
+    def test_existing_root_rejects_cross_channel_update(self):
+        proj = _projection()
+        view = build_view(proj)
+        binding = Binding(binding_key="run.1#slack", channel="slack", root="root.1")
+
+        with pytest.raises(TaskControllerValidationError, match="channel"):
+            render_root_op(view, "run.1#slack", "all-dw-ngh", binding)
+
 
 class TestRenderThread:
     def test_thread_reply_is_reply_not_root(self):
         binding = Binding(binding_key="run.1#slack", channel="slack", root="root.1")
-        op = render_thread_op("run.1#slack", "slack", binding, "SESSION_ROTATED",
-                              "session rotated s1 -> s2")
+        op = render_thread_op("run.1#slack", "slack", binding, "CONTROLLER_RECOVERED",
+                              "controller recovered")
         assert op.op == "REPLY_THREAD"
         assert op.root == "root.1"
 
@@ -100,3 +111,17 @@ class TestRenderThread:
                               "APPROVE needs external authority", authority_required=True)
         assert op.op == "REPLY_THREAD"
         assert op.authority_required is True
+
+    def test_thread_rejects_machine_chatter_event_kind(self):
+        binding = Binding(binding_key="run.1#slack", channel="slack", root="root.1")
+
+        with pytest.raises(TaskControllerValidationError, match="human event"):
+            render_thread_op("run.1#slack", "slack", binding, "A2A_SYNC",
+                             "mailbox seq advanced")
+
+    def test_thread_rejects_wrong_channel_for_binding(self):
+        binding = Binding(binding_key="run.1#slack", channel="slack", root="root.1")
+
+        with pytest.raises(TaskControllerValidationError, match="channel"):
+            render_thread_op("run.1#slack", "all-dw-ngh", binding,
+                             "MILESTONE_REACHED", "milestone")
