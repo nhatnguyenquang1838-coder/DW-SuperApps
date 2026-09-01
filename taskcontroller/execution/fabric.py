@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Any
 
 from taskcontroller.domain.models import ExecutionProviderCard, ExecutionReceipt, ExecutionRequest
+from taskcontroller.errors import TaskControllerValidationError
 from taskcontroller.execution.dispatch import build_envelope, check_correlation
 from taskcontroller.execution.errors import (
     AdapterNotFoundError,
@@ -23,6 +24,7 @@ from taskcontroller.execution.ports import DispatchAck, ExecutionAdapter
 from taskcontroller.execution.registry import AdapterRegistry
 from taskcontroller.execution.types import DispatchEnvelope
 from taskcontroller.runtime.lease import LeaseManager
+from taskcontroller.runtime.materializer import InMemoryPlanStore, StepContext, StepMaterializer
 
 
 def _resolve_adapter(
@@ -54,6 +56,7 @@ class ExecutionFabric:
         now: str,
         binding_id: str | None = None,
         adapter_key: str | None = None,
+        context: StepContext | None = None,
     ) -> DispatchAck:
         """Preflight-correlate then invoke the adapter exactly once.
 
@@ -87,6 +90,7 @@ class ExecutionFabric:
         envelope = build_envelope(
             command_id, request, receipt, provider, binding_id, lease_id,
             getattr(adapter, "adapter_key", adapter_key or ""),
+            context=context,
         )
 
         fp = envelope.canonical_fingerprint()
@@ -108,6 +112,45 @@ class ExecutionFabric:
             )
         self._dispatched[command_id] = (fp, ack)
         return ack
+
+    def dispatch_semantic(
+        self,
+        request: ExecutionRequest,
+        receipt: ExecutionReceipt,
+        provider: ExecutionProviderCard,
+        run_id: str,
+        node_id: str,
+        command_id: str,
+        now: str,
+        *,
+        runtime_plan,
+        run_cursor,
+        evidence_refs=(),
+        runtime_plan_ref: str | None,
+        runtime_plan_digest: str | None,
+        plan_revision: str | None,
+        step_id: str | None,
+        binding_id: str | None = None,
+        adapter_key: str | None = None,
+    ) -> DispatchAck:
+        """Materialize and dispatch exactly one plan-bound semantic step."""
+        if not runtime_plan_ref or not runtime_plan_digest or not plan_revision or not step_id:
+            raise TaskControllerValidationError("runtime plan binding is required")
+        if runtime_plan_ref != runtime_plan.runtime_plan_ref:
+            raise TaskControllerValidationError("runtime plan binding reference mismatch")
+        if runtime_plan_digest != runtime_plan.runtime_plan_digest:
+            raise TaskControllerValidationError("runtime plan binding digest mismatch")
+        if plan_revision != runtime_plan.revision:
+            raise TaskControllerValidationError("runtime plan binding revision mismatch")
+        context = StepMaterializer(InMemoryPlanStore(runtime_plan)).materialize(
+            run_cursor, evidence_refs=evidence_refs
+        )
+        if context.runtime_plan_ref != runtime_plan_ref:
+            raise TaskControllerValidationError("runtime plan binding context mismatch")
+        return self.dispatch(
+            request, receipt, provider, run_id, node_id, command_id, now,
+            binding_id=binding_id, adapter_key=adapter_key, context=context,
+        )
 
     def cancel(
         self,
