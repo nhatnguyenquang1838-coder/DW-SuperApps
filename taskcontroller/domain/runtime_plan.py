@@ -1,8 +1,8 @@
 """Immutable, plan-bound RuntimePlan primitives.
 
-RuntimePlan constrains semantic topology; it never grants GWC authority.  The
-module is deliberately transport- and policy-neutral so TaskController can use
-it as a durable execution contract without making the plan an approval source.
+RuntimePlan constrains semantic topology; it never grants GWC authority. The
+module is transport- and policy-neutral so TaskController can use it as a
+durable execution contract without making the plan an approval source.
 """
 
 from __future__ import annotations
@@ -40,15 +40,11 @@ def _require_text(value: Any, field: str) -> str:
 
 
 def _canonical(value: Any) -> bytes:
-    return json.dumps(
-        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-    ).encode("utf-8")
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
 
 
 @dataclass(frozen=True)
 class PlanEdge:
-    """One explicitly declared typed transition from a plan step."""
-
     outcome: str
     target: str
     kind: str = "continue"
@@ -58,9 +54,7 @@ class PlanEdge:
         _require_text(self.outcome, "edge.outcome")
         _require_text(self.target, "edge.target")
         if self.kind not in _ALLOWED_EDGE_KINDS:
-            raise TaskControllerValidationError(
-                f"unsupported plan edge kind: {self.kind!r}"
-            )
+            raise TaskControllerValidationError(f"unsupported plan edge kind: {self.kind!r}")
         if self.source_step_id is not None:
             _require_text(self.source_step_id, "edge.source_step_id")
         if self.target in _TERMINAL_TARGETS and self.kind != "terminal":
@@ -71,11 +65,7 @@ class PlanEdge:
         return self.target in _TERMINAL_TARGETS or self.kind == "terminal"
 
     def to_dict(self) -> dict[str, Any]:
-        payload: dict[str, Any] = {
-            "outcome": self.outcome,
-            "target": self.target,
-            "kind": self.kind,
-        }
+        payload: dict[str, Any] = {"outcome": self.outcome, "target": self.target, "kind": self.kind}
         if self.source_step_id is not None:
             payload["source_step_id"] = self.source_step_id
         return payload
@@ -83,46 +73,47 @@ class PlanEdge:
     @classmethod
     def from_dict(cls, payload: Mapping[str, Any]) -> "PlanEdge":
         return cls(
-            outcome=payload["outcome"],
-            target=payload["target"],
-            kind=payload.get("kind", "continue"),
-            source_step_id=payload.get("source_step_id"),
+            outcome=payload["outcome"], target=payload["target"],
+            kind=payload.get("kind", "continue"), source_step_id=payload.get("source_step_id"),
         )
 
 
 @dataclass(frozen=True)
 class RuntimePlanStep:
-    """A semantic action and only the edges it is permitted to take."""
+    """One semantic action and its bounded execution contract."""
 
     step_id: str
     semantic_action: str
+    allowed_inputs: tuple[str, ...] = ()
+    allowed_actions: tuple[str, ...] = ()
+    evidence_refs: tuple[str, ...] = ()
     edges: Mapping[str, PlanEdge] | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.step_id, "step.step_id")
         _require_text(self.semantic_action, "step.semantic_action")
-        raw_edges: Mapping[str, PlanEdge] = self.edges or {}
+        for name in ("allowed_inputs", "allowed_actions", "evidence_refs"):
+            values = getattr(self, name)
+            if not isinstance(values, (tuple, list)) or any(
+                not isinstance(value, str) or not value.strip() for value in values
+            ):
+                raise TaskControllerValidationError(f"step.{name} must contain non-empty strings")
+            object.__setattr__(self, name, tuple(values))
+        raw_edges = self.edges or {}
+        if not isinstance(raw_edges, Mapping):
+            raise TaskControllerValidationError("step.edges must be a mapping")
         normalized: dict[str, PlanEdge] = {}
         for outcome, edge in raw_edges.items():
             _require_text(outcome, "step.edge outcome")
             if not isinstance(edge, PlanEdge):
                 raise TaskControllerValidationError("step.edges must contain PlanEdge values")
             if edge.outcome != outcome:
-                raise TaskControllerValidationError(
-                    "step edge mapping key must match edge.outcome"
-                )
-            bound = edge
-            if edge.source_step_id is None:
-                bound = PlanEdge(
-                    outcome=edge.outcome,
-                    target=edge.target,
-                    kind=edge.kind,
-                    source_step_id=self.step_id,
-                )
-            elif edge.source_step_id != self.step_id:
-                raise TaskControllerValidationError(
-                    "plan edge source_step_id does not match its step"
-                )
+                raise TaskControllerValidationError("step edge mapping key must match edge.outcome")
+            bound = edge if edge.source_step_id is not None else PlanEdge(
+                outcome=edge.outcome, target=edge.target, kind=edge.kind, source_step_id=self.step_id
+            )
+            if bound.source_step_id != self.step_id:
+                raise TaskControllerValidationError("plan edge source_step_id does not match its step")
             normalized[outcome] = bound
         object.__setattr__(self, "edges", MappingProxyType(normalized))
 
@@ -130,10 +121,10 @@ class RuntimePlanStep:
         return {
             "step_id": self.step_id,
             "semantic_action": self.semantic_action,
-            "edges": {
-                outcome: edge.to_dict()
-                for outcome, edge in sorted(self.edges.items())
-            },
+            "allowed_inputs": list(self.allowed_inputs),
+            "allowed_actions": list(self.allowed_actions),
+            "evidence_refs": list(self.evidence_refs),
+            "edges": {outcome: edge.to_dict() for outcome, edge in sorted(self.edges.items())},
         }
 
     @classmethod
@@ -144,17 +135,15 @@ class RuntimePlanStep:
         return cls(
             step_id=payload["step_id"],
             semantic_action=payload["semantic_action"],
-            edges={
-                outcome: PlanEdge.from_dict(edge)
-                for outcome, edge in raw_edges.items()
-            },
+            allowed_inputs=tuple(payload.get("allowed_inputs", ())),
+            allowed_actions=tuple(payload.get("allowed_actions", ())),
+            evidence_refs=tuple(payload.get("evidence_refs", ())),
+            edges={outcome: PlanEdge.from_dict(edge) for outcome, edge in raw_edges.items()},
         )
 
 
 @dataclass(frozen=True)
 class RuntimePlan:
-    """Immutable content-addressed graph for one run/revision."""
-
     runtime_plan_ref: str
     revision: str
     steps: Mapping[str, RuntimePlanStep]
@@ -168,13 +157,9 @@ class RuntimePlan:
         for step_id, step in self.steps.items():
             _require_text(step_id, "plan step id")
             if not isinstance(step, RuntimePlanStep):
-                raise TaskControllerValidationError(
-                    "runtime plan steps must contain RuntimePlanStep values"
-                )
+                raise TaskControllerValidationError("runtime plan steps must contain RuntimePlanStep values")
             if step.step_id != step_id:
-                raise TaskControllerValidationError(
-                    "plan step mapping key must match step.step_id"
-                )
+                raise TaskControllerValidationError("plan step mapping key must match step.step_id")
             normalized[step_id] = step
         object.__setattr__(self, "steps", MappingProxyType(normalized))
 
@@ -183,10 +168,7 @@ class RuntimePlan:
         payload = {
             "runtime_plan_ref": self.runtime_plan_ref,
             "revision": self.revision,
-            "steps": {
-                step_id: self.steps[step_id].to_dict()
-                for step_id in sorted(self.steps)
-            },
+            "steps": {step_id: self.steps[step_id].to_dict() for step_id in sorted(self.steps)},
         }
         return "sha256:" + hashlib.sha256(_canonical(payload)).hexdigest()
 
@@ -194,28 +176,20 @@ class RuntimePlan:
         try:
             return self.steps[step_id]
         except KeyError as exc:
-            raise TaskControllerValidationError(
-                f"{BindingErrorCode.STEP_MISSING}: {step_id}"
-            ) from exc
+            raise TaskControllerValidationError(f"{BindingErrorCode.STEP_MISSING}: {step_id}") from exc
 
     def resolve_edge(self, step_id: str, outcome: str) -> PlanEdge:
-        step = self.step(step_id)
         try:
-            return step.edges[outcome]
+            return self.step(step_id).edges[outcome]
         except KeyError as exc:
-            raise TaskControllerValidationError(
-                f"{BindingErrorCode.EDGE_NOT_ALLOWED}: {step_id}/{outcome}"
-            ) from exc
+            raise TaskControllerValidationError(f"{BindingErrorCode.EDGE_NOT_ALLOWED}: {step_id}/{outcome}") from exc
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "runtime_plan_ref": self.runtime_plan_ref,
             "revision": self.revision,
             "runtime_plan_digest": self.runtime_plan_digest,
-            "steps": {
-                step_id: self.steps[step_id].to_dict()
-                for step_id in sorted(self.steps)
-            },
+            "steps": {step_id: self.steps[step_id].to_dict() for step_id in sorted(self.steps)},
         }
 
     @classmethod
@@ -223,40 +197,27 @@ class RuntimePlan:
         if not isinstance(payload, Mapping):
             raise TaskControllerValidationError("runtime plan payload must be an object")
         forbidden = {
-            "authority_granted",
-            "write_authority_granted",
-            "merge_authority_granted",
-            "deployment_authority_granted",
-            "production_authority_granted",
+            "authority_granted", "write_authority_granted", "merge_authority_granted",
+            "deployment_authority_granted", "production_authority_granted",
         }
         present = sorted(key for key in forbidden if key in payload)
         if present:
-            raise TaskControllerValidationError(
-                f"RuntimePlan authority_granted fields are forbidden: {present}"
-            )
+            raise TaskControllerValidationError(f"RuntimePlan authority_granted fields are forbidden: {present}")
         raw_steps = payload.get("steps", {})
         if not isinstance(raw_steps, Mapping):
             raise TaskControllerValidationError("runtime plan steps must be a mapping")
         plan = cls(
-            runtime_plan_ref=payload["runtime_plan_ref"],
-            revision=payload["revision"],
-            steps={
-                step_id: RuntimePlanStep.from_dict(step)
-                for step_id, step in raw_steps.items()
-            },
+            runtime_plan_ref=payload["runtime_plan_ref"], revision=payload["revision"],
+            steps={step_id: RuntimePlanStep.from_dict(step) for step_id, step in raw_steps.items()},
         )
         supplied_digest = payload.get("runtime_plan_digest")
         if supplied_digest is not None and supplied_digest != plan.runtime_plan_digest:
-            raise TaskControllerValidationError(
-                f"{BindingErrorCode.DIGEST_MISMATCH}: persisted digest differs"
-            )
+            raise TaskControllerValidationError(f"{BindingErrorCode.DIGEST_MISMATCH}: persisted digest differs")
         return plan
 
 
 @dataclass(frozen=True)
 class RunCursor:
-    """Durable pointer to one RuntimePlan revision and its current step."""
-
     run_id: str
     runtime_plan_ref: str
     runtime_plan_digest: str
@@ -265,52 +226,33 @@ class RunCursor:
     attempt: int = 1
 
     def __post_init__(self) -> None:
-        for name in (
-            "run_id",
-            "runtime_plan_ref",
-            "runtime_plan_digest",
-            "plan_revision",
-            "current_step_id",
-        ):
+        for name in ("run_id", "runtime_plan_ref", "runtime_plan_digest", "plan_revision", "current_step_id"):
             _require_text(getattr(self, name), f"cursor.{name}")
         if not isinstance(self.attempt, int) or isinstance(self.attempt, bool) or self.attempt < 1:
             raise TaskControllerValidationError("cursor.attempt must be int >= 1")
 
     def validate_against(self, plan: RuntimePlan) -> None:
         if self.runtime_plan_ref != plan.runtime_plan_ref:
-            raise TaskControllerValidationError(
-                f"{BindingErrorCode.REF_MISMATCH}: cursor references another plan"
-            )
+            raise TaskControllerValidationError(f"{BindingErrorCode.REF_MISMATCH}: cursor references another plan")
         if self.runtime_plan_digest != plan.runtime_plan_digest:
-            raise TaskControllerValidationError(
-                f"{BindingErrorCode.DIGEST_MISMATCH}: cursor digest is stale"
-            )
+            raise TaskControllerValidationError(f"{BindingErrorCode.DIGEST_MISMATCH}: cursor digest is stale")
         if self.plan_revision != plan.revision:
-            raise TaskControllerValidationError(
-                f"{BindingErrorCode.STEP_STALE}: cursor revision is stale"
-            )
+            raise TaskControllerValidationError(f"{BindingErrorCode.STEP_STALE}: cursor revision is stale")
         plan.step(self.current_step_id)
 
     def advance(self, edge: PlanEdge) -> "RunCursor":
         if not isinstance(edge, PlanEdge) or edge.source_step_id != self.current_step_id:
-            raise TaskControllerValidationError(
-                f"{BindingErrorCode.EDGE_NOT_ALLOWED}: edge is not declared for current step"
-            )
+            raise TaskControllerValidationError(f"{BindingErrorCode.EDGE_NOT_ALLOWED}: edge is not declared for current step")
         if edge.is_terminal:
             return self
         return RunCursor(
-            run_id=self.run_id,
-            runtime_plan_ref=self.runtime_plan_ref,
-            runtime_plan_digest=self.runtime_plan_digest,
-            plan_revision=self.plan_revision,
-            current_step_id=edge.target,
-            attempt=self.attempt + 1 if edge.kind == "retry" else 1,
+            run_id=self.run_id, runtime_plan_ref=self.runtime_plan_ref,
+            runtime_plan_digest=self.runtime_plan_digest, plan_revision=self.plan_revision,
+            current_step_id=edge.target, attempt=self.attempt + 1 if edge.kind == "retry" else 1,
         )
 
 
 class FilePlanStore:
-    """Small durable JSON store keyed by the stable RuntimePlan reference."""
-
     def __init__(self, root: str | Path):
         self.root = Path(root)
 
@@ -325,63 +267,31 @@ class FilePlanStore:
         if path.exists():
             existing = RuntimePlan.from_dict(json.loads(path.read_text(encoding="utf-8")))
             if existing.runtime_plan_digest != plan.runtime_plan_digest:
-                raise TaskControllerValidationError(
-                    f"{BindingErrorCode.IMMUTABLE}: {plan.runtime_plan_ref} already exists"
-                )
+                raise TaskControllerValidationError(f"{BindingErrorCode.IMMUTABLE}: {plan.runtime_plan_ref} already exists")
             return existing
-        path.write_text(
-            json.dumps(plan.to_dict(), sort_keys=True, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
+        path.write_text(json.dumps(plan.to_dict(), sort_keys=True, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         return plan
 
     def get(self, runtime_plan_ref: str, runtime_plan_digest: str) -> RuntimePlan:
-        path = self._path(runtime_plan_ref)
         try:
-            plan = RuntimePlan.from_dict(json.loads(path.read_text(encoding="utf-8")))
+            plan = RuntimePlan.from_dict(json.loads(self._path(runtime_plan_ref).read_text(encoding="utf-8")))
         except FileNotFoundError as exc:
-            raise TaskControllerValidationError(
-                f"{BindingErrorCode.PLAN_REQUIRED}: plan is not persisted"
-            ) from exc
+            raise TaskControllerValidationError(f"{BindingErrorCode.PLAN_REQUIRED}: plan is not persisted") from exc
         if plan.runtime_plan_digest != runtime_plan_digest:
-            raise TaskControllerValidationError(
-                f"{BindingErrorCode.DIGEST_MISMATCH}: requested digest is stale"
-            )
+            raise TaskControllerValidationError(f"{BindingErrorCode.DIGEST_MISMATCH}: requested digest is stale")
         return plan
 
 
-def require_semantic_binding(
-    plan: RuntimePlan,
-    *,
-    runtime_plan_ref: str | None,
-    runtime_plan_digest: str | None,
-    step_id: str | None,
-) -> None:
-    """Fail closed before semantic execution when any plan identity is absent."""
-
+def require_semantic_binding(plan: RuntimePlan, *, runtime_plan_ref: str | None, runtime_plan_digest: str | None, step_id: str | None) -> None:
     if not isinstance(plan, RuntimePlan):
         raise TaskControllerValidationError(f"{BindingErrorCode.PLAN_REQUIRED}: invalid plan")
     if not runtime_plan_ref or not runtime_plan_digest or not step_id:
-        raise TaskControllerValidationError(
-            f"{BindingErrorCode.PLAN_REQUIRED}: ref, digest and step are required"
-        )
+        raise TaskControllerValidationError(f"{BindingErrorCode.PLAN_REQUIRED}: ref, digest and step are required")
     if runtime_plan_ref != plan.runtime_plan_ref:
-        raise TaskControllerValidationError(
-            f"{BindingErrorCode.REF_MISMATCH}: semantic action references another plan"
-        )
+        raise TaskControllerValidationError(f"{BindingErrorCode.REF_MISMATCH}: semantic action references another plan")
     if runtime_plan_digest != plan.runtime_plan_digest:
-        raise TaskControllerValidationError(
-            f"{BindingErrorCode.DIGEST_MISMATCH}: semantic action digest is stale"
-        )
+        raise TaskControllerValidationError(f"{BindingErrorCode.DIGEST_MISMATCH}: semantic action digest is stale")
     plan.step(step_id)
 
 
-__all__ = [
-    "BindingErrorCode",
-    "FilePlanStore",
-    "PlanEdge",
-    "RunCursor",
-    "RuntimePlan",
-    "RuntimePlanStep",
-    "require_semantic_binding",
-]
+__all__ = ["BindingErrorCode", "FilePlanStore", "PlanEdge", "RunCursor", "RuntimePlan", "RuntimePlanStep", "require_semantic_binding"]
