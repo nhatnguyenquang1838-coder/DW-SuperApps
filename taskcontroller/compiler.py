@@ -171,6 +171,18 @@ def compile_blueprint(
             # Deterministic ordering: by target name for reproducibility.
             route_edges.sort(key=lambda e: (e.kind, e.target))
             for edge in route_edges:
+                # seq=14 W4: never silently overwrite a distinct route. The edge
+                # mapping is keyed by outcome; if two distinct routes resolve to
+                # the same outcome slot, fail closed rather than drop one.
+                existing = edge_map.get(edge.outcome)
+                if existing is not None and existing != edge:
+                    raise TaskControllerValidationError(
+                        "BLUEPRINT_ROUTE_DISCRIMINATOR_REQUIRED: "
+                        f"{action} has multiple routes colliding on outcome "
+                        f"{edge.outcome!r} (kind={edge.kind!r}) — the edge "
+                        "mapping cannot hold both distinct routes; declare "
+                        "distinct kinds/outcomes for each route"
+                    )
                 edge_map[edge.outcome] = edge
 
         else:

@@ -290,3 +290,104 @@ def test_compile_ci_run_capture_active_route_preserves_non_executable():
     # Round-trip preserves both route semantics.
     restored = RuntimePlan.from_dict(json.loads(json.dumps(plan.to_dict())))
     assert restored == plan
+
+
+def test_compile_fails_closed_when_same_kind_routes_collide_despite_condition_id():
+    """seq=14 W4: edge_map is keyed by edge.outcome; two executable 'continue'
+    routes (even with DIFFERENT condition_ids) both resolve to outcome
+    'CONTINUE' and the mapping cannot hold both. The compiler must FAIL CLOSED
+    with BLUEPRINT_ROUTE_DISCRIMINATOR_REQUIRED — never silently overwrite/drop
+    the second distinct route on the first's outcome slot."""
+    payload = _blueprint()
+    payload["topology"] = [
+        {
+            "action": "inspect",
+            "node_id": "reference.inspect",
+            "edges": [
+                {
+                    "target": "validate",
+                    "kind": "continue",
+                    "condition_id": "cond-main",
+                    "runtime_executable": True,
+                    "source_gate": "G3_PR",
+                    "target_gate": "G3_PR",
+                },
+                {
+                    "target": "validate",
+                    "kind": "continue",
+                    "condition_id": "cond-fallback",
+                    "runtime_executable": True,
+                    "source_gate": "G3_PR",
+                    "target_gate": "G3_PR",
+                },
+            ],
+        },
+        {
+            "action": "validate",
+            "node_id": "validation.validate",
+            "edges": [
+                {
+                    "target": "terminal",
+                    "kind": "terminal",
+                    "runtime_executable": False,
+                },
+            ],
+        },
+    ]
+
+    # Two distinct executable continue routes collide on outcome 'CONTINUE'.
+    # Failing closed beats silently overwriting one route.
+    with pytest.raises(TaskControllerValidationError, match="BLUEPRINT_ROUTE_DISCRIMINATOR_REQUIRED"):
+        _compile(payload)
+
+
+def test_compile_preserves_distinct_kind_routes_with_condition_ids():
+    """seq=14 W4: routes that do NOT collide on outcome (different kinds) are
+    each preserved with their own condition_id — no false-positive fail."""
+    payload = _blueprint()
+    payload["topology"] = [
+        {
+            "action": "inspect",
+            "node_id": "reference.inspect",
+            "edges": [
+                {
+                    "target": "validate",
+                    "kind": "continue",
+                    "condition_id": "cond-main",
+                    "runtime_executable": True,
+                    "source_gate": "G3_PR",
+                    "target_gate": "G3_PR",
+                },
+                {
+                    "target": "validate",
+                    "kind": "human_required",
+                    "condition_id": "cond-escalate",
+                    "runtime_executable": False,
+                    "source_gate": "G3_PR",
+                    "target_gate": None,
+                },
+            ],
+        },
+        {
+            "action": "validate",
+            "node_id": "validation.validate",
+            "edges": [
+                {
+                    "target": "terminal",
+                    "kind": "terminal",
+                    "runtime_executable": False,
+                },
+            ],
+        },
+    ]
+
+    plan = _compile(payload)
+    edges = plan.step("inspect").edges
+    assert len(edges) == 2, f"expected both distinct-kind routes preserved, got {list(edges)}"
+    continue_edge = edges["CONTINUE"]
+    hr_edge = edges["HUMAN_REQUIRED"]
+    assert continue_edge.condition_id == "cond-main"
+    assert hr_edge.condition_id == "cond-escalate"
+    # Round-trip preserves both routes + condition discriminators.
+    restored = RuntimePlan.from_dict(json.loads(json.dumps(plan.to_dict())))
+    assert restored == plan
