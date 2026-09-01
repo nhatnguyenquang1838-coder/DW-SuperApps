@@ -13,7 +13,7 @@ Read:
 5. `agents/shared/taskcontroller-human-plane-policy.md`;
 6. this file.
 
-Slack Canvases are optional projections and must not block TaskController activation.
+Do not load Slack-hosted policy documents or external communication-policy copies as TaskController instruction sources. The DW-SuperApps repository chain above is complete and canonical.
 
 ## Slack is the Human Control Plane
 
