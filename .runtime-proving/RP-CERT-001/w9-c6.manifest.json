@@ -2,11 +2,10 @@
   "campaign_id": "RP-CERT-001",
   "events_sha256": "aea2ab0c854529918c34b34c2f3480366d6a3cd4094099e68f7f0f358e09ca93",
   "evidence_refs": {
-    "case": "C6",
-    "gwc_sha": "43f6379158978b0c299d775cd162ad69b5a1c099",
-    "runtime_sha": "80d8b53ada517a2ae2a8349bb19a3b6c238f08dd"
+    "campaign": "RP-CERT-001",
+    "store": "w9-c6"
   },
-  "final_manifest_digest": "8d419c2daf9d950162dcb6807bdfc67e72adb64c44d1e3be9e4de51b00c8f809",
+  "final_manifest_digest": "55613739a1661d1d30c507d8cde6cdbfab95852ec64169c05be7fb02f4d41d71",
   "first_event_digest": "42919759c394be9fff0aeb3616761e8da90349a389b019ad636a9d68cd02b9d7",
   "last_event_digest": "d073e22a5ac37b5e76b8b9fbb4e02495f87d370197caca982fb331d4e5c6d515",
   "record_count": 8,

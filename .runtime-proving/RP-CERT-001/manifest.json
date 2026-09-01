@@ -2,15 +2,10 @@
   "campaign_id": "RP-CERT-001",
   "events_sha256": "ce06247e94693dca6e86ac6a5e996ef3d461274255eb568691352d3a18cd69ee",
   "evidence_refs": {
-    "ci_runtime": "33561482519,33561482583,33561482575",
-    "ci_subject": "33562068425,33562068448,33562068449",
-    "gwc_sha": "43f6379158978b0c299d775cd162ad69b5a1c099",
-    "pr_117": "https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/pull/117",
-    "pr_118": "https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/pull/118",
-    "runtime_sha": "80d8b53ada517a2ae2a8349bb19a3b6c238f08dd",
-    "subject_sha": "79b5b5eb1f1df6fbe67870a5e2433672e9e22a55"
+    "campaign": "RP-CERT-001",
+    "store": "w8"
   },
-  "final_manifest_digest": "221ea1c73b09673d55336d144bec5f317a1538035854454890d3607031c13421",
+  "final_manifest_digest": "e018e6762ba8386e290cf0239b6cc242effd8a2363a4d295c9249a3fd1105399",
   "first_event_digest": "5518bbaa8ed086dfd24802cfb2b3e83c75867ae9c042719a8749fc6aa7c34d4f",
   "last_event_digest": "7434e363dcc1368e1f819332f44c082f888ecbd8757d6944868d20c7d341551e",
   "record_count": 8,
