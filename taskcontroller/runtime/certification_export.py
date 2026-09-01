@@ -132,9 +132,13 @@ def reconstruct_evidence(manifest_path: str | Path) -> tuple[CertificationEvent,
     if expected_final != computed_final:
         raise CertificationExportError("manifest digest mismatch (tamper detected)")
 
-    events_path = manifest_path.parent / "events.jsonl"
+    events_name = "events.jsonl"
+    if manifest_path.name.endswith(".manifest.json"):
+        stem = manifest_path.name[: -len(".manifest.json")]
+        events_name = f"{stem}.events.jsonl" if stem else "events.jsonl"
+    events_path = manifest_path.parent / events_name
     if not events_path.exists():
-        raise CertificationExportError("evidence events.jsonl missing")
+        raise CertificationExportError(f"evidence events file missing: {events_path}")
     actual_events_digest = _events_digest(events_path)
     if actual_events_digest != manifest.get("events_sha256"):
         raise CertificationExportError("events.jsonl digest mismatch (tamper detected)")
