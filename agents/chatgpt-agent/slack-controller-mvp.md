@@ -31,6 +31,21 @@ Keep visible when material:
 
 The RootCard is a projection, never machine authority. Human actions such as PAUSE/STOP/APPROVE/MERGE are intents whose authority must still be validated against the active repository/project contract.
 
+## Connector boundary — no raw Slack bypass
+
+Direct Slack connector calls are transport only. They MUST NOT invent TaskController routing semantics, RootCard identity, thread identity, wake-up shape, or human-event classification.
+
+Before any TaskController Slack mutation, resolve the persisted `existing RootCard binding` for the active run from canonical continuation/host state. Apply these rules fail-closed:
+
+- no binding + first materialization may perform `CREATE_ROOT`, then persist the resulting channel/root binding before later Slack mutation;
+- existing binding + live snapshot change performs `UPDATE_ROOT` on that exact channel/root; never create a replacement root because the session, model, Controller host, Executor host, or recovery context changed;
+- a material semantic human event performs `REPLY_THREAD` under that exact existing root;
+- machine progress, mailbox ACK/seq churn, polling, liveness, retries, raw CI/tool chatter, and ordinary session/model/executor rotation are not thread events;
+- Cross-channel rebinding is forbidden unless an explicit durable human-plane migration/reconciliation contract authorizes and records the new binding;
+- if the persisted binding conflicts with the requested Slack target, do not send; report the binding conflict through canonical machine state instead.
+
+A host using a generic Slack connector MUST derive its actual Slack operation from the TaskController projection/binding result first. The connector call is only the final transport application of that validated operation.
+
 ## Slack reply rendering
 
 For TaskController human-plane replies:
@@ -56,6 +71,8 @@ If this cannot be established, stop delegation with `TASKCONTROLLER_MAILBOX_NOT_
 `SlackWakeupBinding` is notification transport only.
 
 A wake-up MUST NOT include the command request, input refs, artifact payload, continuation state, code, diff, test output, or progress report. It contains only the pointer semantics needed for the Executor to fetch newer mailbox state, such as run, recipient, mailbox ref and seq.
+
+For a host that exposes the runtime object, serialize the canonical pointer with `WakeupSignal.to_dict()` and send that payload without appended prose, command IDs, SHA summaries, instructions, or copied context. Do not hand-compose an expanded Slack wake-up when the canonical serializer is available.
 
 After a wake-up, the Executor reads the canonical command from its Agent mailbox and its semantic result goes to its Agent mailbox. Human control input, wake-up delivery and Executor progress transport are separate concerns.
 
@@ -88,3 +105,5 @@ INTERCEPT only for material scope drift, authority drift, plan drift, evidence c
 ## Recovery
 
 Slack history is not a recovery dependency. Recover machine state from current repository/run identity, Controller mailbox continuation, Executor mailbox/cursor, exact PR/SHA/CI/artifact refs, and configured audit continuation manifest. Slack contributes only the RootCard binding needed for human continuity.
+
+Recovery MUST restore the persisted RootCard binding before any Slack mutation. A recovered Controller updates that same root; it does not create a recovery root or move human-plane traffic to another channel. Emit `CONTROLLER_RECOVERED` only when recovery itself is a material human event; ordinary metadata rotation remains RootCard-only.
