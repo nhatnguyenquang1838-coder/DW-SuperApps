@@ -265,6 +265,7 @@ class ClosedLoopRuntimeExecutor:
         if not isinstance(edges, Mapping):
             raise ClosedLoopRuntimeError(f"ROUTE_INVALID: edges for {step_id} must be a mapping")
         terminal_step = bool(step_raw.get("terminal", False))
+        legacy_unmarked_leaf = False
         if terminal_step:
             if edges:
                 raise ClosedLoopRuntimeError("terminal step must preserve canonical edges: []")
@@ -277,6 +278,7 @@ class ClosedLoopRuntimeExecutor:
                 # Legacy plan payloads may contain an unmarked leaf. Canonical
                 # compiler output must use terminal:true; preserve old replay
                 # semantics here without treating a routed step as terminal.
+                legacy_unmarked_leaf = True
                 edge = None
                 resolved_outcome = None
             else:
@@ -340,7 +342,7 @@ class ClosedLoopRuntimeExecutor:
             target = step_id
         effective_sequence = sequence if sequence is not None else self._sequence + 1
         evidence_entry = {
-            "status": resolved_outcome if resolved_outcome is not None else ("TERMINAL" if terminal_step else "EXECUTED"),
+            "status": resolved_outcome if resolved_outcome is not None else ("TERMINAL" if terminal_step else ("LEGACY_UNMARKED_LEAF" if legacy_unmarked_leaf else "EXECUTED")),
             "payload": dict(payload),
             "requested_action": action or None,
             "evidence_refs": list(evidence_refs),
@@ -363,6 +365,7 @@ class ClosedLoopRuntimeExecutor:
             "implementation_plan_ref": self._plan.get("implementation_plan_ref", ""),
             "current_step": target,
             "is_terminal": is_terminal,
+            "legacy_unmarked_leaf": legacy_unmarked_leaf,
             "completed_steps": list(self._completed_steps),
             "evidence": json.loads(json.dumps(self._evidence)),
             "authority_revalidated": bool(effectful),
