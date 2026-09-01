@@ -64,7 +64,7 @@ class TestRootInvariant:
     def test_rotation_produces_thread_event_root_count_stays_1(self):
         ad, _ = _adapter()
         ad.materialize("run.1", session_id="s1", executor="e1")
-        ad.emit_thread("run.1", "SESSION_ROTATED", "session s1 -> s2")
+        ad.emit_thread("run.1", "CONTROLLER_RECOVERED", "controller recovered on new host")
         ad.materialize("run.1", session_id="s2", executor="e2")  # UPDATE, not CREATE
         assert ad._transport.root_count() == 1
         assert len(ad._transport.thread_replies) >= 1
@@ -88,7 +88,7 @@ class TestRootInvariant:
     def test_thread_event_never_becomes_root(self):
         ad, _ = _adapter()
         ad.materialize("run.1")
-        ad.emit_thread("run.1", "EXECUTOR_EVENT", "node n1 progressed")
+        ad.emit_thread("run.1", "MILESTONE_REACHED", "node n1 reached a material milestone")
         # thread replies are not roots
         assert len(ad._transport.thread_replies) >= 1
         assert ad._transport.root_count() == 1

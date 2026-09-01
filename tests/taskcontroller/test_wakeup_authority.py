@@ -35,6 +35,18 @@ def test_slack_overlay_keeps_wakeup_separate_from_human_and_progress_planes() ->
     assert "Human control input, wake-up delivery and Executor progress transport are separate concerns" in overlay
 
 
+def test_slack_overlay_forbids_raw_connector_bypass_of_root_thread_binding() -> None:
+    overlay = (
+        ROOT / "agents" / "chatgpt-agent" / "slack-controller-mvp.md"
+    ).read_text(encoding="utf-8")
+    assert "Direct Slack connector calls are transport only" in overlay
+    assert "existing RootCard binding" in overlay
+    assert "UPDATE_ROOT" in overlay
+    assert "REPLY_THREAD" in overlay
+    assert "WakeupSignal.to_dict()" in overlay
+    assert "Cross-channel rebinding is forbidden" in overlay
+
+
 def test_hermes_wakeup_requires_zero_slack_progress_replies() -> None:
     overlay = (ROOT / "agents" / "hermes" / "agent-instructions.md").read_text(
         encoding="utf-8"

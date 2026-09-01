@@ -53,32 +53,33 @@ class TestRestartDuplicateRoot:
         assert len(a._transport.roots_created) == 1
 
     def test_persist_then_destroy_then_host_b_updates_same_root(self):
-        # 1-2. Host A materializes -> exactly root R, then persists host state.
         a = _new_host()
         a.materialize(session_id="s1")
         persisted = a.checkpoint_host_state()
-        # 3. Destroy Host A; construct Host B from restored state (new metadata allowed).
         b = SlackTaskControllerPack.restore(persisted, ControlPlane(_store()), FakeSlackTransport())
-        # 4. Host B materializes same run -> UPDATE R, root count stays exactly 1.
         b.materialize(session_id="s9", model="gpt-x", executor="e2")
-        # no new root created; existing root updated
         assert b._transport.roots_created == []
         assert b._transport.roots_updated == ["root.run.1"]
 
-    def test_session_rotated_is_thread_reply_under_r(self):
+    def test_rotation_after_restart_updates_root_without_thread_reply(self):
         a = _new_host()
         a.materialize(session_id="s1")
         persisted = a.checkpoint_host_state()
         b = SlackTaskControllerPack.restore(persisted, ControlPlane(_store()), FakeSlackTransport())
         b.materialize(session_id="s9")
+        updates_before = len(b._transport.roots_updated)
+        replies_before = len(b._transport.thread_replies)
+
         b.rotate(session_id="s9", model="gpt-x", executor="e2")
-        kinds = [o["payload"].get("event_kind") for o in b._transport.ops if o["op"] == "REPLY_THREAD"]
-        assert "SESSION_ROTATED" in kinds
+
+        assert b._transport.roots_created == []
+        assert len(b._transport.roots_updated) == updates_before + 1
+        assert len(b._transport.thread_replies) == replies_before
+        assert b.root_for("run.1") == "root.run.1"
 
     def test_deliberate_second_root_fails_closed_zero_side_effect(self):
         a = _new_host()
         a.materialize(session_id="s1")
-        # a second-root attempt on the live host must fail closed, zero transport side effect
         before = a._transport.root_count()
         with pytest.raises(DuplicateRootError):
             a.attempt_second_root()
@@ -91,7 +92,6 @@ class TestRestartDuplicateRoot:
         persisted = a.checkpoint_host_state()
         b1 = SlackTaskControllerPack.restore(persisted, ControlPlane(_store()), FakeSlackTransport())
         b2 = SlackTaskControllerPack.restore(persisted, ControlPlane(_store()), FakeSlackTransport())
-        # both restored hosts share the same binding identity and update the same root
         b1.materialize(session_id="s9")
         b2.materialize(session_id="s9")
         assert b1._transport.roots_created == []
@@ -102,27 +102,18 @@ class TestRestartDuplicateRoot:
         a = _new_host()
         a.materialize(session_id="s1")
         persisted = a.checkpoint_host_state()
-        # corrupt the persisted snapshot to a DIFFERENT root, then restore+bind.
         d = json.loads(persisted.serialize())
         d["binding_snapshot"]["run.1#slack"]["root"] = "root.EVIL"
         bad_state = TaskControllerHostState.from_dict(d)
         b = SlackTaskControllerPack.restore(bad_state, ControlPlane(_store()), FakeSlackTransport())
-        # restoring the registry with a different root is fine; attempting to
-        # (re)bind the same key to the ORIGINAL root must fail closed via the
-        # host-owned registry (no adapter private state).
         with pytest.raises(DuplicateRootError):
             b._registry.bind("run.1#slack", "slack", "root.run.1")
 
     def test_second_root_fail_closed_after_restart_via_host_registry(self):
-        # The host owns the registry after restart; a conflicting second-root
-        # attempt must raise DuplicateRootError using host-owned state only.
         a = _new_host()
         a.materialize(session_id="s1")
         persisted = a.checkpoint_host_state()
         b = SlackTaskControllerPack.restore(persisted, ControlPlane(_store()), FakeSlackTransport())
-        # restore carries the original root; host-owned registry sees it
         assert b.root_for("run.1") == "root.run.1"
-        # deliberate second-root attempt via host-owned registry fails closed
         with pytest.raises(DuplicateRootError):
             b._registry.bind("run.1#slack", "slack", "root.EVIL2")
-        # and the pack never needs to read adapter private state to enforce it

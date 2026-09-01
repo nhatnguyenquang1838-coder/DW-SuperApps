@@ -11,10 +11,12 @@ Slack is projection/interaction ONLY — never source of runtime truth. The adap
   through WP5 CAS (stale version is rejected by WP5 and is NOT masked as success;
   on success the root is re-materialized). Authority actions (APPROVE/MERGE)
   produce a thread-only AUTHORITY_REQUIRED signal and never mutate the runtime.
-- emit_thread(run_id, kind, text): REPLY_THREAD event log on the SAME root.
+- emit_thread(run_id, kind, text): REPLY_THREAD for canonical semantic human
+  events only on the SAME root.
 
-The hard invariant is enforced by the binding registry: a second root for the
-same task/target raises DuplicateRootError and produces ZERO transport side effect.
+The hard invariant is enforced by the binding registry plus renderer validation:
+a second root, cross-channel route, or machine-chatter thread event fails closed
+before any transport side effect.
 """
 
 from __future__ import annotations
@@ -29,6 +31,7 @@ from taskcontroller.controlplane.errors import (
 from taskcontroller.controlplane.intents import ControlIntent
 from taskcontroller.controlplane.orchestrator import ControlPlane
 from taskcontroller.controlplane.projection import RunProjection
+from taskcontroller.interaction.human_projection import HumanEventKind
 from taskcontroller.projections.actions import map_action
 from taskcontroller.projections.binding import BindingRegistry, DuplicateRootError
 from taskcontroller.projections.domain import build_view
@@ -101,7 +104,7 @@ class SlackProjectionAdapter:
             # APPROVE/MERGE: never mutate runtime; thread-only authority signal
             if binding is not None:
                 op = render_thread_op(
-                    key, _CHANNEL, binding, "AUTHORITY_REQUIRED",
+                    key, _CHANNEL, binding, HumanEventKind.AUTHORITY_REQUIRED.value,
                     f"{action} requires external authority", authority_required=True,
                 )
                 self._transport.apply(op.to_dict())
@@ -112,23 +115,27 @@ class SlackProjectionAdapter:
         try:
             result, proj = self._cp.command(intent)
         except (StaleVersionError, TerminalRunError, ControlPlaneError) as exc:
-            # do NOT update root as success; emit thread error only
+            # do NOT update root as success; emit only a material correction event
             if binding is not None:
-                op = render_thread_op(key, _CHANNEL, binding, "COMMAND_REJECTED", str(exc))
+                op = render_thread_op(
+                    key,
+                    _CHANNEL,
+                    binding,
+                    HumanEventKind.CORRECTION_REQUIRED.value,
+                    str(exc),
+                )
                 self._transport.apply(op.to_dict())
             return {"accepted": False, "error": str(exc), "action": action}
 
-        # success: re-materialize root (UPDATE, same root) + thread command log
+        # success: re-materialize root (UPDATE, same root). Do not mirror the
+        # low-level accepted command into the human timeline.
         view = build_view(proj)
         op_root = render_root_op(view, key, _CHANNEL, binding)
         self._transport.apply(op_root.to_dict())
-        if binding is not None:
-            op_thread = render_thread_op(key, _CHANNEL, binding, "CONTROLLER_COMMAND", f"{action} accepted")
-            self._transport.apply(op_thread.to_dict())
         return {"accepted": True, "action": action, "new_status": result.status}
 
     def emit_thread(self, run_id: str, kind: str, text: str) -> None:
-        """REPLY_THREAD event log on the SAME root (never a new root)."""
+        """REPLY_THREAD semantic human event on the SAME root (never a new root)."""
         key = self._key(run_id)
         binding = self._registry.lookup(key)
         if binding is None:

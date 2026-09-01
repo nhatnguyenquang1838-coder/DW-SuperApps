@@ -48,18 +48,14 @@ class TestCompositionLifecycle:
     def test_materialize_creates_one_root(self):
         host, _ = _host()
         host.materialize(session_id="s1")
-        # one root created, no second
         assert host.root_count() == 1
 
     def test_route_and_dispatch_delegates_to_wp3_wp4(self):
-        # verify the host does not duplicate authority: it calls route_and_dispatch
-        # and returns its result unchanged. We exercise the real path minimally.
         host, store = _host()
-        # the host composes; ensure calling the delegate works and returns a tuple
-        from taskcontroller.domain.enums import BindingType, LeaseStatus
-        from taskcontroller.domain.ids import BindingRef, CapabilityRef, ProviderRef
+        from taskcontroller.domain.enums import BindingType
+        from taskcontroller.domain.ids import CapabilityRef, ProviderRef
         from taskcontroller.domain.models import (
-            CapabilityCard, ExecutionProviderCard, ExecutionReceipt, ExecutionRequest,
+            CapabilityCard, ExecutionProviderCard, ExecutionRequest,
         )
         from taskcontroller.domain.values import Binding, CapabilityRequirement, EnvironmentRequirement, RoutingPref
         from taskcontroller.execution.ports import FakeExecutionAdapter
@@ -82,7 +78,6 @@ class TestCompositionLifecycle:
         adap_reg = build_adapter_registry([FakeExecutionAdapter(adapter_key="fake.1")])
         from taskcontroller.domain.enums import LeaseStatus as LS
         from taskcontroller.domain.models import WorkLease
-        from taskcontroller.domain.ids import ExecutionRef
         store = _store()
         lease = WorkLease(lease_id="lease.1", run_id="run.1", node_id="n1", execution_id="exec.1", attempt_id="att.1",
                          holder=ProviderRef(provider_id="prov.1"), fencing_token="fence.1",
@@ -110,38 +105,36 @@ class TestCompositionLifecycle:
         host.materialize()
         res = host.controller_action("PAUSE", expected_version=5, command_id="cmd.p")
         assert res["accepted"] is True
-        # still exactly one root
         assert host.root_count() == 1
 
-    def test_rotate_emits_session_rotated_thread_event(self):
+    def test_rotate_updates_same_root_without_thread_event(self):
         host, _ = _host()
         host.materialize()
+        replies_before = len(host._transport.thread_replies)
+        updates_before = len(host._transport.roots_updated)
+
         host.rotate(session_id="s2", model="gpt-x", executor="e2")
-        # rotation: same root, thread reply emitted, no new root
+
         assert host.root_count() == 1
-        kinds = [o["payload"].get("event_kind") for o in host._transport.ops if o["op"] == "REPLY_THREAD"]
-        assert "SESSION_ROTATED" in kinds
+        assert len(host._transport.roots_created) == 1
+        assert len(host._transport.roots_updated) == updates_before + 1
+        assert len(host._transport.thread_replies) == replies_before
+        assert host.root_for("run.1") == "root.run.1"
 
     def test_checkpoint_then_restore_preserves_binding(self):
         host, _ = _host()
         host.materialize(session_id="s1")
         state = host.checkpoint_host_state()
-        # destroy host; reconstruct from persisted state into a FRESH transport
         restored = SlackTaskControllerPack.restore(state, ControlPlane(_store()), FakeSlackTransport())
-        # the restored host already holds the binding, so the next materialize is
-        # an UPDATE on the SAME root, never a new CREATE_ROOT
         restored.materialize(session_id="s9")
-        # no new root created in the fresh transport; existing root updated
         assert restored._transport.roots_created == []
         assert restored._transport.roots_updated == ["root.run.1"]
-        # the binding identity is intact (same root, only content changed)
         assert restored.root_for("run.1") == "root.run.1"
 
     def test_no_direct_state_mutation_in_pack(self):
         host, store = _host()
         before = store.get_run("run.1").version
         host.materialize()
-        # materialize is projection-only; it must not bump the runtime version
         assert store.get_run("run.1").version == before
 
     def test_second_root_attempt_fails_closed(self):
