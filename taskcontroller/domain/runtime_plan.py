@@ -40,6 +40,7 @@ class BindingErrorCode:
     STEP_STALE = "RUNTIME_PLAN_STEP_STALE"
     EDGE_NOT_ALLOWED = "RUNTIME_PLAN_EDGE_NOT_ALLOWED"
     IMMUTABLE = "RUNTIME_PLAN_IMMUTABLE"
+    PATH_TRAVERSAL = "RUNTIME_PLAN_PATH_TRAVERSAL"
 
 
 _ALLOWED_EDGE_KINDS = frozenset(
@@ -482,7 +483,19 @@ class FilePlanStore:
         self.root = Path(root)
 
     def _path(self, runtime_plan_ref: str) -> Path:
-        return self.root / f"{runtime_plan_ref}.json"
+        path = self.root / f"{runtime_plan_ref}.json"
+        try:
+            resolved = path.resolve()
+        except RuntimeError as exc:
+            raise TaskControllerValidationError(
+                f"{BindingErrorCode.PATH_TRAVERSAL}: unresolved path"
+            ) from exc
+        root = self.root.resolve()
+        if not str(resolved).startswith(str(root)):
+            raise TaskControllerValidationError(
+                f"{BindingErrorCode.PATH_TRAVERSAL}: ref escapes store root"
+            )
+        return path
 
     def put(self, plan: RuntimePlan) -> RuntimePlan:
         if not isinstance(plan, RuntimePlan):
