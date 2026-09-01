@@ -7,11 +7,13 @@ their authority:
 - route_and_dispatch()       -> WP3 routing + WP4 dispatch only
 - forward_signal()           -> WP2 EventRouter (trusted adapter signal)
 - controller_action()        -> WP5 control plane via WP6 action mapping
-- rotate_executor/session/model -> metadata update + SESSION_ROTATED thread event
+- rotate_executor/session/model -> metadata update + UPDATE_ROOT only
 - checkpoint_host_state() / restore_host_state() -> binding restored before next materialize
 
 The host NEVER mutates run/node state directly; every state change goes through
 the composed layer's own authority (WP2 CAS, WP5 CAS, WP4 fabric preflight).
+Host/session/model/executor rotation is projection metadata, not a semantic human
+event, so it updates the existing RootCard without adding thread chatter.
 """
 
 from __future__ import annotations
@@ -95,6 +97,17 @@ class SlackTaskControllerPack:
         )
         self._audit.record(self._config.run_id, event)
 
+    def _capture_binding_snapshot(self) -> None:
+        """Persist adapter binding identity into host state without changing metadata."""
+        self._state = TaskControllerHostState(
+            config=self._state.config,
+            binding_snapshot=self._adapter.binding_snapshot(),
+            session_id=self._state.session_id,
+            model=self._state.model,
+            executor=self._state.executor,
+            checkpoint_version=self._state.checkpoint_version,
+        )
+
     # -- projection (WP6) --------------------------------------------------
     def materialize(self, session_id=None, model=None, executor=None) -> dict[str, Any]:
         before = self._metadata()
@@ -109,14 +122,7 @@ class SlackTaskControllerPack:
         )
         # capture any binding the adapter created/updated into host state so the
         # next checkpoint persists it (restart-safe root identity)
-        self._state = TaskControllerHostState(
-            config=self._state.config,
-            binding_snapshot=self._adapter.binding_snapshot(),
-            session_id=self._state.session_id,
-            model=self._state.model,
-            executor=self._state.executor,
-            checkpoint_version=self._state.checkpoint_version,
-        )
+        self._capture_binding_snapshot()
         self._audit_event(
             "HOST_MATERIALIZED",
             f"materialize run={self._config.run_id}",
@@ -165,14 +171,22 @@ class SlackTaskControllerPack:
 
     # -- rotation ----------------------------------------------------------
     def rotate(self, session_id=None, model=None, executor=None) -> None:
+        """Rotate host metadata and refresh the SAME RootCard without thread spam."""
         before = self._metadata()
         self._state = self._state.with_metadata(
             session_id=session_id, model=model, executor=executor
         )
-        self._adapter.emit_thread(
-            self._config.run_id, "SESSION_ROTATED",
-            f"rotation s={session_id} m={model} e={executor}",
-        )
+        # Rotation is internal projection metadata. If a RootCard already exists,
+        # render an UPDATE_ROOT of that same binding. It is not a semantic human
+        # timeline event and therefore emits no REPLY_THREAD.
+        if self._registry.has(self._config.binding_key()):
+            self._adapter.materialize(
+                self._config.run_id,
+                session_id=self._state.session_id,
+                model=self._state.model,
+                executor=self._state.executor,
+            )
+            self._capture_binding_snapshot()
         self._audit_event(
             "HOST_ROTATED",
             f"rotate run={self._config.run_id}",
