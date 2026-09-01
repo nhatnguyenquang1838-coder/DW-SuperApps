@@ -6,17 +6,21 @@ Slack and never decides binding identity — that is the BindingRegistry's job.
 
 Hard invariant enforced here:
 - ROOT = live progress card (PlanBlock -> ordered TaskCards + metadata).
-- THREAD = controller command / executor event / milestone evidence / correction.
+- THREAD = semantic human events only.
 - The renderer emits CREATE_ROOT ONLY when no binding exists; for an existing
   binding it emits UPDATE_ROOT (and thread events emit REPLY_THREAD). It NEVER
   emits CREATE_ROOT for an existing binding, so session/model/executor rotation
   can never spawn a new root.
+- Existing bindings cannot move channel/root identity through rendering.
+- Machine chatter cannot be rendered as a human-plane thread event.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
+from taskcontroller.errors import TaskControllerValidationError
+from taskcontroller.interaction.human_projection import HumanEventKind
 from taskcontroller.projections.binding import Binding
 from taskcontroller.projections.domain import build_view
 from taskcontroller.projections.types import (
@@ -98,6 +102,31 @@ def _status_of(view: RunProjectionView) -> TaskStatus:
     return map_run_status(view.run_status)
 
 
+def _validate_binding_route(binding_key: str, channel: str, binding: Binding) -> None:
+    """Fail closed if a rendered operation tries to escape its persisted binding."""
+    if binding.binding_key != binding_key:
+        raise TaskControllerValidationError(
+            "Slack human-plane binding key does not match persisted binding"
+        )
+    if binding.channel != channel:
+        raise TaskControllerValidationError(
+            "Slack human-plane channel does not match persisted binding"
+        )
+    if not binding.root:
+        raise TaskControllerValidationError(
+            "Slack human-plane persisted binding has no root"
+        )
+
+
+def _validate_human_event_kind(event_kind: str) -> None:
+    try:
+        HumanEventKind(event_kind)
+    except (TypeError, ValueError) as exc:
+        raise TaskControllerValidationError(
+            f"Slack thread payload is not a supported human event: {event_kind!r}"
+        ) from exc
+
+
 def render_root_op(
     view: RunProjectionView,
     binding_key: str,
@@ -118,6 +147,7 @@ def render_root_op(
             root=None,
             payload=blocks,
         )
+    _validate_binding_route(binding_key, channel, binding)
     return ProjectionOp(
         op="UPDATE_ROOT",
         binding_key=binding_key,
@@ -135,7 +165,9 @@ def render_thread_op(
     text: str,
     authority_required: bool = False,
 ) -> ProjectionOp:
-    """Produce a thread reply operation (event log). Never a new root."""
+    """Produce one semantic human-plane thread reply on the persisted root."""
+    _validate_binding_route(binding_key, channel, binding)
+    _validate_human_event_kind(event_kind)
     return ProjectionOp(
         op="REPLY_THREAD",
         binding_key=binding_key,
