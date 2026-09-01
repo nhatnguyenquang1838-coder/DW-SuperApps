@@ -28,6 +28,23 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Checkout paired GWC correction head
+        uses: actions/checkout@v4
+        with:
+          repository: nhatnguyenquang1838-coder/gwc
+          ref: 43f6379158978b0c299d775cd162ad69b5a1c099
+          path: .ci/gwc
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify paired GWC identity
+        working-directory: .ci/gwc
+        run: |
+          test "$(git rev-parse HEAD)" = "43f6379158978b0c299d775cd162ad69b5a1c099"
+          test -z "$(git ls-files --others --exclude-standard)"
+          git diff --cached --quiet --ignore-space-at-eol
+          git diff --quiet --ignore-space-at-eol
+
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -40,5 +57,7 @@ jobs:
           pip install pytest
 
       - name: Run TaskController suite
+        env:
+          GWC_ROOT: ${{ github.workspace }}/.ci/gwc
         run: |
           PYTHONPATH=. pytest tests/taskcontroller/
