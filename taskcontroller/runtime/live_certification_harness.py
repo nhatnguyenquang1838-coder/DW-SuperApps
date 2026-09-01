@@ -19,6 +19,12 @@ from .certification_models import (
     TestRun as CampaignTestRun,
 )
 from .certification_store import CertificationStore, CertificationStoreError
+from .proving_workspace import (
+    ExactCheckout,
+    ProvingWorkspaceError,
+    verify_distinct_workspace,
+    verify_exact_checkout,
+)
 
 
 class LiveCertificationError(Exception):
@@ -308,6 +314,12 @@ class LiveCertificationHarness:
         head_sha: str | None = None,
         pr_id: str = "",
         mode: str = RunMode.STANDARD_REAL_RUN,
+        runtime_checkout: ExactCheckout | None = None,
+        subject_checkout: ExactCheckout | None = None,
+        gwc_checkout: ExactCheckout | None = None,
+        canonical_runtime_remote: str | None = None,
+        canonical_subject_remote: str | None = None,
+        canonical_gwc_remote: str | None = None,
     ) -> CampaignTestRun | TestRun:
         if campaign_id is None and runtime is None and subject is None:
             return self._start_legacy_run(
@@ -336,6 +348,26 @@ class LiveCertificationHarness:
             raise LiveCertificationError("executor and model identity are required")
         if gwc_sha != campaign.gwc_sha:
             raise LiveCertificationError("GWC source binding does not match campaign")
+        checkout_values = (runtime_checkout, subject_checkout, gwc_checkout)
+        remote_values = (canonical_runtime_remote, canonical_subject_remote, canonical_gwc_remote)
+        if any(value is not None for value in checkout_values + remote_values):
+            if not all(value is not None for value in checkout_values + remote_values):
+                raise LiveCertificationError("workspace binding requires all exact checkouts and canonical remotes")
+            assert runtime_checkout is not None
+            assert subject_checkout is not None
+            assert gwc_checkout is not None
+            assert canonical_runtime_remote is not None
+            assert canonical_subject_remote is not None
+            assert canonical_gwc_remote is not None
+            try:
+                verify_exact_checkout(runtime_checkout, canonical_runtime_remote)
+                verify_exact_checkout(subject_checkout, canonical_subject_remote)
+                verify_exact_checkout(gwc_checkout, canonical_gwc_remote)
+                verify_distinct_workspace(runtime_checkout, subject_checkout)
+            except ProvingWorkspaceError as exc:
+                raise LiveCertificationError(f"workspace binding: {exc}") from exc
+            if gwc_checkout.sha != gwc_sha:
+                raise LiveCertificationError("workspace binding: GWC checkout SHA does not match campaign")
         branch_key = (subject.repository, subject.branch)
         owner = self._campaign_branches.get(branch_key)
         if owner is not None and owner != campaign_id:
