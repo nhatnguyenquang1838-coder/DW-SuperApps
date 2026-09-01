@@ -125,6 +125,7 @@ class LiveCertificationHarness:
     def __init__(self, store: str | Path | None = None) -> None:
         self._runs: dict[str, TestRun] = {}
         self._branches: dict[str, str] = {}  # branch -> run_id
+        self._seen_terminal_verdicts: dict[str, str] = {}  # run_id -> last terminal verdict
         self._store = Path(store) if store else None
         if self._store is not None:
             self._load()
@@ -152,13 +153,15 @@ class LiveCertificationHarness:
                 raise LiveCertificationError(
                     f"run {record.run_id!r} JSONL record hash mismatch — tamper detected"
                 )
-            existing = self._runs.get(record.run_id)
-            if existing is not None:
-                # Same run_id can appear multiple times: start_run(PENDING) -> record_verdict(PASS/FAIL)
-                # During load, keep the LAST verdict (most recent). This handles the normal
-                # workflow where start_run creates a PENDING entry, then record_verdict appends PASS/FAIL.
-                # Tamper detection: only flag conflict if two DIFFERENT final verdicts exist for same run.
-                pass  # Later entries overwrite earlier ones (last-write-wins for final verdict)
+            # Track terminal verdicts per run_id to detect PASS<->FAIL contradiction.
+            if record.verdict not in (TestRunVerdict.PENDING,):
+                prev_terminal = self._seen_terminal_verdicts.get(record.run_id)
+                if prev_terminal is not None and prev_terminal != record.verdict:
+                    raise LiveCertificationError(
+                        f"run {record.run_id!r} JSONL contradictory terminal history: "
+                        f"{prev_terminal} then {record.verdict}"
+                    )
+                self._seen_terminal_verdicts[record.run_id] = record.verdict
             self._runs[record.run_id] = record
             self._branches[record.branch] = record.run_id
 
@@ -256,15 +259,15 @@ class LiveCertificationHarness:
         if not evidence:
             raise LiveCertificationError("verdict requires exact refs/evidence")
 
-        # M5+CORRECTION: immutable once recorded — a verdict must never be overwritten.
-        # Also reject PENDING/UNKNOWN as terminal verdicts — they are not real outcomes.
+        # M5 seq=8: immutable once recorded — a verdict must never be overwritten.
         if run.verdict != TestRunVerdict.PENDING:
             raise LiveCertificationError(
                 f"verdict for run {run_id!r} is immutable (already recorded: {run.verdict})"
             )
-        if verdict in (TestRunVerdict.PENDING,):
+        # Strict terminal-verdict allowlist: only PASS or FAIL are accepted.
+        if verdict not in (TestRunVerdict.PASS, TestRunVerdict.FAIL):
             raise LiveCertificationError(
-                f"verdict for run {run_id!r} must be PASS or FAIL; PENDING is not a terminal verdict"
+                f"verdict for run {run_id!r} must be exactly PASS or FAIL; got {verdict!r}"
             )
 
         run.verdict = verdict

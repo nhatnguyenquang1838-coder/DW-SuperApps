@@ -146,3 +146,88 @@ def test_evidence_record_schema_wired_into_verdict():
     )
     harness.record_verdict(run_id=run.run_id, verdict="PASS", evidence=rec.to_dict())
     assert harness.get_run(run.run_id).evidence["plan_digest_at_execution"] == "sha256:" + "d" * 64
+
+
+def test_record_verdict_rejects_unknown_verdict():
+    """seq=8: verdict allowlist — only PASS/FAIL accepted."""
+    harness = LiveCertificationHarness()
+    run = _run(harness)
+    with pytest.raises(LiveCertificationError, match="must be exactly PASS or FAIL"):
+        harness.record_verdict(
+            run_id=run.run_id,
+            verdict="UNKNOWN",
+            evidence={"ci": {"run": "r1", "status": "unknown"}},
+        )
+
+
+def test_record_verdict_rejects_arbitrary_verdict():
+    """seq=8: verdict allowlist — arbitrary string rejected."""
+    harness = LiveCertificationHarness()
+    run = _run(harness)
+    with pytest.raises(LiveCertificationError, match="must be exactly PASS or FAIL"):
+        harness.record_verdict(
+            run_id=run.run_id,
+            verdict="MAYBE",
+            evidence={"ci": {"run": "r1", "status": "maybe"}},
+        )
+
+
+def test_jsonl_rejects_pass_fail_contradiction(tmp_path: Path):
+    """seq=8: JSONL contradiction detection — PASS -> FAIL for same run_id raises on load."""
+    store = tmp_path / "contradiction.jsonl"
+    harness = LiveCertificationHarness(store=store)
+    run = _run(harness)
+    harness.record_verdict(
+        run_id=run.run_id,
+        verdict="PASS",
+        evidence={"ci": {"run": "r1", "status": "success"}},
+    )
+    # Tamper: append conflicting FAIL record for same run_id
+    fake = TestRun(
+        run_id=run.run_id,
+        case_id="TC-RP-001",
+        scenario="standard_real_run",
+        acceptance="login works",
+        branch="feature/m5",
+        base_sha="0" * 40,
+        head_sha="1" * 40,
+        executor="Hermes",
+        model="gpt",
+        verdict=TestRunVerdict.FAIL,
+        evidence={"ci": {"run": "r1", "status": "failed"}},
+    )
+    with store.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(fake.to_dict(), sort_keys=True) + "\n")
+    with pytest.raises(LiveCertificationError, match="contradictory terminal history"):
+        LiveCertificationHarness(store=store)
+
+
+def test_jsonl_restart_pending_to_pass(tmp_path: Path):
+    """seq=8: positive restart — PENDING -> PASS is legitimate and reloads."""
+    store = tmp_path / "restart_ok.jsonl"
+    harness = LiveCertificationHarness(store=store)
+    run = _run(harness)
+    harness.record_verdict(
+        run_id=run.run_id,
+        verdict="PASS",
+        evidence={"ci": {"run": "r1", "status": "success"}},
+    )
+    restored = LiveCertificationHarness(store=store)
+    got = restored.get_run(run.run_id)
+    assert got.verdict == "PASS"
+    assert got.evidence == {"ci": {"run": "r1", "status": "success"}}
+
+
+def test_jsonl_restart_pending_to_fail(tmp_path: Path):
+    """seq=8: positive restart — PENDING -> FAIL is legitimate and reloads."""
+    store = tmp_path / "restart_fail.jsonl"
+    harness = LiveCertificationHarness(store=store)
+    run = _run(harness)
+    harness.record_verdict(
+        run_id=run.run_id,
+        verdict="FAIL",
+        evidence={"ci": {"run": "r1", "status": "failed"}},
+    )
+    restored = LiveCertificationHarness(store=store)
+    got = restored.get_run(run.run_id)
+    assert got.verdict == "FAIL"
