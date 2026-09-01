@@ -12,7 +12,7 @@ import hashlib
 import json
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 from taskcontroller.errors import TaskControllerValidationError
 
@@ -97,6 +97,7 @@ class RuntimePlanStep:
     step_id: str
     semantic_action: str
     edges: Mapping[str, PlanEdge] | None = None
+    node_binding: Mapping[str, Any] | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.step_id, "step.step_id")
@@ -127,7 +128,7 @@ class RuntimePlanStep:
         object.__setattr__(self, "edges", MappingProxyType(normalized))
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload: dict[str, Any] = {
             "step_id": self.step_id,
             "semantic_action": self.semantic_action,
             "edges": {
@@ -135,6 +136,9 @@ class RuntimePlanStep:
                 for outcome, edge in sorted(self.edges.items())
             },
         }
+        if self.node_binding is not None:
+            payload["node_binding"] = self.node_binding
+        return payload
 
     @classmethod
     def from_dict(cls, payload: Mapping[str, Any]) -> "RuntimePlanStep":
@@ -148,7 +152,62 @@ class RuntimePlanStep:
                 outcome: PlanEdge.from_dict(edge)
                 for outcome, edge in raw_edges.items()
             },
+            node_binding=payload.get("node_binding"),
         )
+
+
+@dataclass(frozen=True)
+class AuthorityRequirement:
+    """A gate that GWC must satisfy before the action proceeds."""
+
+    action: str
+    gate: str
+    required: bool = False
+
+    def __getitem__(self, key: str) -> Any:
+        return getattr(self, key)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"action": self.action, "gate": self.gate, "required": self.required}
+
+    @classmethod
+    def from_dict(cls, payload: Mapping[str, Any]) -> "AuthorityRequirement":
+        return cls(
+            action=payload.get("action", ""),
+            gate=payload.get("gate", ""),
+            required=bool(payload.get("required", False)),
+        )
+
+
+@dataclass(frozen=True)
+class RunbookBinding:
+    """A pinned runbook revision bound to this plan."""
+
+    runbook_id: str
+    revision: str = ""
+    digest: str = ""
+
+    def __getitem__(self, key: str) -> Any:
+        return getattr(self, key)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "runbook_id": self.runbook_id,
+            "revision": self.revision,
+            "digest": self.digest,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: Mapping[str, Any]) -> "RunbookBinding":
+        return cls(
+            runbook_id=payload.get("runbook_id", ""),
+            revision=payload.get("revision", ""),
+            digest=payload.get("digest", ""),
+        )
+
+
+class SourceBindingError(TaskControllerValidationError):
+    """Raised when source bindings are stale or unreadable."""
 
 
 @dataclass(frozen=True)
@@ -158,6 +217,13 @@ class RuntimePlan:
     runtime_plan_ref: str
     revision: str
     steps: Mapping[str, RuntimePlanStep]
+    source_bindings: Mapping[str, Any] | None = None
+    runbooks: Sequence[RunbookBinding] | None = None
+    authority_requirements: Sequence[AuthorityRequirement] | None = None
+    blueprint_id: str = ""
+    blueprint_digest: str = ""
+    task_id: str = ""
+    scenario: str = ""
 
     def __post_init__(self) -> None:
         _require_text(self.runtime_plan_ref, "runtime_plan_ref")
@@ -208,7 +274,7 @@ class RuntimePlan:
             ) from exc
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload: dict[str, Any] = {
             "runtime_plan_ref": self.runtime_plan_ref,
             "revision": self.revision,
             "runtime_plan_digest": self.runtime_plan_digest,
@@ -217,6 +283,27 @@ class RuntimePlan:
                 for step_id in sorted(self.steps)
             },
         }
+        if self.source_bindings is not None:
+            payload["source_bindings"] = self.source_bindings
+        if self.runbooks is not None:
+            payload["runbooks"] = [
+                rb.to_dict() if isinstance(rb, RunbookBinding) else rb
+                for rb in self.runbooks
+            ]
+        if self.authority_requirements is not None:
+            payload["authority_requirements"] = [
+                ar.to_dict() if isinstance(ar, AuthorityRequirement) else ar
+                for ar in self.authority_requirements
+            ]
+        if self.blueprint_id:
+            payload["blueprint_id"] = self.blueprint_id
+        if self.blueprint_digest:
+            payload["blueprint_digest"] = self.blueprint_digest
+        if self.task_id:
+            payload["task_id"] = self.task_id
+        if self.scenario:
+            payload["scenario"] = self.scenario
+        return payload
 
     @classmethod
     def from_dict(cls, payload: Mapping[str, Any]) -> "RuntimePlan":
@@ -244,6 +331,19 @@ class RuntimePlan:
                 step_id: RuntimePlanStep.from_dict(step)
                 for step_id, step in raw_steps.items()
             },
+            source_bindings=payload.get("source_bindings"),
+            runbooks=[
+                RunbookBinding.from_dict(rb) if isinstance(rb, Mapping) else rb
+                for rb in payload.get("runbooks", [])
+            ] if "runbooks" in payload else None,
+            authority_requirements=[
+                AuthorityRequirement.from_dict(ar) if isinstance(ar, Mapping) else ar
+                for ar in payload.get("authority_requirements", [])
+            ] if "authority_requirements" in payload else None,
+            blueprint_id=payload.get("blueprint_id", ""),
+            blueprint_digest=payload.get("blueprint_digest", ""),
+            task_id=payload.get("task_id", ""),
+            scenario=payload.get("scenario", ""),
         )
         supplied_digest = payload.get("runtime_plan_digest")
         if supplied_digest is not None and supplied_digest != plan.runtime_plan_digest:
@@ -377,11 +477,14 @@ def require_semantic_binding(
 
 
 __all__ = [
+    "AuthorityRequirement",
     "BindingErrorCode",
     "FilePlanStore",
     "PlanEdge",
     "RunCursor",
+    "RunbookBinding",
     "RuntimePlan",
     "RuntimePlanStep",
+    "SourceBindingError",
     "require_semantic_binding",
 ]
