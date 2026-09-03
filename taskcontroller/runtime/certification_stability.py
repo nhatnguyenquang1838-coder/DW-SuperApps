@@ -46,9 +46,19 @@ def _ci_is_green(evidence: object) -> bool:
     return str(ci.get("status", "")).upper() in _GREEN_CI
 
 
+def _execution_identity(run: TestRun) -> tuple[str, str] | None:
+    """Return the first-class physical execution identity for one TestRun."""
+    receipt = run.execution_receipt
+    if receipt is None:
+        return None
+    return receipt.execution_id, receipt.execution_receipt_digest
+
+
 def _base_qualifies(run: TestRun) -> tuple[bool, str]:
     if run.verdict.upper() != "PASS":
         return False, "verdict"
+    if _execution_identity(run) is None:
+        return False, "execution receipt missing"
     if not _ci_is_green(run.evidence):
         return False, "ci"
     negative = _truthy_negative(
@@ -83,32 +93,58 @@ def evaluate_w8_stability(
     expected_runtime_sha: str | None = None,
     required_streak: int = 3,
 ) -> W8StabilityResult:
-    """Evaluate the final consecutive W8 streak without mutating the runs."""
+    """Evaluate the final consecutive W8 streak without mutating the runs.
+
+    SourceIdentity may repeat across qualifying runs, but every counted run must
+    carry a distinct ExecutionIdentity. Replaying the same execution_id or the
+    same execution_receipt_digest resets the streak and the replayed run does
+    not count.
+    """
     if required_streak < 1:
         raise ValueError("required_streak must be positive")
 
     target_sha = expected_runtime_sha or (runs[-1].runtime.end_sha if runs else None)
     streak: list[TestRun] = []
     previous_identity: tuple[str, str, str, str, str] | None = None
+    seen_execution_ids: set[str] = set()
+    seen_receipt_digests: set[str] = set()
     reset_reason = ""
 
     for run in runs:
         if target_sha is not None and run.runtime.end_sha != target_sha:
             streak = []
             previous_identity = None
+            seen_execution_ids.clear()
+            seen_receipt_digests.clear()
             reset_reason = "runtime SHA mismatch or stale run"
             continue
         qualifies, reason = _base_qualifies(run)
         if not qualifies:
             streak = []
             previous_identity = None
+            seen_execution_ids.clear()
+            seen_receipt_digests.clear()
             reset_reason = f"non-qualifying evidence: {reason}"
+            continue
+        execution_identity = _execution_identity(run)
+        assert execution_identity is not None
+        execution_id, receipt_digest = execution_identity
+        if execution_id in seen_execution_ids or receipt_digest in seen_receipt_digests:
+            streak = []
+            previous_identity = None
+            seen_execution_ids.clear()
+            seen_receipt_digests.clear()
+            reset_reason = "execution receipt replay or duplicate ExecutionIdentity"
             continue
         identity = _runtime_identity(run)
         if previous_identity is not None and identity != previous_identity:
             streak = []
+            seen_execution_ids.clear()
+            seen_receipt_digests.clear()
             reset_reason = "runtime/source identity changed"
         streak.append(run)
+        seen_execution_ids.add(execution_id)
+        seen_receipt_digests.add(receipt_digest)
         previous_identity = identity
 
     unresolved = [
@@ -162,16 +198,26 @@ def evaluate_deep_case_stability(
         raise ValueError("threshold and minimum_identities must be positive")
     selected = [run for run in runs if run.case_id == case_id]
     qualifying: list[TestRun] = []
+    seen_execution_ids: set[str] = set()
+    seen_receipt_digests: set[str] = set()
     last_reason = ""
     for run in selected:
         okay, reason = _base_qualifies(run)
         if not okay:
             last_reason = f"non-qualifying evidence: {reason}"
             continue
+        execution_identity = _execution_identity(run)
+        assert execution_identity is not None
+        execution_id, receipt_digest = execution_identity
+        if execution_id in seen_execution_ids or receipt_digest in seen_receipt_digests:
+            last_reason = "execution receipt replay or duplicate ExecutionIdentity"
+            continue
         if not _matrix_is_green(run, required_matrix_rows):
             last_reason = "injection matrix incomplete"
             continue
         qualifying.append(run)
+        seen_execution_ids.add(execution_id)
+        seen_receipt_digests.add(receipt_digest)
     identity_count = len({(run.executor, run.model) for run in qualifying})
     stable = len(qualifying) >= threshold and identity_count >= minimum_identities
     if identity_count < minimum_identities:
