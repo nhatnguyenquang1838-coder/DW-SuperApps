@@ -5,14 +5,25 @@ workspace), but qualifying final evidence must be exported with an immutable
 GitHub source binding.  The verifier reconstructs campaign truth solely from the
 exported hash-chained event stream plus its manifest; it never scans branches or
 uses Slack/Notion/transcript state.
-"""
 
+SCRUM-725 GREEN: evidence binding has two independent identities:
+  - intrinsic manifest binding: repository + ref + path + intrinsic hashes
+    (events_sha256 + manifest_digest).  This is content-addressed and
+    self-contained.
+  - external retaining commit attestation: repository + ref + commit_sha + path.
+    This is verified against the actual Git tree of the retaining commit.
+
+The old circular self-binding (commit_sha embedded inside the manifest blob that
+the commit itself retains) has been removed.  The verifier requires the external
+attestation and checks it against real Git tree content.
+"""
 from __future__ import annotations
 
 import hashlib
 import json
 import os
 import re
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from types import MappingProxyType
@@ -60,9 +71,15 @@ def _validate_repo_path(value: str) -> str:
 
 @dataclass(frozen=True)
 class GitHubEvidenceBinding:
+    """Intrinsic manifest binding: content-addressed, self-contained.
+
+    Does NOT contain the retaining commit SHA (SCRUM-725).  The manifest is
+    bound to repository + ref + path plus its own intrinsic hashes
+    (events_sha256 + manifest_digest).
+    """
+
     repository: str
     ref: str
-    commit_sha: str
     path: str
 
     def __post_init__(self) -> None:
@@ -73,8 +90,54 @@ class GitHubEvidenceBinding:
         normalized_ref = self.ref.removeprefix("refs/heads/")
         if not normalized_ref.startswith("evidence/"):
             raise CertificationEvidenceError("GitHub evidence ref must be an evidence/* branch")
+        object.__setattr__(self, "path", _validate_repo_path(self.path))
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "repository": self.repository,
+            "ref": self.ref,
+            "path": self.path,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: Mapping[str, Any]) -> "GitHubEvidenceBinding":
+        try:
+            return cls(
+                repository=str(payload["repository"]),
+                ref=str(payload["ref"]),
+                path=str(payload["path"]),
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise CertificationEvidenceError(f"invalid GitHub evidence binding: {exc}") from exc
+
+
+@dataclass(frozen=True)
+class GitHubRetainingCommitAttestation:
+    """External retaining commit attestation: verified against actual Git tree.
+
+    This is a SEPARATE identity from the manifest's intrinsic binding.  It is
+    NOT embedded in the manifest (SCRUM-725).  The qualifier independently
+    verifies this attestation against the actual commit tree at the supplied
+    repository/ref/commit_sha/path.
+
+    Durable identity only — no host-local paths.
+    """
+
+    repository: str
+    ref: str
+    commit_sha: str
+    path: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.repository, str) or _REPOSITORY.fullmatch(self.repository) is None:
+            raise CertificationEvidenceError("attestation repository must be owner/name")
+        if not isinstance(self.ref, str) or not self.ref.strip():
+            raise CertificationEvidenceError("GitHub evidence ref is required")
+        normalized_ref = self.ref.removeprefix("refs/heads/")
+        if not normalized_ref.startswith("evidence/"):
+            raise CertificationEvidenceError("GitHub evidence ref must be an evidence/* branch")
         if not isinstance(self.commit_sha, str) or _SHA40.fullmatch(self.commit_sha) is None:
-            raise CertificationEvidenceError("GitHub evidence commit_sha must be exact 40-hex")
+            raise CertificationEvidenceError("GitHub retaining commit_sha must be exact 40-hex")
         object.__setattr__(self, "commit_sha", self.commit_sha.lower())
         object.__setattr__(self, "path", _validate_repo_path(self.path))
 
@@ -87,7 +150,7 @@ class GitHubEvidenceBinding:
         }
 
     @classmethod
-    def from_dict(cls, payload: Mapping[str, Any]) -> "GitHubEvidenceBinding":
+    def from_dict(cls, payload: Mapping[str, Any]) -> "GitHubRetainingCommitAttestation":
         try:
             return cls(
                 repository=str(payload["repository"]),
@@ -96,12 +159,13 @@ class GitHubEvidenceBinding:
                 path=str(payload["path"]),
             )
         except (KeyError, TypeError, ValueError) as exc:
-            raise CertificationEvidenceError(f"invalid GitHub evidence binding: {exc}") from exc
+            raise CertificationEvidenceError(f"invalid retaining commit attestation: {exc}") from exc
 
 
 @dataclass(frozen=True)
 class FreshVerificationResult:
     binding: GitHubEvidenceBinding
+    attestation: GitHubRetainingCommitAttestation
     campaign: CertificationCampaign
     run_ids: tuple[str, ...]
     execution_ids: tuple[str, ...]
@@ -130,6 +194,7 @@ def _manifest_core(
     event_count: int,
     terminal_record_digest: str,
 ) -> dict[str, Any]:
+    """Intrinsic manifest core: binding (no commit_sha) + intrinsic hashes."""
     return {
         "schema_version": 1,
         "artifact_type": "github-backed-certification-evidence",
@@ -150,7 +215,8 @@ def export_github_backed_evidence(
 
     This function deliberately does not push/commit. Repository mutation remains
     a governed outer action. The bundle itself is self-verifying and explicitly
-    bound to the GitHub repository/ref/commit/path that retains it.
+    bound to the GitHub repository/ref/path that retains it (SCRUM-725: no
+    commit_sha in the manifest binding — retaining commit is verified externally).
     """
     if not isinstance(binding, GitHubEvidenceBinding):
         raise CertificationEvidenceError("GitHubEvidenceBinding required")
@@ -245,11 +311,145 @@ def _load_verified_bundle(destination: str | Path) -> tuple[GitHubEvidenceBindin
     return binding, events_path, events, manifest
 
 
-def fresh_verify_campaign(destination: str | Path, campaign_id: str) -> FreshVerificationResult:
-    """Reconstruct campaign truth from the GitHub-backed bundle only."""
+def verify_retaining_commit_attestation(
+    attestation: GitHubRetainingCommitAttestation,
+    bundle_root: str | Path,
+    manifest: Mapping[str, Any],
+) -> None:
+    """Verify the external retaining commit attestation against actual Git content.
+
+    Fail-closed: any mismatch raises CertificationEvidenceError.
+    """
+    repo_path = Path(bundle_root)
+    if not (repo_path / ".git").exists():
+        raise CertificationEvidenceError(
+            f"retaining commit verification requires a real Git repository at {repo_path}"
+        )
+
+    # 1. Verify the attested commit exists and is a valid commit object
+    try:
+        commit_type = subprocess.run(
+            ["git", "-C", str(repo_path), "cat-file", "-t", attestation.commit_sha],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+    except subprocess.CalledProcessError as exc:
+        raise CertificationEvidenceError(
+            f"retaining commit {attestation.commit_sha} not found in repository"
+        ) from exc
+    if commit_type != "commit":
+        raise CertificationEvidenceError(
+            f"retaining commit {attestation.commit_sha} is not a commit object ({commit_type})"
+        )
+
+    # 2. Verify the path exists in the commit tree
+    relative_path = PurePosixPath(attestation.path)
+    try:
+        tree_entry = subprocess.run(
+            ["git", "-C", str(repo_path), "ls-tree", "-r", "--name-only", attestation.commit_sha],
+            check=True, capture_output=True, text=True,
+        ).stdout.splitlines()
+    except subprocess.CalledProcessError as exc:
+        raise CertificationEvidenceError(
+            f"cannot list tree for commit {attestation.commit_sha}"
+        ) from exc
+
+    expected_files = {str(relative_path / _MANIFEST_NAME), str(relative_path / _EVENTS_NAME)}
+    actual_files = set(tree_entry)
+    missing = expected_files - actual_files
+    if missing:
+        raise CertificationEvidenceError(
+            f"retaining commit {attestation.commit_sha} is missing expected files: {missing}"
+        )
+
+    # 3. Verify the manifest blob SHA-1 matches what's in the commit tree
+    try:
+        manifest_blob_sha = subprocess.run(
+            ["git", "-C", str(repo_path), "ls-tree",
+             "-r", "--object-only", attestation.commit_sha,
+             str(relative_path / _MANIFEST_NAME)],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+    except subprocess.CalledProcessError as exc:
+        raise CertificationEvidenceError(
+            f"cannot get manifest blob SHA from commit {attestation.commit_sha}"
+        ) from exc
+
+    try:
+        committed_manifest = subprocess.run(
+            ["git", "-C", str(repo_path), "cat-file", "-p", manifest_blob_sha],
+            check=True, capture_output=True, text=True,
+        ).stdout
+    except subprocess.CalledProcessError as exc:
+        raise CertificationEvidenceError(
+            f"cannot read manifest blob {manifest_blob_sha} from commit {attestation.commit_sha}"
+        ) from exc
+
+    committed_manifest_obj = json.loads(committed_manifest)
+    if committed_manifest_obj != manifest:
+        raise CertificationEvidenceError(
+            "manifest committed at retaining commit does not match the exported manifest"
+        )
+
+    # 4. Verify the events blob SHA-1 matches
+    try:
+        events_blob_sha = subprocess.run(
+            ["git", "-C", str(repo_path), "ls-tree",
+             "-r", "--object-only", attestation.commit_sha,
+             str(relative_path / _EVENTS_NAME)],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+    except subprocess.CalledProcessError as exc:
+        raise CertificationEvidenceError(
+            f"cannot get events blob SHA from commit {attestation.commit_sha}"
+        ) from exc
+
+    events_path = Path(bundle_root) / relative_path / _EVENTS_NAME
+    try:
+        local_events_bytes = events_path.read_bytes()
+    except OSError as exc:
+        raise CertificationEvidenceError(f"cannot read local events file: {exc}") from exc
+    expected_events_blob = hashlib.sha1(b"blob " + str(len(local_events_bytes)).encode() + b"\0" + local_events_bytes).hexdigest()
+    if events_blob_sha != expected_events_blob:
+        raise CertificationEvidenceError(
+            f"events blob mismatch: committed={events_blob_sha}, expected={expected_events_blob}"
+        )
+
+
+def fresh_verify_campaign(
+    destination: str | Path,
+    campaign_id: str,
+    attestation: GitHubRetainingCommitAttestation,
+    git_repo_root: str | Path,
+) -> FreshVerificationResult:
+    """Reconstruct campaign truth from the GitHub-backed bundle + external attestation.
+
+    Fail-closed: attestation + git_repo_root are both mandatory for qualifying
+    evidence.  The verifier does NOT trust the manifest's self-claims about
+    retaining commit identity.
+    """
     if not isinstance(campaign_id, str) or not campaign_id.strip():
         raise CertificationEvidenceError("campaign_id is required")
-    binding, events_path, events, _manifest = _load_verified_bundle(destination)
+    if not isinstance(attestation, GitHubRetainingCommitAttestation):
+        raise CertificationEvidenceError("GitHubRetainingCommitAttestation required for qualifying evidence")
+    git_repo_root = Path(git_repo_root)
+    if not git_repo_root.is_dir() or not (git_repo_root / ".git").exists():
+        raise CertificationEvidenceError(
+            f"qualifying verification requires git_repo_root at {git_repo_root}"
+        )
+
+    binding, events_path, events, manifest = _load_verified_bundle(destination)
+
+    # Mandatory external retaining commit attestation (SCRUM-725)
+    verify_retaining_commit_attestation(attestation, git_repo_root, manifest)
+
+    # Cross-check: attestation repo/ref/path must match manifest binding
+    if (attestation.repository != binding.repository
+            or attestation.ref != binding.ref
+            or attestation.path != binding.path):
+        raise CertificationEvidenceError(
+            "retaining commit attestation repository/ref/path does not match manifest binding"
+        )
+
     try:
         harness = LiveCertificationHarness(store=events_path)
         campaign = harness.get_campaign(campaign_id)
@@ -271,6 +471,7 @@ def fresh_verify_campaign(destination: str | Path, campaign_id: str) -> FreshVer
     stability = evaluate_w8_stability(runs, findings)
     return FreshVerificationResult(
         binding=binding,
+        attestation=attestation,
         campaign=campaign,
         run_ids=tuple(run.run_id for run in runs),
         execution_ids=tuple(execution_ids),
@@ -286,6 +487,8 @@ __all__ = [
     "CertificationEvidenceError",
     "FreshVerificationResult",
     "GitHubEvidenceBinding",
+    "GitHubRetainingCommitAttestation",
     "export_github_backed_evidence",
     "fresh_verify_campaign",
+    "verify_retaining_commit_attestation",
 ]

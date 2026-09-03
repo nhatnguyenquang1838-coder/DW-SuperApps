@@ -1,8 +1,15 @@
 from __future__ import annotations
 
 import importlib
+import subprocess
 
 import pytest
+
+
+def _init_real_git_repo(path):
+    subprocess.run(["git", "init"], cwd=str(path), check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=str(path), check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=str(path), check=True, capture_output=True)
 
 
 def _models():
@@ -124,14 +131,38 @@ def test_github_backed_bundle_fresh_verifier_survives_original_store_removal(tmp
     binding = evidence.GitHubEvidenceBinding(
         repository="nhatnguyenquang1838-coder/DW-SuperApps",
         ref="evidence/RP-CERT-001",
-        commit_sha="9" * 40,
         path="evidence/RP-CERT-001",
     )
     evidence.export_github_backed_evidence(original, bundle, binding)
     original.unlink()
 
-    verified = evidence.fresh_verify_campaign(bundle, "RP-CERT-001")
+    # SCRUM-725 GREEN: attestation is mandatory for qualifying evidence
+    repo = tmp_path / "gitrepo"
+    repo.mkdir()
+    _init_real_git_repo(repo)
+    evidence_dest = repo / "evidence" / "RP-CERT-001"
+    evidence_dest.mkdir(parents=True)
+    for f in ["manifest.json", "campaign.events.jsonl"]:
+        (evidence_dest / f).write_bytes((bundle / f).read_bytes())
+    subprocess.run(["git", "-C", str(repo), "add", "-A"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "commit", "-m", "Add evidence bundle"],
+        check=True, capture_output=True,
+    )
+    actual_head = subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "HEAD"],
+        check=True, capture_output=True, text=True,
+    ).stdout.strip()
+
+    attestation = evidence.GitHubRetainingCommitAttestation(
+        repository="nhatnguyenquang1838-coder/DW-SuperApps",
+        ref="evidence/RP-CERT-001",
+        commit_sha=actual_head,
+        path="evidence/RP-CERT-001",
+    )
+    verified = evidence.fresh_verify_campaign(bundle, "RP-CERT-001", attestation, git_repo_root=repo)
     assert verified.binding == binding
+    assert verified.attestation == attestation
     assert verified.campaign.campaign_id == "RP-CERT-001"
     assert verified.run_ids == ("run-1", "run-2", "run-3")
     assert verified.execution_ids == ("exec-1", "exec-2", "exec-3")
