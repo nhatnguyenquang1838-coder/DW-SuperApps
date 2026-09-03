@@ -97,8 +97,8 @@ def evaluate_w8_stability(
 
     SourceIdentity may repeat across qualifying runs, but every counted run must
     carry a distinct ExecutionIdentity. Replaying the same execution_id or the
-    same execution_receipt_digest resets the streak and the replayed run does
-    not count.
+    same execution_receipt_digest anywhere in the evaluated campaign history
+    invalidates that occurrence; streak resets never erase replay history.
     """
     if required_streak < 1:
         raise ValueError("required_streak must be positive")
@@ -106,45 +106,38 @@ def evaluate_w8_stability(
     target_sha = expected_runtime_sha or (runs[-1].runtime.end_sha if runs else None)
     streak: list[TestRun] = []
     previous_identity: tuple[str, str, str, str, str] | None = None
-    seen_execution_ids: set[str] = set()
-    seen_receipt_digests: set[str] = set()
+    observed_execution_ids: set[str] = set()
+    observed_receipt_digests: set[str] = set()
     reset_reason = ""
 
     for run in runs:
+        execution_identity = _execution_identity(run)
+        if execution_identity is not None:
+            execution_id, receipt_digest = execution_identity
+            if execution_id in observed_execution_ids or receipt_digest in observed_receipt_digests:
+                streak = []
+                previous_identity = None
+                reset_reason = "execution receipt replay or duplicate ExecutionIdentity"
+                continue
+            observed_execution_ids.add(execution_id)
+            observed_receipt_digests.add(receipt_digest)
+
         if target_sha is not None and run.runtime.end_sha != target_sha:
             streak = []
             previous_identity = None
-            seen_execution_ids.clear()
-            seen_receipt_digests.clear()
             reset_reason = "runtime SHA mismatch or stale run"
             continue
         qualifies, reason = _base_qualifies(run)
         if not qualifies:
             streak = []
             previous_identity = None
-            seen_execution_ids.clear()
-            seen_receipt_digests.clear()
             reset_reason = f"non-qualifying evidence: {reason}"
-            continue
-        execution_identity = _execution_identity(run)
-        assert execution_identity is not None
-        execution_id, receipt_digest = execution_identity
-        if execution_id in seen_execution_ids or receipt_digest in seen_receipt_digests:
-            streak = []
-            previous_identity = None
-            seen_execution_ids.clear()
-            seen_receipt_digests.clear()
-            reset_reason = "execution receipt replay or duplicate ExecutionIdentity"
             continue
         identity = _runtime_identity(run)
         if previous_identity is not None and identity != previous_identity:
             streak = []
-            seen_execution_ids.clear()
-            seen_receipt_digests.clear()
             reset_reason = "runtime/source identity changed"
         streak.append(run)
-        seen_execution_ids.add(execution_id)
-        seen_receipt_digests.add(receipt_digest)
         previous_identity = identity
 
     unresolved = [
@@ -159,7 +152,7 @@ def evaluate_w8_stability(
         for run in streak
     )
     stable = len(streak) >= required_streak and recovery_seen and not unresolved
-    if not recovery_seen and streak:
+    if not recovery_seen and streak and not reset_reason:
         reset_reason = "durable recovery evidence missing"
     if unresolved:
         reset_reason = "unresolved P0/P1 finding"
