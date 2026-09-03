@@ -18,6 +18,23 @@ def _models():
 
 def _run(models, run_id: str, runtime_sha: str = "a", case_id: str = "TC-RP-001", executor: str = "Hermes-Mac", model: str = "model-a", evidence=None):
     sha = runtime_sha * 40 if len(runtime_sha) == 1 else runtime_sha
+    receipt = models.ExecutionReceipt(
+        execution_id=f"exec-{run_id}",
+        started_at="2026-09-03T12:00:00Z",
+        ended_at="2026-09-03T12:00:30Z",
+        controller_seq_start=1,
+        controller_seq_end=2,
+        executor_seq_start=1,
+        executor_seq_end=2,
+        cursor_before=f"{run_id}-before",
+        cursor_after=f"{run_id}-after",
+        semantic_step_receipt_digests=("sha256:" + "e" * 64,),
+        local_validation_receipts=(f"pytest://{run_id}",),
+        github_workflow_receipts=(
+            {"run_id": 1001, "run_attempt": 1, "head_sha": sha, "conclusion": "SUCCESS"},
+        ),
+        authority_receipt_refs=(f"authority://{run_id}",),
+    )
     return models.TestRun(
         run_id=run_id,
         campaign_id="RP-CERT-001",
@@ -32,6 +49,7 @@ def _run(models, run_id: str, runtime_sha: str = "a", case_id: str = "TC-RP-001"
         executor=executor,
         model=model,
         verdict="PASS",
+        execution_receipt=receipt,
         evidence=evidence or {"ci": {"status": "SUCCESS"}, "fresh_controller_recovery": True},
     )
 
