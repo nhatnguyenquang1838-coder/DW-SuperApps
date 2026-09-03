@@ -22,7 +22,7 @@ from taskcontroller.runtime.closed_loop_runtime_executor import (
 )
 from taskcontroller.runtime.execution_state import FileRuntimeExecutionStateStore
 
-EXPECTED_GWC_SHA = "43f6379158978b0c299d775cd162ad69b5a1c099"
+EXPECTED_GWC_SHA = "68b45bd903e24818b113a0a0e4fe14fe7de6768c"
 DIGEST = "sha256:" + "a" * 64
 
 
