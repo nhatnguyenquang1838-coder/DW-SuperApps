@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: nhatnguyenquang1838-coder/gwc
-          ref: 43f6379158978b0c299d775cd162ad69b5a1c099
+          ref: 68b45bd903e24818b113a0a0e4fe14fe7de6768c
           path: .ci/gwc
           fetch-depth: 1
           persist-credentials: false
@@ -40,7 +40,7 @@ jobs:
       - name: Verify paired GWC identity
         working-directory: .ci/gwc
         run: |
-          test "$(git rev-parse HEAD)" = "43f6379158978b0c299d775cd162ad69b5a1c099"
+          test "$(git rev-parse HEAD)" = "68b45bd903e24818b113a0a0e4fe14fe7de6768c"
           test -z "$(git ls-files --others --exclude-standard)"
           git diff --cached --quiet --ignore-space-at-eol
           git diff --quiet --ignore-space-at-eol

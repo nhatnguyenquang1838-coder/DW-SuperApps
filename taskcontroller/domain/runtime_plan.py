@@ -664,15 +664,12 @@ class FilePlanStore:
         path = self.root / f"{runtime_plan_ref}.json"
         try:
             resolved = path.resolve()
-        except RuntimeError as exc:
-            raise TaskControllerValidationError(
-                f"{BindingErrorCode.PATH_TRAVERSAL}: unresolved path"
-            ) from exc
-        root = self.root.resolve()
-        if not str(resolved).startswith(str(root)):
+            root = self.root.resolve()
+            resolved.relative_to(root)
+        except (RuntimeError, ValueError) as exc:
             raise TaskControllerValidationError(
                 f"{BindingErrorCode.PATH_TRAVERSAL}: ref escapes store root"
-            )
+            ) from exc
         return path
 
     def put(self, plan: RuntimePlan) -> RuntimePlan:

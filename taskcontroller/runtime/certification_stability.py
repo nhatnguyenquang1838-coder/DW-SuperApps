@@ -46,9 +46,19 @@ def _ci_is_green(evidence: object) -> bool:
     return str(ci.get("status", "")).upper() in _GREEN_CI
 
 
+def _execution_identity(run: TestRun) -> tuple[str, str] | None:
+    """Return the first-class physical execution identity for one TestRun."""
+    receipt = run.execution_receipt
+    if receipt is None:
+        return None
+    return receipt.execution_id, receipt.execution_receipt_digest
+
+
 def _base_qualifies(run: TestRun) -> tuple[bool, str]:
     if run.verdict.upper() != "PASS":
         return False, "verdict"
+    if _execution_identity(run) is None:
+        return False, "execution receipt missing"
     if not _ci_is_green(run.evidence):
         return False, "ci"
     negative = _truthy_negative(
@@ -85,47 +95,49 @@ def evaluate_w8_stability(
 ) -> W8StabilityResult:
     """Evaluate the final consecutive W8 streak without mutating the runs.
 
-    Replay-resistance: a run whose execution receipt duplicates one already
-    inside the streak does not extend the streak (cloned evidence counts one
-    or zero, never three).
+    SourceIdentity may repeat across qualifying runs, but every counted run must
+    carry a distinct ExecutionIdentity. Replaying the same execution_id or the
+    same execution_receipt_digest anywhere in the evaluated campaign history
+    invalidates that occurrence; streak resets never erase replay history.
     """
     if required_streak < 1:
         raise ValueError("required_streak must be positive")
 
     target_sha = expected_runtime_sha or (runs[-1].runtime.end_sha if runs else None)
     streak: list[TestRun] = []
-    streak_receipts: set[str] = set()
     previous_identity: tuple[str, str, str, str, str] | None = None
+    observed_execution_ids: set[str] = set()
+    observed_receipt_digests: set[str] = set()
     reset_reason = ""
 
     for run in runs:
+        execution_identity = _execution_identity(run)
+        if execution_identity is not None:
+            execution_id, receipt_digest = execution_identity
+            if execution_id in observed_execution_ids or receipt_digest in observed_receipt_digests:
+                streak = []
+                previous_identity = None
+                reset_reason = "execution receipt replay or duplicate ExecutionIdentity"
+                continue
+            observed_execution_ids.add(execution_id)
+            observed_receipt_digests.add(receipt_digest)
+
         if target_sha is not None and run.runtime.end_sha != target_sha:
             streak = []
-            streak_receipts = set()
             previous_identity = None
             reset_reason = "runtime SHA mismatch or stale run"
             continue
         qualifies, reason = _base_qualifies(run)
         if not qualifies:
             streak = []
-            streak_receipts = set()
             previous_identity = None
             reset_reason = f"non-qualifying evidence: {reason}"
             continue
         identity = _runtime_identity(run)
         if previous_identity is not None and identity != previous_identity:
             streak = []
-            streak_receipts = set()
             reset_reason = "runtime/source identity changed"
-        if run.execution is None or run.execution.execution_receipt_digest in streak_receipts:
-            # Cloned / synthetic execution receipt does not extend the streak.
-            streak = []
-            streak_receipts = set()
-            previous_identity = None
-            reset_reason = "cloned execution identity (receipt not independently distinct)"
-            continue
         streak.append(run)
-        streak_receipts.add(run.execution.execution_receipt_digest)
         previous_identity = identity
 
     unresolved = [
@@ -140,7 +152,7 @@ def evaluate_w8_stability(
         for run in streak
     )
     stable = len(streak) >= required_streak and recovery_seen and not unresolved
-    if not recovery_seen and streak:
+    if not recovery_seen and streak and not reset_reason:
         reset_reason = "durable recovery evidence missing"
     if unresolved:
         reset_reason = "unresolved P0/P1 finding"
@@ -173,69 +185,36 @@ def evaluate_deep_case_stability(
     threshold: int,
     minimum_identities: int = 1,
     required_matrix_rows: Sequence[str] = (),
-    required_ci_cycle_receipts: int = 0,
 ) -> DeepCaseStabilityResult:
     """Apply one W9 case's explicit repetition and diversity requirements."""
     if threshold < 1 or minimum_identities < 1:
         raise ValueError("threshold and minimum_identities must be positive")
     selected = [run for run in runs if run.case_id == case_id]
     qualifying: list[TestRun] = []
+    seen_execution_ids: set[str] = set()
+    seen_receipt_digests: set[str] = set()
     last_reason = ""
     for run in selected:
         okay, reason = _base_qualifies(run)
         if not okay:
             last_reason = f"non-qualifying evidence: {reason}"
             continue
+        execution_identity = _execution_identity(run)
+        assert execution_identity is not None
+        execution_id, receipt_digest = execution_identity
+        if execution_id in seen_execution_ids or receipt_digest in seen_receipt_digests:
+            last_reason = "execution receipt replay or duplicate ExecutionIdentity"
+            continue
         if not _matrix_is_green(run, required_matrix_rows):
             last_reason = "injection matrix incomplete"
             continue
         qualifying.append(run)
+        seen_execution_ids.add(execution_id)
+        seen_receipt_digests.add(receipt_digest)
     identity_count = len({(run.executor, run.model) for run in qualifying})
-    # Replay-resistance: distinct execution receipts are mandatory; a stored
-    # boolean such as ci_recovery=true is insufficient for case thresholds.
-    receipt_digests = {
-        run.execution.execution_receipt_digest
-        for run in qualifying
-        if run.execution is not None
-    }
-    execution_ids = {run.execution.execution_id for run in qualifying if run.execution is not None}
-    cloned = len(receipt_digests) != len(qualifying) or len(execution_ids) != len(qualifying)
-    if cloned:
-        last_reason = "cloned execution identity in case receipts"
-        qualifying = []
-        receipt_digests = set()
-        execution_ids = set()
-    if required_ci_cycle_receipts > 0:
-        ci_cycle_receipts = {
-            receipt
-            for run in qualifying
-            if run.execution is not None
-            for receipt in run.execution.ci_run_refs
-        }
-        if len(ci_cycle_receipts) < required_ci_cycle_receipts:
-            last_reason = "insufficient live CI-cycle receipts"
-    stable = (
-        len(qualifying) >= threshold
-        and identity_count >= minimum_identities
-        and (
-            required_ci_cycle_receipts == 0
-            or (
-                len(
-                    {
-                        receipt
-                        for run in qualifying
-                        if run.execution is not None
-                        for receipt in run.execution.ci_run_refs
-                    }
-                )
-                >= required_ci_cycle_receipts
-            )
-        )
-    )
+    stable = len(qualifying) >= threshold and identity_count >= minimum_identities
     if identity_count < minimum_identities:
         last_reason = "insufficient executor/model identities"
-    if len(receipt_digests) < threshold and not cloned:
-        last_reason = "insufficient distinct execution receipts"
     if stable:
         last_reason = ""
     return DeepCaseStabilityResult(

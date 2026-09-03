@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import importlib
 
 import pytest
@@ -17,29 +16,25 @@ def _models():
     return importlib.import_module("taskcontroller.runtime.certification_models")
 
 
-def _execution(models, *, execution_id="exec-001", harness_sha="a" * 40):
-    return models.ExecutionReceipt(
-        execution_id=execution_id,
-        started_at="2026-09-02T00:00:00+07:00",
-        completed_at="2026-09-02T00:30:00+07:00",
-        controller_seq_start=19,
-        controller_seq_end=20,
-        executor_seq_start=51,
-        executor_seq_end=52,
-        cursor_before="cursor-before",
-        cursor_after="cursor-after",
-        step_receipt_digests=("step://1",),
-        local_validation_receipts=(),
-        ci_run_refs=(),
-        authority_refs=(),
-        harness_sha=harness_sha,
-        harness_is_runtime=True,
-        execution_receipt_digest="sha256:" + hashlib.sha256(execution_id.encode()).hexdigest(),
-    )
-
-
 def _run(models, run_id: str, runtime_sha: str = "a", case_id: str = "TC-RP-001", executor: str = "Hermes-Mac", model: str = "model-a", evidence=None):
     sha = runtime_sha * 40 if len(runtime_sha) == 1 else runtime_sha
+    receipt = models.ExecutionReceipt(
+        execution_id=f"exec-{run_id}",
+        started_at="2026-09-03T12:00:00Z",
+        ended_at="2026-09-03T12:00:30Z",
+        controller_seq_start=1,
+        controller_seq_end=2,
+        executor_seq_start=1,
+        executor_seq_end=2,
+        cursor_before=f"{run_id}-before",
+        cursor_after=f"{run_id}-after",
+        semantic_step_receipt_digests=("sha256:" + "e" * 64,),
+        local_validation_receipts=(f"pytest://{run_id}",),
+        github_workflow_receipts=(
+            {"run_id": 1001, "run_attempt": 1, "head_sha": sha, "conclusion": "SUCCESS"},
+        ),
+        authority_receipt_refs=(f"authority://{run_id}",),
+    )
     return models.TestRun(
         run_id=run_id,
         campaign_id="RP-CERT-001",
@@ -54,8 +49,8 @@ def _run(models, run_id: str, runtime_sha: str = "a", case_id: str = "TC-RP-001"
         executor=executor,
         model=model,
         verdict="PASS",
+        execution_receipt=receipt,
         evidence=evidence or {"ci": {"status": "SUCCESS"}, "fresh_controller_recovery": True},
-        execution=_execution(models, execution_id=f"exec-{run_id}", harness_sha=sha),
     )
 
 

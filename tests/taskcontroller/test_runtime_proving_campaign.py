@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import hashlib
 import importlib
-import uuid
 
 import pytest
 
@@ -44,9 +42,27 @@ def _revision(models, branch, start, end, repository="nhatnguyenquang1838-coder/
     return models.SourceRevision(repository, branch, start * 40 if len(start) == 1 else start, end * 40 if len(end) == 1 else end)
 
 
-def _start(harness, models, *, campaign_id="RP-CERT-001", run_id=None, end="d", subject_branch=None, execution_id=None):
-    if execution_id is None:
-        execution_id = f"exec-{uuid.uuid4().hex[:10]}"
+def _receipt(models, execution_id: str, head_sha: str):
+    return models.ExecutionReceipt(
+        execution_id=execution_id,
+        started_at="2026-09-03T12:00:00Z",
+        ended_at="2026-09-03T12:00:30Z",
+        controller_seq_start=1,
+        controller_seq_end=2,
+        executor_seq_start=1,
+        executor_seq_end=2,
+        cursor_before=f"{execution_id}-before",
+        cursor_after=f"{execution_id}-after",
+        semantic_step_receipt_digests=("sha256:" + "d" * 64,),
+        local_validation_receipts=(f"pytest://{execution_id}",),
+        github_workflow_receipts=(
+            {"run_id": 2001, "run_attempt": 1, "head_sha": head_sha, "conclusion": "SUCCESS"},
+        ),
+        authority_receipt_refs=(f"authority://{execution_id}",),
+    )
+
+
+def _start(harness, models, *, campaign_id="RP-CERT-001", run_id=None, end="d", subject_branch=None):
     return harness.start_run(
         campaign_id=campaign_id,
         case_id="TC-RP-001",
@@ -59,25 +75,6 @@ def _start(harness, models, *, campaign_id="RP-CERT-001", run_id=None, end="d", 
         runtime_plan_ref="plan://" + campaign_id + "/r1",
         runtime_plan_revision="r1",
         runtime_plan_digest="sha256:" + "e" * 64,
-        execution=models.ExecutionReceipt(
-            execution_id=execution_id,
-            started_at="2026-09-02T00:00:00+07:00",
-            completed_at="2026-09-02T00:30:00+07:00",
-            controller_seq_start=19,
-            controller_seq_end=20,
-            executor_seq_start=51,
-            executor_seq_end=52,
-            cursor_before="cursor-before",
-            cursor_after="cursor-after",
-            step_receipt_digests=("step://1",),
-            local_validation_receipts=(),
-            ci_run_refs=(),
-            authority_refs=(),
-            harness_sha=_revision(models, "runtime-lab/" + campaign_id, "a", end).end_sha,
-            harness_is_runtime=True,
-            execution_receipt_digest="sha256:"
-            + hashlib.sha256((execution_id or "exec").encode()).hexdigest(),
-        ),
     )
 
 
@@ -90,7 +87,12 @@ def test_same_campaign_reuses_proving_branch_with_new_exact_run():
     harness.register_case(_case(models))
 
     first = _start(harness, models, end="d")
-    harness.record_verdict(first.run_id, "PASS", {"ci": {"status": "SUCCESS"}})
+    harness.record_verdict(
+        first.run_id,
+        "PASS",
+        {"ci": {"status": "SUCCESS"}},
+        execution_receipt=_receipt(models, "exec-first", first.runtime.end_sha),
+    )
     second = _start(harness, models, end="f")
 
     assert second.run_id != first.run_id
@@ -123,6 +125,17 @@ def test_duplicate_run_identity_rejected_but_exact_source_repeats_are_allowed():
     assert repeated.run_id == "run-other"
 
 
+def test_terminal_campaign_verdict_requires_execution_receipt():
+    mod = _harness_module()
+    models = _models()
+    harness = mod.LiveCertificationHarness()
+    harness.create_campaign(_campaign(models))
+    harness.register_case(_case(models))
+    run = _start(harness, models, end="d")
+    with pytest.raises(mod.LiveCertificationError, match="execution receipt"):
+        harness.record_verdict(run.run_id, "PASS", {"ci": {"status": "SUCCESS"}})
+
+
 def test_terminal_run_and_evidence_remain_immutable_after_correction():
     mod = _harness_module()
     models = _models()
@@ -130,7 +143,12 @@ def test_terminal_run_and_evidence_remain_immutable_after_correction():
     harness.create_campaign(_campaign(models))
     harness.register_case(_case(models))
     run = _start(harness, models, end="d")
-    harness.record_verdict(run.run_id, "FAIL", {"failure": {"kind": "runtime"}})
+    harness.record_verdict(
+        run.run_id,
+        "FAIL",
+        {"failure": {"kind": "runtime"}},
+        execution_receipt=_receipt(models, "exec-fail", run.runtime.end_sha),
+    )
     finding = harness.record_finding(
         campaign_id="RP-CERT-001",
         discovered_by_run_id=run.run_id,
@@ -140,16 +158,26 @@ def test_terminal_run_and_evidence_remain_immutable_after_correction():
         actual="bypass",
         reproduction_refs=("test://run-fixed",),
     )
+
+    successor = _start(harness, models, run_id="run-successor", end="f")
+    harness.record_verdict(
+        successor.run_id,
+        "PASS",
+        {"ci": {"status": "SUCCESS"}, "regression": "PASS"},
+        execution_receipt=_receipt(models, "exec-successor", successor.runtime.end_sha),
+    )
     correction = harness.record_correction(
         correction_id="correction-001",
         finding_ids=(finding.finding_id,),
         runtime_sha="f" * 40,
         regression_evidence=("test://regression",),
-        successor_run_ids=("run-successor",),
+        successor_run_ids=(successor.run_id,),
     )
     stored = harness.get_run(run.run_id)
     assert stored.verdict == "FAIL"
     assert stored.evidence["failure"]["kind"] == "runtime"
+    assert stored.execution_receipt is not None
+    assert harness.get_run(successor.run_id).verdict == "PASS"
     assert correction.runtime_sha == "f" * 40
     assert harness.get_finding(finding.finding_id).status == "RESOLVED"
 
@@ -162,10 +190,24 @@ def test_restart_replays_campaign_runs_and_branch_ownership(tmp_path):
     harness.create_campaign(_campaign(models))
     harness.register_case(_case(models))
     run = _start(harness, models, end="d")
-    harness.record_verdict(run.run_id, "PASS", {"ci": {"status": "SUCCESS"}})
+    receipt = _receipt(models, "exec-restart", run.runtime.end_sha)
+    harness.record_verdict(
+        run.run_id,
+        "PASS",
+        {"ci": {"status": "SUCCESS"}},
+        execution_receipt=receipt,
+    )
 
     restored = mod.LiveCertificationHarness(store=path)
     assert restored.get_campaign("RP-CERT-001").status == "ACTIVE"
     assert restored.get_run(run.run_id).verdict == "PASS"
+    assert restored.get_run(run.run_id).execution_receipt.execution_id == "exec-restart"
     next_run = _start(restored, models, run_id="new-run", end="d")
     assert next_run.run_id == "new-run"
+    with pytest.raises(mod.LiveCertificationError, match="execution|receipt|replay"):
+        restored.record_verdict(
+            next_run.run_id,
+            "PASS",
+            {"ci": {"status": "SUCCESS"}},
+            execution_receipt=receipt,
+        )

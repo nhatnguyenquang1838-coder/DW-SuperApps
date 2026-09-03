@@ -123,9 +123,9 @@ class TestRun:
 class LiveCertificationHarness:
     """Campaign-scoped certification facade.
 
-    The revised API persists canonical campaign events through
-    :class:`CertificationStore`. The old keyword-only ``case=...`` API remains
-    isolated as a compatibility reader/writer for v1 W7 JSONL records.
+    Revised campaign truth is an append-only event history. Campaign aggregate
+    state may advance through explicit update events while TestRun terminal
+    evidence remains immutable. Legacy W7 JSONL stays isolated.
     """
 
     def __init__(self, store: str | Path | None = None) -> None:
@@ -142,8 +142,8 @@ class LiveCertificationHarness:
         self._corrections: dict[str, RuntimeCorrection] = {}
         self._campaign_branches: dict[tuple[str, str], str] = {}
         self._source_tuples: set[tuple[Any, ...]] = set()
-        self._execution_ids: set[str] = set()
-        self._execution_receipt_digests: set[str] = set()
+        self._execution_ids: dict[str, str] = {}
+        self._execution_receipt_digests: dict[str, str] = {}
         if self._store is not None and self._store.exists():
             self._detect_and_load_store()
 
@@ -198,6 +198,17 @@ class LiveCertificationHarness:
         self._append_event("CAMPAIGN_CREATED", campaign.campaign_id, campaign.to_dict())
         return campaign
 
+    def update_campaign_status(self, campaign_id: str, status: str) -> CertificationCampaign:
+        campaign = self._campaigns.get(campaign_id)
+        if campaign is None:
+            raise LiveCertificationError(f"campaign {campaign_id!r} not found")
+        if not isinstance(status, str) or not status.strip():
+            raise LiveCertificationError("campaign status is required")
+        updated = replace(campaign, status=status.strip())
+        self._campaigns[campaign_id] = updated
+        self._append_event("CAMPAIGN_UPDATED", campaign_id, updated.to_dict())
+        return updated
+
     def register_case(self, case: CampaignTestCase) -> CampaignTestCase:
         if not isinstance(case, CampaignTestCase):
             raise LiveCertificationError("versioned Campaign TestCase required")
@@ -210,13 +221,12 @@ class LiveCertificationHarness:
 
     @staticmethod
     def _cert_run_from_dict(payload: Mapping[str, Any]) -> CampaignTestRun:
-        execution_payload = payload.get("execution")
-        legacy = bool(payload.get("legacy", False))
-        # Historical RUN events written before seq20 have no ExecutionIdentity.
-        # They remain readable (immutable evidence) and are excluded from new
-        # stability by the replay-resistant evaluator; derive synthetic legacy.
-        if execution_payload is None and not legacy:
-            legacy = True
+        receipt_payload = payload.get("execution_receipt")
+        execution_receipt = (
+            ExecutionReceipt.from_dict(receipt_payload)
+            if isinstance(receipt_payload, Mapping)
+            else None
+        )
         return CampaignTestRun(
             run_id=payload["run_id"],
             campaign_id=payload["campaign_id"],
@@ -232,8 +242,11 @@ class LiveCertificationHarness:
             model=payload["model"],
             verdict=payload["verdict"],
             evidence=payload.get("evidence", {}),
-            execution=ExecutionReceipt.from_dict(execution_payload) if execution_payload else None,
-            legacy=legacy,
+            legacy=bool(payload.get("legacy", False)),
+            blueprint_ref=str(payload.get("blueprint_ref", "")),
+            blueprint_digest=str(payload.get("blueprint_digest", "")),
+            harness_sha=str(payload.get("harness_sha", "")),
+            execution_receipt=execution_receipt,
         )
 
     @staticmethod
@@ -250,10 +263,28 @@ class LiveCertificationHarness:
             declared_paths=tuple(payload["declared_paths"]),
         )
 
+    def _index_execution_receipt(self, run: CampaignTestRun) -> None:
+        receipt = run.execution_receipt
+        if receipt is None:
+            return
+        execution_owner = self._execution_ids.get(receipt.execution_id)
+        if execution_owner is not None and execution_owner != run.run_id:
+            raise LiveCertificationError(
+                f"execution identity replay: {receipt.execution_id!r} already belongs to {execution_owner!r}"
+            )
+        digest = receipt.execution_receipt_digest
+        digest_owner = self._execution_receipt_digests.get(digest)
+        if digest_owner is not None and digest_owner != run.run_id:
+            raise LiveCertificationError(
+                f"execution receipt replay: {digest!r} already belongs to {digest_owner!r}"
+            )
+        self._execution_ids[receipt.execution_id] = run.run_id
+        self._execution_receipt_digests[digest] = run.run_id
+
     def _replay_events(self, events: tuple[Any, ...]) -> None:
         for event in events:
             payload = event.payload
-            if event.event_type == "CAMPAIGN_CREATED":
+            if event.event_type in {"CAMPAIGN_CREATED", "CAMPAIGN_UPDATED"}:
                 campaign = self._campaign_from_dict(payload)
                 self._campaigns[campaign.campaign_id] = campaign
                 for branch in (campaign.runtime_branch, campaign.proving_branch):
@@ -263,6 +294,7 @@ class LiveCertificationHarness:
                 self._cases[case.case_id] = case
             elif event.event_type in {"RUN_STARTED", "RUN_VERDICT_RECORDED"}:
                 run = self._cert_run_from_dict(payload)
+                self._index_execution_receipt(run)
                 self._cert_runs[run.run_id] = run
                 self._campaign_branches[(run.subject.repository, run.subject.branch)] = run.campaign_id
                 self._source_tuples.add(self._source_tuple(run))
@@ -318,7 +350,9 @@ class LiveCertificationHarness:
         runtime_plan_ref: str = "",
         runtime_plan_revision: str = "",
         runtime_plan_digest: str = "",
-        execution: Any | None = None,
+        blueprint_ref: str = "",
+        blueprint_digest: str = "",
+        harness_sha: str = "",
         # Compatibility-only W7 arguments:
         case: TestCase | None = None,
         branch: str | None = None,
@@ -390,12 +424,6 @@ class LiveCertificationHarness:
             raise LiveCertificationError(f"duplicate run identity {run_id!r}")
         if not runtime_plan_ref or not runtime_plan_revision or not runtime_plan_digest:
             raise LiveCertificationError("runtime plan identity is required")
-        if not isinstance(execution, ExecutionReceipt):
-            raise LiveCertificationError("a unique ExecutionReceipt is required for a new run")
-        if execution.execution_id in self._execution_ids:
-            raise LiveCertificationError(f"duplicate execution_id {execution.execution_id!r}")
-        if execution.execution_receipt_digest in self._execution_receipt_digests:
-            raise LiveCertificationError("duplicate execution_receipt_digest is not allowed")
         run = CampaignTestRun(
             run_id=run_id,
             campaign_id=campaign_id,
@@ -411,25 +439,39 @@ class LiveCertificationHarness:
             model=model,
             verdict="PENDING",
             evidence={},
-            execution=execution,
+            blueprint_ref=blueprint_ref,
+            blueprint_digest=blueprint_digest,
+            harness_sha=harness_sha or runtime.end_sha,
         )
         source_tuple = self._source_tuple(run)
-        # Repeated exact source identities are required for W8 stability; the
-        # run_id + ExecutionIdentity guards above are the uniqueness boundaries.
         self._cert_runs[run_id] = run
         self._source_tuples.add(source_tuple)
-        self._execution_ids.add(execution.execution_id)
-        self._execution_receipt_digests.add(execution.execution_receipt_digest)
         self._append_event("RUN_STARTED", run_id, run.to_dict())
         return run
 
-    def record_finding(self, *, campaign_id: str, discovered_by_run_id: str, invariant_id: str,
-                       severity: str, expected: str, actual: str,
-                       reproduction_refs: tuple[str, ...], finding_id: str | None = None) -> RuntimeFinding:
+    def record_finding(
+        self,
+        *,
+        campaign_id: str,
+        discovered_by_run_id: str,
+        invariant_id: str,
+        severity: str,
+        expected: str,
+        actual: str,
+        reproduction_refs: tuple[str, ...],
+        finding_id: str | None = None,
+    ) -> RuntimeFinding:
         if campaign_id not in self._campaigns:
             raise LiveCertificationError(f"campaign {campaign_id!r} not found")
-        if discovered_by_run_id not in self._cert_runs:
+        discovered_run = self._cert_runs.get(discovered_by_run_id)
+        if discovered_run is None:
             raise LiveCertificationError(f"run {discovered_by_run_id!r} not found")
+        if discovered_run.campaign_id != campaign_id:
+            raise LiveCertificationError("finding run does not belong to campaign")
+        if discovered_run.verdict != "FAIL" or discovered_run.execution_receipt is None:
+            raise LiveCertificationError(
+                "RuntimeFinding requires a terminal FAIL run with ExecutionReceipt"
+            )
         finding = RuntimeFinding(
             finding_id=finding_id or f"finding-{uuid.uuid4().hex[:8]}",
             campaign_id=campaign_id,
@@ -447,8 +489,15 @@ class LiveCertificationHarness:
         self._append_event("FINDING_RECORDED", finding.finding_id, finding.to_dict())
         return finding
 
-    def record_correction(self, *, correction_id: str, finding_ids: tuple[str, ...], runtime_sha: str,
-                          regression_evidence: tuple[str, ...], successor_run_ids: tuple[str, ...]) -> RuntimeCorrection:
+    def record_correction(
+        self,
+        *,
+        correction_id: str,
+        finding_ids: tuple[str, ...],
+        runtime_sha: str,
+        regression_evidence: tuple[str, ...],
+        successor_run_ids: tuple[str, ...],
+    ) -> RuntimeCorrection:
         correction = RuntimeCorrection(
             correction_id=correction_id,
             finding_ids=finding_ids,
@@ -458,11 +507,45 @@ class LiveCertificationHarness:
         )
         if correction_id in self._corrections:
             raise LiveCertificationError("duplicate correction identity")
+
+        findings: list[RuntimeFinding] = []
+        campaign_ids: set[str] = set()
         for finding_id in correction.finding_ids:
             finding = self._findings.get(finding_id)
             if finding is None:
                 raise LiveCertificationError(f"finding {finding_id!r} not found")
-            self._findings[finding_id] = replace(
+            failing_run = self._cert_runs.get(finding.discovered_by_run_id)
+            if failing_run is None or failing_run.verdict != "FAIL" or failing_run.execution_receipt is None:
+                raise LiveCertificationError(
+                    f"finding {finding_id!r} has no durable failing execution proof"
+                )
+            findings.append(finding)
+            campaign_ids.add(finding.campaign_id)
+        if len(campaign_ids) != 1:
+            raise LiveCertificationError("one correction cannot resolve findings across campaigns")
+        campaign_id = next(iter(campaign_ids))
+
+        for successor_id in correction.successor_run_ids:
+            successor = self._cert_runs.get(successor_id)
+            if successor is None:
+                raise LiveCertificationError(
+                    f"successor run {successor_id!r} does not exist"
+                )
+            if successor.campaign_id != campaign_id:
+                raise LiveCertificationError(
+                    f"successor run {successor_id!r} belongs to another campaign"
+                )
+            if successor.verdict != "PASS" or successor.execution_receipt is None:
+                raise LiveCertificationError(
+                    f"successor run {successor_id!r} must be terminal PASS with ExecutionReceipt"
+                )
+            if correction.runtime_sha not in {successor.runtime.end_sha, successor.harness_sha}:
+                raise LiveCertificationError(
+                    f"successor run {successor_id!r} is not bound to correction runtime SHA"
+                )
+
+        for finding in findings:
+            self._findings[finding.finding_id] = replace(
                 finding,
                 status="RESOLVED",
                 correction_id=correction.correction_id,
@@ -490,6 +573,31 @@ class LiveCertificationHarness:
         except KeyError as exc:
             raise LiveCertificationError(f"finding {finding_id!r} not found") from exc
 
+    def list_campaign_runs(self, campaign_id: str) -> tuple[CampaignTestRun, ...]:
+        if campaign_id not in self._campaigns:
+            raise LiveCertificationError(f"campaign {campaign_id!r} not found")
+        return tuple(
+            run for run in self._cert_runs.values() if run.campaign_id == campaign_id
+        )
+
+    def list_campaign_findings(self, campaign_id: str) -> tuple[RuntimeFinding, ...]:
+        if campaign_id not in self._campaigns:
+            raise LiveCertificationError(f"campaign {campaign_id!r} not found")
+        return tuple(
+            finding
+            for finding in self._findings.values()
+            if finding.campaign_id == campaign_id
+        )
+
+    def get_campaign_branch_ownership(self, campaign_id: str) -> dict[str, str]:
+        if campaign_id not in self._campaigns:
+            raise LiveCertificationError(f"campaign {campaign_id!r} not found")
+        return {
+            branch: owner
+            for (_repository, branch), owner in self._campaign_branches.items()
+            if owner == campaign_id
+        }
+
     # ------------------------- revised verdict API ------------------------
     def record_verdict(
         self,
@@ -499,6 +607,8 @@ class LiveCertificationHarness:
         expected: str = "",
         actual: str = "",
         notion_data: dict[str, Any] | None = None,
+        *,
+        execution_receipt: ExecutionReceipt | None = None,
     ) -> None:
         if run_id in self._cert_runs:
             if notion_data is not None:
@@ -510,9 +620,21 @@ class LiveCertificationHarness:
                 raise LiveCertificationError("verdict must be exactly PASS or FAIL")
             if not evidence:
                 raise LiveCertificationError("verdict requires exact refs/evidence")
-            updated = replace(run, verdict=verdict, evidence=evidence)
-            self._cert_runs[run_id] = updated
+            if execution_receipt is None:
+                raise LiveCertificationError(
+                    "terminal campaign verdict requires a first-class execution receipt"
+                )
+            if not isinstance(execution_receipt, ExecutionReceipt):
+                raise LiveCertificationError("execution_receipt must be an ExecutionReceipt")
+            updated = replace(
+                run,
+                verdict=verdict,
+                evidence=evidence,
+                execution_receipt=execution_receipt,
+            )
+            self._index_execution_receipt(updated)
             self._append_event("RUN_VERDICT_RECORDED", run_id, updated.to_dict())
+            self._cert_runs[run_id] = updated
             return
         self._record_legacy_verdict(run_id, verdict, evidence, expected, actual, notion_data)
 
@@ -556,9 +678,20 @@ class LiveCertificationHarness:
         with self._store.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(payload, sort_keys=True) + "\n")
 
-    def _start_legacy_run(self, *, case: TestCase | None, branch: str | None, base_sha: str | None,
-                          head_sha: str | None, executor: str, model: str, pr_id: str,
-                          runtime_plan_ref: str, runtime_plan_digest: str, mode: str) -> TestRun:
+    def _start_legacy_run(
+        self,
+        *,
+        case: TestCase | None,
+        branch: str | None,
+        base_sha: str | None,
+        head_sha: str | None,
+        executor: str,
+        model: str,
+        pr_id: str,
+        runtime_plan_ref: str,
+        runtime_plan_digest: str,
+        mode: str,
+    ) -> TestRun:
         if case is None:
             raise LiveCertificationError("case identity required")
         if not executor:
@@ -587,8 +720,15 @@ class LiveCertificationHarness:
         self._append(run)
         return run
 
-    def _record_legacy_verdict(self, run_id: str, verdict: str, evidence: Mapping[str, object],
-                               expected: str, actual: str, notion_data: dict[str, Any] | None) -> None:
+    def _record_legacy_verdict(
+        self,
+        run_id: str,
+        verdict: str,
+        evidence: Mapping[str, object],
+        expected: str,
+        actual: str,
+        notion_data: dict[str, Any] | None,
+    ) -> None:
         if notion_data is not None:
             raise LiveCertificationError("Notion/Slack data must not be treated as machine truth")
         run = self._runs.get(run_id)

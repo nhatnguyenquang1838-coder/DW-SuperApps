@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import subprocess
 
 import pytest
@@ -46,28 +45,6 @@ def _campaign(gwc_sha=SHA_C):
     )
 
 
-def _execution(harness_sha: str) -> object:
-    from taskcontroller.runtime.certification_models import ExecutionReceipt
-    return ExecutionReceipt(
-        execution_id="exec-w7-" + harness_sha[:8],
-        started_at="2026-09-02T00:00:00+07:00",
-        completed_at="2026-09-02T00:30:00+07:00",
-        controller_seq_start=19,
-        controller_seq_end=20,
-        executor_seq_start=51,
-        executor_seq_end=52,
-        cursor_before="cursor-before",
-        cursor_after="cursor-after",
-        step_receipt_digests=("step://1",),
-        local_validation_receipts=(),
-        ci_run_refs=(),
-        authority_refs=(),
-        harness_sha=harness_sha,
-        harness_is_runtime=True,
-        execution_receipt_digest="sha256:" + hashlib.sha256(harness_sha.encode()).hexdigest(),
-    )
-
-
 def test_start_run_verifies_all_exact_checkouts_before_persisting(tmp_path):
     remote = "git@github.com:nhatnguyenquang1838-coder/DW-SuperApps.git"
     gwc_remote = "git@github.com:nhatnguyenquang1838-coder/gwc.git"
@@ -98,7 +75,6 @@ def test_start_run_verifies_all_exact_checkouts_before_persisting(tmp_path):
         canonical_runtime_remote=remote,
         canonical_subject_remote=remote,
         canonical_gwc_remote=gwc_remote,
-        execution=_execution(runtime_sha),
     )
     assert run.runtime.end_sha == runtime_sha
 
@@ -126,5 +102,4 @@ def test_start_run_rejects_missing_or_mismatched_workspace_binding(tmp_path):
             runtime_plan_digest="sha256:" + "d" * 64,
             runtime_checkout=ExactCheckout("DW", "runtime", runtime_sha, runtime_root),
             subject_checkout=ExactCheckout("DW", "subject", subject_sha, subject_root),
-            execution=_execution(runtime_sha),
         )
