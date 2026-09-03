@@ -1,8 +1,9 @@
 """Immutable domain records for the Runtime Proving Lab.
 
 The campaign aggregate may evolve in the harness, but terminal TestRun evidence
-must be detached, recursively immutable, and reproducible from exact source
-identities.  This module deliberately contains no Slack/Notion integration.
+must be detached, recursively immutable, and reproducible from exact source and
+execution identities. This module deliberately contains no Slack/Notion
+integration.
 """
 
 from __future__ import annotations
@@ -35,6 +36,12 @@ def _require_sha(value: str, field_name: str) -> str:
     return value.lower()
 
 
+def _require_digest(value: str, field_name: str) -> str:
+    if not isinstance(value, str) or _SHA256_DIGEST.fullmatch(value) is None:
+        raise CertificationModelError(f"{field_name} must be sha256:<64-hex>")
+    return value.lower()
+
+
 def _deep_freeze(value: Any) -> Any:
     """Copy and recursively freeze JSON-shaped values."""
     if isinstance(value, Mapping):
@@ -62,6 +69,20 @@ def _freeze_refs(values: tuple[str, ...], field_name: str) -> tuple[str, ...]:
     if not normalized or any(not isinstance(value, str) or not value.strip() for value in normalized):
         raise CertificationModelError(f"{field_name} is required")
     return normalized
+
+
+def _freeze_optional_refs(values: tuple[str, ...], field_name: str) -> tuple[str, ...]:
+    normalized = tuple(values)
+    if any(not isinstance(value, str) or not value.strip() for value in normalized):
+        raise CertificationModelError(f"{field_name} must contain non-empty strings")
+    return normalized
+
+
+def _canonical_digest(payload: Mapping[str, Any]) -> str:
+    canonical = json.dumps(
+        _plain(payload), sort_keys=True, separators=(",", ":"), ensure_ascii=True
+    )
+    return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -155,6 +176,132 @@ class CertificationCampaign:
 
 
 @dataclass(frozen=True)
+class ExecutionReceipt:
+    """Immutable proof that one TestRun represents one physical execution.
+
+    SourceIdentity is intentionally allowed to repeat for stability replay, but
+    ExecutionIdentity must be unique. The digest covers the complete execution
+    receipt so copying the same receipt under another run ID is detectable.
+    """
+
+    execution_id: str
+    started_at: str
+    ended_at: str
+    controller_seq_start: int
+    controller_seq_end: int
+    executor_seq_start: int
+    executor_seq_end: int
+    cursor_before: str
+    cursor_after: str
+    semantic_step_receipt_digests: tuple[str, ...]
+    local_validation_receipts: tuple[str, ...] = ()
+    github_workflow_receipts: tuple[Mapping[str, object], ...] = ()
+    authority_receipt_refs: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        for field_name in ("execution_id", "started_at", "ended_at", "cursor_before", "cursor_after"):
+            _require_text(getattr(self, field_name), field_name)
+        for start_name, end_name in (
+            ("controller_seq_start", "controller_seq_end"),
+            ("executor_seq_start", "executor_seq_end"),
+        ):
+            start = getattr(self, start_name)
+            end = getattr(self, end_name)
+            if (
+                not isinstance(start, int)
+                or isinstance(start, bool)
+                or start < 0
+                or not isinstance(end, int)
+                or isinstance(end, bool)
+                or end < start
+            ):
+                raise CertificationModelError(f"{start_name}/{end_name} must be monotonic non-negative integers")
+        step_digests = _freeze_refs(
+            self.semantic_step_receipt_digests, "semantic_step_receipt_digests"
+        )
+        for digest in step_digests:
+            _require_digest(digest, "semantic_step_receipt_digest")
+        object.__setattr__(self, "semantic_step_receipt_digests", step_digests)
+        object.__setattr__(
+            self,
+            "local_validation_receipts",
+            _freeze_optional_refs(self.local_validation_receipts, "local_validation_receipts"),
+        )
+        object.__setattr__(
+            self,
+            "authority_receipt_refs",
+            _freeze_optional_refs(self.authority_receipt_refs, "authority_receipt_refs"),
+        )
+        workflows: list[Mapping[str, object]] = []
+        for workflow in self.github_workflow_receipts:
+            if not isinstance(workflow, Mapping):
+                raise CertificationModelError("github_workflow_receipts must contain mappings")
+            if "run_id" not in workflow or "run_attempt" not in workflow or "head_sha" not in workflow:
+                raise CertificationModelError(
+                    "github_workflow_receipt requires run_id, run_attempt and head_sha"
+                )
+            run_id = workflow["run_id"]
+            run_attempt = workflow["run_attempt"]
+            if not isinstance(run_id, int) or isinstance(run_id, bool) or run_id < 1:
+                raise CertificationModelError("github workflow run_id must be a positive integer")
+            if not isinstance(run_attempt, int) or isinstance(run_attempt, bool) or run_attempt < 1:
+                raise CertificationModelError("github workflow run_attempt must be a positive integer")
+            _require_sha(str(workflow["head_sha"]), "github workflow head_sha")
+            workflows.append(_deep_freeze(dict(workflow)))
+        object.__setattr__(self, "github_workflow_receipts", tuple(workflows))
+
+    @property
+    def execution_receipt_digest(self) -> str:
+        return _canonical_digest(self._content_dict())
+
+    def _content_dict(self) -> dict[str, Any]:
+        return {
+            "execution_id": self.execution_id,
+            "started_at": self.started_at,
+            "ended_at": self.ended_at,
+            "controller_seq_start": self.controller_seq_start,
+            "controller_seq_end": self.controller_seq_end,
+            "executor_seq_start": self.executor_seq_start,
+            "executor_seq_end": self.executor_seq_end,
+            "cursor_before": self.cursor_before,
+            "cursor_after": self.cursor_after,
+            "semantic_step_receipt_digests": list(self.semantic_step_receipt_digests),
+            "local_validation_receipts": list(self.local_validation_receipts),
+            "github_workflow_receipts": [_plain(item) for item in self.github_workflow_receipts],
+            "authority_receipt_refs": list(self.authority_receipt_refs),
+        }
+
+    def to_dict(self) -> dict[str, Any]:
+        payload = self._content_dict()
+        payload["execution_receipt_digest"] = self.execution_receipt_digest
+        return payload
+
+    @classmethod
+    def from_dict(cls, payload: Mapping[str, Any]) -> "ExecutionReceipt":
+        if not isinstance(payload, Mapping):
+            raise CertificationModelError("execution_receipt must be a mapping")
+        receipt = cls(
+            execution_id=payload["execution_id"],
+            started_at=payload["started_at"],
+            ended_at=payload["ended_at"],
+            controller_seq_start=payload["controller_seq_start"],
+            controller_seq_end=payload["controller_seq_end"],
+            executor_seq_start=payload["executor_seq_start"],
+            executor_seq_end=payload["executor_seq_end"],
+            cursor_before=payload["cursor_before"],
+            cursor_after=payload["cursor_after"],
+            semantic_step_receipt_digests=tuple(payload["semantic_step_receipt_digests"]),
+            local_validation_receipts=tuple(payload.get("local_validation_receipts", ())),
+            github_workflow_receipts=tuple(payload.get("github_workflow_receipts", ())),
+            authority_receipt_refs=tuple(payload.get("authority_receipt_refs", ())),
+        )
+        supplied = payload.get("execution_receipt_digest")
+        if supplied is not None and supplied != receipt.execution_receipt_digest:
+            raise CertificationModelError("execution_receipt_digest does not match receipt content")
+        return receipt
+
+
+@dataclass(frozen=True)
 class TestRun:
     run_id: str
     campaign_id: str
@@ -171,6 +318,10 @@ class TestRun:
     verdict: str
     evidence: Mapping[str, object] = field(default_factory=dict)
     legacy: bool = False
+    blueprint_ref: str = ""
+    blueprint_digest: str = ""
+    harness_sha: str = ""
+    execution_receipt: ExecutionReceipt | None = None
 
     def __post_init__(self) -> None:
         for field_name in (
@@ -188,8 +339,16 @@ class TestRun:
         if not isinstance(self.runtime, SourceRevision) or not isinstance(self.subject, SourceRevision):
             raise CertificationModelError("runtime and subject SourceRevision records are required")
         object.__setattr__(self, "gwc_sha", _require_sha(self.gwc_sha, "gwc_sha"))
-        if _SHA256_DIGEST.fullmatch(self.runtime_plan_digest) is None:
-            raise CertificationModelError("runtime_plan_digest must be sha256:<64-hex>")
+        object.__setattr__(self, "runtime_plan_digest", _require_digest(self.runtime_plan_digest, "runtime_plan_digest"))
+        if self.blueprint_digest:
+            object.__setattr__(self, "blueprint_digest", _require_digest(self.blueprint_digest, "blueprint_digest"))
+        if self.blueprint_ref:
+            _require_text(self.blueprint_ref, "blueprint_ref")
+        if bool(self.blueprint_ref) != bool(self.blueprint_digest):
+            raise CertificationModelError("blueprint_ref and blueprint_digest must be supplied together")
+        object.__setattr__(self, "harness_sha", _require_sha(self.harness_sha or self.runtime.end_sha, "harness_sha"))
+        if self.execution_receipt is not None and not isinstance(self.execution_receipt, ExecutionReceipt):
+            raise CertificationModelError("execution_receipt must be an ExecutionReceipt")
         if self.verdict not in {"PENDING", "PASS", "FAIL"}:
             raise CertificationModelError(f"invalid verdict {self.verdict!r}")
         if not isinstance(self.evidence, Mapping):
@@ -202,7 +361,7 @@ class TestRun:
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "run_id": self.run_id,
             "campaign_id": self.campaign_id,
             "case_id": self.case_id,
@@ -217,8 +376,14 @@ class TestRun:
             "model": self.model,
             "verdict": self.verdict,
             "legacy": self.legacy,
+            "blueprint_ref": self.blueprint_ref,
+            "blueprint_digest": self.blueprint_digest,
+            "harness_sha": self.harness_sha,
             "evidence": _plain(self.evidence),
         }
+        if self.execution_receipt is not None:
+            payload["execution_receipt"] = self.execution_receipt.to_dict()
+        return payload
 
 
 @dataclass(frozen=True)
@@ -303,6 +468,7 @@ class RuntimeCorrection:
 __all__ = [
     "CertificationCampaign",
     "CertificationModelError",
+    "ExecutionReceipt",
     "RuntimeCorrection",
     "RuntimeFinding",
     "SourceRevision",
