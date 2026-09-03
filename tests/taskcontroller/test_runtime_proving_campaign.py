@@ -158,17 +158,26 @@ def test_terminal_run_and_evidence_remain_immutable_after_correction():
         actual="bypass",
         reproduction_refs=("test://run-fixed",),
     )
+
+    successor = _start(harness, models, run_id="run-successor", end="f")
+    harness.record_verdict(
+        successor.run_id,
+        "PASS",
+        {"ci": {"status": "SUCCESS"}, "regression": "PASS"},
+        execution_receipt=_receipt(models, "exec-successor", successor.runtime.end_sha),
+    )
     correction = harness.record_correction(
         correction_id="correction-001",
         finding_ids=(finding.finding_id,),
         runtime_sha="f" * 40,
         regression_evidence=("test://regression",),
-        successor_run_ids=("run-successor",),
+        successor_run_ids=(successor.run_id,),
     )
     stored = harness.get_run(run.run_id)
     assert stored.verdict == "FAIL"
     assert stored.evidence["failure"]["kind"] == "runtime"
     assert stored.execution_receipt is not None
+    assert harness.get_run(successor.run_id).verdict == "PASS"
     assert correction.runtime_sha == "f" * 40
     assert harness.get_finding(finding.finding_id).status == "RESOLVED"
 
