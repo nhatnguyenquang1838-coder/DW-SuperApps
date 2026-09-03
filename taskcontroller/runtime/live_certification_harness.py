@@ -12,6 +12,7 @@ from typing import Any, Mapping
 
 from .certification_models import (
     CertificationCampaign,
+    ExecutionReceipt,
     RuntimeCorrection,
     RuntimeFinding,
     SourceRevision,
@@ -141,6 +142,8 @@ class LiveCertificationHarness:
         self._corrections: dict[str, RuntimeCorrection] = {}
         self._campaign_branches: dict[tuple[str, str], str] = {}
         self._source_tuples: set[tuple[Any, ...]] = set()
+        self._execution_ids: dict[str, str] = {}
+        self._execution_receipt_digests: dict[str, str] = {}
         if self._store is not None and self._store.exists():
             self._detect_and_load_store()
 
@@ -207,6 +210,12 @@ class LiveCertificationHarness:
 
     @staticmethod
     def _cert_run_from_dict(payload: Mapping[str, Any]) -> CampaignTestRun:
+        receipt_payload = payload.get("execution_receipt")
+        execution_receipt = (
+            ExecutionReceipt.from_dict(receipt_payload)
+            if isinstance(receipt_payload, Mapping)
+            else None
+        )
         return CampaignTestRun(
             run_id=payload["run_id"],
             campaign_id=payload["campaign_id"],
@@ -223,6 +232,10 @@ class LiveCertificationHarness:
             verdict=payload["verdict"],
             evidence=payload.get("evidence", {}),
             legacy=bool(payload.get("legacy", False)),
+            blueprint_ref=str(payload.get("blueprint_ref", "")),
+            blueprint_digest=str(payload.get("blueprint_digest", "")),
+            harness_sha=str(payload.get("harness_sha", "")),
+            execution_receipt=execution_receipt,
         )
 
     @staticmethod
@@ -239,6 +252,24 @@ class LiveCertificationHarness:
             declared_paths=tuple(payload["declared_paths"]),
         )
 
+    def _index_execution_receipt(self, run: CampaignTestRun) -> None:
+        receipt = run.execution_receipt
+        if receipt is None:
+            return
+        execution_owner = self._execution_ids.get(receipt.execution_id)
+        if execution_owner is not None and execution_owner != run.run_id:
+            raise LiveCertificationError(
+                f"execution identity replay: {receipt.execution_id!r} already belongs to {execution_owner!r}"
+            )
+        digest = receipt.execution_receipt_digest
+        digest_owner = self._execution_receipt_digests.get(digest)
+        if digest_owner is not None and digest_owner != run.run_id:
+            raise LiveCertificationError(
+                f"execution receipt replay: {digest!r} already belongs to {digest_owner!r}"
+            )
+        self._execution_ids[receipt.execution_id] = run.run_id
+        self._execution_receipt_digests[digest] = run.run_id
+
     def _replay_events(self, events: tuple[Any, ...]) -> None:
         for event in events:
             payload = event.payload
@@ -252,6 +283,7 @@ class LiveCertificationHarness:
                 self._cases[case.case_id] = case
             elif event.event_type in {"RUN_STARTED", "RUN_VERDICT_RECORDED"}:
                 run = self._cert_run_from_dict(payload)
+                self._index_execution_receipt(run)
                 self._cert_runs[run.run_id] = run
                 self._campaign_branches[(run.subject.repository, run.subject.branch)] = run.campaign_id
                 self._source_tuples.add(self._source_tuple(run))
@@ -307,6 +339,9 @@ class LiveCertificationHarness:
         runtime_plan_ref: str = "",
         runtime_plan_revision: str = "",
         runtime_plan_digest: str = "",
+        blueprint_ref: str = "",
+        blueprint_digest: str = "",
+        harness_sha: str = "",
         # Compatibility-only W7 arguments:
         case: TestCase | None = None,
         branch: str | None = None,
@@ -393,10 +428,14 @@ class LiveCertificationHarness:
             model=model,
             verdict="PENDING",
             evidence={},
+            blueprint_ref=blueprint_ref,
+            blueprint_digest=blueprint_digest,
+            harness_sha=harness_sha or runtime.end_sha,
         )
         source_tuple = self._source_tuple(run)
-        # Repeated exact source identities are required for W8 stability; the
-        # run_id guard above is the uniqueness boundary for terminal records.
+        # Repeated exact SourceIdentity is expected for stability replay. The
+        # physical-execution uniqueness boundary is enforced at terminal
+        # verdict time through ExecutionReceipt.
         self._cert_runs[run_id] = run
         self._source_tuples.add(source_tuple)
         self._append_event("RUN_STARTED", run_id, run.to_dict())
@@ -478,6 +517,8 @@ class LiveCertificationHarness:
         expected: str = "",
         actual: str = "",
         notion_data: dict[str, Any] | None = None,
+        *,
+        execution_receipt: ExecutionReceipt | None = None,
     ) -> None:
         if run_id in self._cert_runs:
             if notion_data is not None:
@@ -489,9 +530,23 @@ class LiveCertificationHarness:
                 raise LiveCertificationError("verdict must be exactly PASS or FAIL")
             if not evidence:
                 raise LiveCertificationError("verdict requires exact refs/evidence")
-            updated = replace(run, verdict=verdict, evidence=evidence)
-            self._cert_runs[run_id] = updated
+            if execution_receipt is None:
+                raise LiveCertificationError(
+                    "terminal campaign verdict requires a first-class execution receipt"
+                )
+            if not isinstance(execution_receipt, ExecutionReceipt):
+                raise LiveCertificationError("execution_receipt must be an ExecutionReceipt")
+            updated = replace(
+                run,
+                verdict=verdict,
+                evidence=evidence,
+                execution_receipt=execution_receipt,
+            )
+            # Validate uniqueness before persisting; replay performs the same
+            # check, so a copied receipt cannot survive process restart.
+            self._index_execution_receipt(updated)
             self._append_event("RUN_VERDICT_RECORDED", run_id, updated.to_dict())
+            self._cert_runs[run_id] = updated
             return
         self._record_legacy_verdict(run_id, verdict, evidence, expected, actual, notion_data)
 
