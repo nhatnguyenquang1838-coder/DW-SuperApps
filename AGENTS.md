@@ -160,6 +160,13 @@ The current MVP uses `taskcontroller/mvp/activation.py` for activation resolutio
 
 Activating TaskController does not automatically activate any Power. Load only the Power explicitly required by the controlled task.
 
+For the RuntimePlan W7→W9 proving campaign, the durable design and execution plan are:
+
+- `docs/superpowers/specs/2026-09-02-runtime-proving-lab-design.md`
+- `docs/superpowers/plans/2026-09-02-runtime-proving-lab-w8-w9.md`
+
+These documents are implementation artifacts under the active TaskController contract; repository policy and exact mailbox state remain authoritative.
+
 ## Power routing
 
 - `gwc`: governance, gates, approvals, delivery control, and validation orchestration.
