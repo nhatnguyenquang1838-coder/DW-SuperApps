@@ -77,7 +77,7 @@ Hermes may self-maintain its own runtime skills and its own Hermes agent instruc
 
 Hermes MUST NOT use self-maintenance to expand authority, widen the current task scope, alter the TaskController selected plan or contract, override canonical repository policy, change approval, merge, deploy, or production authority semantics, or modify TaskController governance, Human Plane policy, project governance, or Power governance unless that protected change is explicitly authorized.
 
-Persisted repository changes to canonical instructions remain subject to the normal branch, PR, validation, and authority model. Local host skill edits are not canonical authority and cannot supersede the current Controller mailbox, repository policy, or approval contract.
+Persisted repository changes to canonical instructions remain subject to the normal branch, PR, validation, and authority model; local host skill edits are not canonical authority and cannot supersede the current Controller mailbox, repository policy, or approval contract.
 
 ## RootCard runtime data
 
