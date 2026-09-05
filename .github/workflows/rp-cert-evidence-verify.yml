@@ -41,6 +41,12 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install verifier dependencies
+        working-directory: runtime
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
       - name: Fresh verify exact retaining commit
         shell: bash
         env:
