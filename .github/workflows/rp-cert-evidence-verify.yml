@@ -1,0 +1,103 @@
+name: RP-CERT Evidence Fresh Verify
+
+on:
+  push:
+    branches:
+      - evidence/SCRUM-725-w7-baseline-r1
+    paths:
+      - .github/workflows/rp-cert-evidence-verify.yml
+      - evidence/**
+
+permissions:
+  contents: read
+
+jobs:
+  fresh-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RUNTIME_SHA: 4ab31d8d1e713f113f7a11770305b57a186957c4
+      EVIDENCE_REPOSITORY: nhatnguyenquang1838-coder/DW-SuperApps
+      EVIDENCE_REF: evidence/SCRUM-725-w7-baseline-r1
+      BASELINE_R3_SHA: 08cde62afa3aee763f30d1f55c493482591d8c7e
+      BASELINE_R3_PATH: evidence/SCRUM-725-w7-baseline-r3
+    steps:
+      - name: Checkout corrected runtime verifier
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RUNTIME_SHA }}
+          path: runtime
+          fetch-depth: 1
+
+      - name: Checkout evidence history
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: evidence-repo
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fresh verify exact retaining commit
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/runtime
+        run: |
+          set -euo pipefail
+          mkdir -p verification-results
+          mapfile -t manifests < <(git -C evidence-repo diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep -E '^evidence/.+/manifest\.json$' || true)
+          if [ "${#manifests[@]}" -eq 0 ]; then
+            manifests=("$BASELINE_R3_PATH/manifest.json")
+            attest_sha="$BASELINE_R3_SHA"
+          else
+            attest_sha="$GITHUB_SHA"
+          fi
+          for manifest in "${manifests[@]}"; do
+            bundle_path="${manifest%/manifest.json}"
+            BUNDLE_PATH="$bundle_path" ATTEST_SHA="$attest_sha" python - <<'PY'
+          import json, os, pathlib
+          from taskcontroller.runtime.certification_evidence import (
+              GitHubRetainingCommitAttestation,
+              fresh_verify_campaign,
+          )
+          repo = pathlib.Path('evidence-repo').resolve()
+          rel = os.environ['BUNDLE_PATH']
+          sha = os.environ['ATTEST_SHA']
+          attestation = GitHubRetainingCommitAttestation(
+              repository=os.environ['EVIDENCE_REPOSITORY'],
+              ref=os.environ['EVIDENCE_REF'],
+              commit_sha=sha,
+              path=rel,
+          )
+          result = fresh_verify_campaign(repo / rel, 'RP-CERT-001', attestation, git_repo_root=repo)
+          payload = {
+              'campaign_id': result.campaign.campaign_id,
+              'binding': result.binding.to_dict(),
+              'attestation': result.attestation.to_dict(),
+              'event_count': result.event_count,
+              'terminal_record_digest': result.terminal_record_digest,
+              'run_ids': list(result.run_ids),
+              'execution_ids': list(result.execution_ids),
+              'w8': {
+                  'stable': result.w8_stability.stable,
+                  'clean_streak': result.w8_stability.clean_streak,
+                  'qualifying_run_ids': list(result.w8_stability.qualifying_run_ids),
+                  'reset_reason': result.w8_stability.reset_reason,
+              },
+          }
+          out = pathlib.Path('verification-results') / (rel.replace('/', '__') + '.json')
+          out.write_text(json.dumps(payload, sort_keys=True, indent=2) + '\n')
+          print(json.dumps(payload, sort_keys=True))
+          PY
+          done
+
+      - name: Upload fresh-verifier result
+        uses: actions/upload-artifact@v4
+        with:
+          name: rp-cert-fresh-verify-${{ github.run_id }}-a${{ github.run_attempt }}
+          path: verification-results/
+          if-no-files-found: error
+          retention-days: 30
