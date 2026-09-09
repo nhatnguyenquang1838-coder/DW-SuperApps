@@ -30,7 +30,7 @@ def _git_repo(path, remote, content):
     return subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD"], text=True).strip()
 
 
-def _campaign(gwc_sha=SHA_C):
+def _campaign(gwc_sha=SHA_C, runtime_sha=SHA_A, subject_sha=SHA_B):
     return CertificationCampaign(
         campaign_id="RP-CERT-001",
         mode="STANDARD_REAL_RUN",
@@ -38,8 +38,8 @@ def _campaign(gwc_sha=SHA_C):
         proving_branch="prove/RP-CERT-001/TC-RP-001",
         test_case_id="TC-RP-001",
         test_case_revision="2026-09-02-r1",
-        baseline_runtime_sha=SHA_A,
-        baseline_subject_sha=SHA_B,
+        baseline_runtime_sha=runtime_sha,
+        baseline_subject_sha=subject_sha,
         gwc_sha=gwc_sha,
         status="ACTIVE",
     )
@@ -56,13 +56,13 @@ def test_start_run_verifies_all_exact_checkouts_before_persisting(tmp_path):
     gwc_sha = _git_repo(gwc_root, gwc_remote, "gwc")
 
     harness = LiveCertificationHarness()
-    harness.create_campaign(_campaign(gwc_sha))
+    harness.create_campaign(_campaign(gwc_sha, runtime_sha, subject_sha))
     harness.register_case(TestCase("TC-RP-001", "2026-09-02-r1", "runtime", "pass", ("taskcontroller",)))
     run = harness.start_run(
         campaign_id="RP-CERT-001",
         case_id="TC-RP-001",
-        runtime=SourceRevision("DW", "runtime-lab/RP-CERT-001", runtime_sha, runtime_sha),
-        subject=SourceRevision("DW", "prove/RP-CERT-001/TC-RP-001", subject_sha, subject_sha),
+        runtime=SourceRevision("nhatnguyenquang1838-coder/DW-SuperApps", "runtime-lab/RP-CERT-001", runtime_sha, runtime_sha),
+        subject=SourceRevision("nhatnguyenquang1838-coder/DW-SuperApps", "prove/RP-CERT-001/TC-RP-001", subject_sha, subject_sha),
         gwc_sha=gwc_sha,
         executor="Hermes-Mac",
         model="model-a",
@@ -86,14 +86,14 @@ def test_start_run_rejects_missing_or_mismatched_workspace_binding(tmp_path):
     runtime_sha = _git_repo(runtime_root, remote, "runtime")
     subject_sha = _git_repo(subject_root, remote, "subject")
     harness = LiveCertificationHarness()
-    harness.create_campaign(_campaign())
+    harness.create_campaign(_campaign(runtime_sha=runtime_sha, subject_sha=subject_sha))
     harness.register_case(TestCase("TC-RP-001", "2026-09-02-r1", "runtime", "pass", ("taskcontroller",)))
     with pytest.raises(LiveCertificationError, match="workspace binding"):
         harness.start_run(
             campaign_id="RP-CERT-001",
             case_id="TC-RP-001",
-            runtime=SourceRevision("DW", "runtime-lab/RP-CERT-001", runtime_sha, runtime_sha),
-            subject=SourceRevision("DW", "prove/RP-CERT-001/TC-RP-001", subject_sha, subject_sha),
+            runtime=SourceRevision("nhatnguyenquang1838-coder/DW-SuperApps", "runtime-lab/RP-CERT-001", runtime_sha, runtime_sha),
+            subject=SourceRevision("nhatnguyenquang1838-coder/DW-SuperApps", "prove/RP-CERT-001/TC-RP-001", subject_sha, subject_sha),
             gwc_sha=SHA_C,
             executor="Hermes-Mac",
             model="model-a",

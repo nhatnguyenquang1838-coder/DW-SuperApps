@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping
@@ -14,6 +15,7 @@ from .certification_models import (
     TestRun,
     _deep_freeze,
     _plain,
+    _redact_sensitive,
 )
 
 
@@ -77,7 +79,7 @@ class CertificationEvent:
             raise CertificationStoreError("record_digest must be a 64-hex digest")
         if not isinstance(self.payload, Mapping):
             raise CertificationStoreError("payload must be a mapping")
-        object.__setattr__(self, "payload", _deep_freeze(dict(self.payload)))
+        object.__setattr__(self, "payload", _deep_freeze(_redact_sensitive(dict(self.payload))))
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -91,12 +93,27 @@ class CertificationEvent:
         }
 
 
+_STORE_LOCK_GUARD = threading.Lock()
+_STORE_LOCKS: dict[str, threading.RLock] = {}
+
+
+def _store_lock(path: Path) -> threading.RLock:
+    key = str(path.expanduser().resolve())
+    with _STORE_LOCK_GUARD:
+        lock = _STORE_LOCKS.get(key)
+        if lock is None:
+            lock = threading.RLock()
+            _STORE_LOCKS[key] = lock
+        return lock
+
+
 class CertificationStore:
     """Durable JSONL event store with a single append-only hash chain."""
 
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
-        self._events = tuple(self._read_events())
+        with _store_lock(self.path):
+            self._events = tuple(self._read_events())
 
     def _read_events(self) -> list[CertificationEvent]:
         if not self.path.exists():
@@ -158,8 +175,9 @@ class CertificationStore:
 
     def replay(self) -> tuple[CertificationEvent, ...]:
         """Return the validated event chain, re-reading the durable file."""
-        self._events = tuple(self._read_events())
-        return self._events
+        with _store_lock(self.path):
+            self._events = tuple(self._read_events())
+            return self._events
 
     def append(
         self,
@@ -168,37 +186,39 @@ class CertificationStore:
         payload: Mapping[str, object],
     ) -> CertificationEvent:
         """Append one event and fsync it before returning the immutable record."""
-        current = self.replay()
-        event_seq = len(current) + 1
-        previous_digest = current[-1].record_digest if current else "GENESIS"
-        digest = _record_digest(
-            schema_version=1,
-            event_seq=event_seq,
-            event_type=event_type,
-            aggregate_id=aggregate_id,
-            payload=payload,
-            previous_digest=previous_digest,
-        )
-        event = CertificationEvent(
-            schema_version=1,
-            event_seq=event_seq,
-            event_type=event_type,
-            aggregate_id=aggregate_id,
-            payload=payload,
-            previous_digest=previous_digest,
-            record_digest=digest,
-        )
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        line = json.dumps(event.to_dict(), sort_keys=True, separators=(",", ":")) + "\n"
-        try:
-            with self.path.open("a", encoding="utf-8") as handle:
-                handle.write(line)
-                handle.flush()
-                os.fsync(handle.fileno())
-        except OSError as exc:
-            raise CertificationStoreError(f"cannot append certification event: {exc}") from exc
-        self._events = (*current, event)
-        return event
+        with _store_lock(self.path):
+            current = tuple(self._read_events())
+            event_seq = len(current) + 1
+            previous_digest = current[-1].record_digest if current else "GENESIS"
+            safe_payload = _redact_sensitive(dict(payload))
+            digest = _record_digest(
+                schema_version=1,
+                event_seq=event_seq,
+                event_type=event_type,
+                aggregate_id=aggregate_id,
+                payload=safe_payload,
+                previous_digest=previous_digest,
+            )
+            event = CertificationEvent(
+                schema_version=1,
+                event_seq=event_seq,
+                event_type=event_type,
+                aggregate_id=aggregate_id,
+                payload=safe_payload,
+                previous_digest=previous_digest,
+                record_digest=digest,
+            )
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            line = json.dumps(event.to_dict(), sort_keys=True, separators=(",", ":")) + "\n"
+            try:
+                with self.path.open("a", encoding="utf-8") as handle:
+                    handle.write(line)
+                    handle.flush()
+                    os.fsync(handle.fileno())
+            except OSError as exc:
+                raise CertificationStoreError(f"cannot append certification event: {exc}") from exc
+            self._events = (*current, event)
+            return event
 
     def load_legacy_runs(self, legacy_path: str | Path) -> tuple[TestRun, ...]:
         """Load old W7 JSONL records as explicitly marked immutable evidence.

@@ -5,7 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import json
 from pathlib import Path
+import threading
 from typing import Any, Callable, Mapping
+from uuid import uuid4
 
 from taskcontroller.domain.runtime_plan import (
     PlanEdge,
@@ -63,6 +65,9 @@ class RuntimeExecutionState:
         )
 
 
+_STATE_STORE_LOCK = threading.RLock()
+
+
 class FileRuntimeExecutionStateStore:
     """Atomic JSON state store keyed by run id."""
 
@@ -75,20 +80,28 @@ class FileRuntimeExecutionStateStore:
         return self.root / f"{run_id}.json"
 
     def load(self, run_id: str) -> RuntimeExecutionState | None:
-        try:
-            return RuntimeExecutionState.from_dict(
-                json.loads(self._path(run_id).read_text(encoding="utf-8"))
-            )
-        except FileNotFoundError:
-            return None
+        with _STATE_STORE_LOCK:
+            try:
+                return RuntimeExecutionState.from_dict(
+                    json.loads(self._path(run_id).read_text(encoding="utf-8"))
+                )
+            except FileNotFoundError:
+                return None
 
     def put(self, state: RuntimeExecutionState) -> RuntimeExecutionState:
-        path = self._path(state.run_id)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(state.to_dict(), sort_keys=True, indent=2) + "\n", encoding="utf-8")
-        tmp.replace(path)
-        return state
+        with _STATE_STORE_LOCK:
+            path = self._path(state.run_id)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = path.with_name(f".{path.name}.{uuid4().hex}.tmp")
+            try:
+                tmp.write_text(
+                    json.dumps(state.to_dict(), sort_keys=True, indent=2) + "\n",
+                    encoding="utf-8",
+                )
+                tmp.replace(path)
+            finally:
+                tmp.unlink(missing_ok=True)
+            return state
 
 
 # Kept as a compatibility seam for callers that inspect the old module flag.
@@ -120,14 +133,19 @@ class ClosedLoopRuntimeExecutor:
         self._evidence: dict[str, dict[str, Any]] = {}
         self._sequence = 0
         self._validate_binding(cursor, self._plan)
+        self._plan_model = self._plan_object()
+        if self._plan_model.runtime_plan_digest != self._plan.get("runtime_plan_digest"):
+            raise ClosedLoopRuntimeError("runtime plan digest mismatch")
         if state_store is not None:
             prior = state_store.load(cursor.run_id)
             if prior is not None:
+                if prior.run_id != cursor.run_id or prior.cursor.run_id != cursor.run_id:
+                    raise ClosedLoopRuntimeError("durable state run_id mismatch")
                 if (prior.runtime_plan_ref != cursor.runtime_plan_ref or
                     prior.runtime_plan_digest != cursor.runtime_plan_digest or
                     prior.plan_revision != cursor.plan_revision):
                     raise ClosedLoopRuntimeError("durable state is bound to a different RuntimePlan")
-                prior.cursor.validate_against(self._plan_object())
+                prior.cursor.validate_against(self._plan_model)
                 self._cursor = prior.cursor
                 self._completed_steps = list(prior.completed_steps)
                 self._evidence = {k: dict(v) for k, v in prior.evidence.items()}
@@ -206,10 +224,28 @@ class ClosedLoopRuntimeExecutor:
         if not self._authority_checker or not required.issubset(self._authority_context):
             return False
         context = dict(self._authority_context)
+        source_bindings = self._plan.get("source_bindings")
+        if not isinstance(source_bindings, Mapping):
+            source_bindings = {}
+        for key in ("task_id", "repository", "base_sha", "head_sha", "scope_hash"):
+            expected = self._plan.get(key) or source_bindings.get(key)
+            if expected and context.get(key) != expected:
+                return False
+        required_actions = {
+            str(requirement.get("action"))
+            for requirement in self._plan.get("authority_requirements", ())
+            if isinstance(requirement, Mapping) and requirement.get("required") is True
+        }
+        if required_actions and action not in required_actions:
+            return False
         context["action"] = action
         decision = self._authority_checker(context)
         if isinstance(decision, Mapping):
-            return decision.get("decision") == "APPROVED" or decision.get("approved") is True
+            if decision.get("decision") == "DENIED":
+                return False
+            if decision.get("decision") == "APPROVED":
+                return decision.get("approved", True) is not False
+            return decision.get("approved") is True
         return decision is True
 
     def _persist(self) -> None:
@@ -324,6 +360,8 @@ class ClosedLoopRuntimeExecutor:
         # Unknown verbs are effectful by default. W5 must not infer that an
         # unfamiliar node action is harmless merely because it is on a plan.
         effectful = bool(action and action not in _READ_ONLY_ACTIONS)
+        if not action and (effect is not None or side_effect is not None):
+            raise ClosedLoopRuntimeError("ACTION_REQUIRED: effect requires an explicitly authorized action")
         if effectful and not self._revalidate_authority(action):
             raise ClosedLoopRuntimeError("AUTHORITY_REQUIRED: exact authority revalidation failed; no effect or cursor advance")
         if effect is not None:

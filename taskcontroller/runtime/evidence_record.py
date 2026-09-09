@@ -51,11 +51,14 @@ class EvidenceRecord:
     def from_dict(cls, payload: Mapping[str, Any]) -> "EvidenceRecord":
         if not isinstance(payload, Mapping):
             raise EvidenceRecordError("evidence record payload must be an object")
+        raw_authority_revalidated = payload.get("authority_revalidated", False)
+        if not isinstance(raw_authority_revalidated, bool):
+            raise EvidenceRecordError("authority_revalidated must be a bool")
         return cls(
             expected_output=payload.get("expected_output"),
             actual_output=payload.get("actual_output"),
             verdict_reason=payload.get("verdict_reason", ""),
-            authority_revalidated=bool(payload.get("authority_revalidated", False)),
+            authority_revalidated=raw_authority_revalidated,
             readback_digest=payload.get("readback_digest", ""),
             plan_digest_at_execution=payload.get("plan_digest_at_execution", ""),
         )

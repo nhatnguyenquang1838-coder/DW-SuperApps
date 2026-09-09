@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import pytest
 
+from taskcontroller.domain.runtime_plan import RuntimePlan
 from taskcontroller.runtime.closed_loop_runtime_executor import (
     ClosedLoopRuntimeExecutor,
     ClosedLoopRuntimeError,
@@ -31,16 +32,35 @@ def _plan(
     revision: str = "sha256:" + "a" * 64,
     steps: dict | None = None,
 ) -> dict:
-    return {
+    raw_steps = steps or {}
+    canonical_steps = {}
+    for step_id, raw_step in raw_steps.items():
+        step = dict(raw_step)
+        allowed = tuple(step.get("allowed_actions", ()))
+        step.setdefault("step_id", step_id)
+        step.setdefault("semantic_action", allowed[0] if allowed else step_id)
+        edges = {}
+        for outcome, raw_edge in (step.get("edges") or {}).items():
+            edge = dict(raw_edge)
+            target = edge.get("target")
+            edge.setdefault("outcome", outcome)
+            edge.setdefault("kind", "terminal" if target == "terminal" else "continue")
+            edge.setdefault("runtime_executable", target != "terminal")
+            edges[outcome] = edge
+        step["edges"] = edges
+        canonical_steps[step_id] = step
+    payload = {
         "runtime_plan_ref": runtime_plan_ref,
         "revision": revision,
-        "runtime_plan_digest": _digest(),
-        "steps": steps or {},
+        "steps": canonical_steps,
     }
+    payload["runtime_plan_digest"] = RuntimePlan.from_dict(payload).runtime_plan_digest
+    return payload
 
 
 def _cursor(
     *,
+    plan: dict | None = None,
     runtime_plan_ref: str = "plan.test/r1",
     plan_revision: str = "sha256:" + "a" * 64,
     current_step_id: str = "inspect",
@@ -48,8 +68,8 @@ def _cursor(
     return RunCursor(
         run_id=f"run-{runtime_plan_ref}",
         runtime_plan_ref=runtime_plan_ref,
-        runtime_plan_digest=_digest(),
-        plan_revision=plan_revision,
+        runtime_plan_digest=plan["runtime_plan_digest"] if plan else _digest(),
+        plan_revision=plan.get("revision", plan_revision) if plan else plan_revision,
         current_step_id=current_step_id,
         attempt=1,
     )
@@ -58,7 +78,7 @@ def _cursor(
 def test_rejects_restart_requiring_transcript_replay():
     """Fresh Controller must resume from durable cursor only, not transcript."""
     plan = _plan(steps={"inspect": {"allowed_actions": ["read"]}})
-    cursor = _cursor(current_step_id="inspect")
+    cursor = _cursor(plan=plan, current_step_id="inspect")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     with pytest.raises(ClosedLoopRuntimeError, match="transcript"):
         executor.execute_step("inspect", {}, transcript=["msg1", "msg2"])
@@ -67,7 +87,7 @@ def test_rejects_restart_requiring_transcript_replay():
 def test_rejects_duplicate_semantic_step_after_restart():
     """Completed step evidence must not be duplicated after restart."""
     plan = _plan(steps={"inspect": {"allowed_actions": ["read"]}})
-    cursor = _cursor(current_step_id="inspect")
+    cursor = _cursor(plan=plan, current_step_id="inspect")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     # Simulate prior execution
     executor._completed_steps.append("inspect")
@@ -82,7 +102,7 @@ def test_rejects_lost_evidence_on_fresh_activation():
         "inspect": {"allowed_actions": ["read"]},
         "validate": {"allowed_actions": ["search"]},
     })
-    cursor = _cursor(current_step_id="validate")
+    cursor = _cursor(plan=plan, current_step_id="validate")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     # Cursor at validate but no evidence for inspect → lost evidence
     executor._completed_steps.append("inspect")
@@ -93,7 +113,7 @@ def test_rejects_lost_evidence_on_fresh_activation():
 def test_rejects_stale_executor_sequence():
     """Stale executor report (lower sequence) must not advance cursor."""
     plan = _plan(steps={"inspect": {"allowed_actions": ["read"]}})
-    cursor = _cursor(current_step_id="inspect")
+    cursor = _cursor(plan=plan, current_step_id="inspect")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     executor._sequence = 5
     with pytest.raises(ClosedLoopRuntimeError, match="stale"):
@@ -106,11 +126,11 @@ def test_same_canonical_inputs_produce_same_next_result():
         "inspect": {"allowed_actions": ["read"], "edges": {"PASS": {"target": "validate"}}},
         "validate": {"allowed_actions": ["search"], "edges": {"PASS": {"target": "terminal"}}},
     })
-    cursor1 = _cursor(current_step_id="inspect")
+    cursor1 = _cursor(plan=plan, current_step_id="inspect")
     executor1 = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor1)
     result1 = executor1.execute_step("inspect", {}, outcome="PASS")
 
-    cursor2 = _cursor(current_step_id="inspect")
+    cursor2 = _cursor(plan=plan, current_step_id="inspect")
     executor2 = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor2)
     result2 = executor2.execute_step("inspect", {}, outcome="PASS")
 
@@ -121,7 +141,7 @@ def test_same_canonical_inputs_produce_same_next_result():
 def test_fresh_controller_resumes_same_run_without_transcript():
     """Fresh Controller resumes a canonical terminal step without transcript replay."""
     plan = _plan(steps={"inspect": {"allowed_actions": ["read"], "terminal": True, "edges": {}}})
-    cursor = _cursor(current_step_id="inspect")
+    cursor = _cursor(plan=plan, current_step_id="inspect")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     result = executor.execute_step("inspect", {})
     assert result["runtime_plan_ref"] == "plan.test/r1"
@@ -134,8 +154,9 @@ def test_exactly_once_semantic_progression():
     """Completed step evidence is not duplicated; cursor advances exactly once."""
     plan = _plan(steps={
         "inspect": {"allowed_actions": ["read"], "edges": {"PASS": {"target": "validate"}}},
+        "validate": {"allowed_actions": ["search"]},
     })
-    cursor = _cursor(current_step_id="inspect")
+    cursor = _cursor(plan=plan, current_step_id="inspect")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     result = executor.execute_step("inspect", {}, outcome="PASS")
     assert result["current_step"] == "validate"
@@ -148,7 +169,7 @@ def test_terminal_step_returns_terminal():
     plan = _plan(steps={
         "inspect": {"allowed_actions": ["read"], "edges": {"PASS": {"target": "terminal"}}},
     })
-    cursor = _cursor(current_step_id="inspect")
+    cursor = _cursor(plan=plan, current_step_id="inspect")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     result = executor.execute_step("inspect", {}, outcome="PASS")
     assert result["current_step"] == "terminal"
@@ -158,7 +179,7 @@ def test_terminal_step_returns_terminal():
 def test_caller_step_id_drift_rejected():
     """Caller-supplied step_id != cursor-bound step_id is rejected."""
     plan = _plan(steps={"inspect": {"allowed_actions": ["read"]}})
-    cursor = _cursor(current_step_id="inspect")
+    cursor = _cursor(plan=plan, current_step_id="inspect")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     with pytest.raises(ClosedLoopRuntimeError, match="step_id"):
         executor.execute_step("OTHER", {})
@@ -167,8 +188,8 @@ def test_caller_step_id_drift_rejected():
 def test_authority_revalidated_false_without_gwc():
     """Without exact GWC authority, effectful execution is rejected fail-closed."""
     from unittest.mock import patch
-    plan = _plan(steps={"inspect": {"allowed_actions": ["write"], "edges": {"PASS": {"target": "validate"}}}})
-    cursor = _cursor(current_step_id="inspect")
+    plan = _plan(steps={"inspect": {"allowed_actions": ["write"], "edges": {"PASS": {"target": "validate"}}}, "validate": {"allowed_actions": ["read"]}})
+    cursor = _cursor(plan=plan, current_step_id="inspect")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     with patch("taskcontroller.runtime.closed_loop_runtime_executor._GWC_VALIDATOR", False):
         with pytest.raises(ClosedLoopRuntimeError, match="AUTHORITY_REQUIRED"):
@@ -186,7 +207,7 @@ def test_arch_p0_h_invalid_outcome_has_zero_effect_and_state_change(tmp_path):
         "validate": {"allowed_actions": ["read"]},
     })
     executor = ClosedLoopRuntimeExecutor(
-        plan, _cursor(current_step_id="inspect"),
+        plan, _cursor(plan=plan, current_step_id="inspect"),
     )
     effects: list[str] = []
     before = executor.state.to_dict()
@@ -212,7 +233,7 @@ def test_arch_p0_h_non_executable_route_has_zero_effect_and_state_change(tmp_pat
         "validate": {"allowed_actions": ["read"]},
     })
     executor = ClosedLoopRuntimeExecutor(
-        plan, _cursor(current_step_id="inspect"),
+        plan, _cursor(plan=plan, current_step_id="inspect"),
     )
     effects: list[str] = []
     before = executor.state.to_dict()
@@ -235,7 +256,7 @@ def test_arch_p0_h_routed_nonterminal_requires_outcome_before_effect():
         },
         "validate": {"allowed_actions": ["read"]},
     })
-    executor = ClosedLoopRuntimeExecutor(plan, _cursor(current_step_id="inspect"))
+    executor = ClosedLoopRuntimeExecutor(plan, _cursor(plan=plan, current_step_id="inspect"))
     effects: list[str] = []
     with pytest.raises(ClosedLoopRuntimeError, match="ROUTE_OUTCOME_REQUIRED"):
         executor.execute_step(
@@ -257,7 +278,7 @@ def test_arch_p0_i_terminal_step_reaches_final_terminal_without_route_selector()
             "edges": {},
         },
     })
-    executor = ClosedLoopRuntimeExecutor(plan, _cursor(current_step_id="finalize"))
+    executor = ClosedLoopRuntimeExecutor(plan, _cursor(plan=plan, current_step_id="finalize"))
     effects: list[str] = []
     result = executor.execute_step(
         "finalize", {}, requested_action="read", sequence=1,
