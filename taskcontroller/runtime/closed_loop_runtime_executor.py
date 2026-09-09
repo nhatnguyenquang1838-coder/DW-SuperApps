@@ -219,7 +219,7 @@ class ClosedLoopRuntimeExecutor:
             evidence_refs = tuple(str(x) for x in instruction.get("evidence_required", evidence_refs))
         return allowed_actions, allowed_inputs, evidence_refs
 
-    def _revalidate_authority(self, action: str) -> bool:
+    def _revalidate_authority(self, action: str, *, semantic_action: str | None = None) -> bool:
         required = {"task_id", "repository", "base_sha", "head_sha", "scope_hash", "expires_at"}
         if not self._authority_checker or not required.issubset(self._authority_context):
             return False
@@ -232,11 +232,11 @@ class ClosedLoopRuntimeExecutor:
             if expected and context.get(key) != expected:
                 return False
         required_actions = {
-            str(requirement.get("action"))
-            for requirement in self._plan.get("authority_requirements", ())
-            if isinstance(requirement, Mapping) and requirement.get("required") is True
+            str(req.action)
+            for req in (self._plan_model.authority_requirements or ())
+            if bool(req.required)
         }
-        if required_actions and action not in required_actions:
+        if required_actions and (semantic_action is None or semantic_action not in required_actions):
             return False
         context["action"] = action
         decision = self._authority_checker(context)
@@ -357,12 +357,13 @@ class ClosedLoopRuntimeExecutor:
                         "ROUTE_NOT_EXECUTABLE: declared non-executable route is provenance-only"
                     )
 
-        # Unknown verbs are effectful by default. W5 must not infer that an
-        # unfamiliar node action is harmless merely because it is on a plan.
+        semantic_action = step_raw.get("semantic_action") or step_id
+        if not isinstance(semantic_action, str) or not semantic_action.strip():
+            raise ClosedLoopRuntimeError("SEMANTIC_ACTION_REQUIRED: step binding is incomplete")
         effectful = bool(action and action not in _READ_ONLY_ACTIONS)
         if not action and (effect is not None or side_effect is not None):
             raise ClosedLoopRuntimeError("ACTION_REQUIRED: effect requires an explicitly authorized action")
-        if effectful and not self._revalidate_authority(action):
+        if effectful and not self._revalidate_authority(action, semantic_action=semantic_action):
             raise ClosedLoopRuntimeError("AUTHORITY_REQUIRED: exact authority revalidation failed; no effect or cursor advance")
         if effect is not None:
             effect(payload)
