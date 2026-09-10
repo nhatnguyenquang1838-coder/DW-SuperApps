@@ -1,0 +1,231 @@
+{
+  "captured_at": "2026-09-10T23:24:44+07:00",
+  "captured_from_commit": "eb6d611b2fe16c3fd2b0453695667a6b5fb2d3da",
+  "cases": {
+    "duplicate_delivery": {
+      "first": {
+        "artifact_refs": [],
+        "inputs": [
+          {
+            "input_id": "source",
+            "media_type": "text/x-python",
+            "source_ref": "github://nhatnguyenquang1838-coder/DW-SuperApps@eb6d611b/taskcontroller/interaction"
+          }
+        ],
+        "kind": "REPORT",
+        "node_id": "node.mailbox",
+        "protocol": "dw.taskcontroller.a2a/v1",
+        "recipient": "controller",
+        "run_id": "TC-MBX-WP0-20260910",
+        "sender": "hermes-cloud",
+        "seq": 2,
+        "state": {
+          "human_summary": "The bounded baseline task is in progress.",
+          "status": "RUNNING"
+        },
+        "updated_at": "2026-09-10T23:25:44+07:00"
+      },
+      "retry": {
+        "artifact_refs": [],
+        "inputs": [
+          {
+            "input_id": "source",
+            "media_type": "text/x-python",
+            "source_ref": "github://nhatnguyenquang1838-coder/DW-SuperApps@eb6d611b/taskcontroller/interaction"
+          }
+        ],
+        "kind": "REPORT",
+        "node_id": "node.mailbox",
+        "protocol": "dw.taskcontroller.a2a/v1",
+        "recipient": "controller",
+        "run_id": "TC-MBX-WP0-20260910",
+        "sender": "hermes-cloud",
+        "seq": 2,
+        "state": {
+          "human_summary": "The bounded baseline task is in progress.",
+          "status": "RUNNING"
+        },
+        "updated_at": "2026-09-10T23:25:44+07:00"
+      }
+    },
+    "executor_progress": {
+      "envelope": {
+        "artifact_refs": [],
+        "inputs": [
+          {
+            "input_id": "source",
+            "media_type": "text/x-python",
+            "source_ref": "github://nhatnguyenquang1838-coder/DW-SuperApps@eb6d611b/taskcontroller/interaction"
+          }
+        ],
+        "kind": "REPORT",
+        "node_id": "node.mailbox",
+        "protocol": "dw.taskcontroller.a2a/v1",
+        "recipient": "controller",
+        "run_id": "TC-MBX-WP0-20260910",
+        "sender": "hermes-cloud",
+        "seq": 2,
+        "state": {
+          "human_summary": "The bounded baseline task is in progress.",
+          "status": "RUNNING"
+        },
+        "updated_at": "2026-09-10T23:25:44+07:00"
+      },
+      "mailbox_body": "<!-- taskcontroller:mailbox:hermes-cloud -->\nTaskController mailbox · hermes-cloud\nLatest seq: 2\nKind: REPORT\nUpdated: 2026-09-10T23:25:44+07:00\n\n```json\n{\"artifact_refs\":[],\"inputs\":[{\"input_id\":\"source\",\"media_type\":\"text/x-python\",\"source_ref\":\"github://nhatnguyenquang1838-coder/DW-SuperApps@eb6d611b/taskcontroller/interaction\"}],\"kind\":\"REPORT\",\"node_id\":\"node.mailbox\",\"protocol\":\"dw.taskcontroller.a2a/v1\",\"recipient\":\"controller\",\"run_id\":\"TC-MBX-WP0-20260910\",\"sender\":\"hermes-cloud\",\"seq\":2,\"state\":{\"human_summary\":\"The bounded baseline task is in progress.\",\"status\":\"RUNNING\"},\"updated_at\":\"2026-09-10T23:25:44+07:00\"}\n```\n"
+    },
+    "missing_identity": {
+      "artifact_refs": [],
+      "inputs": [
+        {
+          "input_id": "source",
+          "media_type": "text/x-python",
+          "source_ref": "github://nhatnguyenquang1838-coder/DW-SuperApps@eb6d611b/taskcontroller/interaction"
+        }
+      ],
+      "kind": "COMMAND",
+      "protocol": "dw.taskcontroller.a2a/v1",
+      "recipient": "hermes-cloud",
+      "request": "Execute one bounded TaskController v2 baseline task.",
+      "run_id": "TC-MBX-WP0-20260910",
+      "sender": "controller",
+      "seq": 1,
+      "state": {
+        "human_summary": "A bounded mailbox baseline task was dispatched.",
+        "status": "DISPATCHED"
+      },
+      "updated_at": "2026-09-10T23:24:44+07:00"
+    },
+    "stale_sequence": {
+      "candidate": {
+        "artifact_refs": [],
+        "inputs": [
+          {
+            "input_id": "source",
+            "media_type": "text/x-python",
+            "source_ref": "github://nhatnguyenquang1838-coder/DW-SuperApps@eb6d611b/taskcontroller/interaction"
+          }
+        ],
+        "kind": "REPORT",
+        "node_id": "node.mailbox",
+        "protocol": "dw.taskcontroller.a2a/v1",
+        "recipient": "controller",
+        "run_id": "TC-MBX-WP0-20260910",
+        "sender": "hermes-cloud",
+        "seq": 1,
+        "state": {
+          "status": "RUNNING"
+        },
+        "updated_at": "2026-09-10T23:25:00+07:00"
+      },
+      "cursor": {
+        "actor": "hermes-cloud",
+        "last_seen_seq": 2,
+        "mailbox_ref": "comment:wp0"
+      }
+    },
+    "terminal_result": {
+      "envelope": {
+        "artifact_refs": [
+          "github://nhatnguyenquang1838-coder/DW-SuperApps@eb6d611b/docs/superpowers/specs/wp0-baseline.md"
+        ],
+        "inputs": [
+          {
+            "input_id": "source",
+            "media_type": "text/x-python",
+            "source_ref": "github://nhatnguyenquang1838-coder/DW-SuperApps@eb6d611b/taskcontroller/interaction"
+          }
+        ],
+        "kind": "TERMINAL",
+        "node_id": "node.mailbox",
+        "protocol": "dw.taskcontroller.a2a/v1",
+        "recipient": "controller",
+        "run_id": "TC-MBX-WP0-20260910",
+        "sender": "hermes-cloud",
+        "seq": 3,
+        "state": {
+          "human_summary": "The bounded baseline task completed with evidence.",
+          "status": "SUCCESS"
+        },
+        "updated_at": "2026-09-10T23:26:44+07:00"
+      },
+      "mailbox_body": "<!-- taskcontroller:mailbox:hermes-cloud -->\nTaskController mailbox · hermes-cloud\nLatest seq: 3\nKind: TERMINAL\nUpdated: 2026-09-10T23:26:44+07:00\n\n```json\n{\"artifact_refs\":[\"github://nhatnguyenquang1838-coder/DW-SuperApps@eb6d611b/docs/superpowers/specs/wp0-baseline.md\"],\"inputs\":[{\"input_id\":\"source\",\"media_type\":\"text/x-python\",\"source_ref\":\"github://nhatnguyenquang1838-coder/DW-SuperApps@eb6d611b/taskcontroller/interaction\"}],\"kind\":\"TERMINAL\",\"node_id\":\"node.mailbox\",\"protocol\":\"dw.taskcontroller.a2a/v1\",\"recipient\":\"controller\",\"run_id\":\"TC-MBX-WP0-20260910\",\"sender\":\"hermes-cloud\",\"seq\":3,\"state\":{\"human_summary\":\"The bounded baseline task completed with evidence.\",\"status\":\"SUCCESS\"},\"updated_at\":\"2026-09-10T23:26:44+07:00\"}\n```\n"
+    },
+    "unsupported_kind": {
+      "artifact_refs": [],
+      "inputs": [
+        {
+          "input_id": "source",
+          "media_type": "text/x-python",
+          "source_ref": "github://nhatnguyenquang1838-coder/DW-SuperApps@eb6d611b/taskcontroller/interaction"
+        }
+      ],
+      "kind": "CHATTER",
+      "node_id": "node.mailbox",
+      "protocol": "dw.taskcontroller.a2a/v1",
+      "recipient": "hermes-cloud",
+      "request": "Execute one bounded TaskController v2 baseline task.",
+      "run_id": "TC-MBX-WP0-20260910",
+      "sender": "controller",
+      "seq": 1,
+      "state": {
+        "human_summary": "A bounded mailbox baseline task was dispatched.",
+        "status": "DISPATCHED"
+      },
+      "updated_at": "2026-09-10T23:24:44+07:00"
+    },
+    "unsupported_protocol": {
+      "artifact_refs": [],
+      "inputs": [
+        {
+          "input_id": "source",
+          "media_type": "text/x-python",
+          "source_ref": "github://nhatnguyenquang1838-coder/DW-SuperApps@eb6d611b/taskcontroller/interaction"
+        }
+      ],
+      "kind": "COMMAND",
+      "node_id": "node.mailbox",
+      "protocol": "dw.taskcontroller.a2a/v2",
+      "recipient": "hermes-cloud",
+      "request": "Execute one bounded TaskController v2 baseline task.",
+      "run_id": "TC-MBX-WP0-20260910",
+      "sender": "controller",
+      "seq": 1,
+      "state": {
+        "human_summary": "A bounded mailbox baseline task was dispatched.",
+        "status": "DISPATCHED"
+      },
+      "updated_at": "2026-09-10T23:24:44+07:00"
+    },
+    "valid_request": {
+      "envelope": {
+        "artifact_refs": [],
+        "inputs": [
+          {
+            "input_id": "source",
+            "media_type": "text/x-python",
+            "source_ref": "github://nhatnguyenquang1838-coder/DW-SuperApps@eb6d611b/taskcontroller/interaction"
+          }
+        ],
+        "kind": "COMMAND",
+        "node_id": "node.mailbox",
+        "protocol": "dw.taskcontroller.a2a/v1",
+        "recipient": "hermes-cloud",
+        "request": "Execute one bounded TaskController v2 baseline task.",
+        "run_id": "TC-MBX-WP0-20260910",
+        "sender": "controller",
+        "seq": 1,
+        "state": {
+          "human_summary": "A bounded mailbox baseline task was dispatched.",
+          "status": "DISPATCHED"
+        },
+        "updated_at": "2026-09-10T23:24:44+07:00"
+      },
+      "mailbox_body": "<!-- taskcontroller:mailbox:controller -->\nTaskController mailbox · controller\nLatest seq: 1\nKind: COMMAND\nUpdated: 2026-09-10T23:24:44+07:00\n\n```json\n{\"artifact_refs\":[],\"inputs\":[{\"input_id\":\"source\",\"media_type\":\"text/x-python\",\"source_ref\":\"github://nhatnguyenquang1838-coder/DW-SuperApps@eb6d611b/taskcontroller/interaction\"}],\"kind\":\"COMMAND\",\"node_id\":\"node.mailbox\",\"protocol\":\"dw.taskcontroller.a2a/v1\",\"recipient\":\"hermes-cloud\",\"request\":\"Execute one bounded TaskController v2 baseline task.\",\"run_id\":\"TC-MBX-WP0-20260910\",\"sender\":\"controller\",\"seq\":1,\"state\":{\"human_summary\":\"A bounded mailbox baseline task was dispatched.\",\"status\":\"DISPATCHED\"},\"updated_at\":\"2026-09-10T23:24:44+07:00\"}\n```\n"
+    }
+  },
+  "fixture_kind": "dw.taskcontroller.a2a/v1-regression",
+  "source_modules": [
+    "taskcontroller/interaction/envelope.py",
+    "taskcontroller/interaction/github_mailbox.py"
+  ]
+}
