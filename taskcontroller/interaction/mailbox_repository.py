@@ -68,6 +68,199 @@ class MailboxEvent:
         return value
 
 
+CURSOR_PROTOCOL = "dw.taskcontroller.mailbox-cursor/v1"
+
+
+@dataclass(frozen=True)
+class MailboxActorCursor:
+    """Serializable durable cursor for one mailbox actor/run/node binding."""
+
+    mailbox_ref: str
+    run_id: str
+    node_id: str
+    actor_namespace: str
+    last_logical_seq: int = -1
+    last_event_seq: int = -1
+    last_event_id: Optional[str] = None
+    last_event_digest: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        for name in ("mailbox_ref", "run_id", "node_id", "actor_namespace"):
+            value = getattr(self, name)
+            if not isinstance(value, str) or not value:
+                raise MailboxV2ValidationError(
+                    MailboxV2ErrorCode.SCHEMA_INVALID,
+                    f"cursor {name} must be a non-empty string",
+                )
+        for name in ("last_logical_seq", "last_event_seq"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, int) or value < -1:
+                raise MailboxV2ValidationError(
+                    MailboxV2ErrorCode.INVALID_SEQUENCE,
+                    f"cursor {name} must be an integer greater than or equal to -1",
+                )
+        if (self.last_event_id is None) != (self.last_event_digest is None):
+            raise MailboxV2ValidationError(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                "cursor event ID and digest must be supplied together",
+            )
+        if self.last_event_seq == -1 and (
+            self.last_logical_seq != -1 or self.last_event_id is not None
+        ):
+            raise MailboxV2ValidationError(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                "an initial cursor cannot contain an acknowledged event",
+            )
+        if self.last_event_seq >= 0 and (
+            self.last_logical_seq < 0
+            or self.last_event_id is None
+            or self.last_event_digest is None
+        ):
+            raise MailboxV2ValidationError(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                "an acknowledged cursor requires event identity and logical sequence",
+            )
+        for name in ("last_event_id", "last_event_digest"):
+            value = getattr(self, name)
+            if value is not None and (not isinstance(value, str) or not value):
+                raise MailboxV2ValidationError(
+                    MailboxV2ErrorCode.SCHEMA_INVALID,
+                    f"cursor {name} must be non-empty when supplied",
+                )
+
+    @classmethod
+    def initial(
+        cls,
+        mailbox_ref: str,
+        *,
+        run_id: str,
+        node_id: str,
+        actor_namespace: str,
+    ) -> "MailboxActorCursor":
+        """Create the deterministic cursor before an actor consumes any event."""
+
+        return cls(
+            mailbox_ref=mailbox_ref,
+            run_id=run_id,
+            node_id=node_id,
+            actor_namespace=actor_namespace,
+        )
+
+    def _validate_event_binding(self, event: "MailboxEvent") -> None:
+        if not isinstance(event, MailboxEvent):
+            raise MailboxV2ValidationError(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                "cursor observation requires a MailboxEvent",
+            )
+        if event.mailbox_ref != self.mailbox_ref:
+            raise MailboxV2ValidationError(
+                MailboxV2ErrorCode.CONTRACT_MISMATCH,
+                "event mailbox does not match cursor mailbox",
+            )
+        if (
+            event.envelope.run_id != self.run_id
+            or event.envelope.node_id != self.node_id
+            or event.producer_namespace != self.actor_namespace
+        ):
+            raise MailboxV2ValidationError(
+                MailboxV2ErrorCode.CONTRACT_MISMATCH,
+                "event identity does not match cursor actor binding",
+            )
+
+    def observe(self, event: "MailboxEvent") -> "MailboxActorCursor":
+        """Advance only over a newer event, treating the exact event as a no-op."""
+
+        self._validate_event_binding(event)
+        exact_duplicate = (
+            event.event_seq == self.last_event_seq
+            and event.logical_seq == self.last_logical_seq
+            and event.event_id == self.last_event_id
+            and event.event_digest == self.last_event_digest
+        )
+        if exact_duplicate:
+            return self
+        if event.event_seq <= self.last_event_seq or event.logical_seq <= self.last_logical_seq:
+            if event.event_seq == self.last_event_seq or event.logical_seq == self.last_logical_seq:
+                raise MailboxV2ValidationError(
+                    MailboxV2ErrorCode.DIGEST_MISMATCH,
+                    "cursor position is bound to a different event",
+                )
+            raise MailboxV2ValidationError(
+                MailboxV2ErrorCode.INVALID_SEQUENCE,
+                "event is not newer than the durable actor cursor",
+            )
+        return replace(
+            self,
+            last_logical_seq=event.logical_seq,
+            last_event_seq=event.event_seq,
+            last_event_id=event.event_id,
+            last_event_digest=event.event_digest,
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Return a deterministic, restart-safe cursor representation."""
+
+        return {
+            "protocol": CURSOR_PROTOCOL,
+            "mailbox_ref": self.mailbox_ref,
+            "run_id": self.run_id,
+            "node_id": self.node_id,
+            "actor_namespace": self.actor_namespace,
+            "last_logical_seq": self.last_logical_seq,
+            "last_event_seq": self.last_event_seq,
+            "last_event_id": self.last_event_id,
+            "last_event_digest": self.last_event_digest,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: Mapping[str, Any]) -> "MailboxActorCursor":
+        """Reconstruct a cursor without accepting unknown or inferred fields."""
+
+        if not isinstance(payload, Mapping):
+            raise MailboxV2ValidationError(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                "cursor payload must be an object",
+            )
+        if payload.get("protocol") != CURSOR_PROTOCOL:
+            raise MailboxV2ValidationError(
+                MailboxV2ErrorCode.UNSUPPORTED_PROTOCOL,
+                f"expected {CURSOR_PROTOCOL}",
+            )
+        allowed = {
+            "protocol",
+            "mailbox_ref",
+            "run_id",
+            "node_id",
+            "actor_namespace",
+            "last_logical_seq",
+            "last_event_seq",
+            "last_event_id",
+            "last_event_digest",
+        }
+        unexpected = set(payload) - allowed
+        if unexpected:
+            raise MailboxV2ValidationError(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                "cursor contains unknown fields: " + ", ".join(sorted(unexpected)),
+            )
+        try:
+            return cls(
+                mailbox_ref=payload["mailbox_ref"],
+                run_id=payload["run_id"],
+                node_id=payload["node_id"],
+                actor_namespace=payload["actor_namespace"],
+                last_logical_seq=payload.get("last_logical_seq", -1),
+                last_event_seq=payload.get("last_event_seq", -1),
+                last_event_id=payload.get("last_event_id"),
+                last_event_digest=payload.get("last_event_digest"),
+            )
+        except KeyError as exc:
+            raise MailboxV2ValidationError(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                "cursor payload is missing a required field",
+            ) from exc
+
+
 @dataclass(frozen=True)
 class WriteReceipt:
     """Exact identity returned for a newly appended or idempotent write."""
@@ -153,6 +346,21 @@ class MailboxRepository(Protocol):
     def scan_after(self, mailbox_ref: str, cursor: int) -> Tuple[MailboxEvent, ...]:
         ...
 
+    def read_cursor(
+        self,
+        mailbox_ref: str,
+        run_id: str,
+        node_id: str,
+        actor_namespace: str,
+    ) -> MailboxActorCursor:
+        ...
+
+    def scan_after_cursor(self, cursor: MailboxActorCursor) -> Tuple[MailboxEvent, ...]:
+        ...
+
+    def acknowledge_cursor(self, cursor: MailboxActorCursor) -> MailboxActorCursor:
+        ...
+
 
 class InMemoryMailboxRepository:
     """Thread-safe reference repository for append-only mailbox/v2 tests."""
@@ -162,6 +370,7 @@ class InMemoryMailboxRepository:
         self._mailboxes: Dict[str, List[MailboxEvent]] = {}
         self._idempotency: Dict[Tuple[str, str], WriteReceipt] = {}
         self._quarantine: Dict[str, List[QuarantineReceipt]] = {}
+        self._actor_cursors: Dict[Tuple[str, str, str, str], MailboxActorCursor] = {}
 
     def capabilities(self) -> Dict[str, Any]:
         return {
@@ -170,7 +379,15 @@ class InMemoryMailboxRepository:
             "append_only": True,
             "supports_v1": False,
             "supports_v2": True,
-            "operations": ["read", "write", "exact_readback", "scan_after"],
+            "operations": [
+                "read",
+                "write",
+                "exact_readback",
+                "scan_after",
+                "read_cursor",
+                "scan_after_cursor",
+                "acknowledge_cursor",
+            ],
         }
 
     @staticmethod
@@ -347,6 +564,130 @@ class InMemoryMailboxRepository:
         with self._lock:
             return tuple(event for event in self._mailboxes.get(mailbox_ref, ()) if event.event_seq > cursor)
 
+    @staticmethod
+    def _cursor_key(cursor: MailboxActorCursor) -> Tuple[str, str, str, str]:
+        return (
+            cursor.mailbox_ref,
+            cursor.run_id,
+            cursor.node_id,
+            cursor.actor_namespace,
+        )
+
+    def read_cursor(
+        self,
+        mailbox_ref: str,
+        run_id: str,
+        node_id: str,
+        actor_namespace: str,
+    ) -> MailboxActorCursor:
+        """Read the durable cursor for one actor without advancing it."""
+
+        self._validate_ref(mailbox_ref)
+        initial = MailboxActorCursor.initial(
+            mailbox_ref,
+            run_id=run_id,
+            node_id=node_id,
+            actor_namespace=actor_namespace,
+        )
+        with self._lock:
+            return self._actor_cursors.get(self._cursor_key(initial), initial)
+
+    def scan_after_cursor(self, cursor: MailboxActorCursor) -> Tuple[MailboxEvent, ...]:
+        """Return only bound-actor events newer than the durable cursor."""
+
+        if not isinstance(cursor, MailboxActorCursor):
+            raise MailboxV2ValidationError(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                "scan_after_cursor requires a MailboxActorCursor",
+            )
+        key = self._cursor_key(cursor)
+        with self._lock:
+            durable = self._actor_cursors.get(key)
+            if durable is not None:
+                if (
+                    cursor.last_event_seq < durable.last_event_seq
+                    or cursor.last_logical_seq < durable.last_logical_seq
+                ):
+                    raise MailboxV2ValidationError(
+                        MailboxV2ErrorCode.INVALID_SEQUENCE,
+                        "scan cursor is behind the durable actor cursor",
+                    )
+                if cursor.last_event_seq == durable.last_event_seq and cursor != durable:
+                    raise MailboxV2ValidationError(
+                        MailboxV2ErrorCode.DIGEST_MISMATCH,
+                        "scan cursor conflicts with the durable actor cursor",
+                    )
+            return tuple(
+                event
+                for event in self._mailboxes.get(cursor.mailbox_ref, ())
+                if event.producer_namespace == cursor.actor_namespace
+                and event.envelope.run_id == cursor.run_id
+                and event.envelope.node_id == cursor.node_id
+                and event.event_seq > cursor.last_event_seq
+                and event.logical_seq > cursor.last_logical_seq
+            )
+
+    def acknowledge_cursor(self, cursor: MailboxActorCursor) -> MailboxActorCursor:
+        """Persist a verified cursor monotonically and idempotently."""
+
+        if not isinstance(cursor, MailboxActorCursor):
+            raise MailboxV2ValidationError(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                "acknowledge_cursor requires a MailboxActorCursor",
+            )
+        key = self._cursor_key(cursor)
+        initial = MailboxActorCursor.initial(
+            cursor.mailbox_ref,
+            run_id=cursor.run_id,
+            node_id=cursor.node_id,
+            actor_namespace=cursor.actor_namespace,
+        )
+        with self._lock:
+            current = self._actor_cursors.get(key, initial)
+            if cursor == current:
+                return current
+            if (
+                cursor.last_event_seq < current.last_event_seq
+                or cursor.last_logical_seq < current.last_logical_seq
+            ):
+                raise MailboxV2ValidationError(
+                    MailboxV2ErrorCode.INVALID_SEQUENCE,
+                    "acknowledged cursor cannot move backwards",
+                )
+            if (
+                cursor.last_event_seq == current.last_event_seq
+                or cursor.last_logical_seq == current.last_logical_seq
+            ):
+                raise MailboxV2ValidationError(
+                    MailboxV2ErrorCode.DIGEST_MISMATCH,
+                    "acknowledged cursor position conflicts with the durable cursor",
+                )
+            event = next(
+                (
+                    candidate
+                    for candidate in self._mailboxes.get(cursor.mailbox_ref, ())
+                    if candidate.event_id == cursor.last_event_id
+                ),
+                None,
+            )
+            if event is None:
+                raise MailboxV2ValidationError(
+                    MailboxV2ErrorCode.DIGEST_MISMATCH,
+                    "acknowledged cursor event is not present in the mailbox",
+                )
+            cursor._validate_event_binding(event)
+            if (
+                event.event_seq != cursor.last_event_seq
+                or event.logical_seq != cursor.last_logical_seq
+                or event.event_digest != cursor.last_event_digest
+            ):
+                raise MailboxV2ValidationError(
+                    MailboxV2ErrorCode.DIGEST_MISMATCH,
+                    "acknowledged cursor does not match the mailbox event",
+                )
+            self._actor_cursors[key] = cursor
+            return cursor
+
     def _record_quarantine(
         self,
         mailbox_ref: str,
@@ -388,7 +729,9 @@ class InMemoryMailboxRepository:
 
 
 __all__ = [
+    "CURSOR_PROTOCOL",
     "InMemoryMailboxRepository",
+    "MailboxActorCursor",
     "MailboxEvent",
     "MailboxRepository",
     "MailboxSnapshot",

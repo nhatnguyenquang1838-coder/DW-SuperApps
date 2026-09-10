@@ -76,7 +76,15 @@ def test_repository_protocol_and_empty_snapshot_are_deterministic() -> None:
     assert capabilities["protocol"] == "dw.taskcontroller.mailbox/v2"
     assert capabilities["append_only"] is True
     assert capabilities["supports_v1"] is False
-    assert capabilities["operations"] == ["read", "write", "exact_readback", "scan_after"]
+    assert capabilities["operations"] == [
+        "read",
+        "write",
+        "exact_readback",
+        "scan_after",
+        "read_cursor",
+        "scan_after_cursor",
+        "acknowledge_cursor",
+    ]
     first = repo.read("mailbox-empty")
     second = repo.read("mailbox-empty")
     assert first == second
@@ -257,3 +265,101 @@ def test_invalid_raw_payload_is_quarantined_without_event_or_execution() -> None
     assert quarantine.mailbox_ref == "mailbox-quarantine"
     assert repo.read("mailbox-quarantine").events == ()
     assert repo.quarantined("mailbox-quarantine") == (quarantine,)
+
+
+def test_per_actor_cursor_filters_events_and_survives_restart_after_terminal_ack() -> None:
+    from taskcontroller.interaction import mailbox_repository as repository_module
+
+    assert hasattr(repository_module, "MailboxActorCursor"), "missing durable actor cursor"
+    MailboxActorCursor = repository_module.MailboxActorCursor
+    from taskcontroller.interaction.mailbox_v2 import V2MailboxEnvelope, canonical_digest
+    from taskcontroller.runtime.mailbox import TaskControllerMailbox
+
+    def terminal_envelope() -> Any:
+        payload = copy.deepcopy(json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))["cases"]["terminal_result"])
+        payload["message_id"] = "message-terminal-cursor"
+        payload["idempotency_key"] = "idem-terminal-cursor"
+        payload["producer"] = {
+            "namespace": "executor",
+            "actor_id": "executor-actor",
+            "role": "executor",
+        }
+        payload["attempt"]["attempt_id"] = "attempt-executor-cursor"
+        payload["execution_identity"]["attempt_id"] = "attempt-executor-cursor"
+        payload["digest"] = canonical_digest(payload)
+        return V2MailboxEnvelope.from_dict(payload)
+
+    repo = repository_module.InMemoryMailboxRepository()
+    repo.write(
+        "mailbox-cursor",
+        -1,
+        _envelope(producer="controller", seq=0, idempotency_key="idem-controller-cursor-0"),
+    )
+    repo.write("mailbox-cursor", 0, terminal_envelope())
+    repo.write(
+        "mailbox-cursor",
+        1,
+        _envelope(
+            producer="controller",
+            seq=1,
+            message_id="message-controller-cursor-1",
+            idempotency_key="idem-controller-cursor-1",
+        ),
+    )
+
+    executor_cursor = MailboxActorCursor.initial(
+        "mailbox-cursor", run_id="run-1", node_id="node-1", actor_namespace="executor"
+    )
+    unseen_executor_events = repo.scan_after_cursor(executor_cursor)
+    assert [event.event_seq for event in unseen_executor_events] == [1]
+    advanced = executor_cursor.observe(unseen_executor_events[0])
+    acknowledged = repo.acknowledge_cursor(advanced)
+    assert repo.acknowledge_cursor(advanced) == acknowledged
+
+    durable_payload = json.loads(json.dumps(acknowledged.to_dict(), sort_keys=True))
+    restarted_cursor = MailboxActorCursor.from_dict(durable_payload)
+    assert repo.read_cursor(
+        "mailbox-cursor", "run-1", "node-1", "executor"
+    ) == acknowledged
+    assert repo.scan_after_cursor(restarted_cursor) == ()
+    _assert_code(lambda: repo.scan_after_cursor(executor_cursor), "INVALID_SEQUENCE")
+
+    controller_cursor = MailboxActorCursor.initial(
+        "mailbox-cursor", run_id="run-1", node_id="node-1", actor_namespace="controller"
+    )
+    assert [event.event_seq for event in repo.scan_after_cursor(controller_cursor)] == [0, 2]
+
+    mailbox = TaskControllerMailbox(repo)
+    assert mailbox.read_cursor("mailbox-cursor", "run-1", "node-1", "executor") == acknowledged
+    assert mailbox.scan_after_cursor(restarted_cursor) == ()
+    assert mailbox.acknowledge_cursor(acknowledged) == acknowledged
+
+
+def test_actor_cursor_rejects_wrong_actor_and_stale_ack() -> None:
+    from taskcontroller.interaction import mailbox_repository as repository_module
+
+    assert hasattr(repository_module, "MailboxActorCursor"), "missing durable actor cursor"
+    MailboxActorCursor = repository_module.MailboxActorCursor
+    repo = repository_module.InMemoryMailboxRepository()
+    controller_envelope = _envelope(idempotency_key="idem-cursor-negative")
+    repo.write("mailbox-cursor-negative", -1, controller_envelope)
+    repo.write(
+        "mailbox-cursor-negative",
+        0,
+        _envelope(
+            producer="executor",
+            idempotency_key="idem-cursor-negative-executor",
+            message_id="message-cursor-negative-executor",
+        ),
+    )
+    cursor = MailboxActorCursor.initial(
+        "mailbox-cursor-negative", run_id="run-1", node_id="node-1", actor_namespace="executor"
+    )
+    events = repo.read("mailbox-cursor-negative").events
+    _assert_code(lambda: cursor.observe(events[0]), "CONTRACT_MISMATCH")
+    acknowledged = repo.acknowledge_cursor(cursor.observe(events[1]))
+    assert repo.acknowledge_cursor(acknowledged) == acknowledged
+    _assert_code(
+        lambda: repo.acknowledge_cursor(cursor),
+        "INVALID_SEQUENCE",
+    )

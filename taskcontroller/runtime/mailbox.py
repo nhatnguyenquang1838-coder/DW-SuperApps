@@ -12,6 +12,7 @@ from typing import Any, Mapping, Tuple
 from taskcontroller.errors import TaskControllerValidationError
 from taskcontroller.interaction.mailbox_repository import (
     EnvelopeInput,
+    MailboxActorCursor,
     MailboxEvent,
     MailboxRepository,
     MailboxSnapshot,
@@ -76,6 +77,27 @@ class TaskControllerMailbox:
         """Return repository events strictly newer than ``cursor``."""
 
         return self._repository.scan_after(mailbox_ref, cursor)
+
+    def read_cursor(
+        self,
+        mailbox_ref: str,
+        run_id: str,
+        node_id: str,
+        actor_namespace: str,
+    ) -> MailboxActorCursor:
+        """Read the durable per-actor cursor used by Controller or Executor."""
+
+        return self._repository.read_cursor(mailbox_ref, run_id, node_id, actor_namespace)
+
+    def scan_after_cursor(self, cursor: MailboxActorCursor) -> Tuple[MailboxEvent, ...]:
+        """Return only events newer than a bound durable actor cursor."""
+
+        return self._repository.scan_after_cursor(cursor)
+
+    def acknowledge_cursor(self, cursor: MailboxActorCursor) -> MailboxActorCursor:
+        """Persist a verified actor cursor after semantic consumption."""
+
+        return self._repository.acknowledge_cursor(cursor)
 
 
 __all__ = ["TaskControllerMailbox"]
