@@ -233,6 +233,22 @@ def test_exact_readback_rejects_receipt_digest_mismatch() -> None:
     _assert_code(lambda: repo.exact_readback(corrupted), "DIGEST_MISMATCH")
 
 
+def test_write_rejects_stale_current_identity_before_append() -> None:
+    InMemoryMailboxRepository, _, _, _, _ = _api()
+    repo = InMemoryMailboxRepository()
+    envelope = _envelope()
+    _assert_code(
+        lambda: repo.write(
+            "mailbox-identity",
+            -1,
+            envelope,
+            expected_identity={"lease_generation": 2},
+        ),
+        "STALE_GENERATION",
+    )
+    assert repo.read("mailbox-identity").events == ()
+
+
 def test_invalid_raw_payload_is_quarantined_without_event_or_execution() -> None:
     InMemoryMailboxRepository, _, _, _, _ = _api()
     repo = InMemoryMailboxRepository()

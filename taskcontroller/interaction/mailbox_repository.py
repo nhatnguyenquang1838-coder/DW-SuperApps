@@ -137,7 +137,14 @@ class MailboxRepository(Protocol):
     def read(self, mailbox_ref: str) -> MailboxSnapshot:
         ...
 
-    def write(self, mailbox_ref: str, expected_seq: int, envelope: EnvelopeInput) -> WriteReceipt:
+    def write(
+        self,
+        mailbox_ref: str,
+        expected_seq: int,
+        envelope: EnvelopeInput,
+        *,
+        expected_identity: Optional[Mapping[str, Any]] = None,
+    ) -> WriteReceipt:
         ...
 
     def exact_readback(self, receipt: WriteReceipt) -> MailboxSnapshot:
@@ -233,7 +240,14 @@ class InMemoryMailboxRepository:
         with self._lock:
             return self._build_snapshot(mailbox_ref)
 
-    def write(self, mailbox_ref: str, expected_seq: int, envelope: EnvelopeInput) -> WriteReceipt:
+    def write(
+        self,
+        mailbox_ref: str,
+        expected_seq: int,
+        envelope: EnvelopeInput,
+        *,
+        expected_identity: Optional[Mapping[str, Any]] = None,
+    ) -> WriteReceipt:
         self._validate_ref(mailbox_ref)
         self._validate_expected_seq(expected_seq)
         try:
@@ -242,6 +256,8 @@ class InMemoryMailboxRepository:
             if isinstance(envelope, Mapping):
                 self._record_quarantine(mailbox_ref, envelope, exc)
             raise
+        if expected_identity is not None:
+            validated.validate_current_identity(expected_identity)
         with self._lock:
             key = (mailbox_ref, validated.idempotency_key)
             existing_receipt = self._idempotency.get(key)
