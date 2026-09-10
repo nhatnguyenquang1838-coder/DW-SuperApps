@@ -16,7 +16,11 @@ from typing import Any, Mapping, NoReturn, Protocol
 
 from taskcontroller.audit.event import AuditEvent
 from taskcontroller.errors import TaskControllerValidationError
-from taskcontroller.interaction.mailbox_repository import MailboxRepository
+from taskcontroller.interaction.mailbox_repository import (
+    MailboxEvent,
+    MailboxRepository,
+    WriteReceipt,
+)
 from taskcontroller.interaction.mailbox_v2 import (
     MailboxV2ErrorCode,
     MailboxV2ValidationError,
@@ -640,6 +644,453 @@ class DispatchProtocol:
             or event.envelope != envelope
         ):
             _fail(MailboxV2ErrorCode.DIGEST_MISMATCH, "exact readback event binding differs")
+
+
+RECONCILIATION_RETRY = "RETRY"
+RECONCILIATION_REPAIR = "REPAIR"
+RECONCILIATION_CONSUME = "CONSUME"
+RECONCILIATION_BLOCKED = "RECONCILIATION_BLOCKED"
+
+RECONCILIATION_PREPARED_NO_MAILBOX = "PREPARED_NO_MAILBOX"
+RECONCILIATION_MAILBOX_COMMITTED_LEDGER_UNCOMMITTED = (
+    "MAILBOX_COMMITTED_LEDGER_UNCOMMITTED"
+)
+RECONCILIATION_DISPATCH_COMMITTED = "DISPATCH_COMMITTED"
+RECONCILIATION_IDENTITY_OR_DIGEST_CONFLICT = "IDENTITY_OR_DIGEST_CONFLICT"
+
+
+@dataclass(frozen=True)
+class ReconciliationDecision:
+    """One deterministic recovery disposition for a dispatch boundary.
+
+    A decision is deliberately small and serializable: it records the observed
+    state, exactly one action, bounded reason text and references to durable
+    evidence.  It never contains Slack/chat content or a second action plan.
+    """
+
+    state: str
+    action: str
+    reason: str
+    evidence_refs: tuple[str, ...] = ()
+    committed: DispatchCommitted | None = None
+    blocked: bool = False
+
+    def __post_init__(self) -> None:
+        _required_text(self.state, "ReconciliationDecision.state")
+        _required_text(self.action, "ReconciliationDecision.action")
+        _required_text(self.reason, "ReconciliationDecision.reason")
+        if self.action not in {
+            RECONCILIATION_RETRY,
+            RECONCILIATION_REPAIR,
+            RECONCILIATION_CONSUME,
+            RECONCILIATION_BLOCKED,
+        }:
+            _fail(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                f"unsupported reconciliation action {self.action!r}",
+            )
+        if not isinstance(self.evidence_refs, (tuple, list)):
+            _fail(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                "ReconciliationDecision.evidence_refs must be a sequence",
+            )
+        object.__setattr__(self, "evidence_refs", tuple(self.evidence_refs))
+        for ref in self.evidence_refs:
+            _required_text(ref, "ReconciliationDecision.evidence_refs item")
+        if self.committed is not None and not isinstance(self.committed, DispatchCommitted):
+            _fail(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                "ReconciliationDecision.committed is invalid",
+            )
+        expected_blocked = self.action == RECONCILIATION_BLOCKED
+        if self.blocked is not expected_blocked:
+            _fail(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                "blocked flag must match reconciliation action",
+            )
+        if expected_blocked and self.committed is not None:
+            _fail(
+                MailboxV2ErrorCode.CONTRACT_MISMATCH,
+                "blocked reconciliation cannot expose committed evidence",
+            )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "protocol": DISPATCH_PROTOCOL,
+            "record_type": "ReconciliationDecision",
+            "state": self.state,
+            "action": self.action,
+            "reason": self.reason,
+            "evidence_refs": list(self.evidence_refs),
+            "committed": self.committed.to_dict() if self.committed is not None else None,
+            "blocked": self.blocked,
+        }
+
+
+class DispatchReconciler:
+    """Reconstruct and repair one dispatch after a restart or crash.
+
+    The reconciler reads the durable Run Ledger and the exact mailbox snapshot.
+    It treats process-local ``DispatchProtocol`` caches as disposable.  A
+    matching mailbox event is repaired into the ledger without another mailbox
+    write; an empty successor slot is retried through the existing CAS boundary;
+    an already complete pair is consumed without mutation; every ambiguity is
+    blocked fail-closed.
+    """
+
+    def __init__(self, *, repository: MailboxRepository, ledger: Any, actor: str = "controller") -> None:
+        if not isinstance(repository, MailboxRepository):
+            raise TaskControllerValidationError("DispatchReconciler requires a MailboxRepository")
+        if not callable(getattr(ledger, "record", None)) and not callable(getattr(ledger, "append", None)):
+            raise TaskControllerValidationError("DispatchReconciler ledger must provide record or append")
+        self._repository = repository
+        self._ledger = ledger
+        self._protocol = DispatchProtocol(repository=repository, ledger=ledger, actor=actor)
+
+    def reconcile(
+        self,
+        prepared: DispatchPrepared,
+        envelope: V2MailboxEnvelope,
+        *,
+        reconciled_at: str,
+    ) -> ReconciliationDecision:
+        """Return and perform exactly one recovery action for ``prepared``."""
+
+        if not isinstance(prepared, DispatchPrepared):
+            _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "reconcile requires DispatchPrepared")
+        if not isinstance(envelope, V2MailboxEnvelope):
+            _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "reconcile requires a v2 envelope")
+        try:
+            self._protocol._assert_envelope_matches(prepared, envelope)
+        except TaskControllerValidationError as exc:
+            return self._blocked(
+                prepared,
+                RECONCILIATION_IDENTITY_OR_DIGEST_CONFLICT,
+                f"supplied envelope differs from prepared binding: {exc}",
+            )
+
+        try:
+            ledger_events = self._ledger_events(prepared.run_id)
+        except Exception as exc:
+            return self._blocked(
+                prepared,
+                RECONCILIATION_IDENTITY_OR_DIGEST_CONFLICT,
+                f"durable ledger cannot be read: {exc}",
+            )
+
+        prepared_event = next(
+            (event for event in ledger_events if event.event_id == prepared.prepared_id),
+            None,
+        )
+        if prepared_event is None:
+            return self._blocked(
+                prepared,
+                "MISSING_PREPARED",
+                "durable DispatchPrepared record is absent",
+            )
+        if prepared_event.decision_kind != DISPATCH_PREPARED:
+            return self._blocked(
+                prepared,
+                RECONCILIATION_IDENTITY_OR_DIGEST_CONFLICT,
+                "prepared event has an unexpected decision kind",
+            )
+        try:
+            durable_prepared = DispatchPrepared.from_dict(prepared_event.after["record"])
+            self._protocol._assert_same_prepared(durable_prepared, prepared)
+        except (KeyError, TypeError, TaskControllerValidationError) as exc:
+            return self._blocked(
+                prepared,
+                RECONCILIATION_IDENTITY_OR_DIGEST_CONFLICT,
+                f"durable DispatchPrepared binding is malformed or conflicting: {exc}",
+            )
+
+        try:
+            snapshot = self._repository.read(prepared.mailbox_ref)
+            events = self._validate_snapshot(snapshot, prepared)
+        except Exception as exc:
+            return self._blocked(
+                prepared,
+                RECONCILIATION_IDENTITY_OR_DIGEST_CONFLICT,
+                f"mailbox snapshot cannot be validated: {exc}",
+            )
+
+        exact_event, conflict = self._locate_event(events, prepared, envelope)
+        if conflict is not None:
+            return self._blocked(
+                prepared,
+                RECONCILIATION_IDENTITY_OR_DIGEST_CONFLICT,
+                conflict,
+                event=exact_event,
+            )
+
+        committed = self._find_committed_record(ledger_events, prepared)
+        if committed[1] is not None:
+            return self._blocked(
+                prepared,
+                RECONCILIATION_IDENTITY_OR_DIGEST_CONFLICT,
+                committed[1],
+                event=exact_event,
+            )
+        durable_committed = committed[0]
+
+        if exact_event is not None:
+            if durable_committed is not None:
+                if not self._commit_matches_event(durable_committed, prepared, envelope, exact_event):
+                    return self._blocked(
+                        prepared,
+                        RECONCILIATION_IDENTITY_OR_DIGEST_CONFLICT,
+                        "DispatchCommitted does not match the exact mailbox event",
+                        event=exact_event,
+                    )
+                return ReconciliationDecision(
+                    state=RECONCILIATION_DISPATCH_COMMITTED,
+                    action=RECONCILIATION_CONSUME,
+                    reason="exact mailbox event and DispatchCommitted evidence already exist",
+                    evidence_refs=self._evidence_refs(prepared, exact_event, durable_committed),
+                    committed=durable_committed,
+                )
+
+            try:
+                repaired = self._commit_from_existing_event(
+                    prepared,
+                    envelope,
+                    exact_event,
+                    reconciled_at=reconciled_at,
+                )
+            except Exception as exc:
+                return self._blocked(
+                    prepared,
+                    RECONCILIATION_MAILBOX_COMMITTED_LEDGER_UNCOMMITTED,
+                    f"existing mailbox event could not repair the ledger: {exc}",
+                    event=exact_event,
+                )
+            return ReconciliationDecision(
+                state=RECONCILIATION_MAILBOX_COMMITTED_LEDGER_UNCOMMITTED,
+                action=RECONCILIATION_REPAIR,
+                reason="exact mailbox event was read back and committed into the ledger",
+                evidence_refs=self._evidence_refs(prepared, exact_event, repaired),
+                committed=repaired,
+            )
+
+        if durable_committed is not None:
+            return self._blocked(
+                prepared,
+                RECONCILIATION_IDENTITY_OR_DIGEST_CONFLICT,
+                "DispatchCommitted exists but its exact mailbox event is absent",
+            )
+
+        if snapshot_last_event_seq(events) != prepared.expected_mailbox_seq:
+            return self._blocked(
+                prepared,
+                RECONCILIATION_IDENTITY_OR_DIGEST_CONFLICT,
+                "mailbox successor slot is not empty at the prepared sequence",
+            )
+
+        try:
+            retried = self._protocol.dispatch(
+                prepared,
+                envelope,
+                committed_at=reconciled_at,
+            )
+        except Exception as exc:
+            return self._blocked(
+                prepared,
+                RECONCILIATION_PREPARED_NO_MAILBOX,
+                f"retry did not produce verified committed evidence: {exc}",
+            )
+        return ReconciliationDecision(
+            state=RECONCILIATION_PREPARED_NO_MAILBOX,
+            action=RECONCILIATION_RETRY,
+            reason="prepared successor slot was empty; CAS/exact-readback/commit was retried",
+            evidence_refs=self._evidence_refs(prepared, None, retried),
+            committed=retried,
+        )
+
+    def _ledger_events(self, run_id: str) -> list[AuditEvent]:
+        events = self._ledger.events(run_id)
+        if not isinstance(events, list):
+            events = list(events)
+        return events
+
+    @staticmethod
+    def _validate_snapshot(snapshot: Any, prepared: DispatchPrepared) -> tuple[MailboxEvent, ...]:
+        if getattr(snapshot, "mailbox_ref", None) != prepared.mailbox_ref:
+            _fail(MailboxV2ErrorCode.CONTRACT_MISMATCH, "mailbox snapshot reference differs")
+        events = getattr(snapshot, "events", None)
+        if not isinstance(events, (list, tuple)):
+            _fail(MailboxV2ErrorCode.DIGEST_MISMATCH, "mailbox snapshot has no event collection")
+        validated = tuple(events)
+        for expected_seq, event in enumerate(validated):
+            if not isinstance(event, MailboxEvent):
+                _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "mailbox snapshot contains a non-event")
+            if event.event_seq != expected_seq:
+                _fail(MailboxV2ErrorCode.INVALID_SEQUENCE, "mailbox event sequence has a gap")
+            if event.mailbox_ref != prepared.mailbox_ref:
+                _fail(MailboxV2ErrorCode.CONTRACT_MISMATCH, "mailbox event reference differs")
+            if not isinstance(event.envelope, V2MailboxEnvelope):
+                _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "mailbox event envelope is invalid")
+        if getattr(snapshot, "last_event_seq", None) != snapshot_last_event_seq(validated):
+            _fail(MailboxV2ErrorCode.INVALID_SEQUENCE, "mailbox snapshot last sequence is inconsistent")
+        return validated
+
+    @staticmethod
+    def _locate_event(
+        events: tuple[MailboxEvent, ...],
+        prepared: DispatchPrepared,
+        envelope: V2MailboxEnvelope,
+    ) -> tuple[MailboxEvent | None, str | None]:
+        expected_event_seq = prepared.expected_mailbox_seq + 1
+        exact: MailboxEvent | None = None
+        conflict: MailboxEvent | None = None
+        for event in events:
+            message_id = event.envelope.to_dict().get("message_id")
+            related = (
+                event.event_seq == expected_event_seq
+                or event.idempotency_key == prepared.idempotency_key
+                or message_id == prepared.message_id
+            )
+            try:
+                identity = DispatchIdentity.from_envelope(event.envelope)
+            except TaskControllerValidationError:
+                identity = None
+            is_exact = (
+                identity == prepared.identity
+                and event.event_seq == expected_event_seq
+                and event.logical_seq == envelope.seq
+                and event.producer_namespace == envelope.producer_namespace
+                and event.idempotency_key == envelope.idempotency_key
+                and event.envelope_digest == envelope.digest()
+                and event.envelope == envelope
+            )
+            if is_exact:
+                if exact is not None:
+                    return exact, "multiple mailbox events match one prepared dispatch"
+                exact = event
+            elif related:
+                conflict = event
+        if conflict is not None:
+            return exact, (
+                "mailbox event conflicts with the prepared identity/digest or occupies the "
+                f"successor slot: {conflict.event_id}"
+            )
+        return exact, None
+
+    @staticmethod
+    def _find_committed_record(
+        ledger_events: list[AuditEvent],
+        prepared: DispatchPrepared,
+    ) -> tuple[DispatchCommitted | None, str | None]:
+        expected_id = f"dispatch-committed:{prepared.envelope_digest}"
+        for event in ledger_events:
+            if event.decision_kind != DISPATCH_COMMITTED:
+                continue
+            record = event.after.get("record") if isinstance(event.after, Mapping) else None
+            candidate_for_dispatch = event.event_id == expected_id or (
+                isinstance(record, Mapping) and record.get("prepared_id") == prepared.prepared_id
+            )
+            if not candidate_for_dispatch:
+                continue
+            try:
+                committed = DispatchCommitted.from_dict(record)
+            except (KeyError, TypeError, TaskControllerValidationError) as exc:
+                return None, f"durable DispatchCommitted record is malformed: {exc}"
+            return committed, None
+        return None, None
+
+    @staticmethod
+    def _commit_matches_event(
+        committed: DispatchCommitted,
+        prepared: DispatchPrepared,
+        envelope: V2MailboxEnvelope,
+        event: MailboxEvent,
+    ) -> bool:
+        return (
+            committed.prepared_id == prepared.prepared_id
+            and committed.identity == prepared.identity
+            and committed.state_version == prepared.state_version
+            and committed.mailbox_ref == prepared.mailbox_ref
+            and committed.expected_mailbox_seq == prepared.expected_mailbox_seq
+            and committed.mailbox_seq == event.event_seq
+            and committed.event_id == event.event_id
+            and committed.message_id == prepared.message_id
+            and committed.envelope_digest == envelope.digest()
+            and committed.event_digest == event.event_digest
+            and committed.readback_verified is True
+        )
+
+    def _commit_from_existing_event(
+        self,
+        prepared: DispatchPrepared,
+        envelope: V2MailboxEnvelope,
+        event: MailboxEvent,
+        *,
+        reconciled_at: str,
+    ) -> DispatchCommitted:
+        message_id = event.envelope.to_dict().get("message_id")
+        receipt = WriteReceipt(
+            mailbox_ref=event.mailbox_ref,
+            event_id=event.event_id,
+            event_seq=event.event_seq,
+            message_id=message_id,
+            envelope_digest=event.envelope_digest,
+            event_digest=event.event_digest,
+            idempotent=True,
+        )
+        snapshot = self._repository.exact_readback(receipt)
+        self._protocol._verify_exact_readback(prepared, envelope, receipt, snapshot)
+        committed = DispatchCommitted(
+            prepared_id=prepared.prepared_id,
+            identity=prepared.identity,
+            state_version=prepared.state_version,
+            mailbox_ref=prepared.mailbox_ref,
+            expected_mailbox_seq=prepared.expected_mailbox_seq,
+            mailbox_seq=event.event_seq,
+            event_id=event.event_id,
+            message_id=message_id,
+            envelope_digest=event.envelope_digest,
+            event_digest=event.event_digest,
+            readback_verified=True,
+            committed_id=f"dispatch-committed:{prepared.envelope_digest}",
+            committed_at=reconciled_at,
+        )
+        self._protocol._append_or_readback(self._protocol._committed_event(committed))
+        return committed
+
+    @staticmethod
+    def _evidence_refs(
+        prepared: DispatchPrepared,
+        event: MailboxEvent | None,
+        committed: DispatchCommitted | None,
+    ) -> tuple[str, ...]:
+        refs = [prepared.prepared_id, prepared.mailbox_ref]
+        if event is not None:
+            refs.append(f"{prepared.mailbox_ref}:event-{event.event_id}")
+        if committed is not None:
+            refs.append(committed.committed_id)
+        return tuple(refs)
+
+    def _blocked(
+        self,
+        prepared: DispatchPrepared,
+        state: str,
+        reason: str,
+        *,
+        event: MailboxEvent | None = None,
+    ) -> ReconciliationDecision:
+        return ReconciliationDecision(
+            state=state,
+            action=RECONCILIATION_BLOCKED,
+            reason=f"{RECONCILIATION_BLOCKED}: {reason}",
+            evidence_refs=self._evidence_refs(prepared, event, None),
+            committed=None,
+            blocked=True,
+        )
+
+
+def snapshot_last_event_seq(events: tuple[MailboxEvent, ...] | list[MailboxEvent]) -> int:
+    """Return the append-only mailbox tail sequence without inferring gaps."""
+
+    return events[-1].event_seq if events else -1
 
 
 __all__ = [
