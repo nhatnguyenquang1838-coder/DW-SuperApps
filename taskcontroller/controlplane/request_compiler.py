@@ -54,6 +54,7 @@ _PAYLOAD_OWNED_KEYS = frozenset(
         "recipient_capability",
         "agent_instance",
         "execution_id",
+        "checkpoint_id",
     }
 )
 
@@ -100,6 +101,7 @@ class BoundedMailboxRequest:
     producer_namespace: str = "controller"
     producer_actor_id: str = "controller"
     execution_id: str | None = None
+    checkpoint_id: str | None = None
     payload: Mapping[str, Any] = field(default_factory=dict)
 
     @classmethod
@@ -394,6 +396,9 @@ def compile_bounded_mailbox_request(
     if bound.execution_id is not None:
         _string(bound.execution_id, "execution_id")
         request_payload["execution_id"] = bound.execution_id
+    if bound.checkpoint_id is not None:
+        _string(bound.checkpoint_id, "checkpoint_id")
+        request_payload["checkpoint_id"] = bound.checkpoint_id
 
     attempt = {
         "attempt_id": bound.attempt_id,
