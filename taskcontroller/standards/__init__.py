@@ -1,5 +1,20 @@
 """Standards resolution boundary for TaskController session context."""
 
+from .context_pack import (
+    BoundedTaskContextPackBuilder,
+    CONTEXT_PACK_PROTOCOL,
+    ContextPack,
+    ContextPackBuilder,
+    ContextPackError,
+    ContextPackLimits,
+    ExactEvidenceReader,
+    ExactTaskSourceReader,
+    EvidenceRef,
+    MaterializedContextSource,
+    MaterializedEvidence,
+    TaskContextPack,
+    build_context_pack,
+)
 from .resolver import (
     ExactSourceReader,
     GitExactSourceReader,
@@ -17,8 +32,19 @@ from .resolver import (
 )
 
 __all__ = [
+    "BoundedTaskContextPackBuilder",
+    "CONTEXT_PACK_PROTOCOL",
+    "ContextPack",
+    "ContextPackBuilder",
+    "ContextPackError",
+    "ContextPackLimits",
+    "ExactEvidenceReader",
     "ExactSourceReader",
+    "ExactTaskSourceReader",
+    "EvidenceRef",
     "GitExactSourceReader",
+    "MaterializedContextSource",
+    "MaterializedEvidence",
     "MaterializedInstruction",
     "ResolvedStandards",
     "STANDARDS_RESOLUTION_BLOCKED",
@@ -29,5 +55,7 @@ __all__ = [
     "StandardsResolver",
     "StandardsSessionContext",
     "StandardsSourceRef",
+    "TaskContextPack",
+    "build_context_pack",
     "canonical_profile_digest",
 ]
