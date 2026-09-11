@@ -96,6 +96,20 @@ from taskcontroller.execution.chunking import (
     ChunkedReviewPartitioner,
     partition_chunks,
 )
+from taskcontroller.execution.result_normalizer import (
+    RESULT_NORMALIZER_PROTOCOL,
+    MAX_ARTIFACTS,
+
+    MAX_FINDINGS,
+
+    ChildResultNormalizationError,
+    ChildResultNormalizer,
+    NormalizationFailure,
+    NormalizationStatus,
+    NormalizedArtifact,
+    NormalizedChildResult,
+    NormalizedFinding,
+)
 from taskcontroller.execution.errors import (
     AdapterNotFoundError,
     AdapterUnsupportedError,
@@ -196,6 +210,16 @@ __all__ = [
     "ChunkRef",
     "ChunkedReviewPartitioner",
     "partition_chunks",
+    "RESULT_NORMALIZER_PROTOCOL",
+    "MAX_ARTIFACTS",
+    "MAX_FINDINGS",
+    "ChildResultNormalizationError",
+    "ChildResultNormalizer",
+    "NormalizationFailure",
+    "NormalizationStatus",
+    "NormalizedArtifact",
+    "NormalizedChildResult",
+    "NormalizedFinding",
     "ExecutionFabricError",
     "ExecutionCorrelationError",
     "AdapterNotFoundError",
