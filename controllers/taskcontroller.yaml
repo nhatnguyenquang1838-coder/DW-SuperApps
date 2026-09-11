@@ -219,4 +219,15 @@ integrity:
   github_mailbox_authority: communication-binding-and-pilot-continuation-copy
   notification_binding_authority: wakeup-only
   audit_ledger_authoritative_for_recorded-events-and-configured-continuation-manifest: true
-  self_modify_agent_instructions_without_explicit_scope: forbidden
+  executor_self_maintenance:
+    own_runtime_skills: allowed
+    own_agent_instructions: allowed
+    scope: executor-local
+    must_not_expand_authority: true
+    must_not_change_controller_contract: true
+    must_not_override_canonical_repository_policy: true
+  protected_self_modification:
+    taskcontroller_governance: forbidden_without_explicit_scope
+    approval_authority: forbidden_without_explicit_scope
+    human_plane_policy: forbidden_without_explicit_scope
+    project_governance: forbidden_without_explicit_scope

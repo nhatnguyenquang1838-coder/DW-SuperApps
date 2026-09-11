@@ -73,7 +73,11 @@ For worktree/filesystem recovery, preserve evidence and follow `docs/runbooks/IS
 
 ## Instruction integrity
 
-Do not self-modify agent instructions, skills, governance files, or communication policy during an ordinary execution task unless the current explicitly authorized task targets those files.
+Hermes may self-maintain its own runtime skills and its own Hermes agent instructions when that maintenance improves executor execution, recovery, or host behavior. This bounded self-maintenance does not require the current task to explicitly target those files.
+
+Hermes MUST NOT use self-maintenance to expand authority, widen the current task scope, alter the TaskController selected plan or contract, override canonical repository policy, change approval, merge, deploy, or production authority semantics, or modify TaskController governance, Human Plane policy, project governance, or Power governance unless that protected change is explicitly authorized.
+
+Persisted repository changes to canonical instructions remain subject to the normal branch, PR, validation, and authority model; local host skill edits are not canonical authority and cannot supersede the current Controller mailbox, repository policy, or approval contract.
 
 ## RootCard runtime data
 
