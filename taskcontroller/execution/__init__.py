@@ -16,6 +16,17 @@ Modules:
 
 from __future__ import annotations
 
+from taskcontroller.execution.classification import (
+    CLASSIFICATION_SCHEMA_VERSION,
+    MAX_LENSES,
+    MAX_LENS_LENGTH,
+    MAX_PRECONDITIONS,
+    MAX_PRECONDITION_LENGTH,
+    MAX_PROPOSED_CHILD_COUNT,
+    MAX_RATIONALE_LENGTH,
+    ExecutionClass,
+    ExecutionClassification,
+)
 from taskcontroller.execution.errors import (
     AdapterNotFoundError,
     AdapterUnsupportedError,
@@ -41,6 +52,15 @@ from taskcontroller.execution.types import (
 )
 
 __all__ = [
+    "CLASSIFICATION_SCHEMA_VERSION",
+    "MAX_LENSES",
+    "MAX_LENS_LENGTH",
+    "MAX_PRECONDITIONS",
+    "MAX_PRECONDITION_LENGTH",
+    "MAX_PROPOSED_CHILD_COUNT",
+    "MAX_RATIONALE_LENGTH",
+    "ExecutionClass",
+    "ExecutionClassification",
     "ExecutionFabricError",
     "ExecutionCorrelationError",
     "AdapterNotFoundError",
