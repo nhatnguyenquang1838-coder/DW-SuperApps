@@ -84,6 +84,16 @@ from taskcontroller.execution.fanout import (
     child_completion,
     transition_child_lifecycle,
 )
+from taskcontroller.execution.manifest import (
+    DEFAULT_CHILD_TIMEOUT_SECONDS,
+    FANOUT_MANIFEST_PROTOCOL,
+    MAX_MANIFEST_CHILDREN,
+    FanoutManifest,
+    FanoutManifestChild,
+    FanoutManifestError,
+    ManifestJoinDecision,
+    ManifestParentIdentity,
+)
 from taskcontroller.execution.chunking import (
     CHUNKING_PROTOCOL,
     DEFAULT_MAX_CHUNK_BYTES,
@@ -207,6 +217,14 @@ __all__ = [
     "allowed_child_lifecycle_transitions",
     "child_completion",
     "transition_child_lifecycle",
+    "DEFAULT_CHILD_TIMEOUT_SECONDS",
+    "FANOUT_MANIFEST_PROTOCOL",
+    "MAX_MANIFEST_CHILDREN",
+    "FanoutManifest",
+    "FanoutManifestChild",
+    "FanoutManifestError",
+    "ManifestJoinDecision",
+    "ManifestParentIdentity",
     "CHUNKING_PROTOCOL",
     "DEFAULT_MAX_CHUNK_BYTES",
     "DEFAULT_MAX_CHUNK_LINES",

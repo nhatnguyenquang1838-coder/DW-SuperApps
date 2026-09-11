@@ -24,6 +24,11 @@ from taskcontroller.execution.fanout import (
     child_completion,
     transition_child_lifecycle,
 )
+from taskcontroller.execution.manifest import (
+    DEFAULT_CHILD_TIMEOUT_SECONDS,
+    FanoutManifest,
+    FanoutManifestError,
+)
 
 
 _PARENT_DIGEST = "sha256:" + "1" * 64
@@ -411,3 +416,147 @@ def test_coordinator_exposes_planned_dispatched_and_terminal_child_lifecycle() -
 
     with pytest.raises(FanoutCoordinatorError, match="unknown child"):
         coordinator.lifecycle_state("unknown-child")
+
+
+def test_manifest_materializes_parent_identity_and_exact_child_evidence_refs() -> None:
+    plan = FanoutCoordinator.from_children(
+        _children(2),
+        parent=_parent(),
+        mode="PARALLEL",
+        max_parallel=2,
+    ).plan
+    manifest = FanoutManifest.from_plan(plan, attempt_id="attempt-506")
+
+    payload = manifest.to_dict()
+    assert payload["protocol"] == "dw.taskcontroller.fanout-manifest/v1"
+    assert payload["manifest_version"] == 1
+    assert payload["manifest_digest"] == manifest.manifest_digest
+    assert payload["parent"] == {
+        "run_id": "run-504",
+        "node_id": "node-504",
+        "plan_version": "plan-504",
+        "contract_id": "contract-504",
+        "contract_digest": _PARENT_DIGEST,
+        "boundary_digest": _parent().boundary.digest(),
+        "source_manifest_ref": "manifest-504",
+        "source_digest": _SOURCE_DIGEST,
+        "standards_profile_ref": "standards.default/v1",
+        "standards_profile_digest": _STANDARDS_DIGEST,
+        "attempt_id": "attempt-506",
+        "lease_generation": None,
+    }
+    assert [item["child_id"] for item in payload["children"]] == ["child-1", "child-2"]
+    assert payload["children"][0]["lens"] == "lens-1"
+    assert payload["children"][0]["agent_instance"] == "hermes-mac"
+    assert payload["children"][0]["attempt_id"] == "attempt-506:child-1"
+    assert payload["children"][0]["status"] == "PLANNED"
+    assert payload["children"][0]["timeout_seconds"] == DEFAULT_CHILD_TIMEOUT_SECONDS
+    assert payload["children"][0]["result_ref"] is None
+    assert payload["children"][0]["result_digest"] is None
+    assert "transcript" not in str(payload)
+    assert FanoutManifest.from_dict(payload) == manifest
+
+
+def test_manifest_transition_is_immutable_versioned_and_idempotent() -> None:
+    child = _children(1)[0]
+    plan = FanoutCoordinator.from_children(
+        (child,),
+        parent=_parent(),
+        mode="PARALLEL",
+        max_parallel=1,
+    ).plan
+    initial = FanoutManifest.from_plan(plan, attempt_id="attempt-506")
+    dispatched = initial.record_transition("child-1", ChildLifecycle.DISPATCHED)
+    running = dispatched.record_transition("child-1", ChildLifecycle.RUNNING)
+    succeeded = running.record_transition(
+        "child-1",
+        ChildLifecycle.SUCCEEDED,
+        result_ref="github://result/child-1/attempt-506",
+        result_digest="sha256:" + "9" * 64,
+    )
+
+    assert initial.manifest_version == 1
+    assert dispatched.manifest_version == 2
+    assert running.manifest_version == 3
+    assert succeeded.manifest_version == 4
+    assert initial.children[0].status is ChildLifecycle.PLANNED
+    assert succeeded.children[0].status is ChildLifecycle.SUCCEEDED
+    assert succeeded.record_transition(
+        "child-1",
+        ChildLifecycle.SUCCEEDED,
+        result_ref="github://result/child-1/attempt-506",
+        result_digest="sha256:" + "9" * 64,
+    ) is succeeded
+    with pytest.raises(FanoutManifestError, match="IDEMPOTENCY_CONFLICT"):
+        succeeded.record_transition(
+            "child-1",
+            ChildLifecycle.SUCCEEDED,
+            result_ref="github://result/child-1/other",
+            result_digest="sha256:" + "8" * 64,
+        )
+
+
+def test_manifest_rejects_illegal_skip_transition_and_terminal_without_evidence() -> None:
+    plan = FanoutCoordinator.from_children(
+        (_children(1)[0],),
+        parent=_parent(),
+        mode="PARALLEL",
+        max_parallel=1,
+    ).plan
+    manifest = FanoutManifest.from_plan(plan, attempt_id="attempt-506")
+
+    with pytest.raises(FanoutManifestError, match="INVALID_LIFECYCLE_TRANSITION"):
+        manifest.record_transition("child-1", ChildLifecycle.SUCCEEDED)
+    dispatched = manifest.record_transition("child-1", ChildLifecycle.DISPATCHED)
+    running = dispatched.record_transition("child-1", ChildLifecycle.RUNNING)
+    with pytest.raises(FanoutManifestError, match="result_ref"):
+        running.record_transition("child-1", ChildLifecycle.FAILED)
+
+
+def test_manifest_join_and_parent_result_binding_require_current_complete_evidence() -> None:
+    children = _children(2)
+    coordinator = FanoutCoordinator.from_children(
+        children,
+        parent=_parent(),
+        mode="PARALLEL",
+        max_parallel=2,
+    )
+    not_ready = FanoutManifest.from_coordinator(coordinator, attempt_id="attempt-506")
+    assert not_ready.join_decision().status is JoinStatus.NOT_READY
+    with pytest.raises(FanoutManifestError, match="JOIN_NOT_READY"):
+        not_ready.parent_result_binding()
+
+    coordinator = coordinator.complete(_completion(children[0]))
+    coordinator = coordinator.complete(_completion(children[1]))
+    ready = FanoutManifest.from_coordinator(coordinator, attempt_id="attempt-506")
+    decision = ready.join_decision()
+    assert decision.status is JoinStatus.READY
+    binding = ready.parent_result_binding()
+    assert binding["manifest_id"] == ready.manifest_id
+    assert binding["manifest_version"] == ready.manifest_version
+    assert binding["manifest_digest"] == ready.manifest_digest
+    assert binding["input_manifest_digest"] == ready.manifest_digest
+    assert binding["consumed_child_ids"] == ["child-1", "child-2"]
+    assert len(binding["consumed_evidence"]) == 2
+    assert binding["consumed_evidence_digest"].startswith("sha256:")
+    assert binding == ready.parent_result_binding()
+
+
+def test_manifest_preserves_failure_as_blocking_evidence_and_rejects_tampered_digest() -> None:
+    children = _children(1)
+    coordinator = FanoutCoordinator.from_children(
+        children,
+        parent=_parent(),
+        mode="PARALLEL",
+        max_parallel=1,
+    ).complete(_completion(children[0], status=CompletionStatus.FAILED))
+    blocked = FanoutManifest.from_coordinator(coordinator, attempt_id="attempt-506")
+    assert blocked.join_decision().status is JoinStatus.BLOCKED
+    assert blocked.join_decision().failed_child_ids == ("child-1",)
+    with pytest.raises(FanoutManifestError, match="JOIN_BLOCKED"):
+        blocked.parent_result_binding()
+
+    tampered = blocked.to_dict()
+    tampered["manifest_digest"] = "sha256:" + "0" * 64
+    with pytest.raises(FanoutManifestError, match="DIGEST_MISMATCH"):
+        FanoutManifest.from_dict(tampered)
