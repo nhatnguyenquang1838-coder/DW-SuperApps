@@ -16,6 +16,8 @@ from .context_pack import (
     build_context_pack,
 )
 from .resolver import (
+    BLOCKED_STALE_STANDARDS,
+    DEFAULT_STANDARDS_RETRY_BUDGET,
     ExactSourceReader,
     GitExactSourceReader,
     MaterializedInstruction,
@@ -23,6 +25,7 @@ from .resolver import (
     ResolvedStandards,
     STANDARDS_MANIFEST_CANONICALIZATION,
     STANDARDS_MATERIALIZATION_PROTOCOL,
+    STANDARDS_RETRY_BUDGET,
     STANDARDS_RESOLUTION_BLOCKED,
     StandardsProfile,
     StandardsResolutionBlocked,
@@ -38,11 +41,13 @@ from .resolver import (
 
 __all__ = [
     "BoundedTaskContextPackBuilder",
+    "BLOCKED_STALE_STANDARDS",
     "CONTEXT_PACK_PROTOCOL",
     "ContextPack",
     "ContextPackBuilder",
     "ContextPackError",
     "ContextPackLimits",
+    "DEFAULT_STANDARDS_RETRY_BUDGET",
     "ExactEvidenceReader",
     "ExactSourceReader",
     "ExactTaskSourceReader",
@@ -55,6 +60,7 @@ __all__ = [
     "ResolvedStandards",
     "STANDARDS_MANIFEST_CANONICALIZATION",
     "STANDARDS_MATERIALIZATION_PROTOCOL",
+    "STANDARDS_RETRY_BUDGET",
     "STANDARDS_RESOLUTION_BLOCKED",
     "StandardsProfile",
     "StandardsResolutionBlocked",

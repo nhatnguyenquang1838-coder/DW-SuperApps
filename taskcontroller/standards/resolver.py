@@ -24,6 +24,10 @@ _DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _COMMIT_RE = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
 _ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]*$")
 STANDARDS_RESOLUTION_BLOCKED = "STANDARDS_RESOLUTION_BLOCKED"
+BLOCKED_STALE_STANDARDS = "BLOCKED_STALE_STANDARDS"
+DEFAULT_STANDARDS_RETRY_BUDGET = 2
+STANDARDS_RETRY_BUDGET = DEFAULT_STANDARDS_RETRY_BUDGET
+_MAX_STANDARDS_RETRY_BUDGET = 16
 STANDARDS_MANIFEST_CANONICALIZATION = "dw-source-manifest-json/v1"
 STANDARDS_MATERIALIZATION_PROTOCOL = "dw.taskcontroller.standards-materialization/v1"
 
@@ -36,18 +40,69 @@ class StandardsResolutionError(TaskControllerValidationError):
     ) -> None:
         self.code = code
         self.reason_code = reason_code or code
+        self.message = message
         super().__init__(f"{code}: {message}")
 
 
 class StandardsResolutionBlocked(StandardsResolutionError):
     """Required standards could not be reproduced, so analysis must not start."""
 
-    def __init__(self, reason_code: str, message: str) -> None:
+    def __init__(
+        self,
+        reason_code: str,
+        message: str,
+        *,
+        source: StandardsSourceRef | None = None,
+        attempts: int = 0,
+        retry_budget: int = 0,
+        recovery_action: str = BLOCKED_STALE_STANDARDS,
+    ) -> None:
+        if isinstance(attempts, bool) or not isinstance(attempts, int) or attempts < 0:
+            raise ValueError("attempts must be an integer >= 0")
+        if (
+            isinstance(retry_budget, bool)
+            or not isinstance(retry_budget, int)
+            or retry_budget < 0
+        ):
+            raise ValueError("retry_budget must be an integer >= 0")
+        if not isinstance(recovery_action, str) or not recovery_action:
+            raise ValueError("recovery_action must be a non-empty string")
+        self.source = source
+        self.attempts = attempts
+        self.retry_budget = retry_budget
+        self.recovery_action = recovery_action
+        self.controller_recovery_action = recovery_action
+        self.blocked_state = BLOCKED_STALE_STANDARDS
+        self.human_visible = True
+        visible_message = (
+            f"{message} [status={STANDARDS_RESOLUTION_BLOCKED}; "
+            f"blocked_state={self.blocked_state}; "
+            f"recovery_action={self.recovery_action}; "
+            f"attempts={self.attempts}; retry_budget={self.retry_budget}]"
+        )
         super().__init__(
             STANDARDS_RESOLUTION_BLOCKED,
-            message,
+            visible_message,
             reason_code=reason_code,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "status": self.code,
+            "code": self.code,
+            "reason_code": self.reason_code,
+            "message": self.message,
+            "human_visible": self.human_visible,
+            "source": self.source.to_dict() if self.source is not None else None,
+            "attempts": self.attempts,
+            "retry_budget": self.retry_budget,
+            "blocked_state": self.blocked_state,
+            "recovery_action": self.recovery_action,
+            "controller_recovery": {
+                "action": self.recovery_action,
+                "required": True,
+            },
+        }
 
 
 def _canonical_bytes(value: Mapping[str, Any]) -> bytes:
@@ -451,8 +506,67 @@ class ResolvedStandards:
 class StandardsResolver:
     """Resolve and verify one exact standards profile into session context."""
 
-    def __init__(self, source_reader: ExactSourceReader) -> None:
+    def __init__(
+        self,
+        source_reader: ExactSourceReader,
+        *,
+        retry_budget: int = DEFAULT_STANDARDS_RETRY_BUDGET,
+    ) -> None:
+        if (
+            isinstance(retry_budget, bool)
+            or not isinstance(retry_budget, int)
+            or not 0 <= retry_budget <= _MAX_STANDARDS_RETRY_BUDGET
+        ):
+            raise StandardsResolutionError(
+                "STANDARDS_RETRY_BUDGET_INVALID",
+                "retry_budget must be an integer between 0 and "
+                f"{_MAX_STANDARDS_RETRY_BUDGET}",
+            )
         self._source_reader = source_reader
+        self._retry_budget = retry_budget
+
+    @property
+    def retry_budget(self) -> int:
+        """Number of retries after the first exact-source read attempt."""
+
+        return self._retry_budget
+
+    @property
+    def max_attempts(self) -> int:
+        """Total bounded source-read attempts for one declared source."""
+
+        return self._retry_budget + 1
+
+    def _read_exact_with_retry(self, source: StandardsSourceRef) -> tuple[bytes, int]:
+        last_exception: BaseException | None = None
+        last_error_label: str | None = None
+        for attempt in range(1, self.max_attempts + 1):
+            try:
+                raw = self._source_reader.read_exact(source)
+            except StandardsResolutionBlocked:
+                raise
+            except StandardsResolutionError as exc:
+                if exc.code != "STANDARDS_SOURCE_UNAVAILABLE":
+                    raise
+                last_exception = exc
+                last_error_label = exc.code
+            except Exception as exc:
+                last_exception = exc
+                last_error_label = type(exc).__name__
+            else:
+                return raw, attempt
+
+        detail = last_error_label or "SOURCE_READER_NO_RESULT"
+        raise StandardsResolutionBlocked(
+            "STANDARDS_SOURCE_UNAVAILABLE",
+            "required standards source unavailable after "
+            f"{self.max_attempts} attempts: {source.repository}@{source.commit_sha}:"
+            f"{source.path}; last_error={detail}; Controller must re-resolve the "
+            "exact standards source before retrying",
+            source=source,
+            attempts=self.max_attempts,
+            retry_budget=self._retry_budget,
+        ) from last_exception
 
     def resolve(self, profile: StandardsProfile | Mapping[str, Any]) -> ResolvedStandards:
         bound = (
@@ -476,15 +590,7 @@ class StandardsResolver:
         instructions: list[MaterializedInstruction] = []
         materialized_sources: list[MaterializedSourceReceipt] = []
         for source in bound.sources:
-            try:
-                raw = self._source_reader.read_exact(source)
-            except StandardsResolutionError:
-                raise
-            except Exception as exc:
-                raise StandardsResolutionError(
-                    "STANDARDS_SOURCE_UNAVAILABLE",
-                    f"cannot read {source.path} at {source.commit_sha}: {exc}",
-                ) from exc
+            raw, attempts = self._read_exact_with_retry(source)
             if not isinstance(raw, bytes):
                 raise StandardsResolutionError(
                     "STANDARDS_SOURCE_INVALID", f"reader returned non-bytes for {source.path}"
@@ -494,6 +600,9 @@ class StandardsResolver:
                 raise StandardsResolutionBlocked(
                     "STANDARDS_SOURCE_DIGEST_MISMATCH",
                     f"source digest mismatch for {source.path}: expected {source.blob_digest}, got {actual_digest}",
+                    source=source,
+                    attempts=attempts,
+                    retry_budget=self._retry_budget,
                 )
             try:
                 content = raw.decode("utf-8")
@@ -541,6 +650,8 @@ class StandardsResolver:
 
 
 __all__ = [
+    "BLOCKED_STALE_STANDARDS",
+    "DEFAULT_STANDARDS_RETRY_BUDGET",
     "ExactSourceReader",
     "GitExactSourceReader",
     "MaterializedInstruction",
@@ -548,6 +659,7 @@ __all__ = [
     "ResolvedStandards",
     "STANDARDS_MANIFEST_CANONICALIZATION",
     "STANDARDS_MATERIALIZATION_PROTOCOL",
+    "STANDARDS_RETRY_BUDGET",
     "StandardsProfile",
     "StandardsResolutionBlocked",
     "StandardsResolutionError",

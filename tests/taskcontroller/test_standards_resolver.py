@@ -9,10 +9,14 @@ from typing import Any
 import pytest
 
 from taskcontroller.standards import (
+    BLOCKED_STALE_STANDARDS,
+    DEFAULT_STANDARDS_RETRY_BUDGET,
     STANDARDS_MANIFEST_CANONICALIZATION,
     STANDARDS_MATERIALIZATION_PROTOCOL,
+    STANDARDS_RESOLUTION_BLOCKED,
     MaterializedSourceReceipt,
     StandardsProfile,
+    StandardsResolutionBlocked,
     StandardsResolutionError,
     StandardsResolver,
     StandardsSourceRef,
@@ -318,3 +322,129 @@ def test_materialization_receipt_and_instructions_are_immutable_after_reader_mut
     assert resolved.instructions[0].content == "approved"
     assert resolved.receipt.to_dict() == before
     assert resolved.session_context.to_dict()["standards"] == before
+
+
+class SequencedSourceReader:
+    def __init__(self, outcomes: list[object]) -> None:
+        self._outcomes = outcomes
+        self.calls: list[tuple[str, str]] = []
+
+    def read_exact(self, source: StandardsSourceRef) -> bytes:
+        self.calls.append((source.commit_sha, source.path))
+        outcome = self._outcomes[min(len(self.calls) - 1, len(self._outcomes) - 1)]
+        if isinstance(outcome, Exception):
+            raise outcome
+        assert isinstance(outcome, bytes)
+        return outcome
+
+
+def test_resolver_retries_transient_unavailability_within_explicit_budget() -> None:
+    source = _source(_COMMIT_A, "instructions/policy.md", "approved")
+    reader = SequencedSourceReader(
+        [
+            FileNotFoundError("temporary source outage"),
+            StandardsResolutionError("STANDARDS_SOURCE_UNAVAILABLE", "temporary git outage"),
+            b"approved",
+        ]
+    )
+
+    resolved = StandardsResolver(
+        reader, retry_budget=DEFAULT_STANDARDS_RETRY_BUDGET
+    ).resolve(_profile(source))
+
+    assert resolved.instructions[0].content == "approved"
+    assert len(reader.calls) == DEFAULT_STANDARDS_RETRY_BUDGET + 1
+
+
+def test_resolver_exhaustion_is_structured_human_visible_and_requires_controller_recovery() -> None:
+    source = _source(_COMMIT_A, "instructions/policy.md", "approved")
+    reader = SequencedSourceReader([FileNotFoundError("source unavailable")])
+
+    with pytest.raises(StandardsResolutionBlocked) as error:
+        StandardsResolver(reader, retry_budget=DEFAULT_STANDARDS_RETRY_BUDGET).resolve(
+            _profile(source)
+        )
+
+    blocked = error.value
+    assert blocked.code == STANDARDS_RESOLUTION_BLOCKED
+    assert blocked.reason_code == "STANDARDS_SOURCE_UNAVAILABLE"
+    assert blocked.recovery_action == BLOCKED_STALE_STANDARDS
+    assert blocked.attempts == DEFAULT_STANDARDS_RETRY_BUDGET + 1
+    assert blocked.retry_budget == DEFAULT_STANDARDS_RETRY_BUDGET
+    payload = blocked.to_dict()
+    assert payload["status"] == STANDARDS_RESOLUTION_BLOCKED
+    assert payload["human_visible"] is True
+    assert payload["source"] == source.to_dict()
+    assert payload["attempts"] == DEFAULT_STANDARDS_RETRY_BUDGET + 1
+    assert payload["retry_budget"] == DEFAULT_STANDARDS_RETRY_BUDGET
+    assert payload["controller_recovery"] == {
+        "action": BLOCKED_STALE_STANDARDS,
+        "required": True,
+    }
+    assert STANDARDS_RESOLUTION_BLOCKED in str(blocked)
+    assert BLOCKED_STALE_STANDARDS in str(blocked)
+    assert "retry_budget=2" in str(blocked)
+
+
+def test_zero_retry_budget_performs_exactly_one_source_attempt() -> None:
+    source = _source(_COMMIT_A, "instructions/policy.md", "approved")
+    reader = SequencedSourceReader([FileNotFoundError("source unavailable")])
+
+    with pytest.raises(StandardsResolutionBlocked) as error:
+        StandardsResolver(reader, retry_budget=0).resolve(_profile(source))
+
+    assert len(reader.calls) == 1
+    assert error.value.attempts == 1
+    assert error.value.retry_budget == 0
+
+
+def test_required_standard_block_happens_before_analyzer_context_use() -> None:
+    source = _source(_COMMIT_A, "instructions/policy.md", "approved")
+    reader = SequencedSourceReader([FileNotFoundError("source unavailable")])
+    analyzer_calls: list[Any] = []
+
+    try:
+        resolved = StandardsResolver(reader, retry_budget=0).resolve(_profile(source))
+    except StandardsResolutionBlocked as error:
+        blocked = error
+    else:
+        analyzer_calls.append(resolved.session_context.to_dict())
+        blocked = None
+
+    assert blocked is not None
+    assert blocked.code == STANDARDS_RESOLUTION_BLOCKED
+    assert analyzer_calls == []
+
+
+def test_digest_mismatch_remains_fail_closed_without_stale_fallback_or_retry() -> None:
+    source = _source(_COMMIT_A, "instructions/policy.md", "approved")
+    reader = SequencedSourceReader([b"substituted"])
+
+    with pytest.raises(StandardsResolutionBlocked) as error:
+        StandardsResolver(reader, retry_budget=DEFAULT_STANDARDS_RETRY_BUDGET).resolve(
+            _profile(source)
+        )
+
+    blocked = error.value
+    assert blocked.reason_code == "STANDARDS_SOURCE_DIGEST_MISMATCH"
+    assert blocked.recovery_action == BLOCKED_STALE_STANDARDS
+    assert blocked.attempts == 1
+    assert len(reader.calls) == 1
+    assert "fallback" not in blocked.to_dict()
+
+
+def test_unavailable_block_does_not_expose_raw_reader_exception_detail() -> None:
+    source = _source(_COMMIT_A, "instructions/policy.md", "approved")
+    leaked_detail = "internal-detail-should-not-be-exposed"
+
+    class Reader:
+        def read_exact(self, requested: StandardsSourceRef) -> bytes:
+            assert requested == source
+            raise RuntimeError(leaked_detail)
+
+    with pytest.raises(StandardsResolutionBlocked) as error:
+        StandardsResolver(Reader(), retry_budget=0).resolve(_profile(source))
+
+    assert leaked_detail not in str(error.value)
+    assert leaked_detail not in error.value.to_dict()["message"]
+    assert "RuntimeError" in str(error.value)
