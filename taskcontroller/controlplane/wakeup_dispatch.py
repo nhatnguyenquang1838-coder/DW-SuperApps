@@ -8,7 +8,7 @@ perform Slack or any other transport I/O.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, NoReturn
+from typing import Any, Iterable, NoReturn
 
 from taskcontroller.controlplane.mailbox_dispatch import MailboxDispatchOutcome
 from taskcontroller.errors import TaskControllerValidationError
@@ -71,6 +71,267 @@ def _human_event_to_dict(event: HumanEvent) -> dict[str, Any]:
         "detail": event.detail,
         "evidence_refs": list(event.evidence_refs),
     }
+
+
+WAKEUP_PROJECTION_PROTOCOL = "dw.taskcontroller.wakeup-projection/v1"
+WAKEUP_PROJECTION_PENDING = "PENDING"
+WAKEUP_PROJECTION_RETRYING = "RETRYING"
+WAKEUP_PROJECTION_DELIVERED = "DELIVERED"
+WAKEUP_PROJECTION_BLOCKED = "BLOCKED"
+WAKEUP_EXECUTOR_NOT_TRIGGERED = "NOT_TRIGGERED"
+WAKEUP_EXECUTOR_RETRYING = "WAKEUP_RETRYING"
+WAKEUP_EXECUTOR_DELIVERED_CLAIM_UNCONFIRMED = "WAKEUP_DELIVERED_CLAIM_UNCONFIRMED"
+WAKEUP_EXECUTOR_BLOCKED = "WAKEUP_BLOCKED"
+
+
+@dataclass(frozen=True)
+class WakeupDeliveryProjection:
+    """Read-only human projection of the separate WakeupDelivery state domain.
+
+    A projection is deliberately not a run-state record.  Its identity points
+    back to the already persisted GitHub mailbox event and its outbox intent;
+    it contains no request payload and cannot advance either canonical source.
+    """
+
+    intent_id: str
+    run_id: str
+    node_id: str
+    mailbox_ref: str
+    mailbox_seq: int
+    event_id: str
+    event_digest: str
+    envelope_digest: str
+    idempotency_key: str
+    recipient: str
+    delivery_status: str
+    executor_status: str
+    attempt_count: int
+    next_attempt_at: str | None
+    detail: str
+    canonical_source: str = "github-mailbox"
+    canonical_request_persisted: bool = True
+    projection_only: bool = True
+    protocol: str = WAKEUP_PROJECTION_PROTOCOL
+
+    def __post_init__(self) -> None:
+        if self.protocol != WAKEUP_PROJECTION_PROTOCOL:
+            raise TaskControllerValidationError(
+                "unsupported WakeupDeliveryProjection protocol"
+            )
+        for name in (
+            "intent_id",
+            "run_id",
+            "node_id",
+            "mailbox_ref",
+            "event_id",
+            "event_digest",
+            "envelope_digest",
+            "idempotency_key",
+            "recipient",
+            "detail",
+        ):
+            _required_text(getattr(self, name), f"wakeup_projection.{name}")
+        if self.delivery_status not in {
+            WAKEUP_PROJECTION_PENDING,
+            WAKEUP_PROJECTION_RETRYING,
+            WAKEUP_PROJECTION_DELIVERED,
+            WAKEUP_PROJECTION_BLOCKED,
+        }:
+            raise TaskControllerValidationError(
+                f"unsupported wakeup projection delivery status: {self.delivery_status!r}"
+            )
+        if self.executor_status not in {
+            WAKEUP_EXECUTOR_NOT_TRIGGERED,
+            WAKEUP_EXECUTOR_RETRYING,
+            WAKEUP_EXECUTOR_DELIVERED_CLAIM_UNCONFIRMED,
+            WAKEUP_EXECUTOR_BLOCKED,
+        }:
+            raise TaskControllerValidationError(
+                f"unsupported wakeup projection executor status: {self.executor_status!r}"
+            )
+        if isinstance(self.mailbox_seq, bool) or not isinstance(self.mailbox_seq, int) or self.mailbox_seq < 0:
+            raise TaskControllerValidationError(
+                "wakeup_projection.mailbox_seq must be int >= 0"
+            )
+        if isinstance(self.attempt_count, bool) or not isinstance(self.attempt_count, int) or self.attempt_count < 0:
+            raise TaskControllerValidationError(
+                "wakeup_projection.attempt_count must be int >= 0"
+            )
+        if self.next_attempt_at is not None:
+            _required_text(self.next_attempt_at, "wakeup_projection.next_attempt_at")
+        if self.canonical_source != "github-mailbox":
+            raise TaskControllerValidationError(
+                "wakeup projection canonical source must be github-mailbox"
+            )
+        if self.canonical_request_persisted is not True or self.projection_only is not True:
+            raise TaskControllerValidationError(
+                "wakeup projection must remain a persisted-request-only projection"
+            )
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize operator data without mailbox request or run-state payloads."""
+
+        return {
+            "protocol": self.protocol,
+            "record_type": "WakeupDeliveryProjection",
+            "intent_id": self.intent_id,
+            "run_id": self.run_id,
+            "node_id": self.node_id,
+            "mailbox_ref": self.mailbox_ref,
+            "mailbox_seq": self.mailbox_seq,
+            "event_id": self.event_id,
+            "event_digest": self.event_digest,
+            "envelope_digest": self.envelope_digest,
+            "idempotency_key": self.idempotency_key,
+            "recipient": self.recipient,
+            "delivery_status": self.delivery_status,
+            "executor_status": self.executor_status,
+            "attempt_count": self.attempt_count,
+            "next_attempt_at": self.next_attempt_at,
+            "detail": self.detail,
+            "canonical_source": self.canonical_source,
+            "canonical_request_persisted": self.canonical_request_persisted,
+            "projection_only": self.projection_only,
+        }
+
+    def to_human_event(self) -> HumanEvent:
+        """Adapt the delivery projection to the existing human-plane event."""
+
+        kind = (
+            HumanEventKind.BLOCKED.value
+            if self.delivery_status == WAKEUP_PROJECTION_BLOCKED
+            else HumanEventKind.SUBTASK_STARTED.value
+        )
+        return HumanEvent(
+            kind=kind,
+            title=f"Wake-up {self.delivery_status.lower()} for {self.node_id}",
+            status=f"WAKEUP_{self.delivery_status}",
+            detail=self.detail,
+            evidence_refs=(self.mailbox_ref, self.event_id, self.intent_id),
+        )
+
+
+def project_wakeup_delivery(
+    intent: Any,
+    attempts: Iterable[Any] = (),
+) -> WakeupDeliveryProjection:
+    """Project durable outbox evidence for operators without changing authority.
+
+    ``WakeupIntent`` is only created from a readback-verified mailbox commit.
+    The full append-only attempt list is required when attempts exist so a
+    projection cannot hide delivery history or accidentally become canonical
+    run state.  The local import preserves the outbox → pointer-emission import
+    boundary.
+    """
+
+    from taskcontroller.controlplane.wakeup_outbox import (
+        WAKEUP_ATTEMPT_BLOCKED,
+        WAKEUP_ATTEMPT_DELIVERED,
+        WAKEUP_ATTEMPT_FAILED,
+        WAKEUP_ATTEMPT_STARTED,
+        WAKEUP_INTENT_BLOCKED,
+        WAKEUP_INTENT_DELIVERED,
+        WAKEUP_INTENT_FAILED,
+        WAKEUP_INTENT_IN_FLIGHT,
+        WAKEUP_INTENT_PENDING,
+        WakeupDeliveryAttempt,
+        WakeupIntent,
+    )
+
+    if not isinstance(intent, WakeupIntent):
+        raise TaskControllerValidationError(
+            "wakeup projection requires WakeupIntent evidence"
+        )
+    try:
+        observed_attempts = tuple(attempts)
+    except TypeError as exc:
+        raise TaskControllerValidationError(
+            "wakeup projection attempts must be iterable"
+        ) from exc
+    for expected_number, attempt in enumerate(observed_attempts, start=1):
+        if not isinstance(attempt, WakeupDeliveryAttempt):
+            raise TaskControllerValidationError(
+                "wakeup projection requires WakeupDeliveryAttempt evidence"
+            )
+        if attempt.intent_id != intent.intent_id:
+            raise TaskControllerValidationError(
+                "wakeup projection attempt is not bound to the intent"
+            )
+        if attempt.attempt_number != expected_number:
+            raise TaskControllerValidationError(
+                "wakeup projection attempts must be contiguous"
+            )
+    if intent.attempt_count != len(observed_attempts):
+        raise TaskControllerValidationError(
+            "wakeup projection attempt count differs from the intent"
+        )
+
+    last_attempt = observed_attempts[-1] if observed_attempts else None
+    if intent.state == WAKEUP_INTENT_PENDING and last_attempt is None:
+        delivery_status = WAKEUP_PROJECTION_PENDING
+        executor_status = WAKEUP_EXECUTOR_NOT_TRIGGERED
+        detail = (
+            "canonical request persisted in GitHub mailbox; "
+            "Executor not yet triggered; wake-up delivery is pending."
+        )
+    elif intent.state == WAKEUP_INTENT_DELIVERED:
+        if last_attempt is None or last_attempt.state != WAKEUP_ATTEMPT_DELIVERED:
+            raise TaskControllerValidationError(
+                "delivered wakeup projection lacks a delivered attempt"
+            )
+        delivery_status = WAKEUP_PROJECTION_DELIVERED
+        executor_status = WAKEUP_EXECUTOR_DELIVERED_CLAIM_UNCONFIRMED
+        detail = (
+            "canonical request persisted in GitHub mailbox; pointer wake-up "
+            "delivered; Executor claim is not observed by this projection."
+        )
+    elif intent.state == WAKEUP_INTENT_BLOCKED:
+        if last_attempt is None or last_attempt.state != WAKEUP_ATTEMPT_BLOCKED:
+            raise TaskControllerValidationError(
+                "blocked wakeup projection lacks a blocked attempt"
+            )
+        delivery_status = WAKEUP_PROJECTION_BLOCKED
+        executor_status = WAKEUP_EXECUTOR_BLOCKED
+        detail = (
+            "canonical request persisted in GitHub mailbox; wake-up delivery "
+            "is blocked with WAKEUP_DELIVERY_BLOCKED; Executor trigger is not confirmed."
+        )
+    elif intent.state in {
+        WAKEUP_INTENT_PENDING,
+        WAKEUP_INTENT_IN_FLIGHT,
+        WAKEUP_INTENT_FAILED,
+    } and last_attempt is not None and last_attempt.state in {
+        WAKEUP_ATTEMPT_STARTED,
+        WAKEUP_ATTEMPT_FAILED,
+    }:
+        delivery_status = WAKEUP_PROJECTION_RETRYING
+        executor_status = WAKEUP_EXECUTOR_RETRYING
+        detail = (
+            "canonical request persisted in GitHub mailbox; Executor wake-up "
+            "delivery is retrying; Executor claim is not observed."
+        )
+    else:
+        raise TaskControllerValidationError(
+            "wakeup projection state and attempt evidence are inconsistent"
+        )
+
+    return WakeupDeliveryProjection(
+        intent_id=intent.intent_id,
+        run_id=intent.run_id,
+        node_id=intent.node_id,
+        mailbox_ref=intent.mailbox_ref,
+        mailbox_seq=intent.mailbox_seq,
+        event_id=intent.event_id,
+        event_digest=intent.event_digest,
+        envelope_digest=intent.envelope_digest,
+        idempotency_key=intent.idempotency_key,
+        recipient=intent.recipient,
+        delivery_status=delivery_status,
+        executor_status=executor_status,
+        attempt_count=intent.attempt_count,
+        next_attempt_at=intent.next_attempt_at,
+        detail=detail,
+    )
 
 
 @dataclass(frozen=True)
@@ -161,4 +422,18 @@ def emit_pointer_only_wakeup(
     return PointerWakeupEmission(decision=decision, human_projection=projection)
 
 
-__all__ = ["PointerWakeupEmission", "emit_pointer_only_wakeup"]
+__all__ = [
+    "PointerWakeupEmission",
+    "WAKEUP_EXECUTOR_BLOCKED",
+    "WAKEUP_EXECUTOR_DELIVERED_CLAIM_UNCONFIRMED",
+    "WAKEUP_EXECUTOR_NOT_TRIGGERED",
+    "WAKEUP_EXECUTOR_RETRYING",
+    "WAKEUP_PROJECTION_BLOCKED",
+    "WAKEUP_PROJECTION_DELIVERED",
+    "WAKEUP_PROJECTION_PENDING",
+    "WAKEUP_PROJECTION_PROTOCOL",
+    "WAKEUP_PROJECTION_RETRYING",
+    "WakeupDeliveryProjection",
+    "emit_pointer_only_wakeup",
+    "project_wakeup_delivery",
+]

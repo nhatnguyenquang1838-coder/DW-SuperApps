@@ -33,6 +33,11 @@ from taskcontroller.controlplane.mailbox_dispatch import (
 
 from taskcontroller.controlplane.wakeup_dispatch import (
     PointerWakeupEmission,
+    WAKEUP_PROJECTION_BLOCKED,
+    WAKEUP_PROJECTION_DELIVERED,
+    WAKEUP_PROJECTION_PENDING,
+    WAKEUP_PROJECTION_RETRYING,
+    project_wakeup_delivery,
     emit_pointer_only_wakeup,
 )
 
@@ -225,4 +230,148 @@ def test_pointer_reconstructs_canonical_mailbox_without_human_history(
     assert event.envelope.run_id == pointer_only["run_id"]
     assert event.envelope.to_dict()["recipient"]["agent_instance"] == pointer_only["recipient"]
     assert event.event_seq == outcome.committed.mailbox_seq
+    ledger.close()
+
+
+def _projection_ready(tmp_path: Path) -> tuple[Any, Any, Any, Any, Any]:
+    from taskcontroller.controlplane.wakeup_outbox import WakeupOutbox
+
+    _, ledger, repository, envelope, _, outcome = _ready(tmp_path)
+    emission = _emit(outcome, envelope)
+    outbox = WakeupOutbox(tmp_path / "wakeup-projection.sqlite3")
+    intent = outbox.create_intent(
+        outcome,
+        emission,
+        recipient="hermes-mac",
+        created_at="2026-09-11T06:30:03+07:00",
+        fallback="mailbox_poll",
+        claim_ttl_seconds=300,
+    )
+    return outbox, ledger, repository, envelope, intent
+
+
+def test_operator_projection_distinguishes_persisted_request_from_untriggered_executor(
+    tmp_path: Path,
+) -> None:
+    outbox, ledger, repository, envelope, intent = _projection_ready(tmp_path)
+
+    projection = project_wakeup_delivery(intent)
+    assert projection.delivery_status == WAKEUP_PROJECTION_PENDING
+    assert projection.canonical_source == "github-mailbox"
+    assert projection.canonical_request_persisted is True
+    assert projection.projection_only is True
+    assert projection.executor_status == "NOT_TRIGGERED"
+    assert "canonical request persisted" in projection.detail
+    assert "Executor not yet triggered" in projection.detail
+    assert projection.mailbox_ref == MAILBOX_REF
+    assert projection.event_id == intent.event_id
+    assert projection.event_digest == intent.event_digest
+    assert projection.idempotency_key == intent.idempotency_key
+
+    event = projection.to_human_event()
+    assert event.kind == "SUBTASK_STARTED"
+    assert event.status == "WAKEUP_PENDING"
+    assert event.evidence_refs == (MAILBOX_REF, intent.event_id, intent.intent_id)
+    serialized = json.dumps(projection.to_dict(), sort_keys=True)
+    for forbidden in ("payload", "objective", "acceptance_criteria", "scope", "context"):
+        assert forbidden not in serialized
+    assert repository.read(MAILBOX_REF).events[0].envelope == envelope
+    outbox.close()
+    ledger.close()
+
+
+def test_operator_projection_marks_failed_delivery_as_retrying_without_run_state(
+    tmp_path: Path,
+) -> None:
+    from taskcontroller.controlplane.wakeup_outbox import (
+        WAKEUP_ATTEMPT_FAILED,
+        WAKEUP_TRANSPORT_UNAVAILABLE,
+    )
+
+    outbox, ledger, _, _, intent = _projection_ready(tmp_path)
+    outbox.record_delivery_attempt(
+        intent.intent_id,
+        attempt_id="wakeup-delivery-projection-1",
+        attempt_number=1,
+        state=WAKEUP_ATTEMPT_FAILED,
+        attempted_at="2026-09-11T06:30:04+07:00",
+        retry_at="2026-09-11T06:30:14+07:00",
+        error_code=WAKEUP_TRANSPORT_UNAVAILABLE,
+    )
+
+    projection = project_wakeup_delivery(
+        outbox.get_intent(intent.intent_id),
+        outbox.list_attempts(intent.intent_id),
+    )
+    assert projection.delivery_status == WAKEUP_PROJECTION_RETRYING
+    assert projection.executor_status == "WAKEUP_RETRYING"
+    assert projection.attempt_count == 1
+    assert projection.next_attempt_at == "2026-09-11T06:30:14+07:00"
+    assert "retrying" in projection.detail
+    assert projection.canonical_request_persisted is True
+    assert projection.projection_only is True
+    assert project_wakeup_delivery(
+        outbox.get_intent(intent.intent_id), outbox.list_attempts(intent.intent_id)
+    ).to_human_event().status == "WAKEUP_RETRYING"
+    outbox.close()
+    ledger.close()
+
+
+def test_operator_projection_marks_blocked_delivery_as_human_visible_not_run_state(
+    tmp_path: Path,
+) -> None:
+    from taskcontroller.controlplane.wakeup_outbox import WAKEUP_ATTEMPT_BLOCKED
+
+    outbox, ledger, _, _, intent = _projection_ready(tmp_path)
+    outbox.record_delivery_attempt(
+        intent.intent_id,
+        attempt_id="wakeup-delivery-projection-blocked",
+        attempt_number=1,
+        state=WAKEUP_ATTEMPT_BLOCKED,
+        attempted_at="2026-09-11T06:30:04+07:00",
+        error_code="WAKEUP_DELIVERY_BLOCKED",
+        error_detail="bounded delivery exhausted",
+    )
+
+    projection = project_wakeup_delivery(
+        outbox.get_intent(intent.intent_id),
+        outbox.list_attempts(intent.intent_id),
+    )
+    assert projection.delivery_status == WAKEUP_PROJECTION_BLOCKED
+    assert projection.executor_status == "WAKEUP_BLOCKED"
+    assert projection.canonical_request_persisted is True
+    assert projection.projection_only is True
+    assert "WAKEUP_DELIVERY_BLOCKED" in projection.detail
+    event = projection.to_human_event()
+    assert event.kind == "BLOCKED"
+    assert event.status == "WAKEUP_BLOCKED"
+    assert event.evidence_refs[0] == MAILBOX_REF
+    outbox.close()
+    ledger.close()
+
+
+def test_operator_projection_rejects_attempts_not_bound_to_the_canonical_intent(
+    tmp_path: Path,
+) -> None:
+    from dataclasses import replace
+    from taskcontroller.controlplane.wakeup_outbox import (
+        WAKEUP_ATTEMPT_FAILED,
+        WAKEUP_TRANSPORT_UNAVAILABLE,
+    )
+
+    outbox, ledger, _, _, intent = _projection_ready(tmp_path)
+    attempt = outbox.record_delivery_attempt(
+        intent.intent_id,
+        attempt_id="wakeup-delivery-projection-mismatch",
+        attempt_number=1,
+        state=WAKEUP_ATTEMPT_FAILED,
+        attempted_at="2026-09-11T06:30:04+07:00",
+        retry_at="2026-09-11T06:30:14+07:00",
+        error_code=WAKEUP_TRANSPORT_UNAVAILABLE,
+    )
+    mismatched = replace(attempt, intent_id="wakeup-intent:foreign")
+
+    with pytest.raises(TaskControllerValidationError, match="intent"):
+        project_wakeup_delivery(intent, (mismatched,))
+    outbox.close()
     ledger.close()
