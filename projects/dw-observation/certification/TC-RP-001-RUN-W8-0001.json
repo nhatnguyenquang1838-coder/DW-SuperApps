@@ -1,0 +1,51 @@
+{
+  "test_run_id": "TC-RP-001-RUN-W8-0001",
+  "test_case_id": "TC-RP-001",
+  "title": "DW Observatory /login UI-only Standard Real Run",
+  "run_type": "standard",
+  "program": "SCRUM-668",
+  "work_item": "SCRUM-677",
+  "repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+  "base_sha": "0a48fc4f73362b57cd61a932eef87d3bd33b5a0b",
+  "head_sha": "0094a4e",
+  "branch": "cert/TC-RP-001/w8",
+  "pr_url": "https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/pull/109",
+  "executor": "Hermes (DWA)",
+  "executed_at": "2026-09-01T15:35:00+07:00",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "expected": "/login renders a DW Run Observatory login screen",
+      "actual": "LoginPage renders 'DW Run Observatory' heading and 'Sign in to your account' subtitle (test: renders DW Run Observatory login screen, PASS)",
+      "verdict": "PASS"
+    },
+    {
+      "id": "AC2",
+      "expected": "Email and password controls present and correctly labelled",
+      "actual": "Email (type=email) and Password (type=password) inputs labelled correctly (test: email and password controls present and correctly labelled, PASS)",
+      "verdict": "PASS"
+    },
+    {
+      "id": "AC3",
+      "expected": "Empty submit produces deterministic validation feedback",
+      "actual": "Empty submit shows 'Email is required' and 'Password is required' (test: empty submit produces deterministic validation feedback, PASS)",
+      "verdict": "PASS"
+    },
+    {
+      "id": "AC4",
+      "expected": "Valid local submit produces deterministic loading/feedback state without external authentication",
+      "actual": "Valid submit shows transient 'Signing in...' then 'Sign-in completed (local only)'; no fetch called (tests: valid local submit ...; does not call external authentication, PASS)",
+      "verdict": "PASS"
+    }
+  ],
+  "overall_verdict": "PASS",
+  "evidence_pointers": [
+    "https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/pull/109",
+    "https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/actions/runs/33487110044",
+    "https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/actions/runs/33487110038",
+    "https://app.kilo.ai/code-reviews/4715f1e4-70c8-45ff-b4f9-98fde2599b79",
+    "https://nhatnguyenquang1838.atlassian.net/browse/SCRUM-677",
+    "https://github.com/nhatnguyenquang1838-coder/DW-SuperApps/issues/101#issuecomment-5491189043"
+  ],
+  "notes": "UI-only Standard Real Run. No merge, no deploy, no main promotion. WAIT_CONTROLLER after tracker reconciliation."
+}
