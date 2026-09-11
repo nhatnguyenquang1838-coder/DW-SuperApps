@@ -7,9 +7,10 @@ import pytest
 
 from taskcontroller.domain.values import InputRef
 from taskcontroller.errors import TaskControllerValidationError
-from taskcontroller.interaction.envelope import A2AEnvelope
+from taskcontroller.interaction.envelope import A2AEnvelope, A2A_PROTOCOL
 from taskcontroller.interaction.executor_entrypoint import (
     EXECUTOR_MAILBOX_BOOTSTRAPPED,
+    ExecutorValidationPolicy,
     MailboxFirstExecutorEntrypoint,
 )
 from taskcontroller.interaction.github_mailbox import render_mailbox_comment
@@ -128,3 +129,109 @@ def test_mailbox_first_entrypoint_does_not_use_modified_mailbox_body_as_projecti
 
     assert loaded.envelope == canonical
     assert loaded.envelope.request != "attacker objective"
+
+
+def _executor_binding(**overrides: Any) -> dict[str, Any]:
+    binding: dict[str, Any] = {
+        "capability_id": "cap.mailbox-executor",
+        "instance_id": "instance.hermes-cloud",
+        "protocol": A2A_PROTOCOL,
+        "status": "DISPATCHED",
+        "attempt_id": "attempt.4",
+        "lease_status": "ACTIVE",
+        "lease_generation": 2,
+        "fencing_token": "fence.2",
+    }
+    binding.update(overrides)
+    return binding
+
+
+def _bound_envelope(**overrides: Any) -> A2AEnvelope:
+    state = dict(_envelope().state)
+    state["executor_binding"] = _executor_binding()
+    state.update(overrides.pop("state", {}))
+    return _envelope(state=state, **overrides)
+
+
+def _validation_policy(**overrides: Any) -> ExecutorValidationPolicy:
+    data: dict[str, Any] = {
+        "capability_id": "cap.mailbox-executor",
+        "instance_id": "instance.hermes-cloud",
+        "supported_protocols": frozenset({A2A_PROTOCOL}),
+        "allowed_statuses": frozenset({"DISPATCHED"}),
+        "attempt_id": "attempt.4",
+        "lease_status": "ACTIVE",
+        "lease_generation": 2,
+        "fencing_token": "fence.2",
+        "last_seen_seq": 3,
+    }
+    data.update(overrides)
+    return ExecutorValidationPolicy(**data)
+
+
+def test_policy_bound_bootstrap_validates_current_recipient_and_fresh_attempt() -> None:
+    canonical = _bound_envelope()
+    reader = FakeMailboxReader(render_mailbox_comment(canonical))
+    entrypoint = MailboxFirstExecutorEntrypoint(
+        reader,
+        executor_actor="hermes-cloud",
+        validation_policy=_validation_policy(),
+    )
+
+    loaded = entrypoint.bootstrap(_signal(seq=4), projection={"status": "ATTACKER"})
+
+    assert loaded.envelope == canonical
+    assert reader.reads == [_signal(seq=4).mailbox_ref]
+
+
+@pytest.mark.parametrize(
+    ("binding_update", "reason"),
+    [
+        ({"capability_id": "cap.other"}, "capability"),
+        ({"instance_id": "instance.other"}, "instance"),
+        ({"protocol": "dw.taskcontroller.mailbox/v2"}, "schema"),
+        ({"status": "RUNNING"}, "status"),
+        ({"attempt_id": "attempt.old"}, "attempt"),
+        ({"lease_status": "EXPIRED"}, "lease"),
+        ({"lease_generation": 1}, "generation"),
+        ({"fencing_token": "fence.old"}, "fencing"),
+    ],
+)
+def test_policy_bound_bootstrap_rejects_stale_or_incompatible_binding(
+    binding_update: dict[str, Any], reason: str
+) -> None:
+    canonical = _bound_envelope(state={"executor_binding": _executor_binding(**binding_update)})
+    reader = FakeMailboxReader(render_mailbox_comment(canonical))
+    entrypoint = MailboxFirstExecutorEntrypoint(
+        reader,
+        executor_actor="hermes-cloud",
+        validation_policy=_validation_policy(),
+    )
+
+    with pytest.raises(TaskControllerValidationError, match=reason):
+        entrypoint.bootstrap(_signal(seq=4))
+
+
+def test_policy_bound_bootstrap_rejects_wrong_recipient_before_mailbox_analysis() -> None:
+    reader = FakeMailboxReader(render_mailbox_comment(_bound_envelope()))
+    entrypoint = MailboxFirstExecutorEntrypoint(
+        reader,
+        executor_actor="hermes-cloud",
+        validation_policy=_validation_policy(),
+    )
+
+    with pytest.raises(TaskControllerValidationError, match="recipient"):
+        entrypoint.bootstrap(_signal(recipient="other-executor"))
+    assert reader.reads == []
+
+
+def test_policy_bound_bootstrap_rejects_non_new_sequence_before_analysis() -> None:
+    reader = FakeMailboxReader(render_mailbox_comment(_bound_envelope()))
+    entrypoint = MailboxFirstExecutorEntrypoint(
+        reader,
+        executor_actor="hermes-cloud",
+        validation_policy=_validation_policy(last_seen_seq=4),
+    )
+
+    with pytest.raises(TaskControllerValidationError, match="sequence"):
+        entrypoint.bootstrap(_signal(seq=4))
