@@ -25,6 +25,7 @@ _COMMIT_RE = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
 _ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]*$")
 STANDARDS_RESOLUTION_BLOCKED = "STANDARDS_RESOLUTION_BLOCKED"
 STANDARDS_MANIFEST_CANONICALIZATION = "dw-source-manifest-json/v1"
+STANDARDS_MATERIALIZATION_PROTOCOL = "dw.taskcontroller.standards-materialization/v1"
 
 
 class StandardsResolutionError(TaskControllerValidationError):
@@ -338,12 +339,77 @@ class MaterializedInstruction:
 
 
 @dataclass(frozen=True)
+class MaterializedSourceReceipt:
+    """Verified immutable source observation captured during resolution."""
+
+    source: StandardsSourceRef
+    observed_digest: str
+    byte_length: int
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.source, StandardsSourceRef):
+            raise StandardsResolutionError(
+                "STANDARDS_MATERIALIZATION_INVALID", "materialized source is invalid"
+            )
+        _require_digest(self.observed_digest, "observed_digest")
+        if self.observed_digest != self.source.blob_digest:
+            raise StandardsResolutionError(
+                "STANDARDS_MATERIALIZATION_INVALID",
+                "observed source digest does not match declared source digest",
+            )
+        if not isinstance(self.byte_length, int) or isinstance(self.byte_length, bool) or self.byte_length < 0:
+            raise StandardsResolutionError(
+                "STANDARDS_MATERIALIZATION_INVALID", "byte_length must be an integer >= 0"
+            )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "source": self.source.to_dict(),
+            "observed_digest": self.observed_digest,
+            "byte_length": self.byte_length,
+        }
+
+
+
+def _materialization_digest(
+    profile_digest: str,
+    context_digest: str,
+    sources: Sequence[MaterializedSourceReceipt],
+) -> str:
+    return _canonical_digest(
+        {
+            "context_digest": context_digest,
+            "materialization_protocol": STANDARDS_MATERIALIZATION_PROTOCOL,
+            "profile_digest": profile_digest,
+            "sources": [source.to_dict() for source in sources],
+        }
+    )
+
+
+@dataclass(frozen=True)
 class StandardsResolutionReceipt:
     profile_id: str
     version: str
     digest: str
     sources: tuple[StandardsSourceRef, ...]
     context_digest: str
+    materialized_sources: tuple[MaterializedSourceReceipt, ...]
+    materialization_digest: str
+
+    def __post_init__(self) -> None:
+        _require_digest(self.digest, "digest")
+        _require_digest(self.context_digest, "context_digest")
+        _require_digest(self.materialization_digest, "materialization_digest")
+        if not isinstance(self.materialized_sources, tuple) or not self.materialized_sources:
+            raise StandardsResolutionError(
+                "STANDARDS_MATERIALIZATION_INVALID",
+                "materialized source receipts are required",
+            )
+        if tuple(item.source for item in self.materialized_sources) != self.sources:
+            raise StandardsResolutionError(
+                "STANDARDS_MATERIALIZATION_INVALID",
+                "materialized source receipts do not match declared sources",
+            )
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -353,6 +419,9 @@ class StandardsResolutionReceipt:
             "source_count": len(self.sources),
             "source_refs": [source.to_dict() for source in self.sources],
             "context_digest": self.context_digest,
+            "materialization_protocol": STANDARDS_MATERIALIZATION_PROTOCOL,
+            "materialized_sources": [item.to_dict() for item in self.materialized_sources],
+            "materialization_digest": self.materialization_digest,
         }
 
 
@@ -405,6 +474,7 @@ class StandardsResolver:
             )
 
         instructions: list[MaterializedInstruction] = []
+        materialized_sources: list[MaterializedSourceReceipt] = []
         for source in bound.sources:
             try:
                 raw = self._source_reader.read_exact(source)
@@ -431,6 +501,13 @@ class StandardsResolver:
                 raise StandardsResolutionError(
                     "STANDARDS_SOURCE_INVALID", f"source is not UTF-8 text: {source.path}"
                 ) from exc
+            materialized_sources.append(
+                MaterializedSourceReceipt(
+                    source=source,
+                    observed_digest=actual_digest,
+                    byte_length=len(raw),
+                )
+            )
             instructions.append(MaterializedInstruction(source=source, content=content))
 
         context_identity = {
@@ -441,12 +518,20 @@ class StandardsResolver:
             ],
         }
         context_digest = _canonical_digest(context_identity)
+        materialized_source_receipts = tuple(materialized_sources)
+        materialization_digest = _materialization_digest(
+            bound.digest,
+            context_digest,
+            materialized_source_receipts,
+        )
         receipt = StandardsResolutionReceipt(
             profile_id=bound.profile_id,
             version=bound.version,
             digest=bound.digest,
             sources=bound.sources,
             context_digest=context_digest,
+            materialized_sources=materialized_source_receipts,
+            materialization_digest=materialization_digest,
         )
         return ResolvedStandards(
             profile=bound,
@@ -459,7 +544,10 @@ __all__ = [
     "ExactSourceReader",
     "GitExactSourceReader",
     "MaterializedInstruction",
+    "MaterializedSourceReceipt",
     "ResolvedStandards",
+    "STANDARDS_MANIFEST_CANONICALIZATION",
+    "STANDARDS_MATERIALIZATION_PROTOCOL",
     "StandardsProfile",
     "StandardsResolutionBlocked",
     "StandardsResolutionError",

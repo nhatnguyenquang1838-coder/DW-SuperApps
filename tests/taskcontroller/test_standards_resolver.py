@@ -10,6 +10,8 @@ import pytest
 
 from taskcontroller.standards import (
     STANDARDS_MANIFEST_CANONICALIZATION,
+    STANDARDS_MATERIALIZATION_PROTOCOL,
+    MaterializedSourceReceipt,
     StandardsProfile,
     StandardsResolutionError,
     StandardsResolver,
@@ -272,3 +274,47 @@ def test_resolver_blocks_profile_digest_drift_before_materialization() -> None:
 
     assert error.value.code == "STANDARDS_RESOLUTION_BLOCKED"
     assert reader.calls == []
+
+
+def test_resolver_records_verified_materialization_manifest_before_session_use() -> None:
+    source = _source(_COMMIT_A, "instructions/policy.md", "approved")
+    resolved = StandardsResolver(_reader((source, "approved"))).resolve(_profile(source))
+
+    receipt = resolved.receipt
+    payload = receipt.to_dict()
+    assert isinstance(receipt.materialized_sources[0], MaterializedSourceReceipt)
+    assert payload["materialization_protocol"] == STANDARDS_MATERIALIZATION_PROTOCOL
+    assert payload["materialized_sources"] == [
+        {
+            "source": source.to_dict(),
+            "observed_digest": source.blob_digest,
+            "byte_length": len(b"approved"),
+        }
+    ]
+    assert payload["materialization_digest"].startswith("sha256:")
+    repeated = StandardsResolver(_reader((source, "approved"))).resolve(_profile(source))
+    assert repeated.receipt.materialization_digest == receipt.materialization_digest
+    assert resolved.session_context.to_dict()["standards"]["materialization_digest"] == payload[
+        "materialization_digest"
+    ]
+
+
+def test_materialization_receipt_and_instructions_are_immutable_after_reader_mutation() -> None:
+    source = _source(_COMMIT_A, "instructions/policy.md", "approved")
+
+    class MutableReader:
+        def __init__(self) -> None:
+            self.raw = b"approved"
+
+        def read_exact(self, requested: StandardsSourceRef) -> bytes:
+            assert requested == source
+            return self.raw
+
+    reader = MutableReader()
+    resolved = StandardsResolver(reader).resolve(_profile(source))
+    before = resolved.receipt.to_dict()
+    reader.raw = b"substituted"
+
+    assert resolved.instructions[0].content == "approved"
+    assert resolved.receipt.to_dict() == before
+    assert resolved.session_context.to_dict()["standards"] == before
