@@ -83,6 +83,26 @@ class ExecutionFabric:
             raise TaskControllerValidationError(
                 "runtime plan binding requires a StepContext"
             )
+        if context is not None:
+            if not all(
+                isinstance(value, str) and value.strip()
+                for value in (
+                    context.runtime_plan_ref,
+                    context.runtime_plan_digest,
+                    context.plan_revision,
+                    context.step_id,
+                    context.semantic_action,
+                )
+            ) or not context.allowed_actions:
+                raise TaskControllerValidationError("runtime plan binding context is incomplete")
+            aliases = {"inspect": frozenset({"read", "search"})}
+            if context.semantic_action not in context.allowed_actions and not (
+                set(aliases.get(context.semantic_action, ()))
+                & set(context.allowed_actions)
+            ):
+                raise TaskControllerValidationError(
+                    "runtime plan binding semantic action is not allowed by the current step"
+                )
 
         # Resolve the binding_id from the provider's bindings that matches the
         # receipt's selected binding (the receipt binding must resolve to a real
@@ -106,7 +126,7 @@ class ExecutionFabric:
         )
 
         envelope = build_envelope(
-            command_id, request, receipt, provider, binding_id, lease_id,
+            command_id, request, receipt, provider, resolved_binding_id, lease_id,
             getattr(adapter, "adapter_key", adapter_key or ""),
             context=context,
         )
@@ -214,7 +234,7 @@ class ExecutionFabric:
             run_id, node_id, now,
         )
         envelope = build_envelope(
-            command_id, request, receipt, provider, binding_id, lease_id,
+            command_id, request, receipt, provider, resolved_binding_id, lease_id,
             getattr(adapter, "adapter_key", adapter_key or ""),
         )
         fp = envelope.canonical_fingerprint()

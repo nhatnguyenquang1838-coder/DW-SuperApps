@@ -26,8 +26,10 @@ from dataclasses import dataclass
 import hashlib
 import json
 from pathlib import Path
+import threading
 from types import MappingProxyType
 from typing import Any, Mapping, Sequence
+from uuid import uuid4
 
 from taskcontroller.errors import TaskControllerValidationError
 
@@ -148,13 +150,16 @@ class PlanEdge:
 
     @classmethod
     def from_dict(cls, payload: Mapping[str, Any]) -> "PlanEdge":
+        raw_runtime_executable = payload.get("runtime_executable", False)
+        if not isinstance(raw_runtime_executable, bool):
+            raise TaskControllerValidationError("edge.runtime_executable must be a bool")
         return cls(
             outcome=payload["outcome"],
             target=payload["target"],
             kind=payload.get("kind", "continue"),
             source_step_id=payload.get("source_step_id"),
             condition_id=payload.get("condition_id"),
-            runtime_executable=bool(payload.get("runtime_executable", False)),
+            runtime_executable=raw_runtime_executable,
             source_gate=payload.get("source_gate"),
             target_gate=payload.get("target_gate"),
         )
@@ -654,6 +659,9 @@ class RunCursor:
     replan = switch_to
 
 
+_PLAN_STORE_LOCK = threading.RLock()
+
+
 class FilePlanStore:
     """Small durable JSON store keyed by the stable RuntimePlan reference."""
 
@@ -675,34 +683,41 @@ class FilePlanStore:
     def put(self, plan: RuntimePlan) -> RuntimePlan:
         if not isinstance(plan, RuntimePlan):
             raise TaskControllerValidationError("plan store accepts RuntimePlan only")
-        path = self._path(plan.runtime_plan_ref)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        if path.exists():
-            existing = RuntimePlan.from_dict(json.loads(path.read_text(encoding="utf-8")))
-            if existing.runtime_plan_digest != plan.runtime_plan_digest:
-                raise TaskControllerValidationError(
-                    f"{BindingErrorCode.IMMUTABLE}: {plan.runtime_plan_ref} already exists"
+        with _PLAN_STORE_LOCK:
+            path = self._path(plan.runtime_plan_ref)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            if path.exists():
+                existing = RuntimePlan.from_dict(json.loads(path.read_text(encoding="utf-8")))
+                if existing.runtime_plan_digest != plan.runtime_plan_digest:
+                    raise TaskControllerValidationError(
+                        f"{BindingErrorCode.IMMUTABLE}: {plan.runtime_plan_ref} already exists"
+                    )
+                return existing
+            tmp = path.with_name(f".{path.name}.{uuid4().hex}.tmp")
+            try:
+                tmp.write_text(
+                    json.dumps(plan.to_dict(), sort_keys=True, indent=2, ensure_ascii=False) + "\n",
+                    encoding="utf-8",
                 )
-            return existing
-        path.write_text(
-            json.dumps(plan.to_dict(), sort_keys=True, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
-        return plan
+                tmp.replace(path)
+            finally:
+                tmp.unlink(missing_ok=True)
+            return plan
 
     def get(self, runtime_plan_ref: str, runtime_plan_digest: str) -> RuntimePlan:
-        path = self._path(runtime_plan_ref)
-        try:
-            plan = RuntimePlan.from_dict(json.loads(path.read_text(encoding="utf-8")))
-        except FileNotFoundError as exc:
-            raise TaskControllerValidationError(
-                f"{BindingErrorCode.PLAN_REQUIRED}: plan is not persisted"
-            ) from exc
-        if plan.runtime_plan_digest != runtime_plan_digest:
-            raise TaskControllerValidationError(
-                f"{BindingErrorCode.DIGEST_MISMATCH}: requested digest is stale"
-            )
-        return plan
+        with _PLAN_STORE_LOCK:
+            path = self._path(runtime_plan_ref)
+            try:
+                plan = RuntimePlan.from_dict(json.loads(path.read_text(encoding="utf-8")))
+            except FileNotFoundError as exc:
+                raise TaskControllerValidationError(
+                    f"{BindingErrorCode.PLAN_REQUIRED}: plan is not persisted"
+                ) from exc
+            if plan.runtime_plan_digest != runtime_plan_digest:
+                raise TaskControllerValidationError(
+                    f"{BindingErrorCode.DIGEST_MISMATCH}: requested digest is stale"
+                )
+            return plan
 
 
 def require_semantic_binding(

@@ -294,6 +294,16 @@ class LiveCertificationHarness:
                 self._cases[case.case_id] = case
             elif event.event_type in {"RUN_STARTED", "RUN_VERDICT_RECORDED"}:
                 run = self._cert_run_from_dict(payload)
+                if event.aggregate_id != run.run_id:
+                    raise LiveCertificationError("run event aggregate does not match run_id")
+                if run.campaign_id not in self._campaigns:
+                    raise LiveCertificationError(
+                        f"run {run.run_id!r} references unknown campaign {run.campaign_id!r}"
+                    )
+                if event.event_type == "RUN_VERDICT_RECORDED" and run.run_id not in self._cert_runs:
+                    raise LiveCertificationError(
+                        f"verdict event for unknown run {run.run_id!r}"
+                    )
                 self._index_execution_receipt(run)
                 self._cert_runs[run.run_id] = run
                 self._campaign_branches[(run.subject.repository, run.subject.branch)] = run.campaign_id
@@ -394,6 +404,16 @@ class LiveCertificationHarness:
             raise LiveCertificationError("executor and model identity are required")
         if gwc_sha != campaign.gwc_sha:
             raise LiveCertificationError("GWC source binding does not match campaign")
+        canonical_repository = "nhatnguyenquang1838-coder/DW-SuperApps"
+        if (
+            runtime.repository != canonical_repository
+            or subject.repository != canonical_repository
+            or runtime.branch != campaign.runtime_branch
+            or subject.branch != campaign.proving_branch
+            or runtime.start_sha != campaign.baseline_runtime_sha
+            or subject.start_sha != campaign.baseline_subject_sha
+        ):
+            raise LiveCertificationError("source binding does not match campaign")
         checkout_values = (runtime_checkout, subject_checkout, gwc_checkout)
         remote_values = (canonical_runtime_remote, canonical_subject_remote, canonical_gwc_remote)
         if any(value is not None for value in checkout_values + remote_values):

@@ -41,7 +41,14 @@ def _load_node_instruction(node: Mapping[str, Any], root: str | Path | None) -> 
     if not root:
         return None
     ref = _require_text(node.get("node_instruction_ref"), "node.node_instruction_ref")
-    path = Path(root) / ref
+    root_path = Path(root).expanduser().resolve()
+    path = (root_path / ref).resolve()
+    try:
+        path.relative_to(root_path)
+    except ValueError as exc:
+        raise TaskControllerValidationError(
+            f"node instruction path escapes root: {ref}"
+        ) from exc
     try:
         raw = path.read_bytes()
     except OSError as exc:
@@ -183,6 +190,11 @@ def compile_blueprint(
                     raise TaskControllerValidationError(
                         f"unsupported route edge kind: {kind!r}"
                     )
+                raw_runtime_executable = row.get("runtime_executable", False)
+                if not isinstance(raw_runtime_executable, bool):
+                    raise TaskControllerValidationError(
+                        "topology.edges runtime_executable must be a bool"
+                    )
                 if tgt not in declared_actions and tgt not in _NON_STEP_TARGETS:
                     raise TaskControllerValidationError(
                         f"edge target not declared: {tgt}"
@@ -192,7 +204,7 @@ def compile_blueprint(
                     target=tgt,
                     kind=kind,
                     condition_id=row.get("condition_id"),
-                    runtime_executable=bool(row.get("runtime_executable", False)),
+                    runtime_executable=raw_runtime_executable,
                     source_gate=row.get("source_gate"),
                     target_gate=row.get("target_gate"),
                 ))

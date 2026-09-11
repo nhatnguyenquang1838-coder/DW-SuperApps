@@ -64,6 +64,29 @@ def _plain(value: Any) -> Any:
     return value
 
 
+_SENSITIVE_KEY = re.compile(
+    r"(?:password|passwd|secret|token|api[_-]?key|authorization|cookie|credential|connection[_-]?string)",
+    re.IGNORECASE,
+)
+_REDACTED = "[REDACTED]"
+
+
+def _redact_sensitive(value: Any, *, key: str | None = None) -> Any:
+    """Detach evidence while replacing values under secret-like keys."""
+    if key is not None and _SENSITIVE_KEY.search(key):
+        return _REDACTED
+    if isinstance(value, Mapping):
+        return {
+            str(item_key): _redact_sensitive(item_value, key=str(item_key))
+            for item_key, item_value in value.items()
+        }
+    if isinstance(value, (tuple, list)):
+        return [_redact_sensitive(item) for item in value]
+    if isinstance(value, (set, frozenset)):
+        return [_redact_sensitive(item) for item in value]
+    return value
+
+
 def _freeze_refs(values: tuple[str, ...], field_name: str) -> tuple[str, ...]:
     normalized = tuple(values)
     if not normalized or any(not isinstance(value, str) or not value.strip() for value in normalized):
@@ -353,7 +376,7 @@ class TestRun:
             raise CertificationModelError(f"invalid verdict {self.verdict!r}")
         if not isinstance(self.evidence, Mapping):
             raise CertificationModelError("evidence must be a mapping")
-        object.__setattr__(self, "evidence", _deep_freeze(dict(self.evidence)))
+        object.__setattr__(self, "evidence", _deep_freeze(_redact_sensitive(dict(self.evidence))))
 
     @property
     def digest(self) -> str:

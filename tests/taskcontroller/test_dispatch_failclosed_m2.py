@@ -175,3 +175,30 @@ def test_durable_store_rejects_digest_drift(tmp_path: Path):
     )
     with pytest.raises(TaskControllerValidationError, match="already exists"):
         store.put(drifted)
+
+
+def test_public_dispatch_rejects_forged_semantic_context(fabric):
+    from taskcontroller.runtime.materializer import StepContext
+
+    forged = StepContext(
+        runtime_plan_ref="plan.m2/r1",
+        runtime_plan_digest="sha256:" + "a" * 64,
+        plan_revision="rev-1",
+        step_id="inspect",
+        semantic_action="write-production",
+        allowed_inputs=(),
+        allowed_actions=("deploy",),
+        evidence_refs=(),
+    )
+    with pytest.raises(TaskControllerValidationError, match="semantic action"):
+        fabric.dispatch(
+            request=None,
+            receipt=None,
+            provider=None,
+            run_id="run-m2",
+            node_id="node-1",
+            command_id="cmd-forged-context",
+            now="2026-09-01T00:00:00+00:00",
+            context=forged,
+            require_plan_binding=True,
+        )

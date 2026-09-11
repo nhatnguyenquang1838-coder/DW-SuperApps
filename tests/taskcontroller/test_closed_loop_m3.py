@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from taskcontroller.domain.runtime_plan import RuntimePlan
 from taskcontroller.runtime.closed_loop_runtime_executor import (
     ClosedLoopRuntimeExecutor,
     ClosedLoopRuntimeError,
@@ -37,35 +38,53 @@ def _plan(
     revision: str = "sha256:" + "a" * 64,
     steps: dict | None = None,
 ) -> dict:
-    return {
-        "runtime_plan_ref": runtime_plan_ref,
-        "revision": revision,
-        "runtime_plan_digest": _digest(),
-        "steps": steps
-        or {
-            "inspect": {
-                "allowed_actions": ["read"],
-                "edges": {"PASS": {"target": "validate"}},
-            },
-            "validate": {
-                "allowed_actions": ["search"],
-                "edges": {"PASS": {"target": "terminal"}},
-            },
+    raw_steps = steps or {
+        "inspect": {
+            "allowed_actions": ["read"],
+            "edges": {"PASS": {"target": "validate"}},
+        },
+        "validate": {
+            "allowed_actions": ["search"],
+            "edges": {"PASS": {"target": "terminal"}},
         },
     }
+    canonical_steps = {}
+    for step_id, raw_step in raw_steps.items():
+        step = dict(raw_step)
+        allowed = tuple(step.get("allowed_actions", ()))
+        step.setdefault("step_id", step_id)
+        step.setdefault("semantic_action", allowed[0] if allowed else step_id)
+        edges = {}
+        for outcome, raw_edge in (step.get("edges") or {}).items():
+            edge = dict(raw_edge)
+            target = edge.get("target")
+            edge.setdefault("outcome", outcome)
+            edge.setdefault("kind", "terminal" if target == "terminal" else "continue")
+            edge.setdefault("runtime_executable", target != "terminal")
+            edges[outcome] = edge
+        step["edges"] = edges
+        canonical_steps[step_id] = step
+    payload = {
+        "runtime_plan_ref": runtime_plan_ref,
+        "revision": revision,
+        "steps": canonical_steps,
+    }
+    payload["runtime_plan_digest"] = RuntimePlan.from_dict(payload).runtime_plan_digest
+    return payload
 
 
 def _cursor(
     *,
+    plan: dict | None = None,
     runtime_plan_ref: str = "plan.m3/r1",
-    plan_revision: str = "sha256:" + "a" * 64,
+    plan_revision: str | None = None,
     current_step_id: str = "inspect",
 ) -> RunCursor:
     return RunCursor(
         run_id=f"run-{runtime_plan_ref}",
         runtime_plan_ref=runtime_plan_ref,
-        runtime_plan_digest=_digest(),
-        plan_revision=plan_revision,
+        runtime_plan_digest=plan["runtime_plan_digest"] if plan else _digest(),
+        plan_revision=plan_revision or (str(plan.get("revision")) if plan else "sha256:" + "a" * 64),
         current_step_id=current_step_id,
         attempt=1,
     )
@@ -82,7 +101,7 @@ def test_constructor_rejects_cross_plan_cursor():
 def test_constructor_rejects_cross_revision_cursor():
     """B3: cursor pinning a different plan revision must fail-closed."""
     plan = _plan(revision="sha256:" + "a" * 64)
-    cursor = _cursor(plan_revision="sha256:" + "b" * 64)
+    cursor = _cursor(plan=plan, plan_revision="sha256:" + "b" * 64)
     with pytest.raises(ClosedLoopRuntimeError, match="revision"):
         ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
 
@@ -105,7 +124,7 @@ def test_constructor_rejects_cross_digest_cursor():
 
 def test_constructor_accepts_matching_cursor():
     plan = _plan()
-    cursor = _cursor(current_step_id="inspect")
+    cursor = _cursor(plan=plan, current_step_id="inspect")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     assert executor is not None
 
@@ -113,7 +132,7 @@ def test_constructor_accepts_matching_cursor():
 def test_sequence_auto_increments_when_not_provided():
     """B4: sequence advances even when the caller forgets to supply it."""
     plan = _plan()
-    cursor = _cursor(current_step_id="inspect")
+    cursor = _cursor(plan=plan, current_step_id="inspect")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     result = executor.execute_step("inspect", {}, outcome="PASS")
     assert result["sequence"] == 1
@@ -123,7 +142,7 @@ def test_sequence_auto_increments_when_not_provided():
 def test_sequence_auto_increments_after_restart_cursor():
     """B4: a restored cursor at sequence 3 continues to 4."""
     plan = _plan()
-    cursor = _cursor(current_step_id="validate")
+    cursor = _cursor(plan=plan, current_step_id="validate")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     # simulate prior execution
     executor._sequence = 3
@@ -150,7 +169,7 @@ def test_durable_restart_resumes_without_transcript():
     plan = _plan(steps={
         "inspect": {"allowed_actions": ["read"]},
     })
-    cursor = _cursor(current_step_id="inspect", plan_revision="sha256:" + "a" * 64)
+    cursor = _cursor(plan=plan, current_step_id="inspect", plan_revision="sha256:" + "a" * 64)
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     result = executor.execute_step("inspect", {})
     assert result["runtime_plan_ref"] == "plan.m3/r1"
@@ -162,8 +181,9 @@ def test_exactly_once_semantic_progression():
     """Completed step evidence is not duplicated; cursor advances exactly once."""
     plan = _plan(steps={
         "inspect": {"allowed_actions": ["read"], "edges": {"PASS": {"target": "validate"}}},
+        "validate": {"allowed_actions": ["search"]},
     })
-    cursor = _cursor(current_step_id="inspect")
+    cursor = _cursor(plan=plan, current_step_id="inspect")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     result = executor.execute_step("inspect", {}, outcome="PASS")
     assert result["current_step"] == "validate"
@@ -176,7 +196,7 @@ def test_terminal_step_returns_terminal():
     plan = _plan(steps={
         "inspect": {"allowed_actions": ["read"], "edges": {"PASS": {"target": "terminal"}}},
     })
-    cursor = _cursor(current_step_id="inspect")
+    cursor = _cursor(plan=plan, current_step_id="inspect")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     result = executor.execute_step("inspect", {}, outcome="PASS")
     assert result["current_step"] == "terminal"
@@ -186,7 +206,7 @@ def test_terminal_step_returns_terminal():
 def test_caller_step_id_drift_rejected():
     """M3+CORRECTION: caller-supplied step_id != cursor-bound step_id is rejected."""
     plan = _plan(steps={"inspect": {"allowed_actions": ["read"]}})
-    cursor = _cursor(current_step_id="inspect")
+    cursor = _cursor(plan=plan, current_step_id="inspect")
     executor = ClosedLoopRuntimeExecutor(plan=plan, cursor=cursor)
     with pytest.raises(ClosedLoopRuntimeError, match="step_id"):
         executor.execute_step("OTHER", {})
