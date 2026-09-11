@@ -88,6 +88,7 @@ def _logical_contract() -> dict[str, Any]:
 def _attempt(attempt_id: str = "attempt-1", generation: int = 1) -> dict[str, Any]:
     return {
         "attempt_id": attempt_id,
+        "boundary_digest": "sha256:" + "2" * 64,
         "attempt_number": 1,
         "lease_generation": generation,
         "fencing_token": f"fence-{generation}",
@@ -207,6 +208,7 @@ def _valid_message(message_type: str) -> dict[str, Any]:
     elif message_type == "review_finding":
         payload["result"] = {
             "status": "SUCCEEDED",
+            "boundary_digest": payload["logical_contract"]["boundary_digest"],
             "result_digest": "sha256:" + "a" * 64,
             "artifact_refs": [],
             "findings": [payload["payload"]["finding"]],
@@ -214,6 +216,7 @@ def _valid_message(message_type: str) -> dict[str, Any]:
     elif message_type == "child_result":
         payload["result"] = {
             "status": "SUCCEEDED",
+            "boundary_digest": payload["logical_contract"]["boundary_digest"],
             "result_digest": payload["payload"]["result_digest"],
             "artifact_refs": [],
             "findings": [],
@@ -221,6 +224,7 @@ def _valid_message(message_type: str) -> dict[str, Any]:
     elif message_type == "mixer_result":
         payload["result"] = {
             "status": "NEEDS_CLARIFICATION",
+            "boundary_digest": payload["logical_contract"]["boundary_digest"],
             "result_digest": payload["payload"]["result_digest"],
             "artifact_refs": [],
             "findings": [],
@@ -228,6 +232,7 @@ def _valid_message(message_type: str) -> dict[str, Any]:
     elif message_type == "terminal_result":
         payload["result"] = {
             "status": "SUCCEEDED",
+            "boundary_digest": payload["logical_contract"]["boundary_digest"],
             "result_digest": payload["payload"]["result_digest"],
             "artifact_refs": [],
             "findings": [],

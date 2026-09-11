@@ -37,6 +37,7 @@ class MailboxV2ErrorCode:
     STALE_RESULT = "STALE_RESULT"
     CONTRACT_MISMATCH = "CONTRACT_MISMATCH"
     BOUNDARY_MISMATCH = "BOUNDARY_MISMATCH"
+    REPLAN_REQUIRED = "REPLAN_REQUIRED"
     MANIFEST_VERSION_MISMATCH = "MANIFEST_VERSION_MISMATCH"
     DIGEST_MISMATCH = "DIGEST_MISMATCH"
 
@@ -135,6 +136,11 @@ def _validate_identity_consistency(payload: Mapping[str, Any]) -> None:
         _fail(MailboxV2ErrorCode.CONTRACT_MISMATCH, "contract digest is not bound to logical contract")
     if identity["boundary_digest"] != logical["boundary_digest"]:
         _fail(MailboxV2ErrorCode.BOUNDARY_MISMATCH, "boundary digest is not bound to logical contract")
+    if attempt["boundary_digest"] != logical["boundary_digest"]:
+        _fail(MailboxV2ErrorCode.BOUNDARY_MISMATCH, "boundary digest is not bound to attempt")
+    result = payload.get("result")
+    if result is not None and result["boundary_digest"] != logical["boundary_digest"]:
+        _fail(MailboxV2ErrorCode.BOUNDARY_MISMATCH, "boundary digest is not bound to result")
     if identity["source_digest"] != logical["source_digest"]:
         _fail(MailboxV2ErrorCode.CONTRACT_MISMATCH, "source digest is not bound to logical contract")
     if identity["attempt_id"] != attempt["attempt_id"]:

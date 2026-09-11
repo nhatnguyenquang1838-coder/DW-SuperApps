@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping, NoReturn, Sequence
 
 from taskcontroller.domain.values import ScopeSpec
+from taskcontroller.controlplane.execution_boundary import ExecutionBoundary
 from taskcontroller.errors import TaskControllerValidationError
 from taskcontroller.interaction.mailbox_v2 import (
     MailboxV2ErrorCode,
@@ -32,9 +33,16 @@ _SCOPE_KEYS = (
     "max_children",
     "max_parallel",
     "max_depth",
+    "replan_required_when",
 )
 _SCOPE_LIST_KEYS = frozenset(
-    {"allowed_actions", "denied_actions", "writable_targets", "source_roots"}
+    {
+        "allowed_actions",
+        "denied_actions",
+        "writable_targets",
+        "source_roots",
+        "replan_required_when",
+    }
 )
 _SCOPE_ALIASES = {
     "allowed_work": "allowed_actions",
@@ -103,6 +111,7 @@ class BoundedMailboxRequest:
     execution_id: str | None = None
     checkpoint_id: str | None = None
     payload: Mapping[str, Any] = field(default_factory=dict)
+    execution_boundary: ExecutionBoundary | Mapping[str, Any] | None = None
 
     @classmethod
     def from_mapping(cls, values: Mapping[str, Any]) -> "BoundedMailboxRequest":
@@ -128,6 +137,7 @@ class BoundedMailboxRequest:
             "authority": "authority_constraints",
             "required_capability": "recipient_capability",
             "capability": "recipient_capability",
+            "boundary": "execution_boundary",
         }
         for alias, field_name in aliases.items():
             if alias in candidate:
@@ -180,6 +190,15 @@ def _mapping(value: Any, name: str) -> dict[str, Any]:
     if not isinstance(value, Mapping):
         _fail(MailboxV2ErrorCode.SCHEMA_INVALID, f"{name} must be an object")
     return copy.deepcopy(dict(value))
+
+
+def _execution_boundary(value: Any) -> ExecutionBoundary:
+    if isinstance(value, ExecutionBoundary):
+        return value
+    if isinstance(value, Mapping):
+        return ExecutionBoundary.from_dict(value)
+    _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "execution_boundary must be an ExecutionBoundary object")
+    raise AssertionError("_fail must raise")
 
 
 def _string(value: Any, name: str) -> str:
@@ -263,7 +282,8 @@ def _normalize_scope(
     normalized.setdefault("denied_actions", [])
     normalized.setdefault("writable_targets", [])
     for key in _SCOPE_LIST_KEYS:
-        normalized[key] = _string_list(normalized[key], f"scope.{key}", sort_values=True)
+        if key in normalized:
+            normalized[key] = _string_list(normalized[key], f"scope.{key}", sort_values=True)
     for key in ("max_children", "max_parallel", "max_depth"):
         value = normalized.get(key)
         if not isinstance(value, int) or isinstance(value, bool):
@@ -332,6 +352,20 @@ def compile_bounded_mailbox_request(
         _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "bound input must be BoundedMailboxRequest or object")
 
     scope, authority_raw = _normalize_scope(bound.scope, bound.authority_constraints)
+    if bound.execution_boundary is not None:
+        execution_boundary = _execution_boundary(bound.execution_boundary)
+        expected_scope = execution_boundary.to_dict()
+        expected_scope.pop("scope_digest", None)
+        if scope != expected_scope:
+            _fail(
+                MailboxV2ErrorCode.REPLAN_REQUIRED,
+                "compiled scope does not exactly bind execution_boundary",
+            )
+        if bound.boundary_digest != execution_boundary.digest():
+            _fail(
+                MailboxV2ErrorCode.BOUNDARY_MISMATCH,
+                "boundary_digest does not match execution_boundary",
+            )
     sources, source_ref_strings = _normalize_source_refs(bound.source_refs)
     criteria = _normalize_criteria(bound.acceptance_criteria)
     evidence_refs = _string_list(bound.evidence_refs, "evidence_refs", sort_values=True)
@@ -402,6 +436,7 @@ def compile_bounded_mailbox_request(
 
     attempt = {
         "attempt_id": bound.attempt_id,
+        "boundary_digest": bound.boundary_digest,
         "attempt_number": bound.attempt_number,
         "lease_generation": bound.lease_generation,
         "fencing_token": bound.fencing_token,

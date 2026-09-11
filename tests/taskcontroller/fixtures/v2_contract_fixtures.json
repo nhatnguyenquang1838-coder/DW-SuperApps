@@ -8,10 +8,11 @@
         "attempt_number": 1,
         "fencing_token": "fence-1",
         "lease_expires_at": "2026-09-11T00:30:00+07:00",
-        "lease_generation": 1
+        "lease_generation": 1,
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
       },
       "correlation_id": "correlation-1",
-      "digest": "sha256:1395d3c703a9bb9e11c4c565e68496f1154dc89993b993ab1502798a3b5e952b",
+      "digest": "sha256:0e159531c2d7bdf6000bcc3a83deee55ed381f22c61c85255d6e11e12ce645f0",
       "direction": "executor_to_controller",
       "execution_identity": {
         "attempt_id": "attempt-1",
@@ -88,7 +89,8 @@
         "artifact_refs": [],
         "findings": [],
         "result_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
-        "status": "SUCCEEDED"
+        "status": "SUCCEEDED",
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
       },
       "run_id": "run-1",
       "seq": 0,
@@ -117,10 +119,11 @@
         "attempt_number": 1,
         "fencing_token": "fence-1",
         "lease_expires_at": "2026-09-11T00:30:00+07:00",
-        "lease_generation": 1
+        "lease_generation": 1,
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
       },
       "correlation_id": "correlation-1",
-      "digest": "sha256:6e1a078de71c94ee841c081fdd01643e1641d9fec4e846aa99ae882dcbd8884e",
+      "digest": "sha256:8fb586a965906ae84a14903603b9f0a9ad51b87f8b110eab65c28ec873616ae5",
       "direction": "controller_to_executor",
       "execution_identity": {
         "attempt_id": "attempt-1",
@@ -220,10 +223,11 @@
         "attempt_number": 1,
         "fencing_token": "fence-1",
         "lease_expires_at": "2026-09-11T00:30:00+07:00",
-        "lease_generation": 1
+        "lease_generation": 1,
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
       },
       "correlation_id": "correlation-1",
-      "digest": "sha256:75eaa8228e066f7a172283c322de241acf7622ee40b99a40fbf4caea02830d7b",
+      "digest": "sha256:e90bd927dd14b0c83475e39e9d9215b809bef74496b98f363e235d525a1a1fa3",
       "direction": "executor_to_controller",
       "execution_identity": {
         "attempt_id": "attempt-1",
@@ -301,7 +305,8 @@
         "artifact_refs": [],
         "findings": [],
         "result_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
-        "status": "NEEDS_CLARIFICATION"
+        "status": "NEEDS_CLARIFICATION",
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
       },
       "run_id": "run-1",
       "seq": 0,
@@ -330,10 +335,11 @@
         "attempt_number": 1,
         "fencing_token": "fence-1",
         "lease_expires_at": "2026-09-11T00:30:00+07:00",
-        "lease_generation": 1
+        "lease_generation": 1,
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
       },
       "correlation_id": "correlation-1",
-      "digest": "sha256:bfdd7afa07289cc35832814bc4715725a990ffc8ca7a80901b703695a38f70fd",
+      "digest": "sha256:21acedb13a58a0f5dd21c61dc24819f7a74e31e45262f0cbf3d479e28c13decd",
       "direction": "executor_to_controller",
       "execution_identity": {
         "attempt_id": "attempt-1",
@@ -439,7 +445,8 @@
           }
         ],
         "result_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "status": "SUCCEEDED"
+        "status": "SUCCEEDED",
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
       },
       "run_id": "run-1",
       "seq": 0,
@@ -468,10 +475,11 @@
         "attempt_number": 1,
         "fencing_token": "fence-1",
         "lease_expires_at": "2026-09-11T00:30:00+07:00",
-        "lease_generation": 1
+        "lease_generation": 1,
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
       },
       "correlation_id": "correlation-1",
-      "digest": "sha256:8187c32f69faede6c62d066fcc7e43393d5fbab56b14b95243792d9eae756518",
+      "digest": "sha256:b355019083ad43721de997141ebc397fa7206024f9be91dec91ec0c902558c08",
       "direction": "executor_to_controller",
       "execution_identity": {
         "attempt_id": "attempt-1",
@@ -548,7 +556,8 @@
         "artifact_refs": [],
         "findings": [],
         "result_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
-        "status": "SUCCEEDED"
+        "status": "SUCCEEDED",
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
       },
       "run_id": "run-1",
       "seq": 0,
