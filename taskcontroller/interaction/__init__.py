@@ -18,6 +18,12 @@ from .continuation import (
 )
 from .envelope import A2A_PROTOCOL, A2AEnvelope, EnvelopeKind, MailboxCursor
 from .executor_entrypoint import (
+    BOOTSTRAP_BOOTSTRAPPED,
+    BOOTSTRAP_RECEIPT_PROTOCOL,
+    BOOTSTRAP_STARTED,
+    ActiveAttemptFence,
+    BootstrapReceipt,
+    BootstrapReceiptError,
     EXECUTOR_MAILBOX_BOOTSTRAPPED,
     EXECUTOR_MAILBOX_PROTOCOL,
     ExecutorMailboxRequest,
@@ -31,6 +37,12 @@ from .wakeup import WAKEUP_PROTOCOL, WakeupSignal
 __all__ = [
     "A2A_PROTOCOL",
     "A2AEnvelope",
+    "ActiveAttemptFence",
+    "BOOTSTRAP_BOOTSTRAPPED",
+    "BOOTSTRAP_RECEIPT_PROTOCOL",
+    "BOOTSTRAP_STARTED",
+    "BootstrapReceipt",
+    "BootstrapReceiptError",
     "CONTINUATION_MANIFEST_KIND",
     "CONTINUATION_PROTOCOL",
     "CONTINUATION_STATE_KEY",

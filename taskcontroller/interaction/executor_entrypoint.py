@@ -9,21 +9,308 @@ for caller compatibility but is never inspected or copied into the request.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import hashlib
+import json
+import re
 from typing import Any, Mapping, Protocol, runtime_checkable
 
 from taskcontroller.errors import TaskControllerValidationError
 from taskcontroller.interaction.envelope import A2AEnvelope, A2A_PROTOCOL, EnvelopeKind
 from taskcontroller.interaction.github_mailbox import parse_mailbox_comment
+from taskcontroller.interaction.mailbox_v2 import V2MailboxEnvelope
 from taskcontroller.interaction.wakeup import WakeupSignal
+from taskcontroller.standards.context_pack import TaskContextPack
+from taskcontroller.standards.resolver import ResolvedStandards, StandardsSessionContext
 
 
 EXECUTOR_MAILBOX_PROTOCOL = "dw.taskcontroller.executor-mailbox-entrypoint/v1"
 EXECUTOR_MAILBOX_BOOTSTRAPPED = "BOOTSTRAPPED"
+BOOTSTRAP_RECEIPT_PROTOCOL = "dw.taskcontroller.bootstrap-receipt/v1"
+BOOTSTRAP_STARTED = "STARTED"
+BOOTSTRAP_BOOTSTRAPPED = "BOOTSTRAPPED"
 _EXECUTABLE_KINDS = frozenset({EnvelopeKind.COMMAND.value, EnvelopeKind.CORRECTION.value})
+_BOOTSTRAP_EVENTS = frozenset({BOOTSTRAP_STARTED, BOOTSTRAP_BOOTSTRAPPED})
 _DEFAULT_SUPPORTED_PROTOCOLS = frozenset({A2A_PROTOCOL})
 _DEFAULT_ALLOWED_STATUSES = frozenset({"DISPATCHED"})
 _ACTIVE_LEASE_STATUS = "ACTIVE"
 _EXECUTOR_BINDING_KEY = "executor_binding"
+_DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+
+
+class BootstrapReceiptError(TaskControllerValidationError):
+    """Stable fail-closed error for an unverifiable bootstrap receipt."""
+
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        super().__init__(f"{code}: {message}")
+
+
+@dataclass(frozen=True)
+class ActiveAttemptFence:
+    """Controller-issued attempt identity carried by a bootstrap receipt."""
+
+    attempt_id: str
+    lease_generation: int
+    fencing_token: str
+
+    def __post_init__(self) -> None:
+        for name in ("attempt_id", "fencing_token"):
+            value = getattr(self, name)
+            if not isinstance(value, str) or not value.strip():
+                raise BootstrapReceiptError(
+                    "BOOTSTRAP_FENCE_INVALID", f"{name} must be non-empty"
+                )
+        if (
+            not isinstance(self.lease_generation, int)
+            or isinstance(self.lease_generation, bool)
+            or self.lease_generation < 0
+        ):
+            raise BootstrapReceiptError(
+                "BOOTSTRAP_FENCE_INVALID", "lease_generation must be int >= 0"
+            )
+
+    @classmethod
+    def from_value(cls, value: Any) -> "ActiveAttemptFence":
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, Mapping):
+            try:
+                return cls(
+                    attempt_id=value["attempt_id"],
+                    lease_generation=value["lease_generation"],
+                    fencing_token=value["fencing_token"],
+                )
+            except KeyError as exc:
+                raise BootstrapReceiptError(
+                    "BOOTSTRAP_FENCE_INVALID",
+                    f"missing active fence field: {exc.args[0]}",
+                ) from exc
+        for name in ("attempt_id", "lease_generation", "fencing_token"):
+            if not hasattr(value, name):
+                raise BootstrapReceiptError(
+                    "BOOTSTRAP_FENCE_INVALID",
+                    "active attempt/fence must be explicit",
+                )
+        return cls(
+            attempt_id=value.attempt_id,
+            lease_generation=value.lease_generation,
+            fencing_token=value.fencing_token,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "attempt_id": self.attempt_id,
+            "lease_generation": self.lease_generation,
+            "fencing_token": self.fencing_token,
+        }
+
+
+
+def _require_digest(value: Any, field: str) -> str:
+    if not isinstance(value, str) or not _DIGEST_RE.fullmatch(value):
+        raise BootstrapReceiptError(
+            "BOOTSTRAP_DIGEST_INVALID", f"{field} must be sha256:<64 lowercase hex>"
+        )
+    return value
+
+
+
+def _canonical_digest(value: Mapping[str, Any]) -> str:
+    try:
+        encoded = json.dumps(
+            dict(value),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+    except (TypeError, ValueError) as exc:
+        raise BootstrapReceiptError(
+            "BOOTSTRAP_REQUEST_INVALID", f"request is not canonical JSON: {exc}"
+        ) from exc
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+
+def _standards_context(
+    value: StandardsSessionContext | ResolvedStandards,
+) -> StandardsSessionContext:
+    if isinstance(value, ResolvedStandards):
+        return value.session_context
+    if isinstance(value, StandardsSessionContext):
+        return value
+    raise BootstrapReceiptError(
+        "BOOTSTRAP_STANDARDS_INVALID",
+        "standards must be an exact resolved session context",
+    )
+
+
+
+def _request_binding(
+    request: A2AEnvelope | V2MailboxEnvelope,
+) -> tuple[str, str, str, ActiveAttemptFence | None, str | None]:
+    if isinstance(request, V2MailboxEnvelope):
+        payload = request.to_dict()
+        identity = request.execution_identity
+        active = ActiveAttemptFence.from_value(identity)
+        standards = payload.get("standards_profile")
+        if not isinstance(standards, Mapping):
+            raise BootstrapReceiptError(
+                "BOOTSTRAP_STANDARDS_INVALID", "v2 request standards profile is missing"
+            )
+        return (
+            request.run_id,
+            request.node_id,
+            request.digest(),
+            active,
+            standards.get("digest"),
+        )
+
+    if isinstance(request, A2AEnvelope):
+        state = request.state
+        if not isinstance(state, dict):
+            raise BootstrapReceiptError(
+                "BOOTSTRAP_REQUEST_INVALID", "v1 request state is invalid"
+            )
+        binding = state.get(_EXECUTOR_BINDING_KEY)
+        active = ActiveAttemptFence.from_value(binding) if isinstance(binding, Mapping) else None
+        standards = state.get("standards_digest")
+        profile = state.get("standards_profile")
+        if standards is None and isinstance(profile, Mapping):
+            standards = profile.get("digest")
+        return (
+            request.run_id,
+            request.node_id,
+            _canonical_digest(request.to_dict()),
+            active,
+            standards,
+        )
+
+    raise BootstrapReceiptError(
+        "BOOTSTRAP_REQUEST_INVALID", "request must be validated A2A v1 or mailbox/v2"
+    )
+
+
+@dataclass(frozen=True)
+class BootstrapReceipt:
+    """Bounded audit event for the exact context used by one Executor bootstrap."""
+
+    receipt_id: str
+    event_type: str
+    run_id: str
+    node_id: str
+    request_digest: str
+    standards_digest: str
+    source_pack_digest: str
+    active_attempt: ActiveAttemptFence
+    recorded_at: str
+
+    def __post_init__(self) -> None:
+        for name in ("receipt_id", "run_id", "node_id", "recorded_at"):
+            value = getattr(self, name)
+            if not isinstance(value, str) or not value.strip():
+                raise BootstrapReceiptError(
+                    "BOOTSTRAP_RECEIPT_INVALID", f"{name} must be non-empty"
+                )
+        if self.event_type not in _BOOTSTRAP_EVENTS:
+            raise BootstrapReceiptError(
+                "BOOTSTRAP_RECEIPT_INVALID",
+                f"event_type must be STARTED or BOOTSTRAPPED, got {self.event_type!r}",
+            )
+        _require_digest(self.request_digest, "request_digest")
+        _require_digest(self.standards_digest, "standards_digest")
+        _require_digest(self.source_pack_digest, "source_pack_digest")
+        if not isinstance(self.active_attempt, ActiveAttemptFence):
+            raise BootstrapReceiptError(
+                "BOOTSTRAP_FENCE_INVALID", "active_attempt must be ActiveAttemptFence"
+            )
+
+    @classmethod
+    def from_context(
+        cls,
+        *,
+        request: A2AEnvelope | V2MailboxEnvelope,
+        standards: StandardsSessionContext | ResolvedStandards,
+        context_pack: TaskContextPack,
+        receipt_id: str,
+        recorded_at: str,
+        event_type: str = BOOTSTRAP_BOOTSTRAPPED,
+        active_attempt: ActiveAttemptFence | Mapping[str, Any] | Any | None = None,
+    ) -> "BootstrapReceipt":
+        if not isinstance(context_pack, TaskContextPack):
+            raise BootstrapReceiptError(
+                "BOOTSTRAP_CONTEXT_INVALID", "context_pack must be TaskContextPack"
+            )
+        session_context = _standards_context(standards)
+        if context_pack.standards.receipt.digest != session_context.receipt.digest:
+            raise BootstrapReceiptError(
+                "BOOTSTRAP_STANDARDS_MISMATCH",
+                "context pack standards digest differs from resolved standards",
+            )
+        run_id, node_id, request_digest, request_active, request_standards = _request_binding(request)
+        standards_digest = session_context.receipt.digest
+        if request_standards is not None and request_standards != standards_digest:
+            raise BootstrapReceiptError(
+                "BOOTSTRAP_STANDARDS_MISMATCH",
+                "request standards digest differs from resolved standards",
+            )
+
+        if request_active is None:
+            if active_attempt is None:
+                binding = request.state.get(_EXECUTOR_BINDING_KEY) if isinstance(request, A2AEnvelope) else None
+                active_attempt = binding
+            if active_attempt is None:
+                raise BootstrapReceiptError(
+                    "BOOTSTRAP_FENCE_REQUIRED",
+                    "v1 bootstrap requires explicit active attempt/fence metadata",
+                )
+            bound_active = ActiveAttemptFence.from_value(active_attempt)
+        else:
+            bound_active = request_active
+            if active_attempt is not None and bound_active != ActiveAttemptFence.from_value(active_attempt):
+                raise BootstrapReceiptError(
+                    "BOOTSTRAP_FENCE_MISMATCH",
+                    "supplied active attempt/fence differs from request identity",
+                )
+
+        return cls(
+            receipt_id=receipt_id,
+            event_type=event_type,
+            run_id=run_id,
+            node_id=node_id,
+            request_digest=request_digest,
+            standards_digest=standards_digest,
+            source_pack_digest=context_pack.source_pack_digest,
+            active_attempt=bound_active,
+            recorded_at=recorded_at,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "protocol": BOOTSTRAP_RECEIPT_PROTOCOL,
+            "receipt_id": self.receipt_id,
+            "event_type": self.event_type,
+            "run_id": self.run_id,
+            "node_id": self.node_id,
+            "request_digest": self.request_digest,
+            "standards_digest": self.standards_digest,
+            "source_pack_digest": self.source_pack_digest,
+            "active_attempt": self.active_attempt.to_dict(),
+            "recorded_at": self.recorded_at,
+        }
+
+    def canonical_bytes(self) -> bytes:
+        return json.dumps(
+            self.to_dict(),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+
+    def digest(self) -> str:
+        return "sha256:" + hashlib.sha256(self.canonical_bytes()).hexdigest()
+
 
 
 @dataclass(frozen=True)
@@ -201,6 +488,28 @@ class ExecutorMailboxRequest:
                 "executor mailbox executable request must be non-empty"
             )
 
+    def bootstrap_receipt(
+        self,
+        standards: StandardsSessionContext | ResolvedStandards,
+        context_pack: TaskContextPack,
+        *,
+        receipt_id: str,
+        recorded_at: str,
+        event_type: str = BOOTSTRAP_BOOTSTRAPPED,
+        active_attempt: ActiveAttemptFence | Mapping[str, Any] | Any | None = None,
+    ) -> BootstrapReceipt:
+        """Materialize an audit receipt after exact mailbox bootstrap validation."""
+
+        return BootstrapReceipt.from_context(
+            request=self.envelope,
+            standards=standards,
+            context_pack=context_pack,
+            receipt_id=receipt_id,
+            recorded_at=recorded_at,
+            event_type=event_type,
+            active_attempt=active_attempt,
+        )
+
     @property
     def mailbox_ref(self) -> str:
         return self.signal.mailbox_ref
@@ -303,6 +612,12 @@ class MailboxFirstExecutorEntrypoint:
 
 
 __all__ = [
+    "ActiveAttemptFence",
+    "BOOTSTRAP_BOOTSTRAPPED",
+    "BOOTSTRAP_RECEIPT_PROTOCOL",
+    "BOOTSTRAP_STARTED",
+    "BootstrapReceipt",
+    "BootstrapReceiptError",
     "EXECUTOR_MAILBOX_BOOTSTRAPPED",
     "EXECUTOR_MAILBOX_PROTOCOL",
     "ExecutorMailboxRequest",
