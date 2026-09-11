@@ -9,10 +9,14 @@ from typing import Any
 import pytest
 
 from taskcontroller.standards import (
+    STANDARDS_MANIFEST_CANONICALIZATION,
     StandardsProfile,
     StandardsResolutionError,
     StandardsResolver,
     StandardsSourceRef,
+    canonical_profile_digest,
+    canonical_source_manifest,
+    canonical_standards_bytes,
 )
 
 
@@ -171,6 +175,90 @@ def test_resolver_blocks_digest_drift_before_analyzer_callback() -> None:
     assert blocked.code == "STANDARDS_RESOLUTION_BLOCKED"
     assert analyzer_calls == []
     assert reader.calls == [(_COMMIT_A, "instructions/policy.md")]
+
+
+def test_canonical_source_manifest_has_stable_utf8_bytes_and_order() -> None:
+    source_z = replace(_source(_COMMIT_A, "z/path.md", "A"), repository="z-repo")
+    source_a = replace(_source(_COMMIT_B, "a/path.md", "B"), repository="a-repo")
+
+    manifest = canonical_source_manifest(
+        "taskcontroller.engineering", "v1", (source_z, source_a)
+    )
+
+    assert manifest["canonicalization"] == STANDARDS_MANIFEST_CANONICALIZATION
+    assert [source["repository"] for source in manifest["sources"]] == [
+        "a-repo",
+        "z-repo",
+    ]
+    assert canonical_standards_bytes(
+        "taskcontroller.engineering", "v1", (source_z, source_a)
+    ) == (
+        b'{"canonicalization":"dw-source-manifest-json/v1","profile_id":"taskcontroller.engineering",'
+        b'"sources":[{"blob_digest":"sha256:df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c",'
+        b'"commit_sha":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","path":"a/path.md","repository":"a-repo"},'
+        b'{"blob_digest":"sha256:559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd",'
+        b'"commit_sha":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","path":"z/path.md","repository":"z-repo"}],"version":"v1"}'
+    )
+    assert canonical_profile_digest(
+        "taskcontroller.engineering", "v1", (source_z, source_a)
+    ) == "sha256:4868cddbed6dabdcba57f0ba42bcfcfd8d43661b7141ef62569424af5f3c3b00"
+
+
+def test_canonical_profile_digest_is_identical_for_reordered_sources() -> None:
+    first = _source(_COMMIT_A, "instructions/a.md", "A")
+    second = _source(_COMMIT_B, "instructions/b.md", "B")
+
+    left = canonical_profile_digest("taskcontroller.engineering", "v1", (first, second))
+    right = canonical_profile_digest("taskcontroller.engineering", "v1", (second, first))
+
+    assert left == right
+
+
+def test_canonical_profile_digest_changes_deterministically_for_content_or_identity() -> None:
+    source = _source(_COMMIT_A, "instructions/policy.md", "approved")
+    changed_content = replace(
+        source,
+        blob_digest="sha256:" + hashlib.sha256(b"changed").hexdigest(),
+    )
+    changed_path = replace(source, path="instructions/other-policy.md")
+
+    original = canonical_profile_digest("taskcontroller.engineering", "v1", (source,))
+    assert canonical_profile_digest("taskcontroller.engineering", "v1", (source,)) == original
+    assert canonical_profile_digest("taskcontroller.engineering", "v1", (changed_content,)) != original
+    assert canonical_profile_digest("taskcontroller.engineering", "v1", (changed_path,)) != original
+
+
+def test_profile_rejects_duplicate_source_identity_even_when_blob_digest_differs() -> None:
+    source = _source(_COMMIT_A, "instructions/policy.md", "approved")
+    substituted = replace(
+        source,
+        blob_digest="sha256:" + hashlib.sha256(b"substituted").hexdigest(),
+    )
+
+    with pytest.raises(StandardsResolutionError) as error:
+        StandardsProfile.create(
+            profile_id="taskcontroller.engineering",
+            version="v1",
+            sources=(source, substituted),
+        )
+
+    assert error.value.code == "STANDARDS_PROFILE_INVALID"
+    assert "duplicate source identity" in str(error.value)
+
+
+def test_canonical_standards_bytes_preserve_utf8_without_text_normalization() -> None:
+    source = _source(_COMMIT_A, "instructions/café.md", "règles")
+    decomposed = replace(source, path="instructions/cafe\u0301.md")
+    encoded = canonical_standards_bytes("taskcontroller.engineering", "v1", (source,))
+
+    assert "café.md".encode("utf-8") in encoded
+    assert b"\\u00e9" not in encoded
+    assert canonical_profile_digest(
+        "taskcontroller.engineering", "v1", (decomposed,)
+    ) != canonical_profile_digest("taskcontroller.engineering", "v1", (source,))
+    assert "cafe\u0301.md".encode("utf-8") in canonical_standards_bytes(
+        "taskcontroller.engineering", "v1", (decomposed,)
+    )
 
 
 def test_resolver_blocks_profile_digest_drift_before_materialization() -> None:

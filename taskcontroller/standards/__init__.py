@@ -20,6 +20,7 @@ from .resolver import (
     GitExactSourceReader,
     MaterializedInstruction,
     ResolvedStandards,
+    STANDARDS_MANIFEST_CANONICALIZATION,
     STANDARDS_RESOLUTION_BLOCKED,
     StandardsProfile,
     StandardsResolutionBlocked,
@@ -29,6 +30,8 @@ from .resolver import (
     StandardsSessionContext,
     StandardsSourceRef,
     canonical_profile_digest,
+    canonical_source_manifest,
+    canonical_standards_bytes,
 )
 
 __all__ = [
@@ -47,6 +50,7 @@ __all__ = [
     "MaterializedEvidence",
     "MaterializedInstruction",
     "ResolvedStandards",
+    "STANDARDS_MANIFEST_CANONICALIZATION",
     "STANDARDS_RESOLUTION_BLOCKED",
     "StandardsProfile",
     "StandardsResolutionBlocked",
@@ -58,4 +62,6 @@ __all__ = [
     "TaskContextPack",
     "build_context_pack",
     "canonical_profile_digest",
+    "canonical_source_manifest",
+    "canonical_standards_bytes",
 ]

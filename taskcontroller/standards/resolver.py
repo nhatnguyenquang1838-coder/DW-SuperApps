@@ -24,6 +24,7 @@ _DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _COMMIT_RE = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
 _ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]*$")
 STANDARDS_RESOLUTION_BLOCKED = "STANDARDS_RESOLUTION_BLOCKED"
+STANDARDS_MANIFEST_CANONICALIZATION = "dw-source-manifest-json/v1"
 
 
 class StandardsResolutionError(TaskControllerValidationError):
@@ -48,9 +49,9 @@ class StandardsResolutionBlocked(StandardsResolutionError):
         )
 
 
-def _canonical_digest(value: Mapping[str, Any]) -> str:
+def _canonical_bytes(value: Mapping[str, Any]) -> bytes:
     try:
-        encoded = json.dumps(
+        return json.dumps(
             value,
             ensure_ascii=False,
             sort_keys=True,
@@ -61,7 +62,10 @@ def _canonical_digest(value: Mapping[str, Any]) -> str:
         raise StandardsResolutionError(
             "STANDARDS_PROFILE_INVALID", f"profile is not canonical JSON: {exc}"
         ) from exc
-    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def _canonical_digest(value: Mapping[str, Any]) -> str:
+    return "sha256:" + hashlib.sha256(_canonical_bytes(value)).hexdigest()
 
 
 def _require_id(value: Any, field: str) -> str:
@@ -118,8 +122,42 @@ class StandardsSourceRef:
         }
 
     @property
-    def sort_key(self) -> tuple[str, str, str, str]:
-        return (self.repository, self.commit_sha, self.path, self.blob_digest)
+    def identity_key(self) -> tuple[str, str, str]:
+        """Exact source identity excluding content, used for canonical ordering."""
+
+        return (self.repository, self.commit_sha, self.path)
+
+    @property
+    def sort_key(self) -> tuple[str, str, str]:
+        """Canonical source order: repository, commit SHA, then path."""
+
+        return self.identity_key
+
+
+
+def _ordered_source_refs(
+    sources: Sequence[StandardsSourceRef],
+) -> tuple[StandardsSourceRef, ...]:
+    try:
+        candidate = tuple(sources)
+    except TypeError as exc:
+        raise StandardsResolutionError(
+            "STANDARDS_PROFILE_INVALID", "profile sources must be iterable"
+        ) from exc
+    if not candidate:
+        raise StandardsResolutionError(
+            "STANDARDS_PROFILE_INVALID", "profile must declare at least one source"
+        )
+    if any(not isinstance(source, StandardsSourceRef) for source in candidate):
+        raise StandardsResolutionError(
+            "STANDARDS_PROFILE_INVALID", "profile sources must be StandardsSourceRef values"
+        )
+    ordered = tuple(sorted(candidate, key=lambda source: source.identity_key))
+    if len({source.identity_key for source in ordered}) != len(ordered):
+        raise StandardsResolutionError(
+            "STANDARDS_PROFILE_INVALID", "duplicate source identity is not allowed"
+        )
+    return ordered
 
 
 @dataclass(frozen=True)
@@ -135,19 +173,11 @@ class StandardsProfile:
         _require_id(self.profile_id, "profile_id")
         _require_id(self.version, "version")
         _require_digest(self.digest, "digest")
-        if not isinstance(self.sources, tuple) or not self.sources:
+        if not isinstance(self.sources, tuple):
             raise StandardsResolutionError(
-                "STANDARDS_PROFILE_INVALID", "profile must declare at least one source"
+                "STANDARDS_PROFILE_INVALID", "profile sources must be a tuple"
             )
-        if any(not isinstance(source, StandardsSourceRef) for source in self.sources):
-            raise StandardsResolutionError(
-                "STANDARDS_PROFILE_INVALID", "profile sources must be StandardsSourceRef values"
-            )
-        ordered = tuple(sorted(self.sources, key=lambda source: source.sort_key))
-        if len(set(source.sort_key for source in ordered)) != len(ordered):
-            raise StandardsResolutionError(
-                "STANDARDS_PROFILE_INVALID", "profile sources must not contain duplicates"
-            )
+        ordered = _ordered_source_refs(self.sources)
         object.__setattr__(self, "sources", ordered)
 
     @classmethod
@@ -158,7 +188,7 @@ class StandardsProfile:
         version: str,
         sources: Sequence[StandardsSourceRef],
     ) -> "StandardsProfile":
-        ordered = tuple(sorted(tuple(sources), key=lambda source: source.sort_key))
+        ordered = _ordered_source_refs(sources)
         digest = canonical_profile_digest(profile_id, version, ordered)
         return cls(profile_id=profile_id, version=version, digest=digest, sources=ordered)
 
@@ -204,12 +234,42 @@ class StandardsProfile:
         }
 
     def canonical_identity(self) -> dict[str, Any]:
-        return {
-            "profile_id": self.profile_id,
-            "version": self.version,
-            "sources": [source.to_dict() for source in self.sources],
-        }
+        return canonical_source_manifest(self.profile_id, self.version, self.sources)
 
+
+
+def canonical_source_manifest(
+    profile_id: str,
+    version: str,
+    sources: Sequence[StandardsSourceRef],
+) -> dict[str, Any]:
+    """Return the normative, sorted source-manifest object.
+
+    The manifest uses exact validated text values: no trimming, case folding or
+    Unicode normalization is applied.  Its identity is therefore bound to the
+    exact repository, commit, path and blob digest values supplied by the
+    caller.
+    """
+
+    _require_id(profile_id, "profile_id")
+    _require_id(version, "version")
+    ordered = _ordered_source_refs(sources)
+    return {
+        "canonicalization": STANDARDS_MANIFEST_CANONICALIZATION,
+        "profile_id": profile_id,
+        "version": version,
+        "sources": [source.to_dict() for source in ordered],
+    }
+
+
+def canonical_standards_bytes(
+    profile_id: str,
+    version: str,
+    sources: Sequence[StandardsSourceRef],
+) -> bytes:
+    """Return canonical UTF-8 JSON bytes for one standards source manifest."""
+
+    return _canonical_bytes(canonical_source_manifest(profile_id, version, sources))
 
 
 def canonical_profile_digest(
@@ -217,16 +277,11 @@ def canonical_profile_digest(
     version: str,
     sources: Sequence[StandardsSourceRef],
 ) -> str:
-    """Return the deterministic digest of profile identity and sorted sources."""
+    """Return the SHA-256 digest of canonical standards-manifest bytes."""
 
-    ordered = tuple(sorted(tuple(sources), key=lambda source: source.sort_key))
-    return _canonical_digest(
-        {
-            "profile_id": profile_id,
-            "version": version,
-            "sources": [source.to_dict() for source in ordered],
-        }
-    )
+    return "sha256:" + hashlib.sha256(
+        canonical_standards_bytes(profile_id, version, sources)
+    ).hexdigest()
 
 
 class ExactSourceReader(Protocol):
