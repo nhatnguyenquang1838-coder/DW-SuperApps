@@ -12,12 +12,17 @@ from taskcontroller.execution.child_contract import (
     generate_child_contracts,
 )
 from taskcontroller.execution.fanout import (
+    ChildLifecycle,
+    ChildLifecycleState,
     CompletionStatus,
     FanoutCoordinator,
+    FanoutCoordinatorError,
     FanoutMode,
+    JoinSemantics,
     JoinStatus,
     NormalizedJoinInput,
     child_completion,
+    transition_child_lifecycle,
 )
 
 
@@ -260,3 +265,149 @@ def test_completion_requires_bound_result_reference_and_digest() -> None:
             result_ref="github://result/child-1",
             result_digest="not-a-digest",
         )
+
+
+def test_child_lifecycle_vocabulary_is_normative_and_terminal_states_are_explicit() -> None:
+    assert tuple(state.value for state in ChildLifecycle) == (
+        "PLANNED",
+        "DISPATCHED",
+        "RUNNING",
+        "SUCCEEDED",
+        "FAILED",
+        "TIMED_OUT",
+        "CANCELLED",
+        "STALE",
+    )
+    assert ChildLifecycle.non_terminal_states() == (
+        ChildLifecycle.PLANNED,
+        ChildLifecycle.DISPATCHED,
+        ChildLifecycle.RUNNING,
+    )
+    assert ChildLifecycle.terminal_states() == (
+        ChildLifecycle.SUCCEEDED,
+        ChildLifecycle.FAILED,
+        ChildLifecycle.TIMED_OUT,
+        ChildLifecycle.CANCELLED,
+        ChildLifecycle.STALE,
+    )
+    assert not ChildLifecycle.RUNNING.is_terminal
+    assert ChildLifecycle.STALE.is_terminal
+
+
+def test_child_lifecycle_transition_table_is_fail_closed_and_replay_idempotent() -> None:
+    state = ChildLifecycleState(child_id="child-1")
+    for target in (
+        ChildLifecycle.DISPATCHED,
+        ChildLifecycle.RUNNING,
+        ChildLifecycle.SUCCEEDED,
+    ):
+        state = state.transition(target)
+    assert state.state is ChildLifecycle.SUCCEEDED
+    assert state.transition(ChildLifecycle.SUCCEEDED) is state
+
+    valid_paths = (
+        (ChildLifecycle.PLANNED, ChildLifecycle.CANCELLED),
+        (ChildLifecycle.PLANNED, ChildLifecycle.STALE),
+        (ChildLifecycle.DISPATCHED, ChildLifecycle.TIMED_OUT),
+        (ChildLifecycle.RUNNING, ChildLifecycle.FAILED),
+        (ChildLifecycle.RUNNING, ChildLifecycle.CANCELLED),
+        (ChildLifecycle.RUNNING, ChildLifecycle.STALE),
+    )
+    for current, target in valid_paths:
+        assert transition_child_lifecycle(current, target) is target
+
+    invalid_paths = (
+        (ChildLifecycle.PLANNED, ChildLifecycle.RUNNING),
+        (ChildLifecycle.PLANNED, ChildLifecycle.SUCCEEDED),
+        (ChildLifecycle.DISPATCHED, ChildLifecycle.SUCCEEDED),
+        (ChildLifecycle.SUCCEEDED, ChildLifecycle.FAILED),
+        (ChildLifecycle.FAILED, ChildLifecycle.RUNNING),
+        (ChildLifecycle.STALE, ChildLifecycle.RUNNING),
+    )
+    for current, target in invalid_paths:
+        with pytest.raises(FanoutCoordinatorError, match="INVALID_LIFECYCLE_TRANSITION"):
+            transition_child_lifecycle(current, target)
+
+
+def test_all_required_join_semantics_explicitly_reject_partial_and_non_success_terminal_states() -> None:
+    semantics = JoinSemantics.for_policy("ALL_REQUIRED")
+
+    assert semantics.policy.value == "ALL_REQUIRED"
+    assert semantics.acceptable_terminal_states == (CompletionStatus.SUCCEEDED,)
+    assert semantics.allow_partial is False
+    assert semantics.partial_result_policy == "NOT_READY"
+    assert semantics.failure_policy == "BLOCK_PARENT"
+    assert semantics.timeout_policy == "BLOCK_PARENT"
+    assert semantics.cancellation_policy == "BLOCK_PARENT"
+    assert semantics.stale_policy == "BLOCK_PARENT"
+    assert semantics.to_dict() == {
+        "policy": "ALL_REQUIRED",
+        "acceptable_terminal_states": ["SUCCEEDED"],
+        "allow_partial": False,
+        "partial_result_policy": "NOT_READY",
+        "failure_policy": "BLOCK_PARENT",
+        "timeout_policy": "BLOCK_PARENT",
+        "cancellation_policy": "BLOCK_PARENT",
+        "stale_policy": "BLOCK_PARENT",
+    }
+    with pytest.raises(FanoutCoordinatorError, match="SCHEMA_INVALID"):
+        JoinSemantics(
+            policy="ALL_REQUIRED",
+            acceptable_terminal_states=(CompletionStatus.FAILED,),
+        )
+    with pytest.raises(FanoutCoordinatorError, match="SCHEMA_INVALID"):
+        JoinSemantics(
+            policy="ALL_REQUIRED",
+            acceptable_terminal_states=(CompletionStatus.SUCCEEDED,),
+            partial_result_policy="ACCEPT_PARTIAL",
+        )
+
+    children = _children(2)
+    for status in (
+        CompletionStatus.FAILED,
+        CompletionStatus.TIMED_OUT,
+        CompletionStatus.CANCELLED,
+        CompletionStatus.STALE,
+    ):
+        coordinator = FanoutCoordinator.from_children(
+            children,
+            parent=_parent(),
+            mode="PARALLEL",
+            max_parallel=2,
+        ).complete(_completion(children[0], status=status))
+        decision = coordinator.join()
+        assert decision.status is JoinStatus.BLOCKED
+        assert decision.join_semantics == semantics
+        assert decision.failed_child_ids == ("child-1",)
+
+    partial = FanoutCoordinator.from_children(
+        children,
+        parent=_parent(),
+        mode="PARALLEL",
+        max_parallel=2,
+    ).complete(_completion(children[0]))
+    partial_decision = partial.join()
+    assert partial_decision.status is JoinStatus.NOT_READY
+    assert partial_decision.missing_child_ids == ("child-2",)
+    assert partial_decision.join_semantics.partial_result_policy == "NOT_READY"
+
+
+def test_coordinator_exposes_planned_dispatched_and_terminal_child_lifecycle() -> None:
+    children = _children(2)
+    coordinator = FanoutCoordinator.from_children(
+        children,
+        parent=_parent(),
+        mode="STAGED",
+        max_parallel=1,
+        stages=(("child-1",), ("child-2",)),
+    )
+
+    assert coordinator.lifecycle_state("child-1") is ChildLifecycle.DISPATCHED
+    assert coordinator.lifecycle_state("child-2") is ChildLifecycle.PLANNED
+
+    coordinator = coordinator.complete(_completion(children[0]))
+    assert coordinator.lifecycle_state("child-1") is ChildLifecycle.SUCCEEDED
+    assert coordinator.lifecycle_state("child-2") is ChildLifecycle.DISPATCHED
+
+    with pytest.raises(FanoutCoordinatorError, match="unknown child"):
+        coordinator.lifecycle_state("unknown-child")

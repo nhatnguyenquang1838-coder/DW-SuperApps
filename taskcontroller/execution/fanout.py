@@ -40,11 +40,81 @@ class FanoutCoordinatorError(ValueError):
         super().__init__(f"{code}: {message}")
 
 
+class ChildLifecycleError(FanoutCoordinatorError):
+    """Stable fail-closed error for an illegal child lifecycle transition."""
+
+
 class FanoutMode(str, Enum):
     """Execution topology inside one Controller-approved parent boundary."""
 
     PARALLEL = "PARALLEL"
     STAGED = "STAGED"
+
+
+class ChildLifecycle(str, Enum):
+    """Normative lifecycle for one bounded child execution attempt."""
+
+    PLANNED = "PLANNED"
+    DISPATCHED = "DISPATCHED"
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+    TIMED_OUT = "TIMED_OUT"
+    CANCELLED = "CANCELLED"
+    STALE = "STALE"
+
+    @property
+    def is_terminal(self) -> bool:
+        return self in _CHILD_LIFECYCLE_TERMINAL_STATES
+
+    @classmethod
+    def non_terminal_states(cls) -> tuple["ChildLifecycle", ...]:
+        return _CHILD_LIFECYCLE_NON_TERMINAL_STATES
+
+    @classmethod
+    def terminal_states(cls) -> tuple["ChildLifecycle", ...]:
+        return _CHILD_LIFECYCLE_TERMINAL_STATES
+
+
+_CHILD_LIFECYCLE_NON_TERMINAL_STATES = (
+    ChildLifecycle.PLANNED,
+    ChildLifecycle.DISPATCHED,
+    ChildLifecycle.RUNNING,
+)
+_CHILD_LIFECYCLE_TERMINAL_STATES = (
+    ChildLifecycle.SUCCEEDED,
+    ChildLifecycle.FAILED,
+    ChildLifecycle.TIMED_OUT,
+    ChildLifecycle.CANCELLED,
+    ChildLifecycle.STALE,
+)
+_CHILD_LIFECYCLE_TRANSITIONS = {
+    ChildLifecycle.PLANNED: frozenset(
+        {ChildLifecycle.DISPATCHED, ChildLifecycle.CANCELLED, ChildLifecycle.STALE}
+    ),
+    ChildLifecycle.DISPATCHED: frozenset(
+        {
+            ChildLifecycle.RUNNING,
+            ChildLifecycle.TIMED_OUT,
+            ChildLifecycle.CANCELLED,
+            ChildLifecycle.STALE,
+        }
+    ),
+    ChildLifecycle.RUNNING: frozenset(
+        {
+            ChildLifecycle.SUCCEEDED,
+            ChildLifecycle.FAILED,
+            ChildLifecycle.TIMED_OUT,
+            ChildLifecycle.CANCELLED,
+            ChildLifecycle.STALE,
+        }
+    ),
+    ChildLifecycle.SUCCEEDED: frozenset(),
+    ChildLifecycle.FAILED: frozenset(),
+    ChildLifecycle.TIMED_OUT: frozenset(),
+    ChildLifecycle.CANCELLED: frozenset(),
+    ChildLifecycle.STALE: frozenset(),
+}
 
 
 class JoinPolicy(str, Enum):
@@ -75,8 +145,92 @@ class CompletionStatus(str, Enum):
     CANCELLED = "CANCELLED"
     STALE = "STALE"
 
+    @property
+    def lifecycle(self) -> ChildLifecycle:
+        return ChildLifecycle(self.value)
+
 
 _TERMINAL_STATUSES = frozenset(CompletionStatus)
+
+
+@dataclass(frozen=True, slots=True)
+class JoinSemantics:
+    """Normative acceptance/failure grammar for a parent join.
+
+    ``ALL_REQUIRED`` is intentionally strict: only successful terminal child
+    outcomes are acceptable. Missing children remain ``NOT_READY``; any
+    failure, timeout, cancellation or stale child blocks the parent. Partial
+    results are retained as evidence but never treated as a successful join.
+    """
+
+    policy: JoinPolicy | str
+    acceptable_terminal_states: tuple[CompletionStatus | str, ...]
+    partial_result_policy: str = "NOT_READY"
+    failure_policy: str = "BLOCK_PARENT"
+    timeout_policy: str = "BLOCK_PARENT"
+    cancellation_policy: str = "BLOCK_PARENT"
+    stale_policy: str = "BLOCK_PARENT"
+
+    @classmethod
+    def for_policy(cls, policy: JoinPolicy | str) -> "JoinSemantics":
+        return cls(
+            policy=policy,
+            acceptable_terminal_states=(CompletionStatus.SUCCEEDED,),
+        )
+
+    def __post_init__(self) -> None:
+        selected_policy = _enum(self.policy, JoinPolicy, "join_policy")
+        states = tuple(
+            _enum(item, CompletionStatus, "acceptable_terminal_states[]")
+            for item in self.acceptable_terminal_states
+        )
+        expected = (CompletionStatus.SUCCEEDED,)
+        if selected_policy is not JoinPolicy.ALL_REQUIRED or states != expected:
+            _fail(
+                "SCHEMA_INVALID",
+                "ALL_REQUIRED accepts exactly SUCCEEDED terminal children",
+            )
+        policies = (
+            "partial_result_policy",
+            "failure_policy",
+            "timeout_policy",
+            "cancellation_policy",
+            "stale_policy",
+        )
+        for name in policies:
+            value = getattr(self, name)
+            if value not in {"NOT_READY", "BLOCK_PARENT"}:
+                _fail("SCHEMA_INVALID", f"{name} has an unsupported disposition")
+        if self.partial_result_policy != "NOT_READY":
+            _fail("SCHEMA_INVALID", "ALL_REQUIRED partial_result_policy must be NOT_READY")
+        if any(
+            getattr(self, name) != "BLOCK_PARENT"
+            for name in (
+                "failure_policy",
+                "timeout_policy",
+                "cancellation_policy",
+                "stale_policy",
+            )
+        ):
+            _fail("SCHEMA_INVALID", "ALL_REQUIRED non-success terminal policy must BLOCK_PARENT")
+        object.__setattr__(self, "policy", selected_policy)
+        object.__setattr__(self, "acceptable_terminal_states", expected)
+
+    @property
+    def allow_partial(self) -> bool:
+        return False
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "policy": self.policy.value,
+            "acceptable_terminal_states": [item.value for item in self.acceptable_terminal_states],
+            "allow_partial": self.allow_partial,
+            "partial_result_policy": self.partial_result_policy,
+            "failure_policy": self.failure_policy,
+            "timeout_policy": self.timeout_policy,
+            "cancellation_policy": self.cancellation_policy,
+            "stale_policy": self.stale_policy,
+        }
 
 
 def _fail(code: str, message: str) -> None:
@@ -124,6 +278,80 @@ def _enum(value: Any, enum_type: type[Enum], name: str) -> Enum:
         allowed = ", ".join(item.value for item in enum_type)
         _fail("SCHEMA_INVALID", f"{name} must be one of {allowed}: {exc}")
     raise AssertionError("_fail must raise")
+
+
+def allowed_child_lifecycle_transitions(
+    current: ChildLifecycle | str,
+) -> tuple[ChildLifecycle, ...]:
+    """Return the only non-idempotent next states allowed from ``current``."""
+    selected = _enum(current, ChildLifecycle, "current_lifecycle")
+    return tuple(
+        state for state in ChildLifecycle if state in _CHILD_LIFECYCLE_TRANSITIONS[selected]
+    )
+
+
+def transition_child_lifecycle(
+    current: ChildLifecycle | str,
+    target: ChildLifecycle | str,
+) -> ChildLifecycle:
+    """Apply one bounded lifecycle transition, allowing exact replay only."""
+    selected_current = _enum(current, ChildLifecycle, "current_lifecycle")
+    selected_target = _enum(target, ChildLifecycle, "target_lifecycle")
+    if selected_current is selected_target:
+        return selected_current
+    if selected_target not in _CHILD_LIFECYCLE_TRANSITIONS[selected_current]:
+        raise ChildLifecycleError(
+            "INVALID_LIFECYCLE_TRANSITION",
+            f"{selected_current.value} -> {selected_target.value} is not allowed",
+        )
+    return selected_target
+
+
+@dataclass(frozen=True, slots=True)
+class ChildLifecycleState:
+    """Immutable child lifecycle snapshot with fail-closed transitions."""
+
+    child_id: str
+    state: ChildLifecycle | str = ChildLifecycle.PLANNED
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "child_id",
+            _text(self.child_id, "child_id", max_bytes=MAX_CHILD_ID_LENGTH, identifier=True),
+        )
+        object.__setattr__(self, "state", _enum(self.state, ChildLifecycle, "state"))
+
+    def transition(self, target: ChildLifecycle | str) -> "ChildLifecycleState":
+        next_state = transition_child_lifecycle(self.state, target)
+        if next_state is self.state:
+            return self
+        return ChildLifecycleState(child_id=self.child_id, state=next_state)
+
+    def to_dict(self) -> dict[str, str]:
+        return {"child_id": self.child_id, "state": self.state.value}
+
+
+@dataclass(frozen=True, slots=True)
+class ChildLifecycleTransition:
+    """Validated state-to-state transition record for durable adapters."""
+
+    from_state: ChildLifecycle | str
+    to_state: ChildLifecycle | str
+
+    def __post_init__(self) -> None:
+        current = _enum(self.from_state, ChildLifecycle, "from_state")
+        target = transition_child_lifecycle(current, self.to_state)
+        object.__setattr__(self, "from_state", current)
+        object.__setattr__(self, "to_state", target)
+
+    @property
+    def idempotent_replay(self) -> bool:
+        return self.from_state is self.to_state
+
+    def to_dict(self) -> dict[str, str]:
+        return {"from_state": self.from_state.value, "to_state": self.to_state.value}
+
 
 
 def _canonical_digest(payload: Mapping[str, Any]) -> str:
@@ -252,6 +480,10 @@ class ChildCompletion:
             "result_digest": self.result_digest,
         }
 
+    @property
+    def lifecycle(self) -> ChildLifecycle:
+        return self.status.lifecycle
+
 
 # Function form is convenient for adapters and keeps constructor validation in
 # one immutable type.
@@ -316,6 +548,7 @@ class FanoutPlan:
 
         selected_mode = _enum(mode, FanoutMode, "mode")
         selected_join = _enum(join_policy, JoinPolicy, "join_policy")
+        join_semantics = JoinSemantics.for_policy(selected_join)  # type: ignore[arg-type]
         requested_parallel = (
             bound_parent.boundary.max_parallel if max_parallel is None else max_parallel
         )
@@ -344,6 +577,7 @@ class FanoutPlan:
             "mode": selected_mode.value,
             "max_parallel": requested_parallel,
             "join_policy": selected_join.value,
+            "join_semantics": join_semantics.to_dict(),
             "stages": [list(stage) for stage in normalized_stages],
         }
         return cls(
@@ -405,6 +639,10 @@ class FanoutPlan:
             _fail("SCHEMA_INVALID", "stages must account for every child_id exactly once")
         return tuple(result)
 
+    @property
+    def join_semantics(self) -> JoinSemantics:
+        return JoinSemantics.for_policy(self.join_policy)
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "protocol": FANOUT_COORDINATOR_PROTOCOL,
@@ -421,6 +659,7 @@ class FanoutPlan:
             "mode": self.mode.value,
             "max_parallel": self.max_parallel,
             "join_policy": self.join_policy.value,
+            "join_semantics": self.join_semantics.to_dict(),
             "stages": [list(stage) for stage in self.stages],
             "plan_digest": self.plan_digest,
         }
@@ -474,6 +713,7 @@ class JoinDecision:
     normalized_input: NormalizedJoinInput
     missing_child_ids: tuple[str, ...]
     failed_child_ids: tuple[str, ...]
+    join_semantics: JoinSemantics = JoinSemantics.for_policy(JoinPolicy.ALL_REQUIRED)
 
     @property
     def ready(self) -> bool:
@@ -563,6 +803,27 @@ class FanoutCoordinator:
     def active_child_ids(self) -> tuple[str, ...]:
         return self.dispatch_window()
 
+    def lifecycle_state(self, child_id: str) -> ChildLifecycle:
+        """Project this snapshot into the normative child lifecycle."""
+        known = {child.child_id for child in self.plan.children}
+        if child_id not in known:
+            _fail("CONTRACT_MISMATCH", f"unknown child: {child_id}")
+        completion = next(
+            (item for item in self.completions if item.child_id == child_id),
+            None,
+        )
+        if completion is not None:
+            return completion.lifecycle
+        if child_id in self.dispatch_window():
+            return ChildLifecycle.DISPATCHED
+        return ChildLifecycle.PLANNED
+
+    def lifecycle_states(self) -> dict[str, ChildLifecycle]:
+        return {
+            child.child_id: self.lifecycle_state(child.child_id)
+            for child in self.plan.children
+        }
+
     def dispatch_window(self) -> tuple[str, ...]:
         """Return only the current bounded window; later stages stay closed."""
         completed = {item.child_id: item for item in self.completions}
@@ -626,15 +887,16 @@ class FanoutCoordinator:
         )
 
     def join(self) -> JoinDecision:
-        """Evaluate explicit ``ALL_REQUIRED`` join without dropping failures."""
+        """Evaluate the declared join grammar without dropping failures."""
         normalized = self.normalized_input()
+        semantics = self.plan.join_semantics
         received = set(normalized.child_ids)
         expected = {child.child_id for child in self.plan.children}
         missing = tuple(sorted(expected - received))
         failed = tuple(
             item.child_id
             for item in normalized.completions
-            if item.status is not CompletionStatus.SUCCEEDED
+            if item.status not in semantics.acceptable_terminal_states
         )
         if failed:
             status = JoinStatus.BLOCKED
@@ -647,6 +909,7 @@ class FanoutCoordinator:
             normalized_input=normalized,
             missing_child_ids=missing,
             failed_child_ids=tuple(sorted(failed)),
+            join_semantics=semantics,
         )
 
     def join_decision(self) -> JoinDecision:
@@ -661,6 +924,10 @@ NormalizedInputSet = NormalizedJoinInput
 
 __all__ = [
     "ChildCompletion",
+    "ChildLifecycle",
+    "ChildLifecycleError",
+    "ChildLifecycleState",
+    "ChildLifecycleTransition",
     "CompletionStatus",
     "FANOUT_COORDINATOR_PROTOCOL",
     "FanoutCompletion",
@@ -671,11 +938,14 @@ __all__ = [
     "FanoutPlan",
     "JoinDecision",
     "JoinPolicy",
+    "JoinSemantics",
     "JoinStatus",
     "MAX_FANOUT_CHILDREN",
     "MAX_FANOUT_PARALLEL",
     "MAX_STAGE_COUNT",
     "NormalizedInputSet",
     "NormalizedJoinInput",
+    "allowed_child_lifecycle_transitions",
     "child_completion",
+    "transition_child_lifecycle",
 ]
