@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import json
 from dataclasses import replace
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -26,12 +27,18 @@ from taskcontroller.interaction.mailbox_v2 import (
 )
 from taskcontroller.runtime.dispatch_ledger import DispatchPrepared, DispatchProtocol
 from taskcontroller.controlplane.wakeup_outbox import (
+    WAKEUP_ATTEMPT_BLOCKED,
     WAKEUP_ATTEMPT_DELIVERED,
     WAKEUP_ATTEMPT_FAILED,
+    WAKEUP_DELIVERY_BLOCKED,
+    WAKEUP_DELIVERY_FALLBACK_DELIVERED,
+    WAKEUP_FALLBACK_DELIVERED,
     WAKEUP_INTENT_PENDING,
     WakeupDeliveryAttempt,
+    WakeupDeliveryResult,
     WakeupIntent,
     WakeupOutbox,
+    WakeupRetryPolicy,
 )
 
 
@@ -286,5 +293,231 @@ def test_unverified_or_mismatched_pointer_evidence_fails_closed(tmp_path: Path) 
         _create_intent(outbox, outcome, mismatched_emission)
     assert exc_info.value.code == MailboxV2ErrorCode.CONTRACT_MISMATCH
     assert outbox.list_intents() == ()
+    outbox.close()
+    ledger.close()
+
+
+def test_retry_policy_has_a_finite_configured_backoff_schedule() -> None:
+    policy = WakeupRetryPolicy(max_attempts=3, backoff_seconds=(2.0, 5.0))
+
+    assert policy.max_attempts == 3
+    assert policy.backoff_for(attempt_number=1) == 2.0
+    assert policy.backoff_for(attempt_number=2) == 5.0
+    with pytest.raises(MailboxV2ValidationError, match="backoff"):
+        policy.backoff_for(attempt_number=3)
+
+
+def test_retry_policy_round_trips_and_rejects_unbounded_configuration() -> None:
+    policy = WakeupRetryPolicy(
+        max_attempts=2,
+        backoff_seconds=(3.5,),
+        approved_fallback_capabilities=frozenset({"mailbox_poll"}),
+    )
+
+    assert WakeupRetryPolicy.from_dict(policy.to_dict()) == policy
+    with pytest.raises(MailboxV2ValidationError, match="between 1 and"):
+        WakeupRetryPolicy(max_attempts=17, backoff_seconds=(1.0,) * 16)
+    with pytest.raises(MailboxV2ValidationError, match="finite"):
+        WakeupRetryPolicy(max_attempts=2, backoff_seconds=(float("inf"),))
+
+
+def test_retry_delivery_uses_configured_backoff_and_bounded_blocked_outcome(
+    tmp_path: Path,
+) -> None:
+    envelope, _, outcome, emission, (repository, ledger) = _bound_dispatch(tmp_path)
+    outbox = WakeupOutbox(tmp_path / "wakeup-outbox.sqlite3")
+    intent = _create_intent(outbox, outcome, emission)
+    before_snapshot = repository.read(MAILBOX_REF)
+    before_cursor = repository.read_cursor(
+        MAILBOX_REF,
+        envelope.run_id,
+        envelope.node_id,
+        envelope.producer_namespace,
+    )
+    calls: list[str] = []
+    fallback_calls: list[str] = []
+    sleeps: list[float] = []
+
+    def unavailable(_intent: WakeupIntent) -> bool:
+        calls.append(_intent.intent_id)
+        raise RuntimeError("Slack outage")
+
+    def not_approved(_intent: WakeupIntent) -> bool:
+        fallback_calls.append(_intent.intent_id)
+        return True
+
+    result = outbox.deliver_with_retry(
+        intent.intent_id,
+        primary=unavailable,
+        policy=WakeupRetryPolicy(max_attempts=3, backoff_seconds=(2.0, 5.0)),
+        fallback_callbacks={"mailbox_poll": not_approved},
+        clock=lambda: "2026-09-11T07:00:04+07:00",
+        sleeper=sleeps.append,
+    )
+
+    assert isinstance(result, WakeupDeliveryResult)
+    assert result.status == WAKEUP_DELIVERY_BLOCKED
+    assert result.reason_code == WAKEUP_DELIVERY_BLOCKED
+    assert WakeupDeliveryResult.from_dict(result.to_dict()) == result
+    assert result.attempt_count == 3
+    assert len(calls) == 3
+    assert sleeps == [2.0, 5.0]
+    attempts = outbox.list_attempts(intent.intent_id)
+    assert [attempt.attempt_number for attempt in attempts] == [1, 2, 3]
+    assert [attempt.state for attempt in attempts] == [
+        WAKEUP_ATTEMPT_FAILED,
+        WAKEUP_ATTEMPT_FAILED,
+        WAKEUP_ATTEMPT_BLOCKED,
+    ]
+    assert attempts[0].retry_at == "2026-09-11T07:00:06+07:00"
+    assert attempts[1].retry_at == "2026-09-11T07:00:09+07:00"
+    assert attempts[2].error_code == WAKEUP_DELIVERY_BLOCKED
+    assert outbox.get_intent(intent.intent_id).state == "BLOCKED"
+    assert fallback_calls == []
+    assert repository.read(MAILBOX_REF) == before_snapshot
+    assert (
+        repository.read_cursor(
+            MAILBOX_REF,
+            envelope.run_id,
+            envelope.node_id,
+            envelope.producer_namespace,
+        )
+        == before_cursor
+    )
+    outbox.close()
+    ledger.close()
+
+
+def test_retry_uses_approved_fallback_and_preserves_canonical_mailbox_state(
+    tmp_path: Path,
+) -> None:
+    envelope, _, outcome, emission, (repository, ledger) = _bound_dispatch(tmp_path)
+    outbox = WakeupOutbox(tmp_path / "wakeup-outbox.sqlite3")
+    intent = _create_intent(outbox, outcome, emission)
+    before_snapshot = repository.read(MAILBOX_REF)
+    before_cursor = repository.read_cursor(
+        MAILBOX_REF,
+        envelope.run_id,
+        envelope.node_id,
+        envelope.producer_namespace,
+    )
+    primary_calls: list[str] = []
+    fallback_calls: list[str] = []
+
+    def unavailable(pointer: WakeupIntent) -> bool:
+        primary_calls.append(pointer.intent_id)
+        return False
+
+    def poll_fallback(pointer: WakeupIntent) -> bool:
+        fallback_calls.append(pointer.intent_id)
+        return True
+
+    policy = WakeupRetryPolicy(
+        max_attempts=2,
+        backoff_seconds=(1.0,),
+        approved_fallback_capabilities=frozenset({"mailbox_poll"}),
+    )
+    result = outbox.deliver_with_retry(
+        intent.intent_id,
+        primary=unavailable,
+        policy=policy,
+        fallback_callbacks={"mailbox_poll": poll_fallback},
+        clock=lambda: "2026-09-11T07:00:04+07:00",
+        sleeper=lambda _delay: None,
+    )
+
+    assert result.status == WAKEUP_DELIVERY_FALLBACK_DELIVERED
+    assert result.fallback_used == "mailbox_poll"
+    assert result.attempt_count == 3
+    assert primary_calls == [intent.intent_id, intent.intent_id]
+    assert fallback_calls == [intent.intent_id]
+    attempts = outbox.list_attempts(intent.intent_id)
+    assert [attempt.state for attempt in attempts] == [
+        WAKEUP_ATTEMPT_FAILED,
+        WAKEUP_ATTEMPT_FAILED,
+        WAKEUP_ATTEMPT_DELIVERED,
+    ]
+    assert attempts[-1].error_code == WAKEUP_FALLBACK_DELIVERED
+    assert repository.read(MAILBOX_REF) == before_snapshot
+    assert (
+        repository.read_cursor(
+            MAILBOX_REF,
+            envelope.run_id,
+            envelope.node_id,
+            envelope.producer_namespace,
+        )
+        == before_cursor
+    )
+
+    replay = outbox.deliver_with_retry(
+        intent.intent_id,
+        primary=lambda _pointer: (_ for _ in ()).throw(AssertionError("replayed primary")),
+        policy=policy,
+        fallback_callbacks={
+            "mailbox_poll": lambda _pointer: (_ for _ in ()).throw(AssertionError("replayed fallback"))
+        },
+        clock=lambda: "2026-09-11T07:00:05+07:00",
+        sleeper=lambda _delay: (_ for _ in ()).throw(AssertionError("replayed sleep")),
+    )
+    assert replay == result
+    assert repository.read(MAILBOX_REF) == before_snapshot
+    outbox.close()
+    ledger.close()
+
+
+def test_failed_approved_fallback_is_blocked_with_terminal_idempotency(
+    tmp_path: Path,
+) -> None:
+    _, _, outcome, emission, (_, ledger) = _bound_dispatch(tmp_path)
+    outbox = WakeupOutbox(tmp_path / "wakeup-outbox.sqlite3")
+    intent = _create_intent(outbox, outcome, emission)
+    primary_calls: list[str] = []
+    fallback_calls: list[str] = []
+
+    def unavailable(pointer: WakeupIntent) -> bool:
+        primary_calls.append(pointer.intent_id)
+        raise OSError("provider unavailable")
+
+    def failed_fallback(pointer: WakeupIntent) -> bool:
+        fallback_calls.append(pointer.intent_id)
+        return False
+
+    policy = WakeupRetryPolicy(
+        max_attempts=1,
+        backoff_seconds=(),
+        approved_fallback_capabilities=frozenset({"mailbox_poll"}),
+    )
+    result = outbox.deliver_with_retry(
+        intent.intent_id,
+        primary=unavailable,
+        policy=policy,
+        fallback_callbacks={"mailbox_poll": failed_fallback},
+        clock=lambda: "2026-09-11T07:00:04+07:00",
+        sleeper=lambda _delay: None,
+    )
+
+    assert result.status == WAKEUP_DELIVERY_BLOCKED
+    assert result.reason_code == WAKEUP_DELIVERY_BLOCKED
+    assert result.attempt_count == 2
+    assert primary_calls == [intent.intent_id]
+    assert fallback_calls == [intent.intent_id]
+    attempts = outbox.list_attempts(intent.intent_id)
+    assert [attempt.state for attempt in attempts] == [
+        WAKEUP_ATTEMPT_FAILED,
+        WAKEUP_ATTEMPT_BLOCKED,
+    ]
+    assert attempts[-1].error_code == WAKEUP_DELIVERY_BLOCKED
+
+    replay = outbox.deliver_with_retry(
+        intent.intent_id,
+        primary=lambda _pointer: (_ for _ in ()).throw(AssertionError("replayed primary")),
+        policy=policy,
+        fallback_callbacks={
+            "mailbox_poll": lambda _pointer: (_ for _ in ()).throw(AssertionError("replayed fallback"))
+        },
+        clock=lambda: "2026-09-11T07:00:05+07:00",
+        sleeper=lambda _delay: (_ for _ in ()).throw(AssertionError("replayed sleep")),
+    )
+    assert replay == result
     outbox.close()
     ledger.close()

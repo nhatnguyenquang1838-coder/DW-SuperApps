@@ -1,4 +1,4 @@
-"""TC-MBX-308 durable WakeupIntent outbox.
+"""TC-MBX-308/309 durable WakeupIntent outbox and bounded delivery.
 
 The outbox is deliberately transport-neutral.  It stores only the metadata
 needed to deliver a pointer to an already committed mailbox event.  Mailbox
@@ -9,11 +9,14 @@ repositories and are never mutated here.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 import hashlib
 import json
+import math
 from pathlib import Path
 import sqlite3
-from typing import Any, Mapping, NoReturn
+from threading import Event
+from typing import Any, Callable, Mapping, NoReturn
 
 from taskcontroller.controlplane.mailbox_dispatch import MailboxDispatchOutcome
 from taskcontroller.controlplane.wakeup_dispatch import PointerWakeupEmission
@@ -59,6 +62,16 @@ _ATTEMPT_STATES = frozenset(
     }
 )
 _SHA256_PREFIX = "sha256:"
+WAKEUP_RETRY_POLICY_PROTOCOL = "dw.taskcontroller.wakeup-retry/v1"
+WAKEUP_DELIVERY_DELIVERED = "DELIVERED"
+WAKEUP_DELIVERY_FALLBACK_DELIVERED = "DELIVERED_FALLBACK"
+WAKEUP_DELIVERY_BLOCKED = "WAKEUP_DELIVERY_BLOCKED"
+WAKEUP_FALLBACK_DELIVERED = "WAKEUP_FALLBACK_DELIVERED"
+WAKEUP_TRANSPORT_UNAVAILABLE = "TRANSPORT_UNAVAILABLE"
+WAKEUP_TRANSPORT_REJECTED = "TRANSPORT_REJECTED"
+WAKEUP_FALLBACK_UNAVAILABLE = "FALLBACK_UNAVAILABLE"
+_MAX_WAKEUP_ATTEMPTS = 16
+_MAX_WAKEUP_BACKOFF_SECONDS = 3600.0
 
 
 def _fail(code: str, message: str) -> NoReturn:
@@ -87,6 +100,108 @@ def _non_negative_int(value: Any, name: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
         _fail(MailboxV2ErrorCode.INVALID_SEQUENCE, f"{name} must be an integer >= 0")
     return value
+
+
+@dataclass(frozen=True)
+class WakeupRetryPolicy:
+    """Finite retry/backoff configuration for one WakeupIntent delivery."""
+
+    max_attempts: int = 3
+    backoff_seconds: tuple[float, ...] = (1.0, 2.0)
+    approved_fallback_capabilities: frozenset[str] = frozenset()
+    protocol: str = WAKEUP_RETRY_POLICY_PROTOCOL
+
+    def __post_init__(self) -> None:
+        if self.protocol != WAKEUP_RETRY_POLICY_PROTOCOL:
+            _fail(
+                MailboxV2ErrorCode.UNSUPPORTED_PROTOCOL,
+                "unsupported WakeupRetryPolicy protocol",
+            )
+        if (
+            isinstance(self.max_attempts, bool)
+            or not isinstance(self.max_attempts, int)
+            or not 1 <= self.max_attempts <= _MAX_WAKEUP_ATTEMPTS
+        ):
+            _fail(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                f"max_attempts must be an integer between 1 and {_MAX_WAKEUP_ATTEMPTS}",
+            )
+        try:
+            configured_backoff = tuple(self.backoff_seconds)
+        except TypeError as exc:
+            _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "backoff_seconds must be a finite sequence")
+            raise AssertionError("_fail must raise") from exc
+        if len(configured_backoff) != self.max_attempts - 1:
+            _fail(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                "backoff_seconds must contain one delay for each retry",
+            )
+        normalized_backoff: list[float] = []
+        for delay in configured_backoff:
+            if isinstance(delay, bool) or not isinstance(delay, (int, float)):
+                _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "backoff delay must be numeric")
+            normalized = float(delay)
+            if not math.isfinite(normalized) or not 0 <= normalized <= _MAX_WAKEUP_BACKOFF_SECONDS:
+                _fail(
+                    MailboxV2ErrorCode.SCHEMA_INVALID,
+                    f"backoff delay must be finite between 0 and {_MAX_WAKEUP_BACKOFF_SECONDS}",
+                )
+            normalized_backoff.append(normalized)
+        object.__setattr__(self, "backoff_seconds", tuple(normalized_backoff))
+        try:
+            capabilities = frozenset(self.approved_fallback_capabilities)
+        except TypeError as exc:
+            _fail(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                "approved_fallback_capabilities must be a string sequence",
+            )
+            raise AssertionError("_fail must raise") from exc
+        if any(not isinstance(capability, str) or not capability.strip() for capability in capabilities):
+            _fail(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                "approved fallback capabilities must be non-empty strings",
+            )
+        object.__setattr__(self, "approved_fallback_capabilities", capabilities)
+
+    def backoff_for(self, *, attempt_number: int) -> float:
+        """Return the configured delay after a failed primary attempt."""
+
+        if (
+            isinstance(attempt_number, bool)
+            or not isinstance(attempt_number, int)
+            or not 1 <= attempt_number <= len(self.backoff_seconds)
+        ):
+            _fail(
+                MailboxV2ErrorCode.INVALID_SEQUENCE,
+                "backoff attempt_number is outside the configured retry schedule",
+            )
+        return self.backoff_seconds[attempt_number - 1]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "protocol": self.protocol,
+            "record_type": "WakeupRetryPolicy",
+            "max_attempts": self.max_attempts,
+            "backoff_seconds": list(self.backoff_seconds),
+            "approved_fallback_capabilities": sorted(self.approved_fallback_capabilities),
+        }
+
+    @classmethod
+    def from_dict(cls, payload: Mapping[str, Any]) -> "WakeupRetryPolicy":
+        if not isinstance(payload, Mapping):
+            _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "WakeupRetryPolicy must be an object")
+        if payload.get("protocol") != WAKEUP_RETRY_POLICY_PROTOCOL or payload.get("record_type") != "WakeupRetryPolicy":
+            _fail(MailboxV2ErrorCode.UNSUPPORTED_PROTOCOL, "unsupported WakeupRetryPolicy record")
+        try:
+            return cls(
+                max_attempts=payload["max_attempts"],
+                backoff_seconds=tuple(payload["backoff_seconds"]),
+                approved_fallback_capabilities=frozenset(payload["approved_fallback_capabilities"]),
+                protocol=payload["protocol"],
+            )
+        except KeyError as exc:
+            _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "WakeupRetryPolicy is missing a required field")
+            raise AssertionError("_fail must raise") from exc
 
 
 def _digest(value: Any, name: str) -> str:
@@ -339,6 +454,123 @@ class WakeupDeliveryAttempt:
                 "WakeupDeliveryAttempt is missing a required field",
             )
             raise AssertionError("_fail must raise") from exc
+
+
+@dataclass(frozen=True)
+class WakeupDeliveryResult:
+    """Terminal, machine-readable result for one bounded delivery run."""
+
+    intent_id: str
+    status: str
+    attempt_count: int
+    fallback_used: str | None = None
+    next_attempt_at: str | None = None
+    reason_code: str | None = None
+    protocol: str = WAKEUP_OUTBOX_PROTOCOL
+
+    def __post_init__(self) -> None:
+        if self.protocol != WAKEUP_OUTBOX_PROTOCOL:
+            _fail(MailboxV2ErrorCode.UNSUPPORTED_PROTOCOL, "unsupported WakeupDeliveryResult protocol")
+        _required_text(self.intent_id, "WakeupDeliveryResult.intent_id")
+        _validate_state(
+            self.status,
+            frozenset(
+                {
+                    WAKEUP_DELIVERY_DELIVERED,
+                    WAKEUP_DELIVERY_FALLBACK_DELIVERED,
+                    WAKEUP_DELIVERY_BLOCKED,
+                }
+            ),
+            "WakeupDeliveryResult.status",
+        )
+        _non_negative_int(self.attempt_count, "WakeupDeliveryResult.attempt_count")
+        _validate_retry_at(self.next_attempt_at)
+        _optional_text(self.fallback_used, "WakeupDeliveryResult.fallback_used")
+        _optional_text(self.reason_code, "WakeupDeliveryResult.reason_code")
+        if self.status == WAKEUP_DELIVERY_FALLBACK_DELIVERED and self.fallback_used is None:
+            _fail(
+                MailboxV2ErrorCode.CONTRACT_MISMATCH,
+                "fallback-delivered result must identify the fallback capability",
+            )
+        if self.status == WAKEUP_DELIVERY_BLOCKED and self.reason_code != WAKEUP_DELIVERY_BLOCKED:
+            _fail(
+                MailboxV2ErrorCode.CONTRACT_MISMATCH,
+                "blocked result must carry WAKEUP_DELIVERY_BLOCKED",
+            )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "protocol": self.protocol,
+            "record_type": "WakeupDeliveryResult",
+            "intent_id": self.intent_id,
+            "status": self.status,
+            "attempt_count": self.attempt_count,
+            "fallback_used": self.fallback_used,
+            "next_attempt_at": self.next_attempt_at,
+            "reason_code": self.reason_code,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: Mapping[str, Any]) -> "WakeupDeliveryResult":
+        if not isinstance(payload, Mapping):
+            _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "WakeupDeliveryResult must be an object")
+        if payload.get("protocol") != WAKEUP_OUTBOX_PROTOCOL or payload.get("record_type") != "WakeupDeliveryResult":
+            _fail(MailboxV2ErrorCode.UNSUPPORTED_PROTOCOL, "unsupported WakeupDeliveryResult record")
+        try:
+            return cls(
+                intent_id=payload["intent_id"],
+                status=payload["status"],
+                attempt_count=payload["attempt_count"],
+                fallback_used=payload["fallback_used"],
+                next_attempt_at=payload["next_attempt_at"],
+                reason_code=payload["reason_code"],
+                protocol=payload["protocol"],
+            )
+        except KeyError as exc:
+            _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "WakeupDeliveryResult is missing a required field")
+            raise AssertionError("_fail must raise") from exc
+
+
+
+def _coerce_datetime(value: datetime | str, name: str) -> datetime:
+    if isinstance(value, datetime):
+        parsed = value
+    elif isinstance(value, str):
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError as exc:
+            _fail(MailboxV2ErrorCode.SCHEMA_INVALID, f"{name} must be an ISO-8601 timestamp")
+            raise AssertionError("_fail must raise") from exc
+    else:
+        _fail(MailboxV2ErrorCode.SCHEMA_INVALID, f"{name} must be an ISO-8601 timestamp")
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
+def _clock_timestamp(clock: Callable[[], datetime | str]) -> str:
+    return _coerce_datetime(clock(), "delivery clock").isoformat()
+
+
+def _retry_timestamp(attempted_at: str, delay_seconds: float) -> str:
+    return (_coerce_datetime(attempted_at, "attempted_at") + timedelta(seconds=delay_seconds)).isoformat()
+
+
+def _bounded_sleep(delay_seconds: float) -> None:
+    Event().wait(delay_seconds)
+
+
+def _invoke_delivery_callback(
+    callback: Callable[["WakeupIntent"], bool],
+    intent: "WakeupIntent",
+) -> tuple[bool, str | None, str | None]:
+    try:
+        accepted = callback(intent)
+    except Exception as exc:  # provider details must not enter durable evidence
+        return False, WAKEUP_TRANSPORT_UNAVAILABLE, type(exc).__name__
+    if accepted is True:
+        return True, None, None
+    return False, WAKEUP_TRANSPORT_REJECTED, "delivery callback rejected the pointer"
 
 
 class WakeupOutbox:
@@ -739,6 +971,261 @@ class WakeupOutbox:
             self._connection.rollback()
             raise
 
+    def deliver_with_retry(
+        self,
+        intent_id: str,
+        *,
+        primary: Callable[[WakeupIntent], bool],
+        policy: WakeupRetryPolicy,
+        fallback_callbacks: Mapping[str, Callable[[WakeupIntent], bool]] | None = None,
+        clock: Callable[[], datetime | str] | None = None,
+        sleeper: Callable[[float], None] | None = None,
+    ) -> WakeupDeliveryResult:
+        """Deliver one pointer with bounded retries and an explicit fallback.
+
+        The injected callbacks receive only the immutable WakeupIntent pointer
+        metadata.  This method never receives a mailbox repository or request
+        body, so retries cannot rewrite canonical mailbox state.
+        """
+
+        intent_id = _required_text(intent_id, "WakeupOutbox.intent_id")
+        if not isinstance(policy, WakeupRetryPolicy):
+            _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "deliver_with_retry requires WakeupRetryPolicy")
+        if not callable(primary):
+            _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "primary delivery callback must be callable")
+        try:
+            configured_fallbacks = dict(fallback_callbacks or {})
+        except (TypeError, ValueError) as exc:
+            _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "fallback_callbacks must be a mapping")
+            raise AssertionError("_fail must raise") from exc
+        clock = clock or (lambda: datetime.now(timezone.utc))
+        sleeper = sleeper or _bounded_sleep
+        if not callable(clock) or not callable(sleeper):
+            _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "clock and sleeper must be callable")
+
+        current = self.get_intent(intent_id)
+        if current.state in {WAKEUP_INTENT_DELIVERED, WAKEUP_INTENT_BLOCKED}:
+            return self._delivery_result(current)
+
+        attempts = self.list_attempts(intent_id)
+        attempt_number = len(attempts) + 1
+        if attempt_number > policy.max_attempts:
+            fallback_callback = self._fallback_callback(current, policy, configured_fallbacks)
+            if fallback_callback is not None:
+                return self._deliver_fallback(
+                    current,
+                    attempt_number=attempt_number,
+                    callback=fallback_callback,
+                    clock=clock,
+                )
+            blocked_at = _clock_timestamp(clock)
+            blocked = self._mark_intent_blocked(intent_id, updated_at=blocked_at)
+            return self._delivery_result(blocked)
+
+        while attempt_number <= policy.max_attempts:
+            current = self.get_intent(intent_id)
+            if current.state in {WAKEUP_INTENT_DELIVERED, WAKEUP_INTENT_BLOCKED}:
+                return self._delivery_result(current)
+            attempted_at = _clock_timestamp(clock)
+            accepted, error_code, error_detail = _invoke_delivery_callback(primary, current)
+            attempt_id = f"wakeup-delivery:{intent_id}:{attempt_number}"
+            if accepted:
+                self.record_delivery_attempt(
+                    intent_id,
+                    attempt_id=attempt_id,
+                    attempt_number=attempt_number,
+                    state=WAKEUP_ATTEMPT_DELIVERED,
+                    attempted_at=attempted_at,
+                )
+                return self._delivery_result(self.get_intent(intent_id))
+
+            if attempt_number < policy.max_attempts:
+                delay_seconds = policy.backoff_for(attempt_number=attempt_number)
+                retry_at = _retry_timestamp(attempted_at, delay_seconds)
+                self.record_delivery_attempt(
+                    intent_id,
+                    attempt_id=attempt_id,
+                    attempt_number=attempt_number,
+                    state=WAKEUP_ATTEMPT_FAILED,
+                    attempted_at=attempted_at,
+                    retry_at=retry_at,
+                    error_code=error_code,
+                    error_detail=error_detail,
+                )
+                sleeper(delay_seconds)
+                attempt_number += 1
+                continue
+
+            fallback_callback = self._fallback_callback(current, policy, configured_fallbacks)
+            if fallback_callback is not None:
+                self.record_delivery_attempt(
+                    intent_id,
+                    attempt_id=attempt_id,
+                    attempt_number=attempt_number,
+                    state=WAKEUP_ATTEMPT_FAILED,
+                    attempted_at=attempted_at,
+                    error_code=error_code,
+                    error_detail=error_detail,
+                )
+                return self._deliver_fallback(
+                    self.get_intent(intent_id),
+                    attempt_number=attempt_number + 1,
+                    callback=fallback_callback,
+                    clock=clock,
+                )
+
+            self.record_delivery_attempt(
+                intent_id,
+                attempt_id=attempt_id,
+                attempt_number=attempt_number,
+                state=WAKEUP_ATTEMPT_BLOCKED,
+                attempted_at=attempted_at,
+                error_code=WAKEUP_DELIVERY_BLOCKED,
+                error_detail=(
+                    "primary delivery retry budget exhausted; "
+                    f"last_error={error_code}"
+                ),
+            )
+            return self._delivery_result(self.get_intent(intent_id))
+
+        blocked_at = _clock_timestamp(clock)
+        blocked = self._mark_intent_blocked(intent_id, updated_at=blocked_at)
+        return self._delivery_result(blocked)
+
+    @staticmethod
+    def _fallback_callback(
+        intent: WakeupIntent,
+        policy: WakeupRetryPolicy,
+        fallback_callbacks: Mapping[str, Callable[[WakeupIntent], bool]],
+    ) -> Callable[[WakeupIntent], bool] | None:
+        capability = intent.fallback
+        if capability is None or capability not in policy.approved_fallback_capabilities:
+            return None
+        callback = fallback_callbacks.get(capability)
+        return callback if callable(callback) else None
+
+    def _deliver_fallback(
+        self,
+        intent: WakeupIntent,
+        *,
+        attempt_number: int,
+        callback: Callable[[WakeupIntent], bool],
+        clock: Callable[[], datetime | str],
+    ) -> WakeupDeliveryResult:
+        attempted_at = _clock_timestamp(clock)
+        accepted, error_code, _error_detail = _invoke_delivery_callback(callback, intent)
+        attempt_id = f"wakeup-delivery:{intent.intent_id}:{attempt_number}"
+        if accepted:
+            self.record_delivery_attempt(
+                intent.intent_id,
+                attempt_id=attempt_id,
+                attempt_number=attempt_number,
+                state=WAKEUP_ATTEMPT_DELIVERED,
+                attempted_at=attempted_at,
+                error_code=WAKEUP_FALLBACK_DELIVERED,
+            )
+        else:
+            self.record_delivery_attempt(
+                intent.intent_id,
+                attempt_id=attempt_id,
+                attempt_number=attempt_number,
+                state=WAKEUP_ATTEMPT_BLOCKED,
+                attempted_at=attempted_at,
+                error_code=WAKEUP_DELIVERY_BLOCKED,
+                error_detail=(
+                    "approved fallback delivery failed; "
+                    f"last_error={error_code}"
+                ),
+            )
+        return self._delivery_result(self.get_intent(intent.intent_id))
+
+    def _delivery_result(self, intent: WakeupIntent) -> WakeupDeliveryResult:
+        if intent.state not in {WAKEUP_INTENT_DELIVERED, WAKEUP_INTENT_BLOCKED}:
+            _fail(
+                MailboxV2ErrorCode.CONTRACT_MISMATCH,
+                "delivery result requested before a terminal outbox state",
+            )
+        attempts = self.list_attempts(intent.intent_id)
+        last_attempt = attempts[-1] if attempts else None
+        fallback_used = (
+            intent.fallback
+            if last_attempt is not None and last_attempt.error_code == WAKEUP_FALLBACK_DELIVERED
+            else None
+        )
+        if intent.state == WAKEUP_INTENT_DELIVERED:
+            status = (
+                WAKEUP_DELIVERY_FALLBACK_DELIVERED
+                if fallback_used is not None
+                else WAKEUP_DELIVERY_DELIVERED
+            )
+            return WakeupDeliveryResult(
+                intent_id=intent.intent_id,
+                status=status,
+                attempt_count=intent.attempt_count,
+                fallback_used=fallback_used,
+                next_attempt_at=intent.next_attempt_at,
+            )
+        return WakeupDeliveryResult(
+            intent_id=intent.intent_id,
+            status=WAKEUP_DELIVERY_BLOCKED,
+            attempt_count=intent.attempt_count,
+            next_attempt_at=intent.next_attempt_at,
+            reason_code=WAKEUP_DELIVERY_BLOCKED,
+        )
+
+    def _mark_intent_blocked(self, intent_id: str, *, updated_at: str) -> WakeupIntent:
+        intent_id = _required_text(intent_id, "WakeupOutbox.intent_id")
+        updated_at = _required_text(updated_at, "WakeupOutbox.updated_at")
+        current = self.get_intent(intent_id)
+        if current.state in {WAKEUP_INTENT_DELIVERED, WAKEUP_INTENT_BLOCKED}:
+            return current
+        self._begin()
+        try:
+            self._connection.execute(
+                """
+                UPDATE wakeup_intents
+                SET state = ?, next_attempt_at = NULL, updated_at = ?
+                WHERE intent_id = ?
+                """,
+                (WAKEUP_INTENT_BLOCKED, updated_at, intent_id),
+            )
+            stored = self._intent_from_row(
+                self._connection.execute(
+                    "SELECT * FROM wakeup_intents WHERE intent_id = ?",
+                    (intent_id,),
+                ).fetchone()
+            )
+            immutable_fields = (
+                "intent_id",
+                "logical_key",
+                "run_id",
+                "node_id",
+                "mailbox_ref",
+                "mailbox_seq",
+                "event_id",
+                "event_digest",
+                "envelope_digest",
+                "message_id",
+                "idempotency_key",
+                "recipient",
+                "attempt_count",
+                "fallback",
+                "claim_ttl_seconds",
+            )
+            if any(getattr(stored, field) != getattr(current, field) for field in immutable_fields):
+                _fail(MailboxV2ErrorCode.DIGEST_MISMATCH, "blocking changed logical WakeupIntent binding")
+            if (
+                stored.state != WAKEUP_INTENT_BLOCKED
+                or stored.next_attempt_at is not None
+                or stored.updated_at != updated_at
+            ):
+                _fail(MailboxV2ErrorCode.DIGEST_MISMATCH, "WakeupIntent blocked exact readback differs")
+            self._connection.commit()
+            return stored
+        except Exception:
+            self._connection.rollback()
+            raise
+
     @staticmethod
     def _validate_committed_pointer(
         outcome: MailboxDispatchOutcome,
@@ -838,13 +1325,20 @@ __all__ = [
     "WAKEUP_ATTEMPT_DELIVERED",
     "WAKEUP_ATTEMPT_FAILED",
     "WAKEUP_ATTEMPT_STARTED",
+    "WAKEUP_DELIVERY_BLOCKED",
+    "WAKEUP_DELIVERY_DELIVERED",
+    "WAKEUP_DELIVERY_FALLBACK_DELIVERED",
+    "WAKEUP_FALLBACK_DELIVERED",
     "WAKEUP_INTENT_BLOCKED",
     "WAKEUP_INTENT_DELIVERED",
     "WAKEUP_INTENT_FAILED",
     "WAKEUP_INTENT_IN_FLIGHT",
     "WAKEUP_INTENT_PENDING",
     "WAKEUP_OUTBOX_PROTOCOL",
+    "WAKEUP_RETRY_POLICY_PROTOCOL",
     "WakeupDeliveryAttempt",
+    "WakeupDeliveryResult",
     "WakeupIntent",
     "WakeupOutbox",
+    "WakeupRetryPolicy",
 ]
