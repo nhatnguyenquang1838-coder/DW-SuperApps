@@ -15,36 +15,22 @@ from taskcontroller.domain.ids import BindingRef, ExecutionRef, ProviderRef
 from taskcontroller.domain.models import ExecutionReceipt, ExecutionRequest
 
 
-# ---------------------------------------------------------------------------
-# DispatchEnvelope — runtime-only, immutable correlation bundle
-# ---------------------------------------------------------------------------
-
 @dataclass(frozen=True)
 class DispatchEnvelope:
-    """Exact request/receipt/binding correlation + current lease identity/fencing.
+    """Exact dispatch correlation plus a bounded current-step context."""
 
-    All fields are caller/adapter supplied. The fabric builds this only after
-    passing the fail-closed pre-dispatch correlation checks.
-    """
-
-    command_id: str  # caller/idempotency identity for exactly-once dispatch
+    command_id: str
     request: ExecutionRequest
     receipt: ExecutionReceipt
     provider: ProviderRef
     binding: BindingRef | None
     lease_id: str
     fencing_token: str
-    # adapter key / binding type that resolved the adapter
     adapter_key: str
+    # Full RuntimePlan and conversation history are deliberately excluded.
+    context: Any | None = None
 
     def canonical_fingerprint(self) -> dict[str, Any]:
-        """Stable fingerprint over correlation identity (for idempotency).
-
-        Includes the request's correlation-bearing fields so a re-dispatched
-        command_id with a genuinely different envelope (contract, attempt, or
-        capability requirement) is detected as a conflict rather than silently
-        returning the prior ack.
-        """
         cap = self.request.capability_requirements
         return {
             "command_id": self.command_id,
@@ -58,54 +44,32 @@ class DispatchEnvelope:
             "provider_id": self.provider.provider_id,
             "binding_id": self.binding.binding_id if self.binding else None,
             "adapter_key": self.adapter_key,
+            "context": self.context.to_dict() if self.context is not None else None,
         }
 
 
-# ---------------------------------------------------------------------------
-# DispatchAck — normalized adapter acknowledgement (runtime-only)
-# ---------------------------------------------------------------------------
-
 @dataclass(frozen=True)
 class DispatchAck:
-    """Normalized dispatch acknowledgement from an adapter (runtime-only)."""
-
     command_id: str
     accepted: bool
-    status: str  # "ACCEPTED" | "REJECTED" | "FAILED"
+    status: str
     adapter_key: str
     detail: str | None = None
 
-
-# ---------------------------------------------------------------------------
-# CancelAck — normalized cancel acknowledgement (runtime-only)
-# ---------------------------------------------------------------------------
 
 @dataclass(frozen=True)
 class CancelAck:
-    """Normalized cancel acknowledgement from an adapter (runtime-only)."""
-
     command_id: str
     accepted: bool
-    status: str  # "ACCEPTED" | "REJECTED" | "UNSUPPORTED"
+    status: str
     adapter_key: str
     detail: str | None = None
 
 
-# ---------------------------------------------------------------------------
-# AdapterSignal — normalized trusted signal carrying explicit canonical fields
-# ---------------------------------------------------------------------------
-
 @dataclass(frozen=True)
 class AdapterSignal:
-    """Normalized adapter signal handed to WP2 EventRouter.
-
-    Carries explicit event_id / event_type / sequence / execution correlation /
-    fencing / payload / artifact refs / idempotency key. The fabric converts
-    this into a canonical AgentEvent; WP2 remains the sole acceptance authority.
-    """
-
     event_id: str
-    event_type: str  # EventType value
+    event_type: str
     sequence: int
     execution_ref: ExecutionRef
     node_id: str
