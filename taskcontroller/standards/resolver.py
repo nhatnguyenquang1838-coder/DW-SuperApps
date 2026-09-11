@@ -23,14 +23,29 @@ from taskcontroller.errors import TaskControllerValidationError
 _DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _COMMIT_RE = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
 _ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]*$")
+STANDARDS_RESOLUTION_BLOCKED = "STANDARDS_RESOLUTION_BLOCKED"
 
 
 class StandardsResolutionError(TaskControllerValidationError):
     """Stable local error for an invalid or unverifiable standards profile."""
 
-    def __init__(self, code: str, message: str) -> None:
+    def __init__(
+        self, code: str, message: str, *, reason_code: str | None = None
+    ) -> None:
         self.code = code
+        self.reason_code = reason_code or code
         super().__init__(f"{code}: {message}")
+
+
+class StandardsResolutionBlocked(StandardsResolutionError):
+    """Required standards could not be reproduced, so analysis must not start."""
+
+    def __init__(self, reason_code: str, message: str) -> None:
+        super().__init__(
+            STANDARDS_RESOLUTION_BLOCKED,
+            message,
+            reason_code=reason_code,
+        )
 
 
 def _canonical_digest(value: Mapping[str, Any]) -> str:
@@ -329,7 +344,7 @@ class StandardsResolver:
             bound.profile_id, bound.version, bound.sources
         )
         if bound.digest != expected_profile_digest:
-            raise StandardsResolutionError(
+            raise StandardsResolutionBlocked(
                 "STANDARDS_PROFILE_DIGEST_MISMATCH",
                 f"expected {expected_profile_digest}, got {bound.digest}",
             )
@@ -351,7 +366,7 @@ class StandardsResolver:
                 )
             actual_digest = "sha256:" + hashlib.sha256(raw).hexdigest()
             if actual_digest != source.blob_digest:
-                raise StandardsResolutionError(
+                raise StandardsResolutionBlocked(
                     "STANDARDS_SOURCE_DIGEST_MISMATCH",
                     f"source digest mismatch for {source.path}: expected {source.blob_digest}, got {actual_digest}",
                 )
@@ -391,6 +406,7 @@ __all__ = [
     "MaterializedInstruction",
     "ResolvedStandards",
     "StandardsProfile",
+    "StandardsResolutionBlocked",
     "StandardsResolutionError",
     "StandardsResolutionReceipt",
     "StandardsResolver",

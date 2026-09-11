@@ -105,7 +105,7 @@ def test_resolver_rejects_source_content_digest_drift() -> None:
     with pytest.raises(StandardsResolutionError) as error:
         StandardsResolver(reader).resolve(_profile(source))
 
-    assert error.value.code == "STANDARDS_SOURCE_DIGEST_MISMATCH"
+    assert error.value.code == "STANDARDS_RESOLUTION_BLOCKED"
     assert "instructions/policy.md" in str(error.value)
 
 
@@ -117,7 +117,7 @@ def test_resolver_rejects_profile_digest_mismatch_after_exact_sources_load() -> 
     with pytest.raises(StandardsResolutionError) as error:
         StandardsResolver(_reader((source, "approved"))).resolve(tampered)
 
-    assert error.value.code == "STANDARDS_PROFILE_DIGEST_MISMATCH"
+    assert error.value.code == "STANDARDS_RESOLUTION_BLOCKED"
 
 
 @pytest.mark.parametrize(
@@ -152,3 +152,35 @@ def test_profile_requires_at_least_one_declared_source() -> None:
         )
 
     assert error.value.code == "STANDARDS_PROFILE_INVALID"
+
+
+def test_resolver_blocks_digest_drift_before_analyzer_callback() -> None:
+    source = _source(_COMMIT_A, "instructions/policy.md", "approved")
+    reader = _reader((source, "newer rules"))
+    analyzer_calls: list[Any] = []
+    blocked = None
+
+    try:
+        resolved = StandardsResolver(reader).resolve(_profile(source))
+    except StandardsResolutionError as error:
+        blocked = error
+    else:
+        analyzer_calls.append(resolved.session_context)
+
+    assert blocked is not None
+    assert blocked.code == "STANDARDS_RESOLUTION_BLOCKED"
+    assert analyzer_calls == []
+    assert reader.calls == [(_COMMIT_A, "instructions/policy.md")]
+
+
+def test_resolver_blocks_profile_digest_drift_before_materialization() -> None:
+    source = _source(_COMMIT_A, "instructions/policy.md", "approved")
+    profile = _profile(source)
+    tampered = replace(profile, digest="sha256:" + "0" * 64)
+    reader = _reader((source, "approved"))
+
+    with pytest.raises(StandardsResolutionError) as error:
+        StandardsResolver(reader).resolve(tampered)
+
+    assert error.value.code == "STANDARDS_RESOLUTION_BLOCKED"
+    assert reader.calls == []
