@@ -1,0 +1,104 @@
+name: W8 Standard Real Run
+
+on:
+  push:
+    branches:
+      - runtime-lab/RP-CERT-001
+    paths:
+      - .github/workflows/w8-standard-real-run.yml
+
+permissions:
+  contents: read
+
+jobs:
+  standard-real-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUBJECT_SHA: 79b5b5eb1f1df6fbe67870a5e2433672e9e22a55
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout runtime harness
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: runtime
+          fetch-depth: 1
+
+      - name: Checkout exact proving subject
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SUBJECT_SHA }}
+          path: subject
+          fetch-depth: 1
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Enable exact pnpm
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.15.1 --activate
+          pnpm --version
+
+      - name: Install subject dependencies
+        shell: bash
+        working-directory: subject/projects/dw-observation
+        run: pnpm install --frozen-lockfile
+
+      - name: Run physical validation workload
+        id: workload
+        shell: bash
+        working-directory: subject/projects/dw-observation
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/receipt"
+          pnpm test 2>&1 | tee "$GITHUB_WORKSPACE/receipt/pnpm-test.log"
+          pnpm typecheck 2>&1 | tee "$GITHUB_WORKSPACE/receipt/pnpm-typecheck.log"
+          pnpm build 2>&1 | tee "$GITHUB_WORKSPACE/receipt/pnpm-build.log"
+          sha256sum "$GITHUB_WORKSPACE"/receipt/pnpm-*.log > "$GITHUB_WORKSPACE/receipt/log-sha256.txt"
+
+      - name: Materialize execution receipt
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, os, pathlib
+          root = pathlib.Path(os.environ['GITHUB_WORKSPACE']) / 'receipt'
+          root.mkdir(parents=True, exist_ok=True)
+          logs = {}
+          for name in ('pnpm-test.log', 'pnpm-typecheck.log', 'pnpm-build.log'):
+              p = root / name
+              logs[name] = 'sha256:' + hashlib.sha256(p.read_bytes()).hexdigest() if p.exists() else None
+          payload = {
+              'schema_version': 1,
+              'campaign_id': 'RP-CERT-001',
+              'case_id': 'TC-RP-001',
+              'executor': 'github-actions',
+              'controller': 'ChatGPT-Direct',
+              'runtime_sha': os.environ['GITHUB_SHA'],
+              'subject_sha': os.environ['SUBJECT_SHA'],
+              'github_run_id': int(os.environ['GITHUB_RUN_ID']),
+              'github_run_attempt': int(os.environ['GITHUB_RUN_ATTEMPT']),
+              'execution_id': f"w8-gh-{os.environ['GITHUB_RUN_ID']}-a{os.environ['GITHUB_RUN_ATTEMPT']}",
+              'commands': ['pnpm test', 'pnpm typecheck', 'pnpm build'],
+              'log_sha256': logs,
+          }
+          digest_input = json.dumps(payload, sort_keys=True, separators=(',', ':')).encode()
+          payload['execution_receipt_digest'] = 'sha256:' + hashlib.sha256(digest_input).hexdigest()
+          (root / 'execution-receipt.json').write_text(json.dumps(payload, sort_keys=True, separators=(',', ':')) + '\n')
+          PY
+
+      - name: Upload immutable run receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: w8-standard-real-run-${{ github.run_id }}-a${{ github.run_attempt }}
+          path: receipt/
+          if-no-files-found: error
+          retention-days: 30
