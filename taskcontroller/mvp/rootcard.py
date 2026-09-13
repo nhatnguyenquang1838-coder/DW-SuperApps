@@ -36,6 +36,7 @@ objects plus a pure renderer. It is the WP2 counterpart of the WP1
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any, Mapping, Sequence
 
 from taskcontroller.errors import TaskControllerValidationError
@@ -71,6 +72,30 @@ NON_PUBLIC_ACTIONS = INTERNAL_RUNTIME_VERBS
 CREATE_ROOT = "CREATE_ROOT"
 UPDATE_ROOT = "UPDATE_ROOT"
 ROOT_OPS = (CREATE_ROOT, UPDATE_ROOT)
+
+
+class SemanticStage(str, Enum):
+    """Bounded high-level stages safe to show in a human projection."""
+
+    UNDERSTAND = "UNDERSTAND"
+    PLAN = "PLAN"
+    EXECUTE = "EXECUTE"
+    VERIFY = "VERIFY"
+    INTEGRATE = "INTEGRATE"
+    VALIDATE = "VALIDATE"
+    ACCEPT = "ACCEPT"
+    BLOCKED = "BLOCKED"
+    WAIT_CONTROLLER = "WAIT_CONTROLLER"
+    TERMINAL = "TERMINAL"
+
+
+SEMANTIC_STAGE_VALUES = tuple(stage.value for stage in SemanticStage)
+SEMANTIC_STAGE_MAX_LENGTH = 32
+ROOT_REF_MAX_LENGTH = 512
+TIMELINE_SUMMARY_MAX_LENGTH = 256
+TIMELINE_DETAIL_MAX_LENGTH = 512
+MAX_TIMELINE_ENTRIES = 12
+
 
 #: MVP plan size bound from the authority docs: 3-5 meaningful subtasks.
 MIN_TASK_CARDS = 3
@@ -110,6 +135,89 @@ def _optional_text(value: Any, field_name: str) -> str | None:
     if value is None:
         return None
     return _require_text(value, field_name)
+
+
+def _bounded_projection_text(value: Any, field_name: str, maximum: int) -> str:
+    """Validate short human text without accepting a transcript or control data."""
+    text = _require_text(value, field_name)
+    if len(text) > maximum:
+        raise TaskControllerValidationError(
+            f"{field_name} exceeds the maximum length of {maximum}"
+        )
+    if any(ord(char) < 32 for char in text):
+        raise TaskControllerValidationError(f"{field_name} must not contain control characters")
+    return text
+
+
+def _projection_ref(value: Any, field_name: str) -> str | None:
+    """Return a bounded pointer; a projection ref is never a command/body."""
+    if value is None:
+        return None
+    ref = _require_text(value, field_name)
+    if len(ref) > ROOT_REF_MAX_LENGTH:
+        raise TaskControllerValidationError(
+            f"{field_name} exceeds the maximum length of {ROOT_REF_MAX_LENGTH}"
+        )
+    if any(char.isspace() or ord(char) < 32 for char in ref):
+        raise TaskControllerValidationError(
+            f"{field_name} must be a single bounded pointer reference"
+        )
+    return ref
+
+
+def _semantic_stage(value: Any, field_name: str = "semantic_stage") -> str:
+    if isinstance(value, SemanticStage):
+        return value.value
+    if not isinstance(value, str) or not value.strip():
+        raise TaskControllerValidationError(f"{field_name} must be a supported semantic stage")
+    if len(value) > SEMANTIC_STAGE_MAX_LENGTH:
+        raise TaskControllerValidationError(
+            f"{field_name} exceeds the maximum length of {SEMANTIC_STAGE_MAX_LENGTH}"
+        )
+    try:
+        return SemanticStage(value).value
+    except ValueError as exc:
+        raise TaskControllerValidationError(
+            f"{field_name} unsupported: {value!r}; expected one of {SEMANTIC_STAGE_VALUES}"
+        ) from exc
+
+
+@dataclass(frozen=True)
+class RootTimelineEntry:
+    """One ordered, reference-only semantic event in the human timeline."""
+
+    semantic_stage: str | SemanticStage
+    summary: str
+    detail: str | None = None
+    mailbox_ref: str | None = None
+    result_ref: str | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "semantic_stage", _semantic_stage(self.semantic_stage))
+        object.__setattr__(
+            self,
+            "summary",
+            _bounded_projection_text(self.summary, "timeline.summary", TIMELINE_SUMMARY_MAX_LENGTH),
+        )
+        if self.detail is not None:
+            object.__setattr__(
+                self,
+                "detail",
+                _bounded_projection_text(self.detail, "timeline.detail", TIMELINE_DETAIL_MAX_LENGTH),
+            )
+        object.__setattr__(self, "mailbox_ref", _projection_ref(self.mailbox_ref, "timeline.mailbox_ref"))
+        object.__setattr__(self, "result_ref", _projection_ref(self.result_ref, "timeline.result_ref"))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "type": "semantic_timeline_entry",
+            "semantic_stage": self.semantic_stage,
+            "summary": self.summary,
+            "detail": self.detail,
+            "mailbox_ref": self.mailbox_ref,
+            "result_ref": self.result_ref,
+        }
+
 
 
 # --------------------------------------------------------------------------
@@ -277,6 +385,11 @@ class RootCard:
     head_sha: str | None = None
     ci_status: str | None = None
     risk: str | None = None
+    semantic_stage: str | SemanticStage | None = None
+    mailbox_ref: str | None = None
+    result_ref: str | None = None
+    timeline: tuple[RootTimelineEntry, ...] = ()
+
     gwc_active: bool = False
     gate_journey: str | None = None
     authority_boundary: bool = False
@@ -323,6 +436,22 @@ class RootCard:
             "gate_journey",
         ):
             object.__setattr__(self, name, _optional_text(getattr(self, name), name))
+        if self.semantic_stage is not None:
+            object.__setattr__(self, "semantic_stage", _semantic_stage(self.semantic_stage))
+        object.__setattr__(self, "mailbox_ref", _projection_ref(self.mailbox_ref, "mailbox_ref"))
+        object.__setattr__(self, "result_ref", _projection_ref(self.result_ref, "result_ref"))
+        if isinstance(self.timeline, (str, bytes)) or not isinstance(self.timeline, Sequence):
+            raise TaskControllerValidationError("timeline must be a sequence of RootTimelineEntry")
+        timeline = tuple(self.timeline)
+        if len(timeline) > MAX_TIMELINE_ENTRIES:
+            raise TaskControllerValidationError(
+                f"timeline allows at most {MAX_TIMELINE_ENTRIES} entries"
+            )
+        if any(not isinstance(entry, RootTimelineEntry) for entry in timeline):
+            raise TaskControllerValidationError(
+                "timeline entries must be RootTimelineEntry values"
+            )
+        object.__setattr__(self, "timeline", timeline)
         if self.gate_journey is not None and not self.gwc_active:
             raise TaskControllerValidationError(
                 "gate_journey is only allowed when gwc_active is true"
@@ -361,7 +490,7 @@ class RootCard:
         return tuple(a for a in PUBLIC_ROOTCARD_ACTIONS if a in actions)
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload: dict[str, Any] = {
             "run_id": self.run_id,
             "human_owner": self.human_owner,
             "watcher": self.watcher,
@@ -386,6 +515,8 @@ class RootCard:
             "plan": self.plan.to_dict(),
             "actions": list(self.contextual_actions()),
         }
+        _add_projection_metadata(payload, self)
+        return payload
 
 
 @dataclass(frozen=True)
@@ -414,6 +545,33 @@ class RootOp:
 # --------------------------------------------------------------------------
 # Pure renderer
 # --------------------------------------------------------------------------
+def _projection_links(card: RootCard) -> dict[str, str]:
+    links: dict[str, str] = {}
+    if card.mailbox_ref is not None:
+        links["mailbox_ref"] = card.mailbox_ref
+    if card.result_ref is not None:
+        links["result_ref"] = card.result_ref
+    return links
+
+
+def _timeline_payload(timeline: Sequence[RootTimelineEntry]) -> list[dict[str, Any]]:
+    return [
+        {"position": position, **entry.to_dict()}
+        for position, entry in enumerate(timeline, start=1)
+    ]
+
+
+def _add_projection_metadata(payload: dict[str, Any], card: RootCard) -> None:
+    """Add only opted-in projection fields; absent fields preserve RootCard V1."""
+    if card.semantic_stage is not None:
+        payload["semantic_stage"] = card.semantic_stage
+    links = _projection_links(card)
+    if links:
+        payload["links"] = links
+    if card.timeline:
+        payload["timeline"] = _timeline_payload(card.timeline)
+
+
 def _plan_block_payload(plan: PlanBlock) -> dict[str, Any]:
     """The explicit PlanBlock: a typed block carrying its ordered TaskCards."""
     return {
@@ -461,11 +619,17 @@ def render_rootcard(card: RootCard) -> dict[str, Any]:
     if card.ci_status:
         fields.append(("ci", card.ci_status))
     fields.append(("risk", card.risk or "none"))
+    if card.semantic_stage is not None:
+        fields.append(("stage", card.semantic_stage))
+    if card.mailbox_ref is not None:
+        fields.append(("mailbox", card.mailbox_ref))
+    if card.result_ref is not None:
+        fields.append(("result", card.result_ref))
     fields.append(("now", card.now))
     fields.append(("next", card.next))
     fields.append(("last material update", card.last_material_update))
 
-    return {
+    payload: dict[str, Any] = {
         "kind": "ROOTCARD_V1",
         "run_id": card.run_id,
         "header": f"Run {card.run_id}",
@@ -474,6 +638,8 @@ def render_rootcard(card: RootCard) -> dict[str, Any]:
         "actions": list(card.contextual_actions()),
         "authority_granted": False,
     }
+    _add_projection_metadata(payload, card)
+    return payload
 
 
 def render_root_op(

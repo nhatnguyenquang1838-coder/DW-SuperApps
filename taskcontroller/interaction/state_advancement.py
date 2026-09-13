@@ -16,6 +16,14 @@ from taskcontroller.interaction.mailbox_v2 import (
     MailboxV2ValidationError,
     V2MailboxEnvelope,
 )
+from taskcontroller.controlplane.lease_binding import (
+    LeaseBindingError,
+    evaluate_result_fence,
+)
+from taskcontroller.controlplane.generation_fence import (
+    GenerationFenceError,
+    evaluate_generation_fence,
+)
 
 
 EnvelopeInput = Union[V2MailboxEnvelope, Mapping[str, Any]]
@@ -85,6 +93,7 @@ _REQUIRED_CURRENT_FIELDS = (
     "attempt_id",
     "lease_generation",
 )
+_ACTIVE_LEASE_UNSET = object()
 
 
 def _fail(code: str, message: str) -> NoReturn:
@@ -156,6 +165,8 @@ def validate_state_advancing_write(
     expected_source_digest: Optional[str] = None,
     actor_cursor: Optional[int] = None,
     write_kind: StateAdvancingWriteKind | str | None = None,
+    active_lease: Any = _ACTIVE_LEASE_UNSET,
+    lease_now: str | None = None,
 ) -> StateAdvancingWriteDecision:
     """Evaluate whether a child, Mixer, or parent terminal write is current.
 
@@ -200,6 +211,18 @@ def validate_state_advancing_write(
     if validated.seq <= cursor:
         failed.append("seq")
 
+    # The legacy current-identity projection did not carry the fence token.
+    # When the authoritative AttemptRecord projection does carry it, use the
+    # shared parent/child/Mixer predicate so a token mismatch is evidence-only.
+    if "fencing_token" in current:
+        try:
+            generation = evaluate_generation_fence(actual, current)
+        except GenerationFenceError as exc:
+            _fail(MailboxV2ErrorCode.SCHEMA_INVALID, str(exc))
+        for check in generation.failed_checks:
+            if check not in failed:
+                failed.append(check)
+
     if failed:
         return StateAdvancingWriteDecision(
             write_kind=canonical_kind,
@@ -209,6 +232,21 @@ def validate_state_advancing_write(
             envelope_digest=validated.digest(),
             failed_checks=tuple(failed),
         )
+
+    if active_lease is not _ACTIVE_LEASE_UNSET:
+        try:
+            fence = evaluate_result_fence(validated, active_lease, now=lease_now)
+        except LeaseBindingError as exc:
+            _fail(MailboxV2ErrorCode.SCHEMA_INVALID, str(exc))
+        if not fence.advances_state:
+            return StateAdvancingWriteDecision(
+                write_kind=canonical_kind,
+                disposition=StateAdvancingDisposition.STALE_RESULT.value,
+                advances_state=False,
+                evidence_only=True,
+                envelope_digest=validated.digest(),
+                failed_checks=fence.failed_checks,
+            )
 
     return StateAdvancingWriteDecision(
         write_kind=canonical_kind,

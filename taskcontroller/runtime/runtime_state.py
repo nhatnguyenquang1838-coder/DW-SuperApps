@@ -46,6 +46,11 @@ class AttemptRecord:
     fencing_token: str
     status: str  # runtime attempt status; MVP mirrors NodeStatus-ish values
     current_attempt_number: int
+    lease_generation: int = 0
+
+    def __post_init__(self) -> None:
+        if isinstance(self.lease_generation, bool) or not isinstance(self.lease_generation, int) or self.lease_generation < 0:
+            raise ValueError("attempt.lease_generation must be a non-negative integer")
 
     def to_dict(self) -> dict:
         return {
@@ -57,6 +62,7 @@ class AttemptRecord:
             "fencing_token": self.fencing_token,
             "status": self.status,
             "current_attempt_number": self.current_attempt_number,
+            "lease_generation": self.lease_generation,
         }
 
     @classmethod
@@ -70,6 +76,7 @@ class AttemptRecord:
             fencing_token=d["fencing_token"],
             status=d["status"],
             current_attempt_number=d["current_attempt_number"],
+            lease_generation=d.get("lease_generation", 0),
         )
 
 
@@ -265,6 +272,7 @@ def make_attempt_record(
     current_attempt_number: int,
     current_lease_id: str | None = None,
     status: str = NodeStatus.PENDING.value,
+    lease_generation: int = 0,
 ) -> AttemptRecord:
     return AttemptRecord(
         attempt_id=attempt_id,
@@ -275,4 +283,5 @@ def make_attempt_record(
         fencing_token=fencing_token,
         status=status,
         current_attempt_number=current_attempt_number,
+        lease_generation=lease_generation,
     )

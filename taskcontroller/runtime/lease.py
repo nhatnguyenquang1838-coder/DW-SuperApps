@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from dataclasses import replace
 from datetime import datetime, timezone
 
 from taskcontroller.domain.enums import LeaseStatus, NodeStatus
@@ -54,6 +55,8 @@ def _safe_to_dict(obj: Any) -> Any:
                 }
                 if obj.resource_ref is not None:
                     d["resource_ref"] = obj.resource_ref
+                if obj.lease_generation is not None:
+                    d["lease_generation"] = obj.lease_generation
                 return d
             raise
     return obj
@@ -244,6 +247,30 @@ class LeaseManager:
             lease.attempt_id,
         )
 
+        # Every v2 lease gets a strictly increasing generation.  Legacy callers
+        # may omit it; omission is normalized to the next durable generation so
+        # the bound AttemptRecord never regresses.
+        meta_snapshot = _meta_to_dict(current_state.meta)
+        raw_attempt = meta_snapshot.get("attempt_registry", {}).get(lease.attempt_id)
+        if isinstance(raw_attempt, dict):
+            current_generation = int(raw_attempt.get("lease_generation", 0))
+        elif isinstance(raw_attempt, AttemptRecord):
+            current_generation = raw_attempt.lease_generation
+        else:
+            current_generation = 0
+        if existing is not None and existing.lease_generation is not None:
+            current_generation = max(current_generation, existing.lease_generation)
+        requested_generation = lease.lease_generation
+        if requested_generation is None:
+            requested_generation = current_generation + 1
+        if isinstance(requested_generation, bool) or not isinstance(requested_generation, int):
+            raise LeaseConflictError("lease_generation must be an integer")
+        if requested_generation <= current_generation:
+            raise LeaseConflictError(
+                f"lease_generation must increase: current={current_generation}, requested={requested_generation}"
+            )
+        lease = replace(lease, lease_generation=requested_generation)
+
         # Build the new state incrementally through CAS steps
         version = expected_version
         rs = current_state
@@ -349,6 +376,7 @@ class LeaseManager:
             expires_at=lease.expires_at,
             resource_ref=lease.resource_ref,
             status=LeaseStatus.RELEASED.value,
+            lease_generation=lease.lease_generation,
         )
         new_leases = dict(leases)
         new_leases[lease_id] = updated
@@ -412,6 +440,13 @@ class LeaseManager:
             raise LeaseConflictError(
                 f"cannot renew expired lease {lease_id}"
             )
+        # Renewal is monotonic: a delayed/stale heartbeat may not shorten the
+        # still-active lease. An already-expired lease was rejected above, so
+        # this comparison cannot revive or rebind an old fence.
+        if _parse_iso_instant(new_expires_at) < _parse_iso_instant(lease.expires_at):
+            raise LeaseConflictError(
+                f"cannot shorten active lease {lease_id}"
+            )
 
         updated = WorkLease(
             lease_id=lease.lease_id,
@@ -425,6 +460,7 @@ class LeaseManager:
             expires_at=new_expires_at,
             resource_ref=lease.resource_ref,
             status=lease.status,
+            lease_generation=lease.lease_generation,
         )
         new_leases = dict(leases)
         new_leases[lease_id] = updated
@@ -478,6 +514,7 @@ class LeaseManager:
             expires_at=lease.expires_at,
             resource_ref=lease.resource_ref,
             status=LeaseStatus.REVOKED.value,
+            lease_generation=lease.lease_generation,
         )
         new_leases = dict(leases)
         new_leases[lease_id] = updated
@@ -630,6 +667,7 @@ class LeaseManager:
             expires_at=lease.expires_at,
             resource_ref=lease.resource_ref,
             status=LeaseStatus.EXPIRED.value,
+            lease_generation=lease.lease_generation,
         )
 
         if is_current_lease:
@@ -745,6 +783,7 @@ class LeaseManager:
             expires_at=existing.expires_at,
             resource_ref=existing.resource_ref,
             status=LeaseStatus.RELEASED.value,
+            lease_generation=existing.lease_generation,
         )
         leases = self._leases_dict(current_state)
         leases[existing.lease_id] = updated
@@ -815,6 +854,9 @@ class LeaseManager:
                 new_active.append(lease.lease_id)
             new_run.active_leases = new_active
 
+        # grant() normalizes legacy omission to a concrete monotonic generation.
+        if lease.lease_generation is None:
+            raise LeaseConflictError("registered lease missing normalized lease_generation")
         # Update attempt record
         old_meta_dict = _meta_to_dict(rs.meta)
         att_reg = old_meta_dict.get("attempt_registry", {})
@@ -823,9 +865,11 @@ class LeaseManager:
             if isinstance(att, dict):
                 att["current_lease_id"] = lease.lease_id
                 att["fencing_token"] = lease.fencing_token
+                att["lease_generation"] = lease.lease_generation
             elif isinstance(att, AttemptRecord):
                 att.current_lease_id = lease.lease_id
                 att.fencing_token = lease.fencing_token
+                att.lease_generation = lease.lease_generation
 
         old_meta_dict["leases"] = {
             k: _safe_to_dict(v) for k, v in leases.items()
