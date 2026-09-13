@@ -4,7 +4,11 @@ from dataclasses import replace
 
 import pytest
 
-from taskcontroller.controlplane.execution_boundary import ExecutionBoundary
+from taskcontroller.controlplane.execution_boundary import (
+    ExecutionBoundary,
+    ExecutionBoundaryValidationError,
+    REPLAN_REQUIRED,
+)
 from taskcontroller.interaction.mailbox_v2 import SOURCE_MANIFEST_VERSION
 from taskcontroller.execution.child_contract import (
     ChildContractInput,
@@ -42,17 +46,24 @@ _SOURCE = {
 }
 
 
-def _boundary(*, max_parallel: int = 2, max_children: int = 6) -> ExecutionBoundary:
-    return ExecutionBoundary(
-        allowed_actions=("read_repo", "write_artifact"),
-        denied_actions=("deploy", "merge"),
-        writable_targets=("artifacts/**",),
-        source_roots=("src",),
-        max_children=max_children,
-        max_parallel=max_parallel,
-        max_depth=1,
-        replan_required_when=("scope_expansion", "budget_exceeded"),
-    )
+def _boundary(
+    *,
+    max_parallel: int = 2,
+    max_children: int = 6,
+    **changes: object,
+) -> ExecutionBoundary:
+    values: dict[str, object] = {
+        "allowed_actions": ("read_repo", "write_artifact"),
+        "denied_actions": ("deploy", "merge"),
+        "writable_targets": ("artifacts/**",),
+        "source_roots": ("src",),
+        "max_children": max_children,
+        "max_parallel": max_parallel,
+        "max_depth": 1,
+        "replan_required_when": ("scope_expansion", "budget_exceeded"),
+    }
+    values.update(changes)
+    return ExecutionBoundary(**values)
 
 
 def _parent() -> ParentContract:
@@ -111,6 +122,36 @@ def _children(count: int = 3, *, parent: ParentContract | None = None):
             for index in range(1, count + 1)
         ],
     )
+
+
+def test_fanout_budget_gate_rejects_over_budget_child_before_dispatch() -> None:
+    parent_boundary = _boundary(time_budget_seconds=60, token_budget=1000)
+    parent = replace(_parent(), boundary=parent_boundary)
+    oversized_child_boundary = replace(
+        parent_boundary,
+        max_children=1,
+        max_parallel=1,
+        max_depth=0,
+        time_budget_seconds=61,
+        token_budget=1001,
+        scope_digest=None,
+    )
+
+    with pytest.raises(ExecutionBoundaryValidationError) as caught:
+        generate_child_contracts(
+            parent,
+            [
+                ChildContractInput(
+                    child_id="child-budget-overrun",
+                    lens="implementation",
+                    boundary=oversized_child_boundary,
+                    objective="Inspect the bounded budget gate.",
+                    acceptance_criteria=(parent.acceptance_criteria[0],),
+                )
+            ],
+        )
+    assert caught.value.code == REPLAN_REQUIRED
+    assert "child_budgets_within_parent" in caught.value.failed_checks
 
 
 def _completion(child, *, status: str = "SUCCEEDED", suffix: str = "result"):
@@ -560,3 +601,172 @@ def test_manifest_preserves_failure_as_blocking_evidence_and_rejects_tampered_di
     tampered["manifest_digest"] = "sha256:" + "0" * 64
     with pytest.raises(FanoutManifestError, match="DIGEST_MISMATCH"):
         FanoutManifest.from_dict(tampered)
+
+def _bound_completion(
+    child,
+    plan,
+    *,
+    parent_attempt_id: str = "parent-attempt-1",
+    lease_generation: int = 1,
+    attempt_id: str | None = None,
+    status: str = "SUCCEEDED",
+    suffix: str = "bound",
+):
+    return child_completion(
+        child_id=child.child_id,
+        child_contract_digest=child.contract_digest,
+        status=status,
+        result_ref=f"github://result/{child.child_id}/{suffix}",
+        result_digest="sha256:" + (str(ord(child.child_id[-1]))[-1] * 64),
+        attempt_id=attempt_id or f"{parent_attempt_id}:{child.child_id}",
+        plan_version=plan.plan_version,
+        plan_digest=plan.plan_digest,
+        parent_attempt_id=parent_attempt_id,
+        lease_generation=lease_generation,
+        source_digest=child.source_digest,
+        standards_profile_digest=child.standards_profile["digest"],
+    )
+
+
+def test_current_generation_binding_excludes_late_prior_generation_from_join() -> None:
+    children = _children(1)
+    coordinator = FanoutCoordinator.from_children(
+        children,
+        parent=_parent(),
+        parent_attempt_id="parent-attempt-1",
+        lease_generation=1,
+        mode="PARALLEL",
+        max_parallel=1,
+    )
+    current = _bound_completion(children[0], coordinator.plan)
+    coordinator = coordinator.complete(current)
+    late = _bound_completion(
+        children[0],
+        coordinator.plan,
+        parent_attempt_id="parent-attempt-0",
+        lease_generation=0,
+        attempt_id="parent-attempt-0:child-1",
+        suffix="late",
+    )
+
+    reconciled = coordinator.complete(late)
+
+    assert reconciled.completions == (current,)
+    assert len(reconciled.stale_completions) == 1
+    assert reconciled.stale_completions[0].status is CompletionStatus.STALE
+    assert reconciled.stale_completions[0].evidence_only is True
+    assert reconciled.join().status is JoinStatus.READY
+    assert reconciled.join().normalized_input.child_ids == ("child-1",)
+    assert reconciled.join().stale_child_ids == ("child-1",)
+
+
+def test_retry_creates_a_new_child_attempt_and_retains_prior_evidence() -> None:
+    children = _children(1)
+    coordinator = FanoutCoordinator.from_children(
+        children,
+        parent=_parent(),
+        parent_attempt_id="parent-attempt-1",
+        lease_generation=1,
+        mode="PARALLEL",
+        max_parallel=1,
+    )
+    first = _bound_completion(children[0], coordinator.plan)
+    coordinator = coordinator.complete(first)
+
+    retried = coordinator.retry_child(
+        "child-1",
+        attempt_id="parent-attempt-1:child-1:retry-2",
+    )
+
+    assert retried.current_attempt_id("child-1") == "parent-attempt-1:child-1:retry-2"
+    assert retried.completions == ()
+    assert len(retried.stale_completions) == 1
+    assert retried.stale_completions[0].attempt_id == first.attempt_id
+    second = _bound_completion(
+        children[0],
+        retried.plan,
+        attempt_id="parent-attempt-1:child-1:retry-2",
+        suffix="retry-2",
+    )
+    retried = retried.complete(second)
+
+    assert retried.join().status is JoinStatus.READY
+    assert retried.join().normalized_input.completions == (second,)
+    assert retried.stale_completions[0].status is CompletionStatus.STALE
+
+
+def test_manifest_child_binds_plan_generation_and_round_trips() -> None:
+    children = _children(1)
+    plan = FanoutCoordinator.from_children(
+        children,
+        parent=_parent(),
+        mode="PARALLEL",
+        max_parallel=1,
+    ).plan
+    manifest = FanoutManifest.from_plan(
+        plan,
+        attempt_id="parent-attempt-1",
+        lease_generation=7,
+    )
+
+    child = manifest.child("child-1")
+    assert child.plan_version == plan.plan_version
+    assert child.plan_digest == plan.plan_digest
+    assert child.parent_attempt_id == "parent-attempt-1"
+    assert child.lease_generation == 7
+    assert child.source_digest == _SOURCE_DIGEST
+    assert child.standards_profile_digest == _STANDARDS_DIGEST
+    assert FanoutManifest.from_dict(manifest.to_dict()) == manifest
+
+
+def test_manifest_late_completion_is_stale_evidence_only_and_retry_is_append_only() -> None:
+    children = _children(1)
+    plan = FanoutCoordinator.from_children(
+        children,
+        parent=_parent(),
+        mode="PARALLEL",
+        max_parallel=1,
+    ).plan
+    manifest = FanoutManifest.from_plan(
+        plan,
+        attempt_id="parent-attempt-1",
+        lease_generation=1,
+    )
+    late = _bound_completion(
+        children[0],
+        plan,
+        parent_attempt_id="parent-attempt-0",
+        lease_generation=0,
+        attempt_id="parent-attempt-0:child-1",
+        suffix="late",
+    )
+
+    with_late = manifest.record_completion(late)
+    assert with_late.join_decision().status is JoinStatus.NOT_READY
+    assert len(with_late.stale_children) == 1
+    assert with_late.stale_children[0].status is ChildLifecycle.STALE
+    assert with_late.stale_children[0].attempt_id == late.attempt_id
+
+    current = _bound_completion(
+        children[0],
+        plan,
+        attempt_id="parent-attempt-1:child-1",
+        suffix="current",
+    )
+    ready = with_late.record_completion(current)
+    assert ready.join_decision().status is JoinStatus.READY
+
+    retried = ready.retry_child(
+        "child-1",
+        attempt_id="parent-attempt-1:child-1:retry-2",
+        lease_generation=2,
+    )
+    assert ready.child("child-1").attempt_id == "parent-attempt-1:child-1"
+    assert retried.child("child-1").attempt_id == "parent-attempt-1:child-1:retry-2"
+    assert retried.child("child-1").status is ChildLifecycle.PLANNED
+    assert any(
+        item.attempt_id == "parent-attempt-1:child-1"
+        and item.status is ChildLifecycle.STALE
+        for item in retried.stale_children
+    )
+    assert retried.join_decision().status is JoinStatus.NOT_READY

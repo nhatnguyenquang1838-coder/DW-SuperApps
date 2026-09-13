@@ -258,6 +258,22 @@
           "items": {
             "$ref": "#/$defs/non_empty"
           }
+        },
+        "time_budget_seconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 3600
+        },
+        "token_budget": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 1000000
         }
       }
     },

@@ -136,6 +136,19 @@ def _proposal(**changes: Any) -> dict[str, Any]:
     return values
 
 
+def test_generate_child_contract_rejects_optional_budget_expansion() -> None:
+    with pytest.raises(ExecutionBoundaryValidationError) as caught:
+        parent = _parent(boundary=_boundary(time_budget_seconds=60, token_budget=1000))
+        generate_child_contract(
+            parent,
+            _proposal(
+                boundary=_child_boundary(time_budget_seconds=61, token_budget=1001),
+            ),
+        )
+    assert caught.value.code == REPLAN_REQUIRED
+    assert "child_budgets_within_parent" in caught.value.failed_checks
+
+
 def test_generate_child_contract_proves_subset_and_inherits_exact_bindings() -> None:
     parent = _parent()
     child = generate_child_contract(parent, _proposal())

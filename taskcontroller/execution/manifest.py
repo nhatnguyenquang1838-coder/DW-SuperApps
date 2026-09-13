@@ -14,13 +14,21 @@ from dataclasses import dataclass, replace
 from typing import Any
 
 from taskcontroller.execution.fanout import (
+    ChildAttemptBinding,
+    ChildCompletion,
     ChildLifecycle,
     ChildLifecycleError,
+    CompletionStatus,
     FanoutCoordinator,
     FanoutPlan,
     JoinSemantics,
     JoinStatus,
     transition_child_lifecycle,
+)
+from taskcontroller.controlplane.generation_fence import (
+    GenerationFenceDecision,
+    GenerationFenceError,
+    evaluate_generation_fence,
 )
 from taskcontroller.interaction.mailbox_v2 import canonical_bytes, canonical_digest
 
@@ -85,6 +93,12 @@ def _optional_digest(value: Any, name: str) -> str | None:
     return _digest(value, name)
 
 
+def _optional_identifier(value: Any, name: str) -> str | None:
+    if value is None:
+        return None
+    return _text(value, name, max_bytes=MAX_IDENTIFIER_BYTES, identifier=True)
+
+
 def _positive_int(value: Any, name: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
         _fail("SCHEMA_INVALID", f"{name} must be a positive integer")
@@ -129,6 +143,7 @@ class ManifestParentIdentity:
     standards_profile_digest: str
     attempt_id: str
     lease_generation: int | None = None
+    fencing_token: str | None = None
 
     def __post_init__(self) -> None:
         for name in (
@@ -163,6 +178,8 @@ class ManifestParentIdentity:
                 "lease_generation",
                 _non_negative_int(self.lease_generation, "lease_generation"),
             )
+        if self.fencing_token is not None:
+            object.__setattr__(self, "fencing_token", _optional_text(self.fencing_token, "fencing_token"))
 
     @classmethod
     def from_plan(
@@ -171,6 +188,7 @@ class ManifestParentIdentity:
         *,
         attempt_id: str,
         lease_generation: int | None = None,
+        fencing_token: str | None = None,
     ) -> "ManifestParentIdentity":
         if not isinstance(plan, FanoutPlan):
             _fail("SCHEMA_INVALID", "plan must be a FanoutPlan")
@@ -220,6 +238,7 @@ class ManifestParentIdentity:
             standards_profile_digest=first.standards_profile["digest"],
             attempt_id=attempt_id,
             lease_generation=lease_generation,
+            fencing_token=fencing_token,
         )
 
     @classmethod
@@ -239,7 +258,8 @@ class ManifestParentIdentity:
             "attempt_id",
             "lease_generation",
         }
-        unknown = sorted(set(candidate) - required)
+        optional = {"fencing_token"}
+        unknown = sorted(set(candidate) - required - optional)
         missing = sorted(required - set(candidate))
         if unknown:
             _fail("SCHEMA_INVALID", f"unsupported parent fields: {', '.join(unknown)}")
@@ -252,7 +272,7 @@ class ManifestParentIdentity:
         raise AssertionError("_fail must raise")
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "run_id": self.run_id,
             "node_id": self.node_id,
             "plan_version": self.plan_version,
@@ -266,6 +286,30 @@ class ManifestParentIdentity:
             "attempt_id": self.attempt_id,
             "lease_generation": self.lease_generation,
         }
+        if self.fencing_token is not None:
+            payload["fencing_token"] = self.fencing_token
+        return payload
+
+    def generation_identity(self) -> dict[str, Any]:
+        """Return the v2 parent fence, rejecting legacy-unbound manifests."""
+        if self.lease_generation is None or self.fencing_token is None:
+            _fail(
+                "SCHEMA_INVALID",
+                "current-generation manifest requires lease_generation and fencing_token",
+            )
+        return {
+            "run_id": self.run_id,
+            "node_id": self.node_id,
+            "attempt_id": self.attempt_id,
+            "lease_generation": self.lease_generation,
+            "fencing_token": self.fencing_token,
+        }
+
+    def generation_decision(self, current: Mapping[str, Any]) -> GenerationFenceDecision:
+        try:
+            return evaluate_generation_fence(self.generation_identity(), current)
+        except GenerationFenceError as exc:
+            raise FanoutManifestError(exc.code, str(exc)) from exc
 
 
 @dataclass(frozen=True, slots=True)
@@ -283,6 +327,10 @@ class FanoutManifestChild:
     standards_profile_digest: str
     result_ref: str | None = None
     result_digest: str | None = None
+    plan_version: str | None = None
+    plan_digest: str | None = None
+    parent_attempt_id: str | None = None
+    lease_generation: int | None = None
 
     def __post_init__(self) -> None:
         for name in ("child_id", "lens", "agent_instance", "attempt_id"):
@@ -310,6 +358,49 @@ class FanoutManifestChild:
         object.__setattr__(self, "result_ref", result_ref)
         object.__setattr__(self, "result_digest", result_digest)
 
+        plan_version = _optional_identifier(self.plan_version, "plan_version")
+        plan_digest = _optional_digest(self.plan_digest, "plan_digest")
+        parent_attempt_id = _optional_identifier(
+            self.parent_attempt_id,
+            "parent_attempt_id",
+        )
+        binding_present = any(
+            value is not None for value in (plan_version, plan_digest, parent_attempt_id, self.lease_generation)
+        )
+        if binding_present and any(
+            value is None for value in (plan_version, plan_digest, parent_attempt_id)
+        ):
+            _fail(
+                "SCHEMA_INVALID",
+                "bound manifest child requires plan_version, plan_digest and parent_attempt_id",
+            )
+        if self.lease_generation is not None:
+            object.__setattr__(
+                self,
+                "lease_generation",
+                _non_negative_int(self.lease_generation, "lease_generation"),
+            )
+        object.__setattr__(self, "plan_version", plan_version)
+        object.__setattr__(self, "plan_digest", plan_digest)
+        object.__setattr__(self, "parent_attempt_id", parent_attempt_id)
+
+    @property
+    def has_parent_binding(self) -> bool:
+        return self.plan_version is not None
+
+    @property
+    def attempt_binding(self) -> ChildAttemptBinding | None:
+        if not self.has_parent_binding:
+            return None
+        return ChildAttemptBinding(
+            plan_version=self.plan_version,
+            plan_digest=self.plan_digest,
+            parent_attempt_id=self.parent_attempt_id,
+            lease_generation=self.lease_generation,
+            source_digest=self.source_digest,
+            standards_profile_digest=self.standards_profile_digest,
+        )
+
     @classmethod
     def from_dict(cls, value: Mapping[str, Any]) -> "FanoutManifestChild":
         candidate = _mapping(value, "children[]")
@@ -326,7 +417,13 @@ class FanoutManifestChild:
             "result_ref",
             "result_digest",
         }
-        unknown = sorted(set(candidate) - required)
+        optional = {
+            "plan_version",
+            "plan_digest",
+            "parent_attempt_id",
+            "lease_generation",
+        }
+        unknown = sorted(set(candidate) - required - optional)
         missing = sorted(required - set(candidate))
         if unknown:
             _fail("SCHEMA_INVALID", f"unsupported child fields: {', '.join(unknown)}")
@@ -339,7 +436,7 @@ class FanoutManifestChild:
         raise AssertionError("_fail must raise")
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload: dict[str, Any] = {
             "child_id": self.child_id,
             "lens": self.lens,
             "agent_instance": self.agent_instance,
@@ -352,6 +449,16 @@ class FanoutManifestChild:
             "result_ref": self.result_ref,
             "result_digest": self.result_digest,
         }
+        if self.has_parent_binding:
+            payload.update(
+                {
+                    "plan_version": self.plan_version,
+                    "plan_digest": self.plan_digest,
+                    "parent_attempt_id": self.parent_attempt_id,
+                    "lease_generation": self.lease_generation,
+                }
+            )
+        return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -386,6 +493,7 @@ class FanoutManifest:
     join_semantics: JoinSemantics
     children: tuple[FanoutManifestChild, ...]
     manifest_digest: str
+    stale_children: tuple[FanoutManifestChild, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -412,6 +520,32 @@ class FanoutManifest:
         if len(set(child_ids)) != len(child_ids):
             _fail("SCHEMA_INVALID", "manifest child_id values must be unique")
         object.__setattr__(self, "children", normalized)
+        for child in normalized:
+            if not child.has_parent_binding:
+                continue
+            if child.plan_version != self.parent.plan_version:
+                _fail("CONTRACT_MISMATCH", f"child plan_version mismatch: {child.child_id}")
+            if child.parent_attempt_id != self.parent.attempt_id:
+                _fail("CONTRACT_MISMATCH", f"child parent attempt mismatch: {child.child_id}")
+            if child.lease_generation != self.parent.lease_generation:
+                _fail("CONTRACT_MISMATCH", f"child lease generation mismatch: {child.child_id}")
+        plan_digests = {child.plan_digest for child in normalized if child.plan_digest is not None}
+        if len(plan_digests) > 1:
+            _fail("CONTRACT_MISMATCH", "manifest children have conflicting plan digests")
+
+        raw_stale = self.stale_children
+        if not isinstance(raw_stale, (tuple, list)):
+            _fail("SCHEMA_INVALID", "stale_children must be an array")
+        stale = tuple(raw_stale)
+        if any(not isinstance(item, FanoutManifestChild) for item in stale):
+            _fail("SCHEMA_INVALID", "stale_children must contain FanoutManifestChild values")
+        if any(item.status is not ChildLifecycle.STALE for item in stale):
+            _fail("SCHEMA_INVALID", "stale_children must contain STALE records")
+        object.__setattr__(
+            self,
+            "stale_children",
+            tuple(sorted(stale, key=lambda item: (item.child_id, item.attempt_id))),
+        )
         expected = canonical_digest(self._payload())
         supplied = _digest(self.manifest_digest, "manifest_digest")
         if supplied != expected:
@@ -419,7 +553,7 @@ class FanoutManifest:
         object.__setattr__(self, "manifest_digest", expected)
 
     def _payload(self) -> dict[str, Any]:
-        return {
+        payload: dict[str, Any] = {
             "protocol": FANOUT_MANIFEST_PROTOCOL,
             "manifest_id": self.manifest_id,
             "manifest_version": self.manifest_version,
@@ -427,6 +561,9 @@ class FanoutManifest:
             "join_semantics": self.join_semantics.to_dict(),
             "children": [item.to_dict() for item in self.children],
         }
+        if self.stale_children:
+            payload["stale_children"] = [item.to_dict() for item in self.stale_children]
+        return payload
 
     @classmethod
     def from_plan(
@@ -435,14 +572,17 @@ class FanoutManifest:
         *,
         attempt_id: str,
         lease_generation: int | None = None,
+        fencing_token: str | None = None,
         timeout_seconds: int = DEFAULT_CHILD_TIMEOUT_SECONDS,
         manifest_id: str | None = None,
         child_attempt_ids: Mapping[str, str] | None = None,
+        _allow_partial_child_attempt_ids: bool = False,
     ) -> "FanoutManifest":
         parent = ManifestParentIdentity.from_plan(
             plan,
             attempt_id=attempt_id,
             lease_generation=lease_generation,
+            fencing_token=fencing_token,
         )
         timeout = _positive_int(timeout_seconds, "timeout_seconds")
         attempts = _mapping(child_attempt_ids, "child_attempt_ids") if child_attempt_ids is not None else {}
@@ -466,10 +606,14 @@ class FanoutManifest:
                 child_contract_digest=child.contract_digest,
                 source_digest=child.source_digest,
                 standards_profile_digest=child.standards_profile["digest"],
+                plan_version=plan.plan_version,
+                plan_digest=plan.plan_digest,
+                parent_attempt_id=parent.attempt_id,
+                lease_generation=parent.lease_generation,
             )
             for child in plan.children
         )
-        if missing and child_attempt_ids is not None:
+        if missing and child_attempt_ids is not None and not _allow_partial_child_attempt_ids:
             _fail("SCHEMA_INVALID", f"missing child attempt IDs: {', '.join(missing)}")
         selected_id = _text(
             manifest_id or f"manifest:{plan.run_id}:{plan.node_id}:{plan.plan_version}",
@@ -499,21 +643,47 @@ class FanoutManifest:
         cls,
         coordinator: FanoutCoordinator,
         *,
-        attempt_id: str,
+        attempt_id: str | None = None,
         lease_generation: int | None = None,
+        fencing_token: str | None = None,
         timeout_seconds: int = DEFAULT_CHILD_TIMEOUT_SECONDS,
         manifest_id: str | None = None,
         child_attempt_ids: Mapping[str, str] | None = None,
     ) -> "FanoutManifest":
         if not isinstance(coordinator, FanoutCoordinator):
             _fail("SCHEMA_INVALID", "coordinator must be a FanoutCoordinator")
+        selected_attempt_id = attempt_id or coordinator.parent_attempt_id
+        if selected_attempt_id is None:
+            _fail("CONTRACT_MISMATCH", "parent attempt_id is required for a manifest")
+        if (
+            coordinator.parent_attempt_id is not None
+            and selected_attempt_id != coordinator.parent_attempt_id
+        ):
+            _fail("CONTRACT_MISMATCH", "manifest attempt_id does not match coordinator generation")
+        selected_lease_generation = (
+            lease_generation
+            if lease_generation is not None
+            else coordinator.lease_generation
+        )
+        if (
+            coordinator.lease_generation is not None
+            and selected_lease_generation != coordinator.lease_generation
+        ):
+            _fail("CONTRACT_MISMATCH", "manifest lease generation does not match coordinator")
+        coordinator_attempt_ids = (
+            dict(coordinator.child_attempt_ids)
+            if child_attempt_ids is None
+            else child_attempt_ids
+        )
         manifest = cls.from_plan(
             coordinator.plan,
-            attempt_id=attempt_id,
-            lease_generation=lease_generation,
+            attempt_id=selected_attempt_id,
+            lease_generation=selected_lease_generation,
+            fencing_token=fencing_token,
             timeout_seconds=timeout_seconds,
             manifest_id=manifest_id,
-            child_attempt_ids=child_attempt_ids,
+            child_attempt_ids=coordinator_attempt_ids or None,
+            _allow_partial_child_attempt_ids=True,
         )
         completions = {item.child_id: item for item in coordinator.completions}
         for child in coordinator.plan.children:
@@ -534,6 +704,8 @@ class FanoutManifest:
                 result_ref=completion.result_ref,
                 result_digest=completion.result_digest,
             )
+        for completion in coordinator.stale_completions:
+            manifest = manifest.record_completion(completion)
         return manifest
 
     @classmethod
@@ -548,7 +720,8 @@ class FanoutManifest:
             "children",
             "manifest_digest",
         }
-        unknown = sorted(set(candidate) - required)
+        optional = {"stale_children"}
+        unknown = sorted(set(candidate) - required - optional)
         missing = sorted(required - set(candidate))
         if unknown:
             _fail("SCHEMA_INVALID", f"unsupported manifest fields: {', '.join(unknown)}")
@@ -563,6 +736,15 @@ class FanoutManifest:
             children = tuple(FanoutManifestChild.from_dict(item) for item in raw_children)
         except TypeError as exc:
             _fail("SCHEMA_INVALID", f"children must be an array: {exc}")
+        raw_stale_children = candidate.get("stale_children", ())
+        if isinstance(raw_stale_children, (str, bytes, Mapping)):
+            _fail("SCHEMA_INVALID", "stale_children must be an array")
+        try:
+            stale_children = tuple(
+                FanoutManifestChild.from_dict(item) for item in raw_stale_children
+            )
+        except TypeError as exc:
+            _fail("SCHEMA_INVALID", f"stale_children must be an array: {exc}")
         semantics = _mapping(candidate["join_semantics"], "join_semantics")
         try:
             join_semantics = JoinSemantics(
@@ -584,6 +766,7 @@ class FanoutManifest:
                 join_semantics=join_semantics,
                 children=children,
                 manifest_digest=candidate["manifest_digest"],
+                stale_children=stale_children,
             )
         except FanoutManifestError:
             raise
@@ -608,27 +791,41 @@ class FanoutManifest:
         _fail("CONTRACT_MISMATCH", f"unknown manifest child: {normalized}")
         raise AssertionError("_fail must raise")
 
+    def _snapshot(
+        self,
+        *,
+        children: tuple[FanoutManifestChild, ...],
+        parent: ManifestParentIdentity | None = None,
+        stale_children: tuple[FanoutManifestChild, ...] | None = None,
+    ) -> "FanoutManifest":
+        selected_parent = self.parent if parent is None else parent
+        selected_stale = self.stale_children if stale_children is None else stale_children
+        next_version = self.manifest_version + 1
+        payload: dict[str, Any] = {
+            "protocol": FANOUT_MANIFEST_PROTOCOL,
+            "manifest_id": self.manifest_id,
+            "manifest_version": next_version,
+            "parent": selected_parent.to_dict(),
+            "join_semantics": self.join_semantics.to_dict(),
+            "children": [item.to_dict() for item in children],
+        }
+        if selected_stale:
+            payload["stale_children"] = [item.to_dict() for item in selected_stale]
+        return FanoutManifest(
+            manifest_id=self.manifest_id,
+            manifest_version=next_version,
+            parent=selected_parent,
+            join_semantics=self.join_semantics,
+            children=children,
+            manifest_digest=canonical_digest(payload),
+            stale_children=selected_stale,
+        )
+
     def _replace_child(self, updated: FanoutManifestChild) -> "FanoutManifest":
         children = tuple(
             updated if item.child_id == updated.child_id else item for item in self.children
         )
-        next_version = self.manifest_version + 1
-        payload = {
-            "protocol": FANOUT_MANIFEST_PROTOCOL,
-            "manifest_id": self.manifest_id,
-            "manifest_version": next_version,
-            "parent": self.parent.to_dict(),
-            "join_semantics": self.join_semantics.to_dict(),
-            "children": [item.to_dict() for item in children],
-        }
-        return FanoutManifest(
-            manifest_id=self.manifest_id,
-            manifest_version=next_version,
-            parent=self.parent,
-            join_semantics=self.join_semantics,
-            children=children,
-            manifest_digest=canonical_digest(payload),
-        )
+        return self._snapshot(children=children)
 
     def record_transition(
         self,
@@ -675,6 +872,195 @@ class FanoutManifest:
             result_digest=normalized_digest,
         )
         return self._replace_child(updated)
+
+    @property
+    def plan_digest(self) -> str | None:
+        digests = {child.plan_digest for child in self.children if child.plan_digest is not None}
+        return next(iter(digests)) if len(digests) == 1 else None
+
+    def _append_stale_child(self, stale: FanoutManifestChild) -> "FanoutManifest":
+        key = (stale.child_id, stale.attempt_id)
+        for prior in self.stale_children:
+            prior_key = (prior.child_id, prior.attempt_id)
+            if prior_key != key:
+                continue
+            if prior == stale:
+                return self
+            _fail("IDEMPOTENCY_CONFLICT", f"conflicting stale evidence: {stale.child_id}")
+        return self._snapshot(
+            children=self.children,
+            stale_children=self.stale_children + (stale,),
+        )
+
+    def _stale_child_from_completion(
+        self,
+        completion: ChildCompletion,
+    ) -> FanoutManifestChild:
+        current = self.child(completion.child_id)
+        attempt_id = completion.attempt_id or (
+            f"stale:{completion.child_id}:{completion.result_digest[7:15]}"
+        )
+        return FanoutManifestChild(
+            child_id=current.child_id,
+            lens=current.lens,
+            agent_instance=current.agent_instance,
+            attempt_id=attempt_id,
+            status=ChildLifecycle.STALE,
+            timeout_seconds=current.timeout_seconds,
+            child_contract_digest=current.child_contract_digest,
+            source_digest=completion.source_digest or current.source_digest,
+            standards_profile_digest=(
+                completion.standards_profile_digest or current.standards_profile_digest
+            ),
+            result_ref=completion.result_ref,
+            result_digest=completion.result_digest,
+            plan_version=completion.plan_version or current.plan_version,
+            plan_digest=completion.plan_digest or current.plan_digest,
+            parent_attempt_id=completion.parent_attempt_id or current.parent_attempt_id,
+            lease_generation=(
+                completion.lease_generation
+                if completion.has_parent_binding
+                else current.lease_generation
+            ),
+        )
+
+    def record_completion(self, completion: ChildCompletion) -> "FanoutManifest":
+        """Record current evidence or retain a late completion as STALE."""
+        if not isinstance(completion, ChildCompletion):
+            _fail("SCHEMA_INVALID", "completion must be a ChildCompletion")
+        current = self.child(completion.child_id)
+        if completion.child_contract_digest != current.child_contract_digest:
+            _fail("CONTRACT_MISMATCH", f"child contract digest mismatch: {completion.child_id}")
+        if completion.evidence_only:
+            return self._append_stale_child(self._stale_child_from_completion(completion))
+
+        if current.has_parent_binding:
+            if not completion.has_parent_binding:
+                _fail(
+                    "CONTRACT_MISMATCH",
+                    f"current-generation completion is missing binding: {completion.child_id}",
+                )
+            mismatched = (
+                completion.plan_version != current.plan_version
+                or completion.plan_digest != current.plan_digest
+                or completion.parent_attempt_id != current.parent_attempt_id
+                or completion.lease_generation != current.lease_generation
+                or completion.attempt_id != current.attempt_id
+                or completion.source_digest not in (None, current.source_digest)
+                or completion.standards_profile_digest
+                not in (None, current.standards_profile_digest)
+            )
+            if mismatched:
+                return self._append_stale_child(self._stale_child_from_completion(completion))
+        elif completion.has_parent_binding:
+            _fail(
+                "CONTRACT_MISMATCH",
+                f"bound completion cannot target an unbound manifest child: {completion.child_id}",
+            )
+
+        result = self
+        if current.status is ChildLifecycle.PLANNED:
+            result = result.record_transition(completion.child_id, ChildLifecycle.DISPATCHED)
+        if result.child(completion.child_id).status is ChildLifecycle.DISPATCHED:
+            result = result.record_transition(completion.child_id, ChildLifecycle.RUNNING)
+        return result.record_transition(
+            completion.child_id,
+            completion.lifecycle,
+            result_ref=completion.result_ref,
+            result_digest=completion.result_digest,
+        )
+
+    def retry_child(
+        self,
+        child_id: str,
+        *,
+        attempt_id: str,
+        parent_attempt_id: str | None = None,
+        lease_generation: int | None = None,
+    ) -> "FanoutManifest":
+        """Create a new child attempt while retaining prior terminal evidence."""
+        current = self.child(child_id)
+        normalized_attempt_id = _text(
+            attempt_id,
+            "attempt_id",
+            max_bytes=MAX_IDENTIFIER_BYTES,
+            identifier=True,
+        )
+        if normalized_attempt_id == current.attempt_id:
+            _fail("ATTEMPT_REUSE", f"retry must create a new attempt: {current.child_id}")
+        next_parent_attempt = (
+            _optional_identifier(parent_attempt_id, "parent_attempt_id")
+            if parent_attempt_id is not None
+            else self.parent.attempt_id
+        )
+        next_lease_generation = (
+            _non_negative_int(lease_generation, "lease_generation")
+            if lease_generation is not None
+            else self.parent.lease_generation
+        )
+        if next_parent_attempt is None or next_parent_attempt == "":
+            _fail("SCHEMA_INVALID", "parent_attempt_id is required for a retry")
+        generation_changed = (
+            next_parent_attempt != self.parent.attempt_id
+            or next_lease_generation != self.parent.lease_generation
+        )
+        parent = self.parent
+        if generation_changed:
+            parent = replace(
+                self.parent,
+                attempt_id=next_parent_attempt,
+                lease_generation=next_lease_generation,
+            )
+
+        stale = list(self.stale_children)
+        for prior in self.children:
+            if not prior.status.is_terminal:
+                continue
+            stale_record = replace(prior, status=ChildLifecycle.STALE)
+            key = (stale_record.child_id, stale_record.attempt_id)
+            if not any((item.child_id, item.attempt_id) == key for item in stale):
+                stale.append(stale_record)
+
+        if generation_changed:
+            children = tuple(
+                replace(
+                    prior,
+                    attempt_id=(
+                        normalized_attempt_id
+                        if prior.child_id == current.child_id
+                        else f"{next_parent_attempt}:{prior.child_id}"
+                    ),
+                    status=ChildLifecycle.PLANNED,
+                    result_ref=None,
+                    result_digest=None,
+                    parent_attempt_id=next_parent_attempt if prior.has_parent_binding else None,
+                    lease_generation=(
+                        next_lease_generation if prior.has_parent_binding else None
+                    ),
+                )
+                for prior in self.children
+            )
+        else:
+            children = tuple(
+                replace(
+                    prior,
+                    attempt_id=normalized_attempt_id,
+                    status=ChildLifecycle.PLANNED,
+                    result_ref=None,
+                    result_digest=None,
+                )
+                if prior.child_id == current.child_id
+                else prior
+                for prior in self.children
+            )
+        return self._snapshot(
+            children=children,
+            parent=parent,
+            stale_children=tuple(stale),
+        )
+
+    retry = retry_child
+    new_attempt = retry_child
 
     def join_decision(self) -> ManifestJoinDecision:
         missing = tuple(

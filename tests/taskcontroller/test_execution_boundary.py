@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 
 from taskcontroller.controlplane.execution_boundary import (
+    MAX_TIME_BUDGET_SECONDS,
+    MAX_TOKEN_BUDGET,
     ExecutionBoundary,
     ExecutionBoundaryValidationError,
     REPLAN_REQUIRED,
@@ -159,6 +161,25 @@ def test_child_budget_depth_and_replan_trigger_expansion_are_rejected() -> None:
     assert "child_budgets_within_parent" in caught.value.failed_checks
 
 
+def test_nested_fanout_requires_explicit_parent_depth_budget() -> None:
+    depth_limited_parent = _boundary(max_depth=1)
+    recursive_child = _boundary(max_depth=1)
+
+    with pytest.raises(ExecutionBoundaryValidationError) as caught:
+        depth_limited_parent.validate_child_subset(recursive_child, child_depth=1)
+
+    assert caught.value.code == REPLAN_REQUIRED
+    assert "child_budgets_within_parent" in caught.value.failed_checks
+
+    explicitly_nested_parent = _boundary(max_depth=2)
+    bounded_nested_child = _boundary(max_depth=1)
+    proof = explicitly_nested_parent.validate_child_subset(bounded_nested_child, child_depth=1)
+
+    assert proof.valid is True
+    assert proof.parent_scope_digest == explicitly_nested_parent.digest()
+    assert proof.child_scope_digest == bounded_nested_child.digest()
+
+
 def test_path_prefix_must_be_segment_safe_and_malformed_child_fails_closed() -> None:
     parent = _boundary(writable_targets=("taskcontroller",), source_roots=("taskcontroller",))
 
@@ -204,3 +225,59 @@ def test_boundary_module_has_no_provider_or_transport_execution_path() -> None:
     assert "hermes-cloud" not in source
     assert "provider_id" not in source
     assert "socket" not in source
+
+
+def test_optional_time_and_token_budgets_are_canonical_and_digest_bound() -> None:
+    unlimited = _boundary()
+    assert unlimited.to_dict()["time_budget_seconds"] is None
+    assert unlimited.to_dict()["token_budget"] is None
+    assert ExecutionBoundary.from_dict(unlimited.to_dict()).to_dict() == unlimited.to_dict()
+
+    bounded = _boundary(time_budget_seconds=120, token_budget=5000)
+    assert bounded.time_budget_seconds == 120
+    assert bounded.token_budget == 5000
+    assert bounded.digest() != unlimited.digest()
+
+    for field, changed in (
+        ("time_budget_seconds", 121),
+        ("token_budget", 5001),
+    ):
+        changed_payload = bounded.to_dict()
+        changed_payload[field] = changed
+        changed_payload.pop("scope_digest")
+        assert ExecutionBoundary.from_dict(changed_payload).digest() != bounded.digest()
+
+
+def test_optional_budget_values_fail_closed() -> None:
+    invalid_values = {
+        "time_budget_seconds": (True, 0, -1, MAX_TIME_BUDGET_SECONDS + 1, "60", 1.5),
+        "token_budget": (True, 0, -1, MAX_TOKEN_BUDGET + 1, "1000", 1.5),
+    }
+    for field, values in invalid_values.items():
+        for value in values:
+            with pytest.raises(ExecutionBoundaryValidationError) as caught:
+                _boundary(**{field: value})
+            assert caught.value.code == "SCHEMA_INVALID"
+
+
+def test_optional_budgets_narrow_parent_and_unlimited_child_cannot_widen_it() -> None:
+    parent = _boundary(time_budget_seconds=60, token_budget=1000)
+    narrowed = _boundary(time_budget_seconds=30, token_budget=500)
+    proof = prove_child_subset(parent, narrowed)
+    assert proof.valid is True
+
+    parent_unlimited = _boundary()
+    finite_child = _boundary(time_budget_seconds=1, token_budget=1)
+    assert prove_child_subset(parent_unlimited, finite_child).valid is True
+
+    for field, value in (
+        ("time_budget_seconds", None),
+        ("time_budget_seconds", 61),
+        ("token_budget", None),
+        ("token_budget", 1001),
+    ):
+        child = _boundary(**{field: value})
+        with pytest.raises(ExecutionBoundaryValidationError) as caught:
+            prove_child_subset(parent, child)
+        assert caught.value.code == REPLAN_REQUIRED
+        assert "child_budgets_within_parent" in caught.value.failed_checks

@@ -13,7 +13,11 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping, NoReturn, Sequence
 
 from taskcontroller.domain.values import ScopeSpec
-from taskcontroller.controlplane.execution_boundary import ExecutionBoundary
+from taskcontroller.controlplane.execution_boundary import (
+    ExecutionBoundary,
+    MAX_TIME_BUDGET_SECONDS,
+    MAX_TOKEN_BUDGET,
+)
 from taskcontroller.errors import TaskControllerValidationError
 from taskcontroller.interaction.mailbox_v2 import (
     MailboxV2ErrorCode,
@@ -34,6 +38,8 @@ _SCOPE_KEYS = (
     "max_parallel",
     "max_depth",
     "replan_required_when",
+    "time_budget_seconds",
+    "token_budget",
 )
 _SCOPE_LIST_KEYS = frozenset(
     {
@@ -291,7 +297,23 @@ def _normalize_scope(
                 MailboxV2ErrorCode.SCHEMA_INVALID,
                 f"scope.{key} must be explicitly bound as an integer",
             )
-    # The normative schema applies the exact range/positive constraints below.
+    for key, maximum in (
+        ("time_budget_seconds", MAX_TIME_BUDGET_SECONDS),
+        ("token_budget", MAX_TOKEN_BUDGET),
+    ):
+        value = normalized.get(key)
+        if value is None:
+            normalized[key] = None
+            continue
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, int)
+            or not 1 <= value <= maximum
+        ):
+            _fail(
+                MailboxV2ErrorCode.SCHEMA_INVALID,
+                f"scope.{key} must be None or an integer between 1 and {maximum}",
+            )
     return normalized, authority_raw
 
 

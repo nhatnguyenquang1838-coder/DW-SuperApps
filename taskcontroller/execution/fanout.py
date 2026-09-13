@@ -13,7 +13,7 @@ import hashlib
 import json
 import re
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Any, TypeAlias
 
@@ -437,13 +437,127 @@ def _assert_child_belongs(parent: ParentContract, child: ChildContract) -> None:
         )
 
 
+def _optional_text(value: Any, name: str, *, identifier: bool = False) -> str | None:
+    if value is None:
+        return None
+    return _text(value, name, max_bytes=MAX_CHILD_ID_LENGTH, identifier=identifier)
+
+
+def _optional_digest(value: Any, name: str) -> str | None:
+    if value is None:
+        return None
+    return _digest(value, name)
+
+
+def _non_negative_int(value: Any, name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        _fail("SCHEMA_INVALID", f"{name} must be a non-negative integer")
+    return value
+
+
+def _sequence_key(value: "ChildCompletion") -> tuple[str, str, str, str]:
+    return (
+        value.child_id,
+        value.attempt_id or "",
+        value.result_ref,
+        value.result_digest,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class ChildAttemptBinding:
+    """Immutable identity shared by a parent plan and one child attempt."""
+
+    plan_version: str
+    plan_digest: str
+    parent_attempt_id: str
+    lease_generation: int | None = None
+    source_digest: str | None = None
+    standards_profile_digest: str | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "plan_version",
+            _text(self.plan_version, "plan_version", max_bytes=MAX_CHILD_ID_LENGTH, identifier=True),
+        )
+        object.__setattr__(self, "plan_digest", _digest(self.plan_digest, "plan_digest"))
+        object.__setattr__(
+            self,
+            "parent_attempt_id",
+            _text(
+                self.parent_attempt_id,
+                "parent_attempt_id",
+                max_bytes=MAX_CHILD_ID_LENGTH,
+                identifier=True,
+            ),
+        )
+        if self.lease_generation is not None:
+            object.__setattr__(
+                self,
+                "lease_generation",
+                _non_negative_int(self.lease_generation, "lease_generation"),
+            )
+        source_digest = _optional_digest(self.source_digest, "source_digest")
+        standards_digest = _optional_digest(
+            self.standards_profile_digest,
+            "standards_profile_digest",
+        )
+        if (source_digest is None) != (standards_digest is None):
+            _fail(
+                "SCHEMA_INVALID",
+                "source_digest and standards_profile_digest must be supplied together",
+            )
+        object.__setattr__(self, "source_digest", source_digest)
+        object.__setattr__(self, "standards_profile_digest", standards_digest)
+
+    @classmethod
+    def from_plan(
+        cls,
+        plan: "FanoutPlan",
+        *,
+        parent_attempt_id: str,
+        lease_generation: int | None = None,
+    ) -> "ChildAttemptBinding":
+        if not isinstance(plan, FanoutPlan):
+            _fail("SCHEMA_INVALID", "plan must be a FanoutPlan")
+        if not plan.children:
+            _fail("SCHEMA_INVALID", "plan must contain at least one child")
+        first = plan.children[0]
+        return cls(
+            plan_version=plan.plan_version,
+            plan_digest=plan.plan_digest,
+            parent_attempt_id=parent_attempt_id,
+            lease_generation=lease_generation,
+            source_digest=first.source_digest,
+            standards_profile_digest=first.standards_profile["digest"],
+        )
+
+    @property
+    def complete(self) -> bool:
+        return self.source_digest is not None and self.standards_profile_digest is not None
+
+    def to_dict(self) -> dict[str, Any]:
+        payload = {
+            "plan_version": self.plan_version,
+            "plan_digest": self.plan_digest,
+            "parent_attempt_id": self.parent_attempt_id,
+            "lease_generation": self.lease_generation,
+        }
+        if self.complete:
+            payload["source_digest"] = self.source_digest
+            payload["standards_profile_digest"] = self.standards_profile_digest
+        return payload
+
+
 @dataclass(frozen=True, slots=True)
 class ChildCompletion:
     """Immutable, reference-only terminal child completion.
 
-    The coordinator accepts no raw provider payload.  Both result references
-    and their digests are required so a future durable adapter can bind this
-    record without treating arrival order or hidden transcript text as state.
+    The coordinator accepts no raw provider payload. Both result references and
+    their digests are required. Newer callers may also bind the completion to
+    the exact parent plan and attempt generation; legacy callers retain the
+    original five-field representation.
     """
 
     child_id: str
@@ -451,6 +565,14 @@ class ChildCompletion:
     status: CompletionStatus | str
     result_ref: str
     result_digest: str
+    attempt_id: str | None = None
+    plan_version: str | None = None
+    plan_digest: str | None = None
+    parent_attempt_id: str | None = None
+    lease_generation: int | None = None
+    source_digest: str | None = None
+    standards_profile_digest: str | None = None
+    evidence_only: bool = False
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -463,7 +585,8 @@ class ChildCompletion:
             "child_contract_digest",
             _digest(self.child_contract_digest, "child_contract_digest"),
         )
-        object.__setattr__(self, "status", _enum(self.status, CompletionStatus, "status"))
+        status = _enum(self.status, CompletionStatus, "status")
+        object.__setattr__(self, "status", status)
         object.__setattr__(
             self,
             "result_ref",
@@ -471,14 +594,147 @@ class ChildCompletion:
         )
         object.__setattr__(self, "result_digest", _digest(self.result_digest, "result_digest"))
 
+        attempt_id = _optional_text(self.attempt_id, "attempt_id", identifier=True)
+        plan_version = _optional_text(self.plan_version, "plan_version", identifier=True)
+        plan_digest = _optional_digest(self.plan_digest, "plan_digest")
+        parent_attempt_id = _optional_text(
+            self.parent_attempt_id,
+            "parent_attempt_id",
+            identifier=True,
+        )
+        source_digest = _optional_digest(self.source_digest, "source_digest")
+        standards_digest = _optional_digest(
+            self.standards_profile_digest,
+            "standards_profile_digest",
+        )
+        binding_present = any(
+            value is not None
+            for value in (plan_version, plan_digest, parent_attempt_id, self.lease_generation)
+        )
+        if binding_present and any(
+            value is None for value in (attempt_id, plan_version, plan_digest, parent_attempt_id)
+        ):
+            _fail(
+                "SCHEMA_INVALID",
+                "bound completion requires attempt_id, plan_version, plan_digest and parent_attempt_id",
+            )
+        if (source_digest is None) != (standards_digest is None):
+            _fail(
+                "SCHEMA_INVALID",
+                "source_digest and standards_profile_digest must be supplied together",
+            )
+        if self.lease_generation is not None:
+            object.__setattr__(
+                self,
+                "lease_generation",
+                _non_negative_int(self.lease_generation, "lease_generation"),
+            )
+        if not isinstance(self.evidence_only, bool):
+            _fail("SCHEMA_INVALID", "evidence_only must be a boolean")
+        if self.evidence_only and status is not CompletionStatus.STALE:
+            _fail("SCHEMA_INVALID", "evidence_only completion must have STALE status")
+
+        object.__setattr__(self, "attempt_id", attempt_id)
+        object.__setattr__(self, "plan_version", plan_version)
+        object.__setattr__(self, "plan_digest", plan_digest)
+        object.__setattr__(self, "parent_attempt_id", parent_attempt_id)
+        object.__setattr__(self, "source_digest", source_digest)
+        object.__setattr__(self, "standards_profile_digest", standards_digest)
+
+    @property
+    def has_parent_binding(self) -> bool:
+        return self.plan_version is not None
+
+    @property
+    def attempt_binding(self) -> ChildAttemptBinding | None:
+        if not self.has_parent_binding:
+            return None
+        return ChildAttemptBinding(
+            plan_version=self.plan_version,
+            plan_digest=self.plan_digest,
+            parent_attempt_id=self.parent_attempt_id,
+            lease_generation=self.lease_generation,
+            source_digest=self.source_digest,
+            standards_profile_digest=self.standards_profile_digest,
+        )
+
+    @property
+    def binding(self) -> ChildAttemptBinding | None:
+        return self.attempt_binding
+
+    @property
+    def state_advancing(self) -> bool:
+        return not self.evidence_only
+
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload: dict[str, Any] = {
             "child_id": self.child_id,
             "child_contract_digest": self.child_contract_digest,
             "status": self.status.value,
             "result_ref": self.result_ref,
             "result_digest": self.result_digest,
         }
+        if self.attempt_id is not None:
+            payload["attempt_id"] = self.attempt_id
+        if self.has_parent_binding:
+            payload.update(
+                {
+                    "plan_version": self.plan_version,
+                    "plan_digest": self.plan_digest,
+                    "parent_attempt_id": self.parent_attempt_id,
+                    "lease_generation": self.lease_generation,
+                }
+            )
+            if self.source_digest is not None:
+                payload["source_digest"] = self.source_digest
+                payload["standards_profile_digest"] = self.standards_profile_digest
+        if self.evidence_only:
+            payload["evidence_only"] = True
+        return payload
+
+    @classmethod
+    def from_dict(cls, value: Mapping[str, Any]) -> "ChildCompletion":
+        if not isinstance(value, Mapping):
+            _fail("SCHEMA_INVALID", "completion must be an object")
+        candidate = dict(value)
+        required = {
+            "child_id",
+            "child_contract_digest",
+            "status",
+            "result_ref",
+            "result_digest",
+        }
+        optional = {
+            "attempt_id",
+            "plan_version",
+            "plan_digest",
+            "parent_attempt_id",
+            "lease_generation",
+            "source_digest",
+            "standards_profile_digest",
+            "evidence_only",
+        }
+        unknown = sorted(set(candidate) - required - optional)
+        missing = sorted(required - set(candidate))
+        if unknown:
+            _fail("SCHEMA_INVALID", f"unsupported completion fields: {', '.join(unknown)}")
+        if missing:
+            _fail("SCHEMA_INVALID", f"missing completion fields: {', '.join(missing)}")
+        return cls(
+            child_id=candidate["child_id"],
+            child_contract_digest=candidate["child_contract_digest"],
+            status=candidate["status"],
+            result_ref=candidate["result_ref"],
+            result_digest=candidate["result_digest"],
+            attempt_id=candidate.get("attempt_id"),
+            plan_version=candidate.get("plan_version"),
+            plan_digest=candidate.get("plan_digest"),
+            parent_attempt_id=candidate.get("parent_attempt_id"),
+            lease_generation=candidate.get("lease_generation"),
+            source_digest=candidate.get("source_digest"),
+            standards_profile_digest=candidate.get("standards_profile_digest"),
+            evidence_only=candidate.get("evidence_only", False),
+        )
 
     @property
     def lifecycle(self) -> ChildLifecycle:
@@ -494,6 +750,14 @@ def child_completion(
     status: CompletionStatus | str,
     result_ref: str,
     result_digest: str,
+    attempt_id: str | None = None,
+    plan_version: str | None = None,
+    plan_digest: str | None = None,
+    parent_attempt_id: str | None = None,
+    lease_generation: int | None = None,
+    source_digest: str | None = None,
+    standards_profile_digest: str | None = None,
+    evidence_only: bool = False,
 ) -> ChildCompletion:
     return ChildCompletion(
         child_id=child_id,
@@ -501,6 +765,14 @@ def child_completion(
         status=status,
         result_ref=result_ref,
         result_digest=result_digest,
+        attempt_id=attempt_id,
+        plan_version=plan_version,
+        plan_digest=plan_digest,
+        parent_attempt_id=parent_attempt_id,
+        lease_generation=lease_generation,
+        source_digest=source_digest,
+        standards_profile_digest=standards_profile_digest,
+        evidence_only=evidence_only,
     )
 
 
@@ -675,6 +947,8 @@ class NormalizedJoinInput:
     child_ids: tuple[str, ...]
     completions: tuple[ChildCompletion, ...]
     digest: str
+    parent_attempt_id: str | None = None
+    lease_generation: int | None = None
 
     def __post_init__(self) -> None:
         ordered = tuple(sorted(self.completions, key=lambda item: item.child_id))
@@ -682,12 +956,29 @@ class NormalizedJoinInput:
             _fail("SCHEMA_INVALID", "normalized child_ids do not match completions")
         object.__setattr__(self, "completions", ordered)
         object.__setattr__(self, "child_ids", tuple(item.child_id for item in ordered))
+        parent_attempt_id = _optional_text(
+            self.parent_attempt_id,
+            "parent_attempt_id",
+            identifier=True,
+        )
+        object.__setattr__(self, "parent_attempt_id", parent_attempt_id)
+        if self.lease_generation is not None:
+            object.__setattr__(
+                self,
+                "lease_generation",
+                _non_negative_int(self.lease_generation, "lease_generation"),
+            )
+        if parent_attempt_id is None and self.lease_generation is not None:
+            _fail("SCHEMA_INVALID", "lease_generation requires parent_attempt_id")
         payload = {
             "parent_contract_id": self.parent_contract_id,
             "parent_contract_digest": self.parent_contract_digest,
             "plan_digest": self.plan_digest,
             "completions": [item.to_dict() for item in ordered],
         }
+        if parent_attempt_id is not None:
+            payload["parent_attempt_id"] = parent_attempt_id
+            payload["lease_generation"] = self.lease_generation
         expected = _canonical_digest(payload)
         supplied = _digest(self.digest, "digest")
         if supplied != expected:
@@ -695,7 +986,7 @@ class NormalizedJoinInput:
         object.__setattr__(self, "digest", expected)
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload: dict[str, Any] = {
             "parent_contract_id": self.parent_contract_id,
             "parent_contract_digest": self.parent_contract_digest,
             "plan_digest": self.plan_digest,
@@ -703,6 +994,10 @@ class NormalizedJoinInput:
             "completions": [item.to_dict() for item in self.completions],
             "digest": self.digest,
         }
+        if self.parent_attempt_id is not None:
+            payload["parent_attempt_id"] = self.parent_attempt_id
+            payload["lease_generation"] = self.lease_generation
+        return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -714,6 +1009,7 @@ class JoinDecision:
     missing_child_ids: tuple[str, ...]
     failed_child_ids: tuple[str, ...]
     join_semantics: JoinSemantics = JoinSemantics.for_policy(JoinPolicy.ALL_REQUIRED)
+    stale_child_ids: tuple[str, ...] = ()
 
     @property
     def ready(self) -> bool:
@@ -726,13 +1022,63 @@ class JoinDecision:
 
 @dataclass(frozen=True, slots=True)
 class FanoutCoordinator:
-    """Immutable coordinator snapshot for bounded waves and explicit join."""
+    """Immutable coordinator snapshot for bounded waves and explicit join.
+
+    A coordinator without ``parent_attempt_id`` is the legacy v1 projection.
+    Once a bound completion is accepted, subsequent state-advancing completions
+    must carry the same plan, parent attempt, lease generation and child
+    attempt identity. Older evidence is retained separately and never joins.
+    """
 
     plan: FanoutPlan
     completions: tuple[ChildCompletion, ...] = ()
+    parent_attempt_id: str | None = None
+    lease_generation: int | None = None
+    child_attempt_ids: tuple[tuple[str, str], ...] = ()
+    stale_completions: tuple[ChildCompletion, ...] = ()
 
     def __post_init__(self) -> None:
+        if not isinstance(self.plan, FanoutPlan):
+            _fail("SCHEMA_INVALID", "plan must be a FanoutPlan")
         known = {child.child_id: child for child in self.plan.children}
+        parent_attempt_id = _optional_text(
+            self.parent_attempt_id,
+            "parent_attempt_id",
+            identifier=True,
+        )
+        object.__setattr__(self, "parent_attempt_id", parent_attempt_id)
+        if self.lease_generation is not None:
+            object.__setattr__(
+                self,
+                "lease_generation",
+                _non_negative_int(self.lease_generation, "lease_generation"),
+            )
+        if parent_attempt_id is None and self.lease_generation is not None:
+            _fail("SCHEMA_INVALID", "lease_generation requires parent_attempt_id")
+        if parent_attempt_id is not None and self.lease_generation is None:
+            _fail("GENERATION_REQUIRED", "parent_attempt_id requires lease_generation for v2 fan-out")
+
+        raw_attempt_ids = self.child_attempt_ids
+        if isinstance(raw_attempt_ids, Mapping):
+            raw_attempt_ids = tuple(raw_attempt_ids.items())
+        normalized_attempt_ids: dict[str, str] = {}
+        for item in raw_attempt_ids:
+            if not isinstance(item, (tuple, list)) or len(item) != 2:
+                _fail("SCHEMA_INVALID", "child_attempt_ids must contain child/attempt pairs")
+            child_id = _text(item[0], "child_attempt_ids[].child_id", max_bytes=MAX_CHILD_ID_LENGTH, identifier=True)
+            attempt_id = _text(item[1], "child_attempt_ids[].attempt_id", max_bytes=MAX_CHILD_ID_LENGTH, identifier=True)
+            if child_id not in known:
+                _fail("CONTRACT_MISMATCH", f"unknown child attempt binding: {child_id}")
+            prior = normalized_attempt_ids.get(child_id)
+            if prior is not None and prior != attempt_id:
+                _fail("CONTRACT_MISMATCH", f"conflicting child attempt binding: {child_id}")
+            normalized_attempt_ids[child_id] = attempt_id
+        object.__setattr__(
+            self,
+            "child_attempt_ids",
+            tuple(sorted(normalized_attempt_ids.items())),
+        )
+
         normalized: list[ChildCompletion] = []
         for completion in self.completions:
             if not isinstance(completion, ChildCompletion):
@@ -744,7 +1090,37 @@ class FanoutCoordinator:
                 _fail("CONTRACT_MISMATCH", f"child contract digest mismatch: {completion.child_id}")
             if completion.status not in _TERMINAL_STATUSES:
                 _fail("SCHEMA_INVALID", "completion status must be terminal")
+            if parent_attempt_id is not None:
+                if not completion.has_parent_binding:
+                    _fail(
+                        "CONTRACT_MISMATCH",
+                        f"current-generation completion is missing binding: {completion.child_id}",
+                    )
+                if completion.plan_version != self.plan.plan_version:
+                    _fail("CONTRACT_MISMATCH", f"completion plan_version mismatch: {completion.child_id}")
+                if completion.plan_digest != self.plan.plan_digest:
+                    _fail("CONTRACT_MISMATCH", f"completion plan_digest mismatch: {completion.child_id}")
+                if completion.parent_attempt_id != parent_attempt_id:
+                    _fail("CONTRACT_MISMATCH", f"completion parent attempt mismatch: {completion.child_id}")
+                if completion.lease_generation != self.lease_generation:
+                    _fail("CONTRACT_MISMATCH", f"completion lease generation mismatch: {completion.child_id}")
+                if completion.source_digest not in (None, expected.source_digest):
+                    _fail("CONTRACT_MISMATCH", f"completion source digest mismatch: {completion.child_id}")
+                if completion.standards_profile_digest not in (
+                    None,
+                    expected.standards_profile["digest"],
+                ):
+                    _fail(
+                        "CONTRACT_MISMATCH",
+                        f"completion standards digest mismatch: {completion.child_id}",
+                    )
+            expected_attempt = normalized_attempt_ids.get(completion.child_id)
+            if expected_attempt is not None and completion.attempt_id != expected_attempt:
+                _fail("CONTRACT_MISMATCH", f"completion attempt mismatch: {completion.child_id}")
+            if completion.attempt_id is not None and expected_attempt is None:
+                normalized_attempt_ids[completion.child_id] = completion.attempt_id
             normalized.append(completion)
+
         by_id: dict[str, ChildCompletion] = {}
         for completion in normalized:
             prior = by_id.get(completion.child_id)
@@ -756,15 +1132,55 @@ class FanoutCoordinator:
             "completions",
             tuple(by_id[child_id] for child_id in sorted(by_id)),
         )
+        object.__setattr__(
+            self,
+            "child_attempt_ids",
+            tuple(sorted(normalized_attempt_ids.items())),
+        )
+
+        stale_by_key: dict[tuple[str, str], ChildCompletion] = {}
+        for completion in self.stale_completions:
+            if not isinstance(completion, ChildCompletion):
+                _fail("SCHEMA_INVALID", "stale_completions must contain ChildCompletion values")
+            expected = known.get(completion.child_id)
+            if expected is None:
+                _fail("CONTRACT_MISMATCH", f"unknown stale child: {completion.child_id}")
+            if completion.child_contract_digest != expected.contract_digest:
+                _fail("CONTRACT_MISMATCH", f"stale child contract digest mismatch: {completion.child_id}")
+            if completion.status is not CompletionStatus.STALE or not completion.evidence_only:
+                _fail("SCHEMA_INVALID", "stale_completions must be evidence_only STALE records")
+            key = (completion.child_id, completion.attempt_id or "")
+            prior = stale_by_key.get(key)
+            if prior is not None and prior != completion:
+                _fail("CONTRACT_MISMATCH", f"conflicting stale evidence: {completion.child_id}")
+            stale_by_key[key] = completion
+        object.__setattr__(
+            self,
+            "stale_completions",
+            tuple(sorted(stale_by_key.values(), key=_sequence_key)),
+        )
 
     @classmethod
     def from_parent(
         cls,
         parent: ParentInput,
         children: Sequence[ChildInput],
+        *,
+        parent_attempt_id: str | None = None,
+        lease_generation: int | None = None,
+        child_attempt_ids: Mapping[str, str] | None = None,
         **kwargs: Any,
     ) -> "FanoutCoordinator":
-        return cls(FanoutPlan.from_parent(parent, children, **kwargs))
+        return cls(
+            FanoutPlan.from_parent(parent, children, **kwargs),
+            parent_attempt_id=parent_attempt_id,
+            lease_generation=lease_generation,
+            child_attempt_ids=(
+                tuple(child_attempt_ids.items())
+                if child_attempt_ids is not None
+                else ()
+            ),
+        )
 
     @classmethod
     def from_children(
@@ -776,6 +1192,9 @@ class FanoutCoordinator:
         max_parallel: int | None = None,
         stages: Sequence[Sequence[str]] | None = None,
         join_policy: JoinPolicy | str = JoinPolicy.ALL_REQUIRED,
+        parent_attempt_id: str | None = None,
+        lease_generation: int | None = None,
+        child_attempt_ids: Mapping[str, str] | None = None,
     ) -> "FanoutCoordinator":
         if parent is None:
             _fail(
@@ -789,6 +1208,9 @@ class FanoutCoordinator:
             max_parallel=max_parallel,
             stages=stages,
             join_policy=join_policy,
+            parent_attempt_id=parent_attempt_id,
+            lease_generation=lease_generation,
+            child_attempt_ids=child_attempt_ids,
         )
 
     @property
@@ -802,6 +1224,24 @@ class FanoutCoordinator:
     @property
     def active_child_ids(self) -> tuple[str, ...]:
         return self.dispatch_window()
+
+    @property
+    def stale_child_ids(self) -> tuple[str, ...]:
+        return tuple(sorted({item.child_id for item in self.stale_completions}))
+
+    @property
+    def evidence_completions(self) -> tuple[ChildCompletion, ...]:
+        return tuple(sorted(self.completions + self.stale_completions, key=_sequence_key))
+
+    def current_attempt_id(self, child_id: str) -> str | None:
+        normalized = _text(child_id, "child_id", max_bytes=MAX_CHILD_ID_LENGTH, identifier=True)
+        for known_child_id, attempt_id in self.child_attempt_ids:
+            if known_child_id == normalized:
+                return attempt_id
+        for completion in self.completions:
+            if completion.child_id == normalized:
+                return completion.attempt_id
+        return None
 
     def lifecycle_state(self, child_id: str) -> ChildLifecycle:
         """Project this snapshot into the normative child lifecycle."""
@@ -839,8 +1279,29 @@ class FanoutCoordinator:
                 return remaining
         return ()
 
+    def _record_stale(self, completion: ChildCompletion) -> "FanoutCoordinator":
+        stale = completion
+        if stale.status is not CompletionStatus.STALE or not stale.evidence_only:
+            stale = replace(stale, status=CompletionStatus.STALE, evidence_only=True)
+        key = (stale.child_id, stale.attempt_id or "")
+        for prior in self.stale_completions:
+            prior_key = (prior.child_id, prior.attempt_id or "")
+            if prior_key != key:
+                continue
+            if prior == stale:
+                return self
+            _fail("IDEMPOTENCY_CONFLICT", f"conflicting stale evidence: {stale.child_id}")
+        return FanoutCoordinator(
+            self.plan,
+            self.completions,
+            parent_attempt_id=self.parent_attempt_id,
+            lease_generation=self.lease_generation,
+            child_attempt_ids=self.child_attempt_ids,
+            stale_completions=self.stale_completions + (stale,),
+        )
+
     def complete(self, completion: ChildCompletion) -> "FanoutCoordinator":
-        """Accept one current-window completion, or idempotently replay it."""
+        """Accept a current-window completion or retain late evidence as STALE."""
         if not isinstance(completion, ChildCompletion):
             _fail("SCHEMA_INVALID", "completion must be a ChildCompletion")
         known = {child.child_id: child for child in self.plan.children}
@@ -849,34 +1310,174 @@ class FanoutCoordinator:
             _fail("CONTRACT_MISMATCH", f"unknown child: {completion.child_id}")
         if completion.child_contract_digest != expected.contract_digest:
             _fail("CONTRACT_MISMATCH", f"child contract digest mismatch: {completion.child_id}")
+        if completion.evidence_only:
+            return self._record_stale(completion)
+
+        current_parent_attempt = self.parent_attempt_id
+        current_lease_generation = self.lease_generation
+        if current_parent_attempt is not None and not completion.has_parent_binding:
+            _fail(
+                "CONTRACT_MISMATCH",
+                f"current-generation completion is missing binding: {completion.child_id}",
+            )
+
+        if completion.has_parent_binding:
+            plan_mismatch = (
+                completion.plan_version != self.plan.plan_version
+                or completion.plan_digest != self.plan.plan_digest
+            )
+            source_mismatch = completion.source_digest not in (None, expected.source_digest)
+            standards_mismatch = completion.standards_profile_digest not in (
+                None,
+                expected.standards_profile["digest"],
+            )
+            if plan_mismatch or source_mismatch or standards_mismatch:
+                if current_parent_attempt is not None:
+                    return self._record_stale(completion)
+                _fail("CONTRACT_MISMATCH", f"completion plan identity mismatch: {completion.child_id}")
+            if current_parent_attempt is None:
+                current_parent_attempt = completion.parent_attempt_id
+                current_lease_generation = completion.lease_generation
+            elif (
+                completion.parent_attempt_id != current_parent_attempt
+                or completion.lease_generation != current_lease_generation
+            ):
+                return self._record_stale(completion)
+        elif current_parent_attempt is not None:
+            _fail("CONTRACT_MISMATCH", f"completion binding is required: {completion.child_id}")
+
+        attempt_bindings = dict(self.child_attempt_ids)
+        expected_attempt = attempt_bindings.get(completion.child_id)
+        if expected_attempt is not None and completion.attempt_id != expected_attempt:
+            return self._record_stale(completion)
+        if current_parent_attempt is not None and completion.attempt_id is None:
+            _fail("CONTRACT_MISMATCH", f"bound completion is missing attempt_id: {completion.child_id}")
+
+        normalized = completion
+        if completion.has_parent_binding and completion.source_digest is None:
+            normalized = replace(
+                completion,
+                source_digest=expected.source_digest,
+                standards_profile_digest=expected.standards_profile["digest"],
+            )
         prior = next(
-            (item for item in self.completions if item.child_id == completion.child_id),
+            (item for item in self.completions if item.child_id == normalized.child_id),
             None,
         )
         if prior is not None:
-            if prior == completion:
+            if prior == normalized:
                 return self
-            _fail("CONTRACT_MISMATCH", f"conflicting completion: {completion.child_id}")
-        if completion.child_id not in self.dispatch_window():
+            _fail("CONTRACT_MISMATCH", f"conflicting completion: {normalized.child_id}")
+        if normalized.child_id not in self.dispatch_window():
             _fail(
                 "CONTRACT_MISMATCH",
-                f"child is not in the current dispatch window: {completion.child_id}",
+                f"child is not in the current dispatch window: {normalized.child_id}",
             )
-        return FanoutCoordinator(self.plan, self.completions + (completion,))
+        if normalized.attempt_id is not None:
+            attempt_bindings[normalized.child_id] = normalized.attempt_id
+        return FanoutCoordinator(
+            self.plan,
+            self.completions + (normalized,),
+            parent_attempt_id=current_parent_attempt,
+            lease_generation=current_lease_generation,
+            child_attempt_ids=tuple(attempt_bindings.items()),
+            stale_completions=self.stale_completions,
+        )
+
+    def retry_child(
+        self,
+        child_id: str,
+        *,
+        attempt_id: str,
+        parent_attempt_id: str | None = None,
+        lease_generation: int | None = None,
+    ) -> "FanoutCoordinator":
+        """Start a new immutable child attempt without reusing the old identity."""
+        normalized_child_id = _text(
+            child_id,
+            "child_id",
+            max_bytes=MAX_CHILD_ID_LENGTH,
+            identifier=True,
+        )
+        if normalized_child_id not in {child.child_id for child in self.plan.children}:
+            _fail("CONTRACT_MISMATCH", f"unknown child: {normalized_child_id}")
+        normalized_attempt_id = _text(
+            attempt_id,
+            "attempt_id",
+            max_bytes=MAX_CHILD_ID_LENGTH,
+            identifier=True,
+        )
+        prior_attempt_id = self.current_attempt_id(normalized_child_id)
+        if prior_attempt_id == normalized_attempt_id:
+            _fail("ATTEMPT_REUSE", f"retry must create a new attempt: {normalized_child_id}")
+
+        next_parent_attempt = (
+            _optional_text(parent_attempt_id, "parent_attempt_id", identifier=True)
+            if parent_attempt_id is not None
+            else self.parent_attempt_id
+        )
+        next_lease_generation = (
+            _non_negative_int(lease_generation, "lease_generation")
+            if lease_generation is not None
+            else self.lease_generation
+        )
+        if next_parent_attempt is None and next_lease_generation is not None:
+            _fail("SCHEMA_INVALID", "lease_generation requires parent_attempt_id")
+        generation_changed = (
+            next_parent_attempt != self.parent_attempt_id
+            or next_lease_generation != self.lease_generation
+        )
+
+        stale = list(self.stale_completions)
+        current_by_id = {item.child_id: item for item in self.completions}
+        if generation_changed:
+            current = tuple()
+            attempt_bindings: dict[str, str] = {}
+            to_stale = tuple(self.completions)
+        else:
+            current = tuple(
+                item for item in self.completions if item.child_id != normalized_child_id
+            )
+            attempt_bindings = dict(self.child_attempt_ids)
+            attempt_bindings.pop(normalized_child_id, None)
+            prior = current_by_id.get(normalized_child_id)
+            to_stale = (prior,) if prior is not None else tuple()
+        for prior in to_stale:
+            stale_record = replace(prior, status=CompletionStatus.STALE, evidence_only=True)
+            key = (stale_record.child_id, stale_record.attempt_id or "")
+            if not any(
+                (item.child_id, item.attempt_id or "") == key
+                for item in stale
+            ):
+                stale.append(stale_record)
+        attempt_bindings[normalized_child_id] = normalized_attempt_id
+        return FanoutCoordinator(
+            self.plan,
+            current,
+            parent_attempt_id=next_parent_attempt,
+            lease_generation=next_lease_generation,
+            child_attempt_ids=tuple(attempt_bindings.items()),
+            stale_completions=tuple(stale),
+        )
 
     # Descriptive aliases for adapters; all use the same immutable transition.
     record_completion = complete
     accept_completion = complete
     record_child_completion = complete
+    retry = retry_child
+    new_attempt = retry_child
 
     def normalized_input(self) -> NormalizedJoinInput:
         ordered = tuple(sorted(self.completions, key=lambda item: item.child_id))
-        payload = {
+        payload: dict[str, Any] = {
             "parent_contract_id": self.plan.parent_contract_id,
             "parent_contract_digest": self.plan.parent_contract_digest,
             "plan_digest": self.plan.plan_digest,
             "completions": [item.to_dict() for item in ordered],
         }
+        if self.parent_attempt_id is not None:
+            payload["parent_attempt_id"] = self.parent_attempt_id
+            payload["lease_generation"] = self.lease_generation
         return NormalizedJoinInput(
             parent_contract_id=self.plan.parent_contract_id,
             parent_contract_digest=self.plan.parent_contract_digest,
@@ -884,6 +1485,8 @@ class FanoutCoordinator:
             child_ids=tuple(item.child_id for item in ordered),
             completions=ordered,
             digest=_canonical_digest(payload),
+            parent_attempt_id=self.parent_attempt_id,
+            lease_generation=self.lease_generation,
         )
 
     def join(self) -> JoinDecision:
@@ -910,6 +1513,7 @@ class FanoutCoordinator:
             missing_child_ids=missing,
             failed_child_ids=tuple(sorted(failed)),
             join_semantics=semantics,
+            stale_child_ids=self.stale_child_ids,
         )
 
     def join_decision(self) -> JoinDecision:
@@ -923,6 +1527,7 @@ NormalizedInputSet = NormalizedJoinInput
 
 
 __all__ = [
+    "ChildAttemptBinding",
     "ChildCompletion",
     "ChildLifecycle",
     "ChildLifecycleError",

@@ -35,6 +35,8 @@ _MAX_REPLAN_TRIGGERS = 64
 _MAX_CHILDREN = 64
 _MAX_PARALLEL = 64
 _MAX_DEPTH = 8
+MAX_TIME_BUDGET_SECONDS = 3_600
+MAX_TOKEN_BUDGET = 1_000_000
 _DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _BOUNDARY_FIELDS = (
     "allowed_actions",
@@ -45,6 +47,10 @@ _BOUNDARY_FIELDS = (
     "max_parallel",
     "max_depth",
     "replan_required_when",
+)
+_OPTIONAL_BOUNDARY_FIELDS = (
+    "time_budget_seconds",
+    "token_budget",
 )
 _SUBSET_CHECKS = (
     "allowed_actions_subset",
@@ -139,6 +145,18 @@ def _integer(value: Any, name: str, *, minimum: int, maximum: int) -> int:
     if value < minimum or value > maximum:
         _fail(SCHEMA_INVALID, f"{name} must be between {minimum} and {maximum}")
     return value
+
+
+def _optional_integer(
+    value: Any,
+    name: str,
+    *,
+    minimum: int,
+    maximum: int,
+) -> int | None:
+    if value is None:
+        return None
+    return _integer(value, name, minimum=minimum, maximum=maximum)
 
 
 def _canonical_bytes(payload: Mapping[str, Any]) -> bytes:
@@ -244,6 +262,8 @@ class ExecutionBoundary:
     max_depth: int
     replan_required_when: tuple[str, ...]
     scope_digest: str | None = None
+    time_budget_seconds: int | None = None
+    token_budget: int | None = None
 
     def __post_init__(self) -> None:
         normalized: dict[str, Any] = {
@@ -289,6 +309,18 @@ class ExecutionBoundary:
             ("max_depth", 0, _MAX_DEPTH),
         ):
             normalized[name] = _integer(getattr(self, name), name, minimum=minimum, maximum=maximum)
+        normalized["time_budget_seconds"] = _optional_integer(
+            self.time_budget_seconds,
+            "time_budget_seconds",
+            minimum=1,
+            maximum=MAX_TIME_BUDGET_SECONDS,
+        )
+        normalized["token_budget"] = _optional_integer(
+            self.token_budget,
+            "token_budget",
+            minimum=1,
+            maximum=MAX_TOKEN_BUDGET,
+        )
         for name, value in normalized.items():
             object.__setattr__(self, name, value)
 
@@ -309,13 +341,19 @@ class ExecutionBoundary:
         if not isinstance(payload, Mapping):
             _fail(SCHEMA_INVALID, "execution boundary must be an object")
         candidate = dict(payload)
-        expected_keys = set(_BOUNDARY_FIELDS) | {"scope_digest"}
+        expected_keys = (
+            set(_BOUNDARY_FIELDS)
+            | set(_OPTIONAL_BOUNDARY_FIELDS)
+            | {"scope_digest"}
+        )
         unknown = sorted(set(candidate) - expected_keys)
         if unknown:
             _fail(SCHEMA_INVALID, "unsupported execution boundary fields: " + ", ".join(unknown))
         missing = [field for field in _BOUNDARY_FIELDS if field not in candidate]
         if missing:
             _fail(SCHEMA_INVALID, "execution boundary is missing: " + ", ".join(missing))
+        for field in _OPTIONAL_BOUNDARY_FIELDS:
+            candidate.setdefault(field, None)
         return cls(**candidate)
 
     def _payload_without_digest(self) -> dict[str, Any]:
@@ -328,6 +366,8 @@ class ExecutionBoundary:
             "max_parallel": self.max_parallel,
             "max_depth": self.max_depth,
             "replan_required_when": list(self.replan_required_when),
+            "time_budget_seconds": self.time_budget_seconds,
+            "token_budget": self.token_budget,
         }
 
     def to_dict(self) -> dict[str, Any]:
@@ -390,6 +430,13 @@ class ExecutionBoundary:
         if child.max_depth > remaining_depth:
             failed.append("max_depth")
             budget_failed = True
+        for budget_name in ("time_budget_seconds", "token_budget"):
+            parent_budget = getattr(self, budget_name)
+            child_budget = getattr(child, budget_name)
+            if parent_budget is not None and (
+                child_budget is None or child_budget > parent_budget
+            ):
+                budget_failed = True
         if budget_failed:
             failed.append("child_budgets_within_parent")
         if not set(self.replan_required_when).issubset(child.replan_required_when):

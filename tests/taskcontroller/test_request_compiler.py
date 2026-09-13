@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Mapping, cast
 
 import pytest
 
 from taskcontroller.errors import TaskControllerValidationError
 from taskcontroller.interaction.mailbox_v2 import V2MailboxEnvelope, canonical_digest
+from taskcontroller.controlplane.execution_boundary import (
+    ExecutionBoundary,
+    MAX_TIME_BUDGET_SECONDS,
+    MAX_TOKEN_BUDGET,
+)
 from taskcontroller.controlplane.request_compiler import (
     BoundedMailboxRequest,
     compile_bounded_mailbox_request,
@@ -220,3 +225,80 @@ def test_mapping_input_is_supported_without_changing_compiler_semantics() -> Non
     envelope = compile_bounded_mailbox_request(request.__dict__)
     assert envelope.to_dict()["idempotency_key"] == request.idempotency_key
     assert envelope.to_dict()["digest"] == envelope.digest()
+
+
+def test_execution_boundary_budgets_round_trip_through_compiler() -> None:
+    boundary = ExecutionBoundary(
+        allowed_actions=("read_repo", "run_tests"),
+        denied_actions=("deploy", "merge"),
+        writable_targets=("taskcontroller",),
+        source_roots=("taskcontroller", "tests/taskcontroller"),
+        max_children=0,
+        max_parallel=1,
+        max_depth=0,
+        replan_required_when=("scope_expansion",),
+        time_budget_seconds=120,
+        token_budget=5000,
+    )
+    scope = boundary.to_dict()
+    scope.pop("scope_digest")
+    request = _bound_request(
+        boundary_digest=boundary.digest(),
+        scope=scope,
+        authority_constraints={
+            "denied_actions": ["merge", "deploy"],
+            "writable_targets": ["taskcontroller"],
+        },
+        execution_boundary=boundary,
+    )
+
+    envelope = compile_bounded_mailbox_request(request)
+    compiled_scope = envelope.to_dict()["logical_contract"]["scope"]
+    assert compiled_scope["time_budget_seconds"] == 120
+    assert compiled_scope["token_budget"] == 5000
+    assert envelope.digest() == canonical_digest(envelope.to_dict())
+
+
+def test_unbounded_budget_scope_omission_and_null_are_valid() -> None:
+    omitted = compile_bounded_mailbox_request(_bound_request())
+    omitted_scope = omitted.to_dict()["logical_contract"]["scope"]
+    assert omitted_scope["time_budget_seconds"] is None
+    assert omitted_scope["token_budget"] is None
+
+    scope = dict(cast(Mapping[str, Any], _bound_request().scope))
+    scope.update({"time_budget_seconds": None, "token_budget": None})
+    explicit_null = compile_bounded_mailbox_request(_bound_request(scope=scope))
+    explicit_scope = explicit_null.to_dict()["logical_contract"]["scope"]
+    assert explicit_scope["time_budget_seconds"] is None
+    assert explicit_scope["token_budget"] is None
+
+
+def test_budget_scope_and_authority_conflict_fails_closed() -> None:
+    request = _bound_request(
+        scope={**dict(cast(Mapping[str, Any], _bound_request().scope)), "time_budget_seconds": 60},
+        authority_constraints={"time_budget_seconds": 61},
+    )
+
+    with pytest.raises(TaskControllerValidationError) as caught:
+        compile_bounded_mailbox_request(request)
+
+    assert getattr(caught.value, "code", None) == "BOUNDARY_MISMATCH"
+
+
+def test_budget_scope_out_of_range_fails_closed() -> None:
+    for field, value in (
+        ("time_budget_seconds", 0),
+        ("time_budget_seconds", -1),
+        ("time_budget_seconds", True),
+        ("time_budget_seconds", MAX_TIME_BUDGET_SECONDS + 1),
+        ("token_budget", 0),
+        ("token_budget", -1),
+        ("token_budget", False),
+        ("token_budget", MAX_TOKEN_BUDGET + 1),
+    ):
+        request = _bound_request(
+            scope={**dict(cast(Mapping[str, Any], _bound_request().scope)), field: value}
+        )
+        with pytest.raises(TaskControllerValidationError) as caught:
+            compile_bounded_mailbox_request(request)
+        assert getattr(caught.value, "code", None) == "SCHEMA_INVALID"
