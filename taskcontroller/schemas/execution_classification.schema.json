@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dw-superapps/taskcontroller/schemas/execution_classification.schema.json",
+  "title": "ExecutionClassification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "classification",
+    "rationale",
+    "lenses",
+    "proposed_child_count",
+    "join_policy",
+    "unresolved_preconditions"
+  ],
+  "properties": {
+    "classification": {
+      "type": "string",
+      "enum": ["ATOMIC", "COMPLEX", "REVIEW", "CROSS_REVIEW"]
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "lenses": {
+      "type": "array",
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      }
+    },
+    "proposed_child_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 64
+    },
+    "join_policy": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+    },
+    "unresolved_preconditions": {
+      "type": "array",
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "classification": { "const": "ATOMIC" }
+        },
+        "required": ["classification"]
+      },
+      "then": {
+        "properties": {
+          "proposed_child_count": { "const": 0 },
+          "join_policy": { "const": "NONE" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "classification": {
+            "enum": ["COMPLEX", "REVIEW", "CROSS_REVIEW"]
+          }
+        },
+        "required": ["classification"]
+      },
+      "then": {
+        "properties": {
+          "lenses": { "minItems": 1 },
+          "proposed_child_count": { "minimum": 1 },
+          "join_policy": { "not": { "const": "NONE" } }
+        }
+      }
+    }
+  ]
+}

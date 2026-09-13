@@ -37,6 +37,9 @@ from taskcontroller.mvp.rootcard import (
     PlanBlock,
     RootCard,
     RootOp,
+    RootTimelineEntry,
+    SemanticStage,
+    SEMANTIC_STAGE_VALUES,
     TaskCard,
     TaskCardStatus,
     render_root_op,
@@ -513,3 +516,112 @@ class TestProjectionNotAuthorityAndPurity:
             render_rootcard({"run_id": "RUN-47"})
         with pytest.raises(TaskControllerValidationError):
             _card(plan=[_contract("S1")])
+
+
+# ---------------------------------------------------------------- 9
+class TestSemanticStageTimelineAndCanonicalLinks:
+    """WP9-903: semantic human projection carries refs, never authority."""
+
+    def test_stage_vocabulary_is_bounded_and_links_are_pointer_only(self):
+        assert SemanticStage.EXECUTE.value in SEMANTIC_STAGE_VALUES
+        card = _card(
+            semantic_stage=SemanticStage.EXECUTE,
+            mailbox_ref="github://owner/repo/issues/47#comment-42",
+            result_ref="artifact://run-47/result-1",
+            timeline=(
+                RootTimelineEntry(
+                    semantic_stage=SemanticStage.PLAN,
+                    summary="Bounded plan materialized",
+                    mailbox_ref="github://owner/repo/issues/47#comment-41",
+                ),
+                RootTimelineEntry(
+                    semantic_stage=SemanticStage.EXECUTE,
+                    summary="Executor started",
+                    mailbox_ref="github://owner/repo/issues/47#comment-42",
+                    result_ref="artifact://run-47/result-1",
+                ),
+            ),
+        )
+
+        payload = render_rootcard(card)
+
+        assert payload["semantic_stage"] == "EXECUTE"
+        assert payload["links"] == {
+            "mailbox_ref": "github://owner/repo/issues/47#comment-42",
+            "result_ref": "artifact://run-47/result-1",
+        }
+        assert [item["semantic_stage"] for item in payload["timeline"]] == [
+            "PLAN",
+            "EXECUTE",
+        ]
+        assert payload["timeline"][0]["mailbox_ref"].startswith("github://")
+        assert payload["authority_granted"] is False
+        assert "request" not in repr(payload).lower()
+        assert "inputs" not in repr(payload).lower()
+
+    def test_timeline_order_and_snapshot_are_deterministic(self):
+        timeline = (
+            RootTimelineEntry(semantic_stage="UNDERSTAND", summary="Inputs bound"),
+            RootTimelineEntry(semantic_stage="VERIFY", summary="Evidence checked"),
+        )
+        card = _card(semantic_stage="VERIFY", timeline=timeline)
+        first = render_rootcard(card)
+        assert [item["position"] for item in first["timeline"]] == [1, 2]
+        assert render_rootcard(card) == first
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            card.timeline = ()  # type: ignore[misc]
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            card.timeline[0].summary = "mutated"  # type: ignore[misc]
+
+    @pytest.mark.parametrize("bad", ("", " ", "UNKNOWN", "EXECUTE\nraw body"))
+    def test_semantic_stage_fails_closed(self, bad):
+        with pytest.raises(TaskControllerValidationError):
+            _card(semantic_stage=bad)
+
+    @pytest.mark.parametrize("bad", ("raw task body", "github://has whitespace", "a\nb", 7))
+    def test_canonical_links_reject_unbounded_or_non_text_values(self, bad):
+        with pytest.raises(TaskControllerValidationError):
+            _card(mailbox_ref=bad)
+        with pytest.raises(TaskControllerValidationError):
+            _card(result_ref=bad)
+
+    def test_timeline_rejects_wrong_entries_and_unbounded_count(self):
+        with pytest.raises(TaskControllerValidationError):
+            _card(timeline=("raw thread reply",))
+        with pytest.raises(TaskControllerValidationError):
+            _card(
+                timeline=tuple(
+                    RootTimelineEntry(semantic_stage="EXECUTE", summary=f"event-{i}")
+                    for i in range(13)
+                )
+            )
+
+    def test_v1_render_shape_and_actions_remain_unchanged_without_optional_projection(self):
+        payload = render_rootcard(_card())
+        assert set(payload) == {
+            "kind",
+            "run_id",
+            "header",
+            "fields",
+            "plan_block",
+            "actions",
+            "authority_granted",
+        }
+        assert payload["actions"] == ["PAUSE", "STOP"]
+        assert payload["authority_granted"] is False
+
+    def test_slack_outage_does_not_enter_the_pure_projection_or_recovery_contract(self):
+        card = _card(
+            semantic_stage="WAIT_CONTROLLER",
+            mailbox_ref="github://owner/repo/issues/47#comment-42",
+        )
+        operation = render_root_op(card, channel="slack-unavailable", root="R1")
+        assert operation.op == UPDATE_ROOT
+        assert operation.payload["links"] == {
+            "mailbox_ref": "github://owner/repo/issues/47#comment-42"
+        }
+        assert operation.payload["authority_granted"] is False
+        source = ROOTCARD_SOURCE.read_text(encoding="utf-8")
+        assert "slack_sdk" not in source
+        assert "requests" not in source
+        assert "httpx" not in source

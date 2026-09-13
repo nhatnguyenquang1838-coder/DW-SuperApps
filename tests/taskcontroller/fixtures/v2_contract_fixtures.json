@@ -1,0 +1,585 @@
+{
+  "captured_from_protocol": "dw.taskcontroller.mailbox/v2",
+  "cases": {
+    "child_result": {
+      "attempt": {
+        "agent_instance": "hermes-mac",
+        "attempt_id": "attempt-1",
+        "attempt_number": 1,
+        "fencing_token": "fence-1",
+        "lease_expires_at": "2026-09-11T00:30:00+07:00",
+        "lease_generation": 1,
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "correlation_id": "correlation-1",
+      "digest": "sha256:0e159531c2d7bdf6000bcc3a83deee55ed381f22c61c85255d6e11e12ce645f0",
+      "direction": "executor_to_controller",
+      "execution_identity": {
+        "attempt_id": "attempt-1",
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "contract_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "fencing_token": "fence-1",
+        "lease_generation": 1,
+        "node_id": "node-1",
+        "plan_version": "plan-1",
+        "run_id": "run-1",
+        "source_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+      },
+      "idempotency_key": "idem-1",
+      "logical_contract": {
+        "acceptance_criteria": [
+          "The result contains deterministic evidence."
+        ],
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "contract_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "contract_id": "contract-1",
+        "objective": "Run one bounded mailbox v2 contract check.",
+        "plan_version": "plan-1",
+        "scope": {
+          "allowed_actions": [
+            "read_repo"
+          ],
+          "denied_actions": [
+            "merge",
+            "deploy"
+          ],
+          "max_children": 6,
+          "max_depth": 1,
+          "max_parallel": 4,
+          "source_roots": [
+            "taskcontroller"
+          ],
+          "writable_targets": []
+        },
+        "source_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "source_manifest_ref": "source-manifest-1",
+        "standards_profile_ref": "standards.default/v1"
+      },
+      "message_id": "message-1",
+      "message_type": "child_result",
+      "node_id": "node-1",
+      "payload": {
+        "result_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+        "status": "SUCCEEDED"
+      },
+      "producer": {
+        "actor_id": "controller-1",
+        "namespace": "controller",
+        "role": "controller"
+      },
+      "protocol": "dw.taskcontroller.mailbox/v2",
+      "provenance": {
+        "agent_instance": "hermes-mac",
+        "child_id": "child-1",
+        "evidence_refs": [],
+        "lens": "implementation",
+        "origin": "child",
+        "parent_message_id": null,
+        "result_digest": null,
+        "source_refs": [
+          "owner/repo@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:taskcontroller/interaction/envelope.py"
+        ],
+        "status": "SUCCEEDED"
+      },
+      "recipient": {
+        "agent_instance": "hermes-mac",
+        "capability": "taskcontroller.executor"
+      },
+      "result": {
+        "artifact_refs": [],
+        "findings": [],
+        "result_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+        "status": "SUCCEEDED",
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "run_id": "run-1",
+      "seq": 0,
+      "source_manifest": {
+        "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "manifest_version": "dw-source-manifest-json/v1",
+        "sources": [
+          {
+            "blob_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "path": "taskcontroller/interaction/envelope.py",
+            "repository": "owner/repo"
+          }
+        ]
+      },
+      "standards_profile": {
+        "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "profile_id": "standards.default",
+        "version": "1"
+      }
+    },
+    "execution_request": {
+      "attempt": {
+        "agent_instance": "hermes-mac",
+        "attempt_id": "attempt-1",
+        "attempt_number": 1,
+        "fencing_token": "fence-1",
+        "lease_expires_at": "2026-09-11T00:30:00+07:00",
+        "lease_generation": 1,
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "correlation_id": "correlation-1",
+      "digest": "sha256:8fb586a965906ae84a14903603b9f0a9ad51b87f8b110eab65c28ec873616ae5",
+      "direction": "controller_to_executor",
+      "execution_identity": {
+        "attempt_id": "attempt-1",
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "contract_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "fencing_token": "fence-1",
+        "lease_generation": 1,
+        "node_id": "node-1",
+        "plan_version": "plan-1",
+        "run_id": "run-1",
+        "source_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+      },
+      "idempotency_key": "idem-1",
+      "logical_contract": {
+        "acceptance_criteria": [
+          "The result contains deterministic evidence."
+        ],
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "contract_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "contract_id": "contract-1",
+        "objective": "Run one bounded mailbox v2 contract check.",
+        "plan_version": "plan-1",
+        "scope": {
+          "allowed_actions": [
+            "read_repo"
+          ],
+          "denied_actions": [
+            "merge",
+            "deploy"
+          ],
+          "max_children": 6,
+          "max_depth": 1,
+          "max_parallel": 4,
+          "source_roots": [
+            "taskcontroller"
+          ],
+          "writable_targets": []
+        },
+        "source_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "source_manifest_ref": "source-manifest-1",
+        "standards_profile_ref": "standards.default/v1"
+      },
+      "message_id": "message-1",
+      "message_type": "execution_request",
+      "node_id": "node-1",
+      "payload": {
+        "objective": "Run one bounded mailbox v2 contract check."
+      },
+      "producer": {
+        "actor_id": "controller-1",
+        "namespace": "controller",
+        "role": "controller"
+      },
+      "protocol": "dw.taskcontroller.mailbox/v2",
+      "provenance": {
+        "agent_instance": "hermes-mac",
+        "child_id": null,
+        "evidence_refs": [],
+        "lens": null,
+        "origin": "controller",
+        "parent_message_id": null,
+        "result_digest": null,
+        "source_refs": [
+          "owner/repo@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:taskcontroller/interaction/envelope.py"
+        ],
+        "status": "REQUESTED"
+      },
+      "recipient": {
+        "agent_instance": "hermes-mac",
+        "capability": "taskcontroller.executor"
+      },
+      "result": null,
+      "run_id": "run-1",
+      "seq": 0,
+      "source_manifest": {
+        "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "manifest_version": "dw-source-manifest-json/v1",
+        "sources": [
+          {
+            "blob_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "path": "taskcontroller/interaction/envelope.py",
+            "repository": "owner/repo"
+          }
+        ]
+      },
+      "standards_profile": {
+        "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "profile_id": "standards.default",
+        "version": "1"
+      }
+    },
+    "mixer_result": {
+      "attempt": {
+        "agent_instance": "hermes-mac",
+        "attempt_id": "attempt-1",
+        "attempt_number": 1,
+        "fencing_token": "fence-1",
+        "lease_expires_at": "2026-09-11T00:30:00+07:00",
+        "lease_generation": 1,
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "correlation_id": "correlation-1",
+      "digest": "sha256:e90bd927dd14b0c83475e39e9d9215b809bef74496b98f363e235d525a1a1fa3",
+      "direction": "executor_to_controller",
+      "execution_identity": {
+        "attempt_id": "attempt-1",
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "contract_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "fencing_token": "fence-1",
+        "lease_generation": 1,
+        "node_id": "node-1",
+        "plan_version": "plan-1",
+        "run_id": "run-1",
+        "source_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+      },
+      "idempotency_key": "idem-1",
+      "logical_contract": {
+        "acceptance_criteria": [
+          "The result contains deterministic evidence."
+        ],
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "contract_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "contract_id": "contract-1",
+        "objective": "Run one bounded mailbox v2 contract check.",
+        "plan_version": "plan-1",
+        "scope": {
+          "allowed_actions": [
+            "read_repo"
+          ],
+          "denied_actions": [
+            "merge",
+            "deploy"
+          ],
+          "max_children": 6,
+          "max_depth": 1,
+          "max_parallel": 4,
+          "source_roots": [
+            "taskcontroller"
+          ],
+          "writable_targets": []
+        },
+        "source_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "source_manifest_ref": "source-manifest-1",
+        "standards_profile_ref": "standards.default/v1"
+      },
+      "message_id": "message-1",
+      "message_type": "mixer_result",
+      "node_id": "node-1",
+      "payload": {
+        "findings": [],
+        "result_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "status": "NEEDS_CLARIFICATION"
+      },
+      "producer": {
+        "actor_id": "controller-1",
+        "namespace": "controller",
+        "role": "controller"
+      },
+      "protocol": "dw.taskcontroller.mailbox/v2",
+      "provenance": {
+        "agent_instance": "hermes-mac",
+        "child_id": null,
+        "evidence_refs": [],
+        "lens": "adjudication",
+        "origin": "mixer",
+        "parent_message_id": null,
+        "result_digest": null,
+        "source_refs": [
+          "owner/repo@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:taskcontroller/interaction/envelope.py"
+        ],
+        "status": "SUCCEEDED"
+      },
+      "recipient": {
+        "agent_instance": "hermes-mac",
+        "capability": "taskcontroller.executor"
+      },
+      "result": {
+        "artifact_refs": [],
+        "findings": [],
+        "result_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "status": "NEEDS_CLARIFICATION",
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "run_id": "run-1",
+      "seq": 0,
+      "source_manifest": {
+        "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "manifest_version": "dw-source-manifest-json/v1",
+        "sources": [
+          {
+            "blob_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "path": "taskcontroller/interaction/envelope.py",
+            "repository": "owner/repo"
+          }
+        ]
+      },
+      "standards_profile": {
+        "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "profile_id": "standards.default",
+        "version": "1"
+      }
+    },
+    "review_finding": {
+      "attempt": {
+        "agent_instance": "hermes-mac",
+        "attempt_id": "attempt-1",
+        "attempt_number": 1,
+        "fencing_token": "fence-1",
+        "lease_expires_at": "2026-09-11T00:30:00+07:00",
+        "lease_generation": 1,
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "correlation_id": "correlation-1",
+      "digest": "sha256:21acedb13a58a0f5dd21c61dc24819f7a74e31e45262f0cbf3d479e28c13decd",
+      "direction": "executor_to_controller",
+      "execution_identity": {
+        "attempt_id": "attempt-1",
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "contract_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "fencing_token": "fence-1",
+        "lease_generation": 1,
+        "node_id": "node-1",
+        "plan_version": "plan-1",
+        "run_id": "run-1",
+        "source_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+      },
+      "idempotency_key": "idem-1",
+      "logical_contract": {
+        "acceptance_criteria": [
+          "The result contains deterministic evidence."
+        ],
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "contract_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "contract_id": "contract-1",
+        "objective": "Run one bounded mailbox v2 contract check.",
+        "plan_version": "plan-1",
+        "scope": {
+          "allowed_actions": [
+            "read_repo"
+          ],
+          "denied_actions": [
+            "merge",
+            "deploy"
+          ],
+          "max_children": 6,
+          "max_depth": 1,
+          "max_parallel": 4,
+          "source_roots": [
+            "taskcontroller"
+          ],
+          "writable_targets": []
+        },
+        "source_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "source_manifest_ref": "source-manifest-1",
+        "standards_profile_ref": "standards.default/v1"
+      },
+      "message_id": "message-1",
+      "message_type": "review_finding",
+      "node_id": "node-1",
+      "payload": {
+        "finding": {
+          "category": "reliability",
+          "claim": "A stale event must not advance the current state.",
+          "confidence": 0.95,
+          "conflict_group": null,
+          "disposition": "OPEN",
+          "evidence_refs": [
+            "artifact://evidence-1"
+          ],
+          "finding_id": "finding-1",
+          "lens": "reliability",
+          "recommendation": "Reject stale generation before mutation.",
+          "reviewer": "reviewer-1",
+          "severity": "major"
+        }
+      },
+      "producer": {
+        "actor_id": "controller-1",
+        "namespace": "controller",
+        "role": "controller"
+      },
+      "protocol": "dw.taskcontroller.mailbox/v2",
+      "provenance": {
+        "agent_instance": "hermes-mac",
+        "child_id": "child-review-1",
+        "evidence_refs": [],
+        "lens": "reliability",
+        "origin": "child",
+        "parent_message_id": null,
+        "result_digest": null,
+        "source_refs": [
+          "owner/repo@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:taskcontroller/interaction/envelope.py"
+        ],
+        "status": "SUCCEEDED"
+      },
+      "recipient": {
+        "agent_instance": "hermes-mac",
+        "capability": "taskcontroller.executor"
+      },
+      "result": {
+        "artifact_refs": [],
+        "findings": [
+          {
+            "category": "reliability",
+            "claim": "A stale event must not advance the current state.",
+            "confidence": 0.95,
+            "conflict_group": null,
+            "disposition": "OPEN",
+            "evidence_refs": [
+              "artifact://evidence-1"
+            ],
+            "finding_id": "finding-1",
+            "lens": "reliability",
+            "recommendation": "Reject stale generation before mutation.",
+            "reviewer": "reviewer-1",
+            "severity": "major"
+          }
+        ],
+        "result_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": "SUCCEEDED",
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "run_id": "run-1",
+      "seq": 0,
+      "source_manifest": {
+        "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "manifest_version": "dw-source-manifest-json/v1",
+        "sources": [
+          {
+            "blob_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "path": "taskcontroller/interaction/envelope.py",
+            "repository": "owner/repo"
+          }
+        ]
+      },
+      "standards_profile": {
+        "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "profile_id": "standards.default",
+        "version": "1"
+      }
+    },
+    "terminal_result": {
+      "attempt": {
+        "agent_instance": "hermes-mac",
+        "attempt_id": "attempt-1",
+        "attempt_number": 1,
+        "fencing_token": "fence-1",
+        "lease_expires_at": "2026-09-11T00:30:00+07:00",
+        "lease_generation": 1,
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "correlation_id": "correlation-1",
+      "digest": "sha256:b355019083ad43721de997141ebc397fa7206024f9be91dec91ec0c902558c08",
+      "direction": "executor_to_controller",
+      "execution_identity": {
+        "attempt_id": "attempt-1",
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "contract_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "fencing_token": "fence-1",
+        "lease_generation": 1,
+        "node_id": "node-1",
+        "plan_version": "plan-1",
+        "run_id": "run-1",
+        "source_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+      },
+      "idempotency_key": "idem-1",
+      "logical_contract": {
+        "acceptance_criteria": [
+          "The result contains deterministic evidence."
+        ],
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "contract_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "contract_id": "contract-1",
+        "objective": "Run one bounded mailbox v2 contract check.",
+        "plan_version": "plan-1",
+        "scope": {
+          "allowed_actions": [
+            "read_repo"
+          ],
+          "denied_actions": [
+            "merge",
+            "deploy"
+          ],
+          "max_children": 6,
+          "max_depth": 1,
+          "max_parallel": 4,
+          "source_roots": [
+            "taskcontroller"
+          ],
+          "writable_targets": []
+        },
+        "source_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "source_manifest_ref": "source-manifest-1",
+        "standards_profile_ref": "standards.default/v1"
+      },
+      "message_id": "message-1",
+      "message_type": "terminal_result",
+      "node_id": "node-1",
+      "payload": {
+        "result_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+        "status": "SUCCEEDED"
+      },
+      "producer": {
+        "actor_id": "controller-1",
+        "namespace": "controller",
+        "role": "controller"
+      },
+      "protocol": "dw.taskcontroller.mailbox/v2",
+      "provenance": {
+        "agent_instance": "hermes-mac",
+        "child_id": null,
+        "evidence_refs": [],
+        "lens": null,
+        "origin": "executor",
+        "parent_message_id": null,
+        "result_digest": null,
+        "source_refs": [
+          "owner/repo@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:taskcontroller/interaction/envelope.py"
+        ],
+        "status": "SUCCEEDED"
+      },
+      "recipient": {
+        "agent_instance": "hermes-mac",
+        "capability": "taskcontroller.executor"
+      },
+      "result": {
+        "artifact_refs": [],
+        "findings": [],
+        "result_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+        "status": "SUCCEEDED",
+        "boundary_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "run_id": "run-1",
+      "seq": 0,
+      "source_manifest": {
+        "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "manifest_version": "dw-source-manifest-json/v1",
+        "sources": [
+          {
+            "blob_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "path": "taskcontroller/interaction/envelope.py",
+            "repository": "owner/repo"
+          }
+        ]
+      },
+      "standards_profile": {
+        "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "profile_id": "standards.default",
+        "version": "1"
+      }
+    }
+  },
+  "fixture_kind": "dw.taskcontroller.mailbox/v2-regression",
+  "schema_id": "https://dw-superapps/taskcontroller/schemas/mailbox_v2.schema.json"
+}

@@ -14,6 +14,7 @@ from typing import Any, Protocol
 from taskcontroller.audit.manifest import RunManifest
 from taskcontroller.errors import TaskControllerValidationError
 from taskcontroller.interaction.envelope import A2AEnvelope
+from taskcontroller.interaction.mailbox_v2 import canonical_digest
 
 CONTINUATION_PROTOCOL = "dw.taskcontroller.continuation/v1"
 CONTINUATION_MANIFEST_KIND = CONTINUATION_PROTOCOL
@@ -156,6 +157,16 @@ class ControllerContinuation:
             last_seen_seq=self.last_seen_executor_seq,
             expected_seq=self.expected_executor_seq,
         )
+
+    @property
+    def checkpoint_id(self) -> str:
+        """Return a deterministic ID for this bounded durable checkpoint.
+
+        The digest covers only the serialized continuation fields. It never
+        includes chat history, Slack history, or process-local state.
+        """
+
+        return canonical_digest(self.to_dict())
 
     def to_dict(self) -> dict[str, Any]:
         payload: dict[str, Any] = {

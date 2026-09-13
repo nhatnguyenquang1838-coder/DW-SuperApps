@@ -134,6 +134,7 @@ class NodeStatus(_StrEnum):
     CLAIMED = "CLAIMED"
     RUNNING = "RUNNING"
     REVIEWING = "REVIEWING"
+    MIXING = "MIXING"
     DONE = "DONE"
     BLOCKED = "BLOCKED"
     FAILED = "FAILED"

@@ -17,6 +17,19 @@ from .continuation import (
     recover_continuation,
 )
 from .envelope import A2A_PROTOCOL, A2AEnvelope, EnvelopeKind, MailboxCursor
+from .executor_entrypoint import (
+    BOOTSTRAP_BOOTSTRAPPED,
+    BOOTSTRAP_RECEIPT_PROTOCOL,
+    BOOTSTRAP_STARTED,
+    ActiveAttemptFence,
+    BootstrapReceipt,
+    BootstrapReceiptError,
+    EXECUTOR_MAILBOX_BOOTSTRAPPED,
+    EXECUTOR_MAILBOX_PROTOCOL,
+    ExecutorMailboxRequest,
+    MailboxFirstExecutorEntrypoint,
+    MailboxReader,
+)
 from .github_mailbox import mailbox_operation, parse_mailbox_comment, render_mailbox_comment
 from .human_projection import HumanEvent, HumanEventKind, project_envelope_for_human
 from .wakeup import WAKEUP_PROTOCOL, WakeupSignal
@@ -24,17 +37,28 @@ from .wakeup import WAKEUP_PROTOCOL, WakeupSignal
 __all__ = [
     "A2A_PROTOCOL",
     "A2AEnvelope",
+    "ActiveAttemptFence",
+    "BOOTSTRAP_BOOTSTRAPPED",
+    "BOOTSTRAP_RECEIPT_PROTOCOL",
+    "BOOTSTRAP_STARTED",
+    "BootstrapReceipt",
+    "BootstrapReceiptError",
     "CONTINUATION_MANIFEST_KIND",
     "CONTINUATION_PROTOCOL",
     "CONTINUATION_STATE_KEY",
     "ControllerContinuation",
     "ContinuationPhase",
     "ContinuationStatus",
+    "EXECUTOR_MAILBOX_BOOTSTRAPPED",
+    "EXECUTOR_MAILBOX_PROTOCOL",
     "EnvelopeKind",
+    "ExecutorMailboxRequest",
     "HumanEvent",
     "HumanEventKind",
     "MailboxCursor",
+    "MailboxFirstExecutorEntrypoint",
     "MailboxPollTarget",
+    "MailboxReader",
     "WAKEUP_PROTOCOL",
     "WakeupSignal",
     "assert_controller_may_finalize",

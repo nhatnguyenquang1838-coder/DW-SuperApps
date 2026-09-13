@@ -588,6 +588,7 @@ class WorkLease:
     expires_at: str
     resource_ref: str | None = None
     status: str = "ACTIVE"  # LeaseStatus
+    lease_generation: int | None = None
 
     def __post_init__(self) -> None:
         _validate_id("lease_id", self.lease_id)
@@ -598,6 +599,9 @@ class WorkLease:
         _non_empty("fencing_token", self.fencing_token)
         _non_empty("granted_at", self.granted_at)
         _non_empty("expires_at", self.expires_at)
+        if self.lease_generation is not None:
+            if isinstance(self.lease_generation, bool) or not isinstance(self.lease_generation, int) or self.lease_generation < 0:
+                raise ValueError("lease_generation must be a non-negative integer")
         as_enum(LeaseStatus, self.status, 'status')
 
     def to_dict(self) -> dict:
@@ -615,6 +619,8 @@ class WorkLease:
         }
         if self.resource_ref is not None:
             d["resource_ref"] = self.resource_ref
+        if self.lease_generation is not None:
+            d["lease_generation"] = self.lease_generation
         return d
 
     @classmethod
@@ -631,6 +637,7 @@ class WorkLease:
             expires_at=d["expires_at"],
             resource_ref=d.get("resource_ref"),
             status=d.get("status", "ACTIVE"),
+            lease_generation=d.get("lease_generation"),
         )
 
 

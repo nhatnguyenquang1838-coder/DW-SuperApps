@@ -65,6 +65,19 @@ class ControlEngine:
         if intent.command_id is not None and intent.command_id in self._applied:
             return self._applied[intent.command_id]
 
+        # Cancellation has an additional runtime boundary: the state CAS and
+        # active lease/fence retirement must be one Controller-owned operation.
+        # Keep PAUSE/RESUME/REPLAN on the existing v1 path unchanged.
+        if intent.intent == "CANCEL":
+            from taskcontroller.controlplane.cancellation import (
+                apply_idempotent_cancellation,
+            )
+
+            result = apply_idempotent_cancellation(self.store, intent)
+            if intent.command_id is not None:
+                self._applied[intent.command_id] = result
+            return result
+
         current = self.store.get_run(intent.run_id)
         if current is None:
             raise ControlPlaneError(f"no such run: {intent.run_id!r}")
