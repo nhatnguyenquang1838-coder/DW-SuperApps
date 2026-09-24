@@ -21,8 +21,10 @@ before any transport side effect.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any
 
+from taskcontroller.errors import TaskControllerValidationError
 from taskcontroller.controlplane.errors import (
     ControlPlaneError,
     StaleVersionError,
@@ -36,10 +38,36 @@ from taskcontroller.projections.actions import map_action
 from taskcontroller.projections.binding import BindingRegistry, DuplicateRootError
 from taskcontroller.projections.domain import build_view
 from taskcontroller.projections.slack_renderer import render_root_op, render_thread_op
+from taskcontroller.projections.types import ProjectionOp
 from taskcontroller.projections.transport import FakeSlackTransport
 
 _CHANNEL = "slack"
 _TARGET = "slack"
+
+
+def _with_authority_request(op: ProjectionOp, required: bool) -> ProjectionOp:
+    """Attach a typed authority request to the existing root projection only."""
+    if not required:
+        return op
+    blocks = op.payload.get("blocks")
+    if not isinstance(blocks, list):
+        raise TaskControllerValidationError(
+            "authority request requires rendered root blocks"
+        )
+    updated_blocks = list(blocks)
+    notice = {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": "*External authority required*\nRuntime unchanged; not approved or merged.",
+        },
+    }
+    updated_blocks.insert(max(0, len(updated_blocks) - 1), notice)
+    return replace(
+        op,
+        authority_required=True,
+        payload={**op.payload, "blocks": updated_blocks},
+    )
 
 
 class SlackProjectionAdapter:
@@ -62,13 +90,26 @@ class SlackProjectionAdapter:
         model: str | None = None,
         executor: str | None = None,
         token_usage: int | None = None,
+        authority_required: bool = False,
     ) -> dict[str, Any]:
-        """Render + apply the ROOT card for a run (CREATE first time, else UPDATE)."""
+        """Render + apply the ROOT card (CREATE first time, else UPDATE).
+
+        ``authority_required`` is a typed external signal. It is never inferred
+        from a wait/blocker status and adds only a human intent affordance; it
+        does not approve or mutate the runtime.
+        """
+        if not isinstance(authority_required, bool):
+            raise TaskControllerValidationError("authority_required must be a bool")
         current = self._cp._store.get_run(run_id)
         if current is None:
             raise ControlPlaneError(f"no such run: {run_id!r}")
         proj = RunProjection.from_versioned(current)
         view = build_view(proj, session_id=session_id, model=model, executor=executor, token_usage=token_usage)
+        if authority_required:
+            view = replace(
+                view,
+                legal_affordances=tuple(sorted(set(view.legal_affordances) | {"APPROVE"})),
+            )
         key = self._key(run_id)
         binding = self._registry.lookup(key)
 
@@ -79,11 +120,13 @@ class SlackProjectionAdapter:
                                            session_id=session_id, model=model, executor=executor)
             op = render_root_op(view, key, _CHANNEL, None)
             op = op.__class__(op.op, op.binding_key, op.channel, allocated_root, op.payload, op.authority_required)
+            op = _with_authority_request(op, authority_required)
             self._transport.apply(op.to_dict())
         else:
             # rotation: refresh metadata (content only), UPDATE same root
             self._registry.update_metadata(key, session_id=session_id, model=model, executor=executor)
             op = render_root_op(view, key, _CHANNEL, binding)
+            op = _with_authority_request(op, authority_required)
             self._transport.apply(op.to_dict())
         return proj.to_dict()
 

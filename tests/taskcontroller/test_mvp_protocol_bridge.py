@@ -278,6 +278,21 @@ class TestAuthorityCannotBeGranted:
         assert v.runtime_mutated is False
         assert "not approved" in v.detail and "not merged" in v.detail
 
+    def test_authority_required_survives_typed_payload_round_trip(self):
+        source = _report(authority_required=True)
+        payload = source.to_dict()
+        restored = ExecutorReport.from_payload(payload)
+
+        assert payload["authority_required"] is True
+        assert restored.authority_required is True
+
+    def test_authority_required_rejects_non_boolean_payload(self):
+        payload = _report().to_dict()
+        payload["authority_required"] = "false"
+
+        with pytest.raises(TaskControllerValidationError, match="authority_required must be a bool"):
+            ExecutorReport.from_payload(payload)
+
     def test_no_approve_or_merge_verdict_can_be_produced(self):
         assert "APPROVE" not in PROTOCOL_VERDICTS
         assert "MERGE" not in PROTOCOL_VERDICTS

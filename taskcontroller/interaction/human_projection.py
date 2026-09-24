@@ -76,6 +76,29 @@ def project_envelope_for_human(envelope: A2AEnvelope) -> HumanEvent | None:
 
     status = _status(envelope, kind.value)
     evidence = tuple(envelope.artifact_refs)
+    authority_required = envelope.state.get("authority_required", False)
+    if not isinstance(authority_required, bool):
+        raise TaskControllerValidationError(
+            "a2a_envelope.state.authority_required must be a bool"
+        )
+    if authority_required:
+        detail = _human_detail(
+            envelope,
+            "External authority is required for this exact boundary.",
+        )
+        lower_detail = detail.lower()
+        if not all(
+            marker in lower_detail
+            for marker in ("runtime unchanged", "not approved", "not merged")
+        ):
+            detail += " Runtime unchanged; not approved or merged."
+        return HumanEvent(
+            kind=HumanEventKind.AUTHORITY_REQUIRED.value,
+            title="External authority required",
+            status=status,
+            detail=detail,
+            evidence_refs=evidence,
+        )
 
     if status.upper() == "BLOCKED":
         return HumanEvent(

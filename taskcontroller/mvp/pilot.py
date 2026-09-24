@@ -420,6 +420,13 @@ def translate_rootcard_to_blocks(card: RootCard) -> list[dict[str, Any]]:
 
     # -- context: now/next/risk/delivery -----------------------------------
     context_lines = [f"*now:* {card.now}", f"*next:* {card.next}"]
+    if card.authority_boundary:
+        context_lines.extend(
+            [
+                "*External authority required*",
+                "Runtime unchanged; not approved or merged.",
+            ]
+        )
     if card.risk:
         context_lines.append(f"*risk:* {card.risk}")
     if card.last_material_update:
@@ -504,6 +511,8 @@ _STATUS_WORDS = {
 _SECTION_MARKERS = {
     "status": "status",
     "phase": "phase",
+    "authority required": "authority_required",
+    "authorityrequired": "authority_required",
     "completed": "completed",
     "evidence": "evidence",
     "finding/risk": "finding_risk",
@@ -592,6 +601,7 @@ def parse_hermes_thread_update(text: str) -> ExecutorReport:
 
         🟡 EXECUTOR UPDATE · Sx/y
         Status: RUNNING|DONE|BLOCKED|FAILED
+        Authority required: true|false
         Phase: <phase>
 
         Completed
@@ -614,6 +624,7 @@ def parse_hermes_thread_update(text: str) -> ExecutorReport:
     * subtask id is derived from the header; if a final ``<id> · <AFTER>`` line
       also names a subtask, the two MUST agree;
     * status MUST be one of ``REPORT_STATUSES``;
+    * ``Authority required`` MUST explicitly be ``true`` or ``false``;
     * After MUST be one of ``CONTRACTED_AFTER_VALUES``, derived from the final
       boundary line;
     * ``Completed`` / ``Evidence`` MUST be non-empty; ``Finding / Risk`` is
@@ -643,6 +654,7 @@ def parse_hermes_thread_update(text: str) -> ExecutorReport:
     current: str | None = None
     status: str | None = None
     phase: str | None = None
+    authority_required: bool | None = None
     next_action: str | None = None
     final_subtask: str | None = None
     final_after: str | None = None
@@ -672,6 +684,15 @@ def parse_hermes_thread_update(text: str) -> ExecutorReport:
             key, _, value = stripped.partition(":")
             norm_key = _normalize_section_key(key)
             mapped = norm_key
+            if mapped == "authority_required":
+                normalized_value = value.strip().lower()
+                if normalized_value not in ("true", "false"):
+                    raise MalformedReportError(
+                        "Authority required must be exactly true or false"
+                    )
+                authority_required = normalized_value == "true"
+                current = None
+                continue
             if mapped == "status":
                 status = _STATUS_WORDS.get(value.strip().lower())
                 current = None
@@ -744,6 +765,11 @@ def parse_hermes_thread_update(text: str) -> ExecutorReport:
             f"Hermes thread update has ambiguous/missing After boundary: {final_after!r}"
         )
 
+    if authority_required is None:
+        raise MalformedReportError(
+            "Hermes thread update missing explicit Authority required: true|false"
+        )
+
     completed = _collect_bullets(sections, "completed")
     evidence = _collect_bullets(sections, "evidence")
     finding_risk = _collect_bullets(sections, "finding_risk")
@@ -764,6 +790,7 @@ def parse_hermes_thread_update(text: str) -> ExecutorReport:
             finding_risk=finding_risk,
             next_action=next_action,
             after=final_after,
+            authority_required=authority_required,
         )
     except TaskControllerValidationError as exc:
         raise MalformedReportError(f"incomplete Hermes thread update: {exc}") from exc
@@ -1204,6 +1231,7 @@ class MvpPilot:
                 if report.finding_risk
                 else self._card.risk
             ),
+            authority_boundary=report.authority_required,
             last_material_update=(
                 report.evidence[-1]
                 if report.evidence

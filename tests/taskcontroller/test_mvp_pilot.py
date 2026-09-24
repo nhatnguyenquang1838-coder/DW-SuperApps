@@ -29,6 +29,7 @@ from taskcontroller.mvp.monitoring import (
     REASON_BOUNDARY,
     REASON_MAX_POLLS,
     POLL_INTERVAL_SECONDS,
+    LoopObservation,
 )
 from taskcontroller.mvp.pilot import (
     AdvancedModeRequired,
@@ -46,6 +47,7 @@ from taskcontroller.mvp.protocol_bridge import (
     CONTRACTED_AFTER_VALUES,
     ContractedSubtask,
     ExecutorReport,
+    classify_report,
 )
 from taskcontroller.mvp.rootcard import (
     RootCard,
@@ -154,7 +156,8 @@ def _contract(subtask_id, after=CONTINUE, objective="objective for "):
 
 
 def _report(subtask_id, status="RUNNING", completed=None, evidence=None,
-            finding_risk=None, next_action="await controller", after=CONTINUE):
+            finding_risk=None, next_action="await controller", after=CONTINUE,
+            authority_required=False):
     return ExecutorReport(
         subtask_id=subtask_id,
         status=status,
@@ -163,6 +166,7 @@ def _report(subtask_id, status="RUNNING", completed=None, evidence=None,
         finding_risk=tuple(finding_risk or []),
         next_action=next_action,
         after=after,
+        authority_required=authority_required,
     )
 
 
@@ -437,7 +441,7 @@ class TestLiveSlackMediatedTopology:
     def _authority_reply(self, subtask_id="S1", status="RUNNING", after="CONTINUE"):
         return (
             f"🟡 EXECUTOR UPDATE · {subtask_id}/3\n"
-            f"Status: {status}\n"
+            f"Status: {status}\nAuthority required: false\n"
             f"Phase: executing\n\n"
             "Completed\n- unit one\n- unit two\n\n"
             "Evidence\n- exact evidence\n\n"
@@ -496,7 +500,7 @@ class TestLoopBoundariesThroughPilot:
     def _authority_reply(self, subtask_id="S1", status="RUNNING", after="CONTINUE"):
         return (
             f"🟡 EXECUTOR UPDATE · {subtask_id}/3\n"
-            f"Status: {status}\n"
+            f"Status: {status}\nAuthority required: false\n"
             f"Phase: executing\n\n"
             "Completed\n- unit one\n\n"
             "Evidence\n- exact evidence\n\n"
@@ -555,7 +559,7 @@ class TestMaterialObservationUpdatesSameRoot:
     def _authority_reply(self, subtask_id="S1"):
         return (
             f"🟡 EXECUTOR UPDATE · {subtask_id}/3\n"
-            "Status: RUNNING\n"
+            "Status: RUNNING\nAuthority required: false\n"
             "Phase: executing\n\n"
             "Completed\n- u1\n- u2\n\n"
             "Evidence\n- e1\n- latest evidence\n\n"
@@ -606,11 +610,12 @@ class TestMaterialObservationUpdatesSameRoot:
 # --------------------------------------------------------------------------- #1 authority text
 class TestCanonicalHumanReadableReportParsing:
     def _authority(self, subtask_id="S1", status="RUNNING", after="CONTINUE",
-                   include_finding=True):
+                   include_finding=True, authority_required=False):
         finding = "Finding / Risk\n- inherited lock mismatch\n\n" if include_finding else ""
         return (
             f"🟡 EXECUTOR UPDATE · {subtask_id}/3\n"
             f"Status: {status}\n"
+            f"Authority required: {str(authority_required).lower()}\n"
             "Phase: executing\n\n"
             "Completed\n- unit one\n- unit two\n\n"
             "Evidence\n- exact evidence\n\n"
@@ -629,11 +634,76 @@ class TestCanonicalHumanReadableReportParsing:
         assert report.finding_risk == ("inherited lock mismatch",)
         assert report.next_action == "controller release required"
         assert report.after == "CONTINUE"
+        assert report.authority_required is False
+
+    def test_explicit_authority_signal_is_preserved_and_not_inferred_from_wait(self):
+        authority = parse_hermes_thread_update(
+            self._authority(after="WAIT_CONTROLLER", authority_required=True)
+        )
+        ordinary_wait = parse_hermes_thread_update(
+            self._authority(after="WAIT_CONTROLLER", authority_required=False)
+        )
+
+        assert authority.authority_required is True
+        assert ordinary_wait.authority_required is False
+
+    def test_missing_or_malformed_authority_signal_fails_closed(self):
+        missing = self._authority().replace("Authority required: false\n", "")
+        malformed = self._authority().replace("Authority required: false", "Authority required: maybe")
+
+        with pytest.raises(MalformedReportError, match="missing explicit Authority required"):
+            parse_hermes_thread_update(missing)
+        with pytest.raises(MalformedReportError, match="exactly true or false"):
+            parse_hermes_thread_update(malformed)
+
+    def test_exact_report_authority_boundary_updates_same_rootcard_affordance(self):
+        slack = FakeSlack()
+        contract = _contract("S1", after=WAIT_CONTROLLER)
+        contracts = [contract, _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(contracts, slack)
+        root = pilot.ensure_root()
+        report = _report("S1", after=WAIT_CONTROLLER, authority_required=True)
+        verdict = classify_report(contract, report)
+
+        pilot.apply_observation(
+            LoopObservation(poll=1, reply_ts="100.1", verdict=verdict, report=report)
+        )
+
+        assert pilot._card is not None
+        assert pilot._root_ts == root
+        assert slack.creates == 1
+        assert slack.updates == 1
+        assert pilot._card.authority_boundary is True
+        assert "APPROVE" in pilot._card.contextual_actions()
+        context = next(
+            b for b in translate_rootcard_to_blocks(pilot._card)
+            if b.get("block_id") == "mvp_context"
+        )
+        context_text = " ".join(e["text"] for e in context["elements"])
+        assert "External authority required" in context_text
+        assert "Runtime unchanged; not approved or merged" in context_text
+
+    def test_wait_controller_without_authority_signal_does_not_offer_approve(self):
+        slack = FakeSlack()
+        contract = _contract("S1", after=WAIT_CONTROLLER)
+        contracts = [contract, _contract("S2"), _contract("S3")]
+        pilot = _build_pilot(contracts, slack)
+        pilot.ensure_root()
+        report = _report("S1", after=WAIT_CONTROLLER, authority_required=False)
+        verdict = classify_report(contract, report)
+
+        pilot.apply_observation(
+            LoopObservation(poll=1, reply_ts="100.1", verdict=verdict, report=report)
+        )
+
+        assert pilot._card is not None
+        assert pilot._card.authority_boundary is False
+        assert "APPROVE" not in pilot._card.contextual_actions()
 
     def test_header_and_final_subtask_must_agree(self):
         text = (
             "🟡 EXECUTOR UPDATE · S1/3\n"
-            "Status: RUNNING\n\n"
+            "Status: RUNNING\nAuthority required: false\n\n"
             "Completed\n- u\n\n"
             "Evidence\n- e\n\n"
             "Next\n→ x\n\n"
@@ -645,7 +715,7 @@ class TestCanonicalHumanReadableReportParsing:
     def test_missing_emoji_header_fails_closed(self):
         text = (
             "EXECUTOR UPDATE · S1/3\n"
-            "Status: RUNNING\n\n"
+            "Status: RUNNING\nAuthority required: false\n\n"
             "Completed\n- u\n\n"
             "Evidence\n- e\n\n"
             "Next\n→ x\n\n"
@@ -681,7 +751,7 @@ class TestCanonicalHumanReadableReportParsing:
     def test_missing_after_fails_closed(self):
         text = (
             "🟡 EXECUTOR UPDATE · S1/3\n"
-            "Status: RUNNING\n\n"
+            "Status: RUNNING\nAuthority required: false\n\n"
             "Completed\n- u\n\n"
             "Evidence\n- e\n\n"
             "Next\n→ x\n"
@@ -741,7 +811,7 @@ class TestSlackWebApiTransportWrapper:
     def test_read_returns_only_executor_authored_reports(self):
         authority = (
             "🟡 EXECUTOR UPDATE · S1/3\n"
-            "Status: RUNNING\n\n"
+            "Status: RUNNING\nAuthority required: false\n\n"
             "Completed\n- u1\n\n"
             "Evidence\n- e1\n\n"
             "Next\n→ n1\n\n"
@@ -760,7 +830,7 @@ class TestSlackWebApiTransportWrapper:
     def test_human_reply_without_executor_identity_is_ignored(self):
         authority = (
             "🟡 EXECUTOR UPDATE · S1/3\n"
-            "Status: RUNNING\n\n"
+            "Status: RUNNING\nAuthority required: false\n\n"
             "Completed\n- u1\n\n"
             "Evidence\n- e1\n\n"
             "Next\n→ n1\n\n"
@@ -834,7 +904,7 @@ class TestTimestampOrderingLossless:
     def test_transport_uses_lossless_ordering(self):
         authority = (
             "🟡 EXECUTOR UPDATE · S1/3\n"
-            "Status: RUNNING\n\n"
+            "Status: RUNNING\nAuthority required: false\n\n"
             "Completed\n- u1\n\n"
             "Evidence\n- e1\n\n"
             "Next\n→ n1\n\n"
@@ -864,7 +934,7 @@ class TestLiveLoopDefaultCadence:
     def _authority_reply(self, subtask_id="S1", status="RUNNING", after="CONTINUE"):
         return (
             f"🟡 EXECUTOR UPDATE · {subtask_id}/3\n"
-            f"Status: {status}\n"
+            f"Status: {status}\nAuthority required: false\n"
             "Phase: x\n\n"
             "Completed\n- u\n\n"
             "Evidence\n- e\n\n"
@@ -1066,7 +1136,7 @@ class TestBlockedFailedRenderAsError:
         cmd_ts = pilot.dispatch_current()
         reply = (
             "🟡 EXECUTOR UPDATE · S1/3\n"
-            "Status: BLOCKED\n\n"
+            "Status: BLOCKED\nAuthority required: false\n\n"
             "Completed\n- u1\n\n"
             "Evidence\n- e1\n\n"
             "Finding / Risk\n- inherited lock mismatch\n\n"
@@ -1101,7 +1171,7 @@ class TestUnboundedLiveLoop:
     def _authority_reply(self, subtask_id="S1", status="RUNNING", after="CONTINUE"):
         return (
             f"🟡 EXECUTOR UPDATE · {subtask_id}/3\n"
-            f"Status: {status}\n"
+            f"Status: {status}\nAuthority required: false\n"
             "Phase: x\n\n"
             "Completed\n- u\n\n"
             "Evidence\n- e\n\n"
@@ -1227,7 +1297,7 @@ class TestSingleExecutorIdentity:
     def _authority_reply(self, subtask_id="S1", status="RUNNING", after="CONTINUE"):
         return (
             f"🟡 EXECUTOR UPDATE · {subtask_id}/3\n"
-            f"Status: {status}\n"
+            f"Status: {status}\nAuthority required: false\n"
             "Phase: x\n\n"
             "Completed\n- u\n\n"
             "Evidence\n- e\n\n"

@@ -217,8 +217,9 @@ class ExecutorReport:
         After = CONTINUE | WAIT_CONTROLLER | TERMINAL
 
     ``authority_required`` carries a projection-layer authority signal (e.g. an
-    ``AuthorityResult`` for APPROVE/MERGE). ``evidence_conflict`` carries a
-    surfaced CAS/expected-version conflict. Neither is acted upon here.
+    ``AuthorityResult`` for APPROVE/MERGE). It must remain a typed boolean across
+    payload parsing/serialization. ``evidence_conflict`` carries a surfaced
+    CAS/expected-version conflict. Neither is acted upon here.
     """
 
     subtask_id: str
@@ -248,6 +249,8 @@ class ExecutorReport:
             self, "finding_risk", _optional_items(self.finding_risk, "finding_risk")
         )
         object.__setattr__(self, "drift", _optional_items(self.drift, "drift"))
+        if not isinstance(self.authority_required, bool):
+            raise TaskControllerValidationError("authority_required must be a bool")
         if self.after not in CONTRACTED_AFTER_VALUES:
             raise TaskControllerValidationError(
                 f"invalid report after value: {self.after!r}; "
@@ -269,7 +272,7 @@ class ExecutorReport:
             finding_risk=payload.get("finding_risk", ()),
             drift=payload.get("drift", ()),
             material_finding=bool(payload.get("material_finding", False)),
-            authority_required=bool(payload.get("authority_required", False)),
+            authority_required=payload.get("authority_required", False),
             evidence_conflict=bool(payload.get("evidence_conflict", False)),
         )
 

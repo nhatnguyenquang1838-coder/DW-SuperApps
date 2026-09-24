@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import pytest
 
+from taskcontroller.errors import TaskControllerValidationError
 from taskcontroller.controlplane.errors import StaleVersionError
 from taskcontroller.controlplane.orchestrator import ControlPlane
 from taskcontroller.controlplane.projection import RunProjection
@@ -142,6 +145,45 @@ class TestActionE2E:
         assert res["accepted"] is False
         # adapter did NOT update the root as success
         assert ad._transport.root_count() == before_roots
+
+    def test_typed_authority_request_materializes_same_root_with_approve_intent_only(self):
+        ad, store = _adapter()
+        ad.materialize("run.1")
+        before = store.get_run("run.1")
+        ad.materialize("run.1", authority_required=True)
+
+        assert ad._transport.root_count() == 1
+        assert len(ad._transport.roots_created) == 1
+        assert len(ad._transport.roots_updated) == 1
+        op = ad._transport.ops[-1]
+        assert op["op"] == "UPDATE_ROOT"
+        assert op["root"] == "root.run.1"
+        assert op["authority_required"] is True
+        affordance_text = op["payload"]["blocks"][-1]["elements"][0]["text"]
+        assert "APPROVE" in affordance_text
+        notice_text = " ".join(
+            block.get("text", {}).get("text", "") for block in op["payload"]["blocks"]
+        )
+        assert "External authority required" in notice_text
+        assert "Runtime unchanged; not approved or merged." in notice_text
+
+        result = ad.apply_action("run.1", "APPROVE", expected_version=5)
+        after = store.get_run("run.1")
+        assert result["authority_required"] is True
+        assert after == before
+        assert ad._transport.root_count() == 1
+
+    def test_no_typed_authority_request_means_no_approve_affordance(self):
+        ad, _ = _adapter()
+        ad.materialize("run.1")
+        affordance_text = ad._transport.ops[-1]["payload"]["blocks"][-1]["elements"][0]["text"]
+        assert "APPROVE" not in affordance_text
+        assert ad._transport.ops[-1]["authority_required"] is False
+
+    def test_malformed_authority_signal_is_rejected(self):
+        ad, _ = _adapter()
+        with pytest.raises(TaskControllerValidationError, match="authority_required must be a bool"):
+            ad.materialize("run.1", authority_required=cast(bool, "false"))
 
     def test_authority_action_no_runtime_mutation(self):
         ad, store = _adapter()
