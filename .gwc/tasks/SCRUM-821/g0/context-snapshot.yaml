@@ -39,9 +39,16 @@ repositories:
     repo: nhatnguyenquang1838-coder/gwc
     released_main_sha: 414002f92d48083e7133236346b26e3a2a047e33
     released_main_date: "2026-09-28T14:10:41Z"
-    logical_release_development_ref: fix/SCRUM-818-migrate-582-into-scrum781-m2
-    exact_release_development_sha: 6a8c35fb38982773b06b3c49ed40ddea6c53f89a
-    release_development_date: "2026-09-28T16:46:19Z"
+    logical_release_development_ref: fix/SCRUM-781-m1-runtime-contract-convergence
+    exact_release_development_sha: 5c4e4a53fe6ceaceac05f233409c3dd20f17f4f3
+    release_development_date: "2026-09-13T12:03:01Z"
+    designation_source: C4 §0 + §21.5
+    designation_evidence: "gh pr view 578 -> headRefOid=5c4e4a53fe6ceaceac05f233409c3dd20f17f4f3, isDraft=true, base=main"
+    superseded_in_plan_revision_1:
+      ref: fix/SCRUM-818-migrate-582-into-scrum781-m2
+      sha: 6a8c35fb38982773b06b3c49ed40ddea6c53f89a
+      reason: not on any open PR; therefore not a designated release-development line
+    corrected_by: replan-record-R2.yaml
     open_release_prs:
       - {number: 582, head: auto/SCRUM-808-na81-20260923-v2, base: main, draft: true}
       - {number: 578, head: fix/SCRUM-781-m1-runtime-contract-convergence, base: main, draft: true}
@@ -131,13 +138,19 @@ canonical_sources:
     status: OFFICIAL_DESIGN_BASELINE
   - title: DWO v2 Solution Design - C4 Architecture
     url: https://app.notion.com/p/3ea07c1c65b6813c95d6c7acf7a61c32
-    read_status: IN_FLIGHT
+    read_status: READ
   - title: Universal Recursive Governed Run Model
     url: https://app.notion.com/p/3d207c1c65b681f48f08d657f6e56d32
-    read_status: IN_FLIGHT
+    read_status: READ
   - title: Universal Run Kernel Contract Freeze
     url: https://app.notion.com/p/3d207c1c65b681b481c2f3247e10c1b2
-    read_status: IN_FLIGHT
+    read_status: READ
+  - title: DWO v2 Business Requirements Document
+    url: https://app.notion.com/p/3e907c1c65b681308eecef740e94aa91
+    read_status: READ
+  - title: DWO v2 Delivery Roadmap and Requirement Traceability
+    url: https://app.notion.com/p/3e907c1c65b6814e9c50c58b68168074
+    read_status: READ
 
 stale_binding_inventory:
   - id: STALE-001
@@ -220,4 +233,9 @@ a2a_recovery:
   note: taskcontroller/** exists on main but no RootCard/mailbox is bound to SCRUM-820; this is a direct governed delivery Run.
 
 g0_gate_outcome: PASS
+plan_revision_current: 2
+plan_rebind_note: >-
+  G0 was re-derived against the canonical C4 designation within the same Run. The G1
+  plan was replanned as revision 2 (replan-record-R2.yaml); revision 1 remains immutable
+  history at commit ff74ffc32bf22d907ccb59b2d0ce217ef230a258.
 g6_handoff: null
