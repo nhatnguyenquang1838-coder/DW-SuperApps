@@ -1,0 +1,110 @@
+/**
+ * CR-824-D — V2_REDUCER_CERTIFIED derivation.
+ *
+ * SCRUM-824 / DWO-V2-03, G2 EXECUTE, PLAN-824-R1, child run CR-824-D.
+ *
+ * The WS3 exit token V2_REDUCER_CERTIFIED is DERIVED from machine-readable state,
+ * never asserted. It holds exactly when:
+ *   1. the reducer is deterministic (same event prefix -> same state);
+ *   2. missing facts stay UNKNOWN/PARTIAL;
+ *   3. parent completion is never inferred solely from child-local success;
+ *   4. recursive Root/Child/Atomic reduction + dependency blocking path are correct;
+ *   5. the reducer conforms to the fixture stream.
+ */
+import { reduceEventPrefix, type ReducerEvent, type ReducedRunState } from './reducer';
+import { isParentComplete, type RunNode, type RunTree } from './recursiveTopology';
+import { evaluateBlockingPath } from './blockingPath';
+
+export interface ReducerCertificationInput {
+  /** Determinism: same prefix reduced twice yields identical state. */
+  readonly deterministic: boolean;
+  /** Missing facts stay UNKNOWN/PARTIAL. */
+  readonly missingFactsStayUnknown: boolean;
+  /** Parent completion never inferred solely from child-local success. */
+  readonly parentCompositionIndependent: boolean;
+  /** Recursive reduction + blocking path correct. */
+  readonly recursiveAndBlockingCorrect: boolean;
+  /** Reducer conforms to the fixture stream. */
+  readonly fixtureConformance: boolean;
+}
+
+export interface ReducerCertificationDecision {
+  readonly derivable: boolean;
+  readonly token: string | null;
+  readonly reasons: readonly string[];
+}
+
+/**
+ * Derive V2_REDUCER_CERTIFIED. Fails closed on any incoherent input.
+ */
+export function deriveV2ReducerCertified(
+  input: ReducerCertificationInput,
+): ReducerCertificationDecision {
+  const reasons: string[] = [];
+  if (!input.deterministic) reasons.push('reducer is not deterministic');
+  if (!input.missingFactsStayUnknown) reasons.push('missing facts do not stay UNKNOWN/PARTIAL');
+  if (!input.parentCompositionIndependent) reasons.push('parent completion inferred from child-local success');
+  if (!input.recursiveAndBlockingCorrect) reasons.push('recursive reduction or blocking path incorrect');
+  if (!input.fixtureConformance) reasons.push('reducer does not conform to fixture stream');
+  if (reasons.length === 0) {
+    return { derivable: true, token: 'V2_REDUCER_CERTIFIED', reasons: [] };
+  }
+  return { derivable: false, token: null, reasons };
+}
+
+/**
+ * Determinism check: reduce the same ordered prefix twice and assert identical
+ * state. Returns true when the two reductions are structurally equal.
+ */
+export function assertDeterministicReduction(
+  runId: string,
+  events: readonly ReducerEvent[],
+): boolean {
+  const a = reduceEventPrefix(runId, events);
+  const b = reduceEventPrefix(runId, events);
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/**
+ * Parent-composition independence check: a parent whose children are all ACCEPTED
+ * but whose own gate is not G6/PASSED must NOT be complete.
+ */
+export function assertParentCompositionIndependent(
+  tree: RunTree,
+  parentId: string,
+  childrenAccepted: boolean,
+): boolean {
+  const parent = tree.nodes[parentId];
+  if (!parent) return false;
+  const complete = isParentComplete(tree, parentId);
+  // If children are accepted but the parent's own gate is not G6/PASSED, the parent
+  // must NOT be complete — proving independence from child-local success.
+  if (childrenAccepted && parent.state.gate !== 'G6') {
+    return complete === false;
+  }
+  return true;
+}
+
+/** Reducer certification is read-only; it grants no effect capability. */
+export interface CertificationCapabilities {
+  readonly read: true;
+  readonly write: false;
+  readonly approve: false;
+  readonly deny: false;
+  readonly merge: false;
+  readonly deploy: false;
+}
+
+export const CERTIFICATION_CAPABILITIES: CertificationCapabilities = Object.freeze({
+  read: true,
+  write: false,
+  approve: false,
+  deny: false,
+  merge: false,
+  deploy: false,
+} as const);
+
+/** Exit-token registry. */
+export const EXIT_TOKENS = Object.freeze({
+  v2ReducerCertified: 'V2_REDUCER_CERTIFIED',
+} as const);
