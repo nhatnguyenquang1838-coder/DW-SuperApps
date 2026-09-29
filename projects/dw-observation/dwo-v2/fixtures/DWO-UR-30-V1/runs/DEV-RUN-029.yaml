@@ -1,0 +1,32 @@
+runtime_facts:
+  run_id: DEV-RUN-029
+  run_kind: CHILD
+  lifecycle_profile:
+    id: gwc.universal-run
+    version: 1
+  domain_profile_ref: EVENT/WEDDING
+  target_contract_ref: TARGET-029-R1
+  active_runtime_plan_ref: PLAN-029-R1
+  active_runtime_plan_revision: 1
+  active_runtime_plan_digest: db482cb83efba1bb38e4e876ec86821cc369287cb5132a1562d5d59967ff1c36
+  atomic: false
+  child_run_refs: []
+  dependency_refs:
+  - DEV-RUN-028
+  parent_run_ref: DEV-RUN-027
+  lifecycle:
+    G0: PASSED
+    G1: PASSED
+    G2: BLOCKED
+    G3: NOT_STARTED
+    G4: NOT_STARTED
+    G5: NOT_STARTED
+    G6: NOT_STARTED
+  run_state: OPEN
+  block_reason: UPSTREAM_DEPENDENCY_REVALIDATION_REQUIRED
+dwo_expected_projection:
+  source_profile: DEV_NATIVE
+  sync_state: LIVE
+  semantic_qualification: PENDING
+  authority_state: NOT_APPLICABLE
+  anomaly_count: 0

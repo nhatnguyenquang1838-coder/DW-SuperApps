@@ -1,0 +1,44 @@
+fixture_set: DWO-UR-30-V1
+status: OFFICIAL_DESIGN_BASELINE
+semantic_review: ACCEPTED
+materialization: MATERIALIZED
+run_count: 30
+conforming_runs: 29
+negative_fixture: DEV-RUN-020
+dwo_fixture_projection_defaults:
+  source_profile: DEV_NATIVE
+  sync_state: LIVE
+  semantic_qualification: PENDING
+  authority_state: NOT_APPLICABLE
+  anomaly_count: 0
+runs:
+- DEV-RUN-001
+- DEV-RUN-002
+- DEV-RUN-003
+- DEV-RUN-004
+- DEV-RUN-005
+- DEV-RUN-006
+- DEV-RUN-007
+- DEV-RUN-008
+- DEV-RUN-009
+- DEV-RUN-010
+- DEV-RUN-011
+- DEV-RUN-012
+- DEV-RUN-013
+- DEV-RUN-014
+- DEV-RUN-015
+- DEV-RUN-016
+- DEV-RUN-017
+- DEV-RUN-018
+- DEV-RUN-019
+- DEV-RUN-020
+- DEV-RUN-021
+- DEV-RUN-022
+- DEV-RUN-023
+- DEV-RUN-024
+- DEV-RUN-025
+- DEV-RUN-026
+- DEV-RUN-027
+- DEV-RUN-028
+- DEV-RUN-029
+- DEV-RUN-030
