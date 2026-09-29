@@ -1,0 +1,68 @@
+# G0 CONTEXT SNAPSHOT — SCRUM-822 (DWO-V2-01)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g0.context-snapshot/1.0
+artifact_type: CONTEXT_SNAPSHOT
+gate: G0_UNDERSTAND
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-822
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 6721bf928a6d2c15305c1d23a58893ab7c7d2da7
+  captured_at: '2026-09-30T03:58:00+07:00'
+
+objective: >-
+  Materialize the official DWO-UR-30-V1 fixture specification into executable
+  dev-mode fixture artifacts that traverse the same projection/reducer path as
+  real evidence.
+
+scope:
+  - 30 canonical Run bundles (DEV-RUN-001..030)
+  - deterministic projection-events.jsonl
+  - evidence for authority, execution, verification, target, closure, handoff, qualification
+  - golden outputs: run-list, hierarchy, states, replay-checkpoints, anomalies
+  - deterministic ActorRefs, timestamps, qualification records
+  - dev-only provider isolation; no production write/effect path
+
+dependencies:
+  - SCRUM-821 (DWO-V2-00) source/baseline inventory — DONE, integrated at 6721bf9
+
+constraints:
+  - source_profile default DEV_NATIVE; sync_state LIVE; semantic_qualification PENDING; authority_state NOT_APPLICABLE; anomaly_count 0
+  - QUALIFIED never implicit — requires deterministic synthetic qualification record bound to exact fixture subject
+  - DEV-RUN-030 authority NOT_APPLICABLE unless explicit effect boundary; do not manufacture UNKNOWN
+  - DEV-RUN-020 incompatible-source negative fixture — MUST fail closed as INCOMPATIBLE, no fabricated G0..G6
+  - Universal runtime facts and DWO-derived projection fields remain separate namespaces
+  - no direct fixture-to-UI state bypass
+  - no production write/effect path
+
+acceptance_criteria:
+  - id: AC-822-01
+    statement: FIXTURE_STREAM_CERTIFIED exit token derivable from machine-readable state
+  - id: AC-822-02
+    statement: /runs renders exactly 30 DEV FIXTURE rows through the real projection path
+  - id: AC-822-03
+    statement: same event prefix deterministically reconstructs the same observable frame
+  - id: AC-822-04
+    statement: no direct fixture-to-UI state bypass
+  - id: AC-822-05
+    statement: projection defaults and all explicit negative-case assertions covered by automated fixture/golden-output checks
+
+canonical_sources:
+  - DWO-UR-30-V1 fixture catalog (Notion 3ea07c1c65b681c28de7c076abdfbdb2) — READ IN FULL
+  - DWO v2 Solution Design C4 (3ea07c1c65b6813c95d6c7acf7a61c32) — READ
+  - Universal Run Kernel Contract Freeze v1.1 (3d207c1c65b681b481c2f3247e10c1b2) — READ
+  - Universal Recursive Governed Run Model (3d207c1c65b681f48f08d657f6e56d32) — READ
+
+authority_boundary:
+  grants:
+    - development commits on task/SCRUM-822-fixture-materialization
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-822 progress/evidence updates
+  excluded:
+    - G4_MERGE, G5_DEPLOY, G6_PRODUCTION
+    - approval bypass, protected main writes
+    - production data mutation, database migration, secret change
