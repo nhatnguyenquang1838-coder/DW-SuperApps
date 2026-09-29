@@ -1,0 +1,128 @@
+# G1 DECISION RECORD — SCRUM-829 (DWO-V2-08)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-decision-record
+generated_at: '2026-09-30T05:12:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-829
+parent_run_ref: SCRUM-820
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: integration/SCRUM-820-dwo-v2
+base_sha: 2cdcb171519b05c0916397d58723179f889e19bb
+task_branch: task/SCRUM-829-accessibility-scale
+active_runtime_plan_ref: PLAN-829-R1
+active_runtime_plan_revision: 1
+target_contract_ref: TARGET-ACCESS-829-R1
+
+options_ref: ../brainstorming/g1-options.yaml
+preflight_ref: ../preflight/g1-preflight-report.yaml
+intake_ref: ../intake/g1-intake.yaml
+g0_ref: ../../g0/context-snapshot.yaml
+
+status: ACCEPTED
+selected_option_id: OPT-1
+
+user_decision:
+  actor: human://nhat-nguyen-quang
+  decided_at: '2026-09-30T05:12:00+07:00'
+  source: standing autonomous execution authorization for planning, decomposition, coding, tests and development commits
+  explicit: true
+  scope_of_decision: >-
+    OPT-1 selected by the agent as the only option satisfying all seven
+    acceptance criteria. Human Principal authorized autonomous execution of the
+    approved development plan. No Human decision required to select among options
+    that all met policy.
+
+rationale: >-
+  OPT-1 implements accessibility and scale qualification as a TypeScript module
+  set: keyboard-operable graph navigation with visible focus and ARIA labels,
+  graph/tree selection synchronization, non-color-only status semantics, a
+  deterministic DWO-SCALE-GEN-V1 generator measuring depth/fanout/node-count/
+  performance, and progressive-disclosure budget thresholds derived from measured
+  metrics. This satisfies all seven AC with executable validation. OPT-2
+  (documentation-only) makes AC-829-01/05/06 unverifiable. OPT-3 (UI-only, no
+  scale pack) leaves AC-829-05/06 unmet.
+
+rejected_option_ids:
+  - OPT-2
+  - OPT-3
+
+decomposition:
+  atomic: false
+  rationale: >-
+    SCRUM-829 carries separable deliverables (accessibility model, selection
+    sync, non-color-only status, scale generator, budget thresholds,
+    certification). Executed as ordered child runs on one task branch, one G3 pass.
+  child_runs:
+    - id: CR-829-A
+      order: 1
+      title: Accessibility model — keyboard nav, ARIA, visible focus
+      produces: [lib/dwo/accessibility.ts]
+    - id: CR-829-B
+      order: 2
+      title: Graph/tree selection synchronization + non-color-only status
+      produces: [lib/dwo/accessibility.ts]
+    - id: CR-829-C
+      order: 3
+      title: DWO-SCALE-GEN-V1 deterministic scale generator
+      produces: [lib/dwo/scaleGen.ts]
+    - id: CR-829-D
+      order: 4
+      title: Progressive-disclosure budget thresholds + V2_ACCESSIBILITY_READY derivation + tests
+      produces: [lib/dwo/accessibilityCertification.ts, tests/unit/dwo/accessibility*.test.ts, tests/unit/dwo/scaleGen.test.ts]
+  execution_order: [CR-829-A, CR-829-B, CR-829-C, CR-829-D]
+  integration: all child runs land on the task branch, then G4 integrates into integration/SCRUM-820-dwo-v2
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/scale/
+  - .gwc/tasks/SCRUM-829/
+
+excluded_actions:
+  - g4_merge
+  - g5_deploy
+  - g6_production
+  - database_migration
+  - secret_change
+  - force_push
+  - branch_deletion
+
+authority_boundaries:
+  grants:
+    - development commits on task/SCRUM-829-accessibility-scale
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-829 progress and evidence updates
+  excluded:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION
+    - approval bypass
+    - protected main writes
+
+required_gate: G2_HUMAN_DIRECTION
+g1_gate_outcome: PASS
+
+verification_plan:
+  - command: npx tsc --noEmit
+    expectation: exit 0
+  - command: npx vitest run --reporter=dot
+    expectation: existing suites still pass, plus new accessibility/scale suites
+  - command: python3 -m pytest tests/ -q
+    expectation: 112 tests still pass (no Python regression)
+  - command: npx next lint
+    expectation: no new lint errors
+  - coverage_mapping:
+      AC-829-01: tests/unit/dwo/accessibilityCertification.test.ts
+      AC-829-02: tests/unit/dwo/accessibility.test.ts (keyboard nav + ARIA + focus)
+      AC-829-03: tests/unit/dwo/accessibility.test.ts (selection sync)
+      AC-829-04: tests/unit/dwo/accessibility.test.ts (non-color-only status)
+      AC-829-05: tests/unit/dwo/scaleGen.test.ts (DWO-SCALE-GEN-V1)
+      AC-829-06: tests/unit/dwo/scaleGen.test.ts (budget thresholds)
+      AC-829-07: tests/unit/dwo/accessibility.test.ts (30-run pack unchanged guard)
+
+next_gate: G2_EXECUTION
