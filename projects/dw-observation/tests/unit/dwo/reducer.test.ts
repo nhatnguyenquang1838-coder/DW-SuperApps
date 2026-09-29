@@ -25,6 +25,7 @@ import {
 import {
   BLOCKING_PATH_CAPABILITIES,
   evaluateBlockingPath,
+  reconcileGateState,
 } from '@/lib/dwo/blockingPath';
 import {
   CERTIFICATION_CAPABILITIES,
@@ -193,11 +194,60 @@ describe('AC-824-05 · recursive reduction + dependency blocking path', () => {
   });
 
   it('fails closed to UNKNOWN when a dependency state is unknown', () => {
-    const bp = evaluateBlockingPath('R1', [{ depId: 'R2', state: 'UNKNOWN' }], 'NOT_APPLICABLE');
-    expect(bp.status).toBe('UNKNOWN');
-    expect(bp.reason).toBe('UNKNOWN');
+      const bp = evaluateBlockingPath('R1', [{ depId: 'R2', state: 'UNKNOWN' }], 'NOT_APPLICABLE');
+      expect(bp.status).toBe('UNKNOWN');
+      expect(bp.reason).toBe('UNKNOWN');
+    });
+
+    it('produces WAITING for an external pending condition (F1)', () => {
+      const bp = evaluateBlockingPath('R22', [], 'NOT_APPLICABLE', ['EXTERNAL_GUEST_CONFIRMATIONS_PENDING']);
+      expect(bp.status).toBe('WAITING');
+      expect(bp.reason).toBe('EXTERNAL_CONDITION_PENDING');
+      expect(bp.blockedBy).toEqual(['EXTERNAL_GUEST_CONFIRMATIONS_PENDING']);
+    });
+
+    it('reconciles gateState to BLOCKED/WAITING (F2)', () => {
+      const blocked = evaluateBlockingPath('R4', [], 'DENIED');
+      expect(reconcileGateState('ACTIVE', blocked)).toBe('BLOCKED');
+      const waiting = evaluateBlockingPath('R22', [], 'NOT_APPLICABLE', ['EXTERNAL']);
+      expect(reconcileGateState('ACTIVE', waiting)).toBe('WAITING');
+      const eligible = evaluateBlockingPath('R10', [{ depId: 'R9', state: 'ACCEPTED' }], 'NOT_APPLICABLE');
+      expect(reconcileGateState('ACTIVE', eligible)).toBe('ACTIVE');
+    });
   });
-});
+
+  describe('F3/F4/F5 — review fixes', () => {
+    it('F3: buildRunTree rejects run_kind/parent-child incoherence', () => {
+      // ATOMIC with children is invalid.
+      expect(() =>
+        buildRunTree([
+          { runId: 'A', runKind: 'ATOMIC', parentRunRef: null, childRunRefs: ['B'], state: { runId: 'A', gate: 'G2', gateState: 'ACTIVE', runState: 'OPEN', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_APPLICABLE', anomalyCount: 0, partial: false } },
+          { runId: 'B', runKind: 'CHILD', parentRunRef: 'A', childRunRefs: [], state: { runId: 'B', gate: 'G2', gateState: 'ACTIVE', runState: 'OPEN', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_APPLICABLE', anomalyCount: 0, partial: false } },
+        ]),
+      ).toThrow(/ATOMIC/);
+    });
+
+    it('F4: reduceEvent rejects an out-of-contract runState', () => {
+      expect(() =>
+        reduceEvent(initialRunState('R1'), { eventId: 'E', runId: 'R1', ordinal: 1, runState: 'BOGUS' }),
+      ).toThrow(/invalid runState/);
+    });
+
+    it('F4: reduceEvent rejects an out-of-contract gateState', () => {
+      expect(() =>
+        reduceEvent(initialRunState('R1'), { eventId: 'E', runId: 'R1', ordinal: 1, gateState: 'BOGUS' }),
+      ).toThrow(/invalid gateState/);
+    });
+
+    it('F5: parent at G6 but not PASSED is not complete even with accepted children', () => {
+      const tree = buildRunTree([
+        { runId: 'P', runKind: 'ROOT', parentRunRef: null, childRunRefs: ['C'], state: { runId: 'P', gate: 'G6', gateState: 'ACTIVE', runState: 'OPEN', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_APPLICABLE', anomalyCount: 0, partial: false } },
+        { runId: 'C', runKind: 'CHILD', parentRunRef: 'P', childRunRefs: [], state: { runId: 'C', gate: 'G6', gateState: 'PASSED', runState: 'ACCEPTED', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_APPLICABLE', anomalyCount: 0, partial: false } },
+      ]);
+      expect(isParentComplete(tree, 'P')).toBe(false);
+      expect(assertParentCompositionIndependent(tree, 'P', true)).toBe(true);
+    });
+  });
 
 describe('AC-824-01 · V2_REDUCER_CERTIFIED derivation', () => {
   it('derives the token from a coherent reducer', () => {

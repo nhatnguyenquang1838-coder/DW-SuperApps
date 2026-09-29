@@ -45,6 +45,16 @@ export function buildRunTree(nodes: readonly RunNode[]): RunTree {
     throw new Error(`expected exactly one root, got ${roots.length}`);
   }
   for (const n of nodes) {
+    // F3: validate run_kind coherence against parent/child refs.
+    if (n.runKind === 'ROOT' && n.parentRunRef !== null) {
+      throw new Error(`ROOT ${n.runId} must have parentRunRef null`);
+    }
+    if (n.runKind === 'CHILD' && n.parentRunRef === null) {
+      throw new Error(`CHILD ${n.runId} must have a parentRunRef`);
+    }
+    if (n.runKind === 'ATOMIC' && n.childRunRefs.length > 0) {
+      throw new Error(`ATOMIC ${n.runId} must have no childRunRefs`);
+    }
     if (n.parentRunRef !== null) {
       const parent = byId.get(n.parentRunRef);
       if (!parent) throw new Error(`parent ${n.parentRunRef} of ${n.runId} not found`);

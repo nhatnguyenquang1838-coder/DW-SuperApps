@@ -20,6 +20,7 @@ export type BlockReason =
   | 'UNMET_DEPENDENCY'
   | 'AUTHORITY_DENIED'
   | 'UPSTREAM_DEPENDENCY_REVALIDATION_REQUIRED'
+  | 'EXTERNAL_CONDITION_PENDING'
   | 'UNKNOWN';
 
 /** The blocking-path evaluation for a Run. */
@@ -40,12 +41,15 @@ export interface BlockingPath {
  *   reason UPSTREAM_DEPENDENCY_REVALIDATION_REQUIRED.
  * - If a dependency's state is UNKNOWN, the Run's blocking status is UNKNOWN
  *   (fail-closed, never fabricated).
+ * - If an EXTERNAL condition is pending (waitingFor non-empty), the Run is
+ *   WAITING with reason EXTERNAL_CONDITION_PENDING — distinct from BLOCKED.
  * - Otherwise the Run is ELIGIBLE.
  */
 export function evaluateBlockingPath(
   runId: string,
   deps: readonly { depId: string; state: string; revalidationRequired?: boolean }[],
   authorityState: string | 'UNKNOWN',
+  waitingFor: readonly string[] = [],
 ): BlockingPath {
   const blockedBy: string[] = [];
   for (const dep of deps) {
@@ -67,7 +71,27 @@ export function evaluateBlockingPath(
   if (authorityState === 'UNKNOWN') {
     return { runId, status: 'UNKNOWN', reason: 'UNKNOWN', blockedBy: [] };
   }
+  if (waitingFor.length > 0) {
+    return { runId, status: 'WAITING', reason: 'EXTERNAL_CONDITION_PENDING', blockedBy: waitingFor };
+  }
   return { runId, status: 'ELIGIBLE', reason: null, blockedBy: [] };
+}
+
+/**
+ * Reconcile a Run's gateState with its blocking status (F2).
+ *
+ * The kernel gate-state enum includes BLOCKED and WAITING. This folds the blocking
+ * path back into the run's authoritative gateState so a BLOCKED/WAITING run never
+ * carries gateState ACTIVE. Returns the reconciled gateState.
+ */
+export function reconcileGateState(
+  currentGateState: string | null,
+  blocking: BlockingPath,
+): string | null {
+  if (blocking.status === 'BLOCKED') return 'BLOCKED';
+  if (blocking.status === 'WAITING') return 'WAITING';
+  if (blocking.status === 'UNKNOWN') return currentGateState ?? 'UNKNOWN';
+  return currentGateState;
 }
 
 /** Blocking path is read-only; it grants no effect capability. */

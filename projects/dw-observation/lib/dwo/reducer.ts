@@ -63,13 +63,26 @@ export function initialRunState(runId: string): ReducedRunState {
   };
 }
 
+/** The kernel run terminal states (kernel §5.2). */
+const VALID_RUN_STATES: readonly string[] = ['OPEN', 'ACCEPTED', 'FAILED', 'CANCELLED', 'SUPERSEDED'];
+
+/** The kernel gate states (kernel §5.1). */
+const VALID_GATE_STATES: readonly string[] = ['NOT_STARTED', 'ACTIVE', 'WAITING', 'BLOCKED', 'PASSED', 'FAILED'];
+
 /**
  * Reduce a single event into a Run state.
  *
  * Missing facts stay UNKNOWN; present facts overwrite. The result is PARTIAL until
- * all core facts are known.
+ * all core facts are known. F4: runState and gateState are validated against the
+ * kernel enums; an out-of-contract value is rejected rather than silently accepted.
  */
 export function reduceEvent(state: ReducedRunState, event: ReducerEvent): ReducedRunState {
+  if (event.runState != null && !VALID_RUN_STATES.includes(event.runState)) {
+    throw new Error(`invalid runState "${event.runState}" for ${event.runId}`);
+  }
+  if (event.gateState != null && !VALID_GATE_STATES.includes(event.gateState)) {
+    throw new Error(`invalid gateState "${event.gateState}" for ${event.runId}`);
+  }
   const next: ReducedRunState = {
     runId: state.runId,
     gate: event.gate != null ? event.gate : state.gate,

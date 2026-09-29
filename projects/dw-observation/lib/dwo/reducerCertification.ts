@@ -77,10 +77,15 @@ export function assertParentCompositionIndependent(
   const parent = tree.nodes[parentId];
   if (!parent) return false;
   const complete = isParentComplete(tree, parentId);
-  // If children are accepted but the parent's own gate is not G6/PASSED, the parent
-  // must NOT be complete — proving independence from child-local success.
-  if (childrenAccepted && parent.state.gate !== 'G6') {
-    return complete === false;
+  // F5: independence holds across BOTH the gate position and the gateState
+  // dimension. If children are accepted but the parent is not G6/PASSED, the
+  // parent must NOT be complete.
+  if (childrenAccepted) {
+    const atG6 = parent.state.gate === 'G6';
+    const passed = parent.state.gateState === 'PASSED';
+    if (!atG6 || !passed) {
+      return complete === false;
+    }
   }
   return true;
 }
