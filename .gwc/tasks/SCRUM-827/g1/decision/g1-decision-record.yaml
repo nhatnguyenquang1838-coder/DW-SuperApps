@@ -66,11 +66,11 @@ decomposition:
     - id: CR-827-C
       order: 3
       title: Deterministic replay checkpoints — fixture + durable history under ordering/rebuild contract
-      produces: [lib/dwo/replayEngine.ts]
+      produces: [lib/dwo/replay.ts]
     - id: CR-827-D
       order: 4
       title: CURRENT vs REPLAY + anomaly presentation + FNR-02 comparison + tests
-      produces: [lib/dwo/replayView.ts, tests/unit/dwo/evidence*.test.ts]
+      produces: [lib/dwo/evidenceCertification.ts, tests/unit/dwo/evidenceReplay.test.ts]
   execution_order: [CR-827-A, CR-827-B, CR-827-C, CR-827-D]
   integration: all child runs land on the task branch, then G4 integrates into integration/SCRUM-820-dwo-v2
 
@@ -116,10 +116,10 @@ verification_plan:
   - command: npx next lint
     expectation: no new lint errors
   - coverage_mapping:
-      AC-827-01: tests/unit/dwo/replayEngine.test.ts (fixture replay)
-      AC-827-02: tests/unit/dwo/replayEngine.test.ts (durable replay)
-      AC-827-03: tests/unit/dwo/recoveryLineage.test.ts
-      AC-827-04: tests/unit/dwo/evidenceInspector.test.ts
-      AC-827-05: tests/unit/dwo/replayView.test.ts (FNR-02 comparison)
+      AC-827-01: tests/unit/dwo/evidenceReplay.test.ts (fixture replay)
+      AC-827-02: tests/unit/dwo/evidenceReplay.test.ts (durable replay)
+      AC-827-03: tests/unit/dwo/evidenceReplay.test.ts
+      AC-827-04: tests/unit/dwo/evidenceReplay.test.ts
+      AC-827-05: tests/unit/dwo/evidenceReplay.test.ts (FNR-02 comparison)
 
 next_gate: G2_EXECUTION
