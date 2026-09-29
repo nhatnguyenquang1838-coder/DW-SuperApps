@@ -1,0 +1,125 @@
+# G1 DECISION RECORD — SCRUM-827 (DWO-V2-06)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-decision-record
+generated_at: '2026-09-30T04:26:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-827
+parent_run_ref: SCRUM-820
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: integration/SCRUM-820-dwo-v2
+base_sha: 980df7e7c7752b7dd384a60cdd3e0e9c6a1e2784
+task_branch: task/SCRUM-827-evidence-replay
+active_runtime_plan_ref: PLAN-827-R1
+active_runtime_plan_revision: 1
+target_contract_ref: TARGET-EVIDENCE-827-R1
+
+options_ref: ../brainstorming/g1-options.yaml
+preflight_ref: ../preflight/g1-preflight-report.yaml
+intake_ref: ../intake/g1-intake.yaml
+g0_ref: ../../g0/context-snapshot.yaml
+
+status: ACCEPTED
+selected_option_id: OPT-1
+
+user_decision:
+  actor: human://nhat-nguyen-quang
+  decided_at: '2026-09-30T04:26:00+07:00'
+  source: standing autonomous execution authorization for planning, decomposition, coding, tests and development commits
+  explicit: true
+  scope_of_decision: >-
+    OPT-1 selected by the agent as the only option satisfying the acceptance
+    criteria. Human Principal authorized autonomous execution of the approved
+    development plan. No Human decision required to select among options that all
+    met policy.
+
+rationale: >-
+  OPT-1 implements the evidence-first UX as a TypeScript module set: Evidence
+  Inspector, recovery lineage (append-only generations), CURRENT vs REPLAY view modes,
+  deterministic replay checkpoints from fixtures + durable history (using the
+  SCRUM-825 ordering/rebuild contract), and FNR-02 comparison evidence. This
+  satisfies all five AC with executable validation. OPT-2 (direct fixture-to-UI)
+  recreates the parallel-source defect. OPT-3 (documentation-only) makes the exit
+  criteria unverifiable.
+
+rejected_option_ids:
+  - OPT-2
+  - OPT-3
+
+decomposition:
+  atomic: false
+  rationale: >-
+    SCRUM-827 carries separable deliverables (evidence inspector, recovery lineage,
+    view modes, fixture replay, durable replay, FNR-02 comparison, anomalies).
+    Executed as ordered child runs on one task branch, one G3 pass.
+  child_runs:
+    - id: CR-827-A
+      order: 1
+      title: Evidence Inspector (source/profile/ref/digest/provenance) + provenance without invention
+      produces: [lib/dwo/evidenceInspector.ts]
+    - id: CR-827-B
+      order: 2
+      title: Recovery lineage (retry/rerun/replan/restart/supersession/reset-derived-state) immutable generations
+      produces: [lib/dwo/recoveryLineage.ts]
+    - id: CR-827-C
+      order: 3
+      title: Deterministic replay checkpoints — fixture + durable history under ordering/rebuild contract
+      produces: [lib/dwo/replayEngine.ts]
+    - id: CR-827-D
+      order: 4
+      title: CURRENT vs REPLAY + anomaly presentation + FNR-02 comparison + tests
+      produces: [lib/dwo/replayView.ts, tests/unit/dwo/evidence*.test.ts]
+  execution_order: [CR-827-A, CR-827-B, CR-827-C, CR-827-D]
+  integration: all child runs land on the task branch, then G4 integrates into integration/SCRUM-820-dwo-v2
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/evidence/
+  - .gwc/tasks/SCRUM-827/
+
+excluded_actions:
+  - g4_merge
+  - g5_deploy
+  - g6_production
+  - database_migration
+  - secret_change
+  - force_push
+  - branch_deletion
+
+authority_boundaries:
+  grants:
+    - development commits on task/SCRUM-827-evidence-replay
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-827 progress and evidence updates
+  excluded:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION
+    - approval bypass
+    - protected main writes
+
+required_gate: G2_HUMAN_DIRECTION
+g1_gate_outcome: PASS
+
+verification_plan:
+  - command: npx tsc --noEmit
+    expectation: exit 0
+  - command: npx vitest run --reporter=dot
+    expectation: existing suites still pass, plus new evidence suites
+  - command: python3 -m pytest tests/ -q
+    expectation: 112 tests still pass (no Python regression)
+  - command: npx next lint
+    expectation: no new lint errors
+  - coverage_mapping:
+      AC-827-01: tests/unit/dwo/replayEngine.test.ts (fixture replay)
+      AC-827-02: tests/unit/dwo/replayEngine.test.ts (durable replay)
+      AC-827-03: tests/unit/dwo/recoveryLineage.test.ts
+      AC-827-04: tests/unit/dwo/evidenceInspector.test.ts
+      AC-827-05: tests/unit/dwo/replayView.test.ts (FNR-02 comparison)
+
+next_gate: G2_EXECUTION
