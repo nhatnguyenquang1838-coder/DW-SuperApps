@@ -1,0 +1,63 @@
+# G3 VERIFICATION ATTESTATION — SCRUM-822 (DWO-V2-01)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g3.verification-attestation/1.0
+artifact_type: VERIFICATION_ATTESTATION
+gate: G3_VERIFY
+trace:
+  task_id: SCRUM-822
+  parent_run_ref: SCRUM-820
+  plan_revision: 1
+  verified_at: '2026-09-30T04:00:00+07:00'
+  task_branch: task/SCRUM-822-fixture-materialization
+  branch_head: 9be2a42
+
+verdict: PASS
+
+child_runs:
+  - id: CR-822-A
+    title: Fixture generator + fixture-set.yaml + 30 DEV-RUN bundles
+    commit: 9be2a42
+    tests: covered by fixtureSet.test.ts
+  - id: CR-822-B
+    title: Deterministic projection-events.jsonl + evidence folders
+    commit: 9be2a42
+    tests: covered by fixtureReplay.test.ts
+  - id: CR-822-C
+    title: Golden outputs (run-list, hierarchy, states, replay-checkpoints, anomalies)
+    commit: 9be2a42
+    tests: covered by fixtureReplay.test.ts
+  - id: CR-822-D
+    title: FIXTURE_STREAM_CERTIFIED derivation + automated tests
+    commit: 9be2a42
+    tests: covered by fixtureSet.test.ts
+
+executed_evidence:
+  - command: npx vitest run tests/unit/dwo/
+    result: 70 passed (70) — 6 dwo constraint suites
+  - command: npx vitest run
+    result: 23 files, 366 passed (296 baseline + 70 new)
+  - command: npx tsc --noEmit
+    result: exit 0
+  - command: python3 -m pytest tests/ -q
+    result: 112 passed (no Python regression)
+  - command: python3 dwo-v2/fixtures/generate_dwo_ur_30_v1.py
+    result: materialized 30 fixtures (deterministic)
+
+acceptance_criteria_coverage:
+  AC-822-01: VERIFIED (fixtureCertification.test.ts — FIXTURE_STREAM_CERTIFIED derived)
+  AC-822-02: VERIFIED (fixtureSet.test.ts — exactly 30 rows)
+  AC-822-03: VERIFIED (fixtureReplay.test.ts — deterministic rebuild)
+  AC-822-04: VERIFIED (fixtureSet.test.ts — read-only, no UI bypass)
+  AC-822-05: VERIFIED (fixtureSet.test.ts — defaults + DEV-RUN-020/030 + QUALIFIED)
+
+exit_token_derivation:
+  token: FIXTURE_STREAM_CERTIFIED
+  derivable: true
+  basis: >
+    30 runs (29 conforming + 1 negative DEV-RUN-020), deterministic event stream,
+    no implicit QUALIFIED, projection defaults applied. Derived by
+    deriveFixtureStreamCertified(), machine-readable.
+
+deviations:
+  - none
