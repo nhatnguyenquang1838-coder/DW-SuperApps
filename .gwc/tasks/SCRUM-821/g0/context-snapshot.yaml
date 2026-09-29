@@ -1,0 +1,223 @@
+# G0 CONTEXT SNAPSHOT — SCRUM-821 (DWO-V2-00)
+# Canonical: DW-SuperApps governed Run, Universal G0 UNDERSTAND
+# This artifact is immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g0.context-snapshot/1.0
+artifact_type: G0_CONTEXT
+gate: G0_UNDERSTAND
+status: PASSED
+
+trace:
+  run_id: SCRUM-821
+  run_kind: CHILD            # governed Child Run of Root Run SCRUM-820
+  parent_run_ref: SCRUM-820
+  root_goal_id: DWO-V2-SCRUM-820-P0
+  release_profile: P0_SEMANTIC_RELEASE
+  fixture_contract: DWO-UR-30-V1
+  lifecycle_profile: gwc.universal-run/1
+  active_runtime_plan_ref: PLAN-821-R1
+  active_runtime_plan_revision: 1
+  target_contract_ref: TARGET-RELEASE-BINDING-821-R1
+  composed_at: "2026-09-29T20:18:00Z"
+  actor_ref: agent://dwa/default
+  human_principal_ref: user://nhat-nguyen-quang
+
+project:
+  id: dw-superapps
+  name: DW SuperApps
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  target_project_path: projects/dw-observation
+
+repositories:
+  dwo_implementation:
+    repo: nhatnguyenquang1838-coder/DW-SuperApps
+    base_ref: main
+    exact_base_sha: 2e0b0cdbf7c08ac9305acbd114aa42db749b24be
+    target_ref: main
+    role: protected integration target
+  universal_runtime:
+    repo: nhatnguyenquang1838-coder/gwc
+    released_main_sha: 414002f92d48083e7133236346b26e3a2a047e33
+    released_main_date: "2026-09-28T14:10:41Z"
+    logical_release_development_ref: fix/SCRUM-818-migrate-582-into-scrum781-m2
+    exact_release_development_sha: 6a8c35fb38982773b06b3c49ed40ddea6c53f89a
+    release_development_date: "2026-09-28T16:46:19Z"
+    open_release_prs:
+      - {number: 582, head: auto/SCRUM-808-na81-20260923-v2, base: main, draft: true}
+      - {number: 578, head: fix/SCRUM-781-m1-runtime-contract-convergence, base: main, draft: true}
+      - {number: 574, head: auto/SCRUM-780-na81-20260810, base: main, draft: true}
+
+target_branch_resolution:
+  requested_final_target: master
+  requested_evidence: "gh api .../git/ref/heads/master -> HTTP 404 Not Found"
+  repo_default_branch: main
+  state: TARGET_BRANCH_CONFLICT
+  resolution: main
+  resolved_by: human://nhat-nguyen-quang
+  resolved_at: "2026-09-29T20:12:00Z"
+  invariant: A `master` branch must never be created in DW-SuperApps.
+
+intent:
+  statement: >-
+    Establish the DWO v2 development baseline: bind DWO to the active Universal Runtime
+    release-development line by exact SHA, inventory the existing DWO M0-M4 capability
+    surface and every stale/legacy binding, record the compatibility/effect-governance
+    baseline separately from native Universal semantics, inventory browser/read/write
+    access boundaries (RLS paths, Realtime topics), and define the recurring R0 rebind
+    evidence record plus drift-classification taxonomy that every later DWO v2 governed
+    run consumes.
+  why_now: >-
+    SCRUM-821 is the entry work package of SCRUM-820 and blocks SCRUM-822 and SCRUM-823.
+    No DWO v2 fixture, projection-contract or reducer work may bind to a Universal source
+    identity until the binding registry and drift taxonomy exist.
+
+scope:
+  in_scope:
+    - Release-binding registry materializing universal_repository / logical_release_development_ref / exact_consumed_sha / lifecycle_profile / contract identity / binding timestamp / affected surfaces.
+    - DWO M0-M4 capability inventory with explicit per-surface provenance and staleness classification.
+    - Compatibility vs native Universal namespace separation baseline.
+    - Access-boundary inventory: browser read paths, server read paths, write/effect paths, RLS policies, Realtime topics.
+    - Recurring R0 rebind evidence record schema + drift classification taxonomy.
+    - Deterministic tests proving the registry is exact-SHA-pinned and fail-closed on drift.
+  out_of_scope:
+    - Materializing any DWO-UR-30-V1 fixture (SCRUM-822).
+    - Projection Contract v2 implementation (SCRUM-823).
+    - Reducer/topology semantics (SCRUM-824).
+    - Any repository merge, deploy, production, database-migration or secret effect.
+    - Granting G4_MERGE / G5_DEPLOY / G6_PRODUCTION authority.
+
+constraints:
+  - No silent fallback from the Universal release-development source to current gwc/main.
+  - Exact consumed SHA is mandatory evidence; a moving branch name is never sufficient.
+  - DWO projection state (sync_state, source_profile, semantic_qualification) stays a separate namespace from Universal runtime facts.
+  - DWO is read-only: no approval/deny/runtime-control surface.
+  - Stage by explicit path; never `git add .` (shared checkouts carry other agents' dirt).
+
+dependencies:
+  jira_predecessors: []      # entry package
+  jira_successors: [SCRUM-822, SCRUM-823]
+  external: []
+
+acceptance_criteria:
+  - id: AC-821-01
+    statement: Release-binding registry records universal_repository, logical_release_development_ref, exact_consumed_sha, lifecycle_profile, contract identity, binding timestamp and affected surfaces for the active release-development line.
+    verifiable: true
+  - id: AC-821-02
+    statement: Every DWO v1 surface is inventoried with an explicit source_profile classification and provenance; stale/legacy bindings are classified, not silently retained.
+    verifiable: true
+  - id: AC-821-03
+    statement: Compatibility/legacy baseline is recorded in a namespace distinct from native Universal semantics.
+    verifiable: true
+  - id: AC-821-04
+    statement: Access-boundary inventory covers browser read, server read, write/effect paths, RLS policies and Realtime topics.
+    verifiable: true
+  - id: AC-821-05
+    statement: Recurring R0 rebind evidence record schema is defined and is immutable per revision.
+    verifiable: true
+  - id: AC-821-06
+    statement: Drift classification taxonomy is implemented and validated with the canonical enum set.
+    verifiable: true
+  - id: AC-821-07
+    statement: Registry fails closed when the bound exact SHA is absent or the ref is unresolvable; no fallback to main.
+    verifiable: true
+  - id: AC-821-08
+    statement: Exit token DEV_BINDING_ACTIVE is derivable from machine-readable state, not prose.
+    verifiable: true
+
+canonical_sources:
+  - title: DWO v2 - Dev Fixture Catalog - 30 Run Fixtures (DWO-UR-30-V1)
+    url: https://app.notion.com/p/3ea07c1c65b681c28de7c076abdfbdb2
+    read_status: READ
+    status: OFFICIAL_DESIGN_BASELINE
+  - title: DWO v2 Solution Design - C4 Architecture
+    url: https://app.notion.com/p/3ea07c1c65b6813c95d6c7acf7a61c32
+    read_status: IN_FLIGHT
+  - title: Universal Recursive Governed Run Model
+    url: https://app.notion.com/p/3d207c1c65b681f48f08d657f6e56d32
+    read_status: IN_FLIGHT
+  - title: Universal Run Kernel Contract Freeze
+    url: https://app.notion.com/p/3d207c1c65b681b481c2f3247e10c1b2
+    read_status: IN_FLIGHT
+
+stale_binding_inventory:
+  - id: STALE-001
+    severity: HIGH
+    surface: projects/dw-observation/project-profile.yaml
+    field: bindings.gwc.target_sha
+    declared:
+      repository: nhatnguyenquang1838-coder/gwc
+      ref: pre-prod
+      target_sha: 10deaa4d9b9f8cf8ef51ee6d89671fefa41e3662
+      declared_at: "2026-08-19T21:13:31Z"
+    live:
+      pre_prod_sha: 7f270f367b36b748c6b0e7afa4c51c4c998123ee
+      pre_prod_date: "2026-08-23T10:20:51Z"
+      main_sha: 414002f92d48083e7133236346b26e3a2a047e33
+      main_date: "2026-09-28T14:10:41Z"
+    divergence:
+      pre_prod_commits_behind: "unresolved (pre-prod last advanced 2026-08-23; pin predates it)"
+      main_commits_behind: 181
+      compare_status: ahead
+    classification: STALE_PINNED_SHA
+    detail: >-
+      The DWO app profile pins the Universal Runtime to a pre-prod SHA that is 181 commits
+      behind current gwc/main and also older than the current pre-prod tip. This is a
+      live source-binding defect: the DWO app profile does not identify the active
+      Universal release-development line at all. It is app-level metadata only and does
+      not repurpose the projects/gwc submodule gitlink, which stays out of scope.
+    disposition: >-
+      Classified and recorded, not silently overwritten. The R0 registry supersedes this
+      ad-hoc app-profile pin as the authoritative DWO v2 source binding; the profile is
+      reconciled by a separate explicitly authorized change, not by this package.
+
+  - id: STALE-002
+    severity: MEDIUM
+    surface: projects/dw-observation/fixtures/**
+    declared: >-
+      v1 fixture data bound to SCRUM-555 (m0, m5_mock), SCRUM-669 (gwc_durable_m0) and the
+      login-epic 10-run campaign.
+    classification: COMPATIBILITY_LEGACY
+    detail: >-
+      These are DWO M0-M4 era projections with no Universal G0->G6 Release-Kernel
+      semantics and no TargetContract/RuntimePlan/ClosureReceipt/HandoffReceipt identity.
+      They are legitimate compatibility inputs but must never be presented as native
+      Universal projection state.
+    disposition: Recorded in the capability inventory with source_profile=COMPATIBILITY; namespace-separated from native.
+
+  - id: STALE-003
+    severity: MEDIUM
+    surface: projects/dw-observation (M0-M4 framing)
+    classification: SUPERSEDED_TAXONOMY
+    detail: >-
+      Milestone framing M0-M4 is the DWO v1 delivery vocabulary. DWO v2 uses workstream
+      WS0-WS8 and Universal G0->G6. The M0-M4 labels must not be emitted as DWO v2
+      lifecycle or qualification state.
+    disposition: Recorded as a superseded taxonomy in the inventory; new taxonomy introduced alongside it.
+
+  - id: STALE-004
+    severity: LOW
+    surface: Python/TypeScript twin (dw_observation/*.py vs lib/*.ts)
+    classification: PARITY_DEBT
+    detail: >-
+      Reducer/projection/replay/fixtures/adapters logic exists in both a Python package
+      and a TypeScript lib with no enforced parity contract.
+    disposition: >-
+      Out of scope for this package. Recorded so SCRUM-823/824 make an explicit
+      single-source-of-truth decision rather than extending both.
+
+baseline_verification:
+  dwo_v1_baseline_green: true
+  evidence:
+    - "npx tsc --noEmit -> exit 0"
+    - "npx vitest run --reporter=dot -> Test Files 17 passed (17), Tests 296 passed (296)"
+    - "python3 -m pytest tests/ -q -> 112 passed in 0.21s"
+  dwo_ur_30_v1_materialization: ABSENT
+  absence_evidence: "exact tree scan of origin/main finds no fixture-set.yaml, runs/DEV-RUN-*.yaml, events/projection-events.jsonl, expected/*.json, or DWO-SCALE-GEN-V1"
+
+a2a_recovery:
+  prior_continuation_state: NONE
+  taskcontroller_active: false
+  note: taskcontroller/** exists on main but no RootCard/mailbox is bound to SCRUM-820; this is a direct governed delivery Run.
+
+g0_gate_outcome: PASS
+g6_handoff: null
