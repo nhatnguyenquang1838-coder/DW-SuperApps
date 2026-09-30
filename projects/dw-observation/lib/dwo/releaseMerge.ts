@@ -10,7 +10,11 @@
  *  1. A release merge is detected only when a durable, attributable merge receipt
  *     is present (exact released main SHA + merge identity).
  *  2. Without durable evidence, the state stays RELEASE_DEV_TRACKING.
- */
+  *  3. The released main SHA must be an exact 40-hex SHA (fail-closed, matching the
+  *     codebase `isExactSha` convention in `releaseBinding.ts`).
+  */
+
+import { isExactSha } from './releaseBinding';
 
 /** Release-train state. */
 export type ReleaseTrainState = 'RELEASE_DEV_TRACKING' | 'MAIN_REBIND_PENDING' | 'RELEASE_MAIN_BOUND';
@@ -44,7 +48,7 @@ export function detectReleaseMerge(
   detector: ReleaseMergeDetector,
   receipt: ReleaseMergeReceipt | null,
 ): ReleaseMergeDetector {
-  if (!receipt || !receipt.attributable || !receipt.releasedMainSha) {
+  if (!receipt || !receipt.attributable || !isExactSha(receipt.releasedMainSha)) {
     return { state: 'RELEASE_DEV_TRACKING', receipt: null };
   }
   return { state: 'MAIN_REBIND_PENDING', receipt };

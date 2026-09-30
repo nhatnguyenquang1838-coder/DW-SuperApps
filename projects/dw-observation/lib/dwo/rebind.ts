@@ -13,10 +13,13 @@
  *  2. Historical development-source provenance is never silently collapsed
  *     (AC-831-06).
  *  3. Prior qualification whose subject materially drifted is not reused as current
- *     qualification without fresh evidence (AC-831-07).
- */
+  *     qualification without fresh evidence (AC-831-07).
+  *  4. Drift classification is delegated to the canonical `drift.ts` module (FNR-03
+  *     taxonomy, `classifyDrift(evidence)` + `requiresReplan`). This module does NOT
+  *     re-implement a divergent drift classifier.
+  */
 
-import type { DriftClassificationResult } from './driftClassification';
+import { requiresReplan, type DriftDecision } from './drift';
 
 /** A qualification record bound to an exact subject. */
 export interface QualificationRecord {
@@ -45,7 +48,7 @@ export interface RebindResult {
 export function performRebind(
   priorQualifiedDevSha: string,
   releasedMainSha: string,
-  drift: DriftClassificationResult,
+  drift: DriftDecision,
   priorQualifications: readonly QualificationRecord[],
   currentSubject: string,
 ): RebindResult {
@@ -53,9 +56,9 @@ export function performRebind(
     .filter((q) => q.subject !== currentSubject)
     .map((q) => q.subject);
 
-  const requiredSuites = drift.blocking
+  const requiredSuites = requiresReplan(drift.classification)
     ? ['DEV-NATIVE-QUALIFICATION']
-    : drift.affectedSurfaces.length > 0
+    : drift.surfacesToRevalidate.length > 0
       ? ['DEV-NATIVE-QUALIFICATION']
       : [];
 

@@ -19,10 +19,12 @@ import {
   type ReleaseMergeReceipt,
 } from '@/lib/dwo/releaseMerge';
 import {
-  DRIFT_CLASSIFICATION_CAPABILITIES,
+  DRIFT_CAPABILITIES,
   classifyDrift,
-  requiresRequalification,
-} from '@/lib/dwo/driftClassification';
+  requiresReplan,
+  type DriftDecision,
+  type DriftEvidence,
+} from '@/lib/dwo/drift';
 import {
   REBIND_CAPABILITIES,
   performRebind,
@@ -42,6 +44,20 @@ const receipt: ReleaseMergeReceipt = {
   releasedMainSha: '414002f92d48083e7133236346b26e3a2a047e33',
   attributable: true,
 };
+
+/** Build canonical drift evidence for a set of changed surfaces. */
+function driftEvidence(changedSurfaces: DriftEvidence['changedSurfaces']): DriftEvidence {
+  return {
+    previousSha: '5c4e4a53fe6ceaceac05f233409c3dd20f17f4f3',
+    currentSha: '414002f92d48083e7133236346b26e3a2a047e33',
+    previousContractDigest: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    currentContractDigest: changedSurfaces.length > 0
+      ? 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+      : 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    changedSurfaces,
+    lifecycleProfileChanged: false,
+  };
+}
 
 function certInput(overrides: Partial<RebindCertificationInput> = {}): RebindCertificationInput {
   return {
@@ -74,37 +90,42 @@ describe('AC-831-03 · release/merge receipt is durable and attributable', () =>
     const d = detectReleaseMerge(initialReleaseTracking(), { ...receipt, attributable: false });
     expect(d.state).toBe('RELEASE_DEV_TRACKING');
   });
+
+  it('a malformed released main SHA is not durable evidence (fail-closed)', () => {
+    const d = detectReleaseMerge(initialReleaseTracking(), { ...receipt, releasedMainSha: 'not-a-sha' });
+    expect(d.state).toBe('RELEASE_DEV_TRACKING');
+  });
 });
 
 describe('AC-831-04 · drift classification and affected surfaces recorded using frozen taxonomy', () => {
   it('classifies COMPATIBLE when no surfaces changed', () => {
-    const r = classifyDrift([]);
+    const r = classifyDrift(driftEvidence([]));
     expect(r.classification).toBe('COMPATIBLE');
-    expect(r.blocking).toBe(false);
+    expect(requiresReplan(r.classification)).toBe(false);
   });
 
   it('classifies ADAPTER_CHANGE and records the surface', () => {
-    const r = classifyDrift(['adapter']);
+    const r = classifyDrift(driftEvidence(['ADAPTER']));
     expect(r.classification).toBe('ADAPTER_CHANGE');
-    expect(r.affectedSurfaces).toContain('adapter');
+    expect(r.surfacesToRevalidate).toContain('ADAPTER');
   });
 
-  it('classifies REDUCER_CHANGE as blocking', () => {
-    const r = classifyDrift(['reducer']);
+  it('classifies REDUCER_CHANGE (revalidation, not replan)', () => {
+    const r = classifyDrift(driftEvidence(['REDUCER']));
     expect(r.classification).toBe('REDUCER_CHANGE');
-    expect(requiresRequalification(r)).toBe(true);
+    expect(requiresReplan(r.classification)).toBe(false);
   });
 
-  it('classifies QUALIFICATION_CHANGE as blocking', () => {
-    const r = classifyDrift(['qualification']);
-    expect(r.classification).toBe('QUALIFICATION_CHANGE');
-    expect(requiresRequalification(r)).toBe(true);
+  it('classifies BLOCKING_CONTRACT_DRIFT as replan-required', () => {
+    const r = classifyDrift({ ...driftEvidence([]), lifecycleProfileChanged: true });
+    expect(r.classification).toBe('BLOCKING_CONTRACT_DRIFT');
+    expect(requiresReplan(r.classification)).toBe(true);
   });
 });
 
 describe('AC-831-02 · exact prior qualified UR-DEV SHA and exact released gwc/main SHA recorded', () => {
   it('records both exact SHAs on rebind', () => {
-    const drift = classifyDrift(['reducer']);
+    const drift = classifyDrift(driftEvidence(['REDUCER']));
     const r = performRebind('5c4e4a53fe6ceaceac05f233409c3dd20f17f4f3', receipt.releasedMainSha, drift, [], 'SUBJ');
     expect(r.priorQualifiedDevSha).toBe('5c4e4a53fe6ceaceac05f233409c3dd20f17f4f3');
     expect(r.releasedMainSha).toBe('414002f92d48083e7133236346b26e3a2a047e33');
@@ -113,7 +134,7 @@ describe('AC-831-02 · exact prior qualified UR-DEV SHA and exact released gwc/m
 
 describe('AC-831-05 · all required affected qualification suites pass against the released-main subject', () => {
   it('requires DEV-NATIVE-QUALIFICATION when drift is blocking', () => {
-    const drift = classifyDrift(['reducer']);
+    const drift = classifyDrift({ ...driftEvidence([]), lifecycleProfileChanged: true });
     const r = performRebind('dev', 'main', drift, [], 'SUBJ');
     expect(r.requiredQualificationSuites).toContain('DEV-NATIVE-QUALIFICATION');
   });
@@ -121,7 +142,7 @@ describe('AC-831-05 · all required affected qualification suites pass against t
 
 describe('AC-831-06 · no silent collapse of historical development-source provenance', () => {
   it('preserves provenance on rebind', () => {
-    const drift = classifyDrift(['adapter']);
+    const drift = classifyDrift(driftEvidence(['ADAPTER']));
     const r = performRebind('dev', 'main', drift, [], 'SUBJ');
     expect(r.provenancePreserved).toBe(true);
   });
@@ -132,7 +153,7 @@ describe('AC-831-07 · prior qualification whose subject materially drifted is n
     const prior: QualificationRecord[] = [
       { subject: 'OLD-SUBJ', qualified: true, evidenceRef: 'ev-1' },
     ];
-    const drift = classifyDrift(['reducer']);
+    const drift = classifyDrift(driftEvidence(['REDUCER']));
     const r = performRebind('dev', 'main', drift, prior, 'NEW-SUBJ');
     expect(r.invalidatedPriorQualifications).toContain('OLD-SUBJ');
   });
@@ -141,7 +162,7 @@ describe('AC-831-07 · prior qualification whose subject materially drifted is n
     const prior: QualificationRecord[] = [
       { subject: 'SUBJ', qualified: true, evidenceRef: 'ev-1' },
     ];
-    const drift = classifyDrift(['adapter']);
+    const drift = classifyDrift(driftEvidence(['ADAPTER']));
     const r = performRebind('dev', 'main', drift, prior, 'SUBJ');
     expect(r.invalidatedPriorQualifications).toEqual([]);
   });
@@ -150,12 +171,17 @@ describe('AC-831-07 · prior qualification whose subject materially drifted is n
 describe('AC-831-08 · warning guard enforced — DWO main merge gated on Universal release merge', () => {
   it('does NOT allow DWO main merge before the Universal release merge', () => {
     const d = detectReleaseMerge(initialReleaseTracking(), receipt);
-    expect(warningGuardAllowsDwoMainMerge(false, d)).toBe(false);
+    expect(warningGuardAllowsDwoMainMerge(false, d, true)).toBe(false);
   });
 
-  it('allows DWO main merge only after the Universal release merge', () => {
+  it('allows DWO main merge only after the Universal release merge AND certification', () => {
     const d = detectReleaseMerge(initialReleaseTracking(), receipt);
-    expect(warningGuardAllowsDwoMainMerge(true, d)).toBe(true);
+    expect(warningGuardAllowsDwoMainMerge(true, d, true)).toBe(true);
+  });
+
+  it('does NOT allow DWO main merge when the rebind is not certified', () => {
+    const d = detectReleaseMerge(initialReleaseTracking(), receipt);
+    expect(warningGuardAllowsDwoMainMerge(true, d, false)).toBe(false);
   });
 });
 
@@ -168,14 +194,17 @@ describe('AC-831-01 · RELEASE_MAIN_BOUND derivation', () => {
   });
 
   it('derives from the rebind module evidence', () => {
-    const d = detectReleaseMerge(initialReleaseTracking(), receipt);
-    const drift = classifyDrift(['reducer']);
-    const rebind = performRebind('dev', 'main', drift, [], 'SUBJ');
-    const evidence = buildRebindEvidence(d, drift, rebind, true);
-    const decision = deriveReleaseMainBound(evidence);
-    expect(decision.derivable).toBe(true);
-    expect(decision.token).toBe('RELEASE_MAIN_BOUND');
-  });
+      const d = detectReleaseMerge(initialReleaseTracking(), receipt);
+      const drift = classifyDrift(driftEvidence(['REDUCER']));
+      const prior: QualificationRecord[] = [
+        { subject: 'OLD-SUBJ', qualified: true, evidenceRef: 'ev-1' },
+      ];
+      const rebind = performRebind('dev', 'main', drift, prior, 'NEW-SUBJ');
+      const evidence = buildRebindEvidence(d, drift, rebind, true);
+      const decision = deriveReleaseMainBound(evidence);
+      expect(decision.derivable).toBe(true);
+      expect(decision.token).toBe('RELEASE_MAIN_BOUND');
+    });
 
   it('fails closed when the release merge is not detected', () => {
     expect(deriveReleaseMainBound(certInput({ releaseMergeDetected: false })).derivable).toBe(false);
@@ -188,11 +217,19 @@ describe('AC-831-01 · RELEASE_MAIN_BOUND derivation', () => {
   it('fails closed when the warning guard is not enforced', () => {
     expect(deriveReleaseMainBound(certInput({ warningGuardEnforced: false })).derivable).toBe(false);
   });
+
+  it('fails closed when affected surfaces are not recorded (no tautology)', () => {
+    expect(deriveReleaseMainBound(certInput({ affectedSurfacesRecorded: false })).derivable).toBe(false);
+  });
+
+  it('fails closed when prior qualification was not invalidated on drift (no tautology)', () => {
+    expect(deriveReleaseMainBound(certInput({ priorQualificationInvalidatedOnDrift: false })).derivable).toBe(false);
+  });
 });
 
 describe('capabilities — rebind modules are read-only', () => {
   it('exposes no effect capability anywhere', () => {
-    for (const caps of [RELEASE_MERGE_CAPABILITIES, DRIFT_CLASSIFICATION_CAPABILITIES, REBIND_CAPABILITIES, REBIND_CERTIFICATION_CAPABILITIES]) {
+    for (const caps of [RELEASE_MERGE_CAPABILITIES, REBIND_CAPABILITIES, REBIND_CERTIFICATION_CAPABILITIES]) {
       expect(caps).toEqual({
         read: true,
         write: false,
@@ -203,5 +240,17 @@ describe('capabilities — rebind modules are read-only', () => {
       });
       expect(Object.isFrozen(caps)).toBe(true);
     }
+  });
+
+  it('canonical drift module exposes observe/classify only (no effect capability)', () => {
+    expect(DRIFT_CAPABILITIES).toEqual({
+      observe: true,
+      classify: true,
+      resolveRef: false,
+      rebind: false,
+      writeBinding: false,
+      consumeAuthority: false,
+    });
+    expect(Object.isFrozen(DRIFT_CAPABILITIES)).toBe(true);
   });
 });
