@@ -65,6 +65,7 @@ export function buildRebindEvidence(
   drift: DriftDecision,
   rebind: RebindResult,
   requalificationPassed: boolean,
+  universalReleaseMerged: boolean,
 ): RebindCertificationInput {
   return {
     releaseMergeDetected: detector.state === 'MAIN_REBIND_PENDING' && detector.receipt !== null,
@@ -74,7 +75,7 @@ export function buildRebindEvidence(
     requalificationPassed,
     provenancePreserved: rebind.provenancePreserved === true,
     priorQualificationInvalidatedOnDrift: rebind.invalidatedPriorQualifications.length > 0,
-    warningGuardEnforced: true,
+    warningGuardEnforced: detector.state === 'MAIN_REBIND_PENDING' && universalReleaseMerged === true,
   };
 }
 

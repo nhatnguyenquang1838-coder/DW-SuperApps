@@ -200,15 +200,27 @@ describe('AC-831-01 · RELEASE_MAIN_BOUND derivation', () => {
         { subject: 'OLD-SUBJ', qualified: true, evidenceRef: 'ev-1' },
       ];
       const rebind = performRebind('dev', 'main', drift, prior, 'NEW-SUBJ');
-      const evidence = buildRebindEvidence(d, drift, rebind, true);
-      const decision = deriveReleaseMainBound(evidence);
-      expect(decision.derivable).toBe(true);
-      expect(decision.token).toBe('RELEASE_MAIN_BOUND');
+            const evidence = buildRebindEvidence(d, drift, rebind, true, true);
+            const decision = deriveReleaseMainBound(evidence);
+            expect(decision.derivable).toBe(true);
+            expect(decision.token).toBe('RELEASE_MAIN_BOUND');
     });
 
   it('fails closed when the release merge is not detected', () => {
-    expect(deriveReleaseMainBound(certInput({ releaseMergeDetected: false })).derivable).toBe(false);
-  });
+      expect(deriveReleaseMainBound(certInput({ releaseMergeDetected: false })).derivable).toBe(false);
+    });
+
+    it('a BLOCKING_CONTRACT_DRIFT intentionally cannot derive RELEASE_MAIN_BOUND (replan, not rebind)', () => {
+      const d = detectReleaseMerge(initialReleaseTracking(), receipt);
+      const drift = classifyDrift({ ...driftEvidence([]), lifecycleProfileChanged: true });
+      expect(drift.classification).toBe('BLOCKING_CONTRACT_DRIFT');
+      expect(drift.surfacesToRevalidate).toEqual([]);
+      const rebind = performRebind('dev', 'main', drift, [], 'SUBJ');
+      const evidence = buildRebindEvidence(d, drift, rebind, true, true);
+      const decision = deriveReleaseMainBound(evidence);
+      expect(decision.derivable).toBe(false);
+      expect(decision.reasons).toContain('affected surfaces not recorded');
+    });
 
   it('fails closed when requalification did not pass', () => {
     expect(deriveReleaseMainBound(certInput({ requalificationPassed: false })).derivable).toBe(false);
