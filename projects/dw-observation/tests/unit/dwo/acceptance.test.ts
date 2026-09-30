@@ -98,13 +98,19 @@ describe('AC-832-01 · DWO_V2_ACCEPTED derivation', () => {
 
 describe('AC-832-04 · accepted G6 handoff identifies exact output and evidence', () => {
   it('produces a handoff dossier identifying exact output and evidence', () => {
-    const dossier = produceHandoffDossier('SCRUM-832', 'dwo-v2-accepted', ['ev-1', 'ev-2'], true);
-    expect(dossier.taskId).toBe('SCRUM-832');
-    expect(dossier.exitToken).toBe('DWO_V2_ACCEPTED');
-    expect(dossier.exactOutput).toBe('dwo-v2-accepted');
-    expect(dossier.evidenceRefs).toEqual(['ev-1', 'ev-2']);
-    expect(dossier.accepted).toBe(true);
-  });
+      const dossier = produceHandoffDossier('SCRUM-832', 'dwo-v2-accepted', ['ev-1', 'ev-2'], true);
+      expect(dossier.taskId).toBe('SCRUM-832');
+      expect(dossier.exitToken).toBe('DWO_V2_ACCEPTED');
+      expect(dossier.exactOutput).toBe('dwo-v2-accepted');
+      expect(dossier.evidenceRefs).toEqual(['ev-1', 'ev-2']);
+      expect(dossier.accepted).toBe(true);
+    });
+
+    it('does NOT stamp the exit token when the handoff is not accepted (fail-closed)', () => {
+      const dossier = produceHandoffDossier('SCRUM-832', 'dwo-v2-not-accepted', ['ev-1'], false);
+      expect(dossier.exitToken).toBe(null);
+      expect(dossier.accepted).toBe(false);
+    });
 });
 
 describe('capabilities — acceptance modules are read-only', () => {

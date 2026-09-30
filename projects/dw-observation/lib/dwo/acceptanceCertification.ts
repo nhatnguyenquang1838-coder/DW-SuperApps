@@ -72,7 +72,7 @@ export function buildAcceptanceEvidence(
 /** The G6 handoff dossier. */
 export interface HandoffDossier {
   readonly taskId: string;
-  readonly exitToken: string;
+  readonly exitToken: string | null;
   readonly exactOutput: string;
   readonly evidenceRefs: readonly string[];
   readonly accepted: boolean;
@@ -89,7 +89,7 @@ export function produceHandoffDossier(
   evidenceRefs: readonly string[],
   accepted: boolean,
 ): HandoffDossier {
-  return { taskId, exitToken: 'DWO_V2_ACCEPTED', exactOutput, evidenceRefs, accepted };
+  return { taskId, exitToken: accepted ? 'DWO_V2_ACCEPTED' : null, exactOutput, evidenceRefs, accepted };
 }
 
 /** Acceptance certification is read-only; it grants no effect capability. */
