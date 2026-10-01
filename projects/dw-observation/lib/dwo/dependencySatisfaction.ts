@@ -31,9 +31,34 @@ export interface DependencySpec {
   readonly required: boolean;
   readonly reducerState: ReducerState | 'UNKNOWN';
   readonly durablePosition: number | 'UNKNOWN';
+  readonly durableWatermark: boolean;
   readonly topologyRevision: string | 'UNKNOWN';
   readonly topologyDigest: string | 'UNKNOWN';
   readonly eligibility: Eligibility;
+}
+
+/**
+ * Bounded external evidence supplied by the caller.
+ *
+ * These are NOT optional refinements: without them the corresponding
+ * invariants cannot be proven, so the evaluation stays fail-closed
+ * (UNKNOWN_UNRESOLVED) rather than assuming a default that would let a
+ * fabricated PASS through.
+ */
+export interface DependencyEvaluationOptions {
+  /**
+   * The authoritative set of run refs that exist in the current topology.
+   * A dependency whose targetRunRef is absent from this set is a missing
+   * endpoint. When the set is omitted the membership check is unprovable
+   * and endpoint validation degrades to non-empty-ref only.
+   */
+  readonly topologyNodeSet?: readonly string[];
+  /**
+   * The reducer's durable high-water mark. Together with the observed
+   * dependency positions this is the ONLY evidence that may establish a
+   * durable gap; non-adjacent positions alone are not a gap.
+   */
+  readonly reducerWatermark?: number | 'UNKNOWN';
 }
 
 /** Provenance record for one dependency — binds the evidence identity. */
@@ -63,6 +88,7 @@ export type UnresolvedReason =
   | 'STALE_TOPOLOGY_DIGEST'
   | 'DURABLE_GAP'
   | 'OUT_OF_ORDER'
+  | 'MISSING_DURABLE_POSITION'
   | 'MISSING_ELIGIBILITY'
   | 'MISSING_REDUCER_STATE'
   | 'MISSING_TOPOLOGY_REVISION'
@@ -94,12 +120,14 @@ export function evaluateDependencySatisfactionV2(
   deps: readonly DependencySpec[],
   currentTopologyRevision: string | 'UNKNOWN',
   currentTopologyDigest: string | 'UNKNOWN',
+  options: DependencyEvaluationOptions = {},
 ): DependencySatisfactionResult {
   const provenance: DependencyProvenance[] = [];
 
-  // Empty dependency array with required deps cannot be SATISFIED
+  // An empty dependency set cannot be SATISFIED: absence of declared
+  // dependencies is unresolved, never proof that nothing is required.
   const requiredDeps = deps.filter((d) => d.required);
-  if (requiredDeps.length > 0 && deps.length === 0) {
+  if (deps.length === 0) {
     return { status: 'UNKNOWN_UNRESOLVED', blocks: false, reason: 'MISSING_REDUCER_STATE', provenance: [] };
   }
 
@@ -140,10 +168,16 @@ export function evaluateDependencySatisfactionV2(
     });
   }
 
-  // Missing endpoint: dep references a run not in the topology node set
-  // (requires topology node-set membership check — empty ref = missing)
+  // Missing endpoint: the dependency must name a run that exists in the
+  // authoritative topology node set. A non-empty ref that is not a
+  // registered node is still a missing endpoint — that is the case the
+  // non-empty check alone cannot catch.
+  const nodeSet = options.topologyNodeSet;
   for (const dep of deps) {
     if (!dep.targetRunRef) {
+      return { status: 'UNKNOWN_UNRESOLVED', blocks: false, reason: 'MISSING_ENDPOINT', provenance };
+    }
+    if (nodeSet && !nodeSet.includes(dep.targetRunRef)) {
       return { status: 'UNKNOWN_UNRESOLVED', blocks: false, reason: 'MISSING_ENDPOINT', provenance };
     }
   }
@@ -172,14 +206,17 @@ export function evaluateDependencySatisfactionV2(
     }
   }
 
-  // Check each required dep for UNKNOWN facts — anomaly-specific reasons
+  // Check each required dep for UNKNOWN facts — anomaly-specific reasons.
+  // Each condition reports its OWN reason code: a missing durable position
+  // is not a missing reducer state, and collapsing them hides which
+  // invariant actually failed.
   for (const dep of deps) {
     if (!dep.required) continue;
     if (dep.reducerState === 'UNKNOWN') {
       return { status: 'UNKNOWN_UNRESOLVED', blocks: false, reason: 'MISSING_REDUCER_STATE', provenance };
     }
     if (dep.durablePosition === 'UNKNOWN') {
-      return { status: 'UNKNOWN_UNRESOLVED', blocks: false, reason: 'MISSING_REDUCER_STATE', provenance };
+      return { status: 'UNKNOWN_UNRESOLVED', blocks: false, reason: 'MISSING_DURABLE_POSITION', provenance };
     }
     if (dep.topologyRevision === 'UNKNOWN') {
       return { status: 'UNKNOWN_UNRESOLVED', blocks: false, reason: 'MISSING_TOPOLOGY_REVISION', provenance };
@@ -192,19 +229,37 @@ export function evaluateDependencySatisfactionV2(
     }
   }
 
-  // Out-of-order check: dependency entries must be in non-decreasing durable position order
+  // Ordering and durable-gap checks operate on the SET of durable positions,
+  // not on the order the caller happened to supply the array in. Sorting a
+  // copy first makes the result invariant under input permutation; using
+  // the raw array order would report OUT_OF_ORDER for a merely reordered
+  // but semantically identical input.
   const knownPositions = deps
     .filter((d) => d.durablePosition !== 'UNKNOWN')
-    .map((d) => ({ depId: d.depId, position: d.durablePosition as number }));
+    .map((d) => ({ depId: d.depId, position: d.durablePosition as number }))
+    .sort((a, b) => a.position - b.position);
+
+  // Duplicate durable positions across distinct dependencies are an
+  // unprovable ordering fact, not a gap.
   for (let i = 1; i < knownPositions.length; i++) {
-    if (knownPositions[i].position < knownPositions[i - 1].position) {
+    if (knownPositions[i].position === knownPositions[i - 1].position
+      && knownPositions[i].depId !== knownPositions[i - 1].depId) {
       return { status: 'UNKNOWN_UNRESOLVED', blocks: false, reason: 'OUT_OF_ORDER', provenance };
     }
   }
 
-  // Durable gap: only flag if explicit gap evidence is provided (positions + declared watermark)
-  // Without a declared durable watermark, positions 1,5 are not a gap — adjacency is not required.
-  // This check is conservative: no gap is inferred without explicit watermark evidence.
+  // Durable gap: requires EXPLICIT watermark evidence. Non-adjacent
+  // positions alone are not a gap — a gap means the reducer's declared
+  // high-water mark is beyond the observed durable positions, i.e. events
+  // that should exist were never durably observed. Without a known
+  // watermark no gap may be inferred.
+  const watermark = options.reducerWatermark;
+  if (watermark !== undefined && watermark !== 'UNKNOWN' && knownPositions.length > 0) {
+    const maxObserved = knownPositions[knownPositions.length - 1].position;
+    if (watermark > maxObserved) {
+      return { status: 'UNKNOWN_UNRESOLVED', blocks: false, reason: 'DURABLE_GAP', provenance };
+    }
+  }
 
   // All required deps known — determine SATISFIED vs UNSATISFIED
   if (requiredDeps.length === 0) {

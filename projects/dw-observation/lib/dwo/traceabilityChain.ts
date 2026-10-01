@@ -22,6 +22,23 @@ export interface RequiredEvidenceRegistry {
   readonly requiredEvidenceIds: readonly string[];
 }
 
+/**
+ * Expected digest for one required evidence id.
+ *
+ * The registry is the authority on WHAT the digest must be; a materialized
+ * EvidenceDescriptor only proves what the digest IS. Comparing the two is
+ * the only way to detect substituted evidence content.
+ */
+export interface RequiredEvidenceEntry {
+  readonly id: string;
+  readonly expectedDigest: string;
+}
+
+/** A registry that also pins expected digests. */
+export interface DigestPinnedEvidenceRegistry extends RequiredEvidenceRegistry {
+  readonly entries: readonly RequiredEvidenceEntry[];
+}
+
 /** The complete traceability chain for a DWO v2 projection/replay. */
 export interface TraceabilityChainV2 {
   readonly runId: string;
@@ -58,6 +75,29 @@ export interface TraceabilityDecision {
   readonly status: 'PASS' | 'UNKNOWN_UNRESOLVED';
   readonly reason: TraceabilityUnresolvedReason | null;
   readonly missingRefs: readonly string[];
+}
+
+/**
+ * Map a set of missing-ref markers onto the single most specific reason.
+ *
+ * Collapsing every violation onto MISSING_REQUIRED_EVIDENCE hides WHICH
+ * invariant failed. The precedence below is deliberate: identity and
+ * watermark/source/topology gaps describe the chain itself, while evidence
+ * problems describe a subset. An opaque aggregate reason would make the
+ * decision unactionable for a reader of the audit record.
+ */
+function classifyMissingRefs(missing: readonly string[]): TraceabilityUnresolvedReason {
+  const has = (p: string) => missing.some((m) => m.startsWith(p));
+
+  if (has('evidence-digest-mismatch')) return 'EVIDENCE_DIGEST_MISMATCH';
+  if (has('required-evidence:')) return 'OMITTED_REQUIRED_EVIDENCE';
+  if (has('evidence:') || has('evidence-digest:')) return 'MISSING_REQUIRED_EVIDENCE';
+  if (has('sourceRef') || has('sourceDigest')) return 'MISSING_SOURCE_REF';
+  if (has('topologyRevision')) return 'MISSING_TOPOLOGY_REVISION';
+  if (has('topologyDigest')) return 'MISSING_TOPOLOGY_DIGEST';
+  if (has('reducerWatermark')) return 'MISSING_REDUCER_WATERMARK';
+  if (has('inputWatermark')) return 'MISSING_INPUT_WATERMARK';
+  return 'UNKNOWN_UNRESOLVED';
 }
 
 /**
@@ -113,14 +153,22 @@ export function assertTraceabilityComplete(
     }
   }
 
-  // Evidence digest mismatch for required entries
+  // Evidence digest mismatch for required entries.
+  // The registry is authoritative: it carries the EXPECTED digest for each
+  // required evidence id, so a materialized entry whose digest differs is
+  // a genuine mismatch. Checking only "digest is empty" cannot detect
+  // substitution and would let wrong content pass.
+  const pinned = (chain.requiredEvidenceRegistry as Partial<DigestPinnedEvidenceRegistry>).entries;
+  const expectedDigests = new Map<string, string>(
+    (pinned ?? []).map((e) => [e.id, e.expectedDigest]),
+  );
   for (const ev of chain.evidence) {
     if (!ev.required) continue;
     if (!ev.ref || !ev.digest) continue;
-    const registryEntry = chain.requiredEvidenceRegistry.requiredEvidenceIds.find(
-      (id) => id === ev.ref,
-    );
-    if (registryEntry && ev.digest === '') {
+    // Only a digest-pinned registry can authoritatively reject a value:
+    // an id-only registry says nothing about what the digest must be.
+    const expected = expectedDigests.get(ev.ref);
+    if (expected !== undefined && expected !== ev.digest) {
       missing.push(`evidence-digest-mismatch:${ev.ref}`);
     }
   }
@@ -128,7 +176,7 @@ export function assertTraceabilityComplete(
   if (missing.length > 0) {
     return {
       status: 'UNKNOWN_UNRESOLVED',
-      reason: 'MISSING_REQUIRED_EVIDENCE',
+      reason: classifyMissingRefs(missing),
       missingRefs: missing,
     };
   }

@@ -77,7 +77,7 @@ describe('R2-B · missing required field → UNKNOWN_UNRESOLVED', () => {
   it('missing sourceRef → UNKNOWN_UNRESOLVED', () => {
     const result = assertTraceabilityComplete(chain({ sourceRef: '' }));
     expect(result.status).toBe('UNKNOWN_UNRESOLVED');
-    expect(result.reason).toBe('MISSING_REQUIRED_EVIDENCE');
+    expect(result.reason).toBe('MISSING_SOURCE_REF');
     expect(result.missingRefs).toContain('sourceRef');
   });
 
@@ -127,7 +127,7 @@ describe('R2-B · omitted required evidence (registry) → UNKNOWN_UNRESOLVED', 
       requiredEvidenceRegistry: registry({ requiredEvidenceIds: ['e1', 'e2'] }),
     }));
     expect(result.status).toBe('UNKNOWN_UNRESOLVED');
-    expect(result.reason).toBe('MISSING_REQUIRED_EVIDENCE');
+    expect(result.reason).toBe('OMITTED_REQUIRED_EVIDENCE');
     expect(result.missingRefs).toContain('required-evidence:e2');
   });
 

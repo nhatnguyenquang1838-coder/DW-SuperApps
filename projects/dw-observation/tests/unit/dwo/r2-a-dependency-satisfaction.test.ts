@@ -89,10 +89,23 @@ describe('R2-A · unresolved paths never derive BLOCKS', () => {
     expect(result.blocks).toBe(false);
   });
 
-  it('out-of-order position → UNKNOWN_UNRESOLVED', () => {
+  it('reordered input is not out-of-order (evaluation is permutation-invariant)', () => {
+    // Positions 3 then 1 are the same SET as 1 then 3. Ordering must be
+    // judged on the durable-position set, not the caller's array order —
+    // otherwise a mere reshuffle fabricates an anomaly.
     const result = evaluateDependencySatisfactionV2('R1', [
       dep({ depId: 'D1', durablePosition: 3 }),
       dep({ depId: 'D2', durablePosition: 1 }),
+    ], 'rev-1', 'abc123');
+    expect(result.status).toBe('SATISFIED');
+    expect(result.blocks).toBe(false);
+    expect(result.reason).not.toBe('OUT_OF_ORDER');
+  });
+
+  it('duplicate durable position across distinct deps → OUT_OF_ORDER', () => {
+    const result = evaluateDependencySatisfactionV2('R1', [
+      dep({ depId: 'D1', durablePosition: 3 }),
+      dep({ depId: 'D2', durablePosition: 3 }),
     ], 'rev-1', 'abc123');
     expect(result.status).toBe('UNKNOWN_UNRESOLVED');
     expect(result.blocks).toBe(false);
