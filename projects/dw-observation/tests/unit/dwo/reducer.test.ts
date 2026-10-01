@@ -42,6 +42,8 @@ function certInput(overrides: Partial<ReducerCertificationInput> = {}): ReducerC
     parentCompositionIndependent: true,
     recursiveAndBlockingCorrect: true,
     fixtureConformance: true,
+    // C3: a proven traceability decision is required for the exit token.
+    traceabilityDecision: { status: 'PASS', reason: null, missingRefs: [] },
     ...overrides,
   };
 }

@@ -16,8 +16,12 @@ import {
   type RequiredEvidenceRegistry,
 } from '@/lib/dwo/traceabilityChain';
 
-function registry(overrides: Partial<{ requiredEvidenceIds: readonly string[] }> = {}) {
-  return { requiredEvidenceIds: overrides.requiredEvidenceIds ?? [] };
+function registry(overrides: Partial<{ requiredEvidenceIds: readonly string[]; noEvidenceRequired: boolean; entries: readonly { id: string; expectedDigest: string }[] }> = {}) {
+  return {
+    requiredEvidenceIds: overrides.requiredEvidenceIds ?? ['e1'],
+    noEvidenceRequired: overrides.noEvidenceRequired ?? false,
+    ...(overrides.entries ? { entries: overrides.entries } : {}),
+  };
 }
 
 function chain(overrides: Partial<{
@@ -38,7 +42,10 @@ function chain(overrides: Partial<{
     overrides.reducerWatermark ?? 'rw-1',
     overrides.inputWatermark ?? 'iw-1',
     overrides.evidence ?? [{ ref: 'e1', digest: 'ed1', required: true }],
-    overrides.requiredEvidenceRegistry ?? registry(),
+    overrides.requiredEvidenceRegistry ?? registry({
+      requiredEvidenceIds: ['e1'],
+      entries: [{ id: 'e1', expectedDigest: 'ed1' }],
+    }),
   );
 }
 
@@ -53,10 +60,17 @@ describe('R2-B · fully valid → PASS', () => {
   it('multiple evidence descriptors all required and present', () => {
     const result = assertTraceabilityComplete(chain({
       evidence: [
-        { ref: 'e1', digest: 'd1', required: true },
-        { ref: 'e2', digest: 'd2', required: true },
-        { ref: 'e3', digest: 'd3', required: false },
+        { ref: 'e1', digest: 'ed1', required: true },
+        { ref: 'e2', digest: 'ed2', required: true },
+        { ref: 'e3', digest: 'ed3', required: false },
       ],
+      requiredEvidenceRegistry: registry({
+        requiredEvidenceIds: ['e1', 'e2'],
+        entries: [
+          { id: 'e1', expectedDigest: 'ed1' },
+          { id: 'e2', expectedDigest: 'ed2' },
+        ],
+      }),
     }));
     expect(result.status).toBe('PASS');
   });
@@ -114,17 +128,33 @@ describe('R2-B · missing required field → UNKNOWN_UNRESOLVED', () => {
   it('missing required evidence descriptor → UNKNOWN_UNRESOLVED', () => {
     const result = assertTraceabilityComplete(chain({
       evidence: [{ ref: '', digest: '', required: true }],
+      requiredEvidenceRegistry: registry({
+        requiredEvidenceIds: ['e1'],
+        entries: [{ id: 'e1', expectedDigest: 'ed1' }],
+      }),
     }));
     expect(result.status).toBe('UNKNOWN_UNRESOLVED');
-    expect(result.reason).toBe('MISSING_REQUIRED_EVIDENCE');
+    // The descriptor has an empty ref, so the required registry ID 'e1' is
+    // also unsatisfied. OMITTED_REQUIRED_EVIDENCE outranks the empty-descriptor
+    // marker in classifyMissingRefs — both violations are reported in
+    // missingRefs; the reason names the more specific one.
+    expect(result.reason).toBe('OMITTED_REQUIRED_EVIDENCE');
+    expect(result.missingRefs).toContain('required-evidence:e1');
+    expect(result.missingRefs.some((r) => r.startsWith('evidence:'))).toBe(true);
   });
 });
 
 describe('R2-B · omitted required evidence (registry) → UNKNOWN_UNRESOLVED', () => {
   it('required evidence ID missing from evidence array → UNKNOWN_UNRESOLVED', () => {
     const result = assertTraceabilityComplete(chain({
-      evidence: [{ ref: 'e1', digest: 'd1', required: true }],
-      requiredEvidenceRegistry: registry({ requiredEvidenceIds: ['e1', 'e2'] }),
+      evidence: [{ ref: 'e1', digest: 'ed1', required: true }],
+      requiredEvidenceRegistry: registry({
+        requiredEvidenceIds: ['e1', 'e2'],
+        entries: [
+          { id: 'e1', expectedDigest: 'ed1' },
+          { id: 'e2', expectedDigest: 'ed2' },
+        ],
+      }),
     }));
     expect(result.status).toBe('UNKNOWN_UNRESOLVED');
     expect(result.reason).toBe('OMITTED_REQUIRED_EVIDENCE');
@@ -134,7 +164,10 @@ describe('R2-B · omitted required evidence (registry) → UNKNOWN_UNRESOLVED', 
   it('empty evidence with non-empty registry → UNKNOWN_UNRESOLVED', () => {
     const result = assertTraceabilityComplete(chain({
       evidence: [],
-      requiredEvidenceRegistry: registry({ requiredEvidenceIds: ['e1'] }),
+      requiredEvidenceRegistry: registry({
+        requiredEvidenceIds: ['e1'],
+        entries: [{ id: 'e1', expectedDigest: 'ed1' }],
+      }),
     }));
     expect(result.status).toBe('UNKNOWN_UNRESOLVED');
     expect(result.missingRefs).toContain('required-evidence:e1');

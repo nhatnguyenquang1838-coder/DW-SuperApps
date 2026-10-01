@@ -177,7 +177,11 @@ export function evaluateDependencySatisfactionV2(
     if (!dep.targetRunRef) {
       return { status: 'UNKNOWN_UNRESOLVED', blocks: false, reason: 'MISSING_ENDPOINT', provenance };
     }
-    if (nodeSet && !nodeSet.includes(dep.targetRunRef)) {
+    // C1: if topologyNodeSet is omitted/empty, membership cannot be proven → fail closed
+    if (!nodeSet || nodeSet.length === 0) {
+      return { status: 'UNKNOWN_UNRESOLVED', blocks: false, reason: 'MISSING_ENDPOINT', provenance };
+    }
+    if (!nodeSet.includes(dep.targetRunRef)) {
       return { status: 'UNKNOWN_UNRESOLVED', blocks: false, reason: 'MISSING_ENDPOINT', provenance };
     }
   }

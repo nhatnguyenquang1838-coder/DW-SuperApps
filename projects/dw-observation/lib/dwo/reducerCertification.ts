@@ -14,6 +14,7 @@
 import { reduceEventPrefix, type ReducerEvent, type ReducedRunState } from './reducer';
 import { isParentComplete, type RunNode, type RunTree } from './recursiveTopology';
 import { evaluateBlockingPath } from './blockingPath';
+import { assertTraceabilityReadiness, type TraceabilityChainV2, type TraceabilityDecision } from './traceabilityChain';
 
 export interface ReducerCertificationInput {
   /** Determinism: same prefix reduced twice yields identical state. */
@@ -26,6 +27,8 @@ export interface ReducerCertificationInput {
   readonly recursiveAndBlockingCorrect: boolean;
   /** Reducer conforms to the fixture stream. */
   readonly fixtureConformance: boolean;
+  /** C3: traceability readiness must be PASS before certification issues a token. */
+  readonly traceabilityDecision: TraceabilityDecision;
 }
 
 export interface ReducerCertificationDecision {
@@ -46,10 +49,31 @@ export function deriveV2ReducerCertified(
   if (!input.parentCompositionIndependent) reasons.push('parent completion inferred from child-local success');
   if (!input.recursiveAndBlockingCorrect) reasons.push('recursive reduction or blocking path incorrect');
   if (!input.fixtureConformance) reasons.push('reducer does not conform to fixture stream');
+  // C3: certification cannot issue PASS/token when traceability is unresolved
+  if (input.traceabilityDecision.status !== 'PASS') {
+    reasons.push(`traceability unresolved: ${input.traceabilityDecision.reason ?? 'unknown'}`);
+  }
   if (reasons.length === 0) {
     return { derivable: true, token: 'V2_REDUCER_CERTIFIED', reasons: [] };
   }
   return { derivable: false, token: null, reasons };
+}
+
+/**
+ * C3 integration surface: derive certification from a real traceability
+ * chain. This is the path that makes traceability a gate on the exit token
+ * rather than an optional helper a caller may forget to invoke.
+ *
+ * It does not duplicate the derivation — it resolves the traceability
+ * decision via assertTraceabilityReadiness and delegates to the single
+ * deriveV2ReducerCertified decision function.
+ */
+export function deriveV2ReducerCertifiedFromChain(
+  input: Omit<ReducerCertificationInput, 'traceabilityDecision'>,
+  chain: TraceabilityChainV2,
+): ReducerCertificationDecision {
+  const traceabilityDecision = assertTraceabilityReadiness(chain);
+  return deriveV2ReducerCertified({ ...input, traceabilityDecision });
 }
 
 /**

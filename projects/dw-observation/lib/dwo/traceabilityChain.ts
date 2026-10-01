@@ -20,6 +20,10 @@ export interface EvidenceDescriptor {
 /** Registry of required evidence IDs — ensures omitted required artifacts are detected. */
 export interface RequiredEvidenceRegistry {
   readonly requiredEvidenceIds: readonly string[];
+  /** C2: explicit source-backed proof that no evidence is required. Without this,
+   *  an empty evidence set must NOT pass — the absence of required evidence
+   *  is unresolved, not proof that nothing was needed. */
+  readonly noEvidenceRequired?: boolean;
 }
 
 /**
@@ -92,7 +96,8 @@ function classifyMissingRefs(missing: readonly string[]): TraceabilityUnresolved
   if (has('evidence-digest-mismatch')) return 'EVIDENCE_DIGEST_MISMATCH';
   if (has('required-evidence:')) return 'OMITTED_REQUIRED_EVIDENCE';
   if (has('evidence:') || has('evidence-digest:')) return 'MISSING_REQUIRED_EVIDENCE';
-  if (has('sourceRef') || has('sourceDigest')) return 'MISSING_SOURCE_REF';
+  if (has('sourceDigest')) return 'MISSING_SOURCE_DIGEST';
+  if (has('sourceRef')) return 'MISSING_SOURCE_REF';
   if (has('topologyRevision')) return 'MISSING_TOPOLOGY_REVISION';
   if (has('topologyDigest')) return 'MISSING_TOPOLOGY_DIGEST';
   if (has('reducerWatermark')) return 'MISSING_REDUCER_WATERMARK';
@@ -153,24 +158,37 @@ export function assertTraceabilityComplete(
     }
   }
 
-  // Evidence digest mismatch for required entries.
-  // The registry is authoritative: it carries the EXPECTED digest for each
-  // required evidence id, so a materialized entry whose digest differs is
-  // a genuine mismatch. Checking only "digest is empty" cannot detect
-  // substitution and would let wrong content pass.
+  // C5: digest authority fail-closed
   const pinned = (chain.requiredEvidenceRegistry as Partial<DigestPinnedEvidenceRegistry>).entries;
-  const expectedDigests = new Map<string, string>(
-    (pinned ?? []).map((e) => [e.id, e.expectedDigest]),
-  );
+  const hasDigestPinning = pinned !== undefined && pinned.length > 0;
   for (const ev of chain.evidence) {
     if (!ev.required) continue;
-    if (!ev.ref || !ev.digest) continue;
-    // Only a digest-pinned registry can authoritatively reject a value:
-    // an id-only registry says nothing about what the digest must be.
-    const expected = expectedDigests.get(ev.ref);
-    if (expected !== undefined && expected !== ev.digest) {
+    if (!ev.ref) continue;
+    if (!hasDigestPinning) {
+      missing.push(`evidence-no-authority:${ev.ref}`);
+      continue;
+    }
+    const entry = pinned.find((e) => e.id === ev.ref);
+    if (!entry) {
+      missing.push(`evidence-no-authority:${ev.ref}`);
+      continue;
+    }
+    if (!entry.expectedDigest) {
+      missing.push(`evidence-empty-expected:${ev.ref}`);
+      continue;
+    }
+    if (!ev.digest) {
+      missing.push(`evidence-digest-mismatch:${ev.ref}`);
+      continue;
+    }
+    if (entry.expectedDigest !== ev.digest) {
       missing.push(`evidence-digest-mismatch:${ev.ref}`);
     }
+  }
+
+  // C2: empty evidence without explicit NO_EVIDENCE_REQUIRED marker → fail closed
+  if (chain.requiredEvidenceRegistry.requiredEvidenceIds.length === 0 && !chain.requiredEvidenceRegistry.noEvidenceRequired) {
+    missing.push('evidence:no-evidence-marker');
   }
 
   if (missing.length > 0) {

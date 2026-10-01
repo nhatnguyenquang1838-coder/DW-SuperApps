@@ -27,6 +27,13 @@ import {
 const REV = 'rev-7';
 const DIGEST = 'sha256:topology-7';
 
+/**
+ * C1: endpoint membership is fail-closed. Any evaluation expected to get past
+ * the endpoint check must supply the authoritative topology node set; a
+ * non-empty ref alone is not proof the run exists.
+ */
+const NODES = ['RUN-A', 'RUN-B'] as const;
+
 function dep(overrides: Partial<DependencySpec> = {}): DependencySpec {
   return {
     depId: 'dep-a',
@@ -53,17 +60,19 @@ describe('R2-A defect closure', () => {
     // Watermark beyond the max observed position => a real durable gap.
     const withGap = evaluateDependencySatisfactionV2('RUN-X', deps, REV, DIGEST, {
       reducerWatermark: 9,
+      topologyNodeSet: NODES,
     });
     expect(withGap.status).toBe('UNKNOWN_UNRESOLVED');
     expect(withGap.reason).toBe('DURABLE_GAP');
 
     // No watermark => non-adjacent positions alone are NOT a gap.
-    const noWatermark = evaluateDependencySatisfactionV2('RUN-X', deps, REV, DIGEST, {});
+    const noWatermark = evaluateDependencySatisfactionV2('RUN-X', deps, REV, DIGEST, { topologyNodeSet: NODES });
     expect(noWatermark.status).toBe('SATISFIED');
 
     // Watermark at or below max observed => no gap.
     const noGap = evaluateDependencySatisfactionV2('RUN-X', deps, REV, DIGEST, {
       reducerWatermark: 1,
+      topologyNodeSet: NODES,
     });
     expect(noGap.status).toBe('SATISFIED');
   });
@@ -133,7 +142,7 @@ describe('R2-A defect closure', () => {
       [dep({ durablePosition: 'UNKNOWN' })],
       REV,
       DIGEST,
-      {},
+      { topologyNodeSet: NODES },
     );
     expect(result.status).toBe('UNKNOWN_UNRESOLVED');
     expect(result.reason).toBe('MISSING_DURABLE_POSITION');
@@ -145,7 +154,7 @@ describe('R2-A defect closure', () => {
       [dep({ reducerState: 'FAILED' })],
       REV,
       DIGEST,
-      {},
+      { topologyNodeSet: NODES },
     );
     expect(unsat.status).toBe('UNSATISFIED');
     expect(deriveBlocksFromSatisfaction(unsat)).toBe(true);
@@ -155,7 +164,7 @@ describe('R2-A defect closure', () => {
       [dep({ reducerState: 'UNKNOWN' })],
       REV,
       DIGEST,
-      {},
+      { topologyNodeSet: NODES },
     );
     expect(unknown.status).toBe('UNKNOWN_UNRESOLVED');
     expect(deriveBlocksFromSatisfaction(unknown)).toBe(false);
@@ -180,7 +189,7 @@ describe('R2-A defect closure', () => {
       [dep({ topologyDigest: 'sha256:stale' })],
       REV,
       DIGEST,
-      {},
+      { topologyNodeSet: NODES },
     );
     expect(result.status).toBe('UNKNOWN_UNRESOLVED');
     expect(result.reason).toBe('STALE_TOPOLOGY_DIGEST');
@@ -252,7 +261,7 @@ describe('R2-B defect closure', () => {
       '', base.sourceDigest, base.topologyRevision, base.topologyDigest,
       base.reducerWatermark, base.inputWatermark,
       [],
-      { requiredEvidenceIds: [] },
+      { requiredEvidenceIds: [], noEvidenceRequired: true },
     );
     const decision = assertTraceabilityComplete(chain);
     expect(decision.reason).toBe('MISSING_SOURCE_REF');
@@ -265,12 +274,12 @@ describe('R2-B defect closure', () => {
       base.sourceRef, base.sourceDigest, base.topologyRevision, base.topologyDigest,
       '', base.inputWatermark,
       [],
-      { requiredEvidenceIds: [] },
+      { requiredEvidenceIds: [], noEvidenceRequired: true },
     );
     expect(assertTraceabilityComplete(chain).reason).toBe('MISSING_REDUCER_WATERMARK');
   });
 
-  it('never fabricates PASS for an empty evidence set without a registry', () => {
+  it('C2: empty evidence without NO_EVIDENCE_REQUIRED marker → fail closed', () => {
     const chain = buildTraceabilityChainV2(
       base.runId, base.projectionId, base.durablePosition,
       base.sourceRef, base.sourceDigest, base.topologyRevision, base.topologyDigest,
@@ -278,22 +287,33 @@ describe('R2-B defect closure', () => {
       [],
       { requiredEvidenceIds: [] },
     );
-    // All identity/watermark facts present and no required evidence declared:
-    // an empty declared set with no registry demand is a valid PASS, but the
-    // chain identity must still be proven.
-    expect(assertTraceabilityComplete(chain).status).toBe('PASS');
+    const decision = assertTraceabilityComplete(chain);
+    expect(decision.status).toBe('UNKNOWN_UNRESOLVED');
+    expect(decision.reason).toBe('MISSING_REQUIRED_EVIDENCE');
+  });
 
-    // Identity mismatch must fail closed.
-    const mismatched = buildTraceabilityChainV2(
-      'RUN-1', 'RUN-2', base.durablePosition,
+  it('C2: empty evidence WITH NO_EVIDENCE_REQUIRED marker + source proof → PASS', () => {
+    const chain = buildTraceabilityChainV2(
+      base.runId, base.projectionId, base.durablePosition,
       base.sourceRef, base.sourceDigest, base.topologyRevision, base.topologyDigest,
       base.reducerWatermark, base.inputWatermark,
       [],
-      { requiredEvidenceIds: [] },
+      { requiredEvidenceIds: [], noEvidenceRequired: true },
     );
-    const decision = assertTraceabilityComplete(mismatched);
+    expect(assertTraceabilityComplete(chain).status).toBe('PASS');
+  });
+
+  it('C2: NO_EVIDENCE_REQUIRED marker without source proof → fail closed', () => {
+    const chain = buildTraceabilityChainV2(
+      base.runId, base.projectionId, base.durablePosition,
+      '', base.sourceDigest, base.topologyRevision, base.topologyDigest,
+      base.reducerWatermark, base.inputWatermark,
+      [],
+      { requiredEvidenceIds: [], noEvidenceRequired: true },
+    );
+    const decision = assertTraceabilityComplete(chain);
     expect(decision.status).toBe('UNKNOWN_UNRESOLVED');
-    expect(decision.reason).toBe('IDENTITY_MISMATCH');
+    expect(decision.missingRefs).toContain('sourceRef');
   });
 
   it('B3: readiness delegates to the fail-closed completeness decision', () => {
@@ -302,7 +322,10 @@ describe('R2-B defect closure', () => {
       base.sourceRef, base.sourceDigest, base.topologyRevision, base.topologyDigest,
       base.reducerWatermark, base.inputWatermark,
       [ev('target.json', 'sha256:x')],
-      { requiredEvidenceIds: ['target.json'] },
+      {
+        requiredEvidenceIds: ['target.json'],
+        entries: [{ id: 'target.json', expectedDigest: 'sha256:x' }],
+      } as DigestPinnedEvidenceRegistry,
     );
     expect(assertTraceabilityReadiness(chain).status).toBe('PASS');
 
@@ -311,7 +334,10 @@ describe('R2-B defect closure', () => {
       '', base.sourceDigest, base.topologyRevision, base.topologyDigest,
       base.reducerWatermark, base.inputWatermark,
       [],
-      { requiredEvidenceIds: ['target.json'] },
+      {
+        requiredEvidenceIds: ['target.json'],
+        entries: [{ id: 'target.json', expectedDigest: 'sha256:x' }],
+      } as DigestPinnedEvidenceRegistry,
     );
     expect(assertTraceabilityReadiness(broken).status).toBe('UNKNOWN_UNRESOLVED');
   });
