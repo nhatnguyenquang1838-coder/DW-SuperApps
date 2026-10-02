@@ -208,9 +208,9 @@ export function resolveTaskRootRuns(
 
   const disagreements: string[] = [];
   for (const [, bucket] of groups) {
-    const canonical = [...bucket[0].rootRunIds].sort().join(' ');
+    const canonical = JSON.stringify([...bucket[0].rootRunIds].sort());
     for (const other of bucket.slice(1)) {
-      if ([...other.rootRunIds].sort().join(' ') !== canonical) {
+      if (JSON.stringify([...other.rootRunIds].sort()) !== canonical) {
         disagreements.push(bucket[0].relationRevisionId);
         break;
       }

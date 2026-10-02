@@ -136,6 +136,16 @@ describe('R2-F · the same revision with conflicting mappings is RELATION_CONFLI
     expect(d.reason).toBe('RELATION_CONFLICT');
     expect(d.rootRunIds).toEqual([]);
   });
+
+  it('root ids containing separators cannot hide a conflicting mapping', () => {
+    const d = resolveTaskRootRuns('SCRUM-820', [
+      record({ sourceRecordId: 'a', rootRunIds: ['RUN-A', 'RUN-B'] }),
+      record({ sourceRecordId: 'b', rootRunIds: ['RUN-A' + String.fromCharCode(0) + 'RUN-B'] }),
+    ]);
+    expect(d.status).toBe('UNKNOWN_UNRESOLVED');
+    expect(d.reason).toBe('RELATION_CONFLICT');
+    expect(d.rootRunIds).toEqual([]);
+  });
 });
 
 describe('R2-F · supersession is explicit', () => {
