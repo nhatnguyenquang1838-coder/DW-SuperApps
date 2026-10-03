@@ -15,6 +15,8 @@ import { reduceEventPrefix, type ReducerEvent, type ReducedRunState } from './re
 import { isParentComplete, type RunNode, type RunTree } from './recursiveTopology';
 import { evaluateBlockingPath } from './blockingPath';
 import { assertTraceabilityReadiness, type TraceabilityChainV2, type TraceabilityDecision } from './traceabilityChain';
+import { deriveAuthorityState, type AuthorityDecision, type AuthorityEvidence } from './authorityVocabulary';
+import { evaluateParentCompositionContract, type ParentCompositionContractV2, type CompositionDecision } from './parentComposition';
 
 export interface ReducerCertificationInput {
   /** Determinism: same prefix reduced twice yields identical state. */
@@ -29,6 +31,12 @@ export interface ReducerCertificationInput {
   readonly fixtureConformance: boolean;
   /** C3: traceability readiness must be PASS before certification issues a token. */
   readonly traceabilityDecision: TraceabilityDecision;
+  /** R2-D: authority decision where authority is required. Absent = not applicable. */
+  readonly authorityDecision?: AuthorityDecision | null;
+  /** R2-E: explicit parent composition decision where a composed parent is required. Absent = not applicable. */
+  readonly parentComposition?: CompositionDecision | null;
+  /** R2-D: explicit source evidence used to derive the authority decision (audit provenance). */
+  readonly authorityEvidence?: AuthorityEvidence | null;
 }
 
 export interface ReducerCertificationDecision {
@@ -52,6 +60,22 @@ export function deriveV2ReducerCertified(
   // C3: certification cannot issue PASS/token when traceability is unresolved
   if (input.traceabilityDecision.status !== 'PASS') {
     reasons.push(`traceability unresolved: ${input.traceabilityDecision.reason ?? 'unknown'}`);
+  }
+  // R2-D: when authority evidence is present, GRANTED is required.
+  // Absence of the field = authority not applicable to this run.
+  if (input.authorityDecision !== undefined && input.authorityDecision !== null) {
+    const ad = input.authorityDecision;
+    if (!ad.granted) {
+      reasons.push(`authority not granted: ${ad.state} (${ad.reason})`);
+    }
+  }
+  // R2-E: when a composition decision is present, composed is required.
+  // Absence of the field = parent composition not applicable to this run.
+  if (input.parentComposition !== undefined && input.parentComposition !== null) {
+    const pc = input.parentComposition;
+    if (!pc.composed) {
+      reasons.push(`parent not composed: ${pc.reason}`);
+    }
   }
   if (reasons.length === 0) {
     return { derivable: true, token: 'V2_REDUCER_CERTIFIED', reasons: [] };

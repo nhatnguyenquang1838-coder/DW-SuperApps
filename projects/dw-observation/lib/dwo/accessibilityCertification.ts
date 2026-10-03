@@ -14,6 +14,9 @@
  *   7. the hand-authored 30-run semantic pack remains unchanged (AC-829-07).
  */
 import { buildRunViewModel } from './runViewModel';
+import type { AuthorityDecision } from './authorityVocabulary';
+import type { CompositionDecision } from './parentComposition';
+import type { RelationDecision } from './taskRunIndex';
 import {
   assertAriaStructure,
   assertGraphTreeSelectionSynchronized,
@@ -65,9 +68,15 @@ export function deriveV2AccessibilityReady(
 
 /**
  * Build the certification evidence from the live view model and scale pack.
+ * R2-D/E/F: evidence maps are consumed by runId — the UI renders the
+ * authoritative decision, never inferred state. Absent maps = null.
  */
-export function buildAccessibilityEvidence(): AccessibilityCertificationInput {
-  const viewModel = buildRunViewModel();
+export function buildAccessibilityEvidence(
+  authorityByRun?: Readonly<Record<string, AuthorityDecision>>,
+  compositionByRun?: Readonly<Record<string, CompositionDecision>>,
+  taskRelationByRun?: Readonly<Record<string, RelationDecision>>,
+): AccessibilityCertificationInput {
+  const viewModel = buildRunViewModel(authorityByRun, compositionByRun, taskRelationByRun);
   const selection: SelectionState = { selectedRunId: viewModel.rows[0]?.runId ?? null };
   const navOrder = keyboardNavOrder(viewModel);
   const scale = qualifyScalePack();

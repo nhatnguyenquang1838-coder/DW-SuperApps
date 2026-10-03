@@ -139,7 +139,7 @@ export function upcastV1ToV2(v1: { recordId: string; runId: string }): Projectio
     sourceProfile: 'COMPATIBILITY_LEGACY',
     syncState: 'LIVE',
     semanticQualification: 'PENDING',
-    authorityState: 'NOT_APPLICABLE',
+    authorityState: 'NOT_REQUIRED',
     anomalyCount: 0,
   };
 }

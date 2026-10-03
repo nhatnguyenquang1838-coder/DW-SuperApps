@@ -16,6 +16,7 @@
  */
 
 import type { GateRef, RunState } from './projectionContract';
+import type { AuthorityState } from './authorityVocabulary';
 
 /** A projection event consumed by the reducer. */
 export interface ReducerEvent {
@@ -28,7 +29,7 @@ export interface ReducerEvent {
   readonly sourceProfile?: string;
   readonly syncState?: string;
   readonly semanticQualification?: string;
-  readonly authorityState?: string;
+  readonly authorityState?: AuthorityState;
   readonly anomalyCount?: number;
 }
 

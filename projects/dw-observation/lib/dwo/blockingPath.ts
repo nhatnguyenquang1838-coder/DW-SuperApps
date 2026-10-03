@@ -13,7 +13,13 @@
  *     BLOCKED.
  *  3. A missing dependency fact stays UNKNOWN/PARTIAL, never fabricated as
  *     satisfied or blocked.
+ *
+ * R2-D: authority consumption via the verified authority vocabulary.
+ * Authority is DERIVED from evidence, not inferred. GRANTED only when source/scope/time
+ * evidence is proven; everything else is not granted.
  */
+
+import { deriveAuthorityState, AUTHORITY_STATES, type AuthorityDecision, type AuthorityEvidence, type AuthorityState, type AuthorityReason } from './authorityVocabulary';
 
 /** Blocking reason codes. */
 export type BlockReason =
@@ -29,6 +35,8 @@ export interface BlockingPath {
   readonly status: 'BLOCKED' | 'WAITING' | 'ELIGIBLE' | 'UNKNOWN';
   readonly reason: BlockReason | null;
   readonly blockedBy: readonly string[];
+  /** R2-D: authority state provenance — the decision state that gated this path. */
+  readonly authorityState: AuthorityState;
 }
 
 /**
@@ -51,30 +59,77 @@ export function evaluateBlockingPath(
   authorityState: string | 'UNKNOWN',
   waitingFor: readonly string[] = [],
 ): BlockingPath {
+  // Fail-closed: reject authority states outside the closed vocabulary.
+  if (!AUTHORITY_STATES.includes(authorityState as AuthorityState)) {
+    return { runId, status: 'UNKNOWN', reason: 'UNKNOWN', blockedBy: [], authorityState: 'UNKNOWN' as AuthorityState };
+  }
+  return evaluateBlockingPathWithDecision(runId, { state: authorityState as AuthorityState, granted: authorityState === 'GRANTED', reason: authorityState as AuthorityReason }, deps, waitingFor);
+}
+
+/**
+ * Evaluate a Run's blocking path from raw dependency/authority state.
+ * Legacy API — delegates to the decision-based path for consistent fail-closed semantics.
+ */
+export function evaluateBlockingPathLegacy(
+  runId: string,
+  deps: readonly { depId: string; state: string; revalidationRequired?: boolean }[],
+  authorityState: string | 'UNKNOWN',
+  waitingFor: readonly string[] = [],
+): BlockingPath {
+  // Fail-closed: reject authority states outside the closed vocabulary.
+  if (!AUTHORITY_STATES.includes(authorityState as AuthorityState)) {
+    return { runId, status: 'UNKNOWN', reason: 'UNKNOWN', blockedBy: [], authorityState: 'UNKNOWN' as AuthorityState };
+  }
+  return evaluateBlockingPathWithDecision(runId, { state: authorityState as AuthorityState, granted: authorityState === 'GRANTED', reason: authorityState as AuthorityReason }, deps, waitingFor);
+}
+
+/**
+ * Evaluate a Run's blocking path from an explicit authority decision.
+ *
+ * Semantics:
+ *  - GRANTED / NOT_REQUIRED → proceed to dependency checks only.
+ *  - PENDING → WAITING (external decision outstanding).
+ *  - DENIED / EXPIRED / REVOKED → BLOCKED with AUTHORITY_DENIED.
+ *  - UNKNOWN / malformed / unavailable required decision → UNKNOWN (fail closed).
+ */
+export function evaluateBlockingPathWithDecision(
+  runId: string,
+  authority: AuthorityDecision,
+  deps: readonly { depId: string; state: string; revalidationRequired?: boolean }[],
+  waitingFor: readonly string[] = [],
+): BlockingPath {
   const blockedBy: string[] = [];
   for (const dep of deps) {
     if (dep.state === 'UNKNOWN') {
-      return { runId, status: 'UNKNOWN', reason: 'UNKNOWN', blockedBy: [dep.depId] };
+      return { runId, status: 'UNKNOWN', reason: 'UNKNOWN', blockedBy: [dep.depId], authorityState: authority.state };
     }
     if (dep.revalidationRequired) {
       blockedBy.push(dep.depId);
-      return { runId, status: 'BLOCKED', reason: 'UPSTREAM_DEPENDENCY_REVALIDATION_REQUIRED', blockedBy };
+      return { runId, status: 'BLOCKED', reason: 'UPSTREAM_DEPENDENCY_REVALIDATION_REQUIRED', blockedBy, authorityState: authority.state };
     }
     if (dep.state !== 'ACCEPTED') {
       blockedBy.push(dep.depId);
-      return { runId, status: 'BLOCKED', reason: 'UNMET_DEPENDENCY', blockedBy };
+      return { runId, status: 'BLOCKED', reason: 'UNMET_DEPENDENCY', blockedBy, authorityState: authority.state };
     }
   }
-  if (authorityState === 'DENIED') {
-    return { runId, status: 'BLOCKED', reason: 'AUTHORITY_DENIED', blockedBy: [] };
+  switch (authority.state as string) {
+    case 'UNKNOWN':
+      return { runId, status: 'UNKNOWN', reason: 'UNKNOWN', blockedBy: [], authorityState: authority.state };
+    case 'DENIED':
+    case 'EXPIRED':
+    case 'REVOKED':
+      return { runId, status: 'BLOCKED', reason: 'AUTHORITY_DENIED', blockedBy: [], authorityState: authority.state };
+    case 'PENDING':
+      return { runId, status: 'WAITING', reason: 'EXTERNAL_CONDITION_PENDING', blockedBy: [], authorityState: authority.state };
+    case 'NOT_REQUIRED':
+    case 'GRANTED':
+      if (waitingFor.length > 0) {
+        return { runId, status: 'WAITING', reason: 'EXTERNAL_CONDITION_PENDING', blockedBy: waitingFor, authorityState: authority.state };
+      }
+      return { runId, status: 'ELIGIBLE', reason: null, blockedBy: [], authorityState: authority.state };
+    default:
+      return { runId, status: 'UNKNOWN', reason: 'UNKNOWN', blockedBy: [], authorityState: authority.state };
   }
-  if (authorityState === 'UNKNOWN') {
-    return { runId, status: 'UNKNOWN', reason: 'UNKNOWN', blockedBy: [] };
-  }
-  if (waitingFor.length > 0) {
-    return { runId, status: 'WAITING', reason: 'EXTERNAL_CONDITION_PENDING', blockedBy: waitingFor };
-  }
-  return { runId, status: 'ELIGIBLE', reason: null, blockedBy: [] };
 }
 
 /**
@@ -92,6 +147,24 @@ export function reconcileGateState(
   if (blocking.status === 'WAITING') return 'WAITING';
   if (blocking.status === 'UNKNOWN') return currentGateState ?? 'UNKNOWN';
   return currentGateState;
+}
+
+/**
+ * R2-D: evaluate the blocking path from explicit authority evidence.
+ *
+ * Derives the authority decision first, then delegates to the
+ * decision-based path so the evidence→decision→gate chain is one
+ * auditable line rather than two independent derivations.
+ */
+export function evaluateBlockingPathWithAuthority(
+  runId: string,
+  authorityEvidence: AuthorityEvidence | null | undefined,
+  now: string | 'UNKNOWN',
+  deps: readonly { depId: string; state: string; revalidationRequired?: boolean }[],
+  waitingFor: readonly string[] = [],
+): BlockingPath {
+  const authority = deriveAuthorityState(authorityEvidence, now);
+  return evaluateBlockingPathWithDecision(runId, authority, deps, waitingFor);
 }
 
 /** Blocking path is read-only; it grants no effect capability. */

@@ -43,6 +43,9 @@ import {
   assertVisibleFocus,
 } from './accessibility';
 import { buildRunViewModel } from './runViewModel';
+import type { AuthorityDecision } from './authorityVocabulary';
+import type { CompositionDecision } from './parentComposition';
+import type { RelationDecision } from './taskRunIndex';
 import {
   FIXTURE_CATALOG,
   DWO_PROJECTION_DEFAULTS,
@@ -250,8 +253,8 @@ export function acRs04OutOfOrderRecovery(): ScenarioResult {
   // Out-of-order arrival: E2 (ordinal 2) arrives before E1 (ordinal 1). The
   // reducer sorts by ordinal, so the deterministic result is ACCEPTED.
   const events: ReducerEvent[] = [
-    { eventId: 'E2', runId: 'R', ordinal: 2, runState: 'ACCEPTED', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_APPLICABLE', anomalyCount: 0 },
-    { eventId: 'E1', runId: 'R', ordinal: 1, runState: 'OPEN', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_APPLICABLE', anomalyCount: 0 },
+    { eventId: 'E2', runId: 'R', ordinal: 2, runState: 'ACCEPTED', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_REQUIRED', anomalyCount: 0 },
+    { eventId: 'E1', runId: 'R', ordinal: 1, runState: 'OPEN', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_REQUIRED', anomalyCount: 0 },
   ];
   const ordered = reduceEventPrefix('R', events);
   const pass = ordered.runState === 'ACCEPTED' && !ordered.partial;
@@ -351,7 +354,7 @@ export function acRs08TraceCorrelationNonAuthority(): ScenarioResult {
 /** AC-RS-09 — Recursive deadlock anomaly: stranded recursive/read-only work detected without fabricating authority. */
 export function acRs09RecursiveDeadlockAnomaly(): ScenarioResult {
   // A read-only child with an unmet dependency is BLOCKED (anomaly), never granted authority.
-  const blocking = evaluateBlockingPath('DEV-RUN-003', [{ depId: 'DEV-RUN-002', state: 'OPEN' }], 'NOT_APPLICABLE');
+  const blocking = evaluateBlockingPath('DEV-RUN-003', [{ depId: 'DEV-RUN-002', state: 'OPEN' }], 'NOT_REQUIRED');
   const pass = blocking.status === 'BLOCKED' && blocking.reason === 'UNMET_DEPENDENCY';
   return {
     id: 'AC-RS-09',
@@ -364,8 +367,12 @@ export function acRs09RecursiveDeadlockAnomaly(): ScenarioResult {
 }
 
 /** AC-RS-10 — Accessibility: keyboard-operable, visible focus, non-color-only, graph/tree parity. */
-export function acRs10Accessibility(): ScenarioResult {
-  const viewModel = buildRunViewModel();
+export function acRs10Accessibility(
+  authorityByRun?: Readonly<Record<string, AuthorityDecision>>,
+  compositionByRun?: Readonly<Record<string, CompositionDecision>>,
+  taskRelationByRun?: Readonly<Record<string, RelationDecision>>,
+): ScenarioResult {
+  const viewModel = buildRunViewModel(authorityByRun, compositionByRun, taskRelationByRun);
   const nonColorOnly = viewModel.rows.every((r) => assertNonColorOnlyStatus(r));
   const focus = assertVisibleFocus(viewModel);
   const aria = assertAriaStructure(viewModel);
@@ -478,7 +485,7 @@ export function adv01StaleAuthority(): ScenarioResult {
 /** ADV-02 — Unknown effect requires readback/reconciliation before retry/rerun. */
 export function adv02UnknownEffectReadback(): ScenarioResult {
   // An unknown dependency state makes the blocking path UNKNOWN (fail-closed), not ELIGIBLE.
-  const blocking = evaluateBlockingPath('R', [{ depId: 'D', state: 'UNKNOWN' }], 'NOT_APPLICABLE');
+  const blocking = evaluateBlockingPath('R', [{ depId: 'D', state: 'UNKNOWN' }], 'NOT_REQUIRED');
   const pass = blocking.status === 'UNKNOWN';
   return {
     id: 'ADV-02',
@@ -530,8 +537,8 @@ export function adv04EvidenceDigestTampering(): ScenarioResult {
 export function adv05FabricatedChildRunHandoff(): ScenarioResult {
   // A child whose parent does not point back breaks the topology -> buildRunTree throws.
   const nodes: RunNode[] = [
-    { runId: 'ROOT', runKind: 'ROOT', parentRunRef: null, childRunRefs: ['CHILD'], state: { runId: 'ROOT', gate: 'G6', gateState: 'PASSED', runState: 'ACCEPTED', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_APPLICABLE', anomalyCount: 0, partial: false } },
-    { runId: 'CHILD', runKind: 'CHILD', parentRunRef: 'OTHER', childRunRefs: [], state: { runId: 'CHILD', gate: 'G6', gateState: 'PASSED', runState: 'ACCEPTED', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_APPLICABLE', anomalyCount: 0, partial: false } },
+    { runId: 'ROOT', runKind: 'ROOT', parentRunRef: null, childRunRefs: ['CHILD'], state: { runId: 'ROOT', gate: 'G6', gateState: 'PASSED', runState: 'ACCEPTED', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_REQUIRED', anomalyCount: 0, partial: false } },
+    { runId: 'CHILD', runKind: 'CHILD', parentRunRef: 'OTHER', childRunRefs: [], state: { runId: 'CHILD', gate: 'G6', gateState: 'PASSED', runState: 'ACCEPTED', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_REQUIRED', anomalyCount: 0, partial: false } },
   ];
   let threw = false;
   try {
@@ -555,7 +562,7 @@ export function adv06ConcurrentChildIntegrationConflict(): ScenarioResult {
   // Parent completion is never inferred solely from child-local success.
   const parent: RunNode = {
     runId: 'P', runKind: 'ROOT', parentRunRef: null, childRunRefs: ['C1', 'C2'],
-    state: { runId: 'P', gate: 'G2', gateState: 'ACTIVE', runState: 'OPEN', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_APPLICABLE', anomalyCount: 0, partial: false },
+    state: { runId: 'P', gate: 'G2', gateState: 'ACTIVE', runState: 'OPEN', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_REQUIRED', anomalyCount: 0, partial: false },
   };
   const comp = evaluateParentComposition(parent);
   const pass = !comp.parentComplete; // children succeeded but parent gate not G6/PASSED

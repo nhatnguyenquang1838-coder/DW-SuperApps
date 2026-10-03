@@ -16,6 +16,9 @@
 
 import { reduceEventPrefix, type ReducedRunState } from './reducer';
 import { FIXTURE_CATALOG } from './fixtureSpec';
+import { AUTHORITY_STATES, type AuthorityState, type AuthorityDecision } from './authorityVocabulary';
+import type { CompositionDecision } from './parentComposition';
+import type { RelationDecision } from './taskRunIndex';
 
 /** A run view-model row. */
 export interface RunViewRow {
@@ -32,6 +35,12 @@ export interface RunViewRow {
   readonly authorityState: string;
   readonly anomalyCount: number;
   readonly reduced: ReducedRunState;
+  /** R2-D: authoritative authority decision rendered, not inferred. */
+  readonly authority: AuthorityDecision | null;
+  /** R2-E: explicit parent composition decision, absent when not applicable. */
+  readonly composition: CompositionDecision | null;
+  /** R2-F: explicit task→root mapping decision, absent when not applicable. */
+  readonly taskRelation: RelationDecision | null;
 }
 
 /** The run view model: all 30 fixture runs reduced through the real reducer. */
@@ -49,11 +58,19 @@ const VALID_GATE_STATES = ['NOT_STARTED', 'ACTIVE', 'WAITING', 'BLOCKED', 'PASSE
  * Each fixture is reduced through the real reducer (deterministic reconstruction).
  * The result has exactly 30 rows.
  *
+ * Optional R2 evidence maps are consumed by runId when present — the UI renders
+ * the authoritative decision, never inferred state. Absent maps = R2 not
+ * applicable to this view, fields default to null.
+ *
  * Fixture gateState values that are terminal RUN states (CANCELLED, SUPERSEDED) are
  * projected through runState; they are not valid kernel gate states and must not be
  * fed to the reducer's gateState (which fails closed on out-of-contract values).
  */
-export function buildRunViewModel(): RunViewModel {
+export function buildRunViewModel(
+  authorityByRun?: Readonly<Record<string, AuthorityDecision>>,
+  compositionByRun?: Readonly<Record<string, CompositionDecision>>,
+  taskRelationByRun?: Readonly<Record<string, RelationDecision>>,
+): RunViewModel {
   const rows: RunViewRow[] = FIXTURE_CATALOG.map((f) => {
     if (f.id === 'DEV-RUN-020') {
       // Negative fixture: fail closed as INCOMPATIBLE, no fabricated G0..G6.
@@ -68,7 +85,7 @@ export function buildRunViewModel(): RunViewModel {
         sourceProfile: f.sourceProfile,
         syncState: f.syncState,
         semanticQualification: f.semanticQualification,
-        authorityState: f.authorityState,
+        authorityState: (AUTHORITY_STATES as readonly string[]).includes(f.authorityState) ? (f.authorityState as AuthorityState) : 'UNKNOWN',
         anomalyCount: f.anomalyCount,
         reduced: {
           runId: f.id,
@@ -78,10 +95,13 @@ export function buildRunViewModel(): RunViewModel {
           sourceProfile: f.sourceProfile,
           syncState: f.syncState,
           semanticQualification: f.semanticQualification,
-          authorityState: f.authorityState,
+          authorityState: (AUTHORITY_STATES as readonly string[]).includes(f.authorityState) ? (f.authorityState as AuthorityState) : 'UNKNOWN',
           anomalyCount: 0,
           partial: true,
         },
+        authority: authorityByRun?.[f.id] ?? null,
+        composition: compositionByRun?.[f.id] ?? null,
+        taskRelation: taskRelationByRun?.[f.id] ?? null,
       };
     }
     const gateState = f.gateState !== null && VALID_GATE_STATES.includes(f.gateState)
@@ -98,7 +118,7 @@ export function buildRunViewModel(): RunViewModel {
         sourceProfile: f.sourceProfile,
         syncState: f.syncState,
         semanticQualification: f.semanticQualification,
-        authorityState: f.authorityState,
+        authorityState: (AUTHORITY_STATES as readonly string[]).includes(f.authorityState) ? (f.authorityState as AuthorityState) : 'UNKNOWN',
         anomalyCount: f.anomalyCount,
       },
     ]);
@@ -113,9 +133,12 @@ export function buildRunViewModel(): RunViewModel {
       sourceProfile: f.sourceProfile,
       syncState: f.syncState,
       semanticQualification: f.semanticQualification,
-      authorityState: f.authorityState,
+      authorityState: (AUTHORITY_STATES as readonly string[]).includes(f.authorityState) ? (f.authorityState as AuthorityState) : 'UNKNOWN',
       anomalyCount: f.anomalyCount,
       reduced,
+      authority: authorityByRun?.[f.id] ?? null,
+      composition: compositionByRun?.[f.id] ?? null,
+      taskRelation: taskRelationByRun?.[f.id] ?? null,
     };
   });
   return { rows, count: rows.length };

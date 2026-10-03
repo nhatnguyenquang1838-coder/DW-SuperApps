@@ -28,7 +28,7 @@ export interface IncompatibleProjection {
   readonly sourceProfile: 'UNKNOWN';
   readonly syncState: 'UNAVAILABLE';
   readonly semanticQualification: 'INCOMPATIBLE';
-  readonly authorityState: 'NOT_APPLICABLE';
+  readonly authorityState: 'NOT_REQUIRED';
   readonly anomalyCount: 0;
   /** True: this profile must NOT receive heuristic Universal G0..G6 semantics. */
   readonly failClosed: true;
@@ -38,7 +38,7 @@ export const INCOMPATIBLE_PROJECTION: IncompatibleProjection = Object.freeze({
   sourceProfile: 'UNKNOWN',
   syncState: 'UNAVAILABLE',
   semanticQualification: 'INCOMPATIBLE',
-  authorityState: 'NOT_APPLICABLE',
+  authorityState: 'NOT_REQUIRED',
   anomalyCount: 0,
   failClosed: true,
 } as const);
@@ -70,11 +70,11 @@ export function resolveProfileProjection(
 ): IncompatibleProjection | { sourceProfile: SourceProfile; syncState: string; semanticQualification: string; authorityState: string; anomalyCount: number; failClosed: false } {
   switch (profile) {
     case 'DEV_NATIVE':
-      return { sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_APPLICABLE', anomalyCount: 0, failClosed: false };
+      return { sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_REQUIRED', anomalyCount: 0, failClosed: false };
     case 'COMPATIBILITY':
-      return { sourceProfile: 'COMPATIBILITY', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_APPLICABLE', anomalyCount: 0, failClosed: false };
+      return { sourceProfile: 'COMPATIBILITY', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_REQUIRED', anomalyCount: 0, failClosed: false };
     case 'COMPATIBILITY_LEGACY':
-      return { sourceProfile: 'COMPATIBILITY_LEGACY', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_APPLICABLE', anomalyCount: 0, failClosed: false };
+      return { sourceProfile: 'COMPATIBILITY_LEGACY', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_REQUIRED', anomalyCount: 0, failClosed: false };
     default:
       return INCOMPATIBLE_PROJECTION;
   }

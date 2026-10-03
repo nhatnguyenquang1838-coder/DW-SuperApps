@@ -59,7 +59,7 @@ function ev(runId: string, ordinal: number, overrides: Partial<ReducerEvent> = {
     sourceProfile: 'DEV_NATIVE',
     syncState: 'LIVE',
     semanticQualification: 'PENDING',
-    authorityState: 'NOT_APPLICABLE',
+    authorityState: 'NOT_REQUIRED',
     anomalyCount: 0,
     ...overrides,
   };
@@ -134,7 +134,7 @@ describe('AC-824-04 · parent completion never inferred solely from child-local 
         sourceProfile: 'DEV_NATIVE',
         syncState: 'LIVE',
         semanticQualification: 'PENDING',
-        authorityState: 'NOT_APPLICABLE',
+        authorityState: 'NOT_REQUIRED',
         anomalyCount: 0,
         partial: false,
       },
@@ -172,7 +172,7 @@ describe('AC-824-04 · parent completion never inferred solely from child-local 
 
 describe('AC-824-05 · recursive reduction + dependency blocking path', () => {
   it('blocks on an unmet dependency with explicit reason', () => {
-    const bp = evaluateBlockingPath('R3', [{ depId: 'R2', state: 'OPEN' }], 'NOT_APPLICABLE');
+    const bp = evaluateBlockingPath('R3', [{ depId: 'R2', state: 'OPEN' }], 'NOT_REQUIRED');
     expect(bp.status).toBe('BLOCKED');
     expect(bp.reason).toBe('UNMET_DEPENDENCY');
     expect(bp.blockedBy).toEqual(['R2']);
@@ -185,24 +185,24 @@ describe('AC-824-05 · recursive reduction + dependency blocking path', () => {
   });
 
   it('blocks on upstream dependency revalidation required', () => {
-    const bp = evaluateBlockingPath('R29', [{ depId: 'R28', state: 'ACCEPTED', revalidationRequired: true }], 'NOT_APPLICABLE');
+    const bp = evaluateBlockingPath('R29', [{ depId: 'R28', state: 'ACCEPTED', revalidationRequired: true }], 'NOT_REQUIRED');
     expect(bp.status).toBe('BLOCKED');
     expect(bp.reason).toBe('UPSTREAM_DEPENDENCY_REVALIDATION_REQUIRED');
   });
 
   it('is ELIGIBLE when all deps accepted and authority not denied', () => {
-    const bp = evaluateBlockingPath('R10', [{ depId: 'R9', state: 'ACCEPTED' }], 'NOT_APPLICABLE');
+    const bp = evaluateBlockingPath('R10', [{ depId: 'R9', state: 'ACCEPTED' }], 'NOT_REQUIRED');
     expect(bp.status).toBe('ELIGIBLE');
   });
 
   it('fails closed to UNKNOWN when a dependency state is unknown', () => {
-      const bp = evaluateBlockingPath('R1', [{ depId: 'R2', state: 'UNKNOWN' }], 'NOT_APPLICABLE');
+      const bp = evaluateBlockingPath('R1', [{ depId: 'R2', state: 'UNKNOWN' }], 'NOT_REQUIRED');
       expect(bp.status).toBe('UNKNOWN');
       expect(bp.reason).toBe('UNKNOWN');
     });
 
     it('produces WAITING for an external pending condition (F1)', () => {
-      const bp = evaluateBlockingPath('R22', [], 'NOT_APPLICABLE', ['EXTERNAL_GUEST_CONFIRMATIONS_PENDING']);
+      const bp = evaluateBlockingPath('R22', [], 'NOT_REQUIRED', ['EXTERNAL_GUEST_CONFIRMATIONS_PENDING']);
       expect(bp.status).toBe('WAITING');
       expect(bp.reason).toBe('EXTERNAL_CONDITION_PENDING');
       expect(bp.blockedBy).toEqual(['EXTERNAL_GUEST_CONFIRMATIONS_PENDING']);
@@ -211,9 +211,9 @@ describe('AC-824-05 · recursive reduction + dependency blocking path', () => {
     it('reconciles gateState to BLOCKED/WAITING (F2)', () => {
       const blocked = evaluateBlockingPath('R4', [], 'DENIED');
       expect(reconcileGateState('ACTIVE', blocked)).toBe('BLOCKED');
-      const waiting = evaluateBlockingPath('R22', [], 'NOT_APPLICABLE', ['EXTERNAL']);
+      const waiting = evaluateBlockingPath('R22', [], 'NOT_REQUIRED', ['EXTERNAL']);
       expect(reconcileGateState('ACTIVE', waiting)).toBe('WAITING');
-      const eligible = evaluateBlockingPath('R10', [{ depId: 'R9', state: 'ACCEPTED' }], 'NOT_APPLICABLE');
+      const eligible = evaluateBlockingPath('R10', [{ depId: 'R9', state: 'ACCEPTED' }], 'NOT_REQUIRED');
       expect(reconcileGateState('ACTIVE', eligible)).toBe('ACTIVE');
     });
   });
@@ -223,8 +223,8 @@ describe('AC-824-05 · recursive reduction + dependency blocking path', () => {
       // ATOMIC with children is invalid.
       expect(() =>
         buildRunTree([
-          { runId: 'A', runKind: 'ATOMIC', parentRunRef: null, childRunRefs: ['B'], state: { runId: 'A', gate: 'G2', gateState: 'ACTIVE', runState: 'OPEN', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_APPLICABLE', anomalyCount: 0, partial: false } },
-          { runId: 'B', runKind: 'CHILD', parentRunRef: 'A', childRunRefs: [], state: { runId: 'B', gate: 'G2', gateState: 'ACTIVE', runState: 'OPEN', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_APPLICABLE', anomalyCount: 0, partial: false } },
+          { runId: 'A', runKind: 'ATOMIC', parentRunRef: null, childRunRefs: ['B'], state: { runId: 'A', gate: 'G2', gateState: 'ACTIVE', runState: 'OPEN', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_REQUIRED', anomalyCount: 0, partial: false } },
+          { runId: 'B', runKind: 'CHILD', parentRunRef: 'A', childRunRefs: [], state: { runId: 'B', gate: 'G2', gateState: 'ACTIVE', runState: 'OPEN', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_REQUIRED', anomalyCount: 0, partial: false } },
         ]),
       ).toThrow(/ATOMIC/);
     });
@@ -243,8 +243,8 @@ describe('AC-824-05 · recursive reduction + dependency blocking path', () => {
 
     it('F5: parent at G6 but not PASSED is not complete even with accepted children', () => {
       const tree = buildRunTree([
-        { runId: 'P', runKind: 'ROOT', parentRunRef: null, childRunRefs: ['C'], state: { runId: 'P', gate: 'G6', gateState: 'ACTIVE', runState: 'OPEN', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_APPLICABLE', anomalyCount: 0, partial: false } },
-        { runId: 'C', runKind: 'CHILD', parentRunRef: 'P', childRunRefs: [], state: { runId: 'C', gate: 'G6', gateState: 'PASSED', runState: 'ACCEPTED', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_APPLICABLE', anomalyCount: 0, partial: false } },
+        { runId: 'P', runKind: 'ROOT', parentRunRef: null, childRunRefs: ['C'], state: { runId: 'P', gate: 'G6', gateState: 'ACTIVE', runState: 'OPEN', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_REQUIRED', anomalyCount: 0, partial: false } },
+        { runId: 'C', runKind: 'CHILD', parentRunRef: 'P', childRunRefs: [], state: { runId: 'C', gate: 'G6', gateState: 'PASSED', runState: 'ACCEPTED', sourceProfile: 'DEV_NATIVE', syncState: 'LIVE', semanticQualification: 'PENDING', authorityState: 'NOT_REQUIRED', anomalyCount: 0, partial: false } },
       ]);
       expect(isParentComplete(tree, 'P')).toBe(false);
       expect(assertParentCompositionIndependent(tree, 'P', true)).toBe(true);

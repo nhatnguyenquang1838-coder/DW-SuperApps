@@ -47,7 +47,7 @@ function validRecord(): ProjectionRecordV2 {
     sourceProfile: 'DEV_NATIVE',
     syncState: 'LIVE',
     semanticQualification: 'PENDING',
-    authorityState: 'NOT_APPLICABLE',
+    authorityState: 'NOT_REQUIRED',
     anomalyCount: 0,
   };
 }
@@ -130,7 +130,7 @@ describe('AC-823-03 · unsupported profiles fail closed', () => {
       sourceProfile: 'UNKNOWN',
       syncState: 'UNAVAILABLE',
       semanticQualification: 'INCOMPATIBLE',
-      authorityState: 'NOT_APPLICABLE',
+      authorityState: 'NOT_REQUIRED',
       anomalyCount: 0,
       failClosed: true,
     });

@@ -11,6 +11,9 @@
  *   4. UR-G* vs GWC-* namespace separation is visible in the lifecycle strip.
  */
 import { assertThirtyFixtures, buildRunViewModel } from './runViewModel';
+import type { AuthorityDecision } from './authorityVocabulary';
+import type { CompositionDecision } from './parentComposition';
+import type { RelationDecision } from './taskRunIndex';
 import { assertSelectionSynchronized, type SelectionState } from './runList';
 import { assertNamespaceSeparation, assertNoAuthorityAffordance, buildAuthorityRail, buildLifecycleStrip } from './lifecycleStrip';
 
@@ -44,11 +47,15 @@ export function deriveV2ProductAlpha(input: ProductAlphaInput): ProductAlphaDeci
 
 /**
  * Build the certification evidence from the live view model.
- *
- * Returns the inputs for deriveV2ProductAlpha, computed from the actual modules.
+ * R2-D/E/F: evidence maps are consumed by runId — the UI renders the
+ * authoritative decision, never inferred state. Absent maps = null.
  */
-export function buildProductAlphaEvidence(): ProductAlphaInput {
-  const viewModel = buildRunViewModel();
+export function buildProductAlphaEvidence(
+  authorityByRun?: Readonly<Record<string, AuthorityDecision>>,
+  compositionByRun?: Readonly<Record<string, CompositionDecision>>,
+  taskRelationByRun?: Readonly<Record<string, RelationDecision>>,
+): ProductAlphaInput {
+  const viewModel = buildRunViewModel(authorityByRun, compositionByRun, taskRelationByRun);
   const selection: SelectionState = { selectedRunId: viewModel.rows[0]?.runId ?? null };
   const strips = viewModel.rows.map(buildLifecycleStrip);
   const rails = viewModel.rows.map(buildAuthorityRail);

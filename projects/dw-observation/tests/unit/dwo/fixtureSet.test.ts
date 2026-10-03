@@ -67,7 +67,7 @@ describe('AC-822-05 · projection defaults and negative-case assertions', () => 
       sourceProfile: 'DEV_NATIVE',
       syncState: 'LIVE',
       semanticQualification: 'PENDING',
-      authorityState: 'NOT_APPLICABLE',
+      authorityState: 'NOT_REQUIRED',
       anomalyCount: 0,
     });
   });
@@ -83,10 +83,10 @@ describe('AC-822-05 · projection defaults and negative-case assertions', () => 
     expect(negative.gateState).toBeNull();
   });
 
-  it('DEV-RUN-030 authority is NOT_APPLICABLE, not manufactured UNKNOWN/DENIED', () => {
+  it('DEV-RUN-030 authority is not manufactured UNKNOWN/DENIED', () => {
     const ceremony = FIXTURE_CATALOG.find((f) => f.id === 'DEV-RUN-030')!;
     const proj = resolveFixtureProjection(ceremony);
-    expect(proj.authorityState).toBe('NOT_APPLICABLE');
+    expect(proj.authorityState).toBe('NOT_REQUIRED');
     expect(proj.authorityState).not.toBe('UNKNOWN');
     expect(proj.authorityState).not.toBe('DENIED');
   });
