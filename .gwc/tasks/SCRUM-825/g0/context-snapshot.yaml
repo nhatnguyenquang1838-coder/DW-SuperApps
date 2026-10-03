@@ -1,0 +1,65 @@
+# G0 CONTEXT SNAPSHOT — SCRUM-825 (DWO-V2-04)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g0.context-snapshot/1.0
+artifact_type: CONTEXT_SNAPSHOT
+gate: G0_UNDERSTAND
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-825
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 0c877134da7a364e825bc055d1983029b0693656
+  captured_at: '2026-09-30T04:17:00+07:00'
+
+objective: >-
+  Build the durable projection/reconciliation foundation required before realtime
+  transport can be correctness-bearing.
+
+scope:
+  - append-only durable event order and explicit durable position/watermark
+  - v1/v2 compatibility and backfill fixtures
+  - duplicate idempotency, out-of-order handling and gap fail-closed behavior
+  - rebuild-from-zero parity and RESET_DERIVED_STATE safety
+  - durable bootstrap/reconnect catch-up
+  - read-isolation/RLS allow-deny tests
+
+dependencies:
+  - SCRUM-823 (DWO-V2-02) Projection Contract v2 — DONE
+  - SCRUM-824 (DWO-V2-03) reducer — DONE
+  - SCRUM-822 (DWO-V2-01) golden fixtures — DONE (consumed)
+
+constraints:
+  - derived state is disposable/rebuildable
+  - durable history sufficient to reconstruct accepted projection state
+  - no browser path requires service-role/secret credentials
+  - no production write/effect path
+
+acceptance_criteria:
+  - id: AC-825-01
+    statement: V2_DURABLE_RECONCILIATION_READY exit token derivable from machine-readable state
+  - id: AC-825-02
+    statement: derived state is disposable/rebuildable (rebuild-from-zero parity)
+  - id: AC-825-03
+    statement: durable history sufficient to reconstruct accepted projection state
+  - id: AC-825-04
+    statement: duplicate idempotency, out-of-order handling, gap fail-closed behavior correct
+  - id: AC-825-05
+    statement: no browser path requires service-role/secret credentials (read-isolation/RLS)
+
+canonical_sources:
+  - DWO v2 Solution Design C4 (3ea07c1c65b6813c95d6c7acf7a61c32) — READ
+  - Universal Run Kernel Contract Freeze v1.1 (3d207c1c65b681b481c2f3247e10c1b2) — READ
+  - DWO-UR-30-V1 fixture catalog (3ea07c1c65b681c28de7c076abdfbdb2) — READ
+
+authority_boundary:
+  grants:
+    - development commits on task/SCRUM-825-durable-history
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-825 progress/evidence updates
+  excluded:
+    - G4_MERGE, G5_DEPLOY, G6_PRODUCTION
+    - approval bypass, protected main writes
+    - production data mutation, database migration, secret change

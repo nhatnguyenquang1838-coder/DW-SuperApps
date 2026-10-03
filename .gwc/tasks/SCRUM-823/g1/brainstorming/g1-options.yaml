@@ -1,0 +1,29 @@
+# G1 OPTIONS — SCRUM-823 (DWO-V2-02)
+schema_version: gwc.g1.options/1.0
+artifact_type: G1_OPTIONS
+gate: G1_PLAN
+trace:
+  task_id: SCRUM-823
+  plan_revision: 1
+
+options:
+  - id: OPT-1
+    title: Versioned TypeScript contract module + registry + FNR-02
+    description: >-
+      Implement Projection Contract v2 as a versioned TS module with source/profile
+      registry, event position/order + gap identity, correlation-as-evidence-metadata,
+      fail-closed UNKNOWN/INCOMPATIBLE, and a frozen FNR-02 comparison contract with
+      cross-runtime vectors. Executable validation of all 5 AC.
+    satisfies: [AC-823-01, AC-823-02, AC-823-03, AC-823-04, AC-823-05]
+  - id: OPT-2
+    title: Documentation-only contract
+    description: Write the contract as docs without executable validation.
+    risk: V2_CONTRACT_FROZEN unverifiable
+    satisfies: []
+  - id: OPT-3
+    title: Split across Python/TypeScript twin
+    description: Duplicate contract logic across both runtimes.
+    risk: recreates source-divergence defect class
+    satisfies: [AC-823-01]
+
+selected: OPT-1

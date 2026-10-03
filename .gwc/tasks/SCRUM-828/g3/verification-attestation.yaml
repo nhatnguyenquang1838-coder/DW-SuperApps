@@ -1,0 +1,61 @@
+# G3 VERIFICATION ATTESTATION — SCRUM-828 (DWO-V2-07)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g3.verification-attestation/1.0
+artifact_type: VERIFICATION_ATTESTATION
+gate: G3_VERIFY
+trace:
+  task_id: SCRUM-828
+  parent_run_ref: SCRUM-820
+  plan_revision: 1
+  verified_at: '2026-09-30T04:38:00+07:00'
+  task_branch: task/SCRUM-828-realtime-live
+  branch_head: 50d9c95
+
+verdict: PASS
+
+child_runs:
+  - id: CR-828-A
+    title: Subscribe-after-bootstrap + reconnect durable catch-up
+    commit: 50d9c95
+    tests: covered by live.test.ts
+  - id: CR-828-B
+    title: Duplicate/stale/out-of-order transport handling
+    commit: 50d9c95
+    tests: covered by live.test.ts
+  - id: CR-828-C
+    title: DEGRADED/UNAVAILABLE states + certified-LIVE qualification gate
+    commit: 50d9c95
+    tests: covered by live.test.ts
+  - id: CR-828-D
+    title: V2_LIVE_PROJECTION_READY derivation + tests
+    commit: 50d9c95
+    tests: covered by live.test.ts
+
+executed_evidence:
+  - command: npx vitest run tests/unit/dwo/
+    result: 189 passed (189) — 12 dwo constraint suites
+  - command: npx vitest run
+    result: 29 files, 485 passed (296 baseline + 189 new)
+  - command: npx tsc --noEmit
+    result: exit 0
+  - command: python3 -m pytest tests/ -q
+    result: 112 passed (no Python regression)
+
+acceptance_criteria_coverage:
+  AC-828-01: VERIFIED (V2_LIVE_PROJECTION_READY derived)
+  AC-828-02: VERIFIED (transport alone not certified LIVE)
+  AC-828-03: VERIFIED (reconnect converges from durable history)
+  AC-828-04: VERIFIED (DEGRADED/UNAVAILABLE states)
+  AC-828-05: VERIFIED (certified Live requires valid qualification bound to subject)
+
+exit_token_derivation:
+  token: V2_LIVE_PROJECTION_READY
+  derivable: true
+  basis: >
+    deriveV2LiveProjectionReady(): transport alone not certified, reconnect converges
+    from durable, DEGRADED/UNAVAILABLE correct, qualification gate correct. Derived
+    by machine-readable state.
+
+deviations:
+  - none

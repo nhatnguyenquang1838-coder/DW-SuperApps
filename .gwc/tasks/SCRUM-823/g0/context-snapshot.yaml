@@ -1,0 +1,71 @@
+# G0 CONTEXT SNAPSHOT — SCRUM-823 (DWO-V2-02)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g0.context-snapshot/1.0
+artifact_type: CONTEXT_SNAPSHOT
+gate: G0_UNDERSTAND
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-823
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: b47781f3f15ef2663e5d9f2e22b8fe22bf1cbe56
+  captured_at: '2026-09-30T04:06:00+07:00'
+
+objective: >-
+  Define and implement the versioned DWO Projection Contract v2 and source/profile
+  registry required for Universal Runtime observability, including the deterministic
+  certification comparison contract (FNR-02) consumed by rebuild/replay/qualification.
+
+scope:
+  - recursive Run identity and Parent/Child relationships
+  - UR-G* lifecycle namespace separated from GWC-* effect/governance namespace
+  - RuntimePlan/topology/source provenance fields
+  - target/handoff, authority/effect and recovery lineage representation
+  - native Universal vs compatibility vs legacy profile registry
+  - fail-closed UNKNOWN/INCOMPATIBLE behavior
+  - explicit durable event position/order for deterministic prefix replay + gap detection
+  - correlation/causation/trace metadata as evidence metadata only (never Run identity/authority)
+  - explicit gap identity and versioned compatibility/upcast rules
+  - FNR-02 deterministic certification comparison contract (versioned, cross-runtime vectors)
+
+dependencies:
+  - SCRUM-821 (DWO-V2-00) baseline inventory — DONE
+  - SCRUM-822 (DWO-V2-01) fixture pack — DONE
+
+constraints:
+  - Contract is additive/versioned and preserves historical semantic integrity
+  - Unsupported profiles never receive heuristic Universal semantics
+  - FNR-02 comparison contract MUST NOT conflate lightweight UI digests with certification equality
+  - Event position/order, gap identity, correlation/causation frozen before reducer/durable consumers finalize
+  - no production write/effect path
+
+acceptance_criteria:
+  - id: AC-823-01
+    statement: V2_CONTRACT_FROZEN exit token derivable from machine-readable state
+  - id: AC-823-02
+    statement: Contract is additive/versioned and preserves historical semantic integrity
+  - id: AC-823-03
+    statement: Unsupported profiles never receive heuristic Universal semantics (fail-closed UNKNOWN/INCOMPATIBLE)
+  - id: AC-823-04
+    statement: Event position/order, gap identity and correlation/causation semantics frozen
+  - id: AC-823-05
+    statement: FNR-02 deterministic comparison contract versioned with cross-runtime vectors
+
+canonical_sources:
+  - DWO v2 Solution Design C4 (3ea07c1c65b6813c95d6c7acf7a61c32) — READ
+  - Universal Run Kernel Contract Freeze v1.1 (3d207c1c65b681b481c2f3247e10c1b2) — READ
+  - Universal Recursive Governed Run Model (3d207c1c65b681f48f08d657f6e56d32) — READ
+  - DWO-UR-30-V1 fixture catalog (3ea07c1c65b681c28de7c076abdfbdb2) — READ
+
+authority_boundary:
+  grants:
+    - development commits on task/SCRUM-823-projection-contract-v2
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-823 progress/evidence updates
+  excluded:
+    - G4_MERGE, G5_DEPLOY, G6_PRODUCTION
+    - approval bypass, protected main writes
+    - production data mutation, database migration, secret change

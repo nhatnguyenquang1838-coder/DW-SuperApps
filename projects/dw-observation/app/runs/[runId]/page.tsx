@@ -29,9 +29,6 @@ import RootCard from "@/components/RootCard";
 import DagView from "@/components/DagView";
 import Timeline from "@/components/Timeline";
 import EvidenceInspector from "@/components/EvidenceInspector";
-import LiveProjectionPane from "@/components/LiveProjectionPane";
-import ReplayPane from "@/components/ReplayPane";
-import ReviewPane from "@/components/ReviewPane";
 import RunGraphView from "@/components/RunGraphView";
 
 // Normalize actor for real-mode events the same way observatory normalizes
@@ -152,24 +149,70 @@ export default async function RunDetailPage({
       run.runId === "DW-OBS-M5-20260823-MOCK" ? "#80" : undefined;
     const historicalEvents = getMockProjectionEvents(params.runId);
     return (
-      <section className="space-y-6">
-        <RootCard run={run} unknownSentinel={UNKNOWN} supabaseReadiness={SUPABASE_READINESS} />
-        <RunGraphView hierarchy={hierarchy} activeId={activeId} />
-        <DagView gates={run.gates} nodes={run.nodes} edges={DAG_EDGES[run.runId]} />
-        <Timeline events={run.events} unknownSentinel={UNKNOWN} />
-        <EvidenceInspector events={run.events} anomalies={run.anomalies} unknownSentinel={UNKNOWN} />
-        <LiveProjectionPane runId={params.runId} initialEvents={historicalEvents} storeDegraded={false} />
-        <ReplayPane runId={params.runId} events={historicalEvents} storeDegraded={false} />
-        <ReviewPane runId={params.runId} events={historicalEvents} storeDegraded={false} />
-        <p className="text-xs text-muted">
+      <section className="space-y-8">
+        {/* Run Tree (hierarchy) */}
+        <div>
+          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>
+            Run Tree
+          </h2>
+          <RootCard run={run} unknownSentinel={UNKNOWN} supabaseReadiness={SUPABASE_READINESS} />
+          <RunGraphView hierarchy={hierarchy} activeId={activeId ?? undefined} />
+        </div>
+
+        {/* Flow (DAG) */}
+        <div>
+          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>
+            Flow
+          </h2>
+          <DagView gates={run.gates} nodes={run.nodes} edges={DAG_EDGES[run.runId]} />
+        </div>
+
+        {/* Timeline */}
+        <div>
+          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>
+            Timeline
+          </h2>
+          <Timeline events={run.events} unknownSentinel={UNKNOWN} />
+        </div>
+
+        {/* Details / Evidence */}
+        <div>
+          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>
+            Details
+          </h2>
+          <EvidenceInspector events={run.events} anomalies={run.anomalies} unknownSentinel={UNKNOWN} />
+        </div>
+
+        {/* Replay (isolated route) */}
+        <div>
+          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>
+            Replay
+          </h2>
+          <a
+            href={`/runs/${encodeURIComponent(params.runId)}/replay`}
+            className="notion-link-btn inline-block rounded border px-3 py-1.5 text-sm"
+          >
+            Open isolated replay →
+          </a>
+          <p className="mt-1 text-xs" style={{ color: "#9b9a97" }}>
+            Replay is isolated to /runs/[runId]/replay — no live event mixing.
+          </p>
+        </div>
+
+        <style>{`
+          .notion-link-btn { border-color: #d3d1cb; background: #f7f7f5; color: #37352f; }
+          .notion-link-btn:hover { background: #efefed; }
+        `}</style>
+
+        <p className="text-xs" style={{ color: "#787774" }}>
           This is a read-only historical projection. No authority, gate, or live
           state is inferred beyond what the source records. Missing values are
-          shown explicitly as &ldquo;{UNKNOWN}&rdquo;. Realtime Broadcast is
-          transport only; the durable store remains the source of truth.
+          shown explicitly as &ldquo;{UNKNOWN}&rdquo;.
         </p>
         <p
           data-testid="data-source-badge"
-          className="text-xs font-mono rounded border border-muted px-2 py-1 inline-block"
+          className="text-xs font-mono rounded border px-2 py-1 inline-block"
+          style={{ borderColor: "#e9e9e7", color: "#787774" }}
         >
           data-source: mock · backend: {MOCK_BACKEND} · run: {run.runId}
         </p>
@@ -210,22 +253,52 @@ export default async function RunDetailPage({
   const backend = detail.backend;
 
   return (
-    <section className="space-y-6">
-      <RootCard run={run} unknownSentinel={UNKNOWN} supabaseReadiness={SUPABASE_READINESS} />
-      <RunGraphView hierarchy={hierarchy} activeId={undefined} />
-      <DagView gates={run.gates} nodes={run.nodes} edges={DAG_EDGES[run.runId]} />
-      <Timeline events={run.events} unknownSentinel={UNKNOWN} />
-      <EvidenceInspector events={run.events} anomalies={run.anomalies} unknownSentinel={UNKNOWN} />
+    <section className="space-y-8">
+      {/* Run Tree */}
+      <div>
+        <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>Run Tree</h2>
+        <RootCard run={run} unknownSentinel={UNKNOWN} supabaseReadiness={SUPABASE_READINESS} />
+        <RunGraphView hierarchy={hierarchy} activeId={undefined} />
+      </div>
 
-      <LiveProjectionPane
-        runId={params.runId}
-        initialEvents={historicalEvents}
-        storeDegraded={storeDegraded}
-      />
-      <ReplayPane runId={params.runId} events={historicalEvents} storeDegraded={storeDegraded} />
-      <ReviewPane runId={params.runId} events={historicalEvents} storeDegraded={storeDegraded} />
+      {/* Flow */}
+      <div>
+        <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>Flow</h2>
+        <DagView gates={run.gates} nodes={run.nodes} edges={DAG_EDGES[run.runId]} />
+      </div>
 
-      <p className="text-xs text-muted">
+      {/* Timeline */}
+      <div>
+        <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>Timeline</h2>
+        <Timeline events={run.events} unknownSentinel={UNKNOWN} />
+      </div>
+
+      {/* Details / Evidence */}
+      <div>
+        <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>Details</h2>
+        <EvidenceInspector events={run.events} anomalies={run.anomalies} unknownSentinel={UNKNOWN} />
+      </div>
+
+      {/* Replay (isolated route) */}
+      <div>
+        <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>Replay</h2>
+        <a
+          href={`/runs/${encodeURIComponent(run.runId)}/replay`}
+          className="notion-link-btn inline-block rounded border px-3 py-1.5 text-sm"
+        >
+          Open isolated replay →
+        </a>
+        <p className="mt-1 text-xs" style={{ color: "#9b9a97" }}>
+          Replay is isolated to /runs/[runId]/replay — no live event mixing.
+        </p>
+      </div>
+
+      <style>{`
+        .notion-link-btn { border-color: #d3d1cb; background: #f7f7f5; color: #37352f; }
+        .notion-link-btn:hover { background: #efefed; }
+      `}</style>
+
+      <p className="text-xs" style={{ color: "#787774" }}>
         Real read from the publishable/RLS-compatible server path. Exact stored
         values only; genuinely absent fields shown as &ldquo;{UNKNOWN}&rdquo;.
         Reconstructed historical runs with zero canonical events surface
@@ -233,13 +306,15 @@ export default async function RunDetailPage({
       </p>
       <p
         data-testid="data-source-badge"
-        className="text-xs font-mono rounded border border-muted px-2 py-1 inline-block"
+        className="text-xs font-mono rounded border px-2 py-1 inline-block"
+        style={{ borderColor: "#e9e9e7", color: "#787774" }}
       >
         data-source: real · backend: {backend} · run: {run.runId}
       </p>
       <p
         data-testid="projection-status"
-        className="text-xs font-mono rounded border border-muted px-2 py-1 inline-block"
+        className="text-xs font-mono rounded border px-2 py-1 inline-block"
+        style={{ borderColor: "#e9e9e7", color: "#787774" }}
       >
         canonicalHistoryAvailable: {String(detail.canonicalHistoryAvailable)} ·
         projection: {detail.projectionStatus}

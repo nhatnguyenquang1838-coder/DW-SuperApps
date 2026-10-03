@@ -1,0 +1,37 @@
+# G1 PREFLIGHT — SCRUM-822 (DWO-V2-01)
+schema_version: gwc.g1.preflight/1.0
+artifact_type: G1_PREFLIGHT
+gate: G1_PLAN
+trace:
+  task_id: SCRUM-822
+  plan_revision: 1
+  checked_at: '2026-09-30T03:59:00+07:00'
+
+refs:
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 6721bf928a6d2c15305c1d23a58893ab7c7d2da7
+  task_branch: task/SCRUM-822-fixture-materialization
+  worktree: /Users/mac/prj/DW-SuperApps.worktrees/task/SCRUM-822-fixture-materialization
+
+baseline_inventory_present:
+  lib/dwo/releaseBinding.ts: true
+  lib/dwo/drift.ts: true
+  lib/dwo/inventory.ts: true
+  lib/dwo/rebindRecord.ts: true
+  dwo-v2/baseline/r0-rebind-evidence.yaml: true
+
+fixture_catalog_source:
+  page: DWO-UR-30-V1 Dev Fixture Catalog
+  notion_id: 3ea07c1c65b681c28de7c076abdfbdb2
+  status: OFFICIAL_DESIGN_BASELINE
+  read_in_full: true
+
+baseline_tests:
+  note: baseline (296 vitest + 112 pytest) verified green on integration branch before this task branched
+  node_modules: symlinked from main checkout for test running; not committed
+
+authorized_paths:
+  - projects/dw-observation/dwo-v2/fixtures/
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - .gwc/tasks/SCRUM-822/

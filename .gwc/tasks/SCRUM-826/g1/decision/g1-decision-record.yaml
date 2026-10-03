@@ -1,0 +1,124 @@
+# G1 DECISION RECORD — SCRUM-826 (DWO-V2-05)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-decision-record
+generated_at: '2026-09-30T04:22:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-826
+parent_run_ref: SCRUM-820
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: integration/SCRUM-820-dwo-v2
+base_sha: 39ac0dd39d74d0150d3966e6dda941507c50ab9a
+task_branch: task/SCRUM-826-run-ux
+active_runtime_plan_ref: PLAN-826-R1
+active_runtime_plan_revision: 1
+target_contract_ref: TARGET-UX-826-R1
+
+options_ref: ../brainstorming/g1-options.yaml
+preflight_ref: ../preflight/g1-preflight-report.yaml
+intake_ref: ../intake/g1-intake.yaml
+g0_ref: ../../g0/context-snapshot.yaml
+
+status: ACCEPTED
+selected_option_id: OPT-1
+
+user_decision:
+  actor: human://nhat-nguyen-quang
+  decided_at: '2026-09-30T04:22:00+07:00'
+  source: standing autonomous execution authorization for planning, decomposition, coding, tests and development commits
+  explicit: true
+  scope_of_decision: >-
+    OPT-1 selected by the agent as the only option satisfying the acceptance
+    criteria. Human Principal authorized autonomous execution of the approved
+    development plan. No Human decision required to select among options that all
+    met policy.
+
+rationale: >-
+  OPT-1 implements the run-centric UX as a view-model module set that renders all 30
+  fixtures through the real reducer, with a shared selection state for graph/tree
+  synchronization, an evidence-only authority rail, and explicit UR-G* vs GWC-*
+  namespace separation. This satisfies all five AC with executable validation.
+  OPT-2 (direct fixture-to-UI) recreates the parallel-source defect. OPT-3
+  (documentation-only) makes V2_PRODUCT_ALPHA unverifiable.
+
+rejected_option_ids:
+  - OPT-2
+  - OPT-3
+
+decomposition:
+  atomic: false
+  rationale: >-
+    SCRUM-826 carries separable deliverables (view model, run list, run detail,
+    graph/tree sync, lifecycle strip, authority rail, certification). Executed as
+    ordered child runs on one task branch, one G3 pass.
+  child_runs:
+    - id: CR-826-A
+      order: 1
+      title: Run view model — render all 30 fixtures through the real reducer
+      produces: [lib/dwo/runViewModel.ts]
+    - id: CR-826-B
+      order: 2
+      title: Run List + Run Detail + graph/tree selection synchronization
+      produces: [lib/dwo/runList.ts, lib/dwo/runDetail.ts]
+    - id: CR-826-C
+      order: 3
+      title: UR lifecycle strip + UR-G* vs GWC-* namespace separation + authority rail
+      produces: [lib/dwo/lifecycleStrip.ts]
+    - id: CR-826-D
+      order: 4
+      title: V2_PRODUCT_ALPHA derivation + tests
+      produces: [lib/dwo/uxCertification.ts, tests/unit/dwo/ux*.test.ts]
+  execution_order: [CR-826-A, CR-826-B, CR-826-C, CR-826-D]
+  integration: all child runs land on the task branch, then G4 integrates into integration/SCRUM-820-dwo-v2
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/ux/
+  - .gwc/tasks/SCRUM-826/
+
+excluded_actions:
+  - g4_merge
+  - g5_deploy
+  - g6_production
+  - database_migration
+  - secret_change
+  - force_push
+  - branch_deletion
+
+authority_boundaries:
+  grants:
+    - development commits on task/SCRUM-826-run-ux
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-826 progress and evidence updates
+  excluded:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION
+    - approval bypass
+    - protected main writes
+
+required_gate: G2_HUMAN_DIRECTION
+g1_gate_outcome: PASS
+
+verification_plan:
+  - command: npx tsc --noEmit
+    expectation: exit 0
+  - command: npx vitest run --reporter=dot
+    expectation: existing suites still pass, plus new ux suites
+  - command: python3 -m pytest tests/ -q
+    expectation: 112 tests still pass (no Python regression)
+  - command: npx next lint
+    expectation: no new lint errors
+  - coverage_mapping:
+      AC-826-01: tests/unit/dwo/uxCertification.test.ts
+      AC-826-02: tests/unit/dwo/runViewModel.test.ts (30 fixtures)
+      AC-826-03: tests/unit/dwo/runList.test.ts (graph/tree sync)
+      AC-826-04: tests/unit/dwo/lifecycleStrip.test.ts (no authority affordance)
+      AC-826-05: tests/unit/dwo/lifecycleStrip.test.ts (namespace separation)
+
+next_gate: G2_EXECUTION

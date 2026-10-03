@@ -1,0 +1,63 @@
+# G3 VERIFICATION ATTESTATION — SCRUM-825 (DWO-V2-04)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g3.verification-attestation/1.0
+artifact_type: VERIFICATION_ATTESTATION
+gate: G3_VERIFY
+trace:
+  task_id: SCRUM-825
+  parent_run_ref: SCRUM-820
+  plan_revision: 1
+  verified_at: '2026-09-30T04:09:00+07:00'
+  task_branch: task/SCRUM-825-durable-history
+  branch_head: 6e1f76d
+
+verdict: PASS
+
+child_runs:
+  - id: CR-825-A
+    title: Append-only durable event order + explicit position/watermark
+    commit: 6e1f76d
+    tests: covered by durable.test.ts
+  - id: CR-825-B
+    title: v1/v2 compatibility + backfill fixtures
+    commit: 6e1f76d
+    tests: covered by durable.test.ts
+  - id: CR-825-C
+    title: Duplicate idempotency + out-of-order + gap fail-closed
+    commit: 6e1f76d
+    tests: covered by durable.test.ts
+  - id: CR-825-D
+    title: Rebuild parity + RESET safety + bootstrap/catch-up + RLS + certification
+    commit: 6e1f76d
+    tests: covered by durable.test.ts
+
+executed_evidence:
+  - command: npx vitest run tests/unit/dwo/
+    result: 137 passed (137) — 9 dwo constraint suites
+  - command: npx vitest run
+    result: 26 files, 433 passed (296 baseline + 137 new)
+  - command: npx tsc --noEmit
+    result: exit 0
+  - command: python3 -m pytest tests/ -q
+    result: 112 passed (no Python regression)
+  - command: npx next lint
+    result: no new errors (1 pre-existing warning)
+
+acceptance_criteria_coverage:
+  AC-825-01: VERIFIED (V2_DURABLE_RECONCILIATION_READY derived)
+  AC-825-02: VERIFIED (rebuild-from-zero parity)
+  AC-825-03: VERIFIED (durable history reconstructs state)
+  AC-825-04: VERIFIED (duplicate/out-of-order/gap fail-closed)
+  AC-825-05: VERIFIED (no service-role in browser, RLS allow-deny)
+
+exit_token_derivation:
+  token: V2_DURABLE_RECONCILIATION_READY
+  derivable: true
+  basis: >
+    deriveV2DurableReconciliationReady(): rebuild parity, history sufficient,
+    idempotency correct, no service-role in browser. Derived by machine-readable
+    state.
+
+deviations:
+  - none

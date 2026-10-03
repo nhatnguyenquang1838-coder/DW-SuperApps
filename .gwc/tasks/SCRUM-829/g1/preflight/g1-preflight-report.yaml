@@ -1,0 +1,36 @@
+# G1 PREFLIGHT — SCRUM-829 (DWO-V2-08)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-preflight-report
+generated_at: '2026-09-30T05:12:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-829
+parent_run_ref: SCRUM-820
+base_ref: integration/SCRUM-820-dwo-v2
+base_sha: 2cdcb171519b05c0916397d58723179f889e19bb
+task_branch: task/SCRUM-829-accessibility-scale
+
+baseline_verified:
+  status: PASS
+  evidence:
+    - integration/SCRUM-820-dwo-v2 @ 2cdcb17 is the current integration head
+    - PR #130 head == 2cdcb17, mergeable CLEAN, validate + validate-worktree-policy SUCCESS
+    - full vitest 485 passed, tsc exit 0, pytest 112 passed at head
+
+dependencies_verified:
+  - SCRUM-825 (DWO-V2-04) DONE — durable history present
+  - SCRUM-826 (DWO-V2-05) DONE — run UX + selection sync present
+  - SCRUM-828 (DWO-V2-07) DONE — realtime present (parallel work complete)
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/scale/
+  - .gwc/tasks/SCRUM-829/
+
+preflight_outcome: READY
+notes:
+  - The 30-run semantic pack (DWO-UR-30-V1) must remain byte-identical; guard test added.
+  - Scale pack DWO-SCALE-GEN-V1 is a NEW generated pack, separate from the hand-authored 30-run pack.

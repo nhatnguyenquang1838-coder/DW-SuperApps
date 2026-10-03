@@ -1,0 +1,60 @@
+# G3 VERIFICATION ATTESTATION — SCRUM-823 (DWO-V2-02)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g3.verification-attestation/1.0
+artifact_type: VERIFICATION_ATTESTATION
+gate: G3_VERIFY
+trace:
+  task_id: SCRUM-823
+  parent_run_ref: SCRUM-820
+  plan_revision: 1
+  verified_at: '2026-09-30T04:00:00+07:00'
+  task_branch: task/SCRUM-823-projection-contract-v2
+  branch_head: d120560
+
+verdict: PASS
+
+child_runs:
+  - id: CR-823-A
+    title: Projection Contract v2 schema + versioning/upcast
+    commit: d120560
+    tests: covered by projectionContract.test.ts
+  - id: CR-823-B
+    title: Source/profile registry + fail-closed UNKNOWN/INCOMPATIBLE
+    commit: d120560
+    tests: covered by projectionContract.test.ts
+  - id: CR-823-C
+    title: Event position/order + gap identity + correlation metadata
+    commit: d120560
+    tests: covered by projectionContract.test.ts
+  - id: CR-823-D
+    title: FNR-02 comparison contract + cross-runtime vectors + V2_CONTRACT_FROZEN
+    commit: d120560
+    tests: covered by projectionContract.test.ts
+
+executed_evidence:
+  - command: npx vitest run tests/unit/dwo/
+    result: 94 passed (94) — 7 dwo constraint suites
+  - command: npx vitest run
+    result: 24 files, 390 passed (296 baseline + 94 new)
+  - command: npx tsc --noEmit
+    result: exit 0
+  - command: python3 -m pytest tests/ -q
+    result: 112 passed (no Python regression)
+
+acceptance_criteria_coverage:
+  AC-823-01: VERIFIED (V2_CONTRACT_FROZEN derived)
+  AC-823-02: VERIFIED (versioned contract + upcast rules)
+  AC-823-03: VERIFIED (fail-closed UNKNOWN/INCOMPATIBLE)
+  AC-823-04: VERIFIED (event position/order + gap identity + correlation)
+  AC-823-05: VERIFIED (FNR-02 versioned with cross-runtime vectors)
+
+exit_token_derivation:
+  token: V2_CONTRACT_FROZEN
+  derivable: true
+  basis: >
+    deriveV2ContractFrozen(): contract id/version correct, mode STRUCTURED_STATE_EQUALITY,
+    cross-runtime vectors present and passing. Derived by machine-readable state.
+
+deviations:
+  - none

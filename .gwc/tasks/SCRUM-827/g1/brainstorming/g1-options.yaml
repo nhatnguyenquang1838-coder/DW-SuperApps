@@ -1,0 +1,29 @@
+# G1 OPTIONS — SCRUM-827 (DWO-V2-06)
+schema_version: gwc.g1.options/1.0
+artifact_type: G1_OPTIONS
+gate: G1_PLAN
+trace:
+  task_id: SCRUM-827
+  plan_revision: 1
+
+options:
+  - id: OPT-1
+    title: TypeScript evidence/replay/recovery module set
+    description: >-
+      Implement Evidence Inspector, recovery lineage (append-only immutable
+      generations), CURRENT vs REPLAY view modes, deterministic replay checkpoints
+      from fixtures + durable history (using the SCRUM-825 ordering/rebuild
+      contract), and FNR-02 comparison evidence. Executable validation of all 5 AC.
+    satisfies: [AC-827-01, AC-827-02, AC-827-03, AC-827-04, AC-827-05]
+  - id: OPT-2
+    title: Direct fixture-to-UI for replay
+    description: Feed fixture data directly to replay UI components.
+    risk: recreates parallel-source defect
+    satisfies: [AC-827-01]
+  - id: OPT-3
+    title: Documentation-only evidence/replay UX
+    description: Write the evidence/replay spec as docs without executable validation.
+    risk: exit criteria unverifiable
+    satisfies: []
+
+selected: OPT-1
