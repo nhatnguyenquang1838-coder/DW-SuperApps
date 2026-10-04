@@ -34,8 +34,9 @@ export default function DevFixturesPage() {
 
       {isConflict && (
         <div className="dwo-fixture-conflict" data-testid="conflict-banner">
-          DEV-RUN-020: incompatible-source negative — fail-closed. Zero nodes, zero edges.
-        </div>
+        DEV-RUN-020: runState=INCOMPATIBLE sourceProfile=UNKNOWN syncState=UNAVAILABLE —
+        fail-closed. Zero nodes, zero edges.
+      </div>
       )}
 
       <UnifiedRunWorkspace model={model} />

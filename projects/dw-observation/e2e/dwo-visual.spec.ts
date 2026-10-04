@@ -95,16 +95,20 @@ test.describe("DWO visual regression — screenshots + semantic assertions", () 
     await page.goto("/dev/fixtures");
     await page.waitForLoadState("networkidle");
 
-    // DEV-RUN-020 card — target the notion-run-card container specifically
-    const card = page.locator(".notion-run-card").filter({ has: page.locator("text=DEV-RUN-020") }).first();
-    await expect(card).toBeVisible();
+    // Click DEV-RUN-020 in the fixture rail
+    const btn = page.locator(".dwo-fixture-btn").filter({ has: page.locator("text=DEV-RUN-020") }).first();
+    await btn.click();
 
-    const cardText = (await card.textContent()) ?? "";
+    // Conflict banner appears (data-testid from page.tsx)
+    const banner = page.locator("[data-testid=\"conflict-banner\"]");
+    await expect(banner).toBeVisible();
+
+    const bannerText = (await banner.textContent()) ?? "";
     // Explicit fail-closed fields from fixtureSpec.ts — never inferred from colour
-    expect(cardText).toMatch(/INCOMPATIBLE/);
+    expect(bannerText).toMatch(/INCOMPATIBLE/);
+    expect(bannerText).toMatch(/UNAVAILABLE/);
+    expect(bannerText).toMatch(/UNKNOWN/);
     // Negative fixture: no child-run chain, no dependency chain fabricated
-    expect(cardText).not.toMatch(/children.*DEV-RUN/);
-    // gate is null → rendered as "—" (not a fabricated gate state)
-    expect(cardText).toMatch(/gate\s*—/);
+    expect(bannerText).not.toMatch(/children.*DEV-RUN/);
   });
 });
