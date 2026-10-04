@@ -1,50 +1,49 @@
 "use client";
 
+import { computeNextFlow } from "@/lib/runtime/nextFlow";
 import type { UnifiedRunWorkspaceModel } from "@/lib/runtime/unifiedRuntime";
 
 /**
  * NextFlowPanel — source-backed Next Flow projection.
  *
- * Derives next node from orderedSteps + currentSequence.
- * When source data is missing, renders UNKNOWN / BLOCKED explicitly
- * (never fabricates a next node).
+ * Uses computeNextFlow() to derive the projection from runtime evidence
+ * (orderedSteps + currentSequence), with fail-closed UNKNOWN/CONFLICT/BLOCKED
+ * states. Never infers from visual position, never guesses from sequence.
  */
 export default function NextFlowPanel({ model }: { model: UnifiedRunWorkspaceModel }) {
-  const current = model.currentSequence;
-  const steps = model.orderedSteps;
+  const projection = computeNextFlow(model);
 
-  let nextNodeId: string | null = null;
-  let reason: string | null = null;
-  let blocker: string | null = null;
-
-  if (current === null || current === undefined) {
-    reason = "No current sequence — awaiting source data";
-  } else if (current < steps.length - 1) {
-    nextNodeId = steps[current + 1]?.nodeId ?? null;
-    reason = nextNodeId ? `Step ${current + 1} → ${current + 2}` : null;
-  } else {
-    reason = "At final step";
-  }
-
-  const status: "RESOLVED" | "UNKNOWN" | "BLOCKED" | "CONFLICT" =
-    nextNodeId !== null ? "RESOLVED" : reason === "No current sequence — awaiting source data" ? "UNKNOWN" : "BLOCKED";
+  const statusColor: Record<string, string> = {
+    RESOLVED: "var(--dwo-color-state-green)",
+    UNKNOWN: "var(--dwo-color-state-amber)",
+    BLOCKED: "var(--dwo-color-state-red)",
+    CONFLICT: "var(--dwo-color-state-purple)",
+  };
 
   return (
-    <div className="dwo-nextflow-panel" data-testid="nextflow-panel" data-status={status}>
+    <div
+      className="dwo-nextflow-panel"
+      data-testid="nextflow-panel"
+      data-status={projection.status}
+    >
       <div className="dwo-nextflow-label">Next Flow</div>
       <div className="dwo-nextflow-node" data-testid="nextflow-node">
-        {nextNodeId ?? <span className="dwo-unknown">UNKNOWN</span>}
+        {projection.nextNodeId ?? <span className="dwo-unknown">UNKNOWN</span>}
       </div>
       <div className="dwo-nextflow-reason" data-testid="nextflow-reason">
-        {reason ?? <span className="dwo-unknown">UNKNOWN</span>}
+        {projection.reason ?? <span className="dwo-unknown">UNKNOWN</span>}
       </div>
-      {blocker && (
+      {projection.blocker && (
         <div className="dwo-nextflow-blocker" data-testid="nextflow-blocker">
-          Blocker: {blocker}
+          Blocker: {projection.blocker}
         </div>
       )}
-      <div className="dwo-nextflow-status" data-testid="nextflow-status">
-        {status}
+      <div
+        className="dwo-nextflow-status"
+        data-testid="nextflow-status"
+        style={{ backgroundColor: statusColor[projection.status] ?? "transparent" }}
+      >
+        {projection.status} ({projection.source})
       </div>
     </div>
   );

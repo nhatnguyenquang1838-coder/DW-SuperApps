@@ -137,9 +137,9 @@ describe("NextFlowPanel", () => {
     expect(screen.getByTestId("nextflow-status")).toHaveTextContent("RESOLVED");
   });
 
-  it("shows BLOCKED at final step", () => {
+  it("shows RESOLVED at final step (flow complete, no blocker)", () => {
     render(<NextFlowPanel model={makeModel({ currentSequence: 1, orderedSteps: [{ nodeId: "node-1", sequence: 0 }, { nodeId: "node-2", sequence: 1 }] })} />);
-    expect(screen.getByTestId("nextflow-status")).toHaveTextContent("BLOCKED");
+    expect(screen.getByTestId("nextflow-status")).toHaveTextContent("RESOLVED");
   });
 });
 
