@@ -7,6 +7,7 @@
 // Read-only. Grants no effect capability.
 
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { resolveFromIndex, buildTaskRunIndexV2 } from "@/lib/dwo/taskRunIndex";
 import { TASK_META, TASK_RELATION_RECORDS } from "@/lib/taskFixtures";
 import { listRuns } from "@/lib/observatory";
@@ -68,9 +69,9 @@ export default function TaskRunsPage({ params }: { params: { taskId: string } })
     >
       <div className="mx-auto max-w-5xl px-6 py-10">
         <nav className="mb-6 text-xs" style={{ color: "var(--dwo-color-text-faint)" }}>
-          <a href="/tasks" style={{ color: "var(--dwo-color-text-muted)" }}>
+          <Link href="/tasks" style={{ color: "var(--dwo-color-text-muted)" }}>
             Tasks
-          </a>{" "}
+          </Link>{" "}
           / <span style={{ color: "var(--dwo-color-text-primary)" }}>{taskRef}</span>
         </nav>
 

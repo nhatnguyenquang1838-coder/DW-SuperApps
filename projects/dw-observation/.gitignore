@@ -18,3 +18,12 @@ supabase/
 
 *storybook.log
 storybook-static
+
+# Playwright run artifacts. The committed baselines live in
+# e2e/*-snapshots/ and ARE tracked; only the throwaway run output is ignored.
+# Without these two rules `git add -A` in a later task sweeps the whole report
+# into the diff — which is how test output starts landing in production code.
+playwright-report/
+test-results/
+/blob-report/
+/playwright/.cache/

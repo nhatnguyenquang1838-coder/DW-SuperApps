@@ -11,10 +11,15 @@ interface TopNavigationProps {
   subtitle?: string;
 }
 
+/**
+ * Product navigation. Dev-only routes (Fixture Lab, simulations) are
+ * deliberately NOT in this list: TECH_SPEC §15 requires "dev-only simulations
+ * are not primary product navigation". They stay reachable by direct URL, which
+ * is how a review lane should work.
+ */
 const defaultItems: NavItem[] = [
   { href: "/tasks", label: "Tasks" },
   { href: "/runs", label: "Run Explorer" },
-  { href: "/dev/fixtures", label: "Fixtures (dev)" },
 ];
 
 export default function TopNavigation({ items = defaultItems, subtitle }: TopNavigationProps) {

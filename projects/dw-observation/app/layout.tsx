@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import TopNavigation from "@/components/dwo/TopNavigation";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,44 +17,15 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <div className="min-h-screen">
-          <header className="border-b border-edge px-6 py-4">
-            <div className="mx-auto max-w-5xl">
-              <div className="flex items-center justify-between">
-                <a href="/tasks" className="text-lg font-semibold">
-                  DW Run Observatory
-                </a>
-                <nav className="flex gap-4 text-sm">
-                  <a
-                    href="/tasks"
-                    className="text-xs text-muted hover:text-foreground"
-                  >
-                    Tasks
-                  </a>
-                  <a
-                    href="/runs"
-                    className="text-xs text-muted hover:text-foreground"
-                  >
-                    Run Explorer
-                  </a>
-                  <a
-                    href="/dev/fixtures"
-                    className="text-xs text-muted hover:text-foreground"
-                  >
-                    Fixtures (dev)
-                  </a>
-                  <a
-                    href="/dev/sim/g0g6"
-                    className="text-xs text-muted hover:text-foreground"
-                  >
-                    Sim G0G6 (dev)
-                  </a>
-                </nav>
-              </div>
-              <span className="ml-3 text-xs text-muted">
-                read-only historical projection (DWO v2, fail-closed)
-              </span>
-            </div>
-          </header>
+          {/*
+            Navigation is owned by TopNavigation (which uses next/link).
+            This layout previously carried its own parallel header built from
+            raw <a href> tags — a second nav that drifted, and a TECH_SPEC §15
+            violation ("no raw anchor navigation remains where Next Link/router
+            semantics are expected"). Dev-only routes are still reachable, but
+            they are rendered by TopNavigation outside the primary product nav.
+          */}
+          <TopNavigation subtitle="read-only historical projection (DWO v2, fail-closed)" />
           <main className="mx-auto max-w-5xl px-6 py-6">{children}</main>
         </div>
       </body>
