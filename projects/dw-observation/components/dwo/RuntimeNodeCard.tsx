@@ -1,25 +1,21 @@
 import { Handle, Position } from "@xyflow/react";
-import type { RuntimeNodeState } from "@/lib/runtime/unifiedRuntime";
+import type { RuntimeNodeState, UnifiedRuntimeNode } from "@/lib/runtime/unifiedRuntime";
 
 /**
  * RuntimeNodeCard — one runtime node inside a Gate cluster.
  * Adapted to accept unified model node shape.
+ *
+ * The prop type below is DERIVED from `UnifiedRuntimeNode` rather than restated
+ * by hand. A hand-written copy drifted: it declared `boundary` where the model
+ * declares `authorityBoundary`, so T10's stories had to cast `as any` and
+ * typecheck failed on 6 errors. Deriving the type makes the next model change
+ * a compile error here instead of a silent `undefined` in the DOM.
  */
 export default function RuntimeNodeCard({
   data,
 }: {
   data: {
-    node: {
-      id: string;
-      title: string;
-      family: string | null | undefined;
-      nodeType: string | null | undefined;
-      boundary: string | null | undefined;
-      purpose: string | null | undefined;
-      artifacts: string[];
-      fileReads: string[];
-      fileWrites: string[];
-    };
+    node: UnifiedRuntimeNode;
     state: RuntimeNodeState;
     active: boolean;
     selected: boolean;
