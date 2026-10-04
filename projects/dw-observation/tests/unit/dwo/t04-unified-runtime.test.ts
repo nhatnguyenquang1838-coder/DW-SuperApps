@@ -9,7 +9,7 @@
  * 6. Detail preservation — login-epic and node-architect adapters preserve artifacts/runbook/checkpoints/history.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import type {
   UnifiedRunWorkspaceModel,
   UnifiedRuntimeNode,
@@ -22,6 +22,42 @@ import { fixtureScenarioAdapter } from "@/lib/runtime/adapters/fixtureScenarioAd
 import { FIXTURE_CATALOG } from "@/lib/dwo/fixtureSpec";
 import type { LoginEpicRuntimeFixture } from "@/lib/loginEpicRuntimeGraph";
 import type { SimRun } from "@/lib/simRun";
+
+// ---------------------------------------------------------------------------
+// Mock server reads for the SCRUM-820 P3 realRuntimeAdapter tests.
+// Default backend = degraded (matches no-server behavior); each test overrides
+// the mock for the non-degraded path.
+// ---------------------------------------------------------------------------
+
+const { mockReadServerRunDetail, mockReadHistoricalEvents } = vi.hoisted(() => ({
+  mockReadServerRunDetail: vi.fn(),
+  mockReadHistoricalEvents: vi.fn(),
+}));
+
+mockReadServerRunDetail.mockResolvedValue({
+  degraded: true,
+  backend: "none",
+  run: null,
+  gates: [],
+  nodes: [],
+  events: [],
+  canonicalHistoryAvailable: false,
+  projectionStatus: "PROJECTION_UNAVAILABLE",
+});
+mockReadHistoricalEvents.mockResolvedValue({
+  events: [],
+  backend: "none",
+  degraded: true,
+});
+
+vi.mock("@/lib/serverRunRead", () => ({
+  readServerConfig: vi.fn(() => ({ url: "http://test", publishableKey: "test" })),
+  readServerRunDetail: (...args: unknown[]) => mockReadServerRunDetail(...args),
+}));
+
+vi.mock("@/lib/serverHistoricalRead", () => ({
+  readHistoricalEvents: (...args: unknown[]) => mockReadHistoricalEvents(...args),
+}));
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -323,5 +359,107 @@ describe("T04 UnifiedRuntimeModel + adapters", () => {
       expect(sn1!.taskControllerHistory.length).toBeGreaterThan(0);
       expect(sn1!.executorHistory.length).toBeGreaterThan(0);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// SCRUM-820 P3 — realRuntimeAdapter: durable sequences + no fabricated edges
+// ---------------------------------------------------------------------------
+
+describe("SCRUM-820 P3 · realRuntimeAdapter", () => {
+  /** Non-degraded server detail with gates + nodes (no dependency evidence). */
+  function mockNonDegradedDetail() {
+    mockReadServerRunDetail.mockResolvedValue({
+      degraded: false,
+      backend: "supabase_publishable",
+      run: { run_id: "T04-NODE-A", status: "ACTIVE" },
+      gates: [
+        { gate_id: "node-1", gate_label: "First", boundary: "product/ui", state: "ACCEPTED" },
+        { gate_id: "node-2", gate_label: "Second", boundary: "product/ui", state: "OPEN" },
+      ],
+      nodes: [],
+      events: [],
+      canonicalHistoryAvailable: true,
+      projectionStatus: "AVAILABLE",
+    });
+  }
+
+  it("orderedSteps carries durable event sequences, never positional 0..N", async () => {
+    mockNonDegradedDetail();
+    // Durable sequences are SPARSE: node-1 at seq 4, node-2 at seq 17.
+    mockReadHistoricalEvents.mockResolvedValue({
+      events: [
+        {
+          run_id: "T04-NODE-A", source_system: "taskcontroller", source_event_id: "evt-1",
+          sequence: 4, projection_ordinal: 1, event_type: "node_started",
+          occurred_at: "2026-08-23T10:00:00Z", gate: "node-1", node_id: "node-1",
+          actor: "Hermes", outcome: "active", evidence_refs: [], authority_ref: undefined,
+          source_digest: undefined,
+        },
+        {
+          run_id: "T04-NODE-A", source_system: "taskcontroller", source_event_id: "evt-2",
+          sequence: 17, projection_ordinal: 2, event_type: "node_completed",
+          occurred_at: "2026-08-23T10:01:00Z", gate: "node-2", node_id: "node-2",
+          actor: "Hermes", outcome: "done", evidence_refs: [], authority_ref: undefined,
+          source_digest: undefined,
+        },
+      ],
+      backend: "supabase_publishable",
+      degraded: false,
+    });
+
+    const result = await realRuntimeAdapter("T04-NODE-A");
+    const sequences = result.orderedSteps.map((s) => s.sequence);
+    // Durable source sequences, not array positions.
+    expect(sequences).toEqual([4, 17]);
+    expect(sequences).not.toEqual([0, 1]);
+    expect(result.currentSequence).toBeNull();
+  });
+
+  it("events with no dependency evidence produce ZERO DEPENDENCY edges", async () => {
+    mockNonDegradedDetail();
+    // Events mention BOTH a gate and a node — that is event/gate membership,
+    // NOT dependency evidence. Zero DEPENDENCY edges must be the honest answer.
+    mockReadHistoricalEvents.mockResolvedValue({
+      events: [
+        {
+          run_id: "T04-NODE-A", source_system: "taskcontroller", source_event_id: "evt-1",
+          sequence: 4, projection_ordinal: 1, event_type: "node_started",
+          occurred_at: "2026-08-23T10:00:00Z", gate: "node-1", node_id: "node-1",
+          actor: "Hermes", outcome: "active", evidence_refs: [], authority_ref: undefined,
+          source_digest: undefined,
+        },
+      ],
+      backend: "supabase_publishable",
+      degraded: false,
+    });
+
+    const result = await realRuntimeAdapter("T04-NODE-A");
+    expect(result.edges.filter((e) => e.kind === "DEPENDENCY")).toHaveLength(0);
+    expect(result.edges).toHaveLength(0);
+  });
+
+  it("an ordered step whose durable sequence has no matching event is absent (fail-closed)", async () => {
+    mockNonDegradedDetail();
+    // Only node-1 has canonical history evidence (seq 4). node-2 has none.
+    mockReadHistoricalEvents.mockResolvedValue({
+      events: [
+        {
+          run_id: "T04-NODE-A", source_system: "taskcontroller", source_event_id: "evt-1",
+          sequence: 4, projection_ordinal: 1, event_type: "node_started",
+          occurred_at: "2026-08-23T10:00:00Z", gate: "node-1", node_id: "node-1",
+          actor: "Hermes", outcome: "active", evidence_refs: [], authority_ref: undefined,
+          source_digest: undefined,
+        },
+      ],
+      backend: "supabase_publishable",
+      degraded: false,
+    });
+
+    const result = await realRuntimeAdapter("T04-NODE-A");
+    // node-2 has NO durable sequence evidence → must not fabricate a step for it.
+    expect(result.orderedSteps.some((s) => s.nodeId === "node-2")).toBe(false);
+    expect(result.orderedSteps.some((s) => s.nodeId === "node-1")).toBe(true);
+    expect(result.orderedSteps[0].sequence).toBe(4);
   });
 });

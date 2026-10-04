@@ -28,6 +28,11 @@ export interface DashboardProjection {
   degradedSourceCount: number | null;
   recentActivity: unknown[];
   needsAttention: unknown[];
+  // Four-bucket population model — TECH_SPEC §10
+  activeCount: number | null;
+  waitingCount: number | null;
+  blockedCount: number | null;
+  completedCount: number | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -84,6 +89,10 @@ export function readDashboardProjection(
   // --- Task aggregates (source: task relation records) ---
   let taskCount: number | null = null;
   let unresolvedCount: number | null = null;
+  let activeCount: number | null = null;
+  let waitingCount: number | null = null;
+  let blockedCount: number | null = null;
+  let completedCount: number | null = null;
   const needsAttention: unknown[] = [];
 
   if (hasTaskRecords) {
@@ -91,6 +100,9 @@ export function readDashboardProjection(
     const taskRefs = [...new Set(records.map((r) => r.taskRef))];
     let resolved = 0;
     let unresolved = 0;
+    let active = 0;
+    let waiting = 0;
+    let blocked = 0;
 
     for (const ref of taskRefs) {
       const rel = resolveFromIndex(index, ref);
@@ -98,6 +110,27 @@ export function readDashboardProjection(
         resolved++;
       } else {
         unresolved++;
+        // Classify UNKNOWN_UNRESOLVED into active / waiting / blocked
+        const terminalReasons = [
+          "RELATION_CONFLICT",
+          "SUPERSESSION_CYCLE",
+          "SUPERSEDED_REVISION",
+          "MISSING_TASK_REF",
+          "MISSING_RELATION_REVISION",
+          "MISSING_SOURCE_IDENTITY",
+          "MISSING_SOURCE_DIGEST",
+          "MISSING_ROOT_RUN_ID",
+          "NEGATIVE_DURABLE_POSITION",
+        ];
+        const taskRecord = records.find((r) => r.taskRef === ref);
+        const hasRuns = taskRecord && taskRecord.rootRunIds.length > 0;
+        if (terminalReasons.includes(rel.reason)) {
+          blocked++;
+        } else if (hasRuns) {
+          active++;
+        } else {
+          waiting++;
+        }
         needsAttention.push({
           type: "task",
           taskRef: ref,
@@ -110,6 +143,10 @@ export function readDashboardProjection(
 
     taskCount = resolved + unresolved;
     unresolvedCount = unresolved;
+    activeCount = active;
+    waitingCount = waiting;
+    blockedCount = blocked;
+    completedCount = resolved;
   }
 
   // --- Run aggregates (source: observatory listRuns) ---
@@ -139,5 +176,9 @@ export function readDashboardProjection(
     degradedSourceCount,
     recentActivity,
     needsAttention,
+    activeCount,
+    waitingCount,
+    blockedCount,
+    completedCount,
   };
 }

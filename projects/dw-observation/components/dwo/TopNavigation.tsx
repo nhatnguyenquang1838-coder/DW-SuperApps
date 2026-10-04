@@ -18,6 +18,7 @@ interface TopNavigationProps {
  * is how a review lane should work.
  */
 const defaultItems: NavItem[] = [
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/tasks", label: "Tasks" },
   { href: "/runs", label: "Run Explorer" },
 ];

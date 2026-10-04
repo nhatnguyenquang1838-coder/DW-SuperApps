@@ -10,12 +10,11 @@ const SCREENSHOTS: ReadonlyArray<{
 }> = [
   {
     name: "Dashboard",
-    url: "/tasks", // root redirects to /tasks; task-first entry is the dashboard surface
-    semanticLabel: "task list visible",
+    url: "/dashboard",
+    semanticLabel: "dashboard population model visible",
     check: async (page) => {
-      const el = page.locator("h1, h2").first();
-      const text = (await el.textContent()) ?? "";
-      return /Task|Dashboard|Runs/i.test(text);
+      const body = await page.locator("body").textContent();
+      return /Dashboard|Active|Waiting|Blocked|Completed/i.test(body ?? "");
     },
   },
   {

@@ -158,7 +158,7 @@ async function buildWorkspaceModel(
   if (replaySeq !== undefined && dataSource === "real") {
     const snapshot = await getReplaySnapshot(runId, replaySeq);
     if (snapshot.status === "OK" && snapshot.projection) {
-      return { model: replayToModel(snapshot.projection, snapshot.selectedSequence), mode: "REPLAY" };
+      return { model: replayToModel(snapshot.projection, snapshot.selectedSequence, "REPLAY").model!, mode: "REPLAY" };
     }
     // Degraded / unavailable → fail-closed UNKNOWN model (never fixture fallback).
     const unknownModel: UnifiedRunWorkspaceModel = {

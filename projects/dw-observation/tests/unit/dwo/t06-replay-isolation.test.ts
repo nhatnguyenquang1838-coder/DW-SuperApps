@@ -16,6 +16,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { reduceEvents } from "@/lib/replay";
 import type { ProjectionEvent } from "@/lib/live";
+import { replayToModel } from "@/lib/runtime/replay";
+import { computeNextFlow } from "@/lib/runtime/nextFlow";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -177,6 +179,66 @@ describe("T06 · Replay isolation", () => {
       // Request a sequence far beyond the max (9) → must fail closed.
       const result = await mod.getReplaySnapshot("RUN-T06", 99999, mockClient);
       expect(result.status).toBe(mod.REPLAY_POSITION_UNAVAILABLE);
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// SCRUM-820 P3 — durable sequence preservation + no fabricated edges
+// ---------------------------------------------------------------------------
+
+describe("SCRUM-820 P3 · replayToModel", () => {
+  describe("orderedSteps preserves durable sequences", () => {
+    it("orderedSteps[].sequence values are the durable event sequences, not 0..N", () => {
+      // Durable sequences are SPARSE (3, 7, 12, 15) — never contiguous 0..N.
+      const events = [
+        makeEvent(0, "run_started"),
+        makeEvent(3, "node_started", { node_id: "NODE-A", outcome: "active" }),
+        makeEvent(7, "node_progress", { node_id: "NODE-A", outcome: "active" }),
+        makeEvent(12, "node_completed", { node_id: "NODE-A", outcome: "done" }),
+        makeEvent(15, "node_started", { node_id: "NODE-B", outcome: "active" }),
+      ];
+      const projection = reduceEvents(events);
+      const model = replayToModel(projection, 15).model!;
+      const sequences = model.orderedSteps.map((s) => s.sequence);
+      // Durable source sequences are preserved.
+      expect(sequences).toEqual([3, 7, 12, 15]);
+      // A positional index (0..N) would be a fabricated sequence.
+      expect(sequences).not.toEqual([0, 1, 2, 3]);
+    });
+  });
+
+  describe("selected sequence with no matching step", () => {
+    it("yields UNKNOWN next flow (fail-closed), not a fabricated step", () => {
+      // Durable sequences are 0 and 10. selectedSequence=5 has NO matching step.
+      const events = [
+        makeEvent(0, "run_started"),
+        makeEvent(10, "node_started", { node_id: "NODE-A", outcome: "active" }),
+      ];
+      const projection = reduceEvents(events);
+      // Fail-closed: replayToModel returns { status, model: null } when the
+      // selected durable sequence has no matching step. It must NOT fabricate one.
+      const result = replayToModel(projection, 5);
+      expect(result.status).toBe("PROJECTION_UNAVAILABLE");
+      expect(result.model).toBeNull();
+      // No step may be fabricated for the missing durable sequence.
+    });
+  });
+
+  describe("no fabricated dependency edges", () => {
+    it("events with no dependency evidence produce ZERO DEPENDENCY edges", () => {
+      // Events mention BOTH a gate and a node — the old code reclassified
+      // that event/gate membership as a SATISFIED DEPENDENCY edge. It is NOT.
+      const events = [
+        makeEvent(0, "run_started"),
+        makeEvent(5, "node_started", { node_id: "NODE-A", gate: "G2" }),
+        makeEvent(10, "node_completed", { node_id: "NODE-A", outcome: "done" }),
+      ];
+      const projection = reduceEvents(events);
+      const model = replayToModel(projection, 10).model!;
+      // No DEPENDENCY edge with SATISFIED may be fabricated from the events.
+      expect(model.edges.filter((e) => e.kind === "DEPENDENCY")).toHaveLength(0);
+      expect(model.edges).toHaveLength(0);
     });
   });
 });

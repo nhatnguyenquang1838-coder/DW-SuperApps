@@ -6,34 +6,100 @@ interface DashboardProps {
   projection: DashboardProjection;
 }
 
-export default function Dashboard({ projection }: DashboardProps) {
-  const { taskCount, runCounts, unresolvedCount, authorityWaitCount, degradedSourceCount, recentActivity, needsAttention } = projection;
+/**
+ * State semantics (TECH_SPEC §4):
+ *  - unavailable (source down) must NOT render as 0;
+ *  - 0 (source up, genuinely nothing) must NOT render as healthy-by-default;
+ *  - a degraded or unknown source must be visibly distinct from a healthy one.
+ */
+function stateFor(
+  count: number | null,
+  degraded: boolean,
+): "healthy" | "attention" | "degraded" | "unknown" {
+  if (count === null) return degraded ? "degraded" : "unknown";
+  if (degraded) return "degraded";
+  if (count > 0) return "attention";
+  return "healthy"; // count === 0, source affirmatively reported zero
+}
 
-  const healthy = !taskCount && !unresolvedCount && !degradedSourceCount && needsAttention.length === 0;
-  const attention = unresolvedCount !== null && unresolvedCount > 0;
-  const degraded = degradedSourceCount !== null && degradedSourceCount > 0;
+export default function Dashboard({ projection }: DashboardProps) {
+  const {
+    taskCount,
+    runCounts,
+    activeCount,
+    waitingCount,
+    blockedCount,
+    completedCount,
+    authorityWaitCount,
+    degradedSourceCount,
+    recentActivity,
+    needsAttention,
+  } = projection;
+
+  const anyDegraded = degradedSourceCount !== null && degradedSourceCount > 0;
+
+  const bucketRows: Array<{
+    label: string;
+    count: number | null;
+    state: "healthy" | "attention" | "degraded" | "unknown";
+  }> = [
+    { label: "Active", count: activeCount, state: stateFor(activeCount, anyDegraded) },
+    { label: "Waiting", count: waitingCount, state: stateFor(waitingCount, anyDegraded) },
+    { label: "Blocked", count: blockedCount, state: stateFor(blockedCount, anyDegraded) },
+    { label: "Completed", count: completedCount, state: stateFor(completedCount, anyDegraded) },
+  ];
 
   return (
     <div className="dwo-dashboard" data-testid="dashboard">
       <h2 className="dwo-h2">Dashboard</h2>
+
+      {/* Four-bucket population model — source-backed */}
       <div className="dwo-dashboard-grid">
-        <div className="dwo-dashboard-card" data-state={healthy ? "healthy" : attention ? "attention" : degraded ? "degraded" : "unknown"}>
+        {bucketRows.map((b) => (
+          <div
+            key={b.label}
+            className="dwo-dashboard-card"
+            data-state={b.state}
+          >
+            <span className="dwo-dashboard-label">{b.label}</span>
+            <span className="dwo-dashboard-value">
+              {b.count ?? "UNAVAILABLE"}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Source health */}
+      <div className="dwo-dashboard-grid" style={{ marginTop: 16 }}>
+        <div
+          className="dwo-dashboard-card"
+          data-state={stateFor(taskCount, anyDegraded)}
+        >
           <span className="dwo-dashboard-label">Tasks</span>
-          <span className="dwo-dashboard-value">{taskCount ?? "UNAVAILABLE"}</span>
+          <span className="dwo-dashboard-value">
+            {taskCount ?? "UNAVAILABLE"}
+          </span>
         </div>
-        <div className="dwo-dashboard-card" data-state={healthy ? "healthy" : attention ? "attention" : degraded ? "degraded" : "unknown"}>
-          <span className="dwo-dashboard-label">Unresolved</span>
-          <span className="dwo-dashboard-value">{unresolvedCount ?? "UNAVAILABLE"}</span>
-        </div>
-        <div className="dwo-dashboard-card" data-state={healthy ? "healthy" : attention ? "attention" : degraded ? "degraded" : "unknown"}>
+        <div
+          className="dwo-dashboard-card"
+          data-state={stateFor(authorityWaitCount, anyDegraded)}
+        >
           <span className="dwo-dashboard-label">Authority Waits</span>
-          <span className="dwo-dashboard-value">{authorityWaitCount ?? "UNAVAILABLE"}</span>
+          <span className="dwo-dashboard-value">
+            {authorityWaitCount ?? "UNAVAILABLE"}
+          </span>
         </div>
-        <div className="dwo-dashboard-card" data-state={healthy ? "healthy" : attention ? "attention" : degraded ? "degraded" : "unknown"}>
+        <div
+          className="dwo-dashboard-card"
+          data-state={stateFor(degradedSourceCount, true)}
+        >
           <span className="dwo-dashboard-label">Degraded Sources</span>
-          <span className="dwo-dashboard-value">{degradedSourceCount ?? "UNAVAILABLE"}</span>
+          <span className="dwo-dashboard-value">
+            {degradedSourceCount ?? "UNAVAILABLE"}
+          </span>
         </div>
       </div>
+
       {needsAttention.length > 0 && (
         <div className="dwo-dashboard-attention" data-testid="dashboard-attention">
           <h3 className="dwo-h3">Needs Attention</h3>

@@ -23,13 +23,11 @@ import { readHistoricalEvents } from "@/lib/serverHistoricalRead";
 function mapSourceStatus(state: string | null | undefined): string | null {
   if (!state) return null;
   const upper = state.toUpperCase();
-  // Direct vocabulary matches from authorityVocabulary.
   const vocabulary = new Set([
     "PENDING", "GRANTED", "DENIED", "EXPIRED", "REVOKED",
     "NOT_REQUIRED", "UNKNOWN",
   ]);
   if (vocabulary.has(upper)) return upper;
-  // Common run state mappings — keep them close to the vocabulary.
   switch (upper) {
     case "OPEN":
     case "ACTIVE":
@@ -61,7 +59,6 @@ export async function realRuntimeAdapter(
   const detail = await readServerRunDetail(runId);
   const history = await readHistoricalEvents(runId);
 
-  // If the server read is degraded, return fully unknown — no fallback.
   if (detail.degraded) {
     return {
       runId,
@@ -82,7 +79,6 @@ export async function realRuntimeAdapter(
   const nodes: UnifiedRuntimeNode[] = [];
   const edges: UnifiedRuntimeEdge[] = [];
 
-  // Map server gates → nodes (one node per gate as a summary).
   for (const gate of detail.gates) {
     const gateId = (gate.gate_id as string) ?? null;
     nodes.push({
@@ -106,7 +102,6 @@ export async function realRuntimeAdapter(
     });
   }
 
-  // Map server nodes → nodes with detail.
   for (const row of detail.nodes) {
     const nodeId = (row.node_id as string) ?? UNKNOWN;
     nodes.push({
@@ -130,20 +125,28 @@ export async function realRuntimeAdapter(
     });
   }
 
-  // Map projection events → edges (recorded relationships only).
+  // --- Dependency edges: canonical evidence only ---
+  // Event/gate membership is NOT dependency evidence.
+  // If the source provides no dependency evidence, edges stay empty.
+  // (No DEPENDENCY edges fabricated here — see task SCRUM-820 P3.)
+
+  // --- orderedSteps: durable sequences from canonical events ---
+  const nodeSequence = new Map<string, number>();
   for (const evt of history.events) {
-    if (evt.nodeId && evt.gate) {
-      edges.push({
-        id: `evt-${evt.sourceEventId}`,
-        source: evt.gate as string,
-        target: evt.nodeId as string,
-        kind: "DEPENDENCY",
-        state: "SATISFIED",
-      });
+    const nodeId = typeof evt.nodeId === "string" ? evt.nodeId : null;
+    if (nodeId && typeof evt.sequence === "number") {
+      const existing = nodeSequence.get(nodeId);
+      if (existing === undefined || evt.sequence > existing) {
+        nodeSequence.set(nodeId, evt.sequence);
+      }
     }
   }
 
-  const orderedSteps = nodes.map((n, i) => ({ nodeId: n.id, sequence: i }));
+  // Only include nodes that have canonical event evidence (fail-closed).
+  const orderedSteps = nodes
+    .filter((n) => n.id !== UNKNOWN && nodeSequence.has(n.id))
+    .map((n) => ({ nodeId: n.id, sequence: nodeSequence.get(n.id)! }))
+    .sort((a, b) => a.sequence - b.sequence);
 
   return {
     runId: (detail.run?.run_id as string) ?? runId,

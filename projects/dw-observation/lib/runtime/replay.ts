@@ -85,16 +85,29 @@ export async function getReplaySnapshot(
 // ---------------------------------------------------------------------------
 
 /**
+ * Result of replayToModel — either OK with a model, or PROJECTION_UNAVAILABLE
+ * when selectedSequence has no matching durable step (fail-closed).
+ */
+export interface ReplayModelResult {
+  status: "OK" | "PROJECTION_UNAVAILABLE";
+  model: UnifiedRunWorkspaceModel | null;
+  projection: ReplayProjection | null;
+}
+
+/**
  * Convert a replay projection into a UnifiedRunWorkspaceModel for
  * rendering through the same UnifiedRunWorkspace shell in REPLAY mode.
  *
  * Absent/unknown fields stay null/UNKNOWN — no fixture fallback.
+ *
+ * Returns PROJECTION_UNAVAILABLE when selectedSequence has no matching
+ * durable step (fail-closed — never fabricate a step).
  */
 export function replayToModel(
   projection: ReplayProjection,
   selectedSequence: number | null,
   mode: WorkspaceMode = "REPLAY"
-): UnifiedRunWorkspaceModel {
+): ReplayModelResult {
   const nodes: UnifiedRuntimeNode[] = Object.values(
     projection.nodes
   ).map((n) => ({
@@ -117,23 +130,33 @@ export function replayToModel(
     checkpoints: [],
   }));
 
-  const edges: UnifiedRuntimeEdge[] = projection.events
-    .filter(
-      (e) =>
-        typeof (e as Record<string, unknown>).node_id === "string" &&
-        typeof (e as Record<string, unknown>).gate === "string"
-    )
-    .map((e) => ({
-      id: `replay-evt-${e.source_event_id}`,
-      source: (e as Record<string, unknown>).gate as string,
-      target: (e as Record<string, unknown>).node_id as string,
-      kind: "DEPENDENCY" as const,
-      state: "SATISFIED" as const,
-    }));
+  // No dependency evidence in canonical events → zero DEPENDENCY edges.
+  // Event/gate membership is NOT dependency evidence.
+  const edges: UnifiedRuntimeEdge[] = [];
 
-  const orderedSteps = nodes.map((n, i) => ({ nodeId: n.id, sequence: i }));
+  // orderedSteps carries the DURABLE sequence from each canonical
+  // node event (node_started / node_progress / node_completed).
+  // One step per event — never a positional index.
+  const seenSequences = new Set<number>();
+  const orderedSteps: { nodeId: string; sequence: number }[] = [];
+  for (const e of projection.events ?? []) {
+    if (typeof e.sequence !== "number") continue; // never fabricate a sequence
+    if (seenSequences.has(e.sequence)) continue;
+    seenSequences.add(e.sequence);
+    const nodeId =
+      typeof (e as Record<string, unknown>).node_id === "string"
+        ? ((e as Record<string, unknown>).node_id as string)
+        : projection.runId ?? "";
+    orderedSteps.push({ nodeId, sequence: e.sequence });
+  }
+  orderedSteps.sort((a, b) => a.sequence - b.sequence);
 
-  return {
+  // Fail-closed: selectedSequence must match a durable step.
+  if (selectedSequence !== null && !orderedSteps.some((s) => s.sequence === selectedSequence)) {
+    return { status: "PROJECTION_UNAVAILABLE", model: null, projection: null };
+  }
+
+  const model: UnifiedRunWorkspaceModel = {
     runId: projection.runId ?? "",
     taskRef: null,
     mode,
@@ -147,4 +170,6 @@ export function replayToModel(
     projectionStatus: "AVAILABLE",
     sourceDigest: null,
   };
+
+  return { status: "OK", model, projection };
 }
