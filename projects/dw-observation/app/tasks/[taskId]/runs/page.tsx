@@ -7,10 +7,20 @@
 // Read-only. Grants no effect capability.
 
 import { notFound } from "next/navigation";
-import { getTaskRootRuns, TASK_META } from "@/lib/taskFixtures";
-import { listRuns, UNKNOWN } from "@/lib/observatory";
+import { resolveFromIndex, buildTaskRunIndexV2 } from "@/lib/dwo/taskRunIndex";
+import { TASK_META, TASK_RELATION_RECORDS } from "@/lib/taskFixtures";
+import { listRuns } from "@/lib/observatory";
 
-type Json = Record<string, unknown>;
+type TaskRunSummary = {
+  runId: string;
+  status: string;
+  sourceSystem: string | null;
+  lane: string | null;
+  startedAt: string | null;
+  lifecycleProgress: { completed: number; total: number } | null;
+  anomalyCount: number | null;
+  relationRevision: number | null;
+};
 
 function findTaskMeta(taskId: string) {
   return TASK_META.find((t) => t.taskRef === taskId);
@@ -23,18 +33,26 @@ export default function TaskRunsPage({ params }: { params: { taskId: string } })
   // Fail-closed: unknown task → 404, not a silent fallback.
   if (!meta) notFound();
 
-  const resolution = getTaskRootRuns(taskRef);
-  const runsById = new Map(listRuns("mock").map((r) => [r.runId, r]));
+  // Resolve relation through source-backed gateway (T02 pattern).
+  const index = buildTaskRunIndexV2(TASK_RELATION_RECORDS);
+  const decision = resolveFromIndex(index, taskRef);
 
-  const items = resolution.rootRunIds.map((runId) => {
+  // Hydrate run metadata from the same source (real fixtures, not mock).
+  const runsById = new Map(listRuns("real").map((r) => [r.runId, r]));
+
+  const items: TaskRunSummary[] = decision.rootRunIds.map((runId) => {
     const run = runsById.get(runId);
     return {
-      id: runId,
-      source: run?.sourceSystem ?? UNKNOWN,
-      kind: run?.lane ?? UNKNOWN,
-      started: run?.startedAt ?? null,
-      eventCount: run?.eventCount,
-      anomalyCount: run?.anomalyCount,
+      runId,
+      status: run?.status ?? "—",
+      sourceSystem: run?.sourceSystem && run.sourceSystem !== "—" ? run.sourceSystem : null,
+      lane: run?.lane && run.lane !== "—" ? run.lane : null,
+      startedAt: run?.startedAt ?? null,
+      lifecycleProgress: null,
+      anomalyCount: run?.anomalyCount ?? null,
+      relationRevision: decision.relationRevisionId
+        ? Number.parseInt(decision.relationRevisionId.replace("rel-", ""), 10)
+        : null,
     };
   });
 
@@ -66,8 +84,11 @@ export default function TaskRunsPage({ params }: { params: { taskId: string } })
           {meta.title}
         </p>
         <p className="mb-6 text-xs" style={{ color: "#787774" }}>
-          domain: {meta.domain} · relation: {resolution.reason} (
-          {resolution.status})
+          domain: {meta.domain} · relation: {decision.reason} (
+          {decision.status})
+          {decision.relationRevisionId
+            ? ` · relationRevision: ${decision.relationRevisionId}`
+            : ""}
         </p>
 
         {items.length === 0 ? (
@@ -86,8 +107,8 @@ export default function TaskRunsPage({ params }: { params: { taskId: string } })
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((r) => (
               <a
-                key={r.id}
-                href={`/runs/${encodeURIComponent(r.id)}`}
+                key={r.runId}
+                href={`/runs/${encodeURIComponent(r.runId)}`}
                 className="notion-run-card block rounded-lg border p-4 transition-colors"
                 style={{ color: "inherit" }}
               >
@@ -96,31 +117,42 @@ export default function TaskRunsPage({ params }: { params: { taskId: string } })
                     className="text-sm font-semibold"
                     style={{ color: "#37352f" }}
                   >
-                    {r.id}
+                    {r.runId}
                   </span>
                   <span
                     className="rounded px-2 py-0.5 text-[10px] uppercase tracking-wide"
                     style={{ background: "#f1f1ef", color: "#787774" }}
                   >
-                    {r.source}
+                    {r.sourceSystem ?? "—"}
                   </span>
                 </div>
                 <dl className="mt-2 grid grid-cols-2 gap-2 text-xs">
                   <div>
-                    <dt style={{ color: "#9b9a97" }}>Kind</dt>
-                    <dd style={{ color: "#37352f" }}>{r.kind}</dd>
+                    <dt style={{ color: "#9b9a97" }}>Status</dt>
+                    <dd style={{ color: "#37352f" }}>{r.status}</dd>
+                  </div>
+                  <div>
+                    <dt style={{ color: "#9b9a97" }}>Lane</dt>
+                    <dd style={{ color: "#37352f" }}>{r.lane ?? "—"}</dd>
                   </div>
                   <div>
                     <dt style={{ color: "#9b9a97" }}>Started</dt>
-                    <dd style={{ color: "#37352f" }}>{r.started ?? "—"}</dd>
+                    <dd style={{ color: "#37352f" }}>
+                      {r.startedAt ?? "—"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt style={{ color: "#9b9a97" }}>Anomalies</dt>
+                    <dd style={{ color: "#37352f" }}>
+                      {r.anomalyCount !== null && r.anomalyCount !== undefined
+                        ? r.anomalyCount
+                        : "—"}
+                    </dd>
                   </div>
                 </dl>
-                {(r.eventCount !== undefined || r.anomalyCount !== undefined) && (
-                  <div className="mt-2 flex gap-2 text-[10px]" style={{ color: "#9b9a97" }}>
-                    {r.eventCount !== undefined && <span>{r.eventCount} events</span>}
-                    {r.anomalyCount !== undefined && r.anomalyCount > 0 && (
-                      <span style={{ color: "#b54708" }}>{r.anomalyCount} anomalies</span>
-                    )}
+                {r.relationRevision !== null && (
+                  <div className="mt-2 text-[10px]" style={{ color: "#9b9a97" }}>
+                    relationRevision: {r.relationRevision}
                   </div>
                 )}
               </a>
