@@ -55,7 +55,7 @@ const DWO_SURFACE = ["components/dwo/", "app/runs/[runId]/page.tsx"];
  *   components/login-epic/*             3  -> legacy, superseded by dwo/
  *   components/DagView.tsx              1
  */
-const DEBT_CEILING = 68;
+const DEBT_CEILING = 37; // 68 − 31 page literals removed by T09b
 
 const SOURCE_RE = /\.(tsx?|jsx?)$/;
 // 3-digit shorthand counts too: #fff is the same drift as #ffffff.

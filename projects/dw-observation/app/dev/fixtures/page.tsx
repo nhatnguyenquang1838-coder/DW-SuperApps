@@ -1,91 +1,44 @@
-// Server Component (Next.js App Router) — dev/review fixture catalog.
-//
-// /dev/fixtures renders the DWO-UR-30-V1 30-fixture pack from fixtureSpec.ts.
-// This is a development-only certification surface: NOT part of primary
-// navigation, NOT in the product run-history path.
-//
-// Read-only. Grants no effect capability.
+"use client";
 
-import { FIXTURE_CATALOG, assertFixtureCatalogInvariants } from "@/lib/dwo/fixtureSpec";
+import { useState } from "react";
+import { FIXTURE_CATALOG, DEV_RUN_020 } from "@/lib/dwo/fixtureSpec";
+import { materializeFixtureScenario } from "@/lib/dwo/materializeFixtureScenario";
+import UnifiedRunWorkspace from "@/components/dwo/UnifiedRunWorkspace";
+import type { UnifiedRunWorkspaceModel } from "@/lib/runtime/unifiedRuntime";
 
 export default function DevFixturesPage() {
-  try {
-    assertFixtureCatalogInvariants(FIXTURE_CATALOG);
-  } catch (e) {
-    return (
-      <div className="p-6">
-        <p className="text-red-600">Fixture catalog invariant violation: {(e as Error).message}</p>
-      </div>
-    );
-  }
+  const [selectedId, setSelectedId] = useState("DEV-RUN-001");
+  const selectedEntry = FIXTURE_CATALOG.find((f) => f.id === selectedId)!;
+  const model: UnifiedRunWorkspaceModel = materializeFixtureScenario(selectedEntry);
+  const isConflict = selectedId === DEV_RUN_020;
 
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        background: "#ffffff",
-        color: "#37352f",
-        fontFamily:
-          'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif',
-      }}
-    >
-      <style>{`
-        .notion-run-card { border-color: #e9e9e7; background: #ffffff; }
-        .notion-run-card:hover { border-color: #37352f; }
-        .notion-link-btn { border-color: #d3d1cb; background: #f7f7f5; color: #37352f; }
-        .notion-link-btn:hover { background: #efefed; }
-      `}</style>
-      <div className="mx-auto max-w-5xl px-6 py-10">
-        <h1 className="mb-1 text-2xl font-bold tracking-tight" style={{ color: "#37352f" }}>
-          Fixture catalog — DWO-UR-30-V1
-        </h1>
-        <p className="mb-6 text-xs" style={{ color: "#787774" }}>
-          29 conforming + 1 negative (DEV-RUN-020). Development/review surface only.
-        </p>
+    <div className="dwo-fixture-lab">
+      <p className="dwo-fixture-label">
+        Fixture data — development/review surface only. Not reachable from production run routes.
+      </p>
 
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {FIXTURE_CATALOG.map((f) => (
-            <div
-              key={f.id}
-              className="notion-run-card rounded border px-3 py-2 text-xs"
-              style={{ borderColor: "#e9e9e7", background: "#ffffff", color: "#37352f" }}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-semibold" style={{ color: "#37352f" }}>{f.id}</span>
-                <span
-                  className="rounded px-1.5 py-0.5 text-[10px] uppercase"
-                  style={{
-                    background: f.kind === "NEGATIVE" ? "#fce4e4" : "#f1f1ef",
-                    color: f.kind === "NEGATIVE" ? "#b54708" : "#787774",
-                  }}
-                >
-                  {f.kind}
-                </span>
-              </div>
-              <dl className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px]">
-                <dt style={{ color: "#9b9a97" }}>domain</dt><dd style={{ color: "#37352f" }}>{f.domain}</dd>
-                <dt style={{ color: "#9b9a97" }}>gate</dt><dd style={{ color: "#37352f" }}>{f.gate ?? "—"}</dd>
-                <dt style={{ color: "#9b9a97" }}>runState</dt><dd style={{ color: "#37352f" }}>{f.runState}</dd>
-                <dt style={{ color: "#9b9a97" }}>auth</dt><dd style={{ color: "#37352f" }}>{f.authorityState}</dd>
-                <dt style={{ color: "#9b9a97" }}>purpose</dt><dd style={{ color: "#787774" }}>{f.purpose}</dd>
-              </dl>
-              {f.children.length > 0 && (
-                <div className="mt-1 text-[10px]" style={{ color: "#9b9a97" }}>children: {f.children.join(", ")}</div>
-              )}
-              {f.deps.length > 0 && (
-                <div className="text-[10px]" style={{ color: "#9b9a97" }}>deps: {f.deps.join(", ")}</div>
-              )}
-            </div>
-          ))}
+      <nav className="dwo-fixture-rail" data-testid="fixture-catalog">
+        {FIXTURE_CATALOG.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            className={`dwo-fixture-btn ${selectedId === f.id ? "dwo-fixture-btn-selected" : ""}`}
+            onClick={() => setSelectedId(f.id)}
+          >
+            <span>{f.id}</span>
+            <span className="dwo-fixture-kind">{f.kind}</span>
+          </button>
+        ))}
+      </nav>
+
+      {isConflict && (
+        <div className="dwo-fixture-conflict" data-testid="conflict-banner">
+          DEV-RUN-020: incompatible-source negative — fail-closed. Zero nodes, zero edges.
         </div>
+      )}
 
-        <a
-          href="/tasks"
-          className="notion-link-btn mt-8 inline-block rounded border px-3 py-1.5 text-sm"
-        >
-          ← Tasks
-        </a>
-      </div>
+      <UnifiedRunWorkspace model={model} />
     </div>
   );
 }
