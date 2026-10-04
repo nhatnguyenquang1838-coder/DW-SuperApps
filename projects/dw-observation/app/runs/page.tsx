@@ -82,28 +82,28 @@ export default async function RunsPage() {
     <div
       className="min-h-screen"
       style={{
-        background: "#ffffff",
-        color: "#37352f",
+        background: "var(--dwo-color-bg-surface)",
+        color: "var(--dwo-color-text-primary)",
         fontFamily:
           'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif',
       }}
     >
       <style>{`
-        .notion-run-card { border-color: #e9e9e7; background: #ffffff; }
-        .notion-run-card:hover { border-color: #37352f; }
-        .notion-link-btn { border-color: #d3d1cb; background: #f7f7f5; color: #37352f; }
-        .notion-link-btn:hover { background: #efefed; }
+        .notion-run-card { border-color: var(--dwo-color-border-default); background: var(--dwo-color-bg-surface); }
+        .notion-run-card:hover { border-color: var(--dwo-color-text-primary); }
+        .notion-link-btn { border-color: var(--dwo-color-border-default); background: var(--dwo-color-bg-subtle); color: var(--dwo-color-text-primary); }
+        .notion-link-btn:hover { background: var(--dwo-color-bg-canvas); }
       `}</style>
       <div className="mx-auto max-w-5xl px-6 py-10">
         <div className="flex items-center justify-between">
           <div>
             <h1
               className="mb-1 text-2xl font-bold tracking-tight"
-              style={{ color: "#37352f" }}
+              style={{ color: "var(--dwo-color-text-primary)" }}
             >
               Run Explorer
             </h1>
-            <p className="text-sm" style={{ color: "#787774" }}>
+            <p className="text-sm" style={{ color: "var(--dwo-color-text-muted)" }}>
               Global run history — read-only historical projection
             </p>
           </div>
@@ -119,9 +119,9 @@ export default async function RunsPage() {
           <div
             className="my-6 rounded-md border px-4 py-3 text-sm"
             style={{
-              borderColor: "#f0b429",
-              background: "#fdf6e3",
-              color: "#8a6d1a",
+              borderColor: "var(--dwo-color-state-amber)",
+              background: "var(--dwo-color-bg-subtle)",
+              color: "var(--dwo-color-state-amber)",
             }}
           >
             <p className="font-semibold">DEGRADED / PROJECTION_UNAVAILABLE</p>
@@ -133,7 +133,7 @@ export default async function RunsPage() {
               <a
                 href="/dev/fixtures"
                 className="underline"
-                style={{ color: "#8a6d1a" }}
+                style={{ color: "var(--dwo-color-state-amber)" }}
               >
                 /dev/fixtures
               </a>
@@ -141,7 +141,7 @@ export default async function RunsPage() {
             </p>
           </div>
         ) : items.length === 0 ? (
-          <p className="my-6 text-sm" style={{ color: "#787774" }}>
+          <p className="my-6 text-sm" style={{ color: "var(--dwo-color-text-muted)" }}>
             No runs recorded.
           </p>
         ) : (
@@ -156,25 +156,25 @@ export default async function RunsPage() {
                 <div className="flex items-center justify-between gap-2">
                   <span
                     className="text-sm font-semibold"
-                    style={{ color: "#37352f" }}
+                    style={{ color: "var(--dwo-color-text-primary)" }}
                   >
                     {r.id}
                   </span>
                   <span
                     className="rounded px-2 py-0.5 text-[10px] uppercase tracking-wide"
-                    style={{ background: "#f1f1ef", color: "#787774" }}
+                    style={{ background: "var(--dwo-color-bg-subtle)", color: "var(--dwo-color-text-muted)" }}
                   >
                     {r.source}
                   </span>
                 </div>
                 <dl className="mt-2 grid grid-cols-2 gap-2 text-xs">
                   <div>
-                    <dt style={{ color: "#9b9a97" }}>Kind</dt>
-                    <dd style={{ color: "#37352f" }}>{r.kind}</dd>
+                    <dt style={{ color: "var(--dwo-color-text-faint)" }}>Kind</dt>
+                    <dd style={{ color: "var(--dwo-color-text-primary)" }}>{r.kind}</dd>
                   </div>
                   <div>
-                    <dt style={{ color: "#9b9a97" }}>Started</dt>
-                    <dd style={{ color: "#37352f" }}>{r.started ?? "—"}</dd>
+                    <dt style={{ color: "var(--dwo-color-text-faint)" }}>Started</dt>
+                    <dd style={{ color: "var(--dwo-color-text-primary)" }}>{r.started ?? "—"}</dd>
                   </div>
                 </dl>
               </a>
@@ -185,7 +185,7 @@ export default async function RunsPage() {
         <p
           data-testid="list-data-source-badge"
           className="mt-6 inline-block rounded border px-2 py-1 font-mono text-xs"
-          style={{ borderColor: "#e9e9e7", color: "#787774" }}
+          style={{ borderColor: "var(--dwo-color-border-default)", color: "var(--dwo-color-text-muted)" }}
         >
           data-source: {dataSource} · backend: {backend}
         </p>

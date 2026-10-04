@@ -37,7 +37,7 @@ const SCAN_DIRS = ["app", "components", "lib"];
 const ALLOWED_FILES = new Set(["app/globals.css"]);
 
 /** Tier 1 — zero tolerance. */
-const DWO_SURFACE = ["components/dwo/", "app/runs/[runId]/page.tsx"];
+const DWO_SURFACE = ["components/dwo/", "app/runs/[runId]/page.tsx", "app/runs/page.tsx"];
 
 /**
  * Tier 2 debt ceiling, measured 2026-10-04 with the SAME matcher as this guard
@@ -46,16 +46,16 @@ const DWO_SURFACE = ["components/dwo/", "app/runs/[runId]/page.tsx"];
  *
  *   start        85  (baseline after the T05 supervisor fix)
  *   - T06        17  app/runs/[runId]/replay/page.tsx fully de-hexed
- *   current      68
+ *   - T05        25  app/runs/page.tsx fully de-hexed (this task)
+ *   current      12
  *
  *   app/dev/fixtures/page.tsx          31  -> T09 Fixture Lab
- *   app/runs/page.tsx                  25  -> T12 Run Explorer
  *   components/RunGraphEdge.tsx         6
  *   components/RunGraphView.tsx         2
  *   components/login-epic/*             3  -> legacy, superseded by dwo/
  *   components/DagView.tsx              1
  */
-const DEBT_CEILING = 37; // 68 − 31 page literals removed by T09b
+const DEBT_CEILING = 12; // post-T05 cleanup: 37 − 25 (app/runs/page.tsx) = 12
 
 const SOURCE_RE = /\.(tsx?|jsx?)$/;
 // 3-digit shorthand counts too: #fff is the same drift as #ffffff.
