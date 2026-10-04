@@ -9,6 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "typecheck:tests": "node scripts/typecheck-tests.mjs",
+    "typecheck:tests:strict": "node scripts/typecheck-tests.mjs --strict",
     "test": "vitest run",
     "test:watch": "vitest",
     "storybook": "storybook dev -p 6006",
