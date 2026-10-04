@@ -1,16 +1,16 @@
 // Server Component — Task → Root runs navigation.
 //
 // /tasks/[taskId]/runs lists the root runs for a given task, resolved through
-// the real TaskRunIndexV2 resolver (resolveFromIndex). No inference from run-id
-// or branch patterns: absence of a relation record -> UNKNOWN_UNRESOLVED.
+// the canonical task gateway (resolveTask). No direct import from the
+// legacy fixture module — the fixture adapter is reachable ONLY from dev routes.
 //
 // Read-only. Grants no effect capability.
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { resolveFromIndex, buildTaskRunIndexV2 } from "@/lib/dwo/taskRunIndex";
-import { TASK_META, TASK_RELATION_RECORDS } from "@/lib/taskFixtures";
+import { resolveTask } from "@/lib/taskRead";
 import { listRuns } from "@/lib/observatory";
+import type { TaskSummary } from "@/lib/taskTypes";
 
 type TaskRunSummary = {
   runId: string;
@@ -23,25 +23,19 @@ type TaskRunSummary = {
   relationRevision: number | null;
 };
 
-function findTaskMeta(taskId: string) {
-  return TASK_META.find((t) => t.taskRef === taskId);
-}
-
-export default function TaskRunsPage({ params }: { params: { taskId: string } }) {
+export default async function TaskRunsPage({ params }: { params: { taskId: string } }) {
   const taskRef = decodeURIComponent(params.taskId);
-  const meta = findTaskMeta(taskRef);
 
-  // Fail-closed: unknown task → 404, not a silent fallback.
-  if (!meta) notFound();
+  // Resolve task through the canonical gateway — real source only.
+  // Fail-closed: UNAVAILABLE → 404 (unknown task, not a silent fallback).
+  const task = await resolveTask(taskRef, "real", []);
 
-  // Resolve relation through source-backed gateway (T02 pattern).
-  const index = buildTaskRunIndexV2(TASK_RELATION_RECORDS);
-  const decision = resolveFromIndex(index, taskRef);
+  if (task.status === "UNAVAILABLE") notFound();
 
-  // Hydrate run metadata from the same source (real fixtures, not mock).
+  // Hydrate runs from the observatory (same source family as the gateway).
   const runsById = new Map(listRuns("real").map((r) => [r.runId, r]));
 
-  const items: TaskRunSummary[] = decision.rootRunIds.map((runId) => {
+  const items: TaskRunSummary[] = task.rootRunIds.map((runId) => {
     const run = runsById.get(runId);
     return {
       runId,
@@ -51,9 +45,7 @@ export default function TaskRunsPage({ params }: { params: { taskId: string } })
       startedAt: run?.startedAt ?? null,
       lifecycleProgress: null,
       anomalyCount: run?.anomalyCount ?? null,
-      relationRevision: decision.relationRevisionId
-        ? Number.parseInt(decision.relationRevisionId.replace("rel-", ""), 10)
-        : null,
+      relationRevision: task.relationRevision,
     };
   });
 
@@ -82,14 +74,11 @@ export default function TaskRunsPage({ params }: { params: { taskId: string } })
           {taskRef}
         </h1>
         <p className="mb-2 text-sm" style={{ color: "var(--dwo-color-text-primary)" }}>
-          {meta.title}
+          {task.title}
         </p>
         <p className="mb-6 text-xs" style={{ color: "var(--dwo-color-text-muted)" }}>
-          domain: {meta.domain} · relation: {decision.reason} (
-          {decision.status})
-          {decision.relationRevisionId
-            ? ` · relationRevision: ${decision.relationRevisionId}`
-            : ""}
+          domain: {task.domain} · relation: {task.status}
+          {task.relationRevision != null && ` · relationRevision: ${task.relationRevision}`}
         </p>
 
         {items.length === 0 ? (
@@ -101,7 +90,7 @@ export default function TaskRunsPage({ params }: { params: { taskId: string } })
               color: "var(--dwo-color-state-amber)",
             }}
           >
-            No root runs resolved for this task — no relation record exists{" "}
+            No root runs resolved for this task — no relation record exists
             (TaskRunIndexV2 fail-closed, no run-id inference).
           </div>
         ) : (

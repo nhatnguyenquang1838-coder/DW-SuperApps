@@ -13,4 +13,6 @@ export interface TaskSummary {
   latestState: string | null;
   relationRevision: number | null;
   status: TaskResolutionStatus;
+  /** Root run ids from the resolved relation — used by /tasks/[taskId]/runs hydration. */
+  rootRunIds: readonly string[];
 }

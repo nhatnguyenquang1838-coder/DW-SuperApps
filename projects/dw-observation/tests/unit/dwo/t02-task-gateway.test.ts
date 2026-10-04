@@ -1,9 +1,11 @@
 /**
  * T02 — Canonical Task read gateway tests.
  *
- * RED phase: these tests fail until lib/taskTypes.ts and lib/taskRead.ts
- * are implemented. They assert the gateway contracts from the SCRUM-820
- * T02 spec.
+ * RED phase: these tests fail until lib/taskRead.ts and the pages
+ * are fixed to remove fixture dependencies from production paths.
+ *
+ * TDD: write the test first. RED must fail for the RIGHT reason
+ * (the missing behaviour, not a typo). Then the minimal fix. Then GREEN.
  */
 import { describe, expect, it } from "vitest";
 import fs from "node:fs";
@@ -30,9 +32,16 @@ function record(overrides: Partial<TaskRunRelationRecord>): TaskRunRelationRecor
 }
 
 describe("T02 · task gateway", () => {
-  // --- Test 1: RESOLVED for a known task ---
+  // --- Gateway function tests ---
+
   it("returns RESOLVED for a task the canonical source knows", () => {
-    const summaries = readFixtureSummaries();
+    const metas = [
+      { taskRef: "SCRUM-555", title: "Mock UI + Supabase migration proposal", domain: "DW-SuperApps", runCount: 1 },
+    ];
+    const records: TaskRunRelationRecord[] = [
+      record({ taskRef: "SCRUM-555", rootRunIds: ["RUN-A"], sourceRecordId: "scrum555-rel-1" }),
+    ];
+    const summaries = readFixtureSummaries(metas, records);
     const sc555 = summaries.find((s) => s.taskRef === "SCRUM-555");
     expect(sc555).toBeDefined();
     expect(sc555!.status).toBe("RESOLVED");
@@ -40,63 +49,83 @@ describe("T02 · task gateway", () => {
     expect(sc555!.relationRevision).toBe(1);
   });
 
-  // --- Test 2: UNAVAILABLE when real source unavailable, NOT from fixtures ---
   it("returns UNAVAILABLE when the real source has no records, not fixtures", async () => {
     const result = await resolveTask("SCRUM-820", "real", []);
     expect(result.status).toBe("UNAVAILABLE");
     expect(result.rootRunCount).toBeNull();
-    // Fixtures must NOT have been used: if they were, status would be UNKNOWN_UNRESOLVED
     expect(result.status).not.toBe("UNKNOWN_UNRESOLVED");
   });
 
-  // --- Test 3: UNKNOWN_UNRESOLVED for unresolvable relation ---
+  it("returns UNAVAILABLE with null title/domain — not fixture data", async () => {
+    const result = await resolveTask("SCRUM-820", "real", []);
+    expect(result.status).toBe("UNAVAILABLE");
+    expect(result.title).toBeNull();
+    expect(result.domain).toBeNull();
+  });
+
   it("returns UNKNOWN_UNRESOLVED when the relation cannot be established", () => {
-    const summaries = readFixtureSummaries();
+    const metas = [
+      { taskRef: "SCRUM-820", title: "DWO v2 — Runtime contract convergence", domain: "DW-SuperApps", runCount: 0 },
+    ];
+    const summaries = readFixtureSummaries(metas);
     const sc820 = summaries.find((s) => s.taskRef === "SCRUM-820");
     expect(sc820).toBeDefined();
     expect(sc820!.status).toBe("UNKNOWN_UNRESOLVED");
     expect(sc820!.rootRunCount).toBeNull();
   });
 
-  // --- Test 4: CONFLICT when sources disagree at same revision ---
   it("returns CONFLICT when real and fixture sources disagree at the same revision", async () => {
-    // Fixture: SCRUM-820 at rel-1 with RUN-A
     const fixtureRecords: TaskRunRelationRecord[] = [
-      record({
-        taskRef: "SCRUM-820",
-        relationRevisionId: "rel-1",
-        rootRunIds: ["RUN-A"],
-        sourceRecordId: "fixture-1",
-      }),
+      record({ taskRef: "SCRUM-820", rootRunIds: ["RUN-A"], sourceRecordId: "fixture-1" }),
     ];
-    // Real: SCRUM-820 at rel-1 with RUN-B — disagrees
     const realRecords: TaskRunRelationRecord[] = [
-      record({
-        taskRef: "SCRUM-820",
-        relationRevisionId: "rel-1",
-        rootRunIds: ["RUN-B"],
-        sourceRecordId: "real-1",
-      }),
+      record({ taskRef: "SCRUM-820", rootRunIds: ["RUN-B"], sourceRecordId: "real-1" }),
+    ];
+    const metas = [
+      { taskRef: "SCRUM-820", title: "DWO v2 — Runtime contract convergence", domain: "DW-SuperApps", runCount: 1 },
     ];
 
-    const result = await resolveTask("SCRUM-820", "fixture", realRecords, fixtureRecords);
+    const result = await resolveTask("SCRUM-820", "fixture", realRecords, fixtureRecords, metas);
     expect(result.status).toBe("CONFLICT");
   });
 
-  // --- Test 5: Regression guard — page.tsx does not import taskFixtures ---
+  // --- Source availability tests (new) ---
+
+  it("readRealSummaries returns empty array when real source has no records", async () => {
+    const result = await readRealSummaries([]);
+    expect(result).toEqual([]);
+  });
+
+  // --- Module graph regression guards ---
+
   it("regression guard: app/tasks/page.tsx does not import from taskFixtures", () => {
     const pagePath = path.resolve(process.cwd(), "app/tasks/page.tsx");
     const content = fs.readFileSync(pagePath, "utf-8");
     expect(content).not.toContain("taskFixtures");
   });
 
-  // --- Test 6: rootRunCount stays null when unknown, never 0 ---
-  it("rootRunCount is null when unknown, never 0 by default", () => {
-    const summaries = readFixtureSummaries();
-    const sc820 = summaries.find((s) => s.taskRef === "SCRUM-820");
-    expect(sc820).toBeDefined();
-    expect(sc820!.rootRunCount).toBeNull();
-    // Defensive: explicitly not 0
-    expect(sc820!.rootRunCount).not.toBe(0);
+  it("regression guard: app/tasks/[taskId]/runs/page.tsx does not import from taskFixtures", () => {
+    const pagePath = path.resolve(process.cwd(), "app/tasks/[taskId]/runs/page.tsx");
+    const content = fs.readFileSync(pagePath, "utf-8");
+    expect(content).not.toContain("taskFixtures");
+  });
+
+  it("regression guard: lib/taskRead.ts does not import from taskFixtures", () => {
+    const libPath = path.resolve(process.cwd(), "lib/taskRead.ts");
+    const content = fs.readFileSync(libPath, "utf-8");
+    expect(content).not.toContain("taskFixtures");
+  });
+
+  it("regression guard: app/tasks/page.tsx uses real adapter, not readFixtureSummaries", () => {
+    const pagePath = path.resolve(process.cwd(), "app/tasks/page.tsx");
+    const content = fs.readFileSync(pagePath, "utf-8");
+    expect(content).not.toContain("readFixtureSummaries");
+  });
+
+  // --- Fixture adapter discipline ---
+
+  it("readFixtureSummaries requires explicit metas — no default fixture fallback", () => {
+    const summaries = readFixtureSummaries([]);
+    expect(summaries).toEqual([]);
   });
 });

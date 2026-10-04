@@ -7,11 +7,25 @@
  *
  * The fixture adapter is dev-only — keep it importable by simulation
  * callers, but the production page must never reach it directly.
+ *
+ * Split from the fixture module: the fixture adapter is self-contained and
+ * accepts explicit metas + records. No default fallback to the
+ * fixture module — production paths must not reach the fixture module.
  */
 
 import { buildTaskRunIndexV2, resolveFromIndex, type TaskRunRelationRecord } from "@/lib/dwo/taskRunIndex";
-import { buildTaskIndex, TASK_META, TASK_RELATION_RECORDS, type TaskMeta } from "@/lib/taskFixtures";
 import type { TaskSummary, TaskResolutionStatus } from "./taskTypes";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface TaskMeta {
+  taskRef: string;
+  title: string | null;
+  domain: string | null;
+  runCount: number;
+}
 
 // ---------------------------------------------------------------------------
 // Summary builder
@@ -22,14 +36,14 @@ function buildSummary(
   rel: { status: string; reason: string; relationRevisionId: string | null; rootRunIds: readonly string[] },
   meta: { title: string | null; domain: string | null },
 ): TaskSummary {
-  const rootRunIds = rel.rootRunIds;
   return {
     taskRef,
     title: meta.title,
     domain: meta.domain,
+    rootRunIds: rel.rootRunIds,
     // null when source did not say — never collapse to 0
-    rootRunCount: rootRunIds.length > 0 ? rootRunIds.length : null,
-    latestRunId: rootRunIds[0] ?? null,
+    rootRunCount: rel.rootRunIds.length > 0 ? rel.rootRunIds.length : null,
+    latestRunId: rel.rootRunIds[0] ?? null,
     latestState: null,
     relationRevision: rel.relationRevisionId
       ? Number.parseInt(rel.relationRevisionId.replace("rel-", ""), 10)
@@ -39,15 +53,16 @@ function buildSummary(
 }
 
 // ---------------------------------------------------------------------------
-// Fixture adapter — dev / simulation only
+// Fixture adapter — dev / simulation only, fully self-contained
 // ---------------------------------------------------------------------------
 
 export function readFixtureSummaries(
+  metas: readonly TaskMeta[],
   records?: readonly TaskRunRelationRecord[],
 ): TaskSummary[] {
-  const index = buildTaskRunIndexV2(records ?? TASK_RELATION_RECORDS);
+  const index = buildTaskRunIndexV2(records ?? []);
   const resolve = (ref: string) => resolveFromIndex(index, ref);
-  return TASK_META.map((meta: TaskMeta) => {
+  return metas.map((meta) => {
     const rel = resolve(meta.taskRef);
     return buildSummary(meta.taskRef, rel, { title: meta.title, domain: meta.domain });
   });
@@ -86,6 +101,7 @@ function unavailable(taskRef: string): TaskSummary {
     taskRef,
     title: null,
     domain: null,
+    rootRunIds: [],
     rootRunCount: null,
     latestRunId: null,
     latestState: null,
@@ -97,14 +113,15 @@ function unavailable(taskRef: string): TaskSummary {
 /**
  * Resolve a single task through the gateway.
  *
- * @param taskRef   - task to resolve
- * @param source    - which adapter to prefer ("real" | "fixture")
- * @param realRecords - optional relation records for the real adapter
+ * @param taskRef        - task to resolve
+ * @param source         - which adapter to prefer ("real" | "fixture")
+ * @param realRecords    - optional relation records for the real adapter
  * @param fixtureRecords - optional relation records for the fixture adapter
+ * @param fixtureMetas   - optional task metadata for the fixture adapter
  *
  * Conflict rule: if both sources provide data for the same task at the
  * same revision and they disagree, return CONFLICT regardless of the
- * selected source.  No fallback to the other source when the selected
+ * selected source. No fallback to the other source when the selected
  * source has no data — the result is UNAVAILABLE.
  */
 export async function resolveTask(
@@ -112,8 +129,9 @@ export async function resolveTask(
   source: "real" | "fixture" = "fixture",
   realRecords?: readonly TaskRunRelationRecord[],
   fixtureRecords?: readonly TaskRunRelationRecord[],
+  fixtureMetas?: readonly TaskMeta[],
 ): Promise<TaskSummary> {
-  const fixtureSummaries = readFixtureSummaries(fixtureRecords);
+  const fixtureSummaries = readFixtureSummaries(fixtureMetas ?? [], fixtureRecords);
   const fixture = fixtureSummaries.find((s) => s.taskRef === taskRef);
 
   const realSummaries = await readRealSummaries(realRecords ?? []);

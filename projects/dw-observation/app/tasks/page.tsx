@@ -5,9 +5,11 @@
 //
 // Read-only. Grants no effect capability.
 //
-// Consumes the gateway only — no direct import from the legacy fixture module.
+// Uses the REAL adapter — fixture adapter is for dev routes only.
+// When the real source is unavailable, FAIL CLOSED: UNAVAILABLE,
+// never an empty list masquerading as healthy.
 
-import { readFixtureSummaries } from "@/lib/taskRead";
+import { readRealSummaries } from "@/lib/taskRead";
 import type { TaskSummary, TaskResolutionStatus } from "@/lib/taskTypes";
 
 const statusStyle: Record<
@@ -36,8 +38,10 @@ const statusStyle: Record<
   },
 };
 
-export default function TasksPage() {
-  const summaries = readFixtureSummaries();
+export default async function TasksPage() {
+  // Real source — empty records = source unavailable (fail-closed).
+  const summaries = await readRealSummaries([]);
+  const sourceAvailable = summaries.length > 0;
 
   return (
     <div
@@ -60,68 +64,83 @@ export default function TasksPage() {
           DW Run Observatory — Task-first navigation (DWO v2)
         </p>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {summaries.map((t) => {
-            const s = statusStyle[t.status];
-            return (
-              <a
-                key={t.taskRef}
-                href={`/tasks/${encodeURIComponent(t.taskRef)}/runs`}
-                className="notion-run-card block rounded-lg border p-4 transition-colors"
-                style={{
-                  color: "inherit",
-                  borderColor:
-                    t.status === "UNAVAILABLE"
-                      ? "var(--dwo-color-text-faint)"
-                      : "var(--dwo-color-border-default)",
-                  opacity: t.status === "UNAVAILABLE" ? 0.6 : 1,
-                }}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span
-                    className="text-sm font-semibold"
+        {/* Fail-closed: unavailable source is never rendered as healthy. */}
+        {!sourceAvailable ? (
+          <div
+            className="rounded-md border px-4 py-3 text-sm"
+            style={{
+              borderColor: "var(--dwo-color-state-amber)",
+              background: "var(--dwo-color-bg-subtle)",
+              color: "var(--dwo-color-state-amber)",
+            }}
+          >
+            Task source unavailable — real source not yet connected.
+            No fixture data shown in real mode.
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {summaries.map((t) => {
+              const s = statusStyle[t.status];
+              return (
+                <a
+                  key={t.taskRef}
+                  href={`/tasks/${encodeURIComponent(t.taskRef)}/runs`}
+                  className="notion-run-card block rounded-lg border p-4 transition-colors"
+                  style={{
+                    color: "inherit",
+                    borderColor:
+                      t.status === "UNAVAILABLE"
+                        ? "var(--dwo-color-text-faint)"
+                        : "var(--dwo-color-border-default)",
+                    opacity: t.status === "UNAVAILABLE" ? 0.6 : 1,
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className="text-sm font-semibold"
+                      style={{ color: "var(--dwo-color-text-primary)" }}
+                    >
+                      {t.taskRef}
+                    </span>
+                    <span
+                      className="rounded px-2 py-0.5 text-[10px] uppercase tracking-wide"
+                      style={{ background: s.bg, color: s.fg }}
+                    >
+                      {s.label}
+                    </span>
+                  </div>
+                  <p
+                    className="mt-2 text-sm"
                     style={{ color: "var(--dwo-color-text-primary)" }}
                   >
-                    {t.taskRef}
-                  </span>
-                  <span
-                    className="rounded px-2 py-0.5 text-[10px] uppercase tracking-wide"
-                    style={{ background: s.bg, color: s.fg }}
+                    {t.title ?? "Unknown task"}
+                  </p>
+                  <div
+                    className="mt-3 flex items-center gap-3 text-xs"
+                    style={{ color: "var(--dwo-color-text-muted)" }}
                   >
-                    {s.label}
-                  </span>
-                </div>
-                <p
-                  className="mt-2 text-sm"
-                  style={{ color: "var(--dwo-color-text-primary)" }}
-                >
-                  {t.title ?? "Unknown task"}
-                </p>
-                <div
-                  className="mt-3 flex items-center gap-3 text-xs"
-                  style={{ color: "var(--dwo-color-text-muted)" }}
-                >
-                  <span>
-                    {t.rootRunCount !== null
-                      ? `${t.rootRunCount} run${t.rootRunCount !== 1 ? "s" : ""}`
-                      : "No runs"}
-                  </span>
-                  {t.relationRevision != null && (
-                    <span className="font-mono">rev:{t.relationRevision}</span>
-                  )}
-                  {t.status === "UNKNOWN_UNRESOLVED" && (
-                    <span
-                      className="uppercase"
-                      style={{ color: "var(--dwo-color-state-amber)" }}
-                    >
-                      unresolved
+                    <span>
+                      {t.rootRunCount !== null
+                        ? `${t.rootRunCount} run${t.rootRunCount !== 1 ? "s" : ""}`
+                        : "No runs"}
                     </span>
-                  )}
-                </div>
-              </a>
-            );
-          })}
-        </div>
+                    {t.relationRevision != null && (
+                      <span className="font-mono">rev:{t.relationRevision}</span>
+                    )}
+                    {t.status === "UNKNOWN_UNRESOLVED" && (
+                      <span
+                        className="uppercase"
+                        style={{ color: "var(--dwo-color-state-amber)" }}
+                      >
+                        unresolved
+                      </span>
+                    )}
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        )}
 
         <div
           className="mt-10 rounded-lg border p-4"
@@ -148,7 +167,7 @@ export default function TasksPage() {
           className="mt-6 rounded-lg border px-3 py-1.5 font-mono text-xs"
           style={{ borderColor: "var(--dwo-color-border-default)", color: "var(--dwo-color-text-faint)" }}
         >
-          data-source: task-gateway · backend: fixture
+          data-source: task-gateway · backend: real
         </div>
       </div>
 
