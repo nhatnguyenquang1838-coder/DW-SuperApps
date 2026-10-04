@@ -137,20 +137,20 @@ export function replayToModel(
   // node event (node_started / node_progress / node_completed).
   // One step per event — never a positional index.
   // A replay step exists only for an event that binds to a NODE. Lifecycle events
-    // with no `node_id` (e.g. `run_started` at sequence 0) are canonical history
-    // but are not ordered workspace steps, so they are excluded here — while still
-    // being retained in `projection.events`.
-    const seenSequences = new Set<number>();
-    const orderedSteps: { nodeId: string; sequence: number }[] = [];
-    for (const e of projection.events ?? []) {
-      if (typeof e.sequence !== "number") continue; // never fabricate a sequence
-      const nodeId = (e as { node_id?: unknown }).node_id;
-      if (typeof nodeId !== "string" || nodeId === "") continue; // not a step
-      if (seenSequences.has(e.sequence)) continue;
-      seenSequences.add(e.sequence);
-      orderedSteps.push({ nodeId, sequence: e.sequence });
-    }
-    orderedSteps.sort((a, b) => a.sequence - b.sequence);
+  // with no `node_id` (e.g. `run_started` at sequence 0) are canonical history
+  // but are not ordered workspace steps, so they are excluded here — while still
+  // being retained in `projection.events`.
+  const seenSequences = new Set<number>();
+  const orderedSteps: { nodeId: string; sequence: number }[] = [];
+  for (const e of projection.events ?? []) {
+    if (typeof e.sequence !== "number") continue; // never fabricate a sequence
+    const nodeId = (e as { node_id?: unknown }).node_id;
+    if (typeof nodeId !== "string" || nodeId === "") continue; // not a step
+    if (seenSequences.has(e.sequence)) continue;
+    seenSequences.add(e.sequence);
+    orderedSteps.push({ nodeId, sequence: e.sequence });
+  }
+  orderedSteps.sort((a, b) => a.sequence - b.sequence);
 
   // Fail-closed: selectedSequence must match a durable step.
   if (selectedSequence !== null && !orderedSteps.some((s) => s.sequence === selectedSequence)) {
