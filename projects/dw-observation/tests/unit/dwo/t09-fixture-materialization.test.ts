@@ -17,6 +17,8 @@ import {
 } from "@/lib/dwo/materializeFixtureScenario";
 import { FIXTURE_CATALOG, DEV_RUN_020 } from "@/lib/dwo/fixtureSpec";
 import type { UnifiedRunWorkspaceModel } from "@/lib/runtime/unifiedRuntime";
+import { readFileSync } from "fs";
+import { join } from "path";
 
 // ---------------------------------------------------------------------------
 // Test 1: 30/30 ids materialize a model (exact id set)
@@ -236,5 +238,146 @@ describe("T09-5: invariant — reject incomplete scenario", () => {
     } as typeof FIXTURE_CATALOG[number];
 
     expect(() => materializeFixtureScenario(incomplete)).toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T09-6: evidence from fixture pack — every conforming scenario yields
+//         non-empty evidence (artifacts / fileReads / history as applicable)
+// ---------------------------------------------------------------------------
+
+const FIXTURE_PACK = join(
+  __dirname,
+  "../../../dwo-v2/fixtures/DWO-UR-30-V1"
+);
+
+function loadEvents(): Array<{
+  event_id: string;
+  run_id: string;
+  ordinal: number;
+  run_state: string;
+  gate: string | null;
+  gate_state: string | null;
+}> {
+  const raw = readFileSync(join(FIXTURE_PACK, "events", "projection-events.jsonl"), "utf-8");
+  return raw
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line))
+    .sort((a, b) => a.ordinal - b.ordinal);
+}
+
+function evidenceFilesForRun(runId: string): string[] {
+  const dirs = ["execution", "target", "verification", "closure", "handoff", "authority"];
+  const files: string[] = [];
+  for (const dir of dirs) {
+    const dirPath = join(FIXTURE_PACK, "evidence", dir);
+    try {
+      const entries = readFileSync(dirPath, "utf-8"); // stat via readdir alternative
+    } catch {
+      continue;
+    }
+    const { readdirSync } = require("fs");
+    try {
+      const entries = readdirSync(dirPath);
+      for (const entry of entries) {
+        if (entry.startsWith(`${runId}-`)) {
+          files.push(`${dir}/${entry}`);
+        }
+      }
+    } catch {
+      continue;
+    }
+  }
+  return files;
+}
+
+describe("T09-6: evidence from fixture pack", () => {
+  it("conforming scenarios have non-empty artifacts per node", () => {
+    const events = loadEvents();
+    const models = materializeAllFixtures();
+
+    for (const m of models) {
+      if (m.runId === DEV_RUN_020) continue;
+
+      const scenarioEvents = events.filter((e) =>
+        m.nodes.some((n) => n.id === e.run_id)
+      );
+
+      for (const node of m.nodes) {
+        const evFiles = evidenceFilesForRun(node.id);
+        expect(
+          node.artifacts.length,
+          `${node.id}: artifacts should be populated from fixture pack evidence`
+        ).toBeGreaterThan(0);
+        expect(
+          node.executorHistory.length,
+          `${node.id}: executorHistory should be populated`
+        ).toBeGreaterThan(0);
+        expect(
+          node.artifacts,
+          `${node.id}: artifacts should reference evidence files`
+        ).toEqual(
+          expect.arrayContaining(evFiles.map((f) => expect.stringContaining(f)))
+        );
+      }
+    }
+  });
+
+  it("DEV-RUN-020 has zero fabricated evidence (fail-closed)", () => {
+    const model = materializeFixtureScenario(
+      FIXTURE_CATALOG.find((c) => c.id === DEV_RUN_020)!
+    );
+    for (const node of model.nodes) {
+      expect(node.artifacts).toEqual([]);
+      expect(node.executorHistory).toEqual([]);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T09-7: dependency edges — UNKNOWN unless evidence supports SATISFIED
+// ---------------------------------------------------------------------------
+
+describe("T09-7: dependency edges are UNKNOWN without evidence", () => {
+  it("no dependency edge is SATISFIED unless evidence explicitly supports it", () => {
+    const models = materializeAllFixtures();
+    for (const m of models) {
+      if (m.runId === DEV_RUN_020) continue;
+      for (const edge of m.edges) {
+        if (edge.kind === "DEPENDENCY") {
+          expect(edge.state).toBe(
+            "UNKNOWN",
+            `DEPENDENCY edge ${edge.source}->${edge.target} must be UNKNOWN (no evidence says SATISFIED)`
+          );
+        }
+      }
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T09-8: timeline from event sequence, not node array order
+// ---------------------------------------------------------------------------
+
+describe("T09-8: timeline from event sequence", () => {
+  it("orderedSteps follows projection-events.jsonl ordinal order", () => {
+    const events = loadEvents();
+    const models = materializeAllFixtures();
+
+    for (const m of models) {
+      if (m.runId === DEV_RUN_020) continue;
+
+      const scenarioRunIds = m.nodes.map((n) => n.id);
+      const scenarioEvents = events.filter((e) =>
+        scenarioRunIds.includes(e.run_id)
+      );
+
+      // orderedSteps must follow event ordinal order, not catalog array order
+      for (let i = 0; i < m.orderedSteps.length; i++) {
+        expect(m.orderedSteps[i].nodeId).toBe(scenarioEvents[i].run_id);
+        expect(m.orderedSteps[i].sequence).toBe(i);
+      }
+    }
   });
 });
