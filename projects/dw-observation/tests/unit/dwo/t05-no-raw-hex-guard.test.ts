@@ -43,15 +43,19 @@ const DWO_SURFACE = ["components/dwo/", "app/runs/[runId]/page.tsx"];
  * Tier 2 debt ceiling, measured 2026-10-04 with the SAME matcher as this guard
  * (per-match, not per-line — `grep -c` undercounts lines that carry two literals).
  * Lower it as each legacy file is rewritten; NEVER raise it.
+ *
+ *   start        85  (baseline after the T05 supervisor fix)
+ *   - T06        17  app/runs/[runId]/replay/page.tsx fully de-hexed
+ *   current      68
+ *
  *   app/dev/fixtures/page.tsx          31  -> T09 Fixture Lab
  *   app/runs/page.tsx                  25  -> T12 Run Explorer
- *   app/runs/[runId]/replay/page.tsx   17  -> T06 replay
  *   components/RunGraphEdge.tsx         6
  *   components/RunGraphView.tsx         2
  *   components/login-epic/*             3  -> legacy, superseded by dwo/
  *   components/DagView.tsx              1
  */
-const DEBT_CEILING = 85;
+const DEBT_CEILING = 68;
 
 const SOURCE_RE = /\.(tsx?|jsx?)$/;
 // 3-digit shorthand counts too: #fff is the same drift as #ffffff.
