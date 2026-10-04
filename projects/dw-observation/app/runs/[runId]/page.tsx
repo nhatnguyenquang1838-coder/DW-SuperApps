@@ -32,6 +32,12 @@ import { loginAuthScenarioAdapter } from "@/lib/runtime/adapters/loginAuthScenar
 import { fixtureScenarioAdapter } from "@/lib/runtime/adapters/fixtureScenarioAdapter";
 import { realRuntimeAdapter } from "@/lib/runtime/adapters/realRuntimeAdapter";
 import { FIXTURE_CATALOG } from "@/lib/dwo/fixtureSpec";
+import {
+  getReplaySnapshot,
+  replayToModel,
+  PROJECTION_UNAVAILABLE,
+  REPLAY_POSITION_UNAVAILABLE,
+} from "@/lib/runtime/replay";
 
 type Json = Record<string, unknown>;
 import { readServerRunDetail } from "@/lib/serverRunRead";
@@ -141,11 +147,43 @@ function runViewFromDetail(
 /**
  * Build a UnifiedRunWorkspaceModel from the selected data source.
  * Uses T04 adapters — never hand-crafts the model shape.
+ * When replaySeq is provided, builds a REPLAY model from canonical history.
  */
 async function buildWorkspaceModel(
   runId: string,
   dataSource: "mock" | "real",
+  replaySeq?: number
 ): Promise<{ model: UnifiedRunWorkspaceModel; mode: WorkspaceMode }> {
+  // ---------- REPLAY mode ----------
+  if (replaySeq !== undefined && dataSource === "real") {
+    const snapshot = await getReplaySnapshot(runId, replaySeq);
+    if (snapshot.status === "OK" && snapshot.projection) {
+      return { model: replayToModel(snapshot.projection, snapshot.selectedSequence), mode: "REPLAY" };
+    }
+    // Degraded / unavailable → fail-closed UNKNOWN model (never fixture fallback).
+    const unknownModel: UnifiedRunWorkspaceModel = {
+      runId,
+      taskRef: null,
+      mode: "REPLAY",
+      status:
+        snapshot.status === REPLAY_POSITION_UNAVAILABLE
+          ? "REPLAY_POSITION_UNAVAILABLE"
+          : "PROJECTION_UNAVAILABLE",
+      hierarchy: null,
+      nodes: [],
+      edges: [],
+      orderedSteps: [],
+      currentSequence: snapshot.status === REPLAY_POSITION_UNAVAILABLE ? snapshot.selectedSequence : null,
+      canonicalHistoryAvailable: false,
+      projectionStatus:
+        snapshot.status === REPLAY_POSITION_UNAVAILABLE
+          ? "REPLAY_POSITION_UNAVAILABLE"
+          : "PROJECTION_UNAVAILABLE",
+      sourceDigest: null,
+    };
+    return { model: unknownModel, mode: "REPLAY" };
+  }
+
   if (dataSource === "mock") {
     const run = getRun(runId, "mock");
     if (!run) notFound();
@@ -232,14 +270,26 @@ async function buildWorkspaceModel(
 
 export default async function RunDetailPage({
   params,
+  searchParams,
 }: {
   params: { runId: string };
+  searchParams: { mode?: string; seq?: string };
 }) {
   const dataSource =
     process.env.OBSERVATORY_DATA_SOURCE === "mock" ? "mock" : "real";
 
+  // Parse replay query params (Next.js 14.2.5 — synchronous searchParams).
+  const replaySeq =
+    searchParams.mode === "replay" && searchParams.seq
+      ? parseInt(searchParams.seq, 10)
+      : undefined;
+
   // Build the unified model from the selected data source.
-  const { model, mode } = await buildWorkspaceModel(params.runId, dataSource);
+  const { model, mode } = await buildWorkspaceModel(
+    params.runId,
+    dataSource,
+    replaySeq
+  );
 
   // Mock mode still renders legacy navigation context alongside the shell.
   if (dataSource === "mock") {

@@ -1,79 +1,32 @@
-// Server Component — Run Replay isolation.
+// Server Component — Run Replay redirect (compatibility deep-link only).
 //
-// /runs/[runId]/replay isolates replay into its own route.
-// No live/future event mixing: replay shows only canonical historical events
-// for the selected run. Read-only. Grants no effect capability.
+// Legacy /runs/[runId]/replay redirects to the canonical route:
+//   /runs/[runId]?mode=replay&seq=<resolved durableSequence>
+// It must not render a second UI — the main run page renders
+// UnifiedRunWorkspace for both LIVE and REPLAY modes.
 
-import { notFound } from "next/navigation";
-import { getRun, UNKNOWN, DAG_EDGES } from "@/lib/observatory";
-import { getMockProjectionEvents } from "@/lib/mockDataSource";
-import type { ProjectionEvent } from "@/lib/live";
-import ReplayPane from "@/components/ReplayPane";
-import DagView from "@/components/DagView";
-import Timeline from "@/components/Timeline";
+import { redirect } from "next/navigation";
+import { readHistoricalEvents } from "@/lib/serverHistoricalRead";
 
-export default function RunReplayPage({ params }: { params: { runId: string } }) {
-  const dataSource =
-    process.env.OBSERVATORY_DATA_SOURCE === "mock" ? "mock" : "real";
+export default async function RunReplayRedirect({
+  params,
+}: {
+  params: { runId: string };
+}) {
+  const result = await readHistoricalEvents(params.runId);
 
-  const run = getRun(params.runId, dataSource);
-  if (!run) notFound();
+  // No canonical history → redirect to LIVE; main page handles UNKNOWN/UNAVAILABLE.
+  if (result.degraded || result.events.length === 0) {
+    redirect(`/runs/${params.runId}?mode=live`);
+  }
 
-  // REPLAY ISOLATION: only canonical events, no live projection mixing.
-  const events: ProjectionEvent[] =
-    dataSource === "mock"
-      ? getMockProjectionEvents(params.runId)
-      : []; // real mode replay uses server-sourced events — not yet wired here
+  const sequences = result.events
+    .map((e) => (typeof e.sequence === "number" ? e.sequence : -1))
+    .filter((s) => s >= 0);
 
-  return (
-    <div
-      className="min-h-screen"
-      style={{
-        background: "#ffffff",
-        color: "#37352f",
-        fontFamily:
-          'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif',
-      }}
-    >
-      <style>{`
-        .notion-run-card { border-color: #e9e9e7; background: #ffffff; }
-        .notion-link-btn { border-color: #d3d1cb; background: #f7f7f5; color: #37352f; }
-        .notion-link-btn:hover { background: #efefed; }
-      `}</style>
-      <div className="mx-auto max-w-5xl px-6 py-10">
-        <nav className="mb-6 text-xs" style={{ color: "#9b9a97" }}>
-          <a href="/tasks" style={{ color: "#787774" }}>Tasks</a> /{" "}
-          <a href="/runs" style={{ color: "#787774" }}>Run Explorer</a> /{" "}
-          <span style={{ color: "#37352f" }}>{run.runId}</span> /{" "}
-          <span style={{ color: "#37352f" }}>Replay</span>
-        </nav>
+  const maxSequence =
+    sequences.length > 0 ? Math.max(...sequences) : 0;
 
-        <h1 className="mb-1 text-2xl font-bold tracking-tight" style={{ color: "#37352f" }}>
-          {run.runId} — Replay
-        </h1>
-        <p className="mb-6 text-xs" style={{ color: "#787774" }}>
-          Canonical replay only — no live or future event mixing.
-        </p>
-
-        <DagView gates={run.gates} nodes={run.nodes} edges={DAG_EDGES[run.runId]} />
-        <Timeline events={run.events} unknownSentinel={UNKNOWN} />
-        <ReplayPane runId={params.runId} events={events} storeDegraded={false} />
-
-        <a
-          href={`/runs/${encodeURIComponent(run.runId)}`}
-          className="notion-link-btn mt-8 inline-block rounded border px-3 py-1.5 text-sm"
-        >
-          ← Back to run detail
-        </a>
-
-        <p
-          data-testid="replay-data-source-badge"
-          className="mt-4 inline-block rounded border px-2 py-1 font-mono text-xs"
-          style={{ borderColor: "#e9e9e7", color: "#787774" }}
-        >
-          data-source: {dataSource} · mode: replay-only
-        </p>
-      </div>
-    </div>
-  );
+  // Redirect to the canonical replay route (same-shell UnifiedRunWorkspace).
+  redirect(`/runs/${params.runId}?mode=replay&seq=${maxSequence}`);
 }
