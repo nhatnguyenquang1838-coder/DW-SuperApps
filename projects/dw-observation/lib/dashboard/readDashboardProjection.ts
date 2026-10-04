@@ -113,7 +113,13 @@ export function readDashboardProjection(
   }
 
   // --- Run aggregates (source: observatory listRuns) ---
-  const runs = listRuns(dataSource);
+  // `DataSource` here is the DWO vocabulary ("real" | "fixture"); observatory's
+  // `DataSource` is "real" | "mock". They are the same two modes under different
+  // names — map explicitly rather than importing and leaking the older spelling
+  // into the dashboard API. T08 originally declared a local `DataSource` union
+  // with a "fixture" member and passed it straight to listRuns(), which typecheck
+  // rejected: the type existed, it just was not this type.
+  const runs = listRuns(dataSource === "fixture" ? "mock" : dataSource);
   const runCounts = computeRunCounts(runs);
   const recentActivity = computeRecentActivity(runs);
 
