@@ -133,7 +133,10 @@ export async function realRuntimeAdapter(
   // --- orderedSteps: durable sequences from canonical events ---
   const nodeSequence = new Map<string, number>();
   for (const evt of history.events) {
-    const nodeId = typeof evt.nodeId === "string" ? evt.nodeId : null;
+    const nodeId =
+      typeof (evt as { node_id?: unknown }).node_id === "string"
+        ? ((evt as { node_id?: unknown }).node_id as string)
+        : null;
     if (nodeId && typeof evt.sequence === "number") {
       const existing = nodeSequence.get(nodeId);
       if (existing === undefined || evt.sequence > existing) {
