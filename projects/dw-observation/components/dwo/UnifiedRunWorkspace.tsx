@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { ReactFlowProvider } from "@xyflow/react";
 import type {
   UnifiedRunWorkspaceModel,
   WorkspaceMode,
@@ -129,15 +130,17 @@ export default function UnifiedRunWorkspace({
         </aside>
 
         <main className="dwo-workspace-center" data-testid="workspace-center">
-          <RuntimeGraphCanvas
-            model={model}
-            cursor={cursor}
-            selection={selection}
-            followCursor={followCursor}
-            onSelectNode={handleSelectNode}
-            onOpenArtifact={handleOpenArtifact}
-            onUserViewportInteract={handleUserViewportInteract}
-          />
+          <ReactFlowProvider>
+            <RuntimeGraphCanvas
+              model={model}
+              cursor={cursor}
+              selection={selection}
+              followCursor={followCursor}
+              onSelectNode={handleSelectNode}
+              onOpenArtifact={handleOpenArtifact}
+              onUserViewportInteract={handleUserViewportInteract}
+            />
+          </ReactFlowProvider>
           <RuntimePlayer
             cursor={cursor}
             len={len}
