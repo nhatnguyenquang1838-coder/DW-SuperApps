@@ -4,11 +4,69 @@
 
 :root {
   color-scheme: dark;
+
+  /* Penpot DWO/Core color tokens — canonical (from Penpot MCP API) */
+  --dwo-color-bg-canvas: #0B0F14;
+  --dwo-color-bg-surface: #111827;
+  --dwo-color-bg-subtle: #17202B;
+  --dwo-color-border-default: #2A3441;
+  --dwo-color-text-primary: #F3F6FA;
+  --dwo-color-text-muted: #9AA6B2;
+  --dwo-color-text-faint: #66717F;
+  --dwo-color-accent-blue: #4EA1FF;
+  --dwo-color-state-green: #48C78E;
+  --dwo-color-state-amber: #F5B942;
+  --dwo-color-state-red: #FF6B6B;
+  --dwo-color-state-purple: #A78BFA;
+
+  /* Legacy backward-compat aliases — resolve to canonical tokens */
+  --color-canvas: var(--dwo-color-bg-canvas);
+  --color-surface: var(--dwo-color-bg-surface);
+  --color-panel: var(--dwo-color-bg-surface);
+  --color-subtle: var(--dwo-color-bg-subtle);
+  --color-border: var(--dwo-color-border-default);
+  --color-edge: var(--dwo-color-border-default);
+  --color-text-primary: var(--dwo-color-text-primary);
+  --color-text-muted: var(--dwo-color-text-muted);
+  --color-text-faint: var(--dwo-color-text-faint);
+  --color-accent: var(--dwo-color-accent-blue);
+  --color-green: var(--dwo-color-state-green);
+  --color-amber: var(--dwo-color-state-amber);
+  --color-red: var(--dwo-color-state-red);
+  --color-purple: var(--dwo-color-state-purple);
+
+  /* Penpot DWO/Core spacing tokens */
+  --dwo-space-4: 4px;
+  --dwo-space-8: 8px;
+  --dwo-space-12: 12px;
+  --dwo-space-16: 16px;
+  --dwo-space-20: 20px;
+  --dwo-space-24: 24px;
+
+  /* Legacy spacing aliases */
+  --space-1: var(--dwo-space-4);
+  --space-2: var(--dwo-space-8);
+  --space-3: var(--dwo-space-12);
+  --space-4: var(--dwo-space-16);
+  --space-5: var(--dwo-space-20);
+  --space-6: var(--dwo-space-24);
+
+  /* Penpot DWO/Core borderRadius tokens */
+  --dwo-radius-6: 6px;
+  --dwo-radius-8: 8px;
+  --dwo-radius-10: 10px;
+  --dwo-radius-12: 12px;
+
+  /* Legacy radius aliases */
+  --radius-sm: var(--dwo-radius-6);
+  --radius-md: var(--dwo-radius-8);
+  --radius-lg: var(--dwo-radius-10);
+  --radius-xl: var(--dwo-radius-12);
 }
 
 body {
-  background: #0b0f17;
-  color: #e6edf6;
+  background: var(--color-canvas);
+  color: var(--color-text-primary);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
