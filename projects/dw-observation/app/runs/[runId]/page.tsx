@@ -254,7 +254,7 @@ export default async function RunDetailPage({
 
         {/* Legacy navigation context (preserved for mock-mode review) */}
         <div>
-          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>
+          <h2 className="text-sm font-semibold" style={{ color: "var(--dwo-color-text-muted)" }}>
             Run Tree
           </h2>
           <RootCard run={run!} unknownSentinel={UNKNOWN} supabaseReadiness={SUPABASE_READINESS} />
@@ -262,21 +262,21 @@ export default async function RunDetailPage({
         </div>
 
         <div>
-          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>Flow</h2>
+          <h2 className="text-sm font-semibold" style={{ color: "var(--dwo-color-text-muted)" }}>Flow</h2>
           <DagView gates={run!.gates} nodes={run!.nodes} edges={DAG_EDGES[run!.runId]} />
         </div>
 
         <div>
-          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>Timeline</h2>
+          <h2 className="text-sm font-semibold" style={{ color: "var(--dwo-color-text-muted)" }}>Timeline</h2>
           <Timeline events={run!.events} unknownSentinel={UNKNOWN} />
         </div>
 
         <div>
-          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>Details</h2>
+          <h2 className="text-sm font-semibold" style={{ color: "var(--dwo-color-text-muted)" }}>Details</h2>
           <EvidenceInspector events={run!.events} anomalies={run!.anomalies} unknownSentinel={UNKNOWN} />
         </div>
 
-        <p className="text-xs" style={{ color: "#787774" }}>
+        <p className="text-xs" style={{ color: "var(--dwo-color-text-faint)" }}>
           data-source: mock · backend: {MOCK_BACKEND} · run: {run!.runId}
         </p>
       </section>

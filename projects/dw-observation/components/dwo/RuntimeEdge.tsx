@@ -24,7 +24,7 @@ export default function RuntimeEdge(props: EdgeProps) {
         ...(props.style ?? {}),
         ...(isActive
           ? {
-              stroke: "#ffd34d",
+              stroke: "var(--dwo-color-state-amber)",
               strokeWidth: 3,
               strokeDasharray: "6 4",
               animation: "runtime-edge-dash 0.8s linear infinite",

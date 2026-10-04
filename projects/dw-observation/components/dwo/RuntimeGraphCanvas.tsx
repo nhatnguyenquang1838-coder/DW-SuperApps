@@ -194,8 +194,8 @@ export default function RuntimeGraphCanvas({
             e.kind === "FANOUT"
               ? "rgba(140,147,166,0.25)"
               : isActive
-                ? "#ffd34d"
-                : "#6ca9ff",
+                ? "var(--dwo-color-state-amber)"
+                : "var(--dwo-color-accent-blue)",
           strokeWidth: e.kind === "FANOUT" ? 1 : 1.5,
           strokeDasharray: e.kind === "FANOUT" ? "3 4" : undefined,
         },
