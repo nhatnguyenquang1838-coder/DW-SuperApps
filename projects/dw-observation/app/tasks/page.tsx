@@ -1,19 +1,50 @@
 // Server Component — Task-first entry point.
 //
-// /tasks lists all known tasks from the fixture/task index.
+// /tasks lists all known tasks from the canonical task gateway.
 // This is the PRIMARY product entry point (DWO v2 Task-first navigation).
 //
 // Read-only. Grants no effect capability.
+//
+// Consumes the gateway only — no direct import from the legacy fixture module.
 
-import { TASK_META, getTaskRootRuns } from "@/lib/taskFixtures";
+import { readFixtureSummaries } from "@/lib/taskRead";
+import type { TaskSummary, TaskResolutionStatus } from "@/lib/taskTypes";
+
+const statusStyle: Record<
+  TaskResolutionStatus,
+  { bg: string; fg: string; label: string }
+> = {
+  RESOLVED: {
+    bg: "var(--dwo-color-bg-subtle)",
+    fg: "var(--dwo-color-state-green)",
+    label: "RESOLVED",
+  },
+  UNKNOWN_UNRESOLVED: {
+    bg: "var(--dwo-color-bg-subtle)",
+    fg: "var(--dwo-color-state-amber)",
+    label: "UNKNOWN_UNRESOLVED",
+  },
+  CONFLICT: {
+    bg: "var(--dwo-color-bg-subtle)",
+    fg: "var(--dwo-color-state-red)",
+    label: "CONFLICT",
+  },
+  UNAVAILABLE: {
+    bg: "var(--dwo-color-bg-canvas)",
+    fg: "var(--dwo-color-text-faint)",
+    label: "UNAVAILABLE",
+  },
+};
 
 export default function TasksPage() {
+  const summaries = readFixtureSummaries();
+
   return (
     <div
       className="min-h-screen"
       style={{
-        background: "#ffffff",
-        color: "#37352f",
+        background: "var(--dwo-color-bg-canvas)",
+        color: "var(--dwo-color-text-primary)",
         fontFamily:
           'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif',
       }}
@@ -21,52 +52,69 @@ export default function TasksPage() {
       <div className="mx-auto max-w-5xl px-6 py-10">
         <h1
           className="mb-1 text-2xl font-bold tracking-tight"
-          style={{ color: "#37352f" }}
+          style={{ color: "var(--dwo-color-text-primary)" }}
         >
           Tasks
         </h1>
-        <p className="mb-6 text-sm" style={{ color: "#787774" }}>
+        <p className="mb-6 text-sm" style={{ color: "var(--dwo-color-text-muted)" }}>
           DW Run Observatory — Task-first navigation (DWO v2)
         </p>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {TASK_META.map((t) => {
-            const resolution = getTaskRootRuns(t.taskRef);
-            const runCount = resolution.rootRunIds.length;
+          {summaries.map((t) => {
+            const s = statusStyle[t.status];
             return (
               <a
                 key={t.taskRef}
                 href={`/tasks/${encodeURIComponent(t.taskRef)}/runs`}
                 className="notion-run-card block rounded-lg border p-4 transition-colors"
-                style={{ color: "inherit" }}
+                style={{
+                  color: "inherit",
+                  borderColor:
+                    t.status === "UNAVAILABLE"
+                      ? "var(--dwo-color-text-faint)"
+                      : "var(--dwo-color-border-default)",
+                  opacity: t.status === "UNAVAILABLE" ? 0.6 : 1,
+                }}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span
                     className="text-sm font-semibold"
-                    style={{ color: "#37352f" }}
+                    style={{ color: "var(--dwo-color-text-primary)" }}
                   >
                     {t.taskRef}
                   </span>
                   <span
                     className="rounded px-2 py-0.5 text-[10px] uppercase tracking-wide"
-                    style={{ background: "#f1f1ef", color: "#787774" }}
+                    style={{ background: s.bg, color: s.fg }}
                   >
-                    {t.domain}
+                    {s.label}
                   </span>
                 </div>
-                <p className="mt-2 text-sm" style={{ color: "#37352f" }}>
-                  {t.title}
+                <p
+                  className="mt-2 text-sm"
+                  style={{ color: "var(--dwo-color-text-primary)" }}
+                >
+                  {t.title ?? "Unknown task"}
                 </p>
-                <div className="mt-3 flex items-center gap-3 text-xs">
-                  <span style={{ color: runCount > 0 ? "#1a7f37" : "#9b9a97" }}>
-                    {runCount} run{runCount !== 1 ? "s" : ""}
+                <div
+                  className="mt-3 flex items-center gap-3 text-xs"
+                  style={{ color: "var(--dwo-color-text-muted)" }}
+                >
+                  <span>
+                    {t.rootRunCount !== null
+                      ? `${t.rootRunCount} run${t.rootRunCount !== 1 ? "s" : ""}`
+                      : "No runs"}
                   </span>
-                  {resolution.status === "UNKNOWN_UNRESOLVED" && (
+                  {t.relationRevision != null && (
+                    <span className="font-mono">rev:{t.relationRevision}</span>
+                  )}
+                  {t.status === "UNKNOWN_UNRESOLVED" && (
                     <span
-                      className="text-[10px] uppercase"
-                      style={{ color: "#b54708" }}
+                      className="uppercase"
+                      style={{ color: "var(--dwo-color-state-amber)" }}
                     >
-                      {resolution.reason}
+                      unresolved
                     </span>
                   )}
                 </div>
@@ -77,12 +125,15 @@ export default function TasksPage() {
 
         <div
           className="mt-10 rounded-lg border p-4"
-          style={{ borderColor: "#e9e9e7", background: "#ffffff" }}
+          style={{
+            borderColor: "var(--dwo-color-border-default)",
+            background: "var(--dwo-color-bg-surface)",
+          }}
         >
-          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>
+          <h2 className="text-sm font-semibold" style={{ color: "var(--dwo-color-text-primary)" }}>
             Global run explorer
           </h2>
-          <p className="mt-1 text-xs" style={{ color: "#787774" }}>
+          <p className="mt-1 text-xs" style={{ color: "var(--dwo-color-text-muted)" }}>
             All runs across tasks (read-only historical projection).
           </p>
           <a
@@ -95,17 +146,17 @@ export default function TasksPage() {
 
         <div
           className="mt-6 rounded-lg border px-3 py-1.5 font-mono text-xs"
-          style={{ borderColor: "#e9e9e7", color: "#787774" }}
+          style={{ borderColor: "var(--dwo-color-border-default)", color: "var(--dwo-color-text-faint)" }}
         >
-          data-source: task-index · backend: fixture
+          data-source: task-gateway · backend: fixture
         </div>
       </div>
 
       <style>{`
-        .notion-run-card { border-color: #e9e9e7; background: #ffffff; }
-        .notion-run-card:hover { border-color: #37352f; }
-        .notion-link-btn { border-color: #d3d1cb; background: #f7f7f5; color: #37352f; }
-        .notion-link-btn:hover { background: #efefed; }
+        .notion-run-card { border-color: var(--dwo-color-border-default); background: var(--dwo-color-bg-surface); }
+        .notion-run-card:hover { border-color: var(--dwo-color-text-primary); }
+        .notion-link-btn { border-color: var(--dwo-color-border-default); background: var(--dwo-color-bg-subtle); color: var(--dwo-color-text-primary); }
+        .notion-link-btn:hover { background: var(--dwo-color-bg-canvas); }
       `}</style>
     </div>
   );
