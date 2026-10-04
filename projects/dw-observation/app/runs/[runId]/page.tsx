@@ -1,14 +1,13 @@
-// Server Component (Next.js App Router) — M2 run detail.
+// Server Component (Next.js App Router) — UnifiedRunWorkspace shell.
 //
-// REAL mode: reads exact stored `runs`, `run_gates`, `run_nodes` and
-// `projection_events` through the publishable/RLS-compatible server path
-// (lib/serverRunRead.readServerRunDetail). NO fixture fallback for run
-// metadata/gates/nodes: absent fields stay UNKNOWN; a reconstructed historical
-// run with zero canonical projection_events reports
-// canonicalHistoryAvailable=false / PROJECTION_UNAVAILABLE.
+// REAL mode: reads exact stored run data through the publishable/RLS-compatible
+// server path (lib/serverRunRead.readServerRunDetail). NO fixture fallback.
 //
-// MOCK mode (OBSERVATORY_DATA_SOURCE=mock): deterministic fixture-backed
-// review path — unchanged.
+// MOCK mode (OBSERVATORY_DATA_SOURCE=mock): deterministic fixture-backed review
+// path — same shell component, different data source.
+//
+// Both modes render through the same UnifiedRunWorkspace component tree per
+// TECH_SPEC §6 — no bespoke fixture workspace.
 
 import { notFound } from "next/navigation";
 import type { ProjectionEvent } from "@/lib/live";
@@ -21,15 +20,23 @@ import {
 } from "@/lib/observatory";
 import type { NormalizedEvent, RunView } from "@/lib/observatory";
 
-type Json = Record<string, unknown>;
-import { readServerRunDetail } from "@/lib/serverRunRead";
-import type { ServerRunDetailResult } from "@/lib/serverRunRead";
-import { getMockProjectionEvents, MOCK_BACKEND } from "@/lib/mockDataSource";
 import RootCard from "@/components/RootCard";
 import DagView from "@/components/DagView";
 import Timeline from "@/components/Timeline";
 import EvidenceInspector from "@/components/EvidenceInspector";
 import RunGraphView from "@/components/RunGraphView";
+import UnifiedRunWorkspace from "@/components/dwo/UnifiedRunWorkspace";
+
+import type { UnifiedRunWorkspaceModel, WorkspaceMode } from "@/lib/runtime/unifiedRuntime";
+import { loginAuthScenarioAdapter } from "@/lib/runtime/adapters/loginAuthScenarioAdapter";
+import { fixtureScenarioAdapter } from "@/lib/runtime/adapters/fixtureScenarioAdapter";
+import { realRuntimeAdapter } from "@/lib/runtime/adapters/realRuntimeAdapter";
+import { FIXTURE_CATALOG } from "@/lib/dwo/fixtureSpec";
+
+type Json = Record<string, unknown>;
+import { readServerRunDetail } from "@/lib/serverRunRead";
+import type { ServerRunDetailResult } from "@/lib/serverRunRead";
+import { getMockProjectionEvents, MOCK_BACKEND } from "@/lib/mockDataSource";
 
 // Normalize actor for real-mode events the same way observatory normalizes
 // fixture actors: preserve string values; for deterministic JSON objects with
@@ -131,194 +138,155 @@ function runViewFromDetail(
   };
 }
 
+/**
+ * Build a UnifiedRunWorkspaceModel from the selected data source.
+ * Uses T04 adapters — never hand-crafts the model shape.
+ */
+async function buildWorkspaceModel(
+  runId: string,
+  dataSource: "mock" | "real",
+): Promise<{ model: UnifiedRunWorkspaceModel; mode: WorkspaceMode }> {
+  if (dataSource === "mock") {
+    const run = getRun(runId, "mock");
+    if (!run) notFound();
+
+    // Use loginAuthScenarioAdapter with a minimal fixture built from the mock run.
+    const fixture = {
+      epic_id: "LOGIN-CAPABILITY" as const,
+      title: (run as Record<string, unknown>).title as string ?? "Mock Run",
+      run_count: 10,
+      runtime_node_count: Object.values(run.gates).reduce((a: number, g: any) => a + (g.nodes?.length ?? 0), 0),
+      runtime_model: "unified",
+      runs: [
+        {
+          id: run.runId,
+          index: 0,
+          slug: run.runId,
+          title: (run as Record<string, unknown>).title ?? "Mock Run",
+          objective: (run as Record<string, unknown>).objective ?? "",
+          run_kind: "implementation" as const,
+          allowed_paths: [],
+          forbidden_actions: [],
+          gates: Object.values(run.gates).map((g: any) => ({
+            id: g.id ?? g.gate_id,
+            label: g.label ?? g.gate_label ?? "",
+            summary: g.summary ?? "",
+            x: 0, y: 0, w: 200, h: 100,
+            nodes: (g.nodes ?? []).map((n: any) => ({
+              gate_id: g.id ?? g.gate_id,
+              id: n.id ?? n.node_id,
+              title: n.title ?? n.label ?? "",
+              family: n.family ?? "runtime",
+              type: n.type ?? n.node_type ?? "",
+              boundary: n.boundary ?? n.authority_boundary ?? "",
+              purpose: n.purpose ?? "",
+              fileReads: n.reads ?? n.file_reads ?? [],
+              fileWrites: n.writes ?? n.file_writes ?? [],
+              artifacts: n.artifacts ?? n.artifact_list ?? [],
+              runbook: n.runbook ?? [],
+              taskControllerHistory: n.taskControllerHistory ?? n.taskcontroller_history ?? [],
+              executorHistory: n.executorHistory ?? n.executor_history ?? [],
+              checkpoints: n.checkpoints ?? [],
+              x: 0, y: 0, w: 100, h: 40,
+            })),
+            gateArtifacts: g.gate_artifacts ?? [],
+            taskControllerHistory: g.taskControllerHistory ?? g.taskcontroller_history ?? [],
+            executorHistory: g.executorHistory ?? g.executor_history ?? [],
+          })),
+          route: (run as any).route ?? Object.values(run.gates).flatMap((g: any) => (g.nodes ?? []).map((n: any, i: number) => ({ gate_id: g.id ?? g.gate_id, node_id: n.id ?? n.node_id }))),
+          status: (run as Record<string, unknown>).status ?? UNKNOWN,
+          summary: (run as Record<string, unknown>).summary ?? "",
+        },
+      ],
+    };
+
+    const model = loginAuthScenarioAdapter(fixture as any, run.runId);
+    return { model: { ...model, mode: "SIMULATED" }, mode: "SIMULATED" };
+  }
+
+  // ---------------- real mode ----------------
+  const detail = await readServerRunDetail(runId);
+  if (detail.degraded) {
+    const model: UnifiedRunWorkspaceModel = {
+      runId,
+      taskRef: null,
+      mode: "LIVE",
+      status: "UNKNOWN",
+      hierarchy: null,
+      nodes: [],
+      edges: [],
+      orderedSteps: [],
+      currentSequence: null,
+      canonicalHistoryAvailable: false,
+      projectionStatus: "PROJECTION_UNAVAILABLE",
+      sourceDigest: null,
+    };
+    return { model, mode: "LIVE" };
+  }
+
+  if (!detail.run) notFound();
+
+  const model = await realRuntimeAdapter(runId);
+  return { model, mode: "LIVE" };
+}
+
 export default async function RunDetailPage({
   params,
 }: {
   params: { runId: string };
 }) {
-  // M5 — explicit data-source switch (OBSERVATORY_DATA_SOURCE=mock|real).
   const dataSource =
     process.env.OBSERVATORY_DATA_SOURCE === "mock" ? "mock" : "real";
 
-  // ---------------- mock mode (unchanged) ----------------
+  // Build the unified model from the selected data source.
+  const { model, mode } = await buildWorkspaceModel(params.runId, dataSource);
+
+  // Mock mode still renders legacy navigation context alongside the shell.
   if (dataSource === "mock") {
     const run = getRun(params.runId, "mock");
-    if (!run) notFound();
-    const hierarchy = buildHierarchy(run, "mock");
-    const activeId =
-      run.runId === "DW-OBS-M5-20260823-MOCK" ? "#80" : undefined;
+    const hierarchy = buildHierarchy(run!, "mock");
     const historicalEvents = getMockProjectionEvents(params.runId);
+
     return (
       <section className="space-y-8">
-        {/* Run Tree (hierarchy) */}
+        {/* Unified workspace shell — all scenarios render through this */}
+        <UnifiedRunWorkspace model={model} />
+
+        {/* Legacy navigation context (preserved for mock-mode review) */}
         <div>
           <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>
             Run Tree
           </h2>
-          <RootCard run={run} unknownSentinel={UNKNOWN} supabaseReadiness={SUPABASE_READINESS} />
-          <RunGraphView hierarchy={hierarchy} activeId={activeId ?? undefined} />
+          <RootCard run={run!} unknownSentinel={UNKNOWN} supabaseReadiness={SUPABASE_READINESS} />
+          <RunGraphView hierarchy={hierarchy} />
         </div>
 
-        {/* Flow (DAG) */}
         <div>
-          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>
-            Flow
-          </h2>
-          <DagView gates={run.gates} nodes={run.nodes} edges={DAG_EDGES[run.runId]} />
+          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>Flow</h2>
+          <DagView gates={run!.gates} nodes={run!.nodes} edges={DAG_EDGES[run!.runId]} />
         </div>
 
-        {/* Timeline */}
         <div>
-          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>
-            Timeline
-          </h2>
-          <Timeline events={run.events} unknownSentinel={UNKNOWN} />
+          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>Timeline</h2>
+          <Timeline events={run!.events} unknownSentinel={UNKNOWN} />
         </div>
 
-        {/* Details / Evidence */}
         <div>
-          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>
-            Details
-          </h2>
-          <EvidenceInspector events={run.events} anomalies={run.anomalies} unknownSentinel={UNKNOWN} />
+          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>Details</h2>
+          <EvidenceInspector events={run!.events} anomalies={run!.anomalies} unknownSentinel={UNKNOWN} />
         </div>
-
-        {/* Replay (isolated route) */}
-        <div>
-          <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>
-            Replay
-          </h2>
-          <a
-            href={`/runs/${encodeURIComponent(params.runId)}/replay`}
-            className="notion-link-btn inline-block rounded border px-3 py-1.5 text-sm"
-          >
-            Open isolated replay →
-          </a>
-          <p className="mt-1 text-xs" style={{ color: "#9b9a97" }}>
-            Replay is isolated to /runs/[runId]/replay — no live event mixing.
-          </p>
-        </div>
-
-        <style>{`
-          .notion-link-btn { border-color: #d3d1cb; background: #f7f7f5; color: #37352f; }
-          .notion-link-btn:hover { background: #efefed; }
-        `}</style>
 
         <p className="text-xs" style={{ color: "#787774" }}>
-          This is a read-only historical projection. No authority, gate, or live
-          state is inferred beyond what the source records. Missing values are
-          shown explicitly as &ldquo;{UNKNOWN}&rdquo;.
-        </p>
-        <p
-          data-testid="data-source-badge"
-          className="text-xs font-mono rounded border px-2 py-1 inline-block"
-          style={{ borderColor: "#e9e9e7", color: "#787774" }}
-        >
-          data-source: mock · backend: {MOCK_BACKEND} · run: {run.runId}
+          data-source: mock · backend: {MOCK_BACKEND} · run: {run!.runId}
         </p>
       </section>
     );
   }
 
-  // ---------------- real mode (serverRunRead, no fixture fallback) ----------------
-  const detail = await readServerRunDetail(params.runId);
-  if (detail.degraded) {
-    // Missing config / RLS denial: explicit degraded/unavailable state.
-    return (
-      <section className="space-y-6">
-        <div className="rounded-lg border border-edge bg-panel p-4">
-          <p className="text-sm font-semibold text-accent">PROJECTION_UNAVAILABLE</p>
-          <p className="mt-1 text-xs text-muted">
-            Supabase is not configured or the read was denied (RLS). Real run
-            detail is unavailable; no fixture fallback.
-          </p>
-          <p
-            data-testid="projection-status"
-            className="mt-3 text-xs font-mono rounded border border-muted px-2 py-1 inline-block"
-          >
-            canonicalHistoryAvailable: false · projection: PROJECTION_UNAVAILABLE · run:{" "}
-            {params.runId}
-          </p>
-        </div>
-      </section>
-    );
-  }
-
-  if (!detail.run) notFound();
-
-  const run = runViewFromDetail(params.runId, detail);
-  const hierarchy = buildHierarchy(run, "real");
-  const historicalEvents: ProjectionEvent[] = detail.events;
-  const storeDegraded = false;
-  const backend = detail.backend;
-
+  // ---------------- real mode ----------------
   return (
     <section className="space-y-8">
-      {/* Run Tree */}
-      <div>
-        <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>Run Tree</h2>
-        <RootCard run={run} unknownSentinel={UNKNOWN} supabaseReadiness={SUPABASE_READINESS} />
-        <RunGraphView hierarchy={hierarchy} activeId={undefined} />
-      </div>
-
-      {/* Flow */}
-      <div>
-        <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>Flow</h2>
-        <DagView gates={run.gates} nodes={run.nodes} edges={DAG_EDGES[run.runId]} />
-      </div>
-
-      {/* Timeline */}
-      <div>
-        <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>Timeline</h2>
-        <Timeline events={run.events} unknownSentinel={UNKNOWN} />
-      </div>
-
-      {/* Details / Evidence */}
-      <div>
-        <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>Details</h2>
-        <EvidenceInspector events={run.events} anomalies={run.anomalies} unknownSentinel={UNKNOWN} />
-      </div>
-
-      {/* Replay (isolated route) */}
-      <div>
-        <h2 className="text-sm font-semibold" style={{ color: "#37352f" }}>Replay</h2>
-        <a
-          href={`/runs/${encodeURIComponent(run.runId)}/replay`}
-          className="notion-link-btn inline-block rounded border px-3 py-1.5 text-sm"
-        >
-          Open isolated replay →
-        </a>
-        <p className="mt-1 text-xs" style={{ color: "#9b9a97" }}>
-          Replay is isolated to /runs/[runId]/replay — no live event mixing.
-        </p>
-      </div>
-
-      <style>{`
-        .notion-link-btn { border-color: #d3d1cb; background: #f7f7f5; color: #37352f; }
-        .notion-link-btn:hover { background: #efefed; }
-      `}</style>
-
-      <p className="text-xs" style={{ color: "#787774" }}>
-        Real read from the publishable/RLS-compatible server path. Exact stored
-        values only; genuinely absent fields shown as &ldquo;{UNKNOWN}&rdquo;.
-        Reconstructed historical runs with zero canonical events surface
-        PROJECTION_UNAVAILABLE; canonical history is never synthesized.
-      </p>
-      <p
-        data-testid="data-source-badge"
-        className="text-xs font-mono rounded border px-2 py-1 inline-block"
-        style={{ borderColor: "#e9e9e7", color: "#787774" }}
-      >
-        data-source: real · backend: {backend} · run: {run.runId}
-      </p>
-      <p
-        data-testid="projection-status"
-        className="text-xs font-mono rounded border px-2 py-1 inline-block"
-        style={{ borderColor: "#e9e9e7", color: "#787774" }}
-      >
-        canonicalHistoryAvailable: {String(detail.canonicalHistoryAvailable)} ·
-        projection: {detail.projectionStatus}
-      </p>
+      <UnifiedRunWorkspace model={model} />
     </section>
   );
 }
