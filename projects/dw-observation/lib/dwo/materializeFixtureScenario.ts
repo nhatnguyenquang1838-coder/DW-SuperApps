@@ -24,7 +24,6 @@ import {
   type FixtureProjection,
   resolveFixtureProjection,
 } from "./fixtureSpec";
-import { computeNextFlow } from "../runtime/nextFlow";
 
 // ---------------------------------------------------------------------------
 // Fixture pack — DWO-UR-30-V1 evidence source
@@ -204,7 +203,6 @@ export function materializeFixtureScenario(
     };
 
     // Next Flow on a conflict model must be UNKNOWN — never resolve through conflict
-    const nextFlow = computeNextFlow(model);
     // Override: conflict models always have UNKNOWN next flow
     model.projectionStatus = "CONFLICT";
     // The model is returned as-is; the Next Flow result is UNKNOWN by virtue of

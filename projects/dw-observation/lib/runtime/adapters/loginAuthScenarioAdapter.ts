@@ -11,18 +11,8 @@ import type {
   UnifiedRunWorkspaceModel,
   WorkspaceMode,
 } from "../unifiedRuntime";
-import type { LoginEpicRuntimeFixture, LoginEpicRun, RuntimeNode, RuntimeGate, RouteStep } from "@/lib/loginEpicRuntimeGraph";
+import type { LoginEpicRuntimeFixture, RuntimeNode, RouteStep } from "@/lib/loginEpicRuntimeGraph";
 import { GATE_CHAIN } from "@/lib/loginEpicRuntimeGraph";
-
-const GATE_LABELS: Record<string, string> = {
-  G0_CONTEXT: "G0 Context",
-  G1_ALIGNMENT: "G1 Alignment",
-  G2_EXECUTION: "G2 Execution",
-  G3_PR: "G3 PR",
-  G4_MERGE: "G4 Merge",
-  G5_DEPLOY: "G5 Deploy",
-  G6_PRODUCTION: "G6 Production",
-};
 
 /** Map login-epic NodeState ("done"/"active"/"future") to UnifiedRuntimeState. */
 function mapNodeState(es: string | null): UnifiedRuntimeNode["sourceStatus"] {

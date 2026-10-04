@@ -1,5 +1,3 @@
-import type { RuntimeNode } from "@/lib/loginEpicRuntimeGraph";
-
 /**
  * FamilyBandNode — a faint visual band grouping nodes of the same family inside
  * a gate. Purely decorative (no interaction). data-testid carries family.

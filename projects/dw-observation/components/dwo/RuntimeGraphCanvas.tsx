@@ -17,7 +17,6 @@ import "@xyflow/react/dist/style.css";
 import type {
   UnifiedRunWorkspaceModel,
   UnifiedRuntimeNode,
-  WorkspaceMode,
 } from "@/lib/runtime/unifiedRuntime";
 import { GATE_CHAIN } from "@/lib/loginEpicRuntimeGraph";
 import GateClusterNode from "./GateClusterNode";

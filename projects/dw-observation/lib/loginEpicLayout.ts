@@ -76,8 +76,6 @@ export function computeRunLayout(run: LoginEpicRun, opts: LayoutOpts): RunLayout
   let maxY = 0;
 
   run.gates.forEach((gate, gi) => {
-    const gx = MARGIN + (dir === "LR" ? gi * (0) : 0);
-    const gy = MARGIN + (dir === "TD" ? gi * (0) : 0);
     const boundary = gate.nodes[0]?.boundary ?? "unknown";
     const fams = familyOrder(gate);
 

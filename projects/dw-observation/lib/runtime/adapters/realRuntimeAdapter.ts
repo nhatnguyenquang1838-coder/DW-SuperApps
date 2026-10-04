@@ -16,7 +16,7 @@ import type {
   WorkspaceMode,
 } from "../unifiedRuntime";
 import { UNKNOWN } from "@/lib/observatory";
-import { readServerConfig, readServerRunDetail } from "@/lib/serverRunRead";
+import { readServerRunDetail } from "@/lib/serverRunRead";
 import { readHistoricalEvents } from "@/lib/serverHistoricalRead";
 
 /** Map a raw server state string to the closest unified sourceStatus. */
@@ -55,7 +55,6 @@ function mapSourceStatus(state: string | null | undefined): string | null {
 export async function realRuntimeAdapter(
   runId: string,
 ): Promise<UnifiedRunWorkspaceModel> {
-  const cfg = readServerConfig();
   const detail = await readServerRunDetail(runId);
   const history = await readHistoricalEvents(runId);
 

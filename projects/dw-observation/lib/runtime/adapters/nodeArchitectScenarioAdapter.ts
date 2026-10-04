@@ -11,7 +11,7 @@ import type {
   UnifiedRunWorkspaceModel,
   WorkspaceMode,
 } from "../unifiedRuntime";
-import type { SimRun, SimNode, SimGate } from "@/lib/simRun";
+import type { SimRun, SimNode } from "@/lib/simRun";
 
 /** Map node_state ("done"/"active"/"future") to UnifiedRuntimeState. */
 function mapSourceState(state: string): UnifiedRuntimeNode["sourceStatus"] {

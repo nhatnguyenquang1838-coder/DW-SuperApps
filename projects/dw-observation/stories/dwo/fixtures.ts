@@ -1,4 +1,4 @@
-import type { UnifiedRunWorkspaceModel, UnifiedRuntimeNode, RuntimeNodeState, WorkspaceMode } from "@/lib/runtime/unifiedRuntime";
+import type { UnifiedRunWorkspaceModel, UnifiedRuntimeNode, RuntimeNodeState } from "@/lib/runtime/unifiedRuntime";
 
 // ---------------------------------------------------------------------------
 // Shared fixture data for DWO Storybook stories

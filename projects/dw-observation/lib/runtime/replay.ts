@@ -13,7 +13,6 @@
 
 import { reduceEvents, type ReplayProjection } from "@/lib/replay";
 import { readHistoricalEvents } from "@/lib/serverHistoricalRead";
-import type { ProjectionEvent } from "@/lib/live";
 import type {
   UnifiedRunWorkspaceModel,
   WorkspaceMode,

@@ -31,10 +31,8 @@ import { detectGaps, assertCorrelationIsEvidenceOnly, type CorrelationMetadata }
 import { appendGeneration, navigateLineage, type RecoveryGeneration } from './recoveryLineage';
 import { buildRunTree, evaluateParentComposition, type RunNode } from './recursiveTopology';
 import { evaluateBlockingPath } from './blockingPath';
-import { upcastV1Event, backfillV1, type V1Event } from './compatibility';
-import { replayFromFixture, replayFromDurable, compareReplayEvidence, type ReplayEvent } from './replay';
-import { determineLiveState, isCertifiedLive, type SemanticQualification } from './liveState';
-import { initialBootstrap, completeBootstrap, completeCatchUp } from './realtimeBootstrap';
+import { backfillV1, type V1Event } from './compatibility';
+import { replayFromFixture, replayFromDurable, compareReplayEvidence } from './replay';
 import {
   assertNonColorOnlyStatus,
   keyboardNavOrder,
@@ -48,16 +46,11 @@ import type { CompositionDecision } from './parentComposition';
 import type { RelationDecision } from './taskRunIndex';
 import {
   FIXTURE_CATALOG,
-  DWO_PROJECTION_DEFAULTS,
-  DEV_RUN_020,
-  DEV_RUN_030,
   resolveFixtureProjection,
-  isQualified,
-  assertFixtureCatalogInvariants,
 } from './fixtureSpec';
 import { resolveProfileProjection, INCOMPATIBLE_PROJECTION } from './profileRegistry';
 import { classifyDrift, type DriftEvidence } from './drift';
-import { resolveNativeBinding, resolveCompatibilityBinding, type NativeSourceResolution } from './releaseBinding';
+import { resolveNativeBinding, type NativeSourceResolution } from './releaseBinding';
 import { assertNoServiceRoleInBrowser, type RlsPolicy } from './durableCertification';
 import {
   validateQualificationSubject,

@@ -4,7 +4,6 @@ import {
   BaseEdge,
   EdgeLabelRenderer,
   getBezierPath,
-  MarkerType,
   type EdgeProps,
 } from "@xyflow/react";
 

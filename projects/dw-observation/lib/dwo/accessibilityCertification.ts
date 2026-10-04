@@ -24,7 +24,7 @@ import {
   assertVisibleFocus,
   keyboardNavOrder,
 } from './accessibility';
-import { selectRun, type SelectionState } from './runList';
+import { type SelectionState } from './runList';
 import { qualifyScalePack } from './scaleGen';
 import { FIXTURE_CATALOG, assertFixtureCatalogInvariants } from './fixtureSpec';
 

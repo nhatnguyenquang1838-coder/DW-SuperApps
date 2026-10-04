@@ -28,7 +28,7 @@ export default function GateClusterNode({
     state: RuntimeNodeState;
   };
 }) {
-  const { gateId, gateLabel, gateSummary, boundary, headerH, nodeCount, artifactCount, state } = data;
+  const { gateId, gateLabel, boundary, headerH, nodeCount, artifactCount, state } = data;
   const label = BOUNDARY_LABELS[boundary] ?? boundary;
   return (
     <div

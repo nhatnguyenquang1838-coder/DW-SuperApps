@@ -11,12 +11,11 @@
  *   4. recursive Root/Child/Atomic reduction + dependency blocking path are correct;
  *   5. the reducer conforms to the fixture stream.
  */
-import { reduceEventPrefix, type ReducerEvent, type ReducedRunState } from './reducer';
-import { isParentComplete, type RunNode, type RunTree } from './recursiveTopology';
-import { evaluateBlockingPath } from './blockingPath';
+import { reduceEventPrefix, type ReducerEvent } from './reducer';
+import { isParentComplete, type RunTree } from './recursiveTopology';
 import { assertTraceabilityReadiness, type TraceabilityChainV2, type TraceabilityDecision } from './traceabilityChain';
-import { deriveAuthorityState, type AuthorityDecision, type AuthorityEvidence } from './authorityVocabulary';
-import { evaluateParentCompositionContract, type ParentCompositionContractV2, type CompositionDecision } from './parentComposition';
+import { AuthorityEvidence, type AuthorityDecision } from './authorityVocabulary';
+import type { CompositionDecision } from './parentComposition';
 
 export interface ReducerCertificationInput {
   /** Determinism: same prefix reduced twice yields identical state. */

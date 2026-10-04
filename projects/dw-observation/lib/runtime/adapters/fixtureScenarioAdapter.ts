@@ -14,7 +14,6 @@ import type {
 } from "../unifiedRuntime";
 import {
   FIXTURE_CATALOG,
-  DWO_PROJECTION_DEFAULTS,
   resolveFixtureProjection,
   type FixtureProjection,
 } from "@/lib/dwo/fixtureSpec";

@@ -89,14 +89,6 @@ export const AUTHORITY_STATES: readonly AuthorityState[] = Object.freeze([
   'UNKNOWN',
 ]);
 
-/** Terminal/lapsed states that still require a proven source record. */
-const SOURCE_BACKED_STATES: ReadonlySet<string> = new Set<AuthorityState>([
-  'GRANTED',
-  'DENIED',
-  'EXPIRED',
-  'REVOKED',
-]);
-
 /**
  * A state that does not require a grant record at all. NOT_REQUIRED and
  * PENDING describe the ABSENCE of a requirement or of a decision, so they

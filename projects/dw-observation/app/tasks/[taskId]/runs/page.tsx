@@ -10,7 +10,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { resolveTask } from "@/lib/taskRead";
 import { listRuns } from "@/lib/observatory";
-import type { TaskSummary } from "@/lib/taskTypes";
 
 type TaskRunSummary = {
   runId: string;

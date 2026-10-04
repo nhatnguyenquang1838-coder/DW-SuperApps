@@ -10,7 +10,7 @@
 // never an empty list masquerading as healthy.
 
 import { readRealSummaries } from "@/lib/taskRead";
-import type { TaskSummary, TaskResolutionStatus } from "@/lib/taskTypes";
+import type { TaskResolutionStatus } from "@/lib/taskTypes";
 
 const statusStyle: Record<
   TaskResolutionStatus,

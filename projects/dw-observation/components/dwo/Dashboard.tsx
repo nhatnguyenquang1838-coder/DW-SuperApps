@@ -1,6 +1,6 @@
 "use client";
 
-import { readDashboardProjection, type DashboardProjection } from "@/lib/dashboard/readDashboardProjection";
+import { type DashboardProjection } from "@/lib/dashboard/readDashboardProjection";
 
 interface DashboardProps {
   projection: DashboardProjection;
@@ -25,7 +25,6 @@ function stateFor(
 export default function Dashboard({ projection }: DashboardProps) {
   const {
     taskCount,
-    runCounts,
     activeCount,
     waitingCount,
     blockedCount,

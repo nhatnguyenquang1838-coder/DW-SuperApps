@@ -15,7 +15,7 @@
  *     fixture stream (from SCRUM-822) for conformance.
  */
 
-import type { GateRef, RunState } from './projectionContract';
+import type { RunState } from './projectionContract';
 import type { AuthorityState } from './authorityVocabulary';
 
 /** A projection event consumed by the reducer. */

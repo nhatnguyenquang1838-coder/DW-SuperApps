@@ -160,7 +160,7 @@ describe("T09C adapter dispatch + real-mode coverage", () => {
       delete process.env.OBSERVATORY_DATA_SOURCE;
 
       try {
-        const { buildWorkspaceModel } = await import("@/app/runs/[runId]/page");
+        const { buildWorkspaceModel } = await import("@/lib/runtime/buildWorkspaceModel");
         await buildWorkspaceModel("TEST-RUN", "real");
 
         // Real mode must never touch mock data utilities
@@ -182,7 +182,7 @@ describe("T09C adapter dispatch + real-mode coverage", () => {
       delete process.env.OBSERVATORY_DATA_SOURCE;
 
       try {
-        const { buildWorkspaceModel } = await import("@/app/runs/[runId]/page");
+        const { buildWorkspaceModel } = await import("@/lib/runtime/buildWorkspaceModel");
         // When OBSERVATORY_DATA_SOURCE is unset, dataSource defaults to "real"
         await buildWorkspaceModel("TEST-RUN", "real");
 
@@ -206,7 +206,7 @@ describe("T09C adapter dispatch + real-mode coverage", () => {
     it("real mode selects realRuntimeAdapter", async () => {
       mockNonDegradedDetail();
 
-      const { buildWorkspaceModel } = await import("@/app/runs/[runId]/page");
+      const { buildWorkspaceModel } = await import("@/lib/runtime/buildWorkspaceModel");
       const result = await buildWorkspaceModel("TEST-RUN", "real");
 
       expect(mockRealRuntimeAdapter).toHaveBeenCalledWith("TEST-RUN");
@@ -224,7 +224,7 @@ describe("T09C adapter dispatch + real-mode coverage", () => {
         gates: {},
       });
 
-      const { buildWorkspaceModel } = await import("@/app/runs/[runId]/page");
+      const { buildWorkspaceModel } = await import("@/lib/runtime/buildWorkspaceModel");
       const result = await buildWorkspaceModel("TEST-RUN", "mock");
 
       expect(mockLoginAuthScenarioAdapter).toHaveBeenCalled();
@@ -237,7 +237,7 @@ describe("T09C adapter dispatch + real-mode coverage", () => {
       const { FIXTURE_CATALOG } = await import("@/lib/dwo/fixtureSpec");
       const entry = FIXTURE_CATALOG[0];
 
-      const { buildWorkspaceModel } = await import("@/app/runs/[runId]/page");
+      const { buildWorkspaceModel } = await import("@/lib/runtime/buildWorkspaceModel");
       const result = await buildWorkspaceModel(entry.id, "fixture");
 
       expect(mockFixtureScenarioAdapter).toHaveBeenCalledWith(entry);
@@ -258,7 +258,7 @@ describe("T09C adapter dispatch + real-mode coverage", () => {
       const { FIXTURE_CATALOG } = await import("@/lib/dwo/fixtureSpec");
       const entry = FIXTURE_CATALOG[0];
 
-      const { buildWorkspaceModel } = await import("@/app/runs/[runId]/page");
+      const { buildWorkspaceModel } = await import("@/lib/runtime/buildWorkspaceModel");
 
       // Real
       await buildWorkspaceModel("TEST-RUN", "real");

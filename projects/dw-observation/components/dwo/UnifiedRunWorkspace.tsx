@@ -45,7 +45,6 @@ export default function UnifiedRunWorkspace({
   const currentNodeId = currentStep?.nodeId ?? null;
 
   const selectedNode = model.nodes.find((n) => n.id === currentNodeId) ?? null;
-  const selectedGateId = selectedNode?.gateId ?? null;
 
   const label = useMemo(() => {
     if (!selectedNode) return model.runId;
