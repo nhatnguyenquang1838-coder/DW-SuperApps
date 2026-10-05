@@ -39,7 +39,8 @@ Before dispatch, correction, approval presentation, or semantic resume:
 7. derive expected digests only from observed evidence or canonical recomputation;
 8. derive preapproval state from the current verified boundary, never by materializing the target gate's required artifact first;
 9. present a human approval only from the typed approval-request artifact plus verified command digest;
-10. for the GitHub high-integrity binding, use `taskcontroller.interaction.github_mailbox_v2.GitHubMailboxRepository`: append typed event/cursor records as new issue comments and never update a mutable actor comment in place.
+10. for the GitHub high-integrity binding, use `taskcontroller.interaction.github_continuation_store.GitHubContinuationStore` to persist/exact-read the bounded continuation before dispatch;
+11. only after continuation persistence PASS, use `taskcontroller.interaction.github_mailbox_v2.GitHubMailboxRepository`: append typed event/cursor records as new issue comments and never update a mutable actor comment in place.
 
 Fail closed instead of falling back to the mutable v1 compatibility lane.
 

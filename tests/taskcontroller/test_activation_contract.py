@@ -394,3 +394,38 @@ def test_chatgpt_and_hermes_route_high_integrity_events_through_github_adapter()
     assert "append typed event/cursor records as new issue comments" in chatgpt
     assert "GitHubMailboxRepository" in hermes
     assert "in high-integrity mailbox/v2 append a new typed event" in hermes
+
+
+
+def test_registry_binds_remote_high_integrity_continuation_store():
+    registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
+
+    assert "continuation_store: taskcontroller/interaction/github_continuation_store.py" in registry
+    assert "continuation_store_class: GitHubContinuationStore" in registry
+    assert "continuation_record_protocol: dw.taskcontroller.github-continuation-record/v1" in registry
+    assert "high_integrity_remote_continuation: required" in registry
+
+
+def test_high_integrity_protocol_requires_remote_continuation_before_mailbox_event():
+    protocol = (
+        ROOT / "agents" / "shared" / "taskcontroller-a2a-protocol.md"
+    ).read_text(encoding="utf-8")
+
+    assert "GitHubContinuationStore" in protocol
+    assert "dw.taskcontroller.github-continuation-record/v1" in protocol
+    assert "before the first mailbox/v2 dispatch" in protocol
+    assert "mailbox event without a durable remote continuation checkpoint is invalid boot state" in protocol
+
+
+def test_chatgpt_and_hermes_require_remote_continuation_binding():
+    chatgpt = (
+        ROOT / "agents" / "chatgpt-agent" / "agent-instructions.md"
+    ).read_text(encoding="utf-8")
+    hermes = (
+        ROOT / "agents" / "hermes" / "agent-instructions.md"
+    ).read_text(encoding="utf-8")
+
+    assert "GitHubContinuationStore" in chatgpt
+    assert "persist/exact-read the bounded continuation before dispatch" in chatgpt
+    assert "GitHubContinuationStore" in hermes
+    assert "mailbox/v2 event without that checkpoint is invalid boot state" in hermes

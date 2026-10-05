@@ -64,6 +64,9 @@ interaction:
     repository_adapter: taskcontroller/interaction/github_mailbox_v2.py
     repository_adapter_class: GitHubMailboxRepository
     remote_record_protocol: dw.taskcontroller.github-mailbox-record/v1
+    continuation_store: taskcontroller/interaction/github_continuation_store.py
+    continuation_store_class: GitHubContinuationStore
+    continuation_record_protocol: dw.taskcontroller.github-continuation-record/v1
     mailbox_record_model: append-only-github-issue-comments
     one_writer_per_actor_mailbox: true
     cross_process_multi_writer_cas: unsupported
@@ -169,6 +172,7 @@ resilience:
   runtime_session: taskcontroller/runtime/session.py
   durable_pilot_copy:
     controller_mailbox_state: required
+    high_integrity_remote_continuation: required
     audit_manifest: required-when-audit-configured
   pre_dispatch_order:
     - materialize-controller-mailbox
