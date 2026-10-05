@@ -429,3 +429,45 @@ def test_chatgpt_and_hermes_require_remote_continuation_binding():
     assert "persist/exact-read the bounded continuation before dispatch" in chatgpt
     assert "GitHubContinuationStore" in hermes
     assert "mailbox/v2 event without that checkpoint is invalid boot state" in hermes
+
+
+
+def test_registry_requires_real_work_execute_contracts():
+    registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
+
+    assert "contracting_guard: taskcontroller/controlplane/execution_contracting.py" in registry
+    assert "required_mode_for_new_high_integrity_requests: true" in registry
+    assert "executor_owns_implementation_details_inside_scope: true" in registry
+    assert "routine_engineering_wait_points: forbidden" in registry
+    assert "default_after_execution_authority: continue-working-within-approved-boundary" in registry
+
+
+def test_chatgpt_controller_plan_once_execute_end_to_end_policy():
+    instructions = (
+        ROOT / "agents" / "chatgpt-agent" / "agent-instructions.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Plan-once / execute-end-to-end contracting" in instructions
+    assert "controller_contract_mode" in instructions
+    assert "The Executor owns implementation details inside that approved boundary" in instructions
+    assert "A routine engineering failure is work to resolve, not a WAIT_CONTROLLER boundary" in instructions
+
+
+def test_hermes_real_work_policy_continues_routine_engineering():
+    instructions = (
+        ROOT / "agents" / "hermes" / "agent-instructions.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Real-work Executor behavior" in instructions
+    assert "controller_contract_mode=EXECUTE" in instructions
+    assert "continue through implementation, TDD/test/fix" in instructions
+
+
+def test_a2a_protocol_defines_plan_and_execute_modes():
+    protocol = (
+        ROOT / "agents" / "shared" / "taskcontroller-a2a-protocol.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Controller execution-contract modes" in protocol
+    assert "read/validate/report-only package is not a valid EXECUTE contract" in protocol
+    assert "Normal RED/GREEN/test/fix/refactor cycles are not separate mailbox authority boundaries" in protocol
