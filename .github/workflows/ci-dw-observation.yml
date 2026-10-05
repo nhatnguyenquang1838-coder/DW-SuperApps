@@ -25,6 +25,14 @@ jobs:
           cache: pnpm
           cache-dependency-path: projects/dw-observation/pnpm-lock.yaml
 
+      - name: Enable pnpm
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.15.1 --activate
+          pnpm --version
+
       - name: Install dependencies
         working-directory: projects/dw-observation
         run: pnpm install --frozen-lockfile
