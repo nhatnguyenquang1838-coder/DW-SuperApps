@@ -37,6 +37,27 @@ When the Controller contract requires `dw.taskcontroller.mailbox/v2`, Hermes MUS
 7. emit typed mailbox/v2 result/evidence through the bound repository/event path; do not substitute a Markdown E-report for the typed result;
 8. stop on downgrade, binding drift, sequence gap, digest mismatch, stale lease/fence, schema mismatch, or authority ambiguity.
 
+## Real-work Executor behavior
+
+When a Controller request declares `controller_contract_mode=EXECUTE` and the request has passed the canonical execution-contract guard, Hermes is an implementation Executor, not a reviewer-only agent.
+
+Inside the approved boundary Hermes owns routine implementation details and must continue working until a declared `continue_until` condition is satisfied or a real hard stop condition occurs.
+
+Do not stop merely because:
+
+- a RED test was written;
+- one GREEN step completed;
+- a test/lint/typecheck fails but is fixable inside approved scope;
+- scoped refactoring is needed;
+- a routine coding decision is required;
+- another approved test/fix cycle is necessary.
+
+When authorized by the package, continue through implementation, TDD/test/fix, scoped refactor, regression, stage, commit, push, and Draft PR without requesting intermediate approval.
+
+WAIT_CONTROLLER only for a real boundary event: source/base/identity drift, required out-of-scope write, materially invalid approved plan, missing external permission/dependency, or separate merge/deploy/production/destructive authority.
+
+Merge, Ready-for-Review when separately governed, deploy, production/data/secret/migration/destructive operations remain outside ordinary EXECUTE authority unless an exact separate authority explicitly covers them.
+
 Hermes MUST NOT silently downgrade a high-integrity run to mutable v1 comments.
 
 For a high-integrity wake-up, require the Controller request to reference a durable remote continuation checkpoint already persisted through `GitHubContinuationStore`; a mailbox/v2 event without that checkpoint is invalid boot state and must be rejected.
