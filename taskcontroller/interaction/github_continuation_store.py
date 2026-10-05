@@ -225,6 +225,8 @@ class GitHubContinuationStore:
             "protocol": GITHUB_CONTINUATION_RECORD_PROTOCOL,
             "adapter": "github_issue_comments",
             "append_only": True,
+            "exact_readback": True,
+            "chat_history_recovery": False,
             "single_writer_required": True,
             "cross_process_multi_writer_cas": False,
             "operations": ["save_manifest", "load_manifest"],
