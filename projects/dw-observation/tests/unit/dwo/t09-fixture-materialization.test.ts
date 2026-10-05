@@ -16,7 +16,6 @@ import {
   materializeAllFixtures,
 } from "@/lib/dwo/materializeFixtureScenario";
 import { FIXTURE_CATALOG, DEV_RUN_020 } from "@/lib/dwo/fixtureSpec";
-import type { UnifiedRunWorkspaceModel } from "@/lib/runtime/unifiedRuntime";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -273,7 +272,7 @@ function evidenceFilesForRun(runId: string): string[] {
   for (const dir of dirs) {
     const dirPath = join(FIXTURE_PACK, "evidence", dir);
     try {
-      const entries = readFileSync(dirPath, "utf-8"); // stat via readdir alternative
+      readFileSync(dirPath, "utf-8"); // stat via readdir alternative
     } catch {
       continue;
     }
@@ -294,15 +293,10 @@ function evidenceFilesForRun(runId: string): string[] {
 
 describe("T09-6: evidence from fixture pack", () => {
   it("conforming scenarios have non-empty artifacts per node", () => {
-    const events = loadEvents();
     const models = materializeAllFixtures();
 
     for (const m of models) {
       if (m.runId === DEV_RUN_020) continue;
-
-      const scenarioEvents = events.filter((e) =>
-        m.nodes.some((n) => n.id === e.run_id)
-      );
 
       for (const node of m.nodes) {
         const evFiles = evidenceFilesForRun(node.id);
@@ -346,10 +340,10 @@ describe("T09-7: dependency edges are UNKNOWN without evidence", () => {
       if (m.runId === DEV_RUN_020) continue;
       for (const edge of m.edges) {
         if (edge.kind === "DEPENDENCY") {
-          expect(edge.state).toBe(
-            "UNKNOWN",
+          expect(
+            edge.state,
             `DEPENDENCY edge ${edge.source}->${edge.target} must be UNKNOWN (no evidence says SATISFIED)`
-          );
+          ).toBe("UNKNOWN");
         }
       }
     }
