@@ -7,9 +7,8 @@ import RunHierarchy from "@/components/dwo/RunHierarchy";
 import NextFlowPanel from "@/components/dwo/NextFlowPanel";
 import NodeInspector from "@/components/dwo/NodeInspector";
 import RuntimePlayer from "@/components/dwo/RuntimePlayer";
-import RuntimeGraphCanvas from "@/components/dwo/RuntimeGraphCanvas";
 import { ReactFlowProvider } from "@xyflow/react";
-import type { UnifiedRunWorkspaceModel, WorkspaceMode } from "@/lib/runtime/unifiedRuntime";
+import type { UnifiedRunWorkspaceModel } from "@/lib/runtime/unifiedRuntime";
 
 const makeModel = (overrides: Partial<UnifiedRunWorkspaceModel> = {}): UnifiedRunWorkspaceModel => ({
   runId: "T05-TEST-RUN",

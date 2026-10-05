@@ -18,8 +18,6 @@ import {
 } from "@/lib/dwo/materializeFixtureScenario";
 import { FIXTURE_CATALOG, DEV_RUN_020 } from "@/lib/dwo/fixtureSpec";
 import DevFixturesPage from "@/app/dev/fixtures/page";
-import UnifiedRunWorkspace from "@/components/dwo/UnifiedRunWorkspace";
-import { ReactFlowProvider } from "@xyflow/react";
 
 // ---------------------------------------------------------------------------
 // RED 2: all 30 catalog ids resolve to a materialized model
