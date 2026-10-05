@@ -31,6 +31,12 @@ from .executor_entrypoint import (
     MailboxReader,
 )
 from .github_mailbox import mailbox_operation, parse_mailbox_comment, render_mailbox_comment
+from .github_mailbox_v2 import (
+    GITHUB_RECORD_PROTOCOL,
+    GitHubIssueComment,
+    GitHubIssueCommentTransport,
+    GitHubMailboxRepository,
+)
 from .human_projection import HumanEvent, HumanEventKind, project_envelope_for_human
 from .wakeup import WAKEUP_PROTOCOL, WakeupSignal
 
@@ -55,6 +61,10 @@ __all__ = [
     "ExecutorMailboxRequest",
     "HumanEvent",
     "HumanEventKind",
+    "GITHUB_RECORD_PROTOCOL",
+    "GitHubIssueComment",
+    "GitHubIssueCommentTransport",
+    "GitHubMailboxRepository",
     "MailboxCursor",
     "MailboxFirstExecutorEntrypoint",
     "MailboxPollTarget",
