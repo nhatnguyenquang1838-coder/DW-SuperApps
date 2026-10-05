@@ -356,3 +356,41 @@ def test_hermes_high_integrity_lane_uses_typed_v2_not_markdown_reports():
     assert "never scan the whole issue/comment history" in overlay
     assert "do not substitute a Markdown E-report for the typed result" in overlay
     assert "MUST NOT silently downgrade a high-integrity run" in overlay
+
+
+
+def test_registry_binds_high_integrity_github_mailbox_v2_adapter():
+    registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
+
+    assert "repository_adapter: taskcontroller/interaction/github_mailbox_v2.py" in registry
+    assert "repository_adapter_class: GitHubMailboxRepository" in registry
+    assert "remote_record_protocol: dw.taskcontroller.github-mailbox-record/v1" in registry
+    assert "mailbox_record_model: append-only-github-issue-comments" in registry
+    assert "one_writer_per_actor_mailbox: true" in registry
+    assert "cross_process_multi_writer_cas: unsupported" in registry
+
+
+def test_high_integrity_a2a_protocol_defines_append_only_github_binding():
+    protocol = (
+        ROOT / "agents" / "shared" / "taskcontroller-a2a-protocol.md"
+    ).read_text(encoding="utf-8")
+
+    assert "High-integrity GitHub mailbox/v2 binding" in protocol
+    assert "GitHubMailboxRepository" in protocol
+    assert "dw.taskcontroller.github-mailbox-record/v1" in protocol
+    assert "new immutable GitHub issue comment" in protocol
+    assert "MUST NOT update one mutable actor comment in place" in protocol
+
+
+def test_chatgpt_and_hermes_route_high_integrity_events_through_github_adapter():
+    chatgpt = (
+        ROOT / "agents" / "chatgpt-agent" / "agent-instructions.md"
+    ).read_text(encoding="utf-8")
+    hermes = (
+        ROOT / "agents" / "hermes" / "agent-instructions.md"
+    ).read_text(encoding="utf-8")
+
+    assert "GitHubMailboxRepository" in chatgpt
+    assert "append typed event/cursor records as new issue comments" in chatgpt
+    assert "GitHubMailboxRepository" in hermes
+    assert "in high-integrity mailbox/v2 append a new typed event" in hermes

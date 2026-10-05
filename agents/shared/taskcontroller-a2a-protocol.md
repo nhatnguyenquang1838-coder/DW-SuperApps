@@ -219,6 +219,27 @@ If a host cannot satisfy the high-integrity admission contract, it must stop wit
 
 This boundary does not grant effect, merge, deploy, release, migration, secret, or production authority.
 
+## High-integrity GitHub mailbox/v2 binding
+
+When the high-integrity lane uses the GitHub binding, the canonical remote adapter is `taskcontroller.interaction.github_mailbox_v2.GitHubMailboxRepository`.
+
+The mailbox reference has the form:
+
+`github://<owner>/<repo>/issues/<issue>#<actor-mailbox>`
+
+Transport rules:
+
+- each accepted mailbox event is appended as a new immutable GitHub issue comment using `dw.taskcontroller.github-mailbox-record/v1`;
+- each durable actor-cursor acknowledgement is also appended as a new immutable GitHub issue comment;
+- unrelated issue comments are not mailbox records and are ignored;
+- a tagged malformed mailbox record fails closed;
+- exact readback validates canonical envelope/event/cursor identity, not full comment-body SHA;
+- the current topology requires one writer per actor mailbox; the adapter does not claim cross-process multi-writer atomic CAS;
+- Controller and Executor use separate actor mailbox refs when both can write concurrently;
+- high-integrity runs MUST NOT update one mutable actor comment in place.
+
+This transport binding does not grant execution authority. Gate/effect authority remains separately validated.
+
 ## Controller contract
 
 Controller owns:
