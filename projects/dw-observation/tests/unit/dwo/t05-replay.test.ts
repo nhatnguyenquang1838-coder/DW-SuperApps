@@ -8,7 +8,7 @@
 
 import { describe, it, expect } from "vitest";
 import { replayToModel } from "@/lib/runtime/replay";
-import type { ReplayProjection, UnifiedRunWorkspaceModel } from "@/lib/runtime/unifiedRuntime";
+import type { ReplayProjection } from "@/lib/runtime/unifiedRuntime";
 
 function makeProjection(overrides: Partial<ReplayProjection> = {}): ReplayProjection {
   return {
