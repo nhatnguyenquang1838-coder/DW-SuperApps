@@ -244,6 +244,22 @@ For high-integrity remote recovery, persist the bounded `dw.taskcontroller.conti
 
 A high-integrity mailbox event without a durable remote continuation checkpoint is invalid boot state and MUST NOT be emitted.
 
+## Controller execution-contract modes
+
+Mailbox/v2 requests may declare one Controller contract mode:
+
+- `PLAN`: source recovery, research, design, decomposition, validation; no implementation effects.
+- `TRANSPORT_REPAIR`: mailbox/protocol/continuation repair only.
+- `EXECUTE`: bounded real engineering work after applicable execution authority is validated.
+
+`EXECUTE` is outcome-oriented. It must include a real writable scope, at least one engineering mutation action, ordered work packages, continue-until conditions, and hard stop conditions. A read/validate/report-only package is not a valid EXECUTE contract.
+
+Within an EXECUTE boundary, implementation details belong to the Executor. Normal RED/GREEN/test/fix/refactor cycles are not separate mailbox authority boundaries and must not create repetitive WAIT_CONTROLLER turns.
+
+One bounded execution package may include branch/worktree creation, approved file edits, tests, staging, commit, push, and Draft PR when explicitly authorized. Merge, Ready-for-Review when separately governed, deploy, production/data/secret/migration/destructive actions remain separate authority.
+
+The transport does not grant authority. `taskcontroller/controlplane/execution_contracting.py` validates the declared mode before dispatch persistence and must return `authority_granted=false`.
+
 ## Controller contract
 
 Controller owns:
