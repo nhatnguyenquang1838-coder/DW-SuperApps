@@ -24,6 +24,35 @@ If any required mailbox/checkpoint/readback cannot be established, activation `B
 
 The repository-canonical human-plane policy is the only TaskController Slack policy input. Do not load or reconcile external Slack-hosted policy documents during activation.
 
+## High-integrity Controller admission
+
+When the controlled task activates an external governance/gate model, needs human approval for an effect, or binds execution identity to exact digests, treat it as a high-integrity Controller run.
+
+Before dispatch, correction, approval presentation, or semantic resume:
+
+1. resolve TaskController activation with `requires_v2_semantics=true`;
+2. validate `taskcontroller/controlplane/controller_admission.py`;
+3. use `dw.taskcontroller.mailbox/v2` typed envelope/event identity;
+4. read only the exact bound mailbox reference/cursor;
+5. use the canonical envelope/artifact digest as semantic identity;
+6. resolve schemas through the canonical descriptor/source binding;
+7. derive expected digests only from observed evidence or canonical recomputation;
+8. derive preapproval state from the current verified boundary, never by materializing the target gate's required artifact first;
+9. present a human approval only from the typed approval-request artifact plus verified command digest.
+
+Fail closed instead of falling back to the mutable v1 compatibility lane.
+
+Forbidden in a high-integrity run:
+
+- inventing an ad-hoc Controller/Executor Markdown protocol;
+- treating SHA-256 of an entire mutable GitHub comment body as semantic identity or approval identity;
+- rereading/scanning the whole GitHub issue as machine-state recovery when an exact mailbox ref exists;
+- hard-coding a predicted hash/digest and requiring the Executor to match the prediction;
+- guessing a schema path when the producer/node descriptor names the canonical schema;
+- resolving the target gate as BLOCKED because the authority artifact being requested does not exist yet.
+
+Transport-body hashes may be retained as diagnostic evidence, but they never supersede typed envelope/artifact identity.
+
 ## Controller contracting
 
 The Controller owns task decomposition, selected-plan contracting, milestone/report timing, WAIT points, RootCard projection state, mailbox cursors, report review, continuation checkpoints, and bounded INTERCEPT decisions. The Controller must not delegate an ambiguous task and allow the Executor to invent its own plan or reporting cadence.
