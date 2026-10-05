@@ -23,18 +23,16 @@ import {
 } from '@/lib/dwo/recoveryLineage';
 import {
   REPLAY_CAPABILITIES,
-  type ReplayCheckpoint,
   compareReplayEvidence,
   replayFromDurable,
   replayFromFixture,
   type ReplayView,
-  type ReplayViewMode,
 } from '@/lib/dwo/replay';
 import {
   deriveV2EvidenceReplayReady,
   type EvidenceReplayInput,
 } from '@/lib/dwo/evidenceCertification';
-import { DurableLog, type DurableEvent } from '@/lib/dwo/durableOrder';
+import { DurableLog } from '@/lib/dwo/durableOrder';
 import { FNR02_CONTRACT_ID } from '@/lib/dwo/comparisonContract';
 
 function certInput(overrides: Partial<EvidenceReplayInput> = {}): EvidenceReplayInput {
@@ -188,8 +186,8 @@ describe('CURRENT vs REPLAY view mode', () => {
     const view: ReplayView = {
       runId: 'DEV-RUN-001',
       mode: 'REPLAY',
-      current: { runId: 'DEV-RUN-001', runState: 'OPEN', source: 'CURRENT', digest: 'cur' },
-      replay: { runId: 'DEV-RUN-001', runState: 'ACCEPTED', source: 'FIXTURE', digest: 'rep' },
+      current: { runId: 'DEV-RUN-001', runState: 'OPEN', source: 'CURRENT', watermark: 1, digest: 'cur' },
+      replay: { runId: 'DEV-RUN-001', runState: 'ACCEPTED', source: 'FIXTURE', watermark: 0, digest: 'rep' },
     };
     expect(view.mode).toBe('REPLAY');
     expect(view.replay.runState).toBe('ACCEPTED');
