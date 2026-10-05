@@ -61,6 +61,12 @@ interaction:
       - human-approval-or-effect-authority-required
       - digest-bound-execution-identity-required
     admission_guard: taskcontroller/controlplane/controller_admission.py
+    repository_adapter: taskcontroller/interaction/github_mailbox_v2.py
+    repository_adapter_class: GitHubMailboxRepository
+    remote_record_protocol: dw.taskcontroller.github-mailbox-record/v1
+    mailbox_record_model: append-only-github-issue-comments
+    one_writer_per_actor_mailbox: true
+    cross_process_multi_writer_cas: unsupported
     mailbox_read_scope: exact-mailbox-ref
     machine_state_integrity: canonical-envelope-digest
     raw_mutable_comment_body_sha: forbidden-as-authority
