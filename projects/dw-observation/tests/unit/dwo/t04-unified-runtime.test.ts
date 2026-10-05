@@ -13,7 +13,6 @@ import { describe, it, expect, vi } from "vitest";
 import type {
   UnifiedRunWorkspaceModel,
   UnifiedRuntimeNode,
-  WorkspaceMode,
 } from "@/lib/runtime/unifiedRuntime";
 import { realRuntimeAdapter } from "@/lib/runtime/adapters/realRuntimeAdapter";
 import { loginAuthScenarioAdapter } from "@/lib/runtime/adapters/loginAuthScenarioAdapter";
@@ -75,12 +74,12 @@ function satisfiesModel(m: unknown): m is UnifiedRunWorkspaceModel {
     if (!n || typeof n !== "object") return false;
     const nn = n as Record<string, unknown>;
     if (typeof nn.id !== "string") return false;
-    if (!Array.isArray((nn as UnifiedRuntimeNode).declaredGates)) return false;
-    if (!Array.isArray((nn as UnifiedRuntimeNode).artifacts)) return false;
-    if (!Array.isArray((nn as UnifiedRuntimeNode).runbook)) return false;
-    if (!Array.isArray((nn as UnifiedRuntimeNode).checkpoints)) return false;
-    if (!Array.isArray((nn as UnifiedRuntimeNode).taskControllerHistory)) return false;
-    if (!Array.isArray((nn as UnifiedRuntimeNode).executorHistory)) return false;
+    if (!Array.isArray((nn as unknown as UnifiedRuntimeNode).declaredGates)) return false;
+    if (!Array.isArray((nn as unknown as UnifiedRuntimeNode).artifacts)) return false;
+    if (!Array.isArray((nn as unknown as UnifiedRuntimeNode).runbook)) return false;
+    if (!Array.isArray((nn as unknown as UnifiedRuntimeNode).checkpoints)) return false;
+    if (!Array.isArray((nn as unknown as UnifiedRuntimeNode).taskControllerHistory)) return false;
+    if (!Array.isArray((nn as unknown as UnifiedRuntimeNode).executorHistory)) return false;
   }
   // Check edge shape.
   for (const e of o.edges as unknown[]) {
@@ -103,7 +102,7 @@ function makeLoginEpicFixture(): LoginEpicRuntimeFixture {
   return {
     epic_id: "LOGIN-CAPABILITY",
     title: "Test Login Epic",
-    run_count: 1,
+    run_count: 10,
     runtime_node_count: 2,
     runtime_model: "G0..G6",
     runs: [
