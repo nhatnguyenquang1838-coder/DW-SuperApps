@@ -11,6 +11,10 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Any, Mapping, NoReturn
 
+from taskcontroller.controlplane.controller_admission import (
+    ControllerAdmissionInput,
+    validate_controller_admission,
+)
 from taskcontroller.controlplane.request_compiler import (
     BoundedMailboxRequest,
     compile_bounded_mailbox_request,
@@ -19,6 +23,7 @@ from taskcontroller.interaction.mailbox_v2 import (
     MailboxV2ErrorCode,
     MailboxV2ValidationError,
     V2MailboxEnvelope,
+    V2_PROTOCOL,
 )
 from taskcontroller.interaction.continuation import (
     ContinuationStore,
@@ -105,6 +110,19 @@ def prepare_v2_dispatch(
     bound = _bound_request(request)
     _assert_request_binding(bound, checkpoint)
     bound = _bind_checkpoint(bound, checkpoint)
+
+    admission = validate_controller_admission(
+        ControllerAdmissionInput(
+            requires_v2_semantics=True,
+            protocol=V2_PROTOCOL,
+            mailbox_ref=checkpoint.controller_mailbox_ref,
+        )
+    )
+    if admission.authority_granted:
+        _fail(
+            MailboxV2ErrorCode.CONTRACT_MISMATCH,
+            "Controller admission guard must never grant authority",
+        )
 
     persisted = persist_before_dispatch(store, checkpoint)
     envelope = compile_bounded_mailbox_request(bound)
