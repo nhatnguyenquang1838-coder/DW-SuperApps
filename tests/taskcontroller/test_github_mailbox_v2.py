@@ -100,6 +100,7 @@ def test_adapter_implements_mailbox_repository_protocol() -> None:
     caps = repository.capabilities()
     assert caps["protocol"] == "dw.taskcontroller.mailbox/v2"
     assert caps["adapter"] == "github_issue_comments"
+    assert caps["record_protocol"] == GITHUB_RECORD_PROTOCOL
     assert caps["append_only"] is True
     assert caps["single_writer_required"] is True
     assert caps["cross_process_multi_writer_cas"] is False
