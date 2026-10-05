@@ -341,3 +341,18 @@ def test_root_agents_requires_high_integrity_admission_for_governed_effects():
     assert "full-body SHA" in agents
     assert "issue-wide comment history" in agents
     assert "Do not downgrade the run to the v1 compatibility lane" in agents
+
+
+
+def test_hermes_high_integrity_lane_uses_typed_v2_not_markdown_reports():
+    overlay = (ROOT / "agents" / "hermes" / "agent-instructions.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "High-integrity mailbox/v2" in overlay
+    assert "dw.taskcontroller.mailbox/v2" in overlay
+    assert "MailboxRepository" in overlay
+    assert "full-comment SHA" in overlay
+    assert "never scan the whole issue/comment history" in overlay
+    assert "do not substitute a Markdown E-report for the typed result" in overlay
+    assert "MUST NOT silently downgrade a high-integrity run" in overlay
