@@ -39,6 +39,8 @@ When the Controller contract requires `dw.taskcontroller.mailbox/v2`, Hermes MUS
 
 Hermes MUST NOT silently downgrade a high-integrity run to mutable v1 comments.
 
+For a high-integrity wake-up, require the Controller request to reference a durable remote continuation checkpoint already persisted through `GitHubContinuationStore`; a mailbox/v2 event without that checkpoint is invalid boot state and must be rejected.
+
 Do not use Slack as the normal progress journal. Slack is not a substitute mailbox when mailbox boot/readback is missing.
 
 ## Pointer-only wake-up
