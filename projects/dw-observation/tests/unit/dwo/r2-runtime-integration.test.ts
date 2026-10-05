@@ -16,16 +16,9 @@ import {
   evaluateBlockingPath,
   evaluateBlockingPathWithAuthority,
   evaluateBlockingPathWithDecision,
-  reconcileGateState,
-  type BlockingPath,
 } from '@/lib/dwo/blockingPath';
-import {
-  deriveV2ReducerCertified,
-  deriveV2ReducerCertifiedFromChain,
-  assertParentCompositionIndependent,
-  type ReducerCertificationInput,
-} from '@/lib/dwo/reducerCertification';
-import { isParentComplete, buildRunTree, type RunNode, type RunTree } from '@/lib/dwo/recursiveTopology';
+import { deriveV2ReducerCertified } from '@/lib/dwo/reducerCertification';
+import { isParentComplete, buildRunTree, type RunNode } from '@/lib/dwo/recursiveTopology';
 import {
   deriveDwoV2Accepted,
   composeDwoV2Readiness,
@@ -36,7 +29,6 @@ import { buildRunViewModel } from '@/lib/dwo/runViewModel';
 import {
   deriveAuthorityState,
   isAuthorityGranted,
-  AUTHORITY_STATES,
   type AuthorityEvidence,
   type AuthorityDecision,
 } from '@/lib/dwo/authorityVocabulary';
@@ -46,11 +38,9 @@ import {
   type CompositionDecision,
 } from '@/lib/dwo/parentComposition';
 import {
-  resolveTaskRootRuns,
   buildTaskRunIndexV2,
   resolveFromIndex,
   type TaskRunRelationRecord,
-  type RelationDecision,
 } from '@/lib/dwo/taskRunIndex';
 import {
   buildTraceabilityChainV2,
@@ -58,7 +48,8 @@ import {
   type TraceabilityDecision,
 } from '@/lib/dwo/traceabilityChain';
 import { FIXTURE_CATALOG } from '@/lib/dwo/fixtureSpec';
-import { reduceEventPrefix, type ReducerEvent } from '@/lib/dwo/reducer';
+import type { ReducedRunState } from '@/lib/dwo/reducer';
+import { recordAcceptance } from '@/lib/dwo/acceptanceRecord';
 
 const NOW = '2026-10-01T12:00:00.000Z';
 
@@ -76,22 +67,6 @@ function authorityEvidence(overrides: Partial<AuthorityEvidence> = {}): Authorit
 
 function authorityDecision(overrides: Partial<AuthorityEvidence> = {}): AuthorityDecision {
   return deriveAuthorityState(authorityEvidence(overrides), NOW);
-}
-
-function reducerEvent(runId: string, ordinal: number): ReducerEvent {
-  return {
-    eventId: `EVT-${runId}`,
-    runId,
-    ordinal,
-    gate: 'G6',
-    gateState: 'PASSED',
-    runState: 'ACCEPTED',
-    sourceProfile: 'DEV_NATIVE',
-    syncState: 'LIVE',
-    semanticQualification: 'PENDING',
-    authorityState: 'NOT_REQUIRED',
-    anomalyCount: 0,
-  };
 }
 
 function passTraceability(): TraceabilityDecision {
@@ -280,7 +255,7 @@ describe('R2-E · parent composition through reducer certification', () => {
       const f = byId.get(id)!;
       return {
         runId: f.id,
-        runKind: f.kind === 'NEGATIVE' ? 'ATOMIC' : f.kind,
+        runKind: (f.kind === 'NEGATIVE' ? 'ATOMIC' : f.kind) as RunNode['runKind'],
         parentRunRef: f.parent,
         childRunRefs: f.children.filter((c) => path.includes(c)),
         state: {
@@ -288,7 +263,7 @@ describe('R2-E · parent composition through reducer certification', () => {
           runState: f.runState, sourceProfile: f.sourceProfile, syncState: f.syncState,
           semanticQualification: f.semanticQualification, authorityState: f.authorityState,
           anomalyCount: f.anomalyCount, partial: false,
-        },
+        } as ReducedRunState,
       };
     });
     const tree = buildRunTree(nodes);
@@ -478,12 +453,12 @@ describe('R2-D/E/F · combined runtime path: evidence → decision → view-mode
     );
 
     const row = vm.rows.find((r) => r.runId === 'DEV-RUN-001')!;
-    expect(row.authority.state).toBe('GRANTED');
-    expect(row.authority.granted).toBe(true);
-    expect(row.composition.composed).toBe(true);
-    expect(row.composition.accepted).toBe(true);
-    expect(row.taskRelation.status).toBe('RESOLVED');
-    expect(row.taskRelation.rootRunIds).toContain('DEV-RUN-001');
+    expect(row.authority!.state).toBe('GRANTED');
+    expect(row.authority!.granted).toBe(true);
+    expect(row.composition!.composed).toBe(true);
+    expect(row.composition!.accepted).toBe(true);
+    expect(row.taskRelation!.status).toBe('RESOLVED');
+    expect(row.taskRelation!.rootRunIds).toContain('DEV-RUN-001');
   });
 
   it('UNKNOWN authority + uncomposed parent + no mapping → view-model renders UNKNOWN, never fabricates', () => {
@@ -502,10 +477,10 @@ describe('R2-D/E/F · combined runtime path: evidence → decision → view-mode
       { 'DEV-RUN-010': resolveFromIndex(buildTaskRunIndexV2([]), 'NO-TASK') },
     );
     const row = vm.rows.find((r) => r.runId === 'DEV-RUN-010')!;
-    expect(row.authority.state).toBe('UNKNOWN');
-    expect(row.authority.reason).toBe('UNKNOWN_NO_ASSERTION');
-    expect(row.composition.composed).toBe(true);
-    expect(row.taskRelation.status).toBe('UNKNOWN_UNRESOLVED');
+    expect(row.authority!.state).toBe('UNKNOWN');
+    expect(row.authority!.reason).toBe('UNKNOWN_NO_ASSERTION');
+    expect(row.composition!.composed).toBe(true);
+    expect(row.taskRelation!.status).toBe('UNKNOWN_UNRESOLVED');
   });
 
   it('composeDwoV2Readiness composes all four decisions into one readiness', () => {
@@ -547,7 +522,7 @@ describe('R2-D/E/F · combined runtime path: evidence → decision → view-mode
   it('acceptanceCertification.buildAcceptanceEvidence carries R2 fields when supplied', () => {
     const campaign = { reconstructsFromDurable: true, liveReplayEqual: true } as never;
     const validation = { readOnlySafe: true, evidenceProvenanceAttributable: true, targetHandoffIdentified: true, degradedModeHandled: true };
-    const record = { reconstructsAfterReset: true, qualificationRecords: ['q1'] };
+    const record = recordAcceptance('sha:u', 'sha:d', 'src', 'prof', 'red', 'proj', ['q1'], true);
     const auth = authorityDecision();
     const evidence = buildAcceptanceEvidence(campaign, validation, record, { authorityDecision: auth });
     expect(evidence.authorityDecision?.granted).toBe(true);
@@ -556,7 +531,7 @@ describe('R2-D/E/F · combined runtime path: evidence → decision → view-mode
   it('buildAcceptanceEvidence without R2 args defaults R2 fields to null (backward compat)', () => {
     const campaign = { reconstructsFromDurable: true, liveReplayEqual: true } as never;
     const validation = { readOnlySafe: true, evidenceProvenanceAttributable: true, targetHandoffIdentified: true, degradedModeHandled: true };
-    const record = { reconstructsAfterReset: true, qualificationRecords: ['q1'] };
+    const record = recordAcceptance('sha:u', 'sha:d', 'src', 'prof', 'red', 'proj', ['q1'], true);
     const evidence = buildAcceptanceEvidence(campaign, validation, record);
     expect(evidence.authorityDecision).toBeNull();
     expect(evidence.parentComposition).toBeNull();
