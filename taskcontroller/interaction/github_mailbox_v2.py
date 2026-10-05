@@ -254,6 +254,7 @@ class GitHubMailboxRepository:
         return {
             "protocol": V2_PROTOCOL,
             "adapter": "github_issue_comments",
+            "record_protocol": GITHUB_RECORD_PROTOCOL,
             "append_only": True,
             "single_writer_required": True,
             "cross_process_multi_writer_cas": False,
