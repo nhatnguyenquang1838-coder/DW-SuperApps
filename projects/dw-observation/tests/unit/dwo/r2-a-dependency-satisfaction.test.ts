@@ -14,13 +14,14 @@ import {
   type DependencySpec,
 } from '@/lib/dwo/dependencySatisfaction';
 
-function dep(overrides: Partial<DependencySpec>): DependencySpec {
+function dep(overrides: Partial<DependencySpec> = {}): DependencySpec {
   return {
     depId: 'D1',
     targetRunRef: 'DEV-RUN-001',
     required: true,
     reducerState: 'ACCEPTED',
     durablePosition: 1,
+    durableWatermark: true,
     topologyRevision: 'rev-1',
     topologyDigest: 'abc123',
     eligibility: 'ELIGIBLE',
