@@ -22,7 +22,7 @@ For an explicitly v1-compatible run, preserve the existing one-actor/one-mutable
 2. consume only a newer Controller mailbox `seq` than the last-seen cursor;
 3. verify repository/base/head/scope assumptions before mutation;
 4. execute the bounded contract;
-5. update the Executor-owned mailbox comment in place with the next monotonic Executor `seq` and semantic result/evidence refs.
+5. update its own mailbox comment in place with the next monotonic Executor `seq` and semantic result/evidence refs.
 
 ### High-integrity mailbox/v2
 
