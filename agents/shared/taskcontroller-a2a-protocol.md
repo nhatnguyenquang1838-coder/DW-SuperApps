@@ -240,6 +240,10 @@ Transport rules:
 
 This transport binding does not grant execution authority. Gate/effect authority remains separately validated.
 
+For high-integrity remote recovery, persist the bounded `dw.taskcontroller.continuation/v1` manifest through `taskcontroller.interaction.github_continuation_store.GitHubContinuationStore` before the first mailbox/v2 dispatch and before every later Controller dispatch checkpoint. Continuation records are append-only GitHub issue comments using `dw.taskcontroller.github-continuation-record/v1`, exact-read back after append, and filtered by exact `run_id + manifest_kind`. The same Controller writer owns continuation updates for the run.
+
+A high-integrity mailbox event without a durable remote continuation checkpoint is invalid boot state and MUST NOT be emitted.
+
 ## Controller contract
 
 Controller owns:
