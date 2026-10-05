@@ -242,3 +242,33 @@ def test_prepare_v2_dispatch_runs_controller_admission_before_persistence(
     assert admission.mailbox_ref == checkpoint.controller_mailbox_ref
     assert envelope.protocol == "dw.taskcontroller.mailbox/v2"
     audit.close()
+
+
+
+def test_prepare_v2_dispatch_rejects_authority_grant_from_admission_guard(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    import taskcontroller.controlplane.continuation_dispatch as dispatch_module
+    from taskcontroller.controlplane.controller_admission import ControllerAdmissionReceipt
+
+    audit = AuditFacade(tmp_path / "run-ledger.sqlite3")
+    store = _RecordingContinuationStore(audit)
+    checkpoint = _checkpoint()
+
+    monkeypatch.setattr(
+        dispatch_module,
+        "validate_controller_admission",
+        lambda value: ControllerAdmissionReceipt(
+            protocol=value.protocol,
+            mailbox_ref=value.mailbox_ref,
+            mode="HIGH_INTEGRITY",
+            reason_codes=("TEST_INVALID_AUTHORITY_GRANT",),
+            authority_granted=True,
+        ),
+    )
+
+    with pytest.raises(TaskControllerValidationError, match="must never grant authority"):
+        dispatch_module.prepare_v2_dispatch(store, checkpoint, _request())
+
+    assert audit.load_manifest(checkpoint.run_id, "dw.taskcontroller.continuation/v1") is None
+    audit.close()
