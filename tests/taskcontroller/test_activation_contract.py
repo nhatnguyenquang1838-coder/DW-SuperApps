@@ -285,3 +285,74 @@ def test_active_taskcontroller_chain_has_no_gwc_or_slack_canvas_policy_dependenc
     for path in active_paths[1:5]:
         text = path.read_text(encoding="utf-8")
         assert "GWC" not in text, f"GWC-specific TaskController coupling leaked into {path}"
+
+
+
+def test_high_integrity_activation_requires_v2_and_controller_admission_guard():
+    plan = resolve_taskcontroller_activation(
+        "TaskController: control a gated execution",
+        host="chatgpt",
+        executor="hermes cloud",
+        requires_v2_semantics=True,
+    )
+
+    assert plan.active is True
+    assert plan.requires_v2_semantics is True
+    assert plan.interaction_protocol == "dw.taskcontroller.mailbox/v2"
+    assert plan.controller_admission_required is True
+    assert plan.controller_admission_guard == "taskcontroller/controlplane/controller_admission.py"
+    assert plan.raw_comment_body_sha_authoritative is False
+    assert plan.whole_issue_machine_state_allowed is False
+    assert plan.schema_resolution_mode == "descriptor-bound"
+
+
+def test_default_activation_preserves_v1_compatibility_lane():
+    plan = resolve_taskcontroller_activation(
+        "TaskController inspect this plan",
+        host="chatgpt",
+    )
+
+    assert plan.interaction_protocol == "dw.taskcontroller.a2a/v1"
+    assert plan.requires_v2_semantics is False
+    assert plan.controller_admission_required is False
+    assert plan.controller_admission_guard is None
+
+
+def test_registry_declares_high_integrity_controller_admission_contract():
+    registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
+
+    assert "high_integrity_protocol: dw.taskcontroller.mailbox/v2" in registry
+    assert "admission_guard: taskcontroller/controlplane/controller_admission.py" in registry
+    assert "raw_mutable_comment_body_sha: forbidden-as-authority" in registry
+    assert "issue_wide_machine_state_scan: forbidden" in registry
+    assert "schema_resolution: descriptor-bound" in registry
+    assert "expected_digest_source: observed-or-canonical-recompute" in registry
+    assert "target_gate_bootstrap_before_authority: forbidden" in registry
+    assert "approval_presentation_binding: typed-artifact-command-digest" in registry
+
+
+
+def test_root_agents_requires_high_integrity_admission_for_governed_effects():
+    agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+
+    assert "TaskController high-integrity admission" in agents
+    assert "taskcontroller/controlplane/controller_admission.py" in agents
+    assert "TASKCONTROLLER_HIGH_INTEGRITY_ADMISSION_BLOCKED" in agents
+    assert "full-body SHA" in agents
+    assert "issue-wide comment history" in agents
+    assert "Do not downgrade the run to the v1 compatibility lane" in agents
+
+
+
+def test_hermes_high_integrity_lane_uses_typed_v2_not_markdown_reports():
+    overlay = (ROOT / "agents" / "hermes" / "agent-instructions.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "High-integrity mailbox/v2" in overlay
+    assert "dw.taskcontroller.mailbox/v2" in overlay
+    assert "MailboxRepository" in overlay
+    assert "full-comment SHA" in overlay
+    assert "never scan the whole issue/comment history" in overlay
+    assert "do not substitute a Markdown E-report for the typed result" in overlay
+    assert "MUST NOT silently downgrade a high-integrity run" in overlay

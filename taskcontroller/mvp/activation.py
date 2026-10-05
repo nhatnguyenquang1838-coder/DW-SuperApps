@@ -14,6 +14,8 @@ from dataclasses import dataclass
 import re
 from typing import Iterable
 
+from taskcontroller.interaction.mailbox_v2 import V1_PROTOCOL, V2_PROTOCOL
+
 
 TASKCONTROLLER_ALIASES = (
     "TaskController",
@@ -22,6 +24,7 @@ TASKCONTROLLER_ALIASES = (
 )
 
 TASKCONTROLLER_RUNTIME_SESSION = "taskcontroller/runtime/session.py"
+TASKCONTROLLER_CONTROLLER_ADMISSION_GUARD = "taskcontroller/controlplane/controller_admission.py"
 
 _BASE_LOAD_ORDER = (
     "AGENTS.md",
@@ -75,6 +78,13 @@ class TaskControllerActivationPlan:
     machine_progress_transport: str | None = None
     slack_machine_progress_allowed: bool = False
     pointer_only_wakeup: bool = False
+    interaction_protocol: str = V1_PROTOCOL
+    requires_v2_semantics: bool = False
+    controller_admission_required: bool = False
+    controller_admission_guard: str | None = None
+    raw_comment_body_sha_authoritative: bool = False
+    whole_issue_machine_state_allowed: bool = False
+    schema_resolution_mode: str = "descriptor-bound"
 
 
 def mentions_taskcontroller(text: str) -> bool:
@@ -99,6 +109,7 @@ def resolve_taskcontroller_activation(
     host: str,
     transport: str | None = None,
     executor: str | None = None,
+    requires_v2_semantics: bool = False,
 ) -> TaskControllerActivationPlan:
     """Resolve mandatory current-repository TaskController entrypoints/runtime."""
 
@@ -143,4 +154,15 @@ def resolve_taskcontroller_activation(
         machine_progress_transport="github-reference-mailbox",
         slack_machine_progress_allowed=False,
         pointer_only_wakeup=True,
+        interaction_protocol=V2_PROTOCOL if requires_v2_semantics else V1_PROTOCOL,
+        requires_v2_semantics=requires_v2_semantics,
+        controller_admission_required=requires_v2_semantics,
+        controller_admission_guard=(
+            TASKCONTROLLER_CONTROLLER_ADMISSION_GUARD
+            if requires_v2_semantics
+            else None
+        ),
+        raw_comment_body_sha_authoritative=False,
+        whole_issue_machine_state_allowed=False,
+        schema_resolution_mode="descriptor-bound",
     )

@@ -160,6 +160,24 @@ The current MVP uses `taskcontroller/mvp/activation.py` for activation resolutio
 
 Activating TaskController does not automatically activate any Power. Load only the Power explicitly required by the controlled task.
 
+### TaskController high-integrity admission
+
+When TaskController controls a task whose active project/Power contract introduces a gate, human approval, protected effect, or digest-bound execution identity, the Controller MUST use the high-integrity interaction lane before dispatch, correction, approval presentation, or semantic resume.
+
+High-integrity runs MUST:
+
+1. resolve TaskController with mailbox/v2 semantics;
+2. pass `taskcontroller/controlplane/controller_admission.py`;
+3. bind machine state to the exact mailbox reference/event cursor and canonical typed envelope/artifact digest;
+4. resolve schemas from canonical descriptor/source bindings;
+5. use only observed or canonically recomputed expected digests;
+6. start preapproval from the current verified boundary rather than synthesizing the target gate before its authority artifact exists;
+7. bind human approval presentation to the typed approval-request artifact and verified command digest.
+
+A mutable GitHub comment body, its full-body SHA, issue-wide comment history, a Controller-predicted hash, or a guessed legacy schema path is never semantic authority. Transport-level body hashes may be diagnostic evidence only.
+
+If high-integrity admission cannot be satisfied, stop with `TASKCONTROLLER_HIGH_INTEGRITY_ADMISSION_BLOCKED`. Do not downgrade the run to the v1 compatibility lane to bypass the blocker.
+
 For the RuntimePlan W7→W9 proving campaign, the durable design and execution plan are:
 
 - `docs/superpowers/specs/2026-09-02-runtime-proving-lab-design.md`

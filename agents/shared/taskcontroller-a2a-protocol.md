@@ -192,6 +192,33 @@ Audit evidence must preserve at minimum:
 
 The configured Run Ledger also stores the latest continuation manifest. Wake-up delivery may be audited as pointer metadata and delivery outcome; it does not duplicate the canonical command payload. Slack is not audit storage.
 
+## High-integrity admission boundary
+
+The v1 mutable-comment lane remains a compatibility lane. A controlled task that requires external governance/gate semantics, human effect approval, or digest-bound execution identity MUST enter the high-integrity lane before Controller dispatch/review.
+
+High-integrity admission requires:
+
+- protocol `dw.taskcontroller.mailbox/v2`;
+- `taskcontroller/controlplane/controller_admission.py` PASS;
+- exact mailbox reference/event cursor reads only;
+- canonical typed envelope/artifact digest for semantic identity;
+- descriptor-bound schema resolution;
+- observed or canonically recomputed digests only;
+- current verified gate/boundary as the input to preapproval;
+- typed approval-request + verified approval-command digest for human approval presentation.
+
+The following are transport/debug evidence only and MUST NOT become semantic authority:
+
+- raw mutable GitHub comment-body SHA;
+- issue-wide comment history;
+- a Controller-predicted digest/hash;
+- a guessed legacy schema path;
+- a target-gate state synthesized before the target gate's authority artifact exists.
+
+If a host cannot satisfy the high-integrity admission contract, it must stop with a Controller admission blocker. It must not downgrade to v1 to continue an authority-sensitive run.
+
+This boundary does not grant effect, merge, deploy, release, migration, secret, or production authority.
+
 ## Controller contract
 
 Controller owns:
