@@ -178,6 +178,16 @@ A mutable GitHub comment body, its full-body SHA, issue-wide comment history, a 
 
 If high-integrity admission cannot be satisfied, stop with `TASKCONTROLLER_HIGH_INTEGRITY_ADMISSION_BLOCKED`. Do not downgrade the run to the v1 compatibility lane to bypass the blocker.
 
+For new high-integrity requests, the Controller must also declare a TaskController execution-contract mode and pass `taskcontroller/controlplane/execution_contracting.py` before dispatch:
+
+- `PLAN` is read/design/validate only;
+- `TRANSPORT_REPAIR` is mailbox/protocol repair only;
+- `EXECUTE` is bounded real implementation after applicable authority validation.
+
+Once `EXECUTE` is active, readonly is no longer the default. The approved package must contain real writable engineering scope and the Executor continues through routine implementation/test/fix/refactor cycles until AC/continue-until is reached or a real hard boundary occurs. Routine RED/GREEN completion, test failure, lint failure, scoped refactor, or ordinary implementation decisions are not WAIT_CONTROLLER boundaries.
+
+A single approved EXECUTE package may cover isolated worktree/branch creation, approved edits, validation, stage, commit, push, and Draft PR when explicitly bound. Merge, separately governed Ready-for-Review, deploy, production/data/secret/migration/destructive operations require separate authority.
+
 For the RuntimePlan W7→W9 proving campaign, the durable design and execution plan are:
 
 - `docs/superpowers/specs/2026-09-02-runtime-proving-lab-design.md`

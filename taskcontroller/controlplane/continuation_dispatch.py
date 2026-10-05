@@ -15,6 +15,9 @@ from taskcontroller.controlplane.controller_admission import (
     ControllerAdmissionInput,
     validate_controller_admission,
 )
+from taskcontroller.controlplane.execution_contracting import (
+    validate_execution_contracting,
+)
 from taskcontroller.controlplane.request_compiler import (
     BoundedMailboxRequest,
     compile_bounded_mailbox_request,
@@ -122,6 +125,16 @@ def prepare_v2_dispatch(
         _fail(
             MailboxV2ErrorCode.CONTRACT_MISMATCH,
             "Controller admission guard must never grant authority",
+        )
+
+    execution_contract = validate_execution_contracting(
+        payload=bound.payload,
+        scope=bound.scope,
+    )
+    if execution_contract.authority_granted:
+        _fail(
+            MailboxV2ErrorCode.CONTRACT_MISMATCH,
+            "execution contracting guard must never grant authority",
         )
 
     persisted = persist_before_dispatch(store, checkpoint)

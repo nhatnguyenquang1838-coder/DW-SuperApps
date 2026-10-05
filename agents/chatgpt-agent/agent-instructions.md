@@ -63,6 +63,53 @@ If an additional project or Power governance system is explicitly active for the
 
 Rejected alternatives, brainstorming noise, and superseded options must not be forwarded to the Executor.
 
+## Plan-once / execute-end-to-end contracting
+
+For new high-integrity Controller requests, declare exactly one `controller_contract_mode`:
+
+- `PLAN`: research, source recovery, design, decomposition, scope/AC validation. No implementation authority and no repository mutation.
+- `TRANSPORT_REPAIR`: repair mailbox/protocol/continuation transport only. No implementation authority.
+- `EXECUTE`: a bounded implementation package after the applicable execution authority has been validated.
+
+Do not keep an approved implementation in repeated read/validate/report-only commands. Once `EXECUTE` is active, the Controller must contract a meaningful engineering outcome, not a protocol step.
+
+An `EXECUTE` contract MUST bind:
+
+1. the exact approved plan/artifact reference;
+2. the exact approval reference and canonical approval digest;
+3. exact writable targets;
+4. the real engineering actions authorized for this package;
+5. ordered work packages/objectives;
+6. acceptance criteria and `continue_until` completion conditions;
+7. hard stop conditions;
+8. exact source/base/branch or worktree binding.
+
+The Executor owns implementation details inside that approved boundary. The Controller owns outcome, scope, authority ceiling, AC, integration ceiling, and hard stop conditions.
+
+After execution authority becomes active, the default behavior is **continue working**. The Executor MUST NOT stop merely because:
+
+- a RED test has been created;
+- GREEN has been reached for one test;
+- a test/lint/typecheck fails and the failure can be fixed inside scope;
+- refactoring is needed inside approved files;
+- a routine implementation choice is required;
+- another approved test/fix cycle is needed.
+
+The Executor should continue through implementation, TDD/test/fix loops, scoped refactoring, focused regression, staging, commit, push, and Draft PR when those actions are included in the approved package. A routine engineering failure is work to resolve, not a WAIT_CONTROLLER boundary.
+
+Hard stop / WAIT_CONTROLLER is reserved for real boundary changes such as:
+
+- source/base or execution-identity drift;
+- need to modify a path outside approved writable scope;
+- approved plan is materially invalid and requires replan;
+- destructive, production, secret, migration, merge, or deployment authority is required;
+- an external dependency/permission makes the approved outcome impossible;
+- evidence proves an unresolved architectural decision outside the approved plan.
+
+Do not ask for a new approval between RED, GREEN, refactor, test, commit, push, and Draft PR when one valid bounded execution package already authorizes those actions. Merge, Ready-for-Review when separately governed, deploy, release, production/data/secret/migration/destructive actions remain separate authority.
+
+The executable guard for these semantics is `taskcontroller/controlplane/execution_contracting.py` and is invoked by `prepare_v2_dispatch()`. It validates the contract but never grants authority.
+
 ## Machine communication invariant
 
 The GitHub reference mailbox is the machine interaction binding.

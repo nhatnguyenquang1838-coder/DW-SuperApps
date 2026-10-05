@@ -206,6 +206,55 @@ mvp:
     - multi-executor-routing
 
 execution_contract:
+  contracting_guard: taskcontroller/controlplane/execution_contracting.py
+  required_mode_for_new_high_integrity_requests: true
+  modes:
+    PLAN:
+      writable_scope: forbidden
+      execution_authority_active: false
+      purpose: research-design-decompose-validate
+    TRANSPORT_REPAIR:
+      writable_scope: mailbox-transport-only
+      execution_authority_active: false
+      purpose: protocol-or-transport-correction
+    EXECUTE:
+      execution_authority_active: required
+      execution_plan_ref: required
+      approval_ref: required
+      approval_digest: required
+      writable_targets: required
+      real_engineering_action: required
+      work_packages: required
+      continue_until: required
+      stop_conditions: hard-boundaries-only
+      executor_owns_implementation_details_inside_scope: true
+      routine_engineering_wait_points: forbidden
+      allowed_package_actions_when_approved:
+        - create_guarded_branch_or_worktree
+        - modify_approved_files
+        - run_sandboxed_validation
+        - stage
+        - create_commit
+        - push_working_branch
+        - open_or_update_draft_pr
+      separate_authority_required:
+        - mark_pr_ready_for_review
+        - merge_approved_pr
+        - deploy_approved_release
+        - production_config_change
+        - production_data_write
+        - migration
+        - credential_rotation
+        - branch_deletion
+        - force_push
+  routine_engineering_conditions_not_wait_boundaries:
+    - RED_COMPLETE
+    - GREEN_COMPLETE
+    - TEST_FAILURE
+    - LINT_FAILURE
+    - REFACTOR_NEEDED
+    - ROUTINE_IMPLEMENTATION_DECISION
+  default_after_execution_authority: continue-working-within-approved-boundary
   subtask_count_min: 3
   subtask_count_max: 5
   local_repository_mutation_policy: controllers/executor-worktree-policy.md
