@@ -1,0 +1,30 @@
+# G1 INTAKE BRIEF — SCRUM-820-T13 (86 Test-Type Errors)
+# Immutable once committed.
+
+schema_version: '1.0'
+artifact_type: g1-intake-brief
+generated_at: '2026-10-05T06:06:00+07:00'
+
+task_id: SCRUM-820-T13
+parent_run_ref: SCRUM-820
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: integration/SCRUM-820-dwo-v2
+base_sha: 3e55c586a1e6b1b6043e60a7b3e6c0a2e6b9a68f
+
+request:
+  source: "Room directive @everyone: 'tiến hành lên plan sửa 86 lỗi này, đảm bảo không phá logic'"
+  origin_actor: human://nhat-nguyen-quang
+  request_type: PLAN_AND_FIX_TYPE_DEBT
+  scope: projects/dw-observation/tests/unit/ (20 files, 86 errors)
+
+verified_facts:
+  - "86 pre-existing type errors in test files only, measured at baseline 210b6bd"
+  - "Zero regression from PR #130: delta +0 vs baseline"
+  - "Main tsc --noEmit passes (exit 0): source files are clean, tsconfig excludes tests/"
+  - "typecheck:tests gate now wired in CI (root workflow, verified SUCCESS x2)"
+  - "All 9 stories independent: zero cross-test imports (verified by grep)"
+  - "Baseline JSON by_code: TS6133x31, TS18047x10, TS2554x8, TS2352x7, TS2304x7, TS2341x5, TS2322x3, TS6196x3, plus 8 minor codes"
+
+blockers: []
+pending:
+  - "User go-ahead for G2 execution per story (plan confirmation requested by @hermes before each file)"
