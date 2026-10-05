@@ -11,7 +11,7 @@
  *  - Replay computes Next Flow as-of selected historical sequence only
  */
 import { describe, expect, it } from "vitest";
-import { computeNextFlow, type NextFlowProjection } from "@/lib/runtime/nextFlow";
+import { computeNextFlow } from "@/lib/runtime/nextFlow";
 import type { UnifiedRunWorkspaceModel, WorkspaceMode } from "@/lib/runtime/unifiedRuntime";
 import type { BlockingPath } from "@/lib/dwo/blockingPath";
 

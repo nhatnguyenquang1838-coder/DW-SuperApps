@@ -17,6 +17,7 @@ import {
   assertNoEffectBoundary,
   buildDwoInventory,
   countByProfile,
+  type AccessBoundaryKind,
 } from '@/lib/dwo/inventory';
 
 describe('AC-821-02 · every DWO v1 surface is inventoried with source_profile and provenance', () => {
@@ -80,7 +81,7 @@ describe('AC-821-04 · access-boundary inventory is complete and fail-closed', (
     // Fail-closed proof: if anyone ever adds a WRITE_EFFECT boundary, the same
     // assertion must throw.
     expect(() =>
-      assertNoEffectBoundary([{ id: 'evil', kind: 'WRITE_EFFECT', description: '' }]),
+      assertNoEffectBoundary([{ id: 'evil', kind: 'WRITE_EFFECT', description: '' }] as unknown as { kind: AccessBoundaryKind }[]),
     ).toThrow(/effect boundary/i);
   });
 

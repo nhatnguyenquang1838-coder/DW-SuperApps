@@ -13,7 +13,6 @@ import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { resolveFromIndex, buildTaskRunIndexV2 } from "@/lib/dwo/taskRunIndex";
-import { TASK_RELATION_RECORDS } from "@/lib/taskFixtures";
 import { listRuns } from "@/lib/observatory";
 import type { TaskRunRelationRecord } from "@/lib/dwo/taskRunIndex";
 

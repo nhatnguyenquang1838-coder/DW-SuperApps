@@ -159,9 +159,6 @@ describe('AC-822-01 · FIXTURE_STREAM_CERTIFIED derivation', () => {
 
   it('fails closed when a QUALIFIED fixture lacks a qualification record', () => {
     // Simulate a fixture that would project QUALIFIED but has no record.
-    const decision = deriveFixtureStreamCertified(
-      certInput({ qualifiedWithRecord: [] }),
-    );
     // In the baseline no fixture is QUALIFIED, so this passes; the guard is that
     // IF one were, it must be in qualifiedWithRecord. Assert the guard exists by
     // checking a hypothetical: a QUALIFIED fixture not in the record list.

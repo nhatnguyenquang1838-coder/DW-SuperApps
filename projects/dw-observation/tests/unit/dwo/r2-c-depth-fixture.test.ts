@@ -133,7 +133,7 @@ describe('R2-C · the pack feeds the real topology builder', () => {
     let cursor: string | null = 'R2C-DEPTH-A-ROOT';
     let hops = 0;
     while (cursor !== null) {
-      const node = tree.nodes[cursor];
+      const node: RunNode | undefined = tree.nodes[cursor];
       if (!node || node.childRunRefs.length === 0) break;
       cursor = node.childRunRefs[0];
       hops += 1;

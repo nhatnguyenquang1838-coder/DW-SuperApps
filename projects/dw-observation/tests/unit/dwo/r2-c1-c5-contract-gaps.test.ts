@@ -226,27 +226,6 @@ describe('C3 · traceability readiness gates certification', () => {
 });
 
 describe('C4 · reason classification stays exact', () => {
-  const base = {
-    runId: 'RUN-1',
-    projectionId: 'RUN-1',
-    durablePosition: 3,
-    sourceRef: 'fixture/run-1.json',
-    sourceDigest: 'sha256:src-1',
-    topologyRevision: REV,
-    topologyDigest: DIGEST,
-    reducerWatermark: 'wm-reducer-3',
-    inputWatermark: 'wm-input-3',
-  };
-
-  const mk = (over: Partial<Parameters<typeof buildTraceabilityChainV2>>) =>
-    buildTraceabilityChainV2(
-      base.runId, base.projectionId, base.durablePosition,
-      over[3] ?? base.sourceRef, over[4] ?? base.sourceDigest,
-      over[5] ?? base.topologyRevision, over[6] ?? base.topologyDigest,
-      over[7] ?? base.reducerWatermark, over[8] ?? base.inputWatermark,
-      over[9] ?? [], over[10] ?? { requiredEvidenceIds: [], noEvidenceRequired: true },
-    );
-
   it('C4: missing sourceRef → MISSING_SOURCE_REF', () => {
     const chain = buildTraceabilityChainV2(
       'RUN-1', 'RUN-1', 3, '', 'sha256:src-1', REV, DIGEST, 'wm-3', 'iw-3',

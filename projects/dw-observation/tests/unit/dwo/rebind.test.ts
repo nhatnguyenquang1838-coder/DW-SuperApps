@@ -22,7 +22,6 @@ import {
   DRIFT_CAPABILITIES,
   classifyDrift,
   requiresReplan,
-  type DriftDecision,
   type DriftEvidence,
 } from '@/lib/dwo/drift';
 import {
