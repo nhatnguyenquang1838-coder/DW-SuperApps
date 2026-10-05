@@ -30,6 +30,10 @@ from .executor_entrypoint import (
     MailboxFirstExecutorEntrypoint,
     MailboxReader,
 )
+from .github_continuation_store import (
+    GITHUB_CONTINUATION_RECORD_PROTOCOL,
+    GitHubContinuationStore,
+)
 from .github_mailbox import mailbox_operation, parse_mailbox_comment, render_mailbox_comment
 from .github_mailbox_v2 import (
     GITHUB_RECORD_PROTOCOL,
@@ -61,6 +65,8 @@ __all__ = [
     "ExecutorMailboxRequest",
     "HumanEvent",
     "HumanEventKind",
+    "GITHUB_CONTINUATION_RECORD_PROTOCOL",
+    "GitHubContinuationStore",
     "GITHUB_RECORD_PROTOCOL",
     "GitHubIssueComment",
     "GitHubIssueCommentTransport",
