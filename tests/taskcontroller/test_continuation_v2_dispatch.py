@@ -213,3 +213,32 @@ def test_compiler_rejects_payload_checkpoint_override() -> None:
 
     with pytest.raises(TaskControllerValidationError, match="compiler-owned"):
         compile_bounded_mailbox_request(request)
+
+
+
+def test_prepare_v2_dispatch_runs_controller_admission_before_persistence(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    import taskcontroller.controlplane.continuation_dispatch as dispatch_module
+
+    audit = AuditFacade(tmp_path / "run-ledger.sqlite3")
+    store = _RecordingContinuationStore(audit)
+    checkpoint = _checkpoint()
+    observed: list[object] = []
+    real_validate = dispatch_module.validate_controller_admission
+
+    def recording_validate(value):
+        observed.append(value)
+        return real_validate(value)
+
+    monkeypatch.setattr(dispatch_module, "validate_controller_admission", recording_validate)
+
+    envelope = dispatch_module.prepare_v2_dispatch(store, checkpoint, _request())
+
+    assert len(observed) == 1
+    admission = observed[0]
+    assert admission.requires_v2_semantics is True
+    assert admission.protocol == "dw.taskcontroller.mailbox/v2"
+    assert admission.mailbox_ref == checkpoint.controller_mailbox_ref
+    assert envelope.protocol == "dw.taskcontroller.mailbox/v2"
+    audit.close()
