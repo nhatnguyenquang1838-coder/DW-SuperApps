@@ -329,3 +329,15 @@ def test_registry_declares_high_integrity_controller_admission_contract():
     assert "expected_digest_source: observed-or-canonical-recompute" in registry
     assert "target_gate_bootstrap_before_authority: forbidden" in registry
     assert "approval_presentation_binding: typed-artifact-command-digest" in registry
+
+
+
+def test_root_agents_requires_high_integrity_admission_for_governed_effects():
+    agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+
+    assert "TaskController high-integrity admission" in agents
+    assert "taskcontroller/controlplane/controller_admission.py" in agents
+    assert "TASKCONTROLLER_HIGH_INTEGRITY_ADMISSION_BLOCKED" in agents
+    assert "full-body SHA" in agents
+    assert "issue-wide comment history" in agents
+    assert "Do not downgrade the run to the v1 compatibility lane" in agents
