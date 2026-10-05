@@ -1,0 +1,37 @@
+name: DW-Observation TypeCheck
+
+on:
+  push:
+    branches: [integration/SCRUM-820-dwo-v2]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: projects/dw-observation/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: projects/dw-observation
+        run: pnpm install --frozen-lockfile
+
+      - name: typecheck:tests (non-blocking)
+        working-directory: projects/dw-observation
+        run: pnpm run typecheck:tests
+
+      - name: typecheck:tests:strict (regression gate)
+        working-directory: projects/dw-observation
+        run: pnpm run typecheck:tests:strict
