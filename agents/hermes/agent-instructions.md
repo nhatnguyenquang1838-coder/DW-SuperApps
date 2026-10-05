@@ -47,7 +47,7 @@ A Slack wake-up is notification only. It contains a mailbox pointer/new seq, not
 
 After a pointer-only wake-up, fetch the canonical command from the Controller mailbox. While executing, do not narrate tools, file reads/edits, raw tests, polling, retries, or internal reasoning on Slack. The required normal behavior is zero Executor Slack progress replies between wake-up and mailbox result.
 
-At the contracted milestone, publish semantic result to the same Executor mailbox comment with a newer seq. Slack human projection is Controller-owned and may be updated separately after Controller review.
+At the contracted milestone, publish semantic result through the active mailbox lane: update the same Executor-owned comment only in compatibility v1; in high-integrity mailbox/v2 append a new typed event through `GitHubMailboxRepository`. Slack human projection is Controller-owned and may be updated separately after Controller review.
 
 ## Subtasks
 
