@@ -126,6 +126,8 @@ def test_transport_protocol_and_store_capabilities() -> None:
     assert caps["protocol"] == GITHUB_CONTINUATION_RECORD_PROTOCOL
     assert caps["adapter"] == "github_issue_comments"
     assert caps["append_only"] is True
+    assert caps["exact_readback"] is True
+    assert caps["chat_history_recovery"] is False
     assert caps["single_writer_required"] is True
     assert caps["cross_process_multi_writer_cas"] is False
 
