@@ -53,6 +53,24 @@ host_overlays:
 
 interaction:
   protocol: dw.taskcontroller.a2a/v1
+  compatibility_protocol: dw.taskcontroller.a2a/v1
+  high_integrity_protocol: dw.taskcontroller.mailbox/v2
+  high_integrity_admission:
+    required_when:
+      - external-governance-or-gate-contract-active
+      - human-approval-or-effect-authority-required
+      - digest-bound-execution-identity-required
+    admission_guard: taskcontroller/controlplane/controller_admission.py
+    mailbox_read_scope: exact-mailbox-ref
+    machine_state_integrity: canonical-envelope-digest
+    raw_mutable_comment_body_sha: forbidden-as-authority
+    issue_wide_machine_state_scan: forbidden
+    schema_resolution: descriptor-bound
+    expected_digest_source: observed-or-canonical-recompute
+    target_gate_bootstrap_before_authority: forbidden
+    approval_presentation_binding: typed-artifact-command-digest
+    authority_granted: false
+    missing_behavior: TASKCONTROLLER_HIGH_INTEGRITY_ADMISSION_BLOCKED
   pilot_binding: github-reference-mailbox
   one_actor_one_mutable_mailbox: true
   context_by_reference: true
