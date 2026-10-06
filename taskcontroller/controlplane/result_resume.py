@@ -20,6 +20,11 @@ from taskcontroller.controlplane.lease_binding import (
     LeaseFenceDecision,
     evaluate_result_fence,
 )
+from taskcontroller.controlplane.orchestration_policy import (
+    ExecutorProgressOutcome,
+    OrchestrationPolicyError,
+    validate_executor_progress,
+)
 from taskcontroller.domain.models import WorkLease
 from taskcontroller.execution.terminal_result import (
     TerminalParentResult,
@@ -34,8 +39,10 @@ from taskcontroller.interaction.mailbox_v2 import canonical_digest
 
 
 POLL_RESULT_AVAILABLE = "RESULT_AVAILABLE"
+POLL_PROGRESS_AVAILABLE = "PROGRESS_AVAILABLE"
 POLL_NO_NEW_RESULT = "NO_NEW_RESULT"
 _TERMINAL_MESSAGE_TYPE = "terminal_result"
+_PROGRESS_MESSAGE_TYPE = "execution_progress"
 _REQUIRED_IDENTITY_FIELDS = (
     "run_id",
     "node_id",
@@ -125,19 +132,24 @@ class ControllerResultPoll:
     status: str
     cursor: MailboxActorCursor
     terminal_result: TerminalParentResult | None = None
+    progress_outcome: ExecutorProgressOutcome | None = None
     observed_event_ids: tuple[str, ...] = ()
     ignored_event_ids: tuple[str, ...] = ()
     ignored_reasons: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        if self.status not in {POLL_RESULT_AVAILABLE, POLL_NO_NEW_RESULT}:
+        if self.status not in {POLL_RESULT_AVAILABLE, POLL_PROGRESS_AVAILABLE, POLL_NO_NEW_RESULT}:
             raise ValueError(f"unsupported Controller result poll status: {self.status!r}")
         if not isinstance(self.cursor, MailboxActorCursor):
             raise ValueError("Controller result poll cursor must be a MailboxActorCursor")
-        if self.status == POLL_RESULT_AVAILABLE and self.terminal_result is None:
-            raise ValueError("RESULT_AVAILABLE requires a terminal result")
-        if self.status == POLL_NO_NEW_RESULT and self.terminal_result is not None:
-            raise ValueError("NO_NEW_RESULT cannot carry a terminal result")
+        if self.status == POLL_RESULT_AVAILABLE:
+            if self.terminal_result is None or self.progress_outcome is not None:
+                raise ValueError("RESULT_AVAILABLE requires exactly one terminal result")
+        elif self.status == POLL_PROGRESS_AVAILABLE:
+            if self.progress_outcome is None or self.terminal_result is not None:
+                raise ValueError("PROGRESS_AVAILABLE requires exactly one progress outcome")
+        elif self.terminal_result is not None or self.progress_outcome is not None:
+            raise ValueError("NO_NEW_RESULT cannot carry a semantic outcome")
         if len(self.ignored_event_ids) != len(self.ignored_reasons):
             raise ValueError("ignored event IDs and reasons must have equal length")
 
@@ -205,6 +217,7 @@ def poll_controller_terminal_result(
     ignored_reasons: list[str] = []
     next_cursor = cursor
     selected: TerminalParentResult | None = None
+    selected_progress: ExecutorProgressOutcome | None = None
 
     for event in sorted(events, key=lambda item: item.event_seq):
         _verify_event_integrity(event)
@@ -221,20 +234,15 @@ def poll_controller_terminal_result(
             _fail("RESUME_SEQUENCE_MISMATCH", "cursor scan returned an event that is not newer")
         next_cursor = next_cursor.observe(event)
         payload = event.envelope.to_dict()
-        if payload.get("message_type") != _TERMINAL_MESSAGE_TYPE:
-            _ignored(ignored_event_ids, ignored_reasons, event, "NON_TERMINAL_EVENT")
-            continue
-
-        try:
-            candidate = TerminalParentResult.from_envelope(event.envelope)
-        except TerminalResultError:
-            _ignored(ignored_event_ids, ignored_reasons, event, "INVALID_TERMINAL_RESULT")
+        message_type = payload.get("message_type")
+        if message_type not in {_TERMINAL_MESSAGE_TYPE, _PROGRESS_MESSAGE_TYPE}:
+            _ignored(ignored_event_ids, ignored_reasons, event, "NON_RESUMABLE_EVENT")
             continue
 
         if payload.get("correlation_id") != expected_correlation:
             _ignored(ignored_event_ids, ignored_reasons, event, "CORRELATION_MISMATCH")
             continue
-        if not _identity_matches(candidate.envelope.execution_identity, identity):
+        if not _identity_matches(event.envelope.execution_identity, identity):
             _ignored(ignored_event_ids, ignored_reasons, event, "EXECUTION_IDENTITY_MISMATCH")
             continue
 
@@ -250,27 +258,44 @@ def poll_controller_terminal_result(
                 _ignored(ignored_event_ids, ignored_reasons, event, _fence_ignore_reason(fence))
                 continue
 
-        candidate_payload = candidate.envelope.to_dict()
-        standards_profile = candidate_payload.get("standards_profile", {})
-        terminal_payload = candidate_payload.get("payload", {})
+        event_payload = event.envelope.to_dict()
+        standards_profile = event_payload.get("standards_profile", {})
         if (
             not isinstance(standards_profile, Mapping)
-            or not isinstance(terminal_payload, Mapping)
-            or standards_profile.get("digest") != terminal_payload.get("standards_digest")
-        ):
-            _ignored(ignored_event_ids, ignored_reasons, event, "STANDARDS_DIGEST_MISMATCH")
-            continue
-        if (
-            expected_standards_digest is not None
-            and standards_profile.get("digest") != expected_standards_digest
+            or (
+                expected_standards_digest is not None
+                and standards_profile.get("digest") != expected_standards_digest
+            )
         ):
             _ignored(ignored_event_ids, ignored_reasons, event, "STANDARDS_DIGEST_MISMATCH")
             continue
         if (
             expected_source_digest is not None
-            and candidate_payload.get("source_manifest", {}).get("digest") != expected_source_digest
+            and event_payload.get("source_manifest", {}).get("digest") != expected_source_digest
         ):
             _ignored(ignored_event_ids, ignored_reasons, event, "SOURCE_DIGEST_MISMATCH")
+            continue
+
+        if message_type == _PROGRESS_MESSAGE_TYPE:
+            try:
+                progress = validate_executor_progress(event.envelope)
+            except OrchestrationPolicyError as exc:
+                _fail(exc.code, str(exc))
+            selected_progress = progress
+            continue
+
+        try:
+            candidate = TerminalParentResult.from_envelope(event.envelope)
+        except TerminalResultError:
+            _ignored(ignored_event_ids, ignored_reasons, event, "INVALID_TERMINAL_RESULT")
+            continue
+
+        terminal_payload = event_payload.get("payload", {})
+        if (
+            not isinstance(terminal_payload, Mapping)
+            or standards_profile.get("digest") != terminal_payload.get("standards_digest")
+        ):
+            _ignored(ignored_event_ids, ignored_reasons, event, "STANDARDS_DIGEST_MISMATCH")
             continue
         if expected_result_digest is not None and candidate.result_digest != expected_result_digest:
             _ignored(ignored_event_ids, ignored_reasons, event, "RESULT_DIGEST_MISMATCH")
@@ -282,6 +307,7 @@ def poll_controller_terminal_result(
                 "multiple current terminal results have different result digests",
             )
         selected = candidate
+        selected_progress = None
 
     if next_cursor != cursor:
         acknowledged = repository.acknowledge_cursor(next_cursor)
@@ -289,10 +315,18 @@ def poll_controller_terminal_result(
             _fail("RESUME_DIGEST_MISMATCH", "durable cursor readback differs from observed cursor")
         next_cursor = acknowledged
 
+    status = (
+        POLL_RESULT_AVAILABLE
+        if selected is not None
+        else POLL_PROGRESS_AVAILABLE
+        if selected_progress is not None
+        else POLL_NO_NEW_RESULT
+    )
     return ControllerResultPoll(
-        status=POLL_RESULT_AVAILABLE if selected is not None else POLL_NO_NEW_RESULT,
+        status=status,
         cursor=next_cursor,
         terminal_result=selected,
+        progress_outcome=selected_progress,
         observed_event_ids=tuple(observed_event_ids),
         ignored_event_ids=tuple(ignored_event_ids),
         ignored_reasons=tuple(ignored_reasons),
@@ -307,6 +341,7 @@ __all__ = [
     "ControllerResultPoll",
     "ControllerResultResumeError",
     "POLL_NO_NEW_RESULT",
+    "POLL_PROGRESS_AVAILABLE",
     "POLL_RESULT_AVAILABLE",
     "poll_controller_terminal_result",
     "resume_controller_from_mailbox",

@@ -108,7 +108,29 @@ Hard stop / WAIT_CONTROLLER is reserved for real boundary changes such as:
 
 Do not ask for a new approval between RED, GREEN, refactor, test, commit, push, and Draft PR when one valid bounded execution package already authorizes those actions. Merge, Ready-for-Review when separately governed, deploy, release, production/data/secret/migration/destructive actions remain separate authority.
 
-The executable guard for these semantics is `taskcontroller/controlplane/execution_contracting.py` and is invoked by `prepare_v2_dispatch()`. It validates the contract but never grants authority.
+### Controller-owned HITL
+
+ChatGPT Controller is the only actor in the Controller/Executor pair that communicates an approval/HITL request to the User. Never instruct an Executor to wait for the User directly. Never accept an Executor-emitted `WAIT_USER_*` or `WAIT_HUMAN_*` as a valid next state.
+
+The required sequence is:
+
+```text
+Controller G0/G1 + authority preparation
+-> Controller materializes exact HITL when required
+-> User/authority resolves
+-> Controller sends one executable mission contract
+-> Executor runs through internal work packages
+-> Executor COMPLETE or BLOCKED(reason)
+-> Controller decides next gate
+```
+
+Executor BLOCKED reasons are limited to `AUTHORITY_BOUNDARY`, `SCOPE_EXPANSION`, `MATERIAL_PLAN_INVALIDATION`, and `EXTERNAL_DEPENDENCY_BLOCKED`. Routine engineering failures are never promoted into these classes when an in-scope repair path remains.
+
+`EFFECT_HOLD` blocks named effects only and does not stop Controller reasoning/planning/read-only recovery. `RUN_HOLD` is the only hold that stops new run actions. Do not create or preserve an ambiguous generic HOLD.
+
+When a boundary requires Human authority, materialize the actionable approval request in the Human Plane in the same Controller transition. Do not persist `WAIT_HUMAN_APPROVAL` unless that request exists. When authority is delegated, require a delegate dispatch receipt. Otherwise fail `AUTHORITY_REQUEST_UNROUTED` instead of waiting silently.
+
+The executable guards for these semantics are `taskcontroller/controlplane/execution_contracting.py`, `taskcontroller/controlplane/orchestration_policy.py`, and `taskcontroller/controlplane/result_resume.py`. They validate the contract/outcome but never grant authority.
 
 ## Machine communication invariant
 

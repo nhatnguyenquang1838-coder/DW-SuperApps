@@ -260,6 +260,38 @@ One bounded execution package may include branch/worktree creation, approved fil
 
 The transport does not grant authority. `taskcontroller/controlplane/execution_contracting.py` validates the declared mode before dispatch persistence and must return `authority_granted=false`.
 
+### Controller-owned HITL and anti-stuck invariant
+
+For high-integrity mailbox/v2 runs, the authority topology is always:
+
+```text
+Human/User <-> Controller <-> Executor
+```
+
+The Executor MUST NOT address an approval request to the Human/User, emit `WAIT_USER_*` / `WAIT_HUMAN_*`, mint an approval command/token, or create a direct Human wait loop. When execution reaches a boundary, the Executor reports it to the Controller. The Controller alone resolves whether the next action is automatic, delegated, or Human HITL and materializes the exact actionable request.
+
+Executor blocker reports are limited to four canonical classes:
+
+- `AUTHORITY_BOUNDARY`;
+- `SCOPE_EXPANSION`;
+- `MATERIAL_PLAN_INVALIDATION`;
+- `EXTERNAL_DEPENDENCY_BLOCKED`.
+
+Source/base/identity drift is reported as material-plan invalidation with an exact subreason/evidence reference; a required write outside scope is scope expansion; a later separately governed gate is an authority boundary.
+
+`execution_progress` is a first-class Controller resume input. RUNNING progress is observational and MUST NOT require a release command. SUCCEEDED progress may close the delegated mission at its declared ceiling. BLOCKED / NEEDS_CLARIFICATION progress requires one canonical blocker class and Controller ownership of the next decision. Atomic missions with `max_children=0` may emit a canonical terminal result with empty child provenance; child evidence MUST NOT be fabricated.
+
+A mission-level `EXECUTE` contract remains active across its internal work packages until `continue_until` is satisfied or one canonical blocker occurs. Work-package completion is not an authority boundary by itself.
+
+HOLD is typed:
+
+- `EFFECT_HOLD`: blocks only explicitly named effects and keeps the Controller control loop running for allowed read/plan/recovery/remediation work;
+- `RUN_HOLD`: stops new run actions until a fresh release.
+
+An untyped/generic HOLD is invalid. An effect authority wait MUST NOT strand bounded runnable read-only work.
+
+A Human-required state is invalid unless the Controller has materialized an actionable Human request. A delegated-authority state is invalid unless a delegate dispatch receipt exists. If no resolver is actually routed, fail closed with `AUTHORITY_REQUEST_UNROUTED`; do not persist a silent wait.
+
 ## Controller contract
 
 Controller owns:

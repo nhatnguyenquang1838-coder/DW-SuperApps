@@ -17,6 +17,7 @@ from taskcontroller.interaction.mailbox_repository import (
 from taskcontroller.interaction.mailbox_v2 import V2MailboxEnvelope, canonical_digest
 from taskcontroller.controlplane.result_resume import (
     POLL_NO_NEW_RESULT,
+    POLL_PROGRESS_AVAILABLE,
     POLL_RESULT_AVAILABLE,
     ControllerResultResumeError,
     poll_controller_terminal_result,
@@ -107,6 +108,66 @@ def _terminal(
         recipient={"capability": "taskcontroller.controller", "agent_instance": "controller"},
         idempotency_key=idempotency_key,
     )
+
+
+
+
+def _progress(
+    request: V2MailboxEnvelope,
+    *,
+    status: str = "SUCCEEDED",
+    typed_next: str = "COMPLETE",
+    blocker_class: str | None = None,
+    blocker_detail: str | None = None,
+    message_id: str = "progress-703",
+    idempotency_key: str = "progress-idem-703",
+    seq: int = 1,
+) -> V2MailboxEnvelope:
+    payload = request.to_dict()
+    payload["message_id"] = message_id
+    payload["seq"] = seq
+    payload["direction"] = "executor_to_controller"
+    payload["message_type"] = "execution_progress"
+    payload["producer"] = {
+        "namespace": "hermes-executor",
+        "actor_id": "hermes-mac",
+        "role": "executor",
+    }
+    payload["recipient"] = {
+        "capability": "taskcontroller.controller",
+        "agent_instance": "controller",
+    }
+    progress_payload: dict[str, Any] = {
+        "status": status,
+        "report_type": "mission_status",
+        "typed_next": typed_next,
+    }
+    if blocker_class is not None:
+        progress_payload["blocker_class"] = blocker_class
+    if blocker_detail is not None:
+        progress_payload["blocker_detail"] = blocker_detail
+    payload["payload"] = progress_payload
+    payload["provenance"] = {
+        "origin": "executor",
+        "parent_message_id": request.to_dict()["message_id"],
+        "child_id": None,
+        "lens": "execution",
+        "agent_instance": request.attempt["agent_instance"],
+        "status": (
+            "SUCCEEDED"
+            if status == "SUCCEEDED"
+            else "NEEDS_CLARIFICATION"
+            if status in {"BLOCKED", "NEEDS_CLARIFICATION"}
+            else "RUNNING"
+        ),
+        "source_refs": [],
+        "evidence_refs": [],
+        "result_digest": None,
+    }
+    payload["idempotency_key"] = idempotency_key
+    payload.pop("result", None)
+    payload["digest"] = canonical_digest(payload)
+    return V2MailboxEnvelope.from_dict(payload)
 
 
 def _cursor() -> MailboxActorCursor:
@@ -266,3 +327,80 @@ def test_poll_rejects_cursor_bound_to_a_different_execution() -> None:
     with pytest.raises(ControllerResultResumeError) as error:
         _poll(repository, wrong_cursor, terminal)
     assert error.value.code == "RESUME_CURSOR_MISMATCH"
+
+def test_poll_surfaces_successful_execution_progress_as_first_class_outcome() -> None:
+    repository = InMemoryMailboxRepository()
+    request = _request()
+    progress = _progress(request)
+    repository.write(_MAILBOX, -1, progress)
+
+    outcome = poll_controller_terminal_result(
+        repository,
+        _cursor(),
+        correlation_id=progress.to_dict()["correlation_id"],
+        expected_identity=progress.execution_identity,
+        expected_source_digest=_SOURCE_DIGEST,
+        expected_standards_digest=_STANDARDS_DIGEST,
+    )
+
+    assert outcome.status == POLL_PROGRESS_AVAILABLE
+    assert outcome.terminal_result is None
+    assert outcome.progress_outcome is not None
+    assert outcome.progress_outcome.completed is True
+    assert outcome.progress_outcome.requires_controller_action is False
+    assert outcome.cursor.last_event_seq == 0
+    assert outcome.cursor.last_logical_seq == 1
+
+
+def test_poll_surfaces_canonical_blocker_to_controller_without_user_handoff() -> None:
+    repository = InMemoryMailboxRepository()
+    request = _request()
+    progress = _progress(
+        request,
+        status="BLOCKED",
+        typed_next="WAIT_CONTROLLER",
+        blocker_class="AUTHORITY_BOUNDARY",
+        blocker_detail="Mission reached the separately governed G3_PR boundary.",
+    )
+    repository.write(_MAILBOX, -1, progress)
+
+    outcome = poll_controller_terminal_result(
+        repository,
+        _cursor(),
+        correlation_id=progress.to_dict()["correlation_id"],
+        expected_identity=progress.execution_identity,
+        expected_source_digest=_SOURCE_DIGEST,
+        expected_standards_digest=_STANDARDS_DIGEST,
+    )
+
+    assert outcome.status == POLL_PROGRESS_AVAILABLE
+    assert outcome.progress_outcome is not None
+    assert outcome.progress_outcome.requires_controller_action is True
+    assert outcome.progress_outcome.blocker_class == "AUTHORITY_BOUNDARY"
+    assert outcome.progress_outcome.typed_next == "WAIT_CONTROLLER"
+
+
+def test_poll_rejects_executor_wait_user_semantic_instead_of_silently_stalling() -> None:
+    repository = InMemoryMailboxRepository()
+    request = _request()
+    progress = _progress(
+        request,
+        status="BLOCKED",
+        typed_next="WAIT_USER_G2_APPROVAL",
+        blocker_class="AUTHORITY_BOUNDARY",
+        blocker_detail="G2 authority is required.",
+    )
+    repository.write(_MAILBOX, -1, progress)
+
+    with pytest.raises(ControllerResultResumeError) as error:
+        poll_controller_terminal_result(
+            repository,
+            _cursor(),
+            correlation_id=progress.to_dict()["correlation_id"],
+            expected_identity=progress.execution_identity,
+            expected_source_digest=_SOURCE_DIGEST,
+            expected_standards_digest=_STANDARDS_DIGEST,
+        )
+
+    assert error.value.code == "EXECUTOR_USER_HITL_FORBIDDEN"
+

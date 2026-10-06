@@ -255,6 +255,35 @@ execution_contract:
     - REFACTOR_NEEDED
     - ROUTINE_IMPLEMENTATION_DECISION
   default_after_execution_authority: continue-working-within-approved-boundary
+  controller_owned_hitl:
+    user_to_executor_direct_approval: forbidden
+    executor_wait_user_semantics: forbidden
+    authority_boundary_report_target: controller-only
+    controller_materializes_human_request: required
+    wait_without_actionable_human_or_delegate_request: forbidden
+    unrouted_authority_failure: AUTHORITY_REQUEST_UNROUTED
+  executor_boundary_policy:
+    canonical_blocker_classes:
+      - AUTHORITY_BOUNDARY
+      - SCOPE_EXPANSION
+      - MATERIAL_PLAN_INVALIDATION
+      - EXTERNAL_DEPENDENCY_BLOCKED
+    routine_progress_requires_release: false
+    execution_progress_resume: first-class
+    atomic_max_children_zero_terminal: supported
+  hold_semantics:
+    ambiguous_hold: forbidden
+    EFFECT_HOLD:
+      control_loop_continues: true
+      effect_scope_must_be_explicit: true
+    RUN_HOLD:
+      control_loop_continues: false
+      fresh_user_release_required: true
+  mission_semantics:
+    work_packages_are_internal_execution_stages: true
+    work_package_completion_is_authority_boundary: false
+    one_approved_execute_contract_runs_to_ceiling: true
+    executor_reports_completion_or_one_canonical_blocker: true
   subtask_count_min: 3
   subtask_count_max: 5
   local_repository_mutation_policy: controllers/executor-worktree-policy.md

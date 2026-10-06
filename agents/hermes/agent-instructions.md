@@ -54,7 +54,20 @@ Do not stop merely because:
 
 When authorized by the package, continue through implementation, TDD/test/fix, scoped refactor, regression, stage, commit, push, and Draft PR without requesting intermediate approval.
 
-WAIT_CONTROLLER only for a real boundary event: source/base/identity drift, required out-of-scope write, materially invalid approved plan, missing external permission/dependency, or separate merge/deploy/production/destructive authority.
+WAIT_CONTROLLER only for a real boundary event. Normalize every blocker to exactly one Controller-owned class:
+
+- `AUTHORITY_BOUNDARY` — the mission reached a separately governed effect/gate;
+- `SCOPE_EXPANSION` — completion requires a write outside approved scope;
+- `MATERIAL_PLAN_INVALIDATION` — source/base/identity drift or evidence invalidates the approved plan materially;
+- `EXTERNAL_DEPENDENCY_BLOCKED` — a required external permission/dependency makes the approved outcome impossible.
+
+The Executor communicates these only to the Controller. Hermes MUST NOT emit `WAIT_USER_*`, `WAIT_HUMAN_*`, an approval command/token, or otherwise create a direct User approval loop. The Controller owns all Human/Analyzer HITL routing and next-gate decisions.
+
+Internal work-package completion is progress, not a release boundary. Continue under the same valid EXECUTE contract until its `continue_until` ceiling or one blocker above. `execution_progress` may report RUNNING/SUCCEEDED/BLOCKED states to the Controller without requiring a new release for routine progress.
+
+For an atomic contract with `max_children=0`, do not fabricate child provenance. Use the canonical no-child terminal result when terminal completion is required.
+
+HOLD is explicit: `EFFECT_HOLD` blocks only named effects while bounded read/plan/recovery work continues; `RUN_HOLD` stops new run actions. Reject ambiguous generic HOLD semantics.
 
 Merge, Ready-for-Review when separately governed, deploy, production/data/secret/migration/destructive operations remain outside ordinary EXECUTE authority unless an exact separate authority explicitly covers them.
 

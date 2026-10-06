@@ -94,6 +94,14 @@ Human-plane controls may expose:
 
 A button press, emoji reaction, casual `ok`, or conversational assent is not authority unless the active governing contract explicitly defines it as such.
 
+### Actionable HITL invariant
+
+Only the Controller materializes Human Plane authority requests. Executor reports are machine-to-Controller evidence; they MUST NOT create direct Human approval actions.
+
+A Human-wait state is valid only when an actionable exact authority request is present on the Human Plane and bound to the same run/gate/scope. A delegated-authority wait is valid only when the configured delegate was actually dispatched and a dispatch receipt exists. If neither route is active, the Controller records `AUTHORITY_REQUEST_UNROUTED` instead of displaying or persisting a passive wait.
+
+An `AUTHORITY_BOUNDARY` report from the Executor is not itself a Human wait. It is a Controller input that must be resolved in the same Controller transition into one of: continue automatically, dispatch a delegate, materialize Human HITL, or fail closed.
+
 ## Governance behavior
 
 The Controller must preserve authority boundaries independently of the human-plane transport:
