@@ -13,7 +13,7 @@ from typing import Any
 import pytest
 
 from taskcontroller.interaction.mailbox_repository import InMemoryMailboxRepository
-from taskcontroller.interaction.mailbox_v2 import V2MailboxEnvelope
+from taskcontroller.interaction.mailbox_v2 import V2MailboxEnvelope, canonical_digest
 from taskcontroller.execution.terminal_result import (
     TerminalParentResult,
     TerminalResultError,
@@ -336,3 +336,54 @@ def test_concurrent_same_terminal_digest_converges_to_one_current_truth() -> Non
     assert sum(idempotent for idempotent, _ in outcomes) == len(terminals) - 1
     assert {consumed.result_digest for _, consumed in outcomes} == {terminals[0].result_digest}
     assert len(repository.read("github://owner/repo/issues/702#controller").events) == 1
+
+def _atomic_request() -> V2MailboxEnvelope:
+    payload = _request().to_dict()
+    payload["logical_contract"]["scope"]["max_children"] = 0
+    payload["logical_contract"]["scope"]["max_depth"] = 0
+    payload["digest"] = canonical_digest(payload)
+    return V2MailboxEnvelope.from_dict(payload)
+
+
+def _atomic_normalized_parent_result() -> dict[str, Any]:
+    normalized = _normalized_parent_result()
+    normalized["child_refs"] = []
+    normalized["child_result_digests"] = []
+    return normalized
+
+
+def test_atomic_no_child_terminal_result_is_canonical_without_fabricated_child() -> None:
+    terminal = build_terminal_parent_result(
+        _atomic_request(),
+        _atomic_normalized_parent_result(),
+        message_id="terminal-701-atomic",
+        seq=1,
+        producer_namespace="hermes-executor",
+        producer_actor_id="hermes-mac",
+        recipient={"capability": "taskcontroller.controller", "agent_instance": "controller"},
+        idempotency_key="terminal-idem-701-atomic",
+    )
+
+    payload = terminal.to_dict()
+    assert payload["payload"]["child_provenance"] == []
+    assert terminal.normalized_result["child_refs"] == []
+    assert terminal.normalized_result["child_result_digests"] == []
+    assert TerminalParentResult.from_envelope(terminal.envelope) == terminal
+
+
+def test_non_atomic_terminal_result_still_requires_real_child_provenance() -> None:
+    normalized = _atomic_normalized_parent_result()
+    with pytest.raises(TerminalResultError) as error:
+        build_terminal_parent_result(
+            _request(),
+            normalized,
+            message_id="terminal-701-missing-child",
+            seq=1,
+            producer_namespace="hermes-executor",
+            producer_actor_id="hermes-mac",
+            recipient={"capability": "taskcontroller.controller", "agent_instance": "controller"},
+            idempotency_key="terminal-idem-701-missing-child",
+        )
+
+    assert error.value.code == "TERMINAL_CHILD_PROVENANCE_REQUIRED"
+
