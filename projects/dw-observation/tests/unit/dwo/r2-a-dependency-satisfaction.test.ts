@@ -21,7 +21,7 @@ function dep(overrides: Partial<DependencySpec> = {}): DependencySpec {
     required: true,
     reducerState: 'ACCEPTED',
     durablePosition: 1,
-    durableWatermark: true,
+    durableWatermark: false,
     topologyRevision: 'rev-1',
     topologyDigest: 'abc123',
     eligibility: 'ELIGIBLE',

@@ -16,7 +16,7 @@ import {
   materializeAllFixtures,
 } from "@/lib/dwo/materializeFixtureScenario";
 import { FIXTURE_CATALOG, DEV_RUN_020 } from "@/lib/dwo/fixtureSpec";
-import { readFileSync } from "fs";
+import { readFileSync, statSync } from "fs";
 import { join } from "path";
 
 // ---------------------------------------------------------------------------
@@ -272,7 +272,8 @@ function evidenceFilesForRun(runId: string): string[] {
   for (const dir of dirs) {
     const dirPath = join(FIXTURE_PACK, "evidence", dir);
     try {
-      readFileSync(dirPath, "utf-8"); // stat via readdir alternative
+      const stat = statSync(dirPath);
+      if (!stat.isDirectory()) continue;
     } catch {
       continue;
     }

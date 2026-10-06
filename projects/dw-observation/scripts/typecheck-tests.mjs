@@ -73,6 +73,25 @@ const proc = spawnSync(
 // show up as an untracked file and could be picked up by a later tsc run.
 rmSync(tmpConfig, { force: true });
 
+// FAIL-CLOSED: if tsc never launched (npx/node missing, spawn error) or
+// crashed (non-zero status with no TS diagnostics), an empty output must NOT
+// be interpreted as "zero errors". Without this check a broken invocation
+// would print "OK: 0 <= baseline" and exit 0 — a vacuous pass (F1 class).
+if (proc.error) {
+  console.error(
+    `GATE FAILED: could not launch tsc (${proc.error.message}). ` +
+      `Test-code typecheck is NOT verified — exiting 2 so CI fails closed.`
+  );
+  process.exit(2);
+}
+if (proc.status !== 0) {
+  console.error(
+    `GATE FAILED: tsc exited with status ${proc.status}. ` +
+      `The output above may be truncated; test-code typecheck is NOT verified.`
+  );
+  process.exit(2);
+}
+
 const output = `${proc.stdout ?? ""}${proc.stderr ?? ""}`;
 const lines = output.split("\n").filter((l) => /error TS\d+:/.test(l));
 const byCode = {};
