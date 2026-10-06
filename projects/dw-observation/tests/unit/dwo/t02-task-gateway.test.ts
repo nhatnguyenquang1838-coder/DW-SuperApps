@@ -96,7 +96,63 @@ describe("T02 · task gateway", () => {
     expect(result).toEqual([]);
   });
 
-  // --- Module graph regression guards ---
+  // Helper: enforce TASK_RELATION_RECORDS-only import from taskFixtures.
+// Returns null if valid, or an error message if the guard fails.
+function taskFixturesGuard(content: string): string | null {
+  // No wildcard/namespace import allowed.
+  if (/import\s*\*\s*as\s+\w+\s*from\s*["']@\/lib\/taskFixtures["']/.test(content)) {
+    return "wildcard import of taskFixtures";
+  }
+  // taskFixtures must appear exactly once (the single named import line).
+  const allRefs = content.match(/taskFixtures/g) || [];
+  if (allRefs.length !== 1) {
+    return `taskFixtures referenced ${allRefs.length} time(s), expected exactly 1`;
+  }
+  // The single import must be exactly { TASK_RELATION_RECORDS }.
+  const match = content.match(/import\s*\{([^}]+)\}\s*from\s*["']@\/lib\/taskFixtures["']/);
+  if (!match) return "no named import from taskFixtures";
+  const imported = match[1].split(",").map((s: string) => s.trim());
+  if (imported.length !== 1 || imported[0] !== "TASK_RELATION_RECORDS") {
+    return `imported [${imported.join(", ")}], expected ["TASK_RELATION_RECORDS"]`;
+  }
+  return null;
+}
+
+function assertGuardPass(label: string, content: string) {
+  const result = taskFixturesGuard(content);
+  expect(result).toBeNull();
+}
+
+function assertGuardFail(label: string, content: string) {
+  const result = taskFixturesGuard(content);
+  expect(result).not.toBeNull();
+}
+
+const VALID_PAGE_IMPORT = `import { TASK_RELATION_RECORDS } from "@/lib/taskFixtures";`;
+
+describe("t02 · taskFixtures guard completeness", () => {
+  it("passes valid single named import", () => {
+    assertGuardPass("valid", VALID_PAGE_IMPORT);
+  });
+
+  it("rejects wildcard namespace import", () => {
+    assertGuardFail("wildcard", `import * as f from "@/lib/taskFixtures";`);
+  });
+
+  it("rejects second import line", () => {
+    assertGuardFail("multi-import", `${VALID_PAGE_IMPORT}\nimport { readFixtureSummaries } from "@/lib/taskFixtures";`);
+  });
+
+  it("rejects import with other named exports", () => {
+    assertGuardFail("extra-import", `import { TASK_RELATION_RECORDS, readFixtureSummaries } from "@/lib/taskFixtures";`);
+  });
+
+  it("rejects no import at all", () => {
+    assertGuardFail("no-import", `// no taskFixtures import here`);
+  });
+});
+
+// --- Module graph regression guards ---
     // Requirement (user-approved): primary route may be fixture-backed until an
     // external connector wires the live task-relation source. So app pages MAY
     // import the TASK_RELATION_RECORDS constant (records fed into the REAL
@@ -140,37 +196,11 @@ describe("T02 · task gateway", () => {
       expect(refs!.length).toBeGreaterThan(1);
     });
 
-    it("regression guard: app/tasks/page.tsx imports ONLY TASK_RELATION_RECORDS from taskFixtures", () => {
-      const pagePath = path.resolve(process.cwd(), "app/tasks/page.tsx");
-      const content = fs.readFileSync(pagePath, "utf-8");
-      // Negative: must NOT use wildcard/namespace import (`import * as f`) —
-      // that would grant unrestricted access to readFixtureSummaries.
-      expect(content).not.toMatch(/import\s*\*\s*as\s+\w+\s*from\s*["']@\/lib\/taskFixtures["']/);
-      // Positive: a named import of exactly TASK_RELATION_RECORDS.
-      const match = content.match(/import\s*\{([^}]+)\}\s*from\s*["']@\/lib\/taskFixtures["']/);
-      expect(match).toBeTruthy();
-      const imported = match![1].split(",").map((s: string) => s.trim());
-      expect(imported).toEqual(["TASK_RELATION_RECORDS"]);
-      // Comprehensive: taskFixtures must appear EXACTLY once (the named import),
-      // no second import line or stray reference allowed.
-      const allRefs = content.match(/taskFixtures/g) || [];
-      expect(allRefs).toHaveLength(1);
-    });
-
-    it("regression guard: app/tasks/[taskId]/runs/page.tsx imports ONLY TASK_RELATION_RECORDS from taskFixtures", () => {
-      const pagePath = path.resolve(process.cwd(), "app/tasks/[taskId]/runs/page.tsx");
-      const content = fs.readFileSync(pagePath, "utf-8");
-      // Negative: must NOT use wildcard/namespace import.
-      expect(content).not.toMatch(/import\s*\*\s*as\s+\w+\s*from\s*["']@\/lib\/taskFixtures["']/);
-      // Positive: a named import of exactly TASK_RELATION_RECORDS.
-      const match = content.match(/import\s*\{([^}]+)\}\s*from\s*["']@\/lib\/taskFixtures["']/);
-      expect(match).toBeTruthy();
-      const imported = match![1].split(",").map((s: string) => s.trim());
-      expect(imported).toEqual(["TASK_RELATION_RECORDS"]);
-      // Comprehensive: taskFixtures must appear EXACTLY once.
-      const allRefs = content.match(/taskFixtures/g) || [];
-      expect(allRefs).toHaveLength(1);
-    });
+    // Positive: a named import of exactly TASK_RELATION_RECORDS.
+    const pagePath = path.resolve(process.cwd(), "app/tasks/page.tsx");
+    const content = fs.readFileSync(pagePath, "utf-8");
+    const result = taskFixturesGuard(content);
+    expect(result).toBeNull();
 
     it("regression guard: app/tasks/page.tsx feeds real records into the real adapter", () => {
       const pagePath = path.resolve(process.cwd(), "app/tasks/page.tsx");
