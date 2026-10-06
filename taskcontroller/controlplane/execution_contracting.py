@@ -14,6 +14,10 @@ from dataclasses import dataclass
 from typing import Any, Mapping, NoReturn, Sequence
 
 from taskcontroller.errors import TaskControllerValidationError
+from taskcontroller.controlplane.orchestration_policy import (
+    HOLD_RUN,
+    validate_hold_semantics,
+)
 
 CONTRACT_MODE_PLAN = "PLAN"
 CONTRACT_MODE_EXECUTE = "EXECUTE"
@@ -145,7 +149,9 @@ def validate_execution_contracting(*, payload: Mapping[str, Any], scope: Mapping
 
     normalized_scope = _mapping(scope, "scope")
     allowed = set(_string_list(normalized_scope.get("allowed_actions", ()), "scope.allowed_actions", allow_empty=True))
+    denied = set(_string_list(normalized_scope.get("denied_actions", ()), "scope.denied_actions", allow_empty=True))
     writable = set(_string_list(normalized_scope.get("writable_targets", ()), "scope.writable_targets", allow_empty=True))
+    hold = validate_hold_semantics(request_payload)
 
     authority_active = request_payload.get("execution_authority_active", False)
     if not isinstance(authority_active, bool):
@@ -156,11 +162,25 @@ def validate_execution_contracting(*, payload: Mapping[str, Any], scope: Mapping
             _fail("EXECUTION_CONTRACT_AUTHORITY_FORBIDDEN", f"{mode} must not claim active execution authority")
         if allowed.intersection(_REAL_WORK_ACTIONS):
             _fail("EXECUTION_CONTRACT_READONLY_MODE_MUTATION", f"{mode} cannot include real-work mutation actions")
+        reasons = [f"EXECUTION_CONTRACT_{mode}_OK"]
+        if hold is not None:
+            reasons.append(f"HOLD:{hold.hold_type}")
         return ExecutionContractingReceipt(
             mode=mode,
-            reason_codes=(f"EXECUTION_CONTRACT_{mode}_OK",),
+            reason_codes=tuple(reasons),
             real_work_required=False,
         )
+
+    if hold is not None:
+        if hold.hold_type == HOLD_RUN:
+            _fail("EXECUTION_CONTRACT_RUN_HOLD_ACTIVE", "RUN_HOLD forbids EXECUTE dispatch")
+        missing_denials = set(hold.denied_effects) - denied
+        if missing_denials:
+            _fail(
+                "EXECUTION_CONTRACT_EFFECT_HOLD_SCOPE_MISMATCH",
+                "EFFECT_HOLD denied effects must also be denied by scope: "
+                + ", ".join(sorted(missing_denials)),
+            )
 
     if not authority_active:
         _fail("EXECUTION_CONTRACT_AUTHORITY_REQUIRED", "EXECUTE requires already-validated bounded execution authority")
