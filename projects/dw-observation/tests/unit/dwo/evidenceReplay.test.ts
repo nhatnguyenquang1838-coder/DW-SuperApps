@@ -96,6 +96,24 @@ describe('AC-827-02 · replay reconstructs expected frames from durable history 
     const b = replayFromDurable(log, 'DEV-RUN-001');
     expect(a.digest).toBe(b.digest);
   });
+
+  it('does not fold events past a durable gap into reconstructed state', () => {
+    // Durable gap: ordinal 2 missing, watermark = 1 (highest contiguous).
+    // Ordinal 3 must NOT update runState — that would certify non-contiguous
+    // history (fail-closed violation per AC-827-02).
+    const log = new DurableLog();
+    log.append({ eventId: 'E1', runId: 'DEV-RUN-001', ordinal: 1, payload: { runState: 'OPEN' } });
+    log.append({ eventId: 'E3-gap', runId: 'DEV-RUN-001', ordinal: 3, payload: { runState: 'ACCEPTED' } });
+    const frame = replayFromDurable(log, 'DEV-RUN-001');
+    expect(frame.watermark).toBe(1);
+    expect(frame.runState).toBe('OPEN');
+    // digest must reflect the gapped state (event ordinal 3 excluded), not
+    // the non-contiguous ACCEPTED — proven by differing from a contiguous log.
+    const contiguousLog = new DurableLog();
+    contiguousLog.append({ eventId: 'E1', runId: 'DEV-RUN-001', ordinal: 1, payload: { runState: 'OPEN' } });
+    const contiguousFrame = replayFromDurable(contiguousLog, 'DEV-RUN-001');
+    expect(frame.digest).toBe(contiguousFrame.digest);
+  });
 });
 
 describe('AC-827-03 · recovery generations remain immutable and navigable', () => {

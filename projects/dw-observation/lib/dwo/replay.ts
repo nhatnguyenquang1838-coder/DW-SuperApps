@@ -102,15 +102,21 @@ export function replayFromDurable(
   runId: string,
 ): ReplayCheckpoint {
   const events = log.read();
+  const watermark = log.watermark().position;
   const ordered = [...events]
     .filter((e) => e.runId === runId)
     .sort((a, b) => a.ordinal - b.ordinal);
   let runState: string | 'UNKNOWN' = 'UNKNOWN';
   for (const e of ordered) {
+    // Fail-closed/rebuild contract (AC-827-02): only events at or below the
+    // contiguous watermark position are reconstructed. A gap (missing ordinal)
+    // makes the watermark non-contiguous; events past the gap must NOT be
+    // folded into runState, otherwise the replay certifies state from
+    // non-contiguous history. (ordinal is 1-based; position 0 means none.)
+    if (e.ordinal > watermark) continue;
     const payload = e.payload as { runState?: string } | undefined;
     if (payload?.runState != null) runState = payload.runState;
   }
-  const watermark = log.watermark().position;
   return {
     runId,
     runState,

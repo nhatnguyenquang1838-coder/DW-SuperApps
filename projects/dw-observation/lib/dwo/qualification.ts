@@ -492,19 +492,21 @@ export function adv02UnknownEffectReadback(): ScenarioResult {
 
 /** ADV-03 — Stale writer / fencing conflict is detected. */
 export function adv03StaleWriterFencing(): ScenarioResult {
-  // A stale writer (out-of-order ordinal) is flagged as out-of-order, not silently applied.
+  // A stale writer (ordinal regressed below the applied watermark) is flagged
+  // as stale, not silently applied. GPT defect: staleness was conflated with
+  // out-of-order; the corrected semantic is stale=true, outOfOrder=false.
   const seen = new Set<string>();
   const applied = new Set<number>();
   applyEvent(seen, applied, 'E1', 1, 1);
   const stale = applyEvent(seen, applied, 'E2', 1, 2);
-  const pass = stale.outOfOrder;
+  const pass = stale.stale;
   return {
     id: 'ADV-03',
     title: 'Stale writer / fencing conflict',
     outcome: 'INCOMPATIBLE',
     pass,
     failClosed: true,
-    evidence: `stale writer (ordinal regressed) flagged outOfOrder=${stale.outOfOrder}`,
+    evidence: `stale writer (ordinal regressed) flagged stale=${stale.stale}, outOfOrder=${stale.outOfOrder}`,
   };
 }
 

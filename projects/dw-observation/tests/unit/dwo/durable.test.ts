@@ -105,9 +105,22 @@ describe('AC-825-04 · duplicate idempotency, out-of-order, gap fail-closed', ()
   });
 
   it('an out-of-order event is flagged and not applied', () => {
-    const result = applyEvent(new Set(), new Set([1]), 'EVT-2', 1, 2);
+    // ordinal > expectedNextOrdinal: arrives ahead, creates a future gap.
+    // This is OUT-OF-ORDER (reorder for deterministic catch-up), NOT stale.
+    const result = applyEvent(new Set(), new Set(), 'EVT-2', 3, 1);
     expect(result.applied).toBe(false);
     expect(result.outOfOrder).toBe(true);
+    expect(result.gapDetected).toBe(true);
+    expect(result.stale).toBe(false);
+  });
+
+  it('a stale event (ordinal below the applied watermark) is flagged stale, not out-of-order', () => {
+    // ordinal 1 < expectedNextOrdinal 2: already-applied region. STALE, not
+    // out-of-order. GPT defect: this was misclassified as outOfOrder:true.
+    const result = applyEvent(new Set(), new Set([1]), 'EVT-2', 1, 2);
+    expect(result.applied).toBe(false);
+    expect(result.stale).toBe(true);
+    expect(result.outOfOrder).toBe(false);
   });
 
   it('a gap fails closed (never fabricated)', () => {

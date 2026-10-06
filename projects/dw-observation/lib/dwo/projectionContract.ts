@@ -34,11 +34,11 @@ export type GwcGate = 'G3_PR' | 'G4_MERGE' | 'G5_DEPLOY' | 'G6_PRODUCTION_DATA';
 /** Gate state projection (kernel §5.1). */
 export type GateState = 'NOT_STARTED' | 'ACTIVE' | 'WAITING' | 'BLOCKED' | 'PASSED' | 'FAILED';
 
-/** Run terminal state (kernel §5.2). */
-export type RunState = 'OPEN' | 'ACCEPTED' | 'FAILED' | 'CANCELLED' | 'SUPERSEDED';
+/** Run terminal state (kernel §5.2). UNKNOWN = not recorded by the source. */
+export type RunState = 'OPEN' | 'ACCEPTED' | 'FAILED' | 'CANCELLED' | 'SUPERSEDED' | 'UNKNOWN';
 
-/** Run kind (kernel §2.1). */
-export type RunKind = 'ROOT' | 'CHILD' | 'ATOMIC';
+/** Run kind (kernel §2.1). UNKNOWN = not recorded by the source. */
+export type RunKind = 'ROOT' | 'CHILD' | 'ATOMIC' | 'UNKNOWN';
 
 /**
  * A gate reference is namespace-qualified so UR-G* and GWC-* can never be
@@ -81,7 +81,7 @@ export interface ProjectionRecordV2 {
   readonly syncState: string;
   readonly semanticQualification: string;
   readonly authorityState: string;
-  readonly anomalyCount: number;
+  readonly anomalyCount: number | null;
 }
 
 /** Upcast rule: moves a v1 record forward to v2 without rewriting history. */
@@ -127,20 +127,25 @@ export function assertProjectionRecordV2(record: ProjectionRecordV2): void {
 /**
  * Upcast a v1 record to v2. The v1 record is preserved (immutable history); the
  * returned v2 record is a new additive view.
+ *
+ * FAIL-CLOSED (GPT review): a v1 input carries only { recordId, runId }. Facts
+ * the v1 source did NOT record must map to UNKNOWN / legacy-unqualified — never
+ * to optimistic inference (LIVE / NOT_REQUIRED / 0 / OPEN / ATOMIC). Fabricating
+ * "healthy" values would certify state the evidence does not support.
  */
 export function upcastV1ToV2(v1: { recordId: string; runId: string }): ProjectionRecordV2 {
   return {
     schemaId: PROJECTION_CONTRACT_V2,
     schemaVersion: PROJECTION_CONTRACT_V2_VERSION,
     recordId: v1.recordId,
-    runIdentity: { runId: v1.runId, runKind: 'ATOMIC', parentRunRef: null, childRunRefs: [] },
+    runIdentity: { runId: v1.runId, runKind: 'UNKNOWN', parentRunRef: null, childRunRefs: [] },
     gates: [],
-    runState: 'OPEN',
+    runState: 'UNKNOWN',
     sourceProfile: 'COMPATIBILITY_LEGACY',
-    syncState: 'LIVE',
-    semanticQualification: 'PENDING',
-    authorityState: 'NOT_REQUIRED',
-    anomalyCount: 0,
+    syncState: 'UNAVAILABLE',
+    semanticQualification: 'INCOMPATIBLE',
+    authorityState: 'UNKNOWN',
+    anomalyCount: null,
   };
 }
 

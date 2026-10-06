@@ -98,13 +98,19 @@ export const FNR02_CONTRACT: Fnr02ComparisonContract = Object.freeze({
   ],
 } as const);
 
-/** Normalize a state for comparison: JCS sorted keys, drop excluded fields. */
+/** Normalize a state for comparison: JCS sorted keys, keep only included fields. */
 export function normalizeForComparison(
   state: Record<string, unknown>,
   contract: Fnr02ComparisonContract = FNR02_CONTRACT,
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const key of Object.keys(state).sort()) {
+    // FNR-02 contract: only includedFields participate in certification
+    // equality. A field outside includedFields (and not excluded) must NOT
+    // make two otherwise-identical states non-equivalent — otherwise the
+    // declared includedFields list is dead and comparison is not the
+    // versioned structured-state equality the contract promises.
+    if (!contract.includedFields.includes(key)) continue;
     if (contract.excludedFields.includes(key)) continue;
     out[key] = state[key];
   }

@@ -110,6 +110,20 @@ export function computeNextFlow(
     };
   }
 
+  // Conflict detection: multiple satisfied edges for the current node with
+  // no ordered-step disambiguation is a CONFLICT — surfaced as CONFLICT, not
+  // RESOLVED with a sentinel nextNodeId (fail-closed).
+  if (hasEdgeConflict(model, currentNodeId)) {
+    return {
+      currentNodeId,
+      nextNodeId: null,
+      reason: "conflict: multiple satisfied edges for current node",
+      blocker: null,
+      source,
+      status: "CONFLICT",
+    };
+  }
+
   // Blocking path check — BLOCKED with explicit blocker text.
   const blocking = options?.blockingPath ?? detectBlockingFromEdges(model, currentNodeId);
   if (blocking.status === "BLOCKED") {
@@ -157,8 +171,25 @@ function deriveNextFromEdges(
     (e) => e.source === currentNodeId && e.state === "SATISFIED"
   );
   if (satisfied.length === 0) return null;
-  if (satisfied.length > 1) return "CONFLICT_MULTIPLE"; // signal conflict to caller
+  // Return the single candidate, or null to signal a conflict (caller
+  // detects via hasEdgeConflict below). We must NOT return a sentinel string
+  // like "CONFLICT_MULTIPLE" as nextNodeId — that would leak into the RESOLVED
+  // branch and certify a non-existent node as real (fail-closed violation).
+  if (satisfied.length > 1) return null;
   return satisfied[0].target;
+}
+
+/** Whether deriveNextFromEdges saw multiple satisfied edges (conflict signal). */
+function hasEdgeConflict(
+  model: UnifiedRunWorkspaceModel,
+  currentNodeId: string | null
+): boolean {
+  if (!currentNodeId) return false;
+  return (
+    model.edges.filter(
+      (e) => e.source === currentNodeId && e.state === "SATISFIED"
+    ).length > 1
+  );
 }
 
 /** Detect blocking status from edges when no explicit blockingPath is provided. */

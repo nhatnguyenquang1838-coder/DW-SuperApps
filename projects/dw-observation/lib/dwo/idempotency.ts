@@ -21,6 +21,7 @@ export interface ApplyResult {
   readonly applied: boolean;
   readonly duplicate: boolean;
   readonly outOfOrder: boolean;
+  readonly stale: boolean;
   readonly gapDetected: boolean;
   readonly position: number;
 }
@@ -38,15 +39,18 @@ export function applyEvent(
   expectedNextOrdinal: number,
 ): ApplyResult {
   if (seenEventIds.has(eventId)) {
-    return { applied: false, duplicate: true, outOfOrder: false, gapDetected: false, position: expectedNextOrdinal - 1 };
+    return { applied: false, duplicate: true, outOfOrder: false, stale: false, gapDetected: false, position: expectedNextOrdinal - 1 };
   }
   if (ordinal < expectedNextOrdinal) {
-    return { applied: false, duplicate: false, outOfOrder: true, gapDetected: false, position: expectedNextOrdinal - 1 };
+    // Stale: ordinal is below the applied watermark — already-applied region.
+    return { applied: false, duplicate: false, outOfOrder: false, stale: true, gapDetected: false, position: expectedNextOrdinal - 1 };
   }
   if (ordinal > expectedNextOrdinal) {
-    return { applied: false, duplicate: false, outOfOrder: false, gapDetected: true, position: expectedNextOrdinal - 1 };
+    // Out-of-order arrival: ordinal is ahead of the expected next, creating a
+    // future gap. The event is flagged for deterministic reordering, NOT stale.
+    return { applied: false, duplicate: false, outOfOrder: true, stale: false, gapDetected: true, position: expectedNextOrdinal - 1 };
   }
-  return { applied: true, duplicate: false, outOfOrder: false, gapDetected: false, position: ordinal };
+  return { applied: true, duplicate: false, outOfOrder: false, stale: false, gapDetected: false, position: ordinal };
 }
 
 /** Idempotency/order/gap handling is read-only; it grants no effect capability. */

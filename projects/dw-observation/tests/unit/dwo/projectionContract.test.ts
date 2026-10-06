@@ -76,11 +76,29 @@ describe('AC-823-02 · contract is additive/versioned, preserves historical inte
   });
 
   it('upcasts a v1 record to v2 without rewriting the v1 source', () => {
-    const v2 = upcastV1ToV2({ recordId: 'REC-LEGACY', runId: 'DEV-RUN-001' });
-    expect(v2.schemaId).toBe(PROJECTION_CONTRACT_V2);
-    expect(v2.schemaVersion).toBe(2);
-    expect(v2.runIdentity.runId).toBe('DEV-RUN-001');
-  });
+      const v2 = upcastV1ToV2({ recordId: 'REC-LEGACY', runId: 'DEV-RUN-001' });
+      expect(v2.schemaId).toBe(PROJECTION_CONTRACT_V2);
+      expect(v2.schemaVersion).toBe(2);
+      expect(v2.runIdentity.runId).toBe('DEV-RUN-001');
+    });
+
+    it('upcast maps missing v1 facts to UNKNOWN/legacy-unqualified, never optimistic inference', () => {
+      // GPT review: upcastV1ToV2 fabricated syncState: LIVE, authorityState:
+      // NOT_REQUIRED, anomalyCount: 0, runState: OPEN, runKind: ATOMIC from a v1
+      // input that only carries { recordId, runId }. Missing facts must be
+      // UNKNOWN / legacy-unqualified — zero optimistic inference.
+      const v2 = upcastV1ToV2({ recordId: 'REC-LEGACY', runId: 'DEV-RUN-001' });
+      expect(v2.runState).toBe('UNKNOWN');
+      expect(v2.runIdentity.runKind).toBe('UNKNOWN');
+      expect(v2.syncState).toBe('UNAVAILABLE');
+      expect(v2.semanticQualification).toBe('INCOMPATIBLE');
+      expect(v2.authorityState).toBe('UNKNOWN');
+      expect(v2.anomalyCount).toBeNull();
+      // The v1 source is preserved — no fabricated "healthy" values.
+      expect(v2.runState).not.toBe('OPEN');
+      expect(v2.syncState).not.toBe('LIVE');
+      expect(v2.anomalyCount).not.toBe(0);
+    });
 
   it('validates a well-formed v2 record', () => {
     expect(() => assertProjectionRecordV2(validRecord())).not.toThrow();
@@ -195,12 +213,33 @@ describe('AC-823-05 · FNR-02 comparison contract versioned with cross-runtime v
   });
 
   it('normalization drops excluded fields and sorts keys', () => {
-    const norm = normalizeForComparison({ runId: 'R', uiDigest: 'x', runState: 'OPEN' });
-    expect(norm).not.toHaveProperty('uiDigest');
-    expect(norm).toHaveProperty('runId');
-    expect(norm).toHaveProperty('runState');
-  });
-});
+      const norm = normalizeForComparison({ runId: 'R', uiDigest: 'x', runState: 'OPEN' });
+      expect(norm).not.toHaveProperty('uiDigest');
+      expect(norm).toHaveProperty('runId');
+      expect(norm).toHaveProperty('runState');
+    });
+
+    it('enforces includedFields: a field outside the contract does not break equivalence', () => {
+        // GPT review: normalizeForComparison only dropped excludedFields and never
+        // restricted to includedFields, so a non-contract field (e.g. a UI-only
+        // layout key not in excludedFields) made two otherwise-identical states
+        // NON_EQUIVALENT. The declared includedFields list must be enforced.
+        // NOTE: uiLayout IS in excludedFields, so it would be dropped anyway — use
+        // a field in NEITHER includedFields NOR excludedFields to prove the
+        // includedFields whitelist is actually enforced.
+        const left = { runId: 'DEV-RUN-001', runState: 'OPEN', decorativeNote: 'a' };
+        const right = { runId: 'DEV-RUN-001', runState: 'OPEN', decorativeNote: 'b' };
+        // decorativeNote is NOT in includedFields and NOT in excludedFields — it
+        // must be ignored for certification equality.
+        expect(compareStates(left, right)).toBe('EQUIVALENT');
+      });
+
+    it('still reports NON_EQUIVALENT when an included field differs', () => {
+      const left = { runId: 'DEV-RUN-001', runState: 'OPEN' };
+      const right = { runId: 'DEV-RUN-001', runState: 'ACCEPTED' };
+      expect(compareStates(left, right)).toBe('NON_EQUIVALENT');
+          });
+        });
 
 describe('AC-823-01 · V2_CONTRACT_FROZEN derivation', () => {
   it('derives the token from a coherent frozen contract', () => {

@@ -130,6 +130,23 @@ describe('transport handling — duplicate/stale/out-of-order', () => {
     const r = handleTransportEvent(new Set(), new Set(), 'E1', 1, 1);
     expect(r.applied).toBe(true);
   });
+
+  it('an out-of-order arrival (ordinal above expected) is flagged, not stale', () => {
+    // GPT defect: ordinal > expectedNextOrdinal was treated as a stale drop in
+    // the realtime layer. It is an out-of-order arrival creating a future gap;
+    // stale must be false so it routes to reorder/catch-up, not drop.
+    const r = handleTransportEvent(new Set(), new Set(), 'E2', 3, 1);
+    expect(r.applied).toBe(false);
+    expect(r.outOfOrder).toBe(true);
+    expect(r.stale).toBe(false);
+  });
+
+  it('a stale event (ordinal below watermark) is neither out-of-order nor applied', () => {
+    const r = handleTransportEvent(new Set(), new Set([1]), 'E2', 1, 2);
+    expect(r.applied).toBe(false);
+    expect(r.stale).toBe(true);
+    expect(r.outOfOrder).toBe(false);
+  });
 });
 
 describe('AC-828-01 · V2_LIVE_PROJECTION_READY derivation', () => {

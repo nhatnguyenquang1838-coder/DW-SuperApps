@@ -40,7 +40,7 @@ export function handleTransportEvent(
   return {
     applied: result.applied,
     duplicate: result.duplicate,
-    stale: result.outOfOrder, // ordinal below expected = stale
+    stale: result.stale,
     outOfOrder: result.outOfOrder,
   };
 }

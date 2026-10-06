@@ -157,13 +157,56 @@ describe("T07 — Next Flow projection", () => {
     });
 
     it("returns RESOLVED when orderedSteps and edges agree", () => {
-      const model = makeModel({ currentSequence: 0 });
-      // edges: node-A -> node-B (agrees with orderedSteps[1] = node-B)
-      const result = computeNextFlow(model);
-      expect(result.status).toBe("RESOLVED");
-      expect(result.nextNodeId).toBe("node-B");
-    });
-  });
+          const model = makeModel({ currentSequence: 0 });
+          // edges: node-A -> node-B (agrees with orderedSteps[1] = node-B)
+          const result = computeNextFlow(model);
+          expect(result.status).toBe("RESOLVED");
+          expect(result.nextNodeId).toBe("node-B");
+        });
+      });
+
+      // ── 4b. Multiple satisfied edges without ordered-step disambiguation => CONFLICT ──
+
+      describe("multiple satisfied edges without ordered-step disambiguation => CONFLICT", () => {
+        it("returns CONFLICT (never RESOLVED with a sentinel nextNodeId) when the current node fans out to 2+ satisfied edges", () => {
+          // GPT review: deriveNextFromEdges returned the sentinel string
+          // "CONFLICT_MULTIPLE" as nextNodeId when >1 satisfied edge existed and
+          // orderedSteps had no next node — the projection then certified a
+          // non-existent node as RESOLVED. Fail-closed: must be CONFLICT.
+          const model = makeModel({
+            currentSequence: 2, // node-C is the last ordered step — no next step
+            edges: [
+              { id: "e1", source: "node-C", target: "node-D", kind: "DEPENDENCY", state: "SATISFIED" },
+              { id: "e2", source: "node-C", target: "node-E", kind: "DEPENDENCY", state: "SATISFIED" },
+            ],
+          });
+          const result = computeNextFlow(model);
+          expect(result.status).toBe("CONFLICT");
+          expect(result.nextNodeId).toBeNull();
+          expect(result.reason).toContain("conflict");
+        });
+
+        it("returns CONFLICT even when orderedSteps has no next node after the current one", () => {
+          // Regression: the old code only detected conflict when BOTH sources
+          // produced a next node; with no ordered next step, the sentinel leaked.
+          const model = makeModel({
+            currentSequence: 2,
+            orderedSteps: [
+              { nodeId: "node-A", sequence: 0 },
+              { nodeId: "node-B", sequence: 1 },
+              { nodeId: "node-C", sequence: 2 },
+            ],
+            edges: [
+              { id: "e1", source: "node-C", target: "node-D", kind: "DEPENDENCY", state: "SATISFIED" },
+              { id: "e2", source: "node-C", target: "node-E", kind: "DEPENDENCY", state: "SATISFIED" },
+            ],
+          });
+          const result = computeNextFlow(model);
+          expect(result.status).toBe("CONFLICT");
+          expect(result.nextNodeId).toBeNull();
+          expect(result.nextNodeId).not.toBe("CONFLICT_MULTIPLE");
+        });
+      });
 
   // ── 5. Replay computes as-of selected sequence only ────────────────────
 
