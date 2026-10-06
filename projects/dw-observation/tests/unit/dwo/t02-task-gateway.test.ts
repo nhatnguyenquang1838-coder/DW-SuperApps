@@ -121,6 +121,24 @@ describe("T02 · task gateway", () => {
       expect(content).not.toContain("taskFixtures");
     });
 
+    it("regression guard: app/tasks/page.tsx imports only TASK_RELATION_RECORDS from taskFixtures", () => {
+      const pagePath = path.resolve(process.cwd(), "app/tasks/page.tsx");
+      const content = fs.readFileSync(pagePath, "utf-8");
+      const match = content.match(/import\s*\{([^}]+)\}\s*from\s*["']@\/lib\/taskFixtures["']/);
+      expect(match).toBeTruthy();
+      const imported = match![1].split(",").map((s: string) => s.trim());
+      expect(imported).toEqual(["TASK_RELATION_RECORDS"]);
+    });
+
+    it("regression guard: app/tasks/[taskId]/runs/page.tsx imports only TASK_RELATION_RECORDS from taskFixtures", () => {
+      const pagePath = path.resolve(process.cwd(), "app/tasks/[taskId]/runs/page.tsx");
+      const content = fs.readFileSync(pagePath, "utf-8");
+      const match = content.match(/import\s*\{([^}]+)\}\s*from\s*["']@\/lib\/taskFixtures["']/);
+      expect(match).toBeTruthy();
+      const imported = match![1].split(",").map((s: string) => s.trim());
+      expect(imported).toEqual(["TASK_RELATION_RECORDS"]);
+    });
+
     it("regression guard: app/tasks/page.tsx feeds real records into the real adapter", () => {
       const pagePath = path.resolve(process.cwd(), "app/tasks/page.tsx");
       const content = fs.readFileSync(pagePath, "utf-8");
