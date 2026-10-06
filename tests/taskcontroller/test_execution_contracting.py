@@ -154,3 +154,79 @@ def test_execute_accepts_end_to_end_real_work_package():
     assert receipt.real_work_required is True
     assert receipt.authority_granted is False
     assert "EXECUTION_CONTRACT_EXECUTE_OK" in receipt.reason_codes
+
+def test_plan_requires_typed_hold_instead_of_ambiguous_hold_disposition():
+    with pytest.raises(TaskControllerValidationError, match="AMBIGUOUS_HOLD_FORBIDDEN"):
+        validate_execution_contracting(
+            payload={
+                "controller_contract_mode": CONTRACT_MODE_PLAN,
+                "execution_authority_active": False,
+                "disposition": "HOLD_CURRENT_USER_DENIAL",
+            },
+            scope=_scope(),
+        )
+
+    receipt = validate_execution_contracting(
+        payload={
+            "controller_contract_mode": CONTRACT_MODE_PLAN,
+            "execution_authority_active": False,
+            "disposition": "EFFECT_HOLD_ACTIVE",
+            "hold": {
+                "type": "EFFECT_HOLD",
+                "denied_effects": ["git_write"],
+                "control_loop_continues": True,
+            },
+        },
+        scope=_scope(),
+    )
+    assert "HOLD:EFFECT_HOLD" in receipt.reason_codes
+
+
+def test_run_hold_forbids_execute_dispatch():
+    with pytest.raises(TaskControllerValidationError, match="RUN_HOLD forbids EXECUTE"):
+        validate_execution_contracting(
+            payload=_execute_payload(
+                hold={
+                    "type": "RUN_HOLD",
+                    "denied_effects": [],
+                    "control_loop_continues": False,
+                }
+            ),
+            scope=_scope(
+                allowed_actions=["modify_approved_files"],
+                writable_targets=["taskcontroller"],
+            ),
+        )
+
+
+def test_effect_hold_execute_scope_must_explicitly_deny_held_effects():
+    payload = _execute_payload(
+        hold={
+            "type": "EFFECT_HOLD",
+            "denied_effects": ["push_working_branch"],
+            "control_loop_continues": True,
+        }
+    )
+    with pytest.raises(TaskControllerValidationError, match="must also be denied by scope"):
+        validate_execution_contracting(
+            payload=payload,
+            scope=_scope(
+                allowed_actions=["modify_approved_files"],
+                writable_targets=["taskcontroller"],
+            ),
+        )
+
+    receipt = validate_execution_contracting(
+        payload=payload,
+        scope=_scope(
+            allowed_actions=["modify_approved_files"],
+            denied_actions=[
+                "merge_approved_pr",
+                "deploy_approved_release",
+                "push_working_branch",
+            ],
+            writable_targets=["taskcontroller"],
+        ),
+    )
+    assert receipt.mode == CONTRACT_MODE_EXECUTE
+
