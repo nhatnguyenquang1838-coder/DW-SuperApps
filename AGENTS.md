@@ -136,7 +136,7 @@ The active Agent interaction contract is reference-based A2A:
 
 - `agents/shared/taskcontroller-a2a-protocol.md` defines transport-neutral Controller↔Executor semantics;
 - GitHub reference mailbox is the current Agent interaction pilot binding;
-- one actor owns one mutable mailbox comment and advances a monotonic sequence;
+- one actor owns one append-only mailbox stream and advances a monotonic sequence;
 - exact repo/SHA/PR/file/artifact references carry context and evidence;
 - semantic Agent events are recorded to the TaskController audit ledger when audit is configured;
 - binding IDs never become canonical TaskController IDs.
@@ -185,6 +185,12 @@ For new high-integrity requests, the Controller must also declare a TaskControll
 - `EXECUTE` is bounded real implementation after applicable authority validation.
 
 Once `EXECUTE` is active, readonly is no longer the default. The approved package must contain real writable engineering scope and the Executor continues through routine implementation/test/fix/refactor cycles until AC/continue-until is reached or a real hard boundary occurs. Routine RED/GREEN completion, test failure, lint failure, scoped refactor, or ordinary implementation decisions are not WAIT_CONTROLLER boundaries.
+
+For high-integrity TaskController runs, Human/User authority is Controller-owned: `Human/User <-> Controller <-> Executor`. The Executor reports only to the Controller and MUST NOT emit `WAIT_USER_*` / `WAIT_HUMAN_*`, approval commands, or direct Human approval loops. Executor blockers are normalized to `AUTHORITY_BOUNDARY`, `SCOPE_EXPANSION`, `MATERIAL_PLAN_INVALIDATION`, or `EXTERNAL_DEPENDENCY_BLOCKED`; the Controller resolves the next gate/HITL. A Human wait without an actionable Human request, or a delegated wait without a delegate dispatch receipt, is invalid and fails `AUTHORITY_REQUEST_UNROUTED`.
+
+`execution_progress` is a first-class mailbox/v2 Controller resume input. Internal work-package milestones are progress, not release boundaries; one approved EXECUTE mission remains active until its declared ceiling or a canonical blocker. Atomic `max_children=0` missions may terminate with empty child provenance and MUST NOT fabricate child evidence.
+
+HOLD semantics are typed: `EFFECT_HOLD` blocks explicitly named effects while the Controller control loop continues safe read/plan/recovery work; `RUN_HOLD` stops new run actions. Untyped generic HOLD is invalid.
 
 A single approved EXECUTE package may cover isolated worktree/branch creation, approved edits, validation, stage, commit, push, and Draft PR when explicitly bound. Merge, separately governed Ready-for-Review, deploy, production/data/secret/migration/destructive operations require separate authority.
 
