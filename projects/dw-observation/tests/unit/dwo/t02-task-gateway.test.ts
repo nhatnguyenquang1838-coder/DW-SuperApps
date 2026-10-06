@@ -97,30 +97,37 @@ describe("T02 · task gateway", () => {
   });
 
   // --- Module graph regression guards ---
+    // Requirement (user-approved): primary route may be fixture-backed until an
+    // external connector wires the live task-relation source. So app pages MAY
+    // import the TASK_RELATION_RECORDS constant (records fed into the REAL
+    // adapter), but must NOT use the fixture adapter (readFixtureSummaries),
+    // and lib/taskRead.ts must stay free of taskFixtures.
 
-  it("regression guard: app/tasks/page.tsx does not import from taskFixtures", () => {
-    const pagePath = path.resolve(process.cwd(), "app/tasks/page.tsx");
-    const content = fs.readFileSync(pagePath, "utf-8");
-    expect(content).not.toContain("taskFixtures");
-  });
+    it("regression guard: app/tasks/page.tsx uses the real adapter, not readFixtureSummaries", () => {
+      const pagePath = path.resolve(process.cwd(), "app/tasks/page.tsx");
+      const content = fs.readFileSync(pagePath, "utf-8");
+      expect(content).not.toContain("readFixtureSummaries");
+    });
 
-  it("regression guard: app/tasks/[taskId]/runs/page.tsx does not import from taskFixtures", () => {
-    const pagePath = path.resolve(process.cwd(), "app/tasks/[taskId]/runs/page.tsx");
-    const content = fs.readFileSync(pagePath, "utf-8");
-    expect(content).not.toContain("taskFixtures");
-  });
+    it("regression guard: app/tasks/[taskId]/runs/page.tsx uses the real adapter, not readFixtureSummaries", () => {
+      const pagePath = path.resolve(process.cwd(), "app/tasks/[taskId]/runs/page.tsx");
+      const content = fs.readFileSync(pagePath, "utf-8");
+      expect(content).not.toContain("readFixtureSummaries");
+    });
 
-  it("regression guard: lib/taskRead.ts does not import from taskFixtures", () => {
-    const libPath = path.resolve(process.cwd(), "lib/taskRead.ts");
-    const content = fs.readFileSync(libPath, "utf-8");
-    expect(content).not.toContain("taskFixtures");
-  });
+    it("regression guard: lib/taskRead.ts does not import from taskFixtures", () => {
+      const libPath = path.resolve(process.cwd(), "lib/taskRead.ts");
+      const content = fs.readFileSync(libPath, "utf-8");
+      expect(content).not.toContain("taskFixtures");
+    });
 
-  it("regression guard: app/tasks/page.tsx uses real adapter, not readFixtureSummaries", () => {
-    const pagePath = path.resolve(process.cwd(), "app/tasks/page.tsx");
-    const content = fs.readFileSync(pagePath, "utf-8");
-    expect(content).not.toContain("readFixtureSummaries");
-  });
+    it("regression guard: app/tasks/page.tsx feeds real records into the real adapter", () => {
+      const pagePath = path.resolve(process.cwd(), "app/tasks/page.tsx");
+      const content = fs.readFileSync(pagePath, "utf-8");
+      // The page must pass real relation records to readRealSummaries, not a
+      // hard-coded empty array (which always renders "source unavailable").
+      expect(content).toContain("readRealSummaries(TASK_RELATION_RECORDS)");
+    });
 
   // --- Fixture adapter discipline ---
 

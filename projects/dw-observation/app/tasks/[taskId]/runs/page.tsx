@@ -1,14 +1,15 @@
 // Server Component — Task → Root runs navigation.
 //
 // /tasks/[taskId]/runs lists the root runs for a given task, resolved through
-// the canonical task gateway (resolveTask). No direct import from the
-// legacy fixture module — the fixture adapter is reachable ONLY from dev routes.
+// the canonical task gateway (resolveTask). Uses the REAL adapter — the
+// fixture adapter is for dev routes only.
 //
 // Read-only. Grants no effect capability.
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { resolveTask } from "@/lib/taskRead";
+import { TASK_RELATION_RECORDS } from "@/lib/taskFixtures";
 import { listRuns } from "@/lib/observatory";
 
 type TaskRunSummary = {
@@ -27,7 +28,7 @@ export default async function TaskRunsPage({ params }: { params: { taskId: strin
 
   // Resolve task through the canonical gateway — real source only.
   // Fail-closed: UNAVAILABLE → 404 (unknown task, not a silent fallback).
-  const task = await resolveTask(taskRef, "real", []);
+  const task = await resolveTask(taskRef, "real", TASK_RELATION_RECORDS);
 
   if (task.status === "UNAVAILABLE") notFound();
 
