@@ -320,15 +320,48 @@ describe("T09-6: evidence from fixture pack", () => {
   });
 
   it("DEV-RUN-020 has zero fabricated evidence (fail-closed)", () => {
-    const model = materializeFixtureScenario(
-      FIXTURE_CATALOG.find((c) => c.id === DEV_RUN_020)!
-    );
-    for (const node of model.nodes) {
-      expect(node.artifacts).toEqual([]);
-      expect(node.executorHistory).toEqual([]);
-    }
+      const model = materializeFixtureScenario(
+        FIXTURE_CATALOG.find((c) => c.id === DEV_RUN_020)!
+      );
+      for (const node of model.nodes) {
+        expect(node.artifacts).toEqual([]);
+        expect(node.executorHistory).toEqual([]);
+      }
+    });
   });
-});
+
+  // ── E5 run-linkage negative test ───────────────────────────────────────────
+  // @qa flagged: evidenceFilesForRun() must return ONLY files for the named run,
+  // never cross-run leakage. Before this test the helper asserted via
+  // arrayContaining([]) (vacuous) and never verified per-run isolation.
+  describe("t09-E5 · evidence file linkage is run-scoped (no cross-run leak)", () => {
+    const KNOWN_RUN = "DEV-RUN-001"; // has evidence files in the fixture pack
+
+    it("returns evidence files scoped to the named run", () => {
+      const files = evidenceFilesForRun(KNOWN_RUN);
+      expect(files.length).toBeGreaterThan(0);
+      // Every returned path must contain the runId — no foreign-run leakage.
+      for (const f of files) {
+        expect(f).toContain(KNOWN_RUN);
+      }
+    });
+
+    it("returns empty for a run with no evidence (fail-closed, no inference)", () => {
+      const files = evidenceFilesForRun("NO-SUCH-RUN-9999");
+      expect(files).toEqual([]);
+    });
+
+    it("never surfaces another run's evidence for this runRef", () => {
+      const foreign = evidenceFilesForRun("DEV-RUN-002");
+      const underTest = evidenceFilesForRun(KNOWN_RUN);
+      // No element of underTest should originate from DEV-RUN-002.
+      for (const f of underTest) {
+        expect(f).not.toContain("DEV-RUN-002");
+      }
+      // Sanity: DEV-RUN-002 has its own files (proves the negative guard is real).
+      expect(foreign.length).toBeGreaterThan(0);
+    });
+  });
 
 // ---------------------------------------------------------------------------
 // T09-7: dependency edges — UNKNOWN unless evidence supports SATISFIED
