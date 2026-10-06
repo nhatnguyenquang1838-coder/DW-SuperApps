@@ -12,6 +12,11 @@
  *     mutated after creation.
  *  2. Each generation carries a parent link; the root has parentGeneration null.
  *  3. navigateLineage walks parent links to the root, returning the ordered path.
+ *  4. Cycle guard (GPT review + @taskme AC): lineages are append-only/immutable,
+ *     so a cycle means the historical data is CORRUPTED. navigateLineage must
+ *     FAIL CLOSED by throwing — never return a partial path or []. The guard
+ *     covers multi-node cycles (A->B->A) AND self-referential parents
+ *     (parentGeneration pointing at itself).
  */
 
 /** The recovery generation kinds. */
@@ -68,8 +73,14 @@ export function appendGeneration(
 /**
  * Navigate the lineage from a generation back to its root.
  *
- * Returns the ordered path [root ... target]. Throws if the target id is not in
- * the lineage or the parent chain is broken (a non-null parent that is absent).
+ * Returns the ordered path [root ... target]. Throws if:
+ *  - the target id is not in the lineage;
+ *  - the parent chain is broken (a non-null parent that is absent);
+ *  - a cycle is detected (multi-node A->B->A or self-referential parent).
+ *
+ * Cycles indicate corrupted historical data: lineages are append-only and
+ * immutable, so a cycle can never be legitimate. FAIL CLOSED by throwing —
+ * never return a partial path or [].
  */
 export function navigateLineage(
   lineage: readonly RecoveryGeneration[],
@@ -81,8 +92,13 @@ export function navigateLineage(
     throw new Error(`generation ${targetId} not in lineage`);
   }
   const path: RecoveryGeneration[] = [];
+  const visited = new Set<string>();
   let current: RecoveryGeneration | undefined = target;
   while (current) {
+    if (visited.has(current.id)) {
+      throw new Error(`cycle detected at generation ${current.id} — corrupted lineage`);
+    }
+    visited.add(current.id);
     path.unshift(current);
     if (current.parentGeneration === null) break;
     const parentId = current.parentGeneration;
