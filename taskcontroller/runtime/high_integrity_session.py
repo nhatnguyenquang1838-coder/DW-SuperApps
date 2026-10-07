@@ -1,10 +1,11 @@
-"""Canonical high-integrity TaskController mailbox/v2 materialization.
+"""Canonical high-integrity TaskController mailbox/v2 runtime session.
 
-This module is the single composition boundary for Controller machine writes once
-mailbox/v2 is active.  Callers provide a bounded semantic request and durable
-runtime dependencies; the runtime owns continuation persistence, envelope
-compilation, mailbox event/CAS materialization, exact readback, dispatch ledger
-commit, and durable producer cursor acknowledgement.
+This module is the single composition boundary for the canonical mailbox/v2
+lifecycle: Controller materialization, Executor bootstrap, Controller
+progress/result resume, and restart recovery. Callers provide bounded semantic
+inputs and durable runtime dependencies; the runtime owns continuation
+persistence, envelope compilation, mailbox event/CAS materialization, exact
+readback, dispatch ledger commit, and durable producer cursor evidence.
 
 The materializer never grants execution authority.  It also rejects raw
 transport-record fields and secret-bearing payload keys so an LLM/host cannot
