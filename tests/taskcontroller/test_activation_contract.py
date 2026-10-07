@@ -69,7 +69,7 @@ def test_chatgpt_slack_hermes_loads_reference_a2a_and_repo_human_plane_policy():
     assert plan.memory_fallback_allowed is False
     assert plan.full_e2e_runtime_active is True
     assert plan.runtime_session == "taskcontroller/runtime/high_integrity_session.py"
-    assert plan.interaction_binding == "github-reference-mailbox"
+    assert plan.interaction_binding == "github-mailbox-v2"
     assert plan.load_order == (
         "AGENTS.md",
         "workspace.yaml",
@@ -92,7 +92,8 @@ def test_chatgpt_non_slack_does_not_invent_slack_or_human_plane_overlay():
     )
     assert plan.active is True
     assert plan.full_e2e_runtime_active is True
-    assert plan.runtime_session == "taskcontroller/runtime/session.py"
+    assert plan.runtime_session == "taskcontroller/runtime/high_integrity_session.py"
+    assert plan.interaction_protocol == "dw.taskcontroller.mailbox/v2"
     assert "agents/chatgpt-agent/agent-instructions.md" in plan.load_order
     assert "agents/chatgpt-agent/slack-controller-mvp.md" not in plan.load_order
     assert "agents/shared/taskcontroller-human-plane-policy.md" not in plan.load_order
@@ -155,7 +156,9 @@ def test_root_agents_contains_hard_activation_guard():
 def test_root_agents_declares_slack_human_plane_and_reference_agent_binding():
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     assert "Slack is the Human Control Plane" in agents
-    assert "GitHub reference mailbox is the current Agent interaction pilot binding" in agents
+    assert "dw.taskcontroller.mailbox/v2" in agents
+    assert "A2A/v1" in agents
+    assert "compatibility-only" in agents
     assert "Slack thread history MUST NOT be the canonical Agent execution journal" in agents
     assert "agents/shared/taskcontroller-human-plane-policy.md" in agents
     assert "Slack Communication Policy" not in agents
@@ -215,7 +218,8 @@ def test_hermes_reports_to_mailbox_not_slack_journal():
     overlay = (ROOT / "agents" / "hermes" / "agent-instructions.md").read_text(
         encoding="utf-8"
     )
-    assert "GitHub reference mailbox" in overlay
+    assert "GitHub mailbox/v2" in overlay
+    assert "explicit compatibility lane" in overlay
     assert "update its own mailbox comment in place" in overlay
     assert "Do not use Slack as the normal progress journal" in overlay
 
@@ -230,7 +234,7 @@ def test_active_taskcontroller_requires_mailbox_boot_before_first_dispatch():
 
     assert plan.active is True
     assert plan.full_e2e_runtime_active is True
-    assert plan.runtime_session == "taskcontroller/runtime/session.py"
+    assert plan.runtime_session == "taskcontroller/runtime/high_integrity_session.py"
     assert plan.mailbox_boot_required is True
     assert plan.mailbox_boot_fail_closed is True
     assert plan.machine_progress_transport == "github-mailbox-v2"
