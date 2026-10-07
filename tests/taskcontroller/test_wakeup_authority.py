@@ -7,7 +7,8 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def test_registry_separates_mailbox_data_path_from_wakeup_notification() -> None:
     registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
-    assert "pilot_binding: github-reference-mailbox" in registry
+    assert "canonical_binding: github-mailbox-v2" in registry
+    assert "compatibility_binding: github-reference-mailbox-v1" in registry
     assert "protocol: dw.taskcontroller.wakeup/v1" in registry
     assert "pilot_binding: slack-wakeup" in registry
     assert "pointer_only: true" in registry
