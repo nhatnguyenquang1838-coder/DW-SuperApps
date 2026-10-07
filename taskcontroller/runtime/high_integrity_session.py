@@ -255,11 +255,32 @@ def materialize_controller_transition(
             "repository snapshot does not bind the Controller mailbox",
         )
 
+    matching = tuple(
+        event
+        for event in snapshot.events
+        if event.idempotency_key == envelope.idempotency_key
+    )
+    if len(matching) > 1:
+        _fail(
+            MailboxV2ErrorCode.DIGEST_MISMATCH,
+            "multiple mailbox events reuse the materialization idempotency key",
+        )
+    if matching:
+        existing = matching[0]
+        if existing.envelope_digest != envelope.digest() or existing.envelope != envelope:
+            _fail(
+                MailboxV2ErrorCode.DIGEST_MISMATCH,
+                "idempotency key is already bound to different mailbox content",
+            )
+        expected_mailbox_seq = existing.event_seq - 1
+    else:
+        expected_mailbox_seq = snapshot.last_event_seq
+
     protocol = DispatchProtocol(repository=repository, ledger=ledger, actor=actor)
     prepared = protocol.prepare(
         envelope,
         mailbox_ref=checkpoint.controller_mailbox_ref,
-        expected_mailbox_seq=snapshot.last_event_seq,
+        expected_mailbox_seq=expected_mailbox_seq,
         state_version=state_version,
         lease_generation=envelope.execution_identity["lease_generation"],
         prepared_at=prepared_at,
