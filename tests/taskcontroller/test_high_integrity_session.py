@@ -204,6 +204,21 @@ def _progress(request: V2MailboxEnvelope, *, seq: int = 1) -> V2MailboxEnvelope:
     return V2MailboxEnvelope.from_dict(payload)
 
 
+class CrashAfterEventBeforeLedgerCommit(GitHubMailboxRepository):
+    def __init__(self, transport: FakeGitHubComments) -> None:
+        super().__init__(transport)
+        self.readback_calls = 0
+        self.crashed = False
+
+    def exact_readback(self, receipt):
+        snapshot = super().exact_readback(receipt)
+        self.readback_calls += 1
+        if self.readback_calls == 1 and not self.crashed:
+            self.crashed = True
+            raise RuntimeError("synthetic crash after event before ledger commit")
+        return snapshot
+
+
 class CrashAfterLedgerCommit:
     def __init__(self, ledger: AuditFacade) -> None:
         self.ledger = ledger
@@ -551,6 +566,49 @@ def test_crash_after_continuation_before_event_retries_without_duplicate_state(
         "cursor",
     ]
     assert receipt.continuation_remote.idempotent is True
+
+
+def test_crash_after_event_before_ledger_commit_repairs_without_duplicate_event(
+    tmp_path: Path,
+) -> None:
+    transport = FakeGitHubComments()
+    repository = CrashAfterEventBeforeLedgerCommit(transport)
+    continuation = GitHubContinuationStore(
+        transport,
+        repository=REPOSITORY,
+        issue_number=ISSUE,
+    )
+    ledger = AuditFacade(tmp_path / "event-before-ledger.sqlite3")
+    try:
+        with pytest.raises(RuntimeError, match="event before ledger commit"):
+            materialize_controller_transition(
+                continuation_store=continuation,
+                repository=repository,
+                ledger=ledger,
+                checkpoint=_checkpoint(),
+                request=_request(),
+                state_version=0,
+                prepared_at="2026-10-07T05:03:31Z",
+                committed_at="2026-10-07T05:03:32Z",
+            )
+        assert len(repository.read(CONTROLLER_MAILBOX).events) == 1
+
+        receipt = materialize_controller_transition(
+            continuation_store=continuation,
+            repository=repository,
+            ledger=ledger,
+            checkpoint=_checkpoint(),
+            request=_request(),
+            state_version=0,
+            prepared_at="2026-10-07T05:03:31Z",
+            committed_at="2026-10-07T05:03:32Z",
+        )
+    finally:
+        ledger.close()
+
+    assert len(repository.read(CONTROLLER_MAILBOX).events) == 1
+    assert receipt.dispatch.committed.readback_verified is True
+    assert receipt.event_remote.payload["event_id"] == receipt.dispatch.committed.event_id
 
 
 def test_crash_after_event_before_materializer_completion_recovers_without_duplicate_event(
