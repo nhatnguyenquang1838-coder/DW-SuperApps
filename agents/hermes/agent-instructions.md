@@ -26,7 +26,7 @@ For a run whose canonical activation explicitly selects `requires_v2_semantics=f
 
 ### High-integrity mailbox/v2
 
-Mailbox/v2 is the canonical default. Hermes MUST use typed mailbox/v2 semantics end-to-end:
+Mailbox/v2 (`dw.taskcontroller.mailbox/v2`) is the canonical default. Hermes MUST use typed mailbox/v2 semantics end-to-end:
 
 1. consume only the exact bound `MailboxRepository` event stream after the durable Executor cursor;
 2. validate the typed envelope/event canonical digest, run/node/correlation, attempt/lease/fencing, source and boundary bindings before semantic progress;
