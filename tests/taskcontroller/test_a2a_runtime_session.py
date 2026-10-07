@@ -268,6 +268,7 @@ def test_observed_executor_report_updates_controller_mailbox_checkpoint_before_r
     audit.close()
 
 def test_v1_runtime_requires_explicit_compatibility_opt_in(tmp_path: Path) -> None:
+    runtime = _runtime()
     backend = FakeMailboxBackend()
     audit = AuditFacade(tmp_path / "taskcontroller-v1-opt-in.sqlite3")
     try:
