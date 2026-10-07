@@ -1,10 +1,10 @@
 # TaskController Reference-Based Agent Interaction Protocol — A2A Pilot
 
-Status: active pilot contract for Controller↔Executor interaction.
+Status: active canonical mailbox/v2 contract for Controller↔Executor interaction. A2A/v1 is compatibility-only.
 
 ## Purpose
 
-This protocol defines **Agent interaction semantics**, independent of transport. The first pilot binding is a GitHub reference mailbox because ChatGPT and heterogeneous Executors can already exchange durable GitHub references without introducing new infrastructure.
+This protocol defines **Agent interaction semantics**, independent of transport. The canonical GitHub binding is append-only `dw.taskcontroller.mailbox/v2`; the older mutable-comment `dw.taskcontroller.a2a/v1` binding is retained only for explicit compatibility runs.
 
 **Slack is not the Executor progress transport.** Slack is the Human Control Plane and receives only semantic human projections. When an idle Executor cannot poll/push-subscribe to its mailbox, Slack may also carry a separate **pointer-only wake-up notification**.
 
@@ -69,9 +69,11 @@ If any required mailbox/checkpoint/readback cannot be established, fail closed w
 
 Activating TaskController does not activate GWC. GWC is loaded only when the current controlled task requires its governance model.
 
-## Pilot mailbox model
+## Legacy v1 compatibility mailbox model
 
-For the GitHub pilot:
+This section applies only when activation explicitly opts into A2A/v1 compatibility. It is not the default TaskController runtime.
+
+For legacy v1 compatibility:
 
 - one Controller identity per run;
 - one main Executor in the first vertical slice;
@@ -83,9 +85,9 @@ For the GitHub pilot:
 
 Normal progress does not append a new comment for every event.
 
-## Envelope
+## Legacy v1 envelope
 
-Use `dw.taskcontroller.a2a/v1` and the typed `taskcontroller.interaction.A2AEnvelope`.
+Only an explicit compatibility run uses `dw.taskcontroller.a2a/v1` and the typed `taskcontroller.interaction.A2AEnvelope`. Canonical runs use the mailbox/v2 envelope/event contract below.
 
 Required semantics:
 
@@ -194,7 +196,7 @@ The configured Run Ledger also stores the latest continuation manifest. Wake-up 
 
 ## High-integrity admission boundary
 
-The v1 mutable-comment lane remains a compatibility lane. A controlled task that requires external governance/gate semantics, human effect approval, or digest-bound execution identity MUST enter the high-integrity lane before Controller dispatch/review.
+The v1 mutable-comment lane is demoted to explicit compatibility only. New TaskController activations default to mailbox/v2. A controlled task MUST NOT silently select or fall back to v1; compatibility requires an explicit activation choice.
 
 High-integrity admission requires:
 
@@ -221,7 +223,7 @@ This boundary does not grant effect, merge, deploy, release, migration, secret, 
 
 ## High-integrity GitHub mailbox/v2 binding
 
-When the high-integrity lane uses the GitHub binding, the canonical remote adapter is `taskcontroller.interaction.github_mailbox_v2.GitHubMailboxRepository`.
+The canonical remote adapter is `taskcontroller.interaction.github_mailbox_v2.GitHubMailboxRepository`, composed by `taskcontroller.runtime.high_integrity_session.materialize_controller_transition`. Controller hosts MUST NOT render or post mailbox event/cursor/continuation JSON directly.
 
 The mailbox reference has the form:
 
@@ -243,6 +245,8 @@ This transport binding does not grant execution authority. Gate/effect authority
 For high-integrity remote recovery, persist the bounded `dw.taskcontroller.continuation/v1` manifest through `taskcontroller.interaction.github_continuation_store.GitHubContinuationStore` before the first mailbox/v2 dispatch and before every later Controller dispatch checkpoint. Continuation records are append-only GitHub issue comments using `dw.taskcontroller.github-continuation-record/v1`, exact-read back after append, and filtered by exact `run_id + manifest_kind`. The same Controller writer owns continuation updates for the run.
 
 A high-integrity mailbox event without a durable remote continuation checkpoint is invalid boot state and MUST NOT be emitted.
+
+The materializer owns `record_type`, event/cursor sequence values, previous-event digests, event/envelope digests, and continuation-chain sequencing. Callers supply only the bounded semantic transition. Raw secret/token/credential values are not valid mailbox payload state; durable references/digests must be used instead.
 
 ## Controller execution-contract modes
 
