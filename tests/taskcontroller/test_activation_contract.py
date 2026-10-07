@@ -68,8 +68,8 @@ def test_chatgpt_slack_hermes_loads_reference_a2a_and_repo_human_plane_policy():
     assert plan.active is True
     assert plan.memory_fallback_allowed is False
     assert plan.full_e2e_runtime_active is True
-    assert plan.runtime_session == "taskcontroller/runtime/session.py"
-    assert plan.interaction_binding == "github-reference-mailbox"
+    assert plan.runtime_session == "taskcontroller/runtime/high_integrity_session.py"
+    assert plan.interaction_binding == "github-mailbox-v2"
     assert plan.load_order == (
         "AGENTS.md",
         "workspace.yaml",
@@ -92,7 +92,8 @@ def test_chatgpt_non_slack_does_not_invent_slack_or_human_plane_overlay():
     )
     assert plan.active is True
     assert plan.full_e2e_runtime_active is True
-    assert plan.runtime_session == "taskcontroller/runtime/session.py"
+    assert plan.runtime_session == "taskcontroller/runtime/high_integrity_session.py"
+    assert plan.interaction_protocol == "dw.taskcontroller.mailbox/v2"
     assert "agents/chatgpt-agent/agent-instructions.md" in plan.load_order
     assert "agents/chatgpt-agent/slack-controller-mvp.md" not in plan.load_order
     assert "agents/shared/taskcontroller-human-plane-policy.md" not in plan.load_order
@@ -112,7 +113,14 @@ def test_registry_forbids_memory_fallback_and_activates_a2a_runtime():
     registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
     assert "memory_fallback_allowed: false" in registry
     assert "missing_required_entrypoint: BLOCKED" in registry
-    assert "runtime_session: taskcontroller/runtime/session.py" in registry
+    assert "runtime_session: taskcontroller/runtime/high_integrity_session.py" in registry
+    assert "compatibility_runtime_session: taskcontroller/runtime/session.py" in registry
+    assert "v1_runtime_status: compatibility-only" in registry
+    assert "v2_full_lifecycle_required: true" in registry
+    assert "controller_materialize: materialize_controller_transition" in registry
+    assert "executor_bootstrap: bootstrap_executor_v2" in registry
+    assert "controller_resume: resume_controller_v2" in registry
+    assert "controller_recovery: recover_high_integrity_session" in registry
     assert "full_e2e_runtime: active" in registry
     assert "full_e2e_runtime: deferred" not in registry
     assert "legacy_slack_pilot: compatibility-only" in registry
@@ -122,10 +130,11 @@ def test_registry_forbids_memory_fallback_and_activates_a2a_runtime():
 
 def test_registry_separates_agent_binding_from_slack_human_plane():
     registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
-    assert "pilot_binding: github-reference-mailbox" in registry
+    assert "canonical_binding: github-mailbox-v2" in registry
+    assert "compatibility_binding: github-reference-mailbox-v1" in registry
     assert "human_control_plane: slack" in registry
     assert "agents/shared/taskcontroller-a2a-protocol.md" in registry
-    assert "one_actor_one_mutable_mailbox: true" in registry
+    assert "v1_one_actor_one_mutable_mailbox: compatibility-only" in registry
     assert "thread_semantics: controller-command-executor-report-evidence" not in registry
 
 
@@ -152,7 +161,9 @@ def test_root_agents_contains_hard_activation_guard():
 def test_root_agents_declares_slack_human_plane_and_reference_agent_binding():
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     assert "Slack is the Human Control Plane" in agents
-    assert "GitHub reference mailbox is the current Agent interaction pilot binding" in agents
+    assert "dw.taskcontroller.mailbox/v2" in agents
+    assert "dw.taskcontroller.a2a/v1" in agents
+    assert "compatibility-only" in agents
     assert "Slack thread history MUST NOT be the canonical Agent execution journal" in agents
     assert "agents/shared/taskcontroller-human-plane-policy.md" in agents
     assert "Slack Communication Policy" not in agents
@@ -212,7 +223,8 @@ def test_hermes_reports_to_mailbox_not_slack_journal():
     overlay = (ROOT / "agents" / "hermes" / "agent-instructions.md").read_text(
         encoding="utf-8"
     )
-    assert "GitHub reference mailbox" in overlay
+    assert "GitHub mailbox/v2" in overlay
+    assert "explicit compatibility lane" in overlay
     assert "update its own mailbox comment in place" in overlay
     assert "Do not use Slack as the normal progress journal" in overlay
 
@@ -227,10 +239,14 @@ def test_active_taskcontroller_requires_mailbox_boot_before_first_dispatch():
 
     assert plan.active is True
     assert plan.full_e2e_runtime_active is True
-    assert plan.runtime_session == "taskcontroller/runtime/session.py"
+    assert plan.runtime_session == "taskcontroller/runtime/high_integrity_session.py"
     assert plan.mailbox_boot_required is True
     assert plan.mailbox_boot_fail_closed is True
-    assert plan.machine_progress_transport == "github-reference-mailbox"
+    assert plan.machine_progress_transport == "github-mailbox-v2"
+    assert plan.interaction_binding == "github-mailbox-v2"
+    assert plan.interaction_protocol == "dw.taskcontroller.mailbox/v2"
+    assert plan.requires_v2_semantics is True
+    assert plan.controller_admission_required is True
     assert plan.slack_machine_progress_allowed is False
     assert plan.pointer_only_wakeup is True
 
@@ -306,14 +322,31 @@ def test_high_integrity_activation_requires_v2_and_controller_admission_guard():
     assert plan.schema_resolution_mode == "descriptor-bound"
 
 
-def test_default_activation_preserves_v1_compatibility_lane():
+def test_default_activation_promotes_mailbox_v2_runtime():
     plan = resolve_taskcontroller_activation(
         "TaskController inspect this plan",
         host="chatgpt",
     )
 
+    assert plan.interaction_protocol == "dw.taskcontroller.mailbox/v2"
+    assert plan.requires_v2_semantics is True
+    assert plan.runtime_session == "taskcontroller/runtime/high_integrity_session.py"
+    assert plan.controller_admission_required is True
+    assert plan.controller_admission_guard == "taskcontroller/controlplane/controller_admission.py"
+
+
+def test_v1_activation_requires_explicit_compatibility_opt_in():
+    plan = resolve_taskcontroller_activation(
+        "TaskController inspect a legacy compatibility run",
+        host="chatgpt",
+        requires_v2_semantics=False,
+    )
+
     assert plan.interaction_protocol == "dw.taskcontroller.a2a/v1"
     assert plan.requires_v2_semantics is False
+    assert plan.runtime_session == "taskcontroller/runtime/session.py"
+    assert plan.machine_progress_transport == "github-reference-mailbox-v1"
+    assert plan.interaction_binding == "github-reference-mailbox-v1"
     assert plan.controller_admission_required is False
     assert plan.controller_admission_guard is None
 
@@ -354,7 +387,8 @@ def test_hermes_high_integrity_lane_uses_typed_v2_not_markdown_reports():
     assert "MailboxRepository" in overlay
     assert "full-comment SHA" in overlay
     assert "never scan the whole issue/comment history" in overlay
-    assert "do not substitute a Markdown E-report for the typed result" in overlay
+    assert "do not hand-author GitHub machine JSON" in overlay
+    assert "Markdown E-report" in overlay
     assert "MUST NOT silently downgrade a high-integrity run" in overlay
 
 

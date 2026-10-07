@@ -12,11 +12,11 @@ Hermes is an Executor, not the Controller and not an approval authority. Execute
 
 ## A2A mailbox binding
 
-The GitHub reference mailbox is the normal command/progress transport. The active Controller contract determines whether the run uses the v1 compatibility lane or the high-integrity mailbox/v2 lane.
+The append-only GitHub mailbox/v2 repository is the normal command/progress transport. A2A/v1 mutable-comment behavior is demoted to an explicit compatibility lane and is never selected implicitly.
 
-### Compatibility v1
+### Compatibility v1 — explicit opt-in only
 
-For an explicitly v1-compatible run, preserve the existing one-actor/one-mutable-comment behavior:
+For a run whose canonical activation explicitly selects `requires_v2_semantics=false`, preserve the existing one-actor/one-mutable-comment behavior:
 
 1. read the exact Executor/Controller mailbox references supplied by the active A2A binding;
 2. consume only a newer Controller mailbox `seq` than the last-seen cursor;
@@ -26,7 +26,7 @@ For an explicitly v1-compatible run, preserve the existing one-actor/one-mutable
 
 ### High-integrity mailbox/v2
 
-When the Controller contract requires `dw.taskcontroller.mailbox/v2`, Hermes MUST use typed mailbox/v2 semantics end-to-end:
+Mailbox/v2 (`dw.taskcontroller.mailbox/v2`) is the canonical default. Hermes MUST use typed mailbox/v2 semantics end-to-end:
 
 1. consume only the exact bound `MailboxRepository` event stream after the durable Executor cursor;
 2. validate the typed envelope/event canonical digest, run/node/correlation, attempt/lease/fencing, source and boundary bindings before semantic progress;
@@ -34,7 +34,7 @@ When the Controller contract requires `dw.taskcontroller.mailbox/v2`, Hermes MUS
 4. never scan the whole issue/comment history to reconstruct machine state when the exact mailbox event/cursor exists;
 5. resolve schemas/evaluator contracts from canonical descriptor/source bindings, never from a guessed legacy path;
 6. never accept a Controller-predicted digest as truth; use observed evidence or canonical recomputation;
-7. emit typed mailbox/v2 result/evidence through the bound repository/event path; do not substitute a Markdown E-report for the typed result;
+7. emit typed mailbox/v2 result/evidence through the bound repository/event path; do not hand-author GitHub machine JSON or substitute a Markdown E-report for the typed result;
 8. stop on downgrade, binding drift, sequence gap, digest mismatch, stale lease/fence, schema mismatch, or authority ambiguity.
 
 ## Real-work Executor behavior

@@ -26,6 +26,34 @@ GITHUB_CONTINUATION_RECORD_PROTOCOL = "dw.taskcontroller.github-continuation-rec
 
 
 @dataclass(frozen=True, slots=True)
+class ContinuationWriteReceipt:
+    """Immutable GitHub evidence for one continuation record."""
+
+    comment_id: str
+    comment_ref: str
+    run_id: str
+    manifest_kind: str
+    record_seq: int
+    previous_record_digest: str | None
+    manifest_digest: str
+    record_digest: str
+    idempotent: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "comment_id": self.comment_id,
+            "comment_ref": self.comment_ref,
+            "run_id": self.run_id,
+            "manifest_kind": self.manifest_kind,
+            "record_seq": self.record_seq,
+            "previous_record_digest": self.previous_record_digest,
+            "manifest_digest": self.manifest_digest,
+            "record_digest": self.record_digest,
+            "idempotent": self.idempotent,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class _ContinuationRecord:
     comment_id: str
     run_id: str
@@ -266,14 +294,34 @@ class GitHubContinuationStore:
         history = self._history(run_id, manifest_kind)
         return history[-1].manifest if history else None
 
-    def save_manifest(self, manifest: RunManifest) -> None:
+    def _receipt(self, record: _ContinuationRecord, *, idempotent: bool = False) -> ContinuationWriteReceipt:
+        return ContinuationWriteReceipt(
+            comment_id=record.comment_id,
+            comment_ref=(
+                f"github://{self.repository}/issues/{self.issue_number}"
+                f"#issuecomment-{record.comment_id}"
+            ),
+            run_id=record.run_id,
+            manifest_kind=record.manifest_kind,
+            record_seq=record.record_seq,
+            previous_record_digest=record.previous_record_digest,
+            manifest_digest=record.manifest_digest,
+            record_digest=record.record_digest,
+            idempotent=idempotent,
+        )
+
+    def latest_receipt(self, run_id: str, manifest_kind: str) -> ContinuationWriteReceipt | None:
+        history = self._history(run_id, manifest_kind)
+        return self._receipt(history[-1], idempotent=True) if history else None
+
+    def save_manifest_with_receipt(self, manifest: RunManifest) -> ContinuationWriteReceipt:
         payload = _manifest_payload(manifest)
         manifest_digest = canonical_digest(payload)
         history = self._history(manifest.run_id, manifest.manifest_kind)
         latest = history[-1] if history else None
         if latest is not None:
             if latest.manifest_digest == manifest_digest:
-                return
+                return self._receipt(latest, idempotent=True)
             if latest.manifest.created_at != manifest.created_at:
                 raise TaskControllerValidationError(
                     "continuation created_at cannot change for an existing run/kind"
@@ -294,7 +342,7 @@ class GitHubContinuationStore:
             manifest_digest=manifest_digest,
             manifest_payload=payload,
         )
-        self.transport.create_comment(
+        created = self.transport.create_comment(
             self.repository,
             self.issue_number,
             _render_record(body),
@@ -303,11 +351,20 @@ class GitHubContinuationStore:
         if len(readback) != record_seq + 1:
             raise TaskControllerValidationError("continuation exact readback record count mismatch")
         observed = readback[-1]
-        if observed.manifest_digest != manifest_digest or observed.manifest != manifest:
+        if (
+            observed.comment_id != created.comment_id
+            or observed.manifest_digest != manifest_digest
+            or observed.manifest != manifest
+        ):
             raise TaskControllerValidationError("continuation exact readback differs from manifest")
+        return self._receipt(observed)
+
+    def save_manifest(self, manifest: RunManifest) -> None:
+        self.save_manifest_with_receipt(manifest)
 
 
 __all__ = [
+    "ContinuationWriteReceipt",
     "GITHUB_CONTINUATION_RECORD_PROTOCOL",
     "GitHubContinuationStore",
 ]

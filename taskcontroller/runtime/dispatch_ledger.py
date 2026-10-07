@@ -570,7 +570,7 @@ class DispatchProtocol:
             after={"state": DISPATCH_COMMITTED, "record": committed.to_dict()},
             evidence_refs=(
                 committed.mailbox_ref,
-                f"{committed.mailbox_ref}:event-{committed.event_id}",
+                committed.event_id,
             ),
             annotations={"protocol": DISPATCH_PROTOCOL, "exact_readback": True},
             version=1,

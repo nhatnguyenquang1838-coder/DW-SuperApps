@@ -80,6 +80,29 @@ class GitHubIssueCommentTransport(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
+class GitHubMailboxRecordReceipt:
+    """Immutable GitHub evidence for one mailbox event/cursor record."""
+
+    comment_id: str
+    comment_ref: str
+    record_type: str
+    mailbox_ref: str
+    payload: Mapping[str, Any]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "payload", copy.deepcopy(dict(self.payload)))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "comment_id": self.comment_id,
+            "comment_ref": self.comment_ref,
+            "record_type": self.record_type,
+            "mailbox_ref": self.mailbox_ref,
+            "payload": copy.deepcopy(dict(self.payload)),
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class _MailboxLocation:
     repository: str
     issue_number: int
@@ -363,6 +386,50 @@ class GitHubMailboxRepository:
             return self._build_snapshot(mailbox_ref)
 
     @staticmethod
+    def _remote_receipt(mailbox_ref: str, record: _RemoteRecord) -> GitHubMailboxRecordReceipt:
+        location = _parse_mailbox_ref(mailbox_ref)
+        return GitHubMailboxRecordReceipt(
+            comment_id=record.comment_id,
+            comment_ref=(
+                f"github://{location.repository}/issues/{location.issue_number}"
+                f"#issuecomment-{record.comment_id}"
+            ),
+            record_type=record.record_type,
+            mailbox_ref=mailbox_ref,
+            payload=record.payload,
+        )
+
+    def event_receipt(self, mailbox_ref: str, event_id: str) -> GitHubMailboxRecordReceipt:
+        matches = tuple(
+            record
+            for record in self._records(mailbox_ref)
+            if record.record_type == _EVENT_RECORD and record.payload.get("event_id") == event_id
+        )
+        if len(matches) != 1:
+            _fail(
+                MailboxV2ErrorCode.DIGEST_MISMATCH,
+                "GitHub event receipt did not resolve exactly one remote comment",
+            )
+        return self._remote_receipt(mailbox_ref, matches[0])
+
+    def cursor_receipt(self, cursor: MailboxActorCursor) -> GitHubMailboxRecordReceipt:
+        if not isinstance(cursor, MailboxActorCursor):
+            _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "cursor_receipt requires MailboxActorCursor")
+        matches: list[_RemoteRecord] = []
+        for record in self._records(cursor.mailbox_ref):
+            if record.record_type != _CURSOR_RECORD:
+                continue
+            candidate = _cursor_from_payload(cursor.mailbox_ref, record.payload)
+            if candidate == cursor:
+                matches.append(record)
+        if len(matches) != 1:
+            _fail(
+                MailboxV2ErrorCode.DIGEST_MISMATCH,
+                "GitHub cursor receipt did not resolve exactly one remote comment",
+            )
+        return self._remote_receipt(cursor.mailbox_ref, matches[0])
+
+    @staticmethod
     def _coerce_envelope(envelope: EnvelopeInput) -> V2MailboxEnvelope:
         if isinstance(envelope, V2MailboxEnvelope):
             return envelope
@@ -634,5 +701,6 @@ __all__ = [
     "GITHUB_RECORD_PROTOCOL",
     "GitHubIssueComment",
     "GitHubIssueCommentTransport",
+    "GitHubMailboxRecordReceipt",
     "GitHubMailboxRepository",
 ]

@@ -29,8 +29,12 @@ from .executor_entrypoint import (
     ExecutorMailboxRequest,
     MailboxFirstExecutorEntrypoint,
     MailboxReader,
+    MailboxV2ExecutorEntrypoint,
+    V2ExecutorMailboxRequest,
+    V2ExecutorValidationPolicy,
 )
 from .github_continuation_store import (
+    ContinuationWriteReceipt,
     GITHUB_CONTINUATION_RECORD_PROTOCOL,
     GitHubContinuationStore,
 )
@@ -39,8 +43,10 @@ from .github_mailbox_v2 import (
     GITHUB_RECORD_PROTOCOL,
     GitHubIssueComment,
     GitHubIssueCommentTransport,
+    GitHubMailboxRecordReceipt,
     GitHubMailboxRepository,
 )
+from .github_rest_transport import GitHubRestConfig, GitHubRestIssueCommentTransport
 from .human_projection import HumanEvent, HumanEventKind, project_envelope_for_human
 from .wakeup import WAKEUP_PROTOCOL, WakeupSignal
 
@@ -65,16 +71,23 @@ __all__ = [
     "ExecutorMailboxRequest",
     "HumanEvent",
     "HumanEventKind",
+    "ContinuationWriteReceipt",
     "GITHUB_CONTINUATION_RECORD_PROTOCOL",
     "GitHubContinuationStore",
     "GITHUB_RECORD_PROTOCOL",
     "GitHubIssueComment",
     "GitHubIssueCommentTransport",
+    "GitHubMailboxRecordReceipt",
     "GitHubMailboxRepository",
+    "GitHubRestConfig",
+    "GitHubRestIssueCommentTransport",
     "MailboxCursor",
     "MailboxFirstExecutorEntrypoint",
     "MailboxPollTarget",
     "MailboxReader",
+    "MailboxV2ExecutorEntrypoint",
+    "V2ExecutorMailboxRequest",
+    "V2ExecutorValidationPolicy",
     "WAKEUP_PROTOCOL",
     "WakeupSignal",
     "assert_controller_may_finalize",

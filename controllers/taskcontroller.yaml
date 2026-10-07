@@ -52,8 +52,9 @@ host_overlays:
         - agents/hermes/agent-instructions.md
 
 interaction:
-  protocol: dw.taskcontroller.a2a/v1
+  protocol: dw.taskcontroller.mailbox/v2
   compatibility_protocol: dw.taskcontroller.a2a/v1
+  compatibility_status: explicit-opt-in-only
   high_integrity_protocol: dw.taskcontroller.mailbox/v2
   high_integrity_admission:
     required_when:
@@ -80,8 +81,22 @@ interaction:
     approval_presentation_binding: typed-artifact-command-digest
     authority_granted: false
     missing_behavior: TASKCONTROLLER_HIGH_INTEGRITY_ADMISSION_BLOCKED
-  pilot_binding: github-reference-mailbox
-  one_actor_one_mutable_mailbox: true
+    runtime_session: taskcontroller/runtime/high_integrity_session.py
+    lifecycle_functions:
+      controller_materialize: materialize_controller_transition
+      executor_bootstrap: bootstrap_executor_v2
+      controller_resume: resume_controller_v2
+      controller_recovery: recover_high_integrity_session
+    producer_cursor_semantics: dispatch-commit-evidence
+    executor_consumption_freshness: validation-policy-last-seen-event-seq
+    hand_authored_machine_records: forbidden
+    runtime_owned_record_types:
+      - event
+      - cursor
+  canonical_binding: github-mailbox-v2
+  compatibility_binding: github-reference-mailbox-v1
+  v1_one_actor_one_mutable_mailbox: compatibility-only
+  v1_default_activation: forbidden
   context_by_reference: true
   mailbox_boot:
     required_when_active: true
@@ -90,7 +105,7 @@ interaction:
     executor_mailbox_required: true
     continuation_required: true
     exact_readback_required: true
-    machine_progress_transport: github-reference-mailbox
+    machine_progress_transport: github-mailbox-v2
     slack_machine_transport_fallback: forbidden
     missing_behavior: TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED
   bounded_context:
@@ -169,7 +184,17 @@ resilience:
   continuation_checkpoint: required-before-dispatch
   active_run_semantic_final: forbidden
   continuation_module: taskcontroller/interaction/continuation.py
-  runtime_session: taskcontroller/runtime/session.py
+  runtime_session: taskcontroller/runtime/high_integrity_session.py
+  compatibility_runtime_session: taskcontroller/runtime/session.py
+  v1_runtime_status: compatibility-only
+  v2_materializer_required: true
+  v2_full_lifecycle_required: true
+  v2_lifecycle_functions:
+    - materialize_controller_transition
+    - bootstrap_executor_v2
+    - resume_controller_v2
+    - recover_high_integrity_session
+  manual_machine_json: forbidden
   durable_pilot_copy:
     controller_mailbox_state: required
     high_integrity_remote_continuation: required
@@ -177,9 +202,14 @@ resilience:
   pre_dispatch_order:
     - materialize-controller-mailbox
     - materialize-executor-mailbox
+    - validate-semantic-transition
     - persist-continuation
-    - write-controller-mailbox-with-checkpoint
+    - compile-mailbox-v2-envelope
+    - prepare-dispatch-ledger
+    - append-controller-mailbox-event
     - exact-mailbox-readback
+    - acknowledge-controller-cursor
+    - exact-continuation-readback
     - wake-executor-pointer-only
   recovery_inputs:
     - current-repository-and-run-identity
