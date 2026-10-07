@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import urllib.error
 import urllib.request
+from urllib.parse import urlparse
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -25,12 +26,27 @@ _GITHUB_API_VERSION = "2022-11-28"
 @dataclass(frozen=True, slots=True)
 class GitHubRestConfig:
     api_url: str = "https://api.github.com"
+    trusted_hosts: tuple[str, ...] = ("api.github.com",)
     user_agent: str = "dw-taskcontroller-mailbox-v2"
     timeout_seconds: int = 30
 
     def __post_init__(self) -> None:
-        if not self.api_url.startswith("https://"):
-            raise TaskControllerValidationError("GitHub REST api_url must use https")
+        parsed = urlparse(self.api_url)
+        if parsed.scheme != "https" or not parsed.hostname:
+            raise TaskControllerValidationError("GitHub REST api_url must be an absolute https URL")
+        if parsed.username or parsed.password or parsed.query or parsed.fragment:
+            raise TaskControllerValidationError(
+                "GitHub REST api_url must not contain credentials, query, or fragment"
+            )
+        hosts = tuple(host.strip().lower() for host in self.trusted_hosts if host and host.strip())
+        if not hosts or len(hosts) != len(set(hosts)):
+            raise TaskControllerValidationError("GitHub REST trusted_hosts must be unique/non-empty")
+        if parsed.hostname.lower() not in hosts:
+            raise TaskControllerValidationError(
+                "GitHub REST api_url host is not in trusted_hosts; refusing credential egress"
+            )
+        object.__setattr__(self, "trusted_hosts", hosts)
+        object.__setattr__(self, "api_url", self.api_url.rstrip("/"))
         if not self.user_agent.strip():
             raise TaskControllerValidationError("GitHub REST user_agent must be non-empty")
         if self.timeout_seconds <= 0:
