@@ -116,6 +116,11 @@ def test_registry_forbids_memory_fallback_and_activates_a2a_runtime():
     assert "runtime_session: taskcontroller/runtime/high_integrity_session.py" in registry
     assert "compatibility_runtime_session: taskcontroller/runtime/session.py" in registry
     assert "v1_runtime_status: compatibility-only" in registry
+    assert "v2_full_lifecycle_required: true" in registry
+    assert "controller_materialize: materialize_controller_transition" in registry
+    assert "executor_bootstrap: bootstrap_executor_v2" in registry
+    assert "controller_resume: resume_controller_v2" in registry
+    assert "controller_recovery: recover_high_integrity_session" in registry
     assert "full_e2e_runtime: active" in registry
     assert "full_e2e_runtime: deferred" not in registry
     assert "legacy_slack_pilot: compatibility-only" in registry
