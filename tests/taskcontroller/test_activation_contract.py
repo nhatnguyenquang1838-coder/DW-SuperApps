@@ -157,7 +157,7 @@ def test_root_agents_declares_slack_human_plane_and_reference_agent_binding():
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     assert "Slack is the Human Control Plane" in agents
     assert "dw.taskcontroller.mailbox/v2" in agents
-    assert "A2A/v1" in agents
+    assert "dw.taskcontroller.a2a/v1" in agents
     assert "compatibility-only" in agents
     assert "Slack thread history MUST NOT be the canonical Agent execution journal" in agents
     assert "agents/shared/taskcontroller-human-plane-policy.md" in agents
@@ -382,7 +382,8 @@ def test_hermes_high_integrity_lane_uses_typed_v2_not_markdown_reports():
     assert "MailboxRepository" in overlay
     assert "full-comment SHA" in overlay
     assert "never scan the whole issue/comment history" in overlay
-    assert "do not substitute a Markdown E-report for the typed result" in overlay
+    assert "do not hand-author GitHub machine JSON" in overlay
+    assert "Markdown E-report" in overlay
     assert "MUST NOT silently downgrade a high-integrity run" in overlay
 
 
