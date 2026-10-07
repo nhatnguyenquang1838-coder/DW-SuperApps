@@ -17,6 +17,11 @@ from typing import Any, Mapping, Protocol, runtime_checkable
 from taskcontroller.errors import TaskControllerValidationError
 from taskcontroller.interaction.envelope import A2AEnvelope, A2A_PROTOCOL, EnvelopeKind
 from taskcontroller.interaction.github_mailbox import parse_mailbox_comment
+from taskcontroller.interaction.mailbox_repository import (
+    MailboxActorCursor,
+    MailboxEvent,
+    MailboxRepository,
+)
 from taskcontroller.interaction.mailbox_v2 import V2MailboxEnvelope
 from taskcontroller.interaction.wakeup import WakeupSignal
 from taskcontroller.standards.context_pack import TaskContextPack
@@ -611,6 +616,221 @@ class MailboxFirstExecutorEntrypoint:
             ) from exc
 
 
+
+@dataclass(frozen=True)
+class V2ExecutorValidationPolicy:
+    """Exact mailbox/v2 identity required before Executor analysis."""
+
+    capability_id: str
+    instance_id: str
+    attempt_id: str
+    lease_generation: int
+    fencing_token: str
+    last_seen_event_seq: int = -1
+
+    def __post_init__(self) -> None:
+        for name in ("capability_id", "instance_id", "attempt_id", "fencing_token"):
+            value = getattr(self, name)
+            if not isinstance(value, str) or not value.strip():
+                raise TaskControllerValidationError(
+                    f"v2 executor validation policy {name} must be non-empty"
+                )
+        if (
+            isinstance(self.lease_generation, bool)
+            or not isinstance(self.lease_generation, int)
+            or self.lease_generation < 0
+        ):
+            raise TaskControllerValidationError(
+                "v2 executor validation policy lease_generation must be int >= 0"
+            )
+        if (
+            isinstance(self.last_seen_event_seq, bool)
+            or not isinstance(self.last_seen_event_seq, int)
+            or self.last_seen_event_seq < -1
+        ):
+            raise TaskControllerValidationError(
+                "v2 executor validation policy last_seen_event_seq must be int >= -1"
+            )
+
+
+@dataclass(frozen=True)
+class V2ExecutorMailboxRequest:
+    """Canonical mailbox/v2 request consumed by one Executor wakeup."""
+
+    signal: WakeupSignal
+    event: MailboxEvent
+    cursor: MailboxActorCursor
+
+    @property
+    def envelope(self) -> V2MailboxEnvelope:
+        return self.event.envelope
+
+    @property
+    def mailbox_ref(self) -> str:
+        return self.event.mailbox_ref
+
+    @property
+    def mailbox_seq(self) -> int:
+        return self.event.event_seq
+
+    def bootstrap_receipt(
+        self,
+        standards: StandardsSessionContext | ResolvedStandards,
+        context_pack: TaskContextPack,
+        *,
+        receipt_id: str,
+        recorded_at: str,
+        event_type: str = BOOTSTRAP_BOOTSTRAPPED,
+    ) -> BootstrapReceipt:
+        return BootstrapReceipt.from_context(
+            request=self.envelope,
+            standards=standards,
+            context_pack=context_pack,
+            receipt_id=receipt_id,
+            recorded_at=recorded_at,
+            event_type=event_type,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "protocol": EXECUTOR_MAILBOX_PROTOCOL,
+            "status": EXECUTOR_MAILBOX_BOOTSTRAPPED,
+            "run_id": self.envelope.run_id,
+            "mailbox_ref": self.mailbox_ref,
+            "mailbox_seq": self.mailbox_seq,
+            "event_id": self.event.event_id,
+            "event_digest": self.event.event_digest,
+            "cursor": self.cursor.to_dict(),
+            "envelope": self.envelope.to_dict(),
+        }
+
+
+class MailboxV2ExecutorEntrypoint:
+    """Consume exactly one append-only mailbox/v2 execution request."""
+
+    def __init__(
+        self,
+        repository: MailboxRepository,
+        *,
+        executor_actor: str,
+        validation_policy: V2ExecutorValidationPolicy | None = None,
+    ) -> None:
+        if not isinstance(repository, MailboxRepository):
+            raise TaskControllerValidationError(
+                "mailbox/v2 executor entrypoint requires MailboxRepository"
+            )
+        if not isinstance(executor_actor, str) or not executor_actor.strip():
+            raise TaskControllerValidationError(
+                "mailbox/v2 executor_actor must be non-empty"
+            )
+        if validation_policy is not None and not isinstance(
+            validation_policy, V2ExecutorValidationPolicy
+        ):
+            raise TaskControllerValidationError(
+                "mailbox/v2 executor validation_policy is invalid"
+            )
+        self._repository = repository
+        self._executor_actor = executor_actor.strip()
+        self._validation_policy = validation_policy
+
+    def _validate_event(self, signal: WakeupSignal, event: MailboxEvent) -> None:
+        if event.envelope.run_id != signal.run_id:
+            raise TaskControllerValidationError("mailbox/v2 executor run_id mismatch")
+        if event.producer_namespace != signal.sender:
+            raise TaskControllerValidationError("mailbox/v2 executor sender mismatch")
+        payload = event.envelope.to_dict()
+        if payload.get("direction") != "controller_to_executor":
+            raise TaskControllerValidationError(
+                "mailbox/v2 executor request direction is not controller_to_executor"
+            )
+        if payload.get("message_type") != "execution_request":
+            raise TaskControllerValidationError(
+                "mailbox/v2 executor request is not execution_request"
+            )
+        recipient = payload.get("recipient")
+        if not isinstance(recipient, Mapping):
+            raise TaskControllerValidationError("mailbox/v2 executor recipient is invalid")
+        if recipient.get("agent_instance") != self._executor_actor:
+            raise TaskControllerValidationError(
+                "mailbox/v2 executor recipient instance mismatch"
+            )
+        policy = self._validation_policy
+        if policy is None:
+            return
+        if event.event_seq <= policy.last_seen_event_seq:
+            raise TaskControllerValidationError(
+                "mailbox/v2 executor wakeup is not newer than durable policy cursor"
+            )
+        if recipient.get("capability") != policy.capability_id:
+            raise TaskControllerValidationError(
+                "mailbox/v2 executor capability mismatch"
+            )
+        if recipient.get("agent_instance") != policy.instance_id:
+            raise TaskControllerValidationError(
+                "mailbox/v2 executor instance mismatch"
+            )
+        identity = event.envelope.execution_identity
+        expected = {
+            "attempt_id": policy.attempt_id,
+            "lease_generation": policy.lease_generation,
+            "fencing_token": policy.fencing_token,
+        }
+        for field_name, expected_value in expected.items():
+            if identity.get(field_name) != expected_value:
+                raise TaskControllerValidationError(
+                    f"mailbox/v2 executor {field_name} mismatch"
+                )
+
+    def bootstrap(
+        self,
+        signal: WakeupSignal,
+        *,
+        projection: object | None = None,
+    ) -> V2ExecutorMailboxRequest:
+        if not isinstance(signal, WakeupSignal):
+            raise TaskControllerValidationError(
+                "mailbox/v2 executor bootstrap requires WakeupSignal"
+            )
+        if signal.recipient != self._executor_actor:
+            raise TaskControllerValidationError(
+                "mailbox/v2 executor wakeup recipient mismatch"
+            )
+        del projection
+
+        target_event_seq = signal.seq - 1
+        snapshot = self._repository.read(signal.mailbox_ref)
+        matches = tuple(
+            event for event in snapshot.events if event.event_seq == target_event_seq
+        )
+        if len(matches) != 1:
+            raise TaskControllerValidationError(
+                "TASKCONTROLLER_EXECUTOR_MAILBOX_REJECTED: wakeup event not found exactly once"
+            )
+        event = matches[0]
+        self._validate_event(signal, event)
+
+        current = self._repository.read_cursor(
+            signal.mailbox_ref,
+            event.envelope.run_id,
+            event.envelope.node_id,
+            event.producer_namespace,
+        )
+        if current.last_event_seq >= event.event_seq:
+            raise TaskControllerValidationError(
+                "TASKCONTROLLER_EXECUTOR_MAILBOX_REJECTED: wakeup event was already consumed"
+            )
+        acknowledged = self._repository.acknowledge_cursor(current.observe(event))
+        if acknowledged.last_event_id != event.event_id:
+            raise TaskControllerValidationError(
+                "TASKCONTROLLER_EXECUTOR_MAILBOX_REJECTED: cursor readback differs from event"
+            )
+        return V2ExecutorMailboxRequest(
+            signal=signal,
+            event=event,
+            cursor=acknowledged,
+        )
+
+
 __all__ = [
     "ActiveAttemptFence",
     "BOOTSTRAP_BOOTSTRAPPED",
@@ -624,4 +844,7 @@ __all__ = [
     "ExecutorValidationPolicy",
     "MailboxFirstExecutorEntrypoint",
     "MailboxReader",
+    "MailboxV2ExecutorEntrypoint",
+    "V2ExecutorMailboxRequest",
+    "V2ExecutorValidationPolicy",
 ]
