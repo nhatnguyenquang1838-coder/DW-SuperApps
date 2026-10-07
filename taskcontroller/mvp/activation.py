@@ -2,10 +2,11 @@
 
 TaskController activation is resolved from current repository state, never from
 conversation memory or external policy documents. Agent interaction semantics
-are transport-neutral; the current binding is a GitHub reference mailbox while
-Slack is the human control/visibility plane. Every active plan explicitly binds
-the executable runtime session that must boot mailboxes before first Executor
-dispatch.
+are transport-neutral; the canonical machine binding is append-only GitHub
+mailbox/v2 while Slack is the human control/visibility plane. Every active plan
+explicitly binds the executable high-integrity runtime session that materializes
+Controller dispatch, bootstraps Executor consumption, resumes Controller state,
+and recovers without chat/Slack replay.
 """
 
 from __future__ import annotations
