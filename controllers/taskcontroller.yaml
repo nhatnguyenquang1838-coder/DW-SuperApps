@@ -221,6 +221,7 @@ resilience:
   conversation_history_required: false
   slack_thread_history_required: false
 
+
 mvp:
   protocol_bridge: taskcontroller/mvp/protocol_bridge.py
   activation_resolver: taskcontroller/mvp/activation.py
@@ -234,6 +235,14 @@ mvp:
     - LeaseManager
     - EventRouter
     - multi-executor-routing
+
+execution_classification:
+  read_only_analysis:
+    effect_authority_required: false
+    repository_write: false
+    wait_controller_invalid_when_runnable: true
+    gate_prefix: GWC-G*
+    ur_gate_prefix: UR-G*
 
 execution_contract:
   contracting_guard: taskcontroller/controlplane/execution_contracting.py

@@ -1,0 +1,63 @@
+schema_version: '1.0'
+artifact_type: g0-context-snapshot
+generated_at: '2026-09-11T02:06:00Z'
+project:
+  id: dw-superapps
+  name: DW SuperApps
+  profile_path: workspace.yaml
+repository:
+  full_name: nhatnguyenquang1838-coder/DW-SuperApps
+  base_ref: main
+  base_sha: eb6d611b2fe16c3fd2b0453695667a6b5fb2d3da
+  protected_branches:
+  - main
+  connector: Git
+  write_enabled: true
+task:
+  id: SCRUM-746
+  title: Pre-plan materialization — TaskController controlplane G0/G1 → GovernedExecution
+constraints:
+- Use guarded branch only (auto/SCRUM-746-controlplane-materialization-r1)
+- No GWC repo mutation outside .gwc/tasks/SCRUM-746/
+- No merge, no deploy, no production data access
+- No G4_MERGE, G5_DEPLOY, G6_PRODUCTION_DATA authority granted at this gate
+- TaskController modules must remain framework-neutral (no Slack/Hermes/GWC imports in WP0-WP5 core)
+applicable_policies:
+- id: GWC_CORE
+  path: projects/gwc/core/Coding_Project_Governance_v1.0.md
+  ref: main
+  source_sha: ea3e44ac2d948b8439e9768bea4f5dda8474a34e914592130965083792a5ee48
+- id: LOCAL_AGENT_RULE
+  path: projects/gwc/core/Local_Agent_Rule.md
+  ref: main
+sources:
+- path: AGENTS.md
+  required: true
+  status: AVAILABLE
+  source_sha: 317d1044bafe2c89e91264d03780494fdca6af4e
+- path: workspace.yaml
+  required: true
+  status: AVAILABLE
+- path: controllers/taskcontroller.yaml
+  required: true
+  status: AVAILABLE
+- path: taskcontroller/controlplane/orchestrator.py
+  required: true
+  status: AVAILABLE
+- path: taskcontroller/controlplane/engine.py
+  required: true
+  status: AVAILABLE
+- path: taskcontroller/controlplane/intents.py
+  required: true
+  status: AVAILABLE
+- path: taskcontroller/controlplane/projection.py
+  required: true
+  status: AVAILABLE
+- path: taskcontroller/execution/dispatch.py
+  required: true
+  status: AVAILABLE
+- path: taskcontroller/runtime/session.py
+  required: true
+  status: AVAILABLE
+status: READY
+blockers: []

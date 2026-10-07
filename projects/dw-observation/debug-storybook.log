@@ -1,0 +1,167 @@
+[20:21:36.860] [INFO] This command is running via an AI agent: hermes-agent. Proceeding with agentic installation flow.
+[20:21:37.135] [INFO] Initializing Storybook
+[20:21:37.396] [DEBUG] Getting package.json info for /Users/mac/prj/DW-SuperApps/projects/dw-observation/package.json...
+[20:21:37.396] [INFO] Package manager: pnpm
+[20:21:37.397] [DEBUG] Getting CLI versions from NPM for storybook...
+[20:21:37.397] [DEBUG] Executing command: pnpm info storybook version
+[20:21:38.257] [INFO] Adding Storybook version 10.6.1 to your project
+[20:21:38.258] [DEBUG] Executing command: pnpm config get minimumReleaseAge
+[20:21:38.514] [DEBUG] Using cached package.json for /Users/mac/prj/DW-SuperApps/projects/dw-observation/package.json...
+[20:21:38.514] [DEBUG] Project type detected: nextjs
+[20:21:38.514] [DEBUG] Using cached package.json for /Users/mac/prj/DW-SuperApps/projects/dw-observation/package.json...
+[20:21:38.518] [INFO] Framework detected: nextjs-vite
+[20:21:38.518] [DEBUG] Getting installed version for vitest...
+[20:21:38.518] [DEBUG] Executing command: pnpm list "vitest" --json --depth=99
+[20:21:38.844] [DEBUG] Installed version for vitest: 2.0.5
+[20:21:38.844] [DEBUG] Getting installed version for msw...
+[20:21:38.844] [DEBUG] Executing command: pnpm list "msw" --json --depth=99
+[20:21:39.164] [DEBUG] No installations found for msw
+[20:21:39.173] [INFO] Storybook collects completely anonymous usage telemetry. We use it to shape Storybook's roadmap and prioritize features. You can learn more, including how to opt out, at https://storybook.js.org/telemetry
+[20:21:39.962] [DEBUG] Using cached package.json for /Users/mac/prj/DW-SuperApps/projects/dw-observation/package.json...
+[20:21:39.963] [DEBUG] Using cached package.json for /Users/mac/prj/DW-SuperApps/projects/dw-observation/package.json...
+[20:21:39.963] [DEBUG] Using cached package.json for /Users/mac/prj/DW-SuperApps/package.json...
+[20:21:39.963] [DEBUG] Using cached package.json for /Users/mac/prj/DW-SuperApps/projects/dw-observation/package.json...
+[20:21:39.963] [INFO] - Configuring ESLint plugin
+[20:21:39.963] [DEBUG] Detected JSON config at /Users/mac/prj/DW-SuperApps/projects/dw-observation/.eslintrc.json
+[20:21:39.966] [DEBUG] Using cached version for storybook...
+[20:21:39.966] [DEBUG] Getting CLI versions from NPM for @storybook/nextjs-vite...
+[20:21:39.966] [DEBUG] Executing command: pnpm info @storybook/nextjs-vite version
+[20:21:39.967] [DEBUG] Getting CLI versions from NPM for @storybook/addon-a11y...
+[20:21:39.967] [DEBUG] Executing command: pnpm info @storybook/addon-a11y version
+[20:21:39.968] [DEBUG] Getting CLI versions from NPM for @storybook/addon-docs...
+[20:21:39.968] [DEBUG] Executing command: pnpm info @storybook/addon-docs version
+[20:21:39.970] [DEBUG] Getting CLI versions from NPM for @storybook/addon-mcp...
+[20:21:39.970] [DEBUG] Executing command: pnpm info @storybook/addon-mcp version
+[20:21:39.973] [DEBUG] Getting CLI versions from NPM for eslint-plugin-storybook...
+[20:21:39.973] [DEBUG] Executing command: pnpm info eslint-plugin-storybook version
+[20:21:41.065] [INFO] - Configuring main.ts
+[20:21:41.066] [INFO] - Configuring preview.ts
+[20:21:41.067] [INFO] - Adding Storybook command to package.json
+[20:21:41.067] [DEBUG] Getting package.json info for /Users/mac/prj/DW-SuperApps/projects/dw-observation/package.json...
+[20:21:41.067] [DEBUG] Using cached package.json for /Users/mac/prj/DW-SuperApps/projects/dw-observation/package.json...
+[20:21:41.067] [DEBUG] Using cached package.json for /Users/mac/prj/DW-SuperApps/projects/dw-observation/package.json...
+[20:21:41.067] [INFO] - Copying framework templates
+[20:21:41.082] [DEBUG] Executing command: npm config get registry --workspaces=false --include-workspace-root
+[20:21:41.779] [INFO] Storybook configuration generated
+[20:21:41.779] [INFO] Adding devDependencies:
+- storybook@^10.6.1
+- @storybook/nextjs-vite@^10.6.1
+- @storybook/addon-a11y@^10.6.1
+- @storybook/addon-docs@^10.6.1
+- @storybook/addon-mcp@^10.6.1
+- vite
+- eslint-plugin-storybook@^10.6.1
+[20:21:41.779] [DEBUG] Using cached package.json for /Users/mac/prj/DW-SuperApps/projects/dw-observation/package.json...
+[20:21:41.779] [DEBUG] Using cached package.json for /Users/mac/prj/DW-SuperApps/projects/dw-observation/package.json...
+[20:21:41.779] [INFO] Dependencies added to package.json
+[20:21:41.780] [INFO] Installing dependencies...
+[20:21:41.780] [INFO] Installing dependencies...
+[20:21:41.780] [DEBUG] Executing command: pnpm install -w
+[20:21:42.086] [INFO] Installing dependencies...: ✓ Lockfile passes supply-chain policies (verified 42d ago)
+
+[20:21:42.086] [INFO] Installing dependencies...: ✓ Lockfile passes supply-
+[20:21:42.105] [INFO] Installing dependencies...: Progress: resolved 1, reused 0, downloaded 0, added 0
+
+[20:21:42.105] [INFO] Installing dependencies...: Progress: resolved 1, reu
+[20:21:42.161] [INFO] Installing dependencies...: [WARN] deprecated eslint@8.57.0: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+
+[20:21:42.161] [INFO] Installing dependencies...: [WARN] deprecated eslint@
+[20:21:42.443] [INFO] Installing dependencies...: [WARN] deprecated next@14.2.5: This version has a security vulnerability. Please upgrade to a patched version. See https://nextjs.org/blog/security-update-2025-12-11 for more details.
+
+[20:21:42.443] [INFO] Installing dependencies...: [WARN] deprecated next@14
+[20:21:43.105] [INFO] Installing dependencies...: Progress: resolved 24, reused 19, downloaded 3, added 0
+
+[20:21:43.105] [INFO] Installing dependencies...: Progress: resolved 24, re
+[20:21:43.421] [INFO] Installing dependencies...: [WARN] GET https://registry.npmjs.org/@storybook%2Freact error (ENOTFOUND). Will retry in 10 seconds. 2 retries left.
+
+[20:21:43.421] [INFO] Installing dependencies...: [WARN] GET https://regist
+[20:21:44.107] [INFO] Installing dependencies...: Progress: resolved 203, reused 177, downloaded 16, added 0
+
+[20:21:44.107] [INFO] Installing dependencies...: Progress: resolved 203, r
+[20:21:45.108] [INFO] Installing dependencies...: Progress: resolved 208, reused 178, downloaded 22, added 0
+
+[20:21:45.108] [INFO] Installing dependencies...: Progress: resolved 208, r
+[20:21:46.109] [INFO] Installing dependencies...: Progress: resolved 210, reused 178, downloaded 24, added 0
+
+[20:21:46.109] [INFO] Installing dependencies...: Progress: resolved 210, r
+[20:21:53.794] [INFO] Installing dependencies...: [WARN] Request took 10411ms: https://registry.npmjs.org/@storybook%2Freact
+
+[20:21:53.794] [INFO] Installing dependencies...: [WARN] Request took 10411
+[20:21:53.806] [INFO] Installing dependencies...: Progress: resolved 211, reused 178, downloaded 24, added 0
+
+[20:21:53.806] [INFO] Installing dependencies...: Progress: resolved 211, r
+[20:21:54.806] [INFO] Installing dependencies...: Progress: resolved 496, reused 360, downloaded 44, added 0
+
+[20:21:54.806] [INFO] Installing dependencies...: Progress: resolved 496, r
+[20:21:55.808] [INFO] Installing dependencies...: Progress: resolved 500, reused 360, downloaded 47, added 0
+
+[20:21:55.808] [INFO] Installing dependencies...: Progress: resolved 500, r
+[20:21:56.810] [INFO] Installing dependencies...: Progress: resolved 662, reused 463, downloaded 58, added 0
+
+[20:21:56.810] [INFO] Installing dependencies...: Progress: resolved 662, r
+[20:21:57.810] [INFO] Installing dependencies...: Progress: resolved 741, reused 535, downloaded 67, added 0
+
+[20:21:57.810] [INFO] Installing dependencies...: Progress: resolved 741, r
+[20:21:58.319] [INFO] Installing dependencies...: [WARN] 8 deprecated subdependencies found: @humanwhocodes/config-array@0.11.14, @humanwhocodes/object-schema@2.0.3, glob@10.3.10, glob@7.2.3, inflight@1.0.6, rimraf@3.0.2, tsconfck@3.1.6, whatwg-encoding@3.1.1
+
+[20:21:58.319] [INFO] Installing dependencies...: [WARN] 8 deprecated subde
+[20:21:58.675] [INFO] Installing dependencies...: Packages: +141 -5
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
+
+[20:21:58.675] [INFO] Installing dependencies...: Packages: +141 -5
++++++++
+[20:21:58.813] [INFO] Installing dependencies...: Progress: resolved 799, reused 589, downloaded 73, added 46
+
+[20:21:58.813] [INFO] Installing dependencies...: Progress: resolved 799, r
+[20:21:59.817] [INFO] Installing dependencies...: Progress: resolved 799, reused 589, downloaded 73, added 140
+
+[20:21:59.817] [INFO] Installing dependencies...: Progress: resolved 799, r
+[20:21:59.908] [INFO] Installing dependencies...: Progress: resolved 799, reused 589, downloaded 73, added 141, done
+
+[20:21:59.908] [INFO] Installing dependencies...: Progress: resolved 799, r
+[20:22:00.233] [INFO] Installing dependencies...: [WARN] Issues with peer dependencies found. Run "pnpm peers check" to list them.
+
+[20:22:00.233] [INFO] Installing dependencies...: [WARN] Issues with peer d
+[20:22:00.233] [INFO] Installing dependencies...: 
+devDependencies:
++ @storybook/addon-a11y 10.6.1
++ @storybook/addon-docs 10.6.1
++ @storybook/addon-mcp 10.6.1
++ @storybook/nextjs-vite 10.6.1
++ eslint-plugin-storybook 10.6.1
++ storybook 10.6.1
++ vite 8.3.2
+
+
+[20:22:00.233] [INFO] Installing dependencies...: devDependencies:
++ @story
+[20:22:00.256] [INFO] Installing dependencies...: Done in 18.4s using pnpm v11.15.1
+
+[20:22:00.257] [INFO] Installing dependencies...: Done in 18.4s using pnpm 
+[20:22:00.287] [INFO] Dependencies installed
+[20:22:00.287] [INFO] Dependencies installed
+[20:22:00.289] [INFO] Configuring @storybook/addon-a11y...
+[20:22:00.290] [DEBUG] Getting package.json info for /Users/mac/prj/DW-SuperApps/projects/dw-observation/package.json...
+[20:22:00.290] [DEBUG] Executing command: pnpm exec storybook automigrate addon-a11y-addon-test --loglevel silent --skip-doctor --yes --package-manager pnpm --config-dir .storybook
+[20:22:09.109] [INFO] @storybook/addon-a11y configured
+
+[20:22:09.110] [INFO] Configuring @storybook/addon-docs...
+[20:22:09.154] [WARN] Could not resolve the postinstall hook of @storybook/addon-docs, skipping its configuration. Run `npx storybook add @storybook/addon-docs` to set it up manually.
+[20:22:09.155] [INFO] @storybook/addon-docs configured
+
+[20:22:09.155] [INFO] Configuring @storybook/addon-mcp...
+[20:22:09.201] [WARN] Could not resolve the postinstall hook of @storybook/addon-mcp, skipping its configuration. Run `npx storybook add @storybook/addon-mcp` to set it up manually.
+[20:22:09.201] [INFO] @storybook/addon-mcp configured
+
+[20:22:09.201] [INFO] Addons configured successfully
+[20:22:09.201] [INFO] ✅ @storybook/addon-a11y
+[20:22:09.201] [INFO] ✅ @storybook/addon-docs
+[20:22:09.201] [INFO] ✅ @storybook/addon-mcp
+[20:22:10.317] [INFO] [38;2;255;71;133mStorybook is installed but is not entirely set up yet.
+To finish setting up, now run `pnpm exec storybook skills setup` and follow its instructions precisely.[39m
+[20:22:10.317] [INFO] To run Storybook, run pnpm run storybook. CTRL+C to stop.
+[20:22:10.317] [INFO] Official documentation reference: https://storybook.js.org/llms.txt
+[20:22:10.317] [INFO] To finalize setting up with AI, paste this prompt to your AI agent:
+
+[38;2;255;71;133mRun `pnpm exec storybook skills setup` and follow its instructions precisely.[39m
+[20:22:10.926] [INFO] 

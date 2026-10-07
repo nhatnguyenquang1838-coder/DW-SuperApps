@@ -1,0 +1,36 @@
+```mermaid
+flowchart TD
+    subgraph G0["G0_CONTEXT: Context Snapshot"]
+        G0_SRC["Repository Identity + Base SHA<br/>AGENTS.md, workspace.yaml,<br/>taskcontroller/controlplane/*, runtime/session.py"]
+        G0_CONS["Constraints:<br/>No repo mutation outside .gwc/<br/>No branch/commit/push<br/>Framework-neutral core"]
+    end
+
+    subgraph G1["G1_ALIGNMENT: Alignment"]
+        G1_INTAKE["G1 Intake Brief<br/>Problem, Scope, Risks,<br/>Acceptance Criteria"]
+        G1_PREFLIGHT["G1 Preflight Report<br/>REPO_IDENTITY ✓<br/>REQUIRED_SOURCES ✓<br/>TASK_TRACEABILITY ✓<br/>INTAKE_COMPLETENESS ✓<br/>RISK_GATE ✓"]
+        G1_OPTS["G1 Options (Brainstorming)<br/>OPT-1: Full Materialization<br/>OPT-2: Chat-only (REJECTED)"]
+        G1_DEC["G1 Decision Record<br/>OPT-1 ACCEPTED<br/>Scope Hash Bound"]
+    end
+
+    subgraph G2["G2_EXECUTION: Execution Envelope"]
+        G2_ENV["G2 Execution Envelope<br/>Approval ID<br/>Authorized Actions<br/>Excluded Actions<br/>Scope Hash"]
+        G2_SCOPE["scope_inputs.json<br/>+ gen_scope_hash.py<br/>+ scope_hash.txt"]
+    end
+
+    subgraph G3["G3_PR: (Deferred)"]
+        G3["Delivery Record<br/>Draft PR<br/>Independent Review"]
+    end
+
+    G0 --> G1_INTAKE
+    G1_INTAKE --> G1_PREFLIGHT
+    G1_PREFLIGHT --> G1_OPTS
+    G1_OPTS --> G1_DEC
+    G1_DEC --> G2_ENV
+    G2_ENV --> G2_SCOPE
+    G2_SCOPE --> G3
+
+    style G0 fill:#e1f5fe
+    style G1 fill:#f3e5f5
+    style G2 fill:#fff8e1
+    style G3 fill:#e8f5e9
+```

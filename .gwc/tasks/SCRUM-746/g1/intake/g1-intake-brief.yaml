@@ -1,0 +1,122 @@
+schema_version: '1.0'
+artifact_type: g1-intake-brief
+generated_at: '2026-09-11T02:06:00Z'
+trace:
+  project_id: dw-superapps
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: SCRUM-746
+  base_sha: eb6d611b2fe16c3fd2b0453695667a6b5fb2d3da
+  g0_snapshot: ../../g0/context-snapshot.yaml
+problem:
+  statement: >
+    The TaskController controlplane (WP5) currently provides bounded control
+    intents (PAUSE, RESUME, CANCEL, REPLAN) over the runtime store, but the
+    pre-plan materialization path — transforming Intent/G0-G1 context into a
+    GovernedExecution envelope — lacks canonical, auditable artifacts in the
+    repository. The G0/G1 context exists in conversation and scattered design
+    notes, but has not been materialized as schema-valid, scope-hashed,
+    GWC-gated evidence that a downstream TaskController can consume as a
+    GovernedExecutionBlueprint for RuntimePlan compilation (W4 compiler).
+  why_now: >
+    The W4 GovernedExecutionBlueprint→RuntimePlan compiler (commit 10a87897 on
+    the runtimeplan/w4 branch) is the sanctioned path from a declared blueprint
+    to an executable RuntimePlan. To feed that compiler, the Intent/G0-G1
+    context for SCRUM-746 must be materialized into a GovernedExecution envelope
+    (G2) with a deterministic scope hash, approved architecture, and bounded
+    authorized/excluded actions. This closes the gap between controller intent
+    and executable governance.
+desired_outcome: >
+  G0 context snapshot + G1 alignment artifacts (intake, preflight, options,
+  decision) that are schema-valid and scope-hash-bounded, producing a G2
+  execution envelope declaring the bounded materialization work for the
+  TaskController controlplane GovernedExecution path.
+stakeholders:
+  requester: user
+  affected:
+  - TaskController WP5 controlplane maintainers
+  - DW-SuperApps GWC governance reviewers
+  - Hermes Executor (DWA) performing the materialization
+scope:
+  in_scope:
+  - Materialize G0 context snapshot for SCRUM-746
+  - Materialize G1 intake brief, preflight report, options, and decision record
+  - Materialize G2 execution envelope with scope hash + authorized actions
+  - Bind the envelope to the current main HEAD (eb6d611b)
+  - No repository source mutation outside .gwc/tasks/SCRUM-746/
+  - Proposal artifacts (written-proposal, change-plan, overview.mmd, detailed.svg/png, artifact-hashes.txt, approval-envelope.yaml) per LOCAL_AGENT_RULE.md
+  non_goals:
+  - Create a Git branch or worktree (G2 gate not yet active)
+  - Modify taskcontroller/ source files
+  - Merge, deploy, or production-data operations
+  - Grant G4_MERGE, G5_DEPLOY, or G6_PRODUCTION_DATA authority
+  - Activate runtime fan-out or cross-review
+constraints:
+- No repository mutation outside .gwc/tasks/SCRUM-746/
+- No branch creation, no worktree creation, no commit, no push
+- GWC repo remains read-only during this gate
+- TaskController modules must remain framework-neutral (no Slack/Hermes/GWC imports in WP0-WP5 core)
+assumptions:
+- base main@eb6d611b2fe16c3fd2b0453695667a6b5fb2d3da is the exact current main HEAD
+- The runtimeplan/w4 branch (commit 10a87897) contains the GovernedExecutionBlueprint→RuntimePlan compiler to which the G2 envelope feeds
+- The controlplane module (taskcontroller/controlplane/) is the WP5 surface being governed
+risks:
+- id: RISK-1
+  description: >
+    Scope hash drift if the G0/G1 context inputs change between artifact
+    creation and G2 envelope generation.
+  impact: high
+  mitigation: >
+    Compute scope hash from canonical sorted-key JSON over scope_inputs.json;
+    regenerate whenever any scope input changes; bind scope_hash to envelope.
+- id: RISK-2
+  description: >
+    G0/G1 artifacts may not schema-validate against the GWC gate lifecycle
+    contract, causing G1 exit to fail.
+  impact: medium
+  mitigation: >
+    Validate each artifact against the documented structure (schema_version,
+    artifact_type, trace, problem, scope, acceptance_criteria, status fields).
+- id: RISK-3
+  description: >
+    The GovernedExecution envelope may over-grant authority beyond the
+    pre-plan materialization scope.
+  impact: high
+  mitigation: >
+    Explicitly exclude G4_MERGE, G5_DEPLOY, G6_PRODUCTION_DATA and all
+    mutating actions; authorize only create_task_artifacts, write_docs, and
+    record_gate_evidence.
+acceptance_criteria:
+- id: AC-1
+  statement: >
+    G0 context snapshot is schema-valid (schema_version, artifact_type,
+    repository identity, base SHA, sources, status=READY, no blockers).
+  verifiable: true
+- id: AC-2
+  statement: >
+    G1 intake brief, preflight report, options, and decision record are all
+    present, schema-valid, and traceable to the same task/repository/base SHA.
+  verifiable: true
+- id: AC-3
+  statement: >
+    G1 preflight report outcome is PASS with all checks (REPO_IDENTITY,
+    REQUIRED_SOURCES, TASK_TRACEABILITY, INTAKE_COMPLETENESS, RISK_GATE) passing.
+  verifiable: true
+- id: AC-4
+  statement: >
+    G2 execution envelope has a deterministic scope_hash computed from
+    scope_inputs.json via sha256 over canonical sorted-key JSON.
+  verifiable: true
+- id: AC-5
+  statement: >
+    G2 execution envelope explicitly excludes merge, deploy, production data,
+    credential rotation, protected-branch write, force-push, and GWC repo
+    mutation.
+  verifiable: true
+- id: AC-6
+  statement: >
+    Proposal artifacts (written-proposal.md, change-plan.yaml, overview.mmd,
+    detailed.svg, detailed.png, artifact-hashes.txt, approval-envelope.yaml)
+    are generated in .gwc/tasks/SCRUM-746/proposal/ per LOCAL_AGENT_RULE.md.
+  verifiable: true
+unresolved_questions: []
+status: READY

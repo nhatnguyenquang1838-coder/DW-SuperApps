@@ -1,0 +1,58 @@
+schema_version: '1.0'
+artifact_type: g1-preflight-report
+generated_at: '2026-09-11T02:06:00Z'
+trace:
+  project_id: dw-superapps
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: SCRUM-746
+  base_sha: eb6d611b2fe16c3fd2b0453695667a6b5fb2d3da
+  g0_snapshot: ../../g0/context-snapshot.yaml
+repository_state:
+  base_ref: main
+  base_sha: eb6d611b2fe16c3fd2b0453695667a6b5fb2d3da
+  profile_path: workspace.yaml
+  connector: Git
+checks:
+- id: REPO_IDENTITY
+  status: PASS
+  code: REPOSITORY_VERIFIED
+  message: Repository identity and base evidence are verified.
+  evidence:
+  - nhatnguyenquang1838-coder/DW-SuperApps@eb6d611b2fe16c3fd2b0453695667a6b5fb2d3da
+  - main branch confirmed as base_ref
+- id: REQUIRED_SOURCES
+  status: PASS
+  code: REQUIRED_SOURCES_AVAILABLE
+  message: All required sources are available.
+  evidence:
+  - AGENTS.md
+  - workspace.yaml
+  - controllers/taskcontroller.yaml
+  - taskcontroller/controlplane/orchestrator.py
+  - taskcontroller/controlplane/engine.py
+  - taskcontroller/controlplane/intents.py
+  - taskcontroller/controlplane/projection.py
+  - taskcontroller/execution/dispatch.py
+  - taskcontroller/runtime/session.py
+- id: TASK_TRACEABILITY
+  status: PASS
+  code: SCRUM_746_LANE_CLAIMED
+  message: Bounded change has the SCRUM-746 pre-plan materialization scope.
+  evidence:
+  - SCRUM-746
+- id: INTAKE_COMPLETENESS
+  status: PASS
+  code: G1_INTAKE_READY
+  message: Problem, scope, non-goals, and verifiable acceptance criteria are complete.
+  evidence:
+  - g1/intake/g1-intake-brief.yaml
+- id: RISK_GATE
+  status: PASS
+  code: HUMAN_DIRECTION_RECORDED
+  message: All identified risks have documented mitigations; no human direction required at this gate.
+  evidence:
+  - risk_class=R2
+risk_class: R2
+required_gate: G2_EXECUTION
+blockers: []
+outcome: PASS

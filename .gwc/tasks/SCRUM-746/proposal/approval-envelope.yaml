@@ -1,0 +1,52 @@
+schema_version: '1.0'
+artifact_type: approval-envelope
+generated_at: '2026-09-11T02:06:00Z'
+envelope:
+  approval_id: G2-SCRUM-746-CONTROLPLANE-PREPLAN-R1
+  authority_gate: G2_EXECUTION
+  task_id: SCRUM-746
+  run_label: DW-TC-CONTROLPLANE-PREPLAN-R1
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  base_ref: main
+  base_sha: eb6d611b2fe16c3fd2b0453695667a6b5fb2d3da
+  working_branch: auto/SCRUM-746-controlplane-materialization-r1
+  feature_target: main
+  risk_class: R2
+  expires_at: '2026-09-12T02:06:00Z'
+  scope_hash: sha256:b3d1959516e05fb7ce2916d0a1fb9b7eebda6d4e0cce20298f5d3bab71cdd293
+  approved_paths:
+  - .gwc/tasks/SCRUM-746/g0/context-snapshot.yaml
+  - .gwc/tasks/SCRUM-746/g1/intake/g1-intake-brief.yaml
+  - .gwc/tasks/SCRUM-746/g1/preflight/g1-preflight-report.yaml
+  - .gwc/tasks/SCRUM-746/g1/brainstorming/g1-options.yaml
+  - .gwc/tasks/SCRUM-746/g1/decision/g1-decision-record.yaml
+  - .gwc/tasks/SCRUM-746/g2/execution-envelope.yaml
+  - .gwc/tasks/SCRUM-746/g2/scope_inputs.json
+  - .gwc/tasks/SCRUM-746/g2/gen_scope_hash.py
+  - .gwc/tasks/SCRUM-746/g2/scope_hash.txt
+  - .gwc/tasks/SCRUM-746/proposal/written-proposal.md
+  - .gwc/tasks/SCRUM-746/proposal/change-plan.yaml
+  - .gwc/tasks/SCRUM-746/proposal/overview.mmd
+  - .gwc/tasks/SCRUM-746/proposal/detailed.svg
+  - .gwc/tasks/SCRUM-746/proposal/detailed.png
+  - .gwc/tasks/SCRUM-746/proposal/artifact-hashes.txt
+  authorized_actions:
+  - create_task_artifacts
+  - write_docs
+  - record_gate_evidence
+  excluded_actions:
+  - merge
+  - auto_merge
+  - deploy
+  - release
+  - production_config_change
+  - credential_rotation
+  - production_data_read
+  - production_data_write
+  - protected_main_write
+  - branch_delete
+  - force_push
+  - gwc_repo_mutation
+  - db_push
+  - remote_supabase_ddl_apply
+  - remote_supabase_dml_apply

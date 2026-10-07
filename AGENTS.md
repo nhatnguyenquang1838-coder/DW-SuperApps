@@ -334,6 +334,16 @@ BMAD bootstrap must not place package code or host skills in the project.
 - Preserve runtime by default. Destructive runtime cleanup requires explicit authorization and confirmation flags.
 - Shared package uninstall must not break another bound project. Detach the selected project and remove a shared package only when no bindings remain.
 - Use `READY`, `PARTIAL`, `BLOCKED`, and `FAILED` exactly as defined by the onboarding runbook.
+## Read-only Analyzer Child Run invariants (SCRUM-808)
+
+These invariants prevent read-only Analyzer Child Run deadlock behind effect authority:
+
+1. **READ_ONLY_ANALYSIS Child Run ≠ Repository G2 effect.** A child run whose only work is read-only analysis (inspection, evidence gathering, projection, recommendation) does not constitute a Repository G2 effect. It must not be treated as requiring G2 execution authority, repository write capability, or a gated effect graph.
+
+2. **WAIT_CONTROLLER invalid if runnable read-only work exists.** When the only remaining delegated work is runnable read-only analysis, the Controller MUST NOT emit `WAIT_CONTROLLER` as a blocking verdict. `WAIT_CONTROLLER` is valid only when the next actionable step requires human/gate authority or a capability the Executor lacks. Read-only analysis that the Executor can perform is `CONTINUE`-eligible.
+
+3. **UR-G* vs GWC-G* naming separation.** UR-G* references the Ultimate Responsibility gate authority chain (human approval boundaries). GWC-G* references the GWC gate lifecycle (G0–G6). These are distinct naming spaces and must not be conflated in controller verdicts, envelope decisions, or audit records. A GWC gate decision is never a UR authority delegation, and a UR approval is never a GWC gate transition.
+
 
 ## Model providers
 

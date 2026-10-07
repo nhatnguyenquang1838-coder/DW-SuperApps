@@ -1,0 +1,50 @@
+schema_version: '1.0'
+artifact_type: g1-options
+generated_at: '2026-09-11T02:06:00Z'
+trace:
+  project_id: dw-superapps
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: SCRUM-746
+  base_sha: eb6d611b2fe16c3fd2b0453695667a6b5fb2d3da
+  g0_snapshot: ../../g0/context-snapshot.yaml
+options:
+- id: OPT-1
+  title: Full G0/G1/G2 materialization into .gwc/tasks/SCRUM-746/ with proposal artifacts
+  description: >
+    Materialize the complete G0 context snapshot, G1 alignment (intake, preflight,
+    options, decision), and G2 execution envelope under .gwc/tasks/SCRUM-746/,
+    plus proposal artifacts (written-proposal, change-plan, overview.mmd,
+    detailed.svg/png, artifact-hashes.txt, approval-envelope.yaml) per
+    LOCAL_AGENT_RULE.md. No repository source mutation, no branch creation.
+  benefits:
+  - Provides canonical, schema-valid, scope-hashed G0/G1/G2 evidence
+  - Enables downstream GovernedExecutionBlueprint→RuntimePlan compilation (W4)
+  - Preserves full audit trail of Intent → GovernedExecution transformation
+  tradeoffs:
+  - Does not itself create a G2-authorized execution branch
+  - Requires a separate G2 human-approval step for any repository write
+  risks:
+  - Scope hash must be recomputed if any input changes (mitigated by gen_scope_hash.py)
+  constraint_fit: FIT
+- id: OPT-2
+  title: Chat-only G0/G1 discussion without materialized artifacts
+  description: >
+    Produce only conversational G0/G1 context without writing canonical
+    .gwc/tasks/SCRUM-746/ artifacts or proposal files.
+  benefits:
+  - Smaller artifact footprint
+  tradeoffs:
+  - Cannot feed the W4 GovernedExecutionBlueprint compiler
+  - No auditable, replayable, scope-hashed evidence
+  - Cannot satisfy G1 exit criteria (outcome: PASS requires schema-valid artifacts)
+  risks:
+  - Intent → GovernedExecution gap remains unclosed; no machine-verifiable handoff
+  constraint_fit: NOT_FIT
+recommended_option_id: OPT-1
+recommendation_rationale: >
+  Full materialization provides the canonical G0/G1/G2 evidence required by the
+  GWC gate lifecycle contract and feeds the W4 compiler. Chat-only preparation
+  is explicitly labeled CHAT_ONLY_PREPARATION and does not constitute formal G1
+  exit per GATE_LIFECYCLE_CONTRACT_v1.0.md section 4.
+decision_required: true
+status: READY

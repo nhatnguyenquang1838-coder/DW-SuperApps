@@ -1,0 +1,58 @@
+schema_version: '1.0'
+artifact_type: g1-decision-record
+generated_at: '2026-09-11T02:06:00Z'
+trace:
+  project_id: dw-superapps
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  task_id: SCRUM-746
+  base_sha: eb6d611b2fe16c3fd2b0453695667a6b5fb2d3da
+  g0_snapshot: ../../g0/context-snapshot.yaml
+options_ref: ../brainstorming/g1-options.yaml
+preflight_ref: ../preflight/g1-preflight-report.yaml
+status: ACCEPTED
+selected_option_id: OPT-1
+user_decision:
+  actor: user
+  decided_at: '2026-09-11T02:06:00+07:00'
+  source: Intent/G0-G1 context → GovernedExecution pre-plan materialization approved for SCRUM-746
+  explicit: true
+rationale: >
+  Full G0/G1/G2 materialization provides the canonical, schema-valid,
+  scope-hashed evidence required by the GWC gate lifecycle contract (section 4:
+  formal G0/G1 evidence begins when the user requests transition to G2).
+  Chat-only preparation is CHAT_ONLY_PREPARATION and does not constitute formal
+  G1 exit. OPT-2 is rejected because it leaves the Intent → GovernedExecution
+  gap unclosed.
+rejected_option_ids: [OPT-2]
+acceptance_criteria_refs: [AC-1, AC-2, AC-3, AC-4, AC-5, AC-6]
+scope_hash: sha256:b3d1959516e05fb7ce2916d0a1fb9b7eebda6d4e0cce20298f5d3bab71cdd293
+g1_gate_outcome: PASS
+authority_boundaries:
+  grants: []
+  excluded: [G4_MERGE, G5_DEPLOY, G6_PRODUCTION_DATA]
+subagent_distribution_plan:
+  task_decomposition:
+  - sub_task_id: S1
+    description: Materialize G0 context snapshot (repository identity, base SHA, sources, constraints).
+    dependencies: []
+  - sub_task_id: S2
+    description: Materialize G1 intake brief (problem, scope, risks, acceptance criteria).
+    dependencies: [S1]
+  - sub_task_id: S3
+    description: Materialize G1 preflight report (repo identity, required sources, task traceability, intake completeness, risk gate).
+    dependencies: [S2]
+  - sub_task_id: S4
+    description: Materialize G1 options (brainstorming) and decision record.
+    dependencies: [S3]
+  - sub_task_id: S5
+    description: Materialize G2 execution envelope + scope_inputs.json + scope_hash + gen_scope_hash.py.
+    dependencies: [S4]
+  - sub_task_id: S6
+    description: Generate proposal artifacts (written-proposal, change-plan, overview.mmd, detailed.svg/png, artifact-hashes.txt, approval-envelope.yaml) per LOCAL_AGENT_RULE.md.
+    dependencies: [S5]
+  execution_order: [S1, S2, S3, S4, S5, S6]
+  summary: >
+    Single local agent (Hermes/Designer) execution of the pre-plan
+    materialization path only; no repository source mutation, no branch
+    creation, no push. G2 envelope binds all scope inputs with a deterministic
+    scope hash.
