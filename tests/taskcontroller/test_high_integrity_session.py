@@ -23,7 +23,17 @@ from taskcontroller.interaction.github_mailbox_v2 import (
     GitHubIssueComment,
     GitHubMailboxRepository,
 )
-from taskcontroller.runtime.high_integrity_session import materialize_controller_transition
+from taskcontroller.interaction.mailbox_repository import MailboxActorCursor
+from taskcontroller.interaction.mailbox_v2 import V2MailboxEnvelope, canonical_digest
+from taskcontroller.interaction.wakeup import WakeupSignal
+from taskcontroller.interaction.executor_entrypoint import V2ExecutorValidationPolicy
+from taskcontroller.runtime.dispatch_ledger import DISPATCH_COMMITTED
+from taskcontroller.runtime.high_integrity_session import (
+    bootstrap_executor_v2,
+    materialize_controller_transition,
+    recover_high_integrity_session,
+    resume_controller_v2,
+)
 
 
 REPOSITORY = "owner/repo"
@@ -39,9 +49,12 @@ SOURCE = {
 
 
 class FakeGitHubComments:
-    def __init__(self) -> None:
+    def __init__(self, *, crash_on_create: int | None = None) -> None:
         self.comments: list[GitHubIssueComment] = []
         self.next_id = 1000
+        self.create_calls = 0
+        self.crash_on_create = crash_on_create
+        self.crashed = False
 
     def list_comments(self, repository: str, issue_number: int):
         assert repository == REPOSITORY
@@ -51,6 +64,14 @@ class FakeGitHubComments:
     def create_comment(self, repository: str, issue_number: int, body: str):
         assert repository == REPOSITORY
         assert issue_number == ISSUE
+        self.create_calls += 1
+        if (
+            self.crash_on_create is not None
+            and self.create_calls == self.crash_on_create
+            and not self.crashed
+        ):
+            self.crashed = True
+            raise RuntimeError("synthetic GitHub comment crash")
         comment = GitHubIssueComment(str(self.next_id), body)
         self.next_id += 1
         self.comments.append(comment)
@@ -134,8 +155,8 @@ def _request(**changes: Any) -> BoundedMailboxRequest:
     return BoundedMailboxRequest(**values)
 
 
-def _runtime(tmp_path: Path):
-    transport = FakeGitHubComments()
+def _runtime(tmp_path: Path, transport: FakeGitHubComments | None = None):
+    transport = transport or FakeGitHubComments()
     repository = GitHubMailboxRepository(transport)
     continuation = GitHubContinuationStore(
         transport,
@@ -144,6 +165,79 @@ def _runtime(tmp_path: Path):
     )
     ledger = AuditFacade(tmp_path / "dispatch.sqlite3")
     return transport, repository, continuation, ledger
+
+
+def _progress(request: V2MailboxEnvelope, *, seq: int = 1) -> V2MailboxEnvelope:
+    payload = request.to_dict()
+    payload["message_id"] = "progress-839"
+    payload["seq"] = seq
+    payload["direction"] = "executor_to_controller"
+    payload["message_type"] = "execution_progress"
+    payload["producer"] = {
+        "namespace": "hermes-executor",
+        "actor_id": "hermes-cloud",
+        "role": "executor",
+    }
+    payload["recipient"] = {
+        "capability": "taskcontroller.controller",
+        "agent_instance": "controller",
+    }
+    payload["payload"] = {
+        "status": "SUCCEEDED",
+        "report_type": "mission_status",
+        "typed_next": "COMPLETE",
+    }
+    payload["provenance"] = {
+        "origin": "executor",
+        "parent_message_id": request.to_dict()["message_id"],
+        "child_id": None,
+        "lens": "execution",
+        "agent_instance": request.attempt["agent_instance"],
+        "status": "SUCCEEDED",
+        "source_refs": [],
+        "evidence_refs": [],
+        "result_digest": None,
+    }
+    payload["idempotency_key"] = "progress-idem-839"
+    payload.pop("result", None)
+    payload["digest"] = canonical_digest(payload)
+    return V2MailboxEnvelope.from_dict(payload)
+
+
+class CrashAfterLedgerCommit:
+    def __init__(self, ledger: AuditFacade) -> None:
+        self.ledger = ledger
+        self.crashed = False
+
+    def record(self, run_id: str, event):
+        result = self.ledger.record(run_id, event)
+        if event.decision_kind == DISPATCH_COMMITTED and not self.crashed:
+            self.crashed = True
+            raise RuntimeError("synthetic crash after ledger commit")
+        return result
+
+    def events(self, run_id: str):
+        return self.ledger.events(run_id)
+
+
+class CrashBeforeContinuationReadback:
+    def __init__(self, store: GitHubContinuationStore) -> None:
+        self.store = store
+        self.loads = 0
+        self.crashed = False
+
+    def save_manifest(self, manifest):
+        return self.store.save_manifest(manifest)
+
+    def load_manifest(self, run_id: str, manifest_kind: str):
+        self.loads += 1
+        if self.loads == 3 and not self.crashed:
+            self.crashed = True
+            raise RuntimeError("synthetic crash before post-cursor continuation readback")
+        return self.store.load_manifest(run_id, manifest_kind)
+
+    def latest_receipt(self, run_id: str, manifest_kind: str):
+        return self.store.latest_receipt(run_id, manifest_kind)
 
 
 def test_materializer_owns_event_cursor_and_continuation_records(tmp_path: Path) -> None:
@@ -275,3 +369,269 @@ def test_request_mapping_cannot_supply_remote_record_fields(tmp_path: Path) -> N
         ledger.close()
 
     assert transport.comments == []
+
+def test_materializer_returns_exact_remote_event_cursor_and_continuation_receipts(
+    tmp_path: Path,
+) -> None:
+    transport, repository, continuation, ledger = _runtime(tmp_path)
+    try:
+        receipt = materialize_controller_transition(
+            continuation_store=continuation,
+            repository=repository,
+            ledger=ledger,
+            checkpoint=_checkpoint(),
+            request=_request(),
+            state_version=0,
+            prepared_at="2026-10-07T05:00:01Z",
+            committed_at="2026-10-07T05:00:02Z",
+        )
+    finally:
+        ledger.close()
+
+    assert receipt.event_remote.record_type == "event"
+    assert receipt.event_remote.comment_ref.endswith("#issuecomment-1001")
+    assert receipt.event_remote.payload["event_id"] == receipt.dispatch.committed.event_id
+    assert receipt.cursor_remote.record_type == "cursor"
+    assert receipt.cursor_remote.comment_ref.endswith("#issuecomment-1002")
+    assert receipt.continuation_remote.record_seq == 0
+    assert receipt.continuation_remote.comment_ref.endswith("#issuecomment-1000")
+    assert receipt.continuation_remote.record_digest.startswith("sha256:")
+
+
+@pytest.mark.parametrize(
+    "environment",
+    [
+        {"GITHUB_TOKEN": "raw-secret"},
+        {"nested": {"refresh_token": "raw-secret"}},
+        {"oauth": {"session-token": "raw-secret"}},
+    ],
+)
+def test_materializer_rejects_secret_bearing_non_payload_fields_before_write(
+    tmp_path: Path,
+    environment: dict[str, Any],
+) -> None:
+    transport, repository, continuation, ledger = _runtime(tmp_path)
+    try:
+        with pytest.raises(TaskControllerValidationError, match="SECRET_BEARING_PAYLOAD_FORBIDDEN"):
+            materialize_controller_transition(
+                continuation_store=continuation,
+                repository=repository,
+                ledger=ledger,
+                checkpoint=_checkpoint(),
+                request=_request(environment_requirements=environment),
+                state_version=0,
+                prepared_at="2026-10-07T05:01:01Z",
+                committed_at="2026-10-07T05:01:02Z",
+            )
+    finally:
+        ledger.close()
+    assert transport.comments == []
+
+
+def test_mailbox_v2_full_lifecycle_survives_controller_restart(tmp_path: Path) -> None:
+    transport, repository, continuation, ledger = _runtime(tmp_path)
+    checkpoint = _checkpoint()
+    try:
+        materialized = materialize_controller_transition(
+            continuation_store=continuation,
+            repository=repository,
+            ledger=ledger,
+            checkpoint=checkpoint,
+            request=_request(),
+            state_version=0,
+            prepared_at="2026-10-07T05:02:01Z",
+            committed_at="2026-10-07T05:02:02Z",
+        )
+
+        signal = WakeupSignal(
+            run_id=checkpoint.run_id,
+            sender="controller",
+            recipient="hermes-cloud",
+            mailbox_ref=CONTROLLER_MAILBOX,
+            seq=materialized.dispatch.committed.mailbox_seq + 1,
+            updated_at="2026-10-07T05:02:03Z",
+        )
+        executor_request = bootstrap_executor_v2(
+            repository,
+            signal,
+            executor_actor="hermes-cloud",
+            validation_policy=V2ExecutorValidationPolicy(
+                capability_id="taskcontroller.executor",
+                instance_id="hermes-cloud",
+                attempt_id="attempt-839",
+                lease_generation=1,
+                fencing_token="fence-839",
+            ),
+        )
+        assert executor_request.envelope == materialized.envelope
+        assert executor_request.cursor.last_event_id == materialized.dispatch.committed.event_id
+
+        progress = _progress(materialized.envelope)
+        repository.write(EXECUTOR_MAILBOX, -1, progress)
+        result_cursor = MailboxActorCursor.initial(
+            EXECUTOR_MAILBOX,
+            run_id=progress.run_id,
+            node_id=progress.node_id,
+            actor_namespace="hermes-executor",
+        )
+        resumed = resume_controller_v2(
+            continuation_store=continuation,
+            repository=repository,
+            checkpoint=checkpoint,
+            cursor=result_cursor,
+            correlation_id=progress.to_dict()["correlation_id"],
+            expected_identity=progress.execution_identity,
+            observed_at="2026-10-07T05:02:04Z",
+        )
+        assert resumed.checkpoint.phase == ContinuationPhase.REVIEW_EXECUTOR.value
+        assert resumed.checkpoint.last_seen_executor_seq == 1
+    finally:
+        ledger.close()
+
+    restarted_repository = GitHubMailboxRepository(transport)
+    restarted_continuation = GitHubContinuationStore(
+        transport,
+        repository=REPOSITORY,
+        issue_number=ISSUE,
+    )
+    recovered = recover_high_integrity_session(
+        continuation_store=restarted_continuation,
+        repository=restarted_repository,
+        run_id=checkpoint.run_id,
+    )
+    assert recovered.checkpoint == resumed.checkpoint
+    assert recovered.controller_envelope == materialized.envelope
+    assert recovered.controller_cursor.last_event_id == materialized.dispatch.committed.event_id
+    durable_result_cursor = restarted_repository.read_cursor(
+        EXECUTOR_MAILBOX,
+        progress.run_id,
+        progress.node_id,
+        "hermes-executor",
+    )
+    assert durable_result_cursor.last_event_seq == 0
+    assert durable_result_cursor.last_logical_seq == 1
+
+
+def test_crash_after_continuation_before_event_retries_without_duplicate_state(
+    tmp_path: Path,
+) -> None:
+    transport = FakeGitHubComments(crash_on_create=2)
+    _, repository, continuation, ledger = _runtime(tmp_path, transport)
+    try:
+        with pytest.raises(RuntimeError, match="synthetic GitHub comment crash"):
+            materialize_controller_transition(
+                continuation_store=continuation,
+                repository=repository,
+                ledger=ledger,
+                checkpoint=_checkpoint(),
+                request=_request(),
+                state_version=0,
+                prepared_at="2026-10-07T05:03:01Z",
+                committed_at="2026-10-07T05:03:02Z",
+            )
+        assert len(transport.comments) == 1
+
+        receipt = materialize_controller_transition(
+            continuation_store=continuation,
+            repository=repository,
+            ledger=ledger,
+            checkpoint=_checkpoint(),
+            request=_request(),
+            state_version=0,
+            prepared_at="2026-10-07T05:03:01Z",
+            committed_at="2026-10-07T05:03:02Z",
+        )
+    finally:
+        ledger.close()
+
+    records = [json.loads(comment.body) for comment in transport.comments]
+    assert sum(record.get("protocol") == GITHUB_CONTINUATION_RECORD_PROTOCOL for record in records) == 1
+    assert [record.get("record_type") for record in records if record.get("protocol") == GITHUB_RECORD_PROTOCOL] == [
+        "event",
+        "cursor",
+    ]
+    assert receipt.continuation_remote.idempotent is True
+
+
+def test_crash_after_event_before_materializer_completion_recovers_without_duplicate_event(
+    tmp_path: Path,
+) -> None:
+    transport, repository, continuation, base_ledger = _runtime(tmp_path)
+    crash_ledger = CrashAfterLedgerCommit(base_ledger)
+    with pytest.raises(RuntimeError, match="synthetic crash after ledger commit"):
+        materialize_controller_transition(
+            continuation_store=continuation,
+            repository=repository,
+            ledger=crash_ledger,
+            checkpoint=_checkpoint(),
+            request=_request(),
+            state_version=0,
+            prepared_at="2026-10-07T05:04:01Z",
+            committed_at="2026-10-07T05:04:02Z",
+        )
+
+    receipt = materialize_controller_transition(
+        continuation_store=continuation,
+        repository=repository,
+        ledger=crash_ledger,
+        checkpoint=_checkpoint(),
+        request=_request(),
+        state_version=0,
+        prepared_at="2026-10-07T05:04:01Z",
+        committed_at="2026-10-07T05:04:02Z",
+    )
+    base_ledger.close()
+
+    records = [json.loads(comment.body) for comment in transport.comments]
+    assert sum(
+        record.get("record_type") == "event"
+        for record in records
+        if record.get("protocol") == GITHUB_RECORD_PROTOCOL
+    ) == 1
+    assert receipt.dispatch.committed.readback_verified is True
+
+
+def test_crash_after_cursor_before_continuation_readback_retries_idempotently(
+    tmp_path: Path,
+) -> None:
+    transport, repository, continuation, ledger = _runtime(tmp_path)
+    crashing_store = CrashBeforeContinuationReadback(continuation)
+    try:
+        with pytest.raises(RuntimeError, match="post-cursor continuation readback"):
+            materialize_controller_transition(
+                continuation_store=crashing_store,
+                repository=repository,
+                ledger=ledger,
+                checkpoint=_checkpoint(),
+                request=_request(),
+                state_version=0,
+                prepared_at="2026-10-07T05:05:01Z",
+                committed_at="2026-10-07T05:05:02Z",
+            )
+
+        receipt = materialize_controller_transition(
+            continuation_store=crashing_store,
+            repository=repository,
+            ledger=ledger,
+            checkpoint=_checkpoint(),
+            request=_request(),
+            state_version=0,
+            prepared_at="2026-10-07T05:05:01Z",
+            committed_at="2026-10-07T05:05:02Z",
+        )
+    finally:
+        ledger.close()
+
+    records = [json.loads(comment.body) for comment in transport.comments]
+    assert sum(
+        record.get("record_type") == "event"
+        for record in records
+        if record.get("protocol") == GITHUB_RECORD_PROTOCOL
+    ) == 1
+    assert sum(
+        record.get("record_type") == "cursor"
+        for record in records
+        if record.get("protocol") == GITHUB_RECORD_PROTOCOL
+    ) == 1
+    assert receipt.dispatch.cursor.last_event_seq == 0
+
