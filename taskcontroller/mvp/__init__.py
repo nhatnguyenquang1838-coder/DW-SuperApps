@@ -1,15 +1,15 @@
-"""TaskController compatibility package (NO GWC activation side effect).
+"""TaskController activation and compatibility package (NO GWC side effect).
 
-The active TaskController machine runtime is ``taskcontroller/runtime/session.py``.
-It boots/recoveries the A2A Controller + Executor mailboxes and continuation
-checkpoint before dispatch, then polls only the exact bound Executor mailbox.
+The canonical TaskController machine runtime is
+``taskcontroller/runtime/high_integrity_session.py`` using append-only
+``dw.taskcontroller.mailbox/v2``.  The older
+``taskcontroller/runtime/session.py`` A2A/v1 mutable-comment runtime is
+compatibility-only and requires explicit opt-in.
 
 This ``taskcontroller.mvp`` package retains deterministic activation,
-protocol-bridge, RootCard/action helpers, and the historical Slack thread
-monitoring/pilot APIs for backward compatibility. ``monitoring`` and ``pilot``
-are compatibility-only surfaces and MUST NOT be selected as the active
-TaskController machine transport while ``dw.taskcontroller.a2a/v1`` is active.
-Slack remains the Human Control Plane / pointer-only wake-up surface.
+protocol-bridge, RootCard/action helpers, and historical Slack pilot APIs for
+backward compatibility. Slack remains the Human Control Plane / pointer-only
+wake-up surface and never becomes machine state.
 """
 
 from taskcontroller.mvp.activation import (
