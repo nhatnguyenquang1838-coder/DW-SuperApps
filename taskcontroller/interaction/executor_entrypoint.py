@@ -809,25 +809,24 @@ class MailboxV2ExecutorEntrypoint:
         event = matches[0]
         self._validate_event(signal, event)
 
-        current = self._repository.read_cursor(
+        producer_cursor = self._repository.read_cursor(
             signal.mailbox_ref,
             event.envelope.run_id,
             event.envelope.node_id,
             event.producer_namespace,
         )
-        if current.last_event_seq >= event.event_seq:
+        if (
+            producer_cursor.last_event_seq < event.event_seq
+            or producer_cursor.last_event_id != event.event_id
+            or producer_cursor.last_event_digest != event.event_digest
+        ):
             raise TaskControllerValidationError(
-                "TASKCONTROLLER_EXECUTOR_MAILBOX_REJECTED: wakeup event was already consumed"
-            )
-        acknowledged = self._repository.acknowledge_cursor(current.observe(event))
-        if acknowledged.last_event_id != event.event_id:
-            raise TaskControllerValidationError(
-                "TASKCONTROLLER_EXECUTOR_MAILBOX_REJECTED: cursor readback differs from event"
+                "TASKCONTROLLER_EXECUTOR_MAILBOX_REJECTED: producer cursor does not prove committed event"
             )
         return V2ExecutorMailboxRequest(
             signal=signal,
             event=event,
-            cursor=acknowledged,
+            cursor=producer_cursor,
         )
 
 
