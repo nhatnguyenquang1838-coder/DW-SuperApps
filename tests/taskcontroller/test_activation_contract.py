@@ -233,7 +233,8 @@ def test_active_taskcontroller_requires_mailbox_boot_before_first_dispatch():
     assert plan.runtime_session == "taskcontroller/runtime/session.py"
     assert plan.mailbox_boot_required is True
     assert plan.mailbox_boot_fail_closed is True
-    assert plan.machine_progress_transport == "github-reference-mailbox"
+    assert plan.machine_progress_transport == "github-mailbox-v2"
+    assert plan.interaction_binding == "github-mailbox-v2"
     assert plan.interaction_protocol == "dw.taskcontroller.mailbox/v2"
     assert plan.requires_v2_semantics is True
     assert plan.controller_admission_required is True
@@ -335,6 +336,8 @@ def test_v1_activation_requires_explicit_compatibility_opt_in():
     assert plan.interaction_protocol == "dw.taskcontroller.a2a/v1"
     assert plan.requires_v2_semantics is False
     assert plan.runtime_session == "taskcontroller/runtime/session.py"
+    assert plan.machine_progress_transport == "github-reference-mailbox-v1"
+    assert plan.interaction_binding == "github-reference-mailbox-v1"
     assert plan.controller_admission_required is False
     assert plan.controller_admission_guard is None
 
