@@ -132,10 +132,11 @@ Hosts may use `taskcontroller.mvp.resolve_taskcontroller_activation(...)` as the
 
 If a mandatory **repository TaskController entrypoint** is missing or unreadable, activation is `BLOCKED`. Do not fabricate a controller contract or silently fall back to remembered instructions. The active TaskController load chain has no external Slack policy source.
 
-The active Agent interaction contract is reference-based A2A:
+The active Agent interaction contract is canonical mailbox/v2:
 
 - `agents/shared/taskcontroller-a2a-protocol.md` defines transport-neutral Controller↔Executor semantics;
-- GitHub reference mailbox is the current Agent interaction pilot binding;
+- `dw.taskcontroller.mailbox/v2` with append-only GitHub event/cursor records is the default machine binding;
+- `dw.taskcontroller.a2a/v1` mutable-comment semantics are compatibility-only and require explicit opt-in;
 - one actor owns one append-only mailbox stream and advances a monotonic sequence;
 - exact repo/SHA/PR/file/artifact references carry context and evidence;
 - semantic Agent events are recorded to the TaskController audit ledger when audit is configured;
@@ -167,14 +168,17 @@ When TaskController controls a task whose active project/Power contract introduc
 High-integrity runs MUST:
 
 1. resolve TaskController with mailbox/v2 semantics;
-2. pass `taskcontroller/controlplane/controller_admission.py`;
-3. bind machine state to the exact mailbox reference/event cursor and canonical typed envelope/artifact digest;
-4. resolve schemas from canonical descriptor/source bindings;
-5. use only observed or canonically recomputed expected digests;
-6. start preapproval from the current verified boundary rather than synthesizing the target gate before its authority artifact exists;
-7. bind human approval presentation to the typed approval-request artifact and verified command digest.
+2. materialize every Controller machine transition through `taskcontroller/runtime/high_integrity_session.py::materialize_controller_transition`;
+3. pass `taskcontroller/controlplane/controller_admission.py`;
+4. bind machine state to the exact mailbox reference/event cursor and canonical typed envelope/artifact digest;
+5. resolve schemas from canonical descriptor/source bindings;
+6. use only observed or canonically recomputed expected digests;
+7. start preapproval from the current verified boundary rather than synthesizing the target gate before its authority artifact exists;
+8. bind human approval presentation to the typed approval-request artifact and verified command digest.
 
 A mutable GitHub comment body, its full-body SHA, issue-wide comment history, a Controller-predicted hash, or a guessed legacy schema path is never semantic authority. Transport-level body hashes may be diagnostic evidence only.
+
+The Controller MUST NOT hand-author GitHub mailbox JSON, event/cursor records, continuation sequence/digests, or any alternate record type. Runtime-owned fields such as `record_type`, `event_seq`, `previous_event_digest`, `event_digest`, cursor state, and continuation record sequencing are emitted only by the canonical v2 materializer/repository/store. Raw token/secret/credential values are forbidden in machine payloads; use durable references/digests instead.
 
 If high-integrity admission cannot be satisfied, stop with `TASKCONTROLLER_HIGH_INTEGRITY_ADMISSION_BLOCKED`. Do not downgrade the run to the v1 compatibility lane to bypass the blocker.
 
