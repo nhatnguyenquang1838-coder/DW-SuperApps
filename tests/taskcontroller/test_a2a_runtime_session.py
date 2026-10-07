@@ -58,6 +58,7 @@ def _boot(tmp_path: Path, backend: FakeMailboxBackend):
         request="Execute the bounded node.",
         updated_at="2026-08-25T00:10:00+07:00",
         human_root_ref="slack://C0BJSPXN7UN/1787569433.468359",
+        compatibility_v1=True,
     )
     return runtime, audit, session
 
@@ -123,6 +124,7 @@ def test_boot_fails_closed_when_controller_mailbox_exact_readback_differs(tmp_pa
             wakeup_binding="slack-websocket",
             request="Execute.",
             updated_at="2026-08-25T00:10:00+07:00",
+            compatibility_v1=True,
         )
     audit.close()
 
@@ -148,6 +150,7 @@ def test_poll_reads_only_bound_executor_mailbox_and_accepts_exact_expected_seq(t
         continuation_store=audit,
         mailbox_backend=backend,
         session=session,
+        compatibility_v1=True,
     )
 
     assert backend.calls[before:] == [
@@ -178,10 +181,10 @@ def test_poll_ignores_stale_equal_seq_but_fails_closed_on_sequence_gap(tmp_path:
         updated_at="2026-08-25T00:11:00+07:00",
     )
     backend.bodies[backend.refs["hermes-cloud"]] = render_mailbox_comment(stale)
-    observed = runtime.poll_executor_mailbox(audit, backend, session)
+    observed = runtime.poll_executor_mailbox(audit, backend, session, compatibility_v1=True)
     assert observed.status == "OBSERVED"
 
-    stale_again = runtime.poll_executor_mailbox(audit, backend, observed.session)
+    stale_again = runtime.poll_executor_mailbox(audit, backend, observed.session, compatibility_v1=True)
     assert stale_again.status == "STALE"
     assert stale_again.session == observed.session
 
@@ -191,6 +194,7 @@ def test_poll_ignores_stale_equal_seq_but_fails_closed_on_sequence_gap(tmp_path:
         session=observed.session,
         request="Continue bounded execution.",
         updated_at="2026-08-25T00:12:00+07:00",
+        compatibility_v1=True,
     )
     gap = runtime.A2AEnvelope(
         run_id=waiting.checkpoint.run_id,
@@ -204,7 +208,7 @@ def test_poll_ignores_stale_equal_seq_but_fails_closed_on_sequence_gap(tmp_path:
     )
     backend.bodies[backend.refs["hermes-cloud"]] = render_mailbox_comment(gap)
     with pytest.raises(TaskControllerValidationError, match="sequence gap"):
-        runtime.poll_executor_mailbox(audit, backend, waiting)
+        runtime.poll_executor_mailbox(audit, backend, waiting, compatibility_v1=True)
     audit.close()
 
 
@@ -217,6 +221,7 @@ def test_recovery_uses_persisted_continuation_and_controller_mailbox_not_slack_h
         mailbox_backend=backend,
         run_id=session.checkpoint.run_id,
         controller_actor="controller",
+        compatibility_v1=True,
     )
 
     assert recovered == session
@@ -241,7 +246,9 @@ def test_observed_executor_report_updates_controller_mailbox_checkpoint_before_r
     )
     backend.bodies[backend.refs["hermes-cloud"]] = render_mailbox_comment(executor_envelope)
 
-    observation = runtime.poll_executor_mailbox(audit, backend, session)
+    observation = runtime.poll_executor_mailbox(
+        audit, backend, session, compatibility_v1=True
+    )
     controller_envelope = parse_mailbox_comment(backend.bodies[backend.refs["controller"]])
     embedded = continuation_from_envelope(controller_envelope)
 
@@ -255,6 +262,31 @@ def test_observed_executor_report_updates_controller_mailbox_checkpoint_before_r
         mailbox_backend=backend,
         run_id=session.checkpoint.run_id,
         controller_actor="controller",
+        compatibility_v1=True,
     )
     assert recovered == observation.session
     audit.close()
+
+def test_v1_runtime_requires_explicit_compatibility_opt_in(tmp_path: Path) -> None:
+    backend = FakeMailboxBackend()
+    audit = AuditFacade(tmp_path / "taskcontroller-v1-opt-in.sqlite3")
+    try:
+        with pytest.raises(
+            TaskControllerValidationError,
+            match="TASKCONTROLLER_V1_COMPATIBILITY_OPT_IN_REQUIRED",
+        ):
+            runtime.boot_taskcontroller_session(
+                continuation_store=audit,
+                mailbox_backend=backend,
+                run_id="run.a2a.no-opt-in",
+                node_id="node.1",
+                controller_actor="controller",
+                executor_actor="hermes-cloud",
+                exact_head_sha="d" * 40,
+                wakeup_binding="slack-websocket",
+                request="Legacy v1 without explicit compatibility must fail.",
+                updated_at="2026-10-07T04:40:00Z",
+            )
+    finally:
+        audit.close()
+
