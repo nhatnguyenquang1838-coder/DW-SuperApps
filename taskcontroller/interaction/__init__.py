@@ -29,6 +29,9 @@ from .executor_entrypoint import (
     ExecutorMailboxRequest,
     MailboxFirstExecutorEntrypoint,
     MailboxReader,
+    MailboxV2ExecutorEntrypoint,
+    V2ExecutorMailboxRequest,
+    V2ExecutorValidationPolicy,
 )
 from .github_continuation_store import (
     ContinuationWriteReceipt,
@@ -82,6 +85,9 @@ __all__ = [
     "MailboxFirstExecutorEntrypoint",
     "MailboxPollTarget",
     "MailboxReader",
+    "MailboxV2ExecutorEntrypoint",
+    "V2ExecutorMailboxRequest",
+    "V2ExecutorValidationPolicy",
     "WAKEUP_PROTOCOL",
     "WakeupSignal",
     "assert_controller_may_finalize",
