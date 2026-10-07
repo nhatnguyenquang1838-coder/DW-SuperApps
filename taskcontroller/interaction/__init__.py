@@ -41,6 +41,7 @@ from .github_mailbox_v2 import (
     GitHubIssueCommentTransport,
     GitHubMailboxRepository,
 )
+from .github_rest_transport import GitHubRestConfig, GitHubRestIssueCommentTransport
 from .human_projection import HumanEvent, HumanEventKind, project_envelope_for_human
 from .wakeup import WAKEUP_PROTOCOL, WakeupSignal
 
@@ -71,6 +72,8 @@ __all__ = [
     "GitHubIssueComment",
     "GitHubIssueCommentTransport",
     "GitHubMailboxRepository",
+    "GitHubRestConfig",
+    "GitHubRestIssueCommentTransport",
     "MailboxCursor",
     "MailboxFirstExecutorEntrypoint",
     "MailboxPollTarget",
