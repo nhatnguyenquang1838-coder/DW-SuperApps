@@ -70,7 +70,7 @@ class TaskControllerActivationPlan:
     executor: str | None
     load_order: tuple[str, ...]
     human_plane_policy: str | None = None
-    interaction_binding: str = "github-reference-mailbox"
+    interaction_binding: str = "github-mailbox-v2"
     memory_fallback_allowed: bool = False
     full_e2e_runtime_active: bool = False
     runtime_session: str | None = None
@@ -160,9 +160,14 @@ def resolve_taskcontroller_activation(
             if resolved_v2
             else TASKCONTROLLER_COMPATIBILITY_RUNTIME_SESSION
         ),
+        interaction_binding=(
+            "github-mailbox-v2" if resolved_v2 else "github-reference-mailbox-v1"
+        ),
         mailbox_boot_required=True,
         mailbox_boot_fail_closed=True,
-        machine_progress_transport="github-reference-mailbox",
+        machine_progress_transport=(
+            "github-mailbox-v2" if resolved_v2 else "github-reference-mailbox-v1"
+        ),
         slack_machine_progress_allowed=False,
         pointer_only_wakeup=True,
         interaction_protocol=V2_PROTOCOL if resolved_v2 else V1_PROTOCOL,
