@@ -12,13 +12,16 @@ Any explicit TaskController activation MUST load current repository instructions
 
 Required composition includes root/project instructions, `controllers/taskcontroller.yaml`, this file, `agents/shared/taskcontroller-a2a-protocol.md`, and when Slack is the human plane, `agents/shared/taskcontroller-human-plane-policy.md` plus `agents/chatgpt-agent/slack-controller-mvp.md`. Do not substitute conversation memory, prior Slack history, prior session summaries, external Slack policy documents, Power-local copies, or stale host instructions for this load chain.
 
-TaskController activation is incomplete until the A2A transport is booted for the run:
+TaskController activation is incomplete until the canonical mailbox/v2 transport is booted for the run:
 
-1. materialize/recover exactly one Controller GitHub reference mailbox;
-2. materialize/recover exactly one Executor GitHub reference mailbox;
+1. materialize/recover exactly one Controller mailbox/v2 reference;
+2. materialize/recover exactly one Executor mailbox/v2 reference;
 3. persist the bounded `dw.taskcontroller.continuation/v1` checkpoint with mailbox pointers/cursors and exact head;
-4. write the Controller mailbox with the same checkpoint and exact-read it back;
-5. only then send any provider wake-up or first Executor dispatch.
+4. materialize the Controller transition only through `taskcontroller/runtime/high_integrity_session.py::materialize_controller_transition`;
+5. exact-read the append-only event, durable cursor, and continuation;
+6. only then send any provider wake-up or first Executor dispatch.
+
+A2A/v1 mutable-comment runtime is compatibility-only and requires explicit opt-in; it is never the default fallback.
 
 If any required mailbox/checkpoint/readback cannot be established, activation `BLOCKED` with `TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED`. Do not fall back to Slack as the machine command, progress, or recovery transport.
 
@@ -30,7 +33,7 @@ When the controlled task activates an external governance/gate model, needs huma
 
 Before dispatch, correction, approval presentation, or semantic resume:
 
-1. resolve TaskController activation with `requires_v2_semantics=true`;
+1. resolve TaskController activation; mailbox/v2 is the default canonical protocol;
 2. validate `taskcontroller/controlplane/controller_admission.py`;
 3. use `dw.taskcontroller.mailbox/v2` typed envelope/event identity;
 4. read only the exact bound mailbox reference/cursor;
@@ -46,6 +49,9 @@ Fail closed instead of falling back to the mutable v1 compatibility lane.
 
 Forbidden in a high-integrity run:
 
+- hand-authoring or directly posting machine-state JSON/records to GitHub instead of using the canonical v2 materializer;
+- supplying runtime-owned `record_type`, event/cursor sequence, previous-digest, event-digest, or continuation-chain fields;
+- persisting raw token/secret/credential values in mailbox payloads; use durable refs/digests;
 - inventing an ad-hoc Controller/Executor Markdown protocol;
 - treating SHA-256 of an entire mutable GitHub comment body as semantic identity or approval identity;
 - rereading/scanning the whole GitHub issue as machine-state recovery when an exact mailbox ref exists;
@@ -134,15 +140,20 @@ The executable guards for these semantics are `taskcontroller/controlplane/execu
 
 ## Machine communication invariant
 
-The GitHub reference mailbox is the machine interaction binding.
+The append-only GitHub mailbox/v2 repository is the default machine interaction binding. The Controller never renders or posts transport JSON itself.
 
 Before every new COMMAND or CORRECTION:
 
 ```text
-advance Controller seq
-→ persist continuation
-→ update Controller mailbox in place
-→ exact-readback same mailbox/seq
+bind semantic transition
+→ validate contract/authority
+→ persist + exact-read continuation
+→ compile deterministic mailbox/v2 envelope
+→ DispatchPrepared
+→ append canonical event through GitHubMailboxRepository
+→ exact-readback event
+→ acknowledge durable producer cursor
+→ exact-readback continuation
 → pointer-only wake-up when required
 ```
 
