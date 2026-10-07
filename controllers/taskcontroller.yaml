@@ -81,8 +81,14 @@ interaction:
     approval_presentation_binding: typed-artifact-command-digest
     authority_granted: false
     missing_behavior: TASKCONTROLLER_HIGH_INTEGRITY_ADMISSION_BLOCKED
-    materializer: taskcontroller/runtime/high_integrity_session.py
-    materializer_function: materialize_controller_transition
+    runtime_session: taskcontroller/runtime/high_integrity_session.py
+    lifecycle_functions:
+      controller_materialize: materialize_controller_transition
+      executor_bootstrap: bootstrap_executor_v2
+      controller_resume: resume_controller_v2
+      controller_recovery: recover_high_integrity_session
+    producer_cursor_semantics: dispatch-commit-evidence
+    executor_consumption_freshness: validation-policy-last-seen-event-seq
     hand_authored_machine_records: forbidden
     runtime_owned_record_types:
       - event
@@ -182,6 +188,12 @@ resilience:
   compatibility_runtime_session: taskcontroller/runtime/session.py
   v1_runtime_status: compatibility-only
   v2_materializer_required: true
+  v2_full_lifecycle_required: true
+  v2_lifecycle_functions:
+    - materialize_controller_transition
+    - bootstrap_executor_v2
+    - resume_controller_v2
+    - recover_high_integrity_session
   manual_machine_json: forbidden
   durable_pilot_copy:
     controller_mailbox_state: required
