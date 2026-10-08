@@ -211,6 +211,14 @@ resilience:
     - acknowledge-controller-cursor
     - exact-continuation-readback
     - wake-executor-pointer-only
+  wait_executor_deadlock_guard:
+    observed_time_required_on_wait_executor_recovery: true
+    execution_attempt_lease_must_be_current_before_poll_or_wakeup: true
+    stale_expired_or_missing_fence_transition:
+      phase: WAIT_CONTROLLER
+      next_action: RESOLVE_EXECUTION_AUTHORITY
+    poll_after_guard_trip: forbidden
+    wakeup_after_guard_trip: forbidden
   recovery_inputs:
     - current-repository-and-run-identity
     - controller-mailbox-checkpoint

@@ -16,6 +16,7 @@ machine state.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from datetime import datetime, timezone
 from typing import Any, Mapping, NoReturn, Sequence
 
 from taskcontroller.controlplane.continuation_dispatch import (
@@ -25,6 +26,10 @@ from taskcontroller.controlplane.continuation_dispatch import (
 from taskcontroller.controlplane.mailbox_dispatch import (
     MailboxDispatchOutcome,
     dispatch_v2_with_cursor,
+)
+from taskcontroller.controlplane.lease_binding import (
+    LeaseBindingError,
+    evaluate_result_fence,
 )
 from taskcontroller.controlplane.request_compiler import BoundedMailboxRequest
 from taskcontroller.controlplane.result_resume import (
@@ -51,7 +56,11 @@ from taskcontroller.interaction.executor_entrypoint import (
 )
 from taskcontroller.interaction.github_continuation_store import ContinuationWriteReceipt
 from taskcontroller.interaction.github_mailbox_v2 import GitHubMailboxRecordReceipt
-from taskcontroller.interaction.mailbox_repository import MailboxActorCursor, MailboxRepository
+from taskcontroller.interaction.mailbox_repository import (
+    MailboxActorCursor,
+    MailboxEvent,
+    MailboxRepository,
+)
 from taskcontroller.interaction.wakeup import WakeupSignal
 from taskcontroller.interaction.mailbox_v2 import (
     MailboxV2ErrorCode,
@@ -64,6 +73,8 @@ from taskcontroller.runtime.dispatch_ledger import DispatchPrepared, DispatchPro
 
 HIGH_INTEGRITY_RUNTIME_PROTOCOL = V2_PROTOCOL
 LEGACY_V1_RUNTIME_SESSION = "taskcontroller/runtime/session.py"
+WAIT_EXECUTOR_AUTHORITY_ACTION = "RESOLVE_EXECUTION_AUTHORITY"
+_ACTIVE_LEASE_UNSET = object()
 
 _FORBIDDEN_TRANSPORT_KEYS = frozenset(
     {
@@ -107,6 +118,90 @@ class HighIntegrityMaterializationError(TaskControllerValidationError):
 
 def _fail(code: str, message: str) -> NoReturn:
     raise HighIntegrityMaterializationError(code, message)
+
+
+def _instant(value: Any, field: str) -> datetime:
+    if not isinstance(value, str) or not value:
+        _fail("WAIT_EXECUTOR_TIME_INVALID", f"{field} must be a non-empty ISO-8601 timestamp")
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        _fail("WAIT_EXECUTOR_TIME_INVALID", f"{field} must be ISO-8601")
+    if parsed.tzinfo is None:
+        _fail("WAIT_EXECUTOR_TIME_INVALID", f"{field} must include a timezone")
+    return parsed.astimezone(timezone.utc)
+
+
+def _controller_event_for_checkpoint(
+    repository: MailboxRepository,
+    checkpoint: ControllerContinuation,
+) -> MailboxEvent:
+    snapshot = repository.read(checkpoint.controller_mailbox_ref)
+    matches = tuple(
+        event
+        for event in snapshot.events
+        if (
+            event.envelope.run_id == checkpoint.run_id
+            and event.logical_seq == checkpoint.controller_seq
+            and event.envelope.to_dict().get("direction") == "controller_to_executor"
+        )
+    )
+    if len(matches) != 1:
+        _fail(
+            "RECOVERY_CONTROLLER_EVENT_INVALID",
+            "current Controller continuation does not resolve exactly one v2 request event",
+        )
+    return matches[0]
+
+
+def _guard_wait_executor_authority(
+    *,
+    continuation_store: ContinuationStore,
+    checkpoint: ControllerContinuation,
+    controller_envelope: V2MailboxEnvelope,
+    observed_at: str,
+    active_lease: Any = _ACTIVE_LEASE_UNSET,
+    lease_now: str | None = None,
+) -> ControllerContinuation:
+    """Break WAIT_EXECUTOR polling when the bound execution attempt is no longer current."""
+
+    if checkpoint.phase != ContinuationPhase.WAIT_EXECUTOR.value:
+        return checkpoint
+
+    attempt = controller_envelope.attempt
+    lease_expires_at = attempt.get("lease_expires_at")
+    observed = _instant(observed_at, "observed_at")
+    expires = _instant(lease_expires_at, "attempt.lease_expires_at")
+    boundary_required = expires < observed
+
+    if not boundary_required and active_lease is not _ACTIVE_LEASE_UNSET:
+        try:
+            fence = evaluate_result_fence(
+                controller_envelope,
+                active_lease,
+                now=lease_now or observed_at,
+            )
+        except LeaseBindingError as exc:
+            _fail("WAIT_EXECUTOR_LEASE_INVALID", str(exc))
+        boundary_required = not fence.advances_state
+
+    if not boundary_required:
+        return checkpoint
+
+    next_checkpoint = replace(
+        checkpoint,
+        phase=ContinuationPhase.WAIT_CONTROLLER.value,
+        next_action=WAIT_EXECUTOR_AUTHORITY_ACTION,
+        updated_at=observed_at,
+    )
+    persist_continuation(continuation_store, next_checkpoint)
+    durable = recover_continuation(continuation_store, next_checkpoint.run_id)
+    if durable != next_checkpoint:
+        _fail(
+            "WAIT_EXECUTOR_GUARD_READBACK_FAILED",
+            "authority-boundary continuation exact readback differs",
+        )
+    return durable
 
 
 def _normalized_key(value: Any) -> str:
@@ -437,15 +532,34 @@ def resume_controller_v2(
     expected_source_digest: str | None = None,
     expected_standards_digest: str | None = None,
     expected_result_digest: str | None = None,
-    active_lease: Any = None,
+    active_lease: Any = _ACTIVE_LEASE_UNSET,
     lease_now: str | None = None,
 ) -> HighIntegrityResumeOutcome:
     """Consume Executor progress/result and persist the next Controller continuation."""
 
     if checkpoint.status != ContinuationStatus.ACTIVE.value:
         _fail("RESUME_CHECKPOINT_INVALID", "cannot resume a terminal Controller checkpoint")
+    if checkpoint.phase != ContinuationPhase.WAIT_EXECUTOR.value:
+        _fail(
+            "RESUME_PHASE_INVALID",
+            "Controller may poll Executor only from WAIT_EXECUTOR",
+        )
     if checkpoint.executor_mailbox_ref != cursor.mailbox_ref:
         _fail("RESUME_CURSOR_INVALID", "Executor result cursor mailbox differs from continuation")
+    controller_event = _controller_event_for_checkpoint(repository, checkpoint)
+    guarded = _guard_wait_executor_authority(
+        continuation_store=continuation_store,
+        checkpoint=checkpoint,
+        controller_envelope=controller_event.envelope,
+        observed_at=observed_at,
+        active_lease=active_lease,
+        lease_now=lease_now,
+    )
+    if guarded != checkpoint:
+        return HighIntegrityResumeOutcome(
+            poll=ControllerResultPoll(status=POLL_NO_NEW_RESULT, cursor=cursor),
+            checkpoint=guarded,
+        )
     poll_kwargs: dict[str, Any] = {
         "correlation_id": correlation_id,
         "expected_identity": expected_identity,
@@ -453,9 +567,9 @@ def resume_controller_v2(
         "expected_standards_digest": expected_standards_digest,
         "expected_result_digest": expected_result_digest,
     }
-    if active_lease is not None:
+    if active_lease is not _ACTIVE_LEASE_UNSET:
         poll_kwargs["active_lease"] = active_lease
-        poll_kwargs["lease_now"] = lease_now
+        poll_kwargs["lease_now"] = lease_now or observed_at
     poll = poll_controller_terminal_result(repository, cursor, **poll_kwargs)
     if poll.status == POLL_NO_NEW_RESULT:
         return HighIntegrityResumeOutcome(poll=poll, checkpoint=checkpoint)
@@ -493,32 +607,33 @@ def recover_high_integrity_session(
     continuation_store: ContinuationStore,
     repository: MailboxRepository,
     run_id: str,
+    observed_at: str | None = None,
+    active_lease: Any = _ACTIVE_LEASE_UNSET,
+    lease_now: str | None = None,
 ) -> HighIntegrityRecovery:
     """Recover current Controller state from continuation + mailbox/v2 only."""
 
     checkpoint = recover_continuation(continuation_store, run_id)
     if checkpoint is None:
         _fail("RECOVERY_CONTINUATION_MISSING", "durable Controller continuation is missing")
-    snapshot = repository.read(checkpoint.controller_mailbox_ref)
-    matches = tuple(
-        event
-        for event in snapshot.events
-        if (
-            event.envelope.run_id == checkpoint.run_id
-            and event.logical_seq == checkpoint.controller_seq
-            and event.envelope.to_dict().get("direction") == "controller_to_executor"
-        )
-    )
-    if len(matches) != 1:
-        _fail(
-            "RECOVERY_CONTROLLER_EVENT_INVALID",
-            "current Controller continuation does not resolve exactly one v2 request event",
-        )
-    event = matches[0]
+    event = _controller_event_for_checkpoint(repository, checkpoint)
     if checkpoint.phase == ContinuationPhase.WAIT_EXECUTOR.value:
         recovered = recover_v2_dispatch(continuation_store, event.envelope)
         if recovered != checkpoint:
             _fail("RECOVERY_CONTINUATION_MISMATCH", "request checkpoint differs from durable state")
+        if observed_at is None:
+            _fail(
+                "RECOVERY_TIME_REQUIRED",
+                "WAIT_EXECUTOR recovery requires observed_at for the execution-attempt expiry guard",
+            )
+        checkpoint = _guard_wait_executor_authority(
+            continuation_store=continuation_store,
+            checkpoint=checkpoint,
+            controller_envelope=event.envelope,
+            observed_at=observed_at,
+            active_lease=active_lease,
+            lease_now=lease_now,
+        )
     cursor = repository.read_cursor(
         checkpoint.controller_mailbox_ref,
         event.envelope.run_id,
@@ -543,6 +658,7 @@ __all__ = [
     "HIGH_INTEGRITY_RUNTIME_PROTOCOL",
     "HighIntegrityMaterializationError",
     "LEGACY_V1_RUNTIME_SESSION",
+    "WAIT_EXECUTOR_AUTHORITY_ACTION",
     "bootstrap_executor_v2",
     "materialize_controller_transition",
     "recover_high_integrity_session",
