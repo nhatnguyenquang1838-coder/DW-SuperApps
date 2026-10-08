@@ -130,19 +130,20 @@ Required pre-dispatch sequence:
 persist continuation
 → write Controller mailbox with same checkpoint
 → exact-readback Controller mailbox
-→ send provider wake-up
-→ poll exact Executor mailbox comment only
+→ publish provider mailbox-event notification
+→ remain at AWAIT_EXECUTOR_EVENT
+→ on a newer Executor event, exact-read that event once and resume
 ```
 
 An `ACTIVE` continuation checkpoint forbids a semantic Controller final/terminal response. The Controller may stop the current host execution only at a genuine human-authority or unrecoverable blocker while leaving the durable run state truthful and recoverable.
 
-While the host execution remains alive, polling is synchronous/in-session at the configured cadence. Polling MUST fetch only the exact Executor mailbox comment referenced by the checkpoint; it MUST NOT repeatedly load the whole GitHub issue, Slack thread, or GPT conversation.
+Canonical mailbox/v2 execution is event-driven. The Controller MUST NOT run a periodic mailbox polling cadence. A `WAIT_EXECUTOR` continuation uses `AWAIT_EXECUTOR_EVENT`; the Controller resumes only after a provider/event adapter reports a newer Executor mailbox event, then exact-reads that event once.
 
-For the current `hermes-cloud` provider, `slack-websocket` is a REQUIRED wake-up binding because Slack WebSocket is Hermes's trigger point. This requirement does not make Slack the command/data bus.
+For the current `hermes-cloud` binding, machine notification is a mailbox event. Slack WebSocket is not a canonical Executor wake-up path and MUST NOT be used as machine notification for event-driven runs.
 
 ## Wake-up notification
 
-Use `dw.taskcontroller.wakeup/v1` and typed `WakeupSignal` only when an Executor needs an external signal to notice unseen mailbox work.
+Use `dw.taskcontroller.wakeup/v1` and typed `WakeupSignal` only as a transport-neutral pointer when a provider event adapter needs an external signal to notice unseen mailbox work. Canonical event-driven runs do not use periodic polling.
 
 The signal is **pointer-only**:
 
@@ -159,7 +160,7 @@ It MUST NOT carry `request`, `inputs`, `artifact_refs`, `state`, code, context b
 
 Wake-up delivery is safe to duplicate. Stale/equal sequence does not announce new work. Notification message IDs are transport metadata only.
 
-In the Slack pilot, a wake-up mention is allowed only as `SlackWakeupBinding`; it does not turn Slack into the command/progress bus. After wake-up the Executor reads GitHub and reports to its mailbox. Tool/progress narration on the wake-up channel is forbidden.
+Slack MUST NOT be used as the machine wake-up path for canonical event-driven mailbox/v2 execution. Human-plane projection remains separate from Executor notification.
 
 ## Context contract
 

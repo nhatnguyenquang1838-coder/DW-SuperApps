@@ -20,6 +20,9 @@ CONTINUATION_PROTOCOL = "dw.taskcontroller.continuation/v1"
 CONTINUATION_MANIFEST_KIND = CONTINUATION_PROTOCOL
 CONTINUATION_SCHEMA_VERSION = "1.0"
 CONTINUATION_STATE_KEY = "controller_continuation"
+WAIT_EXECUTOR_POLL_ACTION = "POLL_EXECUTOR"
+WAIT_EXECUTOR_EVENT_ACTION = "AWAIT_EXECUTOR_EVENT"
+_WAIT_EXECUTOR_ACTIONS = frozenset({WAIT_EXECUTOR_POLL_ACTION, WAIT_EXECUTOR_EVENT_ACTION})
 
 
 class ContinuationPhase(str, Enum):
@@ -137,19 +140,19 @@ class ControllerContinuation:
                 raise TaskControllerValidationError(
                     "WAIT_EXECUTOR expected_executor_seq must be newer than last_seen_executor_seq"
                 )
-            if self.next_action != "POLL_EXECUTOR":
+            if self.next_action not in _WAIT_EXECUTOR_ACTIONS:
                 raise TaskControllerValidationError(
-                    "WAIT_EXECUTOR controller continuation requires POLL_EXECUTOR"
+                    "WAIT_EXECUTOR controller continuation requires POLL_EXECUTOR or AWAIT_EXECUTOR_EVENT"
                 )
 
-    def poll_target(self) -> MailboxPollTarget:
+    def executor_wait_target(self) -> MailboxPollTarget:
         if (
             self.status != ContinuationStatus.ACTIVE.value
             or self.phase != ContinuationPhase.WAIT_EXECUTOR.value
-            or self.next_action != "POLL_EXECUTOR"
+            or self.next_action not in _WAIT_EXECUTOR_ACTIONS
         ):
             raise TaskControllerValidationError(
-                "controller continuation is not at an active executor-poll boundary"
+                "controller continuation is not at an active executor-wait boundary"
             )
         return MailboxPollTarget(
             actor=self.executor_actor,
@@ -157,6 +160,20 @@ class ControllerContinuation:
             last_seen_seq=self.last_seen_executor_seq,
             expected_seq=self.expected_executor_seq,
         )
+
+    def poll_target(self) -> MailboxPollTarget:
+        if self.next_action != WAIT_EXECUTOR_POLL_ACTION:
+            raise TaskControllerValidationError(
+                "controller continuation is not at an active executor-poll boundary"
+            )
+        return self.executor_wait_target()
+
+    def event_target(self) -> MailboxPollTarget:
+        if self.next_action != WAIT_EXECUTOR_EVENT_ACTION:
+            raise TaskControllerValidationError(
+                "controller continuation is not at an active executor-event boundary"
+            )
+        return self.executor_wait_target()
 
     @property
     def checkpoint_id(self) -> str:
@@ -264,7 +281,7 @@ def persist_before_dispatch(
 ) -> ControllerContinuation:
     """Fail closed unless the WAIT_EXECUTOR checkpoint survives exact readback."""
 
-    checkpoint.poll_target()
+    checkpoint.executor_wait_target()
     persist_continuation(store, checkpoint)
     recovered = recover_continuation(store, checkpoint.run_id)
     if recovered != checkpoint:

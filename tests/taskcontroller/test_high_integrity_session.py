@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +14,7 @@ from taskcontroller.interaction.continuation import (
     ControllerContinuation,
     ContinuationPhase,
     ContinuationStatus,
+    WAIT_EXECUTOR_EVENT_ACTION,
 )
 from taskcontroller.interaction.github_continuation_store import (
     GITHUB_CONTINUATION_RECORD_PROTOCOL,
@@ -33,6 +35,7 @@ from taskcontroller.runtime.high_integrity_session import (
     bootstrap_executor_v2,
     materialize_controller_transition,
     recover_high_integrity_session,
+    resume_controller_event_v2,
     resume_controller_v2,
 )
 
@@ -442,6 +445,113 @@ def test_materializer_rejects_secret_bearing_non_payload_fields_before_write(
     finally:
         ledger.close()
     assert transport.comments == []
+
+
+def test_event_driven_materialization_and_one_shot_resume_without_polling(tmp_path: Path) -> None:
+    transport, repository, continuation, ledger = _runtime(tmp_path)
+    checkpoint = replace(_checkpoint(), next_action=WAIT_EXECUTOR_EVENT_ACTION)
+    try:
+        materialized = materialize_controller_transition(
+            continuation_store=continuation,
+            repository=repository,
+            ledger=ledger,
+            checkpoint=checkpoint,
+            request=_request(),
+            state_version=0,
+            prepared_at="2026-10-07T05:01:31Z",
+            committed_at="2026-10-07T05:01:32Z",
+        )
+        progress = _progress(materialized.envelope)
+        repository.write(EXECUTOR_MAILBOX, -1, progress)
+        cursor = MailboxActorCursor.initial(
+            EXECUTOR_MAILBOX,
+            run_id=progress.run_id,
+            node_id=progress.node_id,
+            actor_namespace="hermes-executor",
+        )
+
+        resumed = resume_controller_event_v2(
+            continuation_store=continuation,
+            repository=repository,
+            checkpoint=checkpoint,
+            cursor=cursor,
+            correlation_id=progress.to_dict()["correlation_id"],
+            expected_identity=progress.execution_identity,
+            observed_at="2026-10-07T05:01:33Z",
+        )
+    finally:
+        ledger.close()
+
+    assert resumed.checkpoint.phase == ContinuationPhase.REVIEW_EXECUTOR.value
+    assert resumed.checkpoint.last_seen_executor_seq == 1
+
+
+def test_event_driven_resume_fails_closed_without_new_executor_event(tmp_path: Path) -> None:
+    transport, repository, continuation, ledger = _runtime(tmp_path)
+    checkpoint = replace(_checkpoint(), next_action=WAIT_EXECUTOR_EVENT_ACTION)
+    try:
+        materialized = materialize_controller_transition(
+            continuation_store=continuation,
+            repository=repository,
+            ledger=ledger,
+            checkpoint=checkpoint,
+            request=_request(),
+            state_version=0,
+            prepared_at="2026-10-07T05:01:41Z",
+            committed_at="2026-10-07T05:01:42Z",
+        )
+        cursor = MailboxActorCursor.initial(
+            EXECUTOR_MAILBOX,
+            run_id=materialized.envelope.run_id,
+            node_id=materialized.envelope.node_id,
+            actor_namespace="hermes-executor",
+        )
+        with pytest.raises(TaskControllerValidationError, match="EXECUTOR_EVENT_MISSING"):
+            resume_controller_event_v2(
+                continuation_store=continuation,
+                repository=repository,
+                checkpoint=checkpoint,
+                cursor=cursor,
+                correlation_id=materialized.envelope.to_dict()["correlation_id"],
+                expected_identity=materialized.envelope.execution_identity,
+                observed_at="2026-10-07T05:01:43Z",
+            )
+    finally:
+        ledger.close()
+
+
+def test_periodic_resume_rejects_event_driven_checkpoint(tmp_path: Path) -> None:
+    transport, repository, continuation, ledger = _runtime(tmp_path)
+    checkpoint = replace(_checkpoint(), next_action=WAIT_EXECUTOR_EVENT_ACTION)
+    try:
+        materialized = materialize_controller_transition(
+            continuation_store=continuation,
+            repository=repository,
+            ledger=ledger,
+            checkpoint=checkpoint,
+            request=_request(),
+            state_version=0,
+            prepared_at="2026-10-07T05:01:51Z",
+            committed_at="2026-10-07T05:01:52Z",
+        )
+        cursor = MailboxActorCursor.initial(
+            EXECUTOR_MAILBOX,
+            run_id=materialized.envelope.run_id,
+            node_id=materialized.envelope.node_id,
+            actor_namespace="hermes-executor",
+        )
+        with pytest.raises(TaskControllerValidationError, match="RESUME_MODE_INVALID"):
+            resume_controller_v2(
+                continuation_store=continuation,
+                repository=repository,
+                checkpoint=checkpoint,
+                cursor=cursor,
+                correlation_id=materialized.envelope.to_dict()["correlation_id"],
+                expected_identity=materialized.envelope.execution_identity,
+                observed_at="2026-10-07T05:01:53Z",
+            )
+    finally:
+        ledger.close()
 
 
 def test_mailbox_v2_full_lifecycle_survives_controller_restart(tmp_path: Path) -> None:

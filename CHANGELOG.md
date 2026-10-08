@@ -2,6 +2,22 @@
 
 All notable changes to the DW SuperApps workspace control plane are documented here.
 
+## 2026-10-08 — TaskController event-driven mailbox execution
+
+### Changed
+
+- Canonical mailbox/v2 `WAIT_EXECUTOR` now supports `AWAIT_EXECUTOR_EVENT` instead of requiring periodic `POLL_EXECUTOR`.
+- Added `resume_controller_event_v2` for one-shot exact consumption after an external mailbox event signal.
+- Periodic Controller mailbox polling is forbidden for event-driven runs.
+- Slack is removed as the canonical Executor machine wake-up path; human-plane projection remains separate.
+- Legacy `POLL_EXECUTOR` remains compatibility-only for existing durable checkpoints.
+
+### Safety
+
+- Event resume fails closed when invoked without a newer Executor event.
+- Existing lease/fence expiry guard remains active before event consumption.
+- No execution, merge, deploy, or production authority is created by event delivery.
+
 ## 2026-10-08 — TaskController mailbox epoch isolation
 
 ### Fixed
