@@ -539,23 +539,27 @@ def resume_controller_v2(
 
     if checkpoint.status != ContinuationStatus.ACTIVE.value:
         _fail("RESUME_CHECKPOINT_INVALID", "cannot resume a terminal Controller checkpoint")
+    if checkpoint.phase != ContinuationPhase.WAIT_EXECUTOR.value:
+        _fail(
+            "RESUME_PHASE_INVALID",
+            "Controller may poll Executor only from WAIT_EXECUTOR",
+        )
     if checkpoint.executor_mailbox_ref != cursor.mailbox_ref:
         _fail("RESUME_CURSOR_INVALID", "Executor result cursor mailbox differs from continuation")
-    if checkpoint.phase == ContinuationPhase.WAIT_EXECUTOR.value:
-        controller_event = _controller_event_for_checkpoint(repository, checkpoint)
-        guarded = _guard_wait_executor_authority(
-            continuation_store=continuation_store,
-            checkpoint=checkpoint,
-            controller_envelope=controller_event.envelope,
-            observed_at=observed_at,
-            active_lease=active_lease,
-            lease_now=lease_now,
+    controller_event = _controller_event_for_checkpoint(repository, checkpoint)
+    guarded = _guard_wait_executor_authority(
+        continuation_store=continuation_store,
+        checkpoint=checkpoint,
+        controller_envelope=controller_event.envelope,
+        observed_at=observed_at,
+        active_lease=active_lease,
+        lease_now=lease_now,
+    )
+    if guarded != checkpoint:
+        return HighIntegrityResumeOutcome(
+            poll=ControllerResultPoll(status=POLL_NO_NEW_RESULT, cursor=cursor),
+            checkpoint=guarded,
         )
-        if guarded != checkpoint:
-            return HighIntegrityResumeOutcome(
-                poll=ControllerResultPoll(status=POLL_NO_NEW_RESULT, cursor=cursor),
-                checkpoint=guarded,
-            )
     poll_kwargs: dict[str, Any] = {
         "correlation_id": correlation_id,
         "expected_identity": expected_identity,
