@@ -188,6 +188,54 @@ def test_foreign_and_other_mailbox_comments_are_ignored() -> None:
     assert len(snapshot.events) == 1
 
 
+def test_malformed_tagged_record_for_other_mailbox_is_ignored_before_strict_parse() -> None:
+    repository, transport = _repo()
+    transport.append_foreign(
+        json.dumps(
+            {
+                "protocol": GITHUB_RECORD_PROTOCOL,
+                "record_type": "disposition_release",
+                "mailbox_ref": "github://owner/repo/issues/575#legacy-controller-v1",
+                "event": "TYPED_DISPOSITION_RELEASE",
+                "cursor": "legacy-cursor",
+                "continuation": "legacy-continuation",
+                "payload": {"legacy": True},
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+
+    snapshot = repository.read(MAILBOX)
+
+    assert snapshot.last_event_seq == -1
+    assert snapshot.events == ()
+
+
+def test_malformed_tagged_record_for_selected_mailbox_still_fails_closed() -> None:
+    repository, transport = _repo()
+    transport.append_foreign(
+        json.dumps(
+            {
+                "protocol": GITHUB_RECORD_PROTOCOL,
+                "record_type": "disposition_release",
+                "mailbox_ref": MAILBOX,
+                "event": "TYPED_DISPOSITION_RELEASE",
+                "cursor": "legacy-cursor",
+                "continuation": "legacy-continuation",
+                "payload": {"legacy": True},
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+
+    with pytest.raises(TaskControllerValidationError) as caught:
+        repository.read(MAILBOX)
+
+    assert getattr(caught.value, "code", None) == MailboxV2ErrorCode.SCHEMA_INVALID
+
+
 def test_malformed_tagged_comment_fails_closed() -> None:
     repository, transport = _repo()
     transport.append_foreign(
