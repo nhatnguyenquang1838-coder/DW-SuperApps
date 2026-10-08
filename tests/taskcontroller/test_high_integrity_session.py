@@ -29,6 +29,7 @@ from taskcontroller.interaction.wakeup import WakeupSignal
 from taskcontroller.interaction.executor_entrypoint import V2ExecutorValidationPolicy
 from taskcontroller.runtime.dispatch_ledger import DISPATCH_COMMITTED
 from taskcontroller.runtime.high_integrity_session import (
+    WAIT_EXECUTOR_AUTHORITY_ACTION,
     bootstrap_executor_v2,
     materialize_controller_transition,
     recover_high_integrity_session,
@@ -693,3 +694,107 @@ def test_crash_after_cursor_before_continuation_readback_retries_idempotently(
     ) == 1
     assert receipt.dispatch.cursor.last_event_seq == 0
 
+def test_resume_breaks_wait_executor_loop_when_execution_attempt_expired(tmp_path: Path) -> None:
+    transport, repository, continuation, ledger = _runtime(tmp_path)
+    checkpoint = _checkpoint()
+    try:
+        materialized = materialize_controller_transition(
+            continuation_store=continuation,
+            repository=repository,
+            ledger=ledger,
+            checkpoint=checkpoint,
+            request=_request(),
+            state_version=0,
+            prepared_at="2026-10-07T04:46:00Z",
+            committed_at="2026-10-07T04:46:01Z",
+        )
+        cursor = MailboxActorCursor.initial(
+            EXECUTOR_MAILBOX,
+            run_id=materialized.envelope.run_id,
+            node_id=materialized.envelope.node_id,
+            actor_namespace="hermes-executor",
+        )
+
+        resumed = resume_controller_v2(
+            continuation_store=continuation,
+            repository=repository,
+            checkpoint=checkpoint,
+            cursor=cursor,
+            correlation_id=materialized.envelope.to_dict()["correlation_id"],
+            expected_identity=materialized.envelope.execution_identity,
+            observed_at="2026-10-07T05:46:00Z",
+        )
+    finally:
+        ledger.close()
+
+    assert resumed.poll.status == "NO_NEW_RESULT"
+    assert resumed.checkpoint.phase == ContinuationPhase.WAIT_CONTROLLER.value
+    assert resumed.checkpoint.next_action == WAIT_EXECUTOR_AUTHORITY_ACTION
+    assert resumed.checkpoint.last_seen_executor_seq == checkpoint.last_seen_executor_seq
+    assert resumed.checkpoint.expected_executor_seq == checkpoint.expected_executor_seq
+
+
+def test_recovery_breaks_wait_executor_loop_when_execution_attempt_expired(tmp_path: Path) -> None:
+    transport, repository, continuation, ledger = _runtime(tmp_path)
+    checkpoint = _checkpoint()
+    try:
+        materialize_controller_transition(
+            continuation_store=continuation,
+            repository=repository,
+            ledger=ledger,
+            checkpoint=checkpoint,
+            request=_request(),
+            state_version=0,
+            prepared_at="2026-10-07T04:46:00Z",
+            committed_at="2026-10-07T04:46:01Z",
+        )
+    finally:
+        ledger.close()
+
+    restarted_repository = GitHubMailboxRepository(transport)
+    restarted_continuation = GitHubContinuationStore(
+        transport,
+        repository=REPOSITORY,
+        issue_number=ISSUE,
+    )
+    recovered = recover_high_integrity_session(
+        continuation_store=restarted_continuation,
+        repository=restarted_repository,
+        run_id=checkpoint.run_id,
+        observed_at="2026-10-07T05:46:00Z",
+    )
+
+    assert recovered.checkpoint.phase == ContinuationPhase.WAIT_CONTROLLER.value
+    assert recovered.checkpoint.next_action == WAIT_EXECUTOR_AUTHORITY_ACTION
+
+
+def test_wait_executor_recovery_requires_observed_time(tmp_path: Path) -> None:
+    transport, repository, continuation, ledger = _runtime(tmp_path)
+    checkpoint = _checkpoint()
+    try:
+        materialize_controller_transition(
+            continuation_store=continuation,
+            repository=repository,
+            ledger=ledger,
+            checkpoint=checkpoint,
+            request=_request(),
+            state_version=0,
+            prepared_at="2026-10-07T04:46:00Z",
+            committed_at="2026-10-07T04:46:01Z",
+        )
+    finally:
+        ledger.close()
+
+    restarted_repository = GitHubMailboxRepository(transport)
+    restarted_continuation = GitHubContinuationStore(
+        transport,
+        repository=REPOSITORY,
+        issue_number=ISSUE,
+    )
+    with pytest.raises(TaskControllerValidationError, match="RECOVERY_TIME_REQUIRED"):
+        recover_high_integrity_session(
+            continuation_store=restarted_continuation,
+            repository=restarted_repository,
+            run_id=checkpoint.run_id,
+        )
+\n
