@@ -160,12 +160,17 @@ bind semantic transition
 During active execution:
 
 ```text
-sleep configured cadence
+before poll/wakeup → exact-read current Controller request + continuation
+→ validate the bound execution attempt lease/fence at caller-supplied observed_at
+→ if stale/expired/missing current fence: WAIT_CONTROLLER / RESOLVE_EXECUTION_AUTHORITY
+→ otherwise sleep configured cadence
 → read only the exact Executor mailbox comment from the continuation poll target
 → reject stale/equal seq
 → validate the bounded semantic report
 → continue | review | intercept | terminal
 ```
+
+Never keep `POLL_EXECUTOR` or send an Executor wake-up after the bound execution attempt lease/fence is stale or expired. A previously materialized approval remains historical authority evidence; it does not make an expired execution attempt current.
 
 Do not use Slack thread replies as the Executor progress transport. Do not reread whole Slack threads or GPT history to recover machine state when mailbox/continuation references exist.
 
