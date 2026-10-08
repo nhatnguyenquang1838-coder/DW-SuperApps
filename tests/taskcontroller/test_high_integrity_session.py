@@ -734,6 +734,44 @@ def test_resume_breaks_wait_executor_loop_when_execution_attempt_expired(tmp_pat
     assert resumed.checkpoint.expected_executor_seq == checkpoint.expected_executor_seq
 
 
+def test_resume_explicit_missing_active_lease_breaks_wait_executor_before_expiry(tmp_path: Path) -> None:
+    transport, repository, continuation, ledger = _runtime(tmp_path)
+    checkpoint = _checkpoint()
+    try:
+        materialized = materialize_controller_transition(
+            continuation_store=continuation,
+            repository=repository,
+            ledger=ledger,
+            checkpoint=checkpoint,
+            request=_request(),
+            state_version=0,
+            prepared_at="2026-10-07T04:46:00Z",
+            committed_at="2026-10-07T04:46:01Z",
+        )
+        cursor = MailboxActorCursor.initial(
+            EXECUTOR_MAILBOX,
+            run_id=materialized.envelope.run_id,
+            node_id=materialized.envelope.node_id,
+            actor_namespace="hermes-executor",
+        )
+
+        resumed = resume_controller_v2(
+            continuation_store=continuation,
+            repository=repository,
+            checkpoint=checkpoint,
+            cursor=cursor,
+            correlation_id=materialized.envelope.to_dict()["correlation_id"],
+            expected_identity=materialized.envelope.execution_identity,
+            observed_at="2026-10-07T05:00:00Z",
+            active_lease=None,
+        )
+    finally:
+        ledger.close()
+
+    assert resumed.checkpoint.phase == ContinuationPhase.WAIT_CONTROLLER.value
+    assert resumed.checkpoint.next_action == WAIT_EXECUTOR_AUTHORITY_ACTION
+
+
 def test_recovery_breaks_wait_executor_loop_when_execution_attempt_expired(tmp_path: Path) -> None:
     transport, repository, continuation, ledger = _runtime(tmp_path)
     checkpoint = _checkpoint()
