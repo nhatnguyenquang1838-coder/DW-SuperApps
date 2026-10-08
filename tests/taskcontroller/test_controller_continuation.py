@@ -16,6 +16,7 @@ from taskcontroller.interaction import (
     persist_continuation,
     recover_continuation,
 )
+from taskcontroller.interaction.continuation import WAIT_EXECUTOR_EVENT_ACTION
 
 
 def _checkpoint(**overrides) -> ControllerContinuation:
@@ -67,6 +68,18 @@ def test_active_run_cannot_semantically_finalize() -> None:
     )
 
 
+def test_event_wait_target_contains_only_exact_mailbox_pointer_and_cursor() -> None:
+    checkpoint = _checkpoint(next_action=WAIT_EXECUTOR_EVENT_ACTION)
+    target = checkpoint.event_target()
+
+    assert target.actor == "hermes-cloud"
+    assert target.mailbox_ref.endswith("#issuecomment-5308548539")
+    assert target.last_seen_seq == 3
+    assert target.expected_seq == 4
+    with pytest.raises(TaskControllerValidationError):
+        checkpoint.poll_target()
+
+
 def test_poll_target_contains_only_exact_mailbox_pointer_and_cursor() -> None:
     target = _checkpoint().poll_target()
 
@@ -107,15 +120,16 @@ def test_reference_envelope_enforces_bounded_context() -> None:
         A2AEnvelope(**base, state={"payload": "x" * 10000})
 
 
-def test_registry_promotes_checkpoint_and_hermes_slack_wakeup_to_pilot_requirements() -> None:
+def test_registry_promotes_checkpoint_and_event_driven_executor_delivery() -> None:
     root = Path(__file__).resolve().parents[2]
     registry = (root / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
 
     assert "continuation_checkpoint: required-before-dispatch" in registry
     assert "active_run_semantic_final: forbidden" in registry
-    assert "exact_mailbox_comment_only: true" in registry
+    assert "periodic_mailbox_polling: forbidden" in registry
+    assert "controller_wait_action: AWAIT_EXECUTOR_EVENT" in registry
     assert "hermes-cloud:" in registry
-    assert "wakeup_binding: slack-websocket" in registry
+    assert "wakeup_binding: mailbox-event" in registry
     assert "required: true" in registry
     assert "    - recovery\n" not in registry
     assert "    - checkpoint\n" not in registry
