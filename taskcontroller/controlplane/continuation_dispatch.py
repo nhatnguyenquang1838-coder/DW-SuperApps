@@ -182,7 +182,7 @@ def recover_v2_dispatch(
             MailboxV2ErrorCode.CONTRACT_MISMATCH,
             "durable continuation checkpoint is missing",
         )
-    checkpoint.poll_target()
+    checkpoint.executor_wait_target()
     if checkpoint.checkpoint_id != checkpoint_id:
         _fail(
             MailboxV2ErrorCode.DIGEST_MISMATCH,
