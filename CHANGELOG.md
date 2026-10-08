@@ -2,6 +2,19 @@
 
 All notable changes to the DW SuperApps workspace control plane are documented here.
 
+## 2026-10-08 — TaskController mailbox epoch isolation
+
+### Fixed
+
+- GitHub mailbox/v2 reads now isolate strict validation to the selected mailbox when an issue contains explicitly attributed legacy records for other mailbox epochs.
+- A malformed tagged record with a different valid `mailbox_ref` no longer poisons reads of a clean current mailbox.
+- Malformed tagged records for the selected mailbox, or tagged records that cannot be safely attributed, still fail closed.
+
+### Safety
+
+- No legacy record is rewritten or deleted.
+- Mailbox-local corruption remains blocking; only cross-mailbox contamination is isolated.
+
 ## 2026-10-08 — TaskController WAIT_EXECUTOR deadlock guard
 
 ### Fixed

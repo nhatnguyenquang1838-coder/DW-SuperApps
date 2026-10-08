@@ -303,6 +303,33 @@ class GitHubMailboxRepository:
                 raise TaskControllerValidationError(
                     "GitHubIssueCommentTransport returned an invalid comment"
                 )
+
+            # Issue comments are a shared append-only plane for many mailbox
+            # epochs. A legacy malformed record for a different mailbox must
+            # not poison reads of the selected mailbox. Filter by an explicit,
+            # well-formed mailbox_ref hint before strict record validation.
+            #
+            # Fail closed when the tagged record cannot be safely attributed:
+            # malformed JSON, missing/invalid mailbox_ref, or the selected
+            # mailbox itself still flows through _parse_record().
+            body = comment.body.strip()
+            if body:
+                try:
+                    hinted = json.loads(body)
+                except json.JSONDecodeError:
+                    hinted = None
+                if (
+                    isinstance(hinted, Mapping)
+                    and hinted.get("protocol") == GITHUB_RECORD_PROTOCOL
+                ):
+                    hinted_mailbox = hinted.get("mailbox_ref")
+                    if (
+                        isinstance(hinted_mailbox, str)
+                        and hinted_mailbox
+                        and hinted_mailbox != mailbox_ref
+                    ):
+                        continue
+
             record = _parse_record(comment)
             if record is None or record.mailbox_ref != mailbox_ref:
                 continue
