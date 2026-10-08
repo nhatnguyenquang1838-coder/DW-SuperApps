@@ -2,6 +2,21 @@
 
 All notable changes to the DW SuperApps workspace control plane are documented here.
 
+## 2026-10-08 — TaskController WAIT_EXECUTOR deadlock guard
+
+### Fixed
+
+- High-integrity Controller resume checks the bound execution-attempt lease before polling an unchanged Executor mailbox.
+- Restart recovery for `WAIT_EXECUTOR` requires caller-supplied `observed_at` and applies the same expiry/fence guard.
+- Stale, expired, or explicitly missing current fences transition to `WAIT_CONTROLLER / RESOLVE_EXECUTION_AUTHORITY` instead of remaining in `POLL_EXECUTOR`.
+- Controller resume rejects polling from non-`WAIT_EXECUTOR` phases, preventing callers from bypassing a tripped authority boundary.
+- ChatGPT Controller instructions forbid pointer wake-ups after the guard trips.
+
+### Safety
+
+- The guard does not revoke historical approval evidence; it only prevents a stale execution attempt from remaining runnable.
+- No merge, deploy, production, secret, or cross-repository authority is inferred by the guard.
+
 ## 2026-07-27 — G1 user-facing report generator
 
 ### Added
