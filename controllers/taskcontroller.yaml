@@ -85,7 +85,8 @@ interaction:
     lifecycle_functions:
       controller_materialize: materialize_controller_transition
       executor_bootstrap: bootstrap_executor_v2
-      controller_resume: resume_controller_v2
+      controller_resume_compat_poll: resume_controller_v2
+      controller_event_resume: resume_controller_event_v2
       controller_recovery: recover_high_integrity_session
     producer_cursor_semantics: dispatch-commit-evidence
     executor_consumption_freshness: validation-policy-last-seen-event-seq
@@ -114,17 +115,21 @@ interaction:
     input_refs_max: 16
     artifact_refs_max: 16
   canonical_ids_from_binding_ids: forbidden
+  delivery:
+    mode: event-driven
+    controller_wait_action: AWAIT_EXECUTOR_EVENT
+    periodic_mailbox_polling: forbidden
+    executor_event_subscription_required: true
+    slack_machine_notification: forbidden
   notification:
     protocol: dw.taskcontroller.wakeup/v1
-    optional_when_executor_does_not_poll: true
-    pilot_binding: slack-wakeup
     pointer_only: true
     command_payload_forbidden: true
     progress_payload_forbidden: true
     canonical_ids_from_notification_ids: forbidden
     provider_requirements:
       hermes-cloud:
-        wakeup_binding: slack-websocket
+        wakeup_binding: mailbox-event
         required: true
   future_bindings:
     - a2a-http
@@ -152,19 +157,11 @@ human_plane:
     plain_text_fallback_required: true
     thread_reply_only: true
     duplicate_progress_suppressed: true
-  polling:
-    mailbox_mode: in-session-incremental
-    cadence_seconds: 60
-    cadence_policy: progressive-backoff-on-unchanged-mailbox-seq
-    adaptive_cadence_seconds:
-      - 60
-      - 120
-      - 180
-    cadence_reset_on_new_seq: true
-    cadence_max_seconds: 180
-    in_session_sleep_required: true
-    silent: true
-    exact_mailbox_comment_only: true
+  event_resume:
+    mailbox_mode: event-driven
+    periodic_polling: forbidden
+    exact_mailbox_event_only: true
+    resume_function: resume_controller_event_v2
     detached_scheduler_allowed: false
   verdicts:
     - CONTINUE
@@ -193,6 +190,7 @@ resilience:
     - materialize_controller_transition
     - bootstrap_executor_v2
     - resume_controller_v2
+    - resume_controller_event_v2
     - recover_high_integrity_session
   manual_machine_json: forbidden
   durable_pilot_copy:
@@ -210,15 +208,15 @@ resilience:
     - exact-mailbox-readback
     - acknowledge-controller-cursor
     - exact-continuation-readback
-    - wake-executor-pointer-only
+    - publish-mailbox-event-notification
   wait_executor_deadlock_guard:
     observed_time_required_on_wait_executor_recovery: true
-    execution_attempt_lease_must_be_current_before_poll_or_wakeup: true
+    execution_attempt_lease_must_be_current_before_event-resume: true
     stale_expired_or_missing_fence_transition:
       phase: WAIT_CONTROLLER
       next_action: RESOLVE_EXECUTION_AUTHORITY
     poll_after_guard_trip: forbidden
-    wakeup_after_guard_trip: forbidden
+    event_resume_after_guard_trip: forbidden
   recovery_inputs:
     - current-repository-and-run-identity
     - controller-mailbox-checkpoint
