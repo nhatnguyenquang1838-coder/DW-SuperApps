@@ -46,6 +46,8 @@ from taskcontroller.interaction.continuation import (
     ContinuationStatus,
     ContinuationStore,
     ControllerContinuation,
+    WAIT_EXECUTOR_EVENT_ACTION,
+    WAIT_EXECUTOR_POLL_ACTION,
     persist_continuation,
     recover_continuation,
 )
@@ -542,7 +544,12 @@ def resume_controller_v2(
     if checkpoint.phase != ContinuationPhase.WAIT_EXECUTOR.value:
         _fail(
             "RESUME_PHASE_INVALID",
-            "Controller may poll Executor only from WAIT_EXECUTOR",
+            "Controller may consume Executor output only from WAIT_EXECUTOR",
+        )
+    if checkpoint.next_action != WAIT_EXECUTOR_POLL_ACTION:
+        _fail(
+            "RESUME_MODE_INVALID",
+            "periodic Controller polling is forbidden for event-driven WAIT_EXECUTOR",
         )
     if checkpoint.executor_mailbox_ref != cursor.mailbox_ref:
         _fail("RESUME_CURSOR_INVALID", "Executor result cursor mailbox differs from continuation")
@@ -590,7 +597,7 @@ def resume_controller_v2(
             if review_required
             else ContinuationPhase.WAIT_EXECUTOR.value
         ),
-        next_action="REVIEW_EXECUTOR" if review_required else "POLL_EXECUTOR",
+        next_action="REVIEW_EXECUTOR" if review_required else WAIT_EXECUTOR_POLL_ACTION,
         last_seen_executor_seq=observed_seq,
         expected_executor_seq=observed_seq + 1,
         updated_at=observed_at,
@@ -600,6 +607,105 @@ def resume_controller_v2(
     if durable != next_checkpoint:
         _fail("RESUME_CONTINUATION_READBACK_FAILED", "resumed continuation exact readback differs")
     return HighIntegrityResumeOutcome(poll=poll, checkpoint=durable)
+
+
+
+def resume_controller_event_v2(
+    *,
+    continuation_store: ContinuationStore,
+    repository: MailboxRepository,
+    checkpoint: ControllerContinuation,
+    cursor: MailboxActorCursor,
+    correlation_id: str,
+    expected_identity: Mapping[str, Any],
+    observed_at: str,
+    expected_source_digest: str | None = None,
+    expected_standards_digest: str | None = None,
+    expected_result_digest: str | None = None,
+    active_lease: Any = _ACTIVE_LEASE_UNSET,
+    lease_now: str | None = None,
+) -> HighIntegrityResumeOutcome:
+    """Consume exactly one externally-signaled Executor mailbox event without polling."""
+
+    if checkpoint.status != ContinuationStatus.ACTIVE.value:
+        _fail("RESUME_CHECKPOINT_INVALID", "cannot resume a terminal Controller checkpoint")
+    if checkpoint.phase != ContinuationPhase.WAIT_EXECUTOR.value:
+        _fail(
+            "RESUME_PHASE_INVALID",
+            "Controller may consume Executor output only from WAIT_EXECUTOR",
+        )
+    if checkpoint.next_action != WAIT_EXECUTOR_EVENT_ACTION:
+        _fail(
+            "RESUME_MODE_INVALID",
+            "event resume requires AWAIT_EXECUTOR_EVENT",
+        )
+    if checkpoint.executor_mailbox_ref != cursor.mailbox_ref:
+        _fail("RESUME_CURSOR_INVALID", "Executor result cursor mailbox differs from continuation")
+
+    controller_event = _controller_event_for_checkpoint(repository, checkpoint)
+    guarded = _guard_wait_executor_authority(
+        continuation_store=continuation_store,
+        checkpoint=checkpoint,
+        controller_envelope=controller_event.envelope,
+        observed_at=observed_at,
+        active_lease=active_lease,
+        lease_now=lease_now,
+    )
+    if guarded != checkpoint:
+        return HighIntegrityResumeOutcome(
+            poll=ControllerResultPoll(status=POLL_NO_NEW_RESULT, cursor=cursor),
+            checkpoint=guarded,
+        )
+
+    read_kwargs: dict[str, Any] = {
+        "correlation_id": correlation_id,
+        "expected_identity": expected_identity,
+        "expected_source_digest": expected_source_digest,
+        "expected_standards_digest": expected_standards_digest,
+        "expected_result_digest": expected_result_digest,
+    }
+    if active_lease is not _ACTIVE_LEASE_UNSET:
+        read_kwargs["active_lease"] = active_lease
+        read_kwargs["lease_now"] = lease_now or observed_at
+
+    observed = poll_controller_terminal_result(repository, cursor, **read_kwargs)
+    if observed.status == POLL_NO_NEW_RESULT:
+        _fail(
+            "EXECUTOR_EVENT_MISSING",
+            "event-driven resume was invoked without a newer Executor mailbox event",
+        )
+
+    observed_seq = observed.cursor.last_logical_seq
+    if observed_seq < checkpoint.last_seen_executor_seq:
+        _fail("RESUME_SEQUENCE_INVALID", "Executor result cursor regressed continuation state")
+
+    review_required = observed.status == POLL_RESULT_AVAILABLE
+    if observed.status == POLL_PROGRESS_AVAILABLE and observed.progress_outcome is not None:
+        review_required = (
+            observed.progress_outcome.requires_controller_action
+            or observed.progress_outcome.completed
+        )
+    next_checkpoint = replace(
+        checkpoint,
+        phase=(
+            ContinuationPhase.REVIEW_EXECUTOR.value
+            if review_required
+            else ContinuationPhase.WAIT_EXECUTOR.value
+        ),
+        next_action=(
+            "REVIEW_EXECUTOR"
+            if review_required
+            else WAIT_EXECUTOR_EVENT_ACTION
+        ),
+        last_seen_executor_seq=observed_seq,
+        expected_executor_seq=observed_seq + 1,
+        updated_at=observed_at,
+    )
+    persist_continuation(continuation_store, next_checkpoint)
+    durable = recover_continuation(continuation_store, next_checkpoint.run_id)
+    if durable != next_checkpoint:
+        _fail("RESUME_CONTINUATION_READBACK_FAILED", "resumed continuation exact readback differs")
+    return HighIntegrityResumeOutcome(poll=observed, checkpoint=durable)
 
 
 def recover_high_integrity_session(
@@ -659,6 +765,7 @@ __all__ = [
     "HighIntegrityMaterializationError",
     "LEGACY_V1_RUNTIME_SESSION",
     "WAIT_EXECUTOR_AUTHORITY_ACTION",
+    "resume_controller_event_v2",
     "bootstrap_executor_v2",
     "materialize_controller_transition",
     "recover_high_integrity_session",
