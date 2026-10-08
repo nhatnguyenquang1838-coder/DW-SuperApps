@@ -77,13 +77,13 @@ For a high-integrity wake-up, require the Controller request to reference a dura
 
 Do not use Slack as the normal progress journal. Slack is not a substitute mailbox when mailbox boot/readback is missing.
 
-## Pointer-only wake-up
+## Event-driven mailbox delivery
 
-A Slack wake-up is notification only. It contains a mailbox pointer/new seq, not the command body.
+Canonical mailbox/v2 execution does not use periodic mailbox polling and does not use Slack as an Executor wake-up path.
 
-After a pointer-only wake-up, fetch the canonical command from the Controller mailbox. While executing, do not narrate tools, file reads/edits, raw tests, polling, retries, or internal reasoning on Slack. The required normal behavior is zero Executor Slack progress replies between wake-up and mailbox result.
+When the provider's mailbox-event adapter reports a newer Controller event, fetch exactly that Controller mailbox event, validate its sequence/digest/lease/fence/bindings, then execute the bounded contract. Duplicate or stale event notifications are harmless and must not re-execute already-consumed work.
 
-At the contracted milestone, in compatibility v1 publish semantic result to the same Executor mailbox comment with a newer seq; in high-integrity mailbox/v2 append a new typed event through `GitHubMailboxRepository`. Slack human projection is Controller-owned and may be updated separately after Controller review.
+At the contracted milestone, in compatibility v1 publish semantic result to the same Executor mailbox comment with a newer seq; in high-integrity mailbox/v2 append a new typed event through `GitHubMailboxRepository`. Human-plane projection is Controller-owned and separate from machine notification.
 
 ## Subtasks
 
