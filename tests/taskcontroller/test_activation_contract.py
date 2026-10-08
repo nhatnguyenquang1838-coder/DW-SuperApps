@@ -119,7 +119,8 @@ def test_registry_forbids_memory_fallback_and_activates_a2a_runtime():
     assert "v2_full_lifecycle_required: true" in registry
     assert "controller_materialize: materialize_controller_transition" in registry
     assert "executor_bootstrap: bootstrap_executor_v2" in registry
-    assert "controller_resume: resume_controller_v2" in registry
+    assert "controller_resume_compat_poll: resume_controller_v2" in registry
+    assert "controller_event_resume: resume_controller_event_v2" in registry
     assert "controller_recovery: recover_high_integrity_session" in registry
     assert "full_e2e_runtime: active" in registry
     assert "full_e2e_runtime: deferred" not in registry
@@ -217,6 +218,19 @@ def test_slack_overlay_is_human_projection_not_machine_journal():
     assert "Do not load Slack-hosted policy documents" in overlay
     assert "Slack Communication Policy" not in overlay
     assert "Governance Behavior" not in overlay
+
+
+def test_registry_forbids_periodic_executor_polling_for_canonical_mailbox_v2():
+    registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
+    protocol = (
+        ROOT / "agents" / "shared" / "taskcontroller-a2a-protocol.md"
+    ).read_text(encoding="utf-8")
+
+    assert "periodic_mailbox_polling: forbidden" in registry
+    assert "controller_wait_action: AWAIT_EXECUTOR_EVENT" in registry
+    assert "resume_function: resume_controller_event_v2" in registry
+    assert "The Controller MUST NOT run a periodic mailbox polling cadence" in protocol
+    assert "Slack WebSocket is not a canonical Executor wake-up path" in protocol
 
 
 def test_hermes_reports_to_mailbox_not_slack_journal():
