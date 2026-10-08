@@ -835,4 +835,4 @@ def test_wait_executor_recovery_requires_observed_time(tmp_path: Path) -> None:
             repository=restarted_repository,
             run_id=checkpoint.run_id,
         )
-\n
+
