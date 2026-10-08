@@ -11,6 +11,7 @@ from __future__ import annotations
 import copy
 import re
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Mapping, NoReturn, Sequence
 
 from taskcontroller.errors import TaskControllerValidationError
@@ -110,6 +111,56 @@ def _string_list(value: Any, field: str, *, allow_empty: bool = False) -> tuple[
     return normalized
 
 
+def _parse_aware_instant(value: Any, field: str) -> datetime:
+    text = _text(value, field)
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError as exc:
+        _fail(
+            "EXECUTION_CONTRACT_AUTHORITY_EXPIRY_INVALID",
+            f"{field} must be an ISO-8601 timestamp",
+        )
+        raise AssertionError("_fail must raise") from exc
+    if parsed.tzinfo is None:
+        _fail(
+            "EXECUTION_CONTRACT_AUTHORITY_EXPIRY_INVALID",
+            f"{field} must include timezone information",
+        )
+    return parsed
+
+
+def execution_authority_expires_at(payload: Mapping[str, Any] | Any) -> str:
+    """Return the exact bounded EXECUTE-authority expiry or fail closed."""
+
+    request_payload = _mapping(payload, "payload")
+    direct = request_payload.get("authority_expires_at")
+    approval = request_payload.get("approval")
+    nested = None
+    if approval is not None:
+        if not isinstance(approval, Mapping):
+            _fail(
+                "EXECUTION_CONTRACT_AUTHORITY_EXPIRY_INVALID",
+                "payload.approval must be an object when present",
+            )
+        nested = approval.get("expires_at")
+
+    candidates = [value for value in (direct, nested) if value is not None]
+    if not candidates:
+        _fail(
+            "EXECUTION_CONTRACT_AUTHORITY_EXPIRY_REQUIRED",
+            "EXECUTE authority must bind an exact expiry before dispatch",
+        )
+    normalized = tuple(_text(value, "authority expiry") for value in candidates)
+    if len(set(normalized)) != 1:
+        _fail(
+            "EXECUTION_CONTRACT_AUTHORITY_EXPIRY_MISMATCH",
+            "authority_expires_at and approval.expires_at must match exactly",
+        )
+    expires_at = normalized[0]
+    _parse_aware_instant(expires_at, "authority expiry")
+    return expires_at
+
+
 def _work_packages(value: Any) -> tuple[dict[str, Any], ...]:
     if isinstance(value, (str, bytes, bytearray)) or not isinstance(value, Sequence) or not value:
         _fail("EXECUTION_CONTRACT_WORK_PACKAGES_REQUIRED", "EXECUTE requires work_packages")
@@ -184,6 +235,7 @@ def validate_execution_contracting(*, payload: Mapping[str, Any], scope: Mapping
 
     if not authority_active:
         _fail("EXECUTION_CONTRACT_AUTHORITY_REQUIRED", "EXECUTE requires already-validated bounded execution authority")
+    authority_expires_at = execution_authority_expires_at(request_payload)
     execution_plan_ref = _text(request_payload.get("execution_plan_ref"), "execution_plan_ref")
     approval_ref = _text(request_payload.get("approval_ref"), "approval_ref")
     approval_digest = _text(request_payload.get("approval_digest"), "approval_digest")
@@ -219,6 +271,7 @@ def validate_execution_contracting(*, payload: Mapping[str, Any], scope: Mapping
             "EXECUTION_CONTRACT_EXECUTE_OK",
             f"EXECUTION_PLAN_REF:{execution_plan_ref}",
             f"APPROVAL_REF:{approval_ref}",
+            f"AUTHORITY_EXPIRES_AT:{authority_expires_at}",
             f"WORK_PACKAGES:{len(packages)}",
             f"REAL_ACTIONS:{len(real_actions)}",
             f"CONTINUE_UNTIL:{len(continue_until)}",
@@ -234,5 +287,6 @@ __all__ = [
     "CONTRACT_MODE_TRANSPORT_REPAIR",
     "ExecutionContractingError",
     "ExecutionContractingReceipt",
+    "execution_authority_expires_at",
     "validate_execution_contracting",
 ]
