@@ -32,6 +32,29 @@ Repository contracts and exact evidence prevail over this runbook or a Desktop p
 
 Use native **`/goal`** for one bounded authorized **standalone** execution mission. `/goal <text>` starts its first turn immediately, so do **not** set or resume a goal until prechecks pass. Never use `/loop` or heartbeat as a mailbox polling substitute. The `/goal` judge, turn count, and stop reason are **not** canonical TaskController results.
 
+## Controller continuity — GPT Exchange vs Pattern E
+
+**Do not switch transport based on terminology.** The canonical DW-SuperApps TaskController contract uses **typed GitHub mailbox/v2 + verified provider mailbox-event delivery**. It does **not** require a bound ChatGPT in-app-browser, `desktop_preview`, or `drive_preview` for the current mailbox/v2 lane. A missing provider event adapter is a **delivery blocker**, not permission to reintroduce browser automation, Slack machine messages or polling.
+
+The external Hermes skill [`dwa-a2a-coordination` Pattern E — SlackFanout](https://github.com/nhatnguyenquang1838-coder/hermes-sync/blob/67e332fb2ef3d2cd0e86e0b8f1a20fcf3d235bb6/skills/dwa-a2a-coordination/SKILL.md) fans a Slack-ingress task to specialist **Bot Chat** sessions using a headless `fanout.py`, then optionally performs MoA synthesis. **Its product is advisory synthesis, not a ChatGPT Controller reply, mailbox event, approval, or execution release.** Availability of `~/.hermes/dw_superapps/fanout.py` on this Desktop is unverified. That skill also contains legacy mutable/v1 and Slack/polling guidance; **current DW-SuperApps mailbox/v2 and event-driven contracts take precedence**.
+
+For this Standalone mission (`max_children=0`), **do not invoke Pattern E, `delegate_task`, or extra Bot Chat sessions as delegated child work**. If specialist fanout is valuable, the **Controller** may commission a separately governed read-only analysis run before contracting (or explicitly replan/rebind a child-capable mission); this does not convert the existing Executor's role, authorization, or mode. If DWA is to replace GPT as the Controller, it requires a separate canonical Controller identity/binding/authority transition — Pattern E alone cannot make that change.
+
+### Closed-loop continuity check
+
+| Current state | Input or outcome | Legal next action | Forbidden shortcut |
+| --- | --- | --- | --- |
+| `PAUSED` | User pause remains | No execution; await explicit unpause plus new valid work | Goal/loop restart or Pattern E wakeup |
+| `IDLE` | No event delivered | Remain idle; qualify adapter if unattended execution is required | Poll GitHub, Slack machine wakeup, browser/preview bypass |
+| `EVENT_RECEIVED` | New Controller event | Exact-read and validate event/cursor/continuation + authority | Assume notification = execution permission |
+| `VALIDATED EXECUTE` | Active authority and approved scope | One native `/goal` mission, continuing internal test/fix | Spawn child sessions under `max_children=0` |
+| `EXECUTING` | Recoverable in-scope test failure | Self-repair and test again while lease/identity valid | Request a new Controller decision per RED/GREEN |
+| `EXECUTING` | Hard authority/plan/dependency boundary | Emit typed Executor blocker to its mailbox, then stop; Controller resumes from a **new Executor event** | Ask specialist synthesis to mint approval or directly unblock |
+| `EXECUTING` | All contracted AC/evidence verified | Emit typed Executor result and exact-readback; Controller resumes and determines next gate | Infer terminal success from `/goal` judge |
+| `WAIT_CONTROLLER` | Valid successor Controller event after Controller resolution | Consume newer seq and re-run PRECHECK, including pause and current lease | Reuse expired E9 event or original goal |
+
+The happy path is **Controller event → Executor exact consume → continuous standalone execution → typed Executor result → Controller event-driven resume**. The blocker path is **Executor blocker → Controller authority resolution → new Controller event → fresh Executor precheck**. Pattern E is not an edge in either machine control path.
+
 ## Six-step execution procedure
 
 ### 1 — BOOT (exact recovery)
