@@ -142,6 +142,8 @@ The active Agent interaction contract is canonical mailbox/v2:
 - semantic Agent events are recorded to the TaskController audit ledger when audit is configured;
 - binding IDs never become canonical TaskController IDs.
 
+When **Hermes Desktop** is the Executor, also load `docs/runbooks/HERMES_DESKTOP_EXECUTOR.md` after `agents/hermes/agent-instructions.md`. The runbook only maps the canonical mailbox/v2 contract to Desktop native `/goal`; it does not activate TaskController or GWC, authorize effects, provide a mailbox-event adapter, or override user pause. Do not use `/loop` as periodic mailbox polling.
+
 TaskController human-plane behavior is canonical in `agents/shared/taskcontroller-human-plane-policy.md`.
 
 Slack is the Human Control Plane for active TaskController runs. For ChatGPT presenting a controlled run in Slack, the mandatory repository/transport chain includes:
