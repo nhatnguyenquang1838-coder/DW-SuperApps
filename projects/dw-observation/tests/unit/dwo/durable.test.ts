@@ -129,6 +129,12 @@ describe('AC-825-04 · duplicate idempotency, out-of-order, gap fail-closed', ()
     expect(result.gapDetected).toBe(true);
   });
 
+  it('an already-applied ordinal is duplicate even when its event ID differs', () => {
+    const result = applyEvent(new Set(), new Set([1]), 'EVT-DIFFERENT-ID', 1, 1);
+    expect(result.applied).toBe(false);
+    expect(result.duplicate).toBe(true);
+  });
+
   it('an in-order event is applied', () => {
     const result = applyEvent(new Set(), new Set(), 'EVT-1', 1, 1);
     expect(result.applied).toBe(true);

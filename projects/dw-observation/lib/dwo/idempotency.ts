@@ -45,6 +45,9 @@ export function applyEvent(
     // Stale: ordinal is below the applied watermark — already-applied region.
     return { applied: false, duplicate: false, outOfOrder: false, stale: true, gapDetected: false, position: expectedNextOrdinal - 1 };
   }
+  if (appliedOrdinals.has(ordinal)) {
+    return { applied: false, duplicate: true, outOfOrder: false, stale: false, gapDetected: false, position: expectedNextOrdinal - 1 };
+  }
   if (ordinal > expectedNextOrdinal) {
     // Out-of-order arrival: ordinal is ahead of the expected next, creating a
     // future gap. The event is flagged for deterministic reordering, NOT stale.
