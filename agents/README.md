@@ -13,8 +13,8 @@ Any explicit TaskController activation uses the reference-based A2A interaction 
 5. `agents/shared/taskcontroller-human-plane-policy.md` when Slack is used as the Human Control Plane;
 6. `agents/chatgpt-agent/slack-controller-mvp.md` for ChatGPT's Slack Human Plane transport overlay;
 7. `agents/hermes/agent-instructions.md` when Hermes is the Executor.
-8. **Hermes Desktop Standalone:** `docs/runbooks/HERMES_DESKTOP_STANDALONE.md` for a bounded atomic/single-Executor mission; mandatory when the parent has `max_children=0`.
-9. **Hermes Desktop Coordinator:** `docs/runbooks/HERMES_DESKTOP_COORDINATOR.md` only for an explicitly authorized child-capable parent with qualified delegation capability. These are host procedures, not authority sources or automatic mode upgrades.
+8. **Hermes Desktop Standalone:** `docs/runbooks/HERMES_DESKTOP_STANDALONE.md` for **one persistent main session**, with a separately admitted local Controller phase using Pattern E → MoA → Controller mailbox before main Executor consume/resume; no GPT Web exchange.
+9. **Hermes Desktop Coordination:** `docs/runbooks/HERMES_DESKTOP_COORDINATION.md` for **Hermes main session as Executor + external GPT Web Controller** via a verified bound in-app-browser / `drive_preview` pointer after Executor mailbox exact-readback. These modes are selected by controller location/communication binding, not `max_children` (which independently governs child runs). Neither runbook grants effect/approval or configures transport implicitly.
 
 TaskController boot must materialize/recover the Controller mailbox, Executor mailbox and continuation checkpoint and exact-read the Controller mailbox before first Executor dispatch. Missing mailbox boot is fail-closed; Slack is not a machine-transport fallback.
 
