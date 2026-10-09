@@ -13,18 +13,20 @@ Any explicit TaskController activation uses the reference-based A2A interaction 
 5. `agents/shared/taskcontroller-human-plane-policy.md` when Slack is used as the Human Control Plane;
 6. `agents/chatgpt-agent/slack-controller-mvp.md` for ChatGPT's Slack Human Plane transport overlay;
 7. `agents/hermes/agent-instructions.md` when Hermes is the Executor.
+8. `docs/runbooks/HERMES_DESKTOP_EXECUTOR.md` when Hermes **Desktop** is the Executor (host procedure only, not an authority source).
 
 TaskController boot must materialize/recover the Controller mailbox, Executor mailbox and continuation checkpoint and exact-read the Controller mailbox before first Executor dispatch. Missing mailbox boot is fail-closed; Slack is not a machine-transport fallback.
 
 The active machine path is:
 
 ```text
-Controller mailbox
-→ pointer-only wake-up when required
-→ Executor consumes newer Controller seq
-→ bounded execution
-→ Executor updates its own mailbox comment in place
-→ Controller polls exact Executor mailbox/cursor
+Controller persists continuation and appends typed mailbox/v2 event
+→ exact Controller event/cursor readback
+→ provider mailbox-event notification (when configured and qualified)
+→ Executor validates newer event, authority and lease
+→ bounded EXECUTE mission (Hermes Desktop native /goal only after precheck)
+→ Executor appends typed result and exact-readbacks its cursor
+→ provider Executor event resumes Controller once
 → semantic Human Plane projection to Slack
 ```
 
