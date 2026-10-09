@@ -40,32 +40,33 @@ Executor fetches canonical payload from mailbox
 
 The communication binding may later be GitHub, A2A HTTP, local IPC, NATS, Kafka/MSK or another provider without changing the semantic contract.
 
-## Session boot — A2A and mailboxes first
+## Session boot — Controller-owned gates before Executor dispatch
 
-TaskController activation MUST boot the A2A interaction state before the first Executor dispatch. Boot is not complete merely because the instruction files were read or a Slack RootCard exists.
+The canonical mailbox/v2 boot requirement applies **before the first Executor dispatch**. TaskController **source/Controller activation** and **Executor dispatch readiness** are distinct states. A fresh Controller may validate its native run context, assign itself understanding/planning/recovery actions and persist the native gate receipts without a live Executor session, Executor acknowledgement, lease, notification adapter, or a mailbox event. Do not issue a placeholder execution request to boot Controller-only work. Native gate/receipt checks and `RUN_HOLD` still govern.
 
-Required boot state:
+For a real **Controller → Executor** dispatch, the prerequisites are:
 
-- exactly one Controller mailbox reference for the run;
-- exactly one Executor mailbox reference for the run;
-- Controller and Executor mailbox cursors/expected sequence;
-- an ACTIVE `dw.taskcontroller.continuation/v1` checkpoint bound to the current exact head and both mailbox refs;
-- the Controller mailbox updated in place with that same checkpoint and exact-read back successfully.
+- exactly one Controller mailbox/v2 reference and one separate Executor mailbox/v2 reference for the new run (fresh refs may be empty beforehand);
+- bound recipient/Executor actor identity and a qualified event-driven delivery route;
+- the required exact source, contract/scope/authority checks;
+- a durable `dw.taskcontroller.continuation/v1` checkpoint bound to the current exact head, the two mailbox refs and cursor/expected sequences;
+- a canonical typed Controller event and producer cursor, plus exact-readback of event, cursor and continuation, **before** notification.
 
-Required order:
+Required order at the **first dispatch**, not before Controller-native gate work:
 
 ```text
-resolve current repository/run identity
-→ materialize or recover Controller mailbox
-→ materialize or recover Executor mailbox
-→ persist continuation checkpoint
-→ write Controller mailbox with same checkpoint
-→ exact-readback Controller mailbox/seq
-→ send pointer-only wake-up when the provider requires it
-→ poll exact Executor mailbox comment only
+resolve current repository/run identity + native gate owner
+→ if CONTROLLER-owned: perform native action and validate native receipt; do not dispatch
+→ if EXECUTOR-owned: validate actor/route/scope/authority and prepare dispatch
+→ bind the Controller and Executor mailbox/v2 refs
+→ native materialize_controller_transition (persist continuation first)
+→ append-only canonical Controller event + producer cursor; exact-readback all three
+→ signal pointer-only notification to the qualified Executor adapter
+→ Executor performs its own PRECHECK on received command
+→ Controller resumes only on a newer valid Executor event, without polling
 ```
 
-If any required mailbox/checkpoint/readback cannot be established, fail closed with `TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED`. Do not copy the command into Slack, use Slack thread progress as substitute state, or recover by replaying Slack/GPT history.
+A missing Executor session or notification route is a **dispatch blocker only**; it MUST NOT block an otherwise legal Controller-owned native gate. If a required mailbox/continuation/readback is missing **at dispatch**, fail closed with `TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED`. Never update the canonical v2 actor mailbox comment in place; never hand-author records, poll periodically, use Slack as machine fallback, or replay old session events.
 
 Activating TaskController does not activate GWC. GWC is loaded only when the current controlled task requires its governance model.
 
