@@ -149,6 +149,28 @@ action: Exact-read Executor event; return Controller successor event reference.
 - Resume from **exact** current event/cursor, durable continuation, actor, attempt, lease/fence, branch/head/CI and relevant evidence, never from prior ChatGPT messages, Slack history, Loop ticks or uncommitted local notes.
 - Do not mix `dw.taskcontroller.a2a/v1` mutable comments with canonical `dw.taskcontroller.mailbox/v2` append-only typed events. Runtime-owned materializers control sequences/digests.
 - For an expired authority or stale fence, the Controller must perform the legal recovery transition and issue a *new* valid event. No automatic `/goal resume`.
+
+  **Controller-host recovery entrypoint (one-shot, not an Executor command):**
+  `scripts/taskcontroller_mailbox_recover.py` invokes the canonical
+  `recover_high_integrity_session()` with a pinned head SHA and GitHub-backed
+  mailbox/continuation stores. Run only under a **separately admitted Controller**
+  identity with its existing host-provided `GITHUB_TOKEN`, after validating any
+  `RUN_HOLD` restrictions. For SCRUM-781:
+  ```bash
+  python scripts/taskcontroller_mailbox_recover.py \
+    --repository nhatnguyenquang1838-coder/gwc --issue 575 \
+    --run-id scrum781-q0-20260920T074727Z \
+    --expected-head-sha f6fd4121e492b61e8e0781614cd4b627d99ad979
+  ```
+  A successful run yields immutable **continuation recovery evidence only**:
+  `WAIT_CONTROLLER / RESOLVE_EXECUTION_AUTHORITY`. It does **not** grant G2,
+  advance Controller mailbox event/cursor, notify Hermes, or resume T1–T7.
+  Afterward, resolve route-specific authority and produce a fresh typed
+  execution request with `scripts/taskcontroller_mailbox_materialize.py`
+  (again using the admitted Controller runtime), exact-readback, and only then
+  deliver via an independently qualified Coordination notification adapter.
+  Never use a legacy `APPROVE G2` token as a Universal V2 cursor release.
+
 - Existing SCRUM-781 E9 event `#6058394365`, cursor `#6058397162`, continuation 23 (`WAIT_EXECUTOR / AWAIT_EXECUTOR_EVENT`) is not proof of a live Desktop callback; Executor E5 was seq 1, lease expired `2026-10-08T14:24:04Z`, and Desktop Loop was user-paused at tick 645. **Neither strategy may replay, auto-unpause or change Controller identity for this run**. Explicit approved transfer/renewal is required.
 - Do not conflate a local provider capability demonstration with a passed governed TaskController E2E or runtime readiness.
 
