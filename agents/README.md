@@ -13,18 +13,20 @@ Any explicit TaskController activation uses the reference-based A2A interaction 
 5. `agents/shared/taskcontroller-human-plane-policy.md` when Slack is used as the Human Control Plane;
 6. `agents/chatgpt-agent/slack-controller-mvp.md` for ChatGPT's Slack Human Plane transport overlay;
 7. `agents/hermes/agent-instructions.md` when Hermes is the Executor.
+8. **Hermes Desktop common runtime:** `docs/runbooks/HERMES_DESKTOP_RUNTIME.md` defines the **single** continuous main Executor state machine and Controller invocation contract. `standalone` = separately admitted serialized in-session Controller phase with Pattern E/MoA advisory; `coordination` = external GPT Web Controller via qualified bound in-app-browser / `drive_preview` notification after Executor mailbox exact-readback. Both return a canonical Controller mailbox successor before the main Executor re-PRECHECK. The Controller strategy is a bound actor/transport choice **independent of** `max_children`, not a permission to self-approve or downgrade mailbox/v2.
 
 TaskController boot must materialize/recover the Controller mailbox, Executor mailbox and continuation checkpoint and exact-read the Controller mailbox before first Executor dispatch. Missing mailbox boot is fail-closed; Slack is not a machine-transport fallback.
 
 The active machine path is:
 
 ```text
-Controller mailbox
-→ pointer-only wake-up when required
-→ Executor consumes newer Controller seq
-→ bounded execution
-→ Executor updates its own mailbox comment in place
-→ Controller polls exact Executor mailbox/cursor
+Controller persists continuation and appends typed mailbox/v2 event
+→ exact Controller event/cursor readback
+→ provider mailbox-event notification (when configured and qualified)
+→ Executor validates newer event, authority and lease
+→ bounded EXECUTE mission (Hermes Desktop native /goal only after precheck)
+→ Executor appends typed result and exact-readbacks its cursor
+→ provider Executor event resumes Controller once
 → semantic Human Plane projection to Slack
 ```
 

@@ -142,6 +142,8 @@ The active Agent interaction contract is canonical mailbox/v2:
 - semantic Agent events are recorded to the TaskController audit ledger when audit is configured;
 - binding IDs never become canonical TaskController IDs.
 
+When **Hermes Desktop** is the main Executor, load **one** host procedure: `docs/runbooks/HERMES_DESKTOP_RUNTIME.md`, after `agents/hermes/agent-instructions.md`. It defines one common continuous Executor lifecycle and invokes one **pre-bound Controller strategy only at a semantic decision boundary**: `standalone` = same-session serialized internal Controller phase with separately admitted actor identity and Pattern E → MoA advisory synthesis; `coordination` = GPT Web Controller notified using an approved bound in-app-browser / `drive_preview` pointer after typed Executor mailbox readback. Both require separate Controller/Executor actor ownership, exact event/cursor/continuation, current authority/lease/fence and user-pause guards. `max_children=0` governs child-run authority, **not** Desktop mode. Never infer rights from MoA/GPT prose; no `/loop` mailbox polling or Slack machine fallback. The runbook is host guidance, not an adapter implementation or approval source.
+
 TaskController human-plane behavior is canonical in `agents/shared/taskcontroller-human-plane-policy.md`.
 
 Slack is the Human Control Plane for active TaskController runs. For ChatGPT presenting a controlled run in Slack, the mandatory repository/transport chain includes:
