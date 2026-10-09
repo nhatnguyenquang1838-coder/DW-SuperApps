@@ -1,115 +1,114 @@
-# Hermes Desktop — Standalone Executor Runbook
+# Hermes Desktop — Standalone Mode Runbook
 
-**Mode:** STANDALONE — one Hermes Desktop Executor directly delivers one bounded Controller mission without delegating child runs.
-**Scope:** DW-SuperApps TaskController missions executed in Hermes Desktop.
-**Authority:** This is a host runbook, not a new runtime, transport, permission, or gate.
+**User-defined mode:** One persistent **Hermes Desktop main session** runs to a verified outcome without calling an external **GPT Web / in-app-browser Controller**. When a Controller decision is required, the same host performs a separately bound **Controller phase**: Pattern E fanout → MoA synthesis → canonical Controller mailbox transition. The **main session**, designated Executor for the work, then reads the new Controller mailbox event and continues execution.
 
-## Mode selection
+**Not a separate runtime, plugin, approval engine or second standing Executor.** This runbook defines the session operating pattern; canonical TaskController contracts decide whether an in-session Controller phase may actually produce a machine transition. Mere role-playing or a prompt saying "Controller" never grants that binding.
 
-- Select **Standalone** for a single bounded mission when the active Controller contract assigns Hermes as its only Executor. An atomic mission with `max_children=0` **must not** spawn TaskController child runs or invoke `delegate_task` on the mission's behalf.
-- Select [Coordinator Mode](HERMES_DESKTOP_COORDINATOR.md) **only** when an exact Controller-owned parent contract explicitly permits child delegation/fanout and the provider's delegation binding is qualified.
-- `EXECUTE` denotes a validated effect boundary, **not** a mode switch. Standalone may operate under `PLAN`, `TRANSPORT_REPAIR`, or `EXECUTE` as allowed; only `EXECUTE` with live authority permits actual repository effects.
-- When mode or identity is ambiguous, fail closed. Neither a Desktop prompt nor `/goal` grants a role, gate, execution lease, or child authority.
-- The current SCRUM-781 E9 T1–T7 contract declares `max_children=0`; treat it as **Standalone-only**, and keep its user pause and expired authority intact.
+## 1. Definitions and admission
 
-## Canonical boot order
+- **One continuous session** means one enduring Hermes Desktop *main Executor* session. Pattern E may call existing specialist Bot Chat sessions as **temporary advisory tools**, but does not create a second main session or communicate with GPT Web.
+- **No outside GPT calls** means no GPT Web exchange, browser injection, Drive Preview handoff or external Controller conversation. It does **not** mean network-offline: the GitHub canonical mailbox and Pattern E's gateway/model backends may use network services. If literal offline execution is required, this binding must be redesigned and approved separately.
+- **Logical Controller phase** is a serialized, explicitly authorized invocation of the *canonical TaskController Controller* from the Desktop host. It has its own validated identity, producer namespace, mailbox writer and continuation. **Executor and Controller cannot write each other's streams.** The same UI session does not collapse their authority boundaries.
+- **Executor phase** belongs to the main Hermes session. It may use native `/goal` to implement one bounded approved contract. Routine test/fix loops do not invoke Controller.
+- `max_children` specifies **TaskController child-run authority**, not whether the Desktop uses Standalone or Coordination mode. `max_children=0` forbids delegating governed Executor child runs. Controller-phase **read-only advisory Pattern E** is a separate scoped analysis capability, never disguised as an Executor child or given mutation authority.
+- Where a run is already bound to a **GPT Web Controller**, Standalone must **not** silently take over Controller identity. First obtain and materialize the canonical Controller reassignment/continuation and required authority. Until then, stay paused or execute only an already-valid contract.
 
-1. Read [root AGENTS.md](../../AGENTS.md), `workspace.yaml`, and [TaskController registry](../../controllers/taskcontroller.yaml).
-2. Read [agent index](../../agents/README.md), [A2A contract](../../agents/shared/taskcontroller-a2a-protocol.md), and [Hermes instructions](../../agents/hermes/agent-instructions.md).
-3. Recover exact Controller event/cursor, Executor cursor, durable continuation, run/attempt identity, source refs, scope, and authority.
-4. Before local mutation of a registered submodule, read [Executor worktree policy](../../controllers/executor-worktree-policy.md) and [isolated worktree runbook](ISOLATED_SUBMODULE_WORKTREE.md).
-5. Apply GWC or other project governance only when active for the specific task.
+## 2. Canonical source order
 
-Repository contracts and exact evidence prevail over this runbook or a Desktop prompt. A `hermes-cloud` provider binding does **not** prove an event adapter exists in Hermes Desktop.
+Read [root AGENTS.md](../../AGENTS.md), `workspace.yaml`, [TaskController registry](../../controllers/taskcontroller.yaml), [agent index](../../agents/README.md), [A2A protocol](../../agents/shared/taskcontroller-a2a-protocol.md) and [Hermes Executor overlay](../../agents/hermes/agent-instructions.md). GWC activates only if the controlled task requires it. For child-repository writes load [Executor worktree policy](../../controllers/executor-worktree-policy.md) and [isolated worktree runbook](ISOLATED_SUBMODULE_WORKTREE.md).
 
-## Modes
+For advisory fanout consult the externally managed [`dwa-a2a-coordination` Pattern E — SlackFanout source](https://github.com/nhatnguyenquang1838-coder/hermes-sync/blob/67e332fb2ef3d2cd0e86e0b8f1a20fcf3d235bb6/skills/dwa-a2a-coordination/SKILL.md). Pattern E's verified original entrypoint accepts a task string through `~/.hermes/dw_superapps/fanout.py`, consults specialist Bot Chat sessions, and optionally synthesizes one MoA assessment. **Adapting the Slack-ingress script for a Controller-phase decision inside Desktop is proposed, not verified on the current host**; inspect actual installed skill, script and provider before invocation. Historical v1 mutable-mailbox/Slack-poll instructions in that skill are *not* authoritative for current mailbox/v2.
 
-| Mode | Trigger | Behavior |
-| --- | --- | --- |
-| Manual-assisted | Human opens the bound Desktop session with an exact Controller event ref | Read and validate the event first; a human prompt does not itself confer authority. |
-| Unattended | Verified provider mailbox-event notification | Fetch only the referenced newer event; require a demonstrated Desktop delivery/consumption path. |
-| Paused / idle | User pause, no valid event, or hard boundary | No effects, scheduled mailbox polling, automatic `/goal` start, or Slack machine wakeup. |
-
-Use native **`/goal`** for one bounded authorized **standalone** execution mission. `/goal <text>` starts its first turn immediately, so do **not** set or resume a goal until prechecks pass. Never use `/loop` or heartbeat as a mailbox polling substitute. The `/goal` judge, turn count, and stop reason are **not** canonical TaskController results.
-
-## Controller continuity — GPT Exchange vs Pattern E
-
-**Do not switch transport based on terminology.** The canonical DW-SuperApps TaskController contract uses **typed GitHub mailbox/v2 + verified provider mailbox-event delivery**. It does **not** require a bound ChatGPT in-app-browser, `desktop_preview`, or `drive_preview` for the current mailbox/v2 lane. A missing provider event adapter is a **delivery blocker**, not permission to reintroduce browser automation, Slack machine messages or polling.
-
-The external Hermes skill [`dwa-a2a-coordination` Pattern E — SlackFanout](https://github.com/nhatnguyenquang1838-coder/hermes-sync/blob/67e332fb2ef3d2cd0e86e0b8f1a20fcf3d235bb6/skills/dwa-a2a-coordination/SKILL.md) fans a Slack-ingress task to specialist **Bot Chat** sessions using a headless `fanout.py`, then optionally performs MoA synthesis. **Its product is advisory synthesis, not a ChatGPT Controller reply, mailbox event, approval, or execution release.** Availability of `~/.hermes/dw_superapps/fanout.py` on this Desktop is unverified. That skill also contains legacy mutable/v1 and Slack/polling guidance; **current DW-SuperApps mailbox/v2 and event-driven contracts take precedence**.
-
-For this Standalone mission (`max_children=0`), **do not invoke Pattern E, `delegate_task`, or extra Bot Chat sessions as delegated child work**. If specialist fanout is valuable, the **Controller** may commission a separately governed read-only analysis run before contracting (or explicitly replan/rebind a child-capable mission); this does not convert the existing Executor's role, authorization, or mode. If DWA is to replace GPT as the Controller, it requires a separate canonical Controller identity/binding/authority transition — Pattern E alone cannot make that change.
-
-### Closed-loop continuity check
-
-| Current state | Input or outcome | Legal next action | Forbidden shortcut |
-| --- | --- | --- | --- |
-| `PAUSED` | User pause remains | No execution; await explicit unpause plus new valid work | Goal/loop restart or Pattern E wakeup |
-| `IDLE` | No event delivered | Remain idle; qualify adapter if unattended execution is required | Poll GitHub, Slack machine wakeup, browser/preview bypass |
-| `EVENT_RECEIVED` | New Controller event | Exact-read and validate event/cursor/continuation + authority | Assume notification = execution permission |
-| `VALIDATED EXECUTE` | Active authority and approved scope | One native `/goal` mission, continuing internal test/fix | Spawn child sessions under `max_children=0` |
-| `EXECUTING` | Recoverable in-scope test failure | Self-repair and test again while lease/identity valid | Request a new Controller decision per RED/GREEN |
-| `EXECUTING` | Hard authority/plan/dependency boundary | Emit typed Executor blocker to its mailbox, then stop; Controller resumes from a **new Executor event** | Ask specialist synthesis to mint approval or directly unblock |
-| `EXECUTING` | All contracted AC/evidence verified | Emit typed Executor result and exact-readback; Controller resumes and determines next gate | Infer terminal success from `/goal` judge |
-| `WAIT_CONTROLLER` | Valid successor Controller event after Controller resolution | Consume newer seq and re-run PRECHECK, including pause and current lease | Reuse expired E9 event or original goal |
-
-The happy path is **Controller event → Executor exact consume → continuous standalone execution → typed Executor result → Controller event-driven resume**. The blocker path is **Executor blocker → Controller authority resolution → new Controller event → fresh Executor precheck**. Pattern E is not an edge in either machine control path.
-
-## Six-step execution procedure
-
-### 1 — BOOT (exact recovery)
-- Recover canonical mailbox/v2 event/cursor and immutable continuation; do not scan GitHub issue history or rely on Slack for machine state.
-- Bind run/node, Controller epoch/seq, Executor last-seen seq, actor/session, branch/head, plan, scope, and provider identity.
-- Reject stale/duplicate/conflicting events, sequence gaps, digests or schema mismatches; never silently downgrade to mutable mailbox/v1.
-
-### 2 — PRECHECK (fail closed)
-- Validate contract mode (`EXECUTE` for real implementation), approval, current lease time, fencing/generation, idempotency, scope, source/base/head, worktree and stop boundaries.
-- Verify the user has not paused/cancelled. Require the durable continuation persisted before dispatch.
-- Missing capability or invalid binding means **no `/goal` and no repository effects**. Report a canonical Controller-owned blocker when permissible.
-
-### 3 — EXECUTE (native Hermes standalone goal)
-After all checks pass, set **one** goal in the bound Desktop session using exact variables from the validated contract:
+## 3. Continuous operating sequence
 
 ```text
-/goal Complete <work-packages> for <run_id> on <approved branch>.
-verify: <acceptance criteria; tests; exact-head and mailbox evidence>
-constraints: Only <approved actions and paths>; preserve <immutable artifacts>; obey lease/fence; no unauthorized PR/merge/deploy/production/secrets.
-boundaries: <approved writable roots and execution identity>
-stop when: paused, expired authority, material drift, missing capability or hard blocker.
+MAIN HERMES DESKTOP SESSION (persists)
+  BOOT canonical run and bind main Executor
+     |
+  Have a valid Controller event and current execution authority?
+     | YES
+     v
+  EXECUTOR: exact-read Controller event/cursor and continuation → PRECHECK
+     |
+  EXECUTOR: one native /goal → implement → test → in-scope fix → verify
+     |
+     +-- ROUTINE WORK --> continue in same goal, no Controller exchange
+     |
+     +-- HARD DECISION NEEDED --> publish typed Executor progress/blocker
+     |                             (exact readback)
+     |                             |
+     |                  SWITCH to permitted CONTROLLER PHASE
+     |                     exact-read Executor event
+     |                     Pattern E read-only specialists → MoA
+     |                     verify advice against exact current sources
+     |                     check human/authority gate and source bindings
+     |                     materialize new Controller event + continuation + cursor
+     |                     exact readback
+     |                             |
+     |                  SWITCH BACK to MAIN EXECUTOR PHASE
+     |                     consume newer Controller event exactly once
+     |                     re-PRECHECK lease/fence/scope/pause/source
+     |                     resume native /goal only if still authorized
+     |                             |
+     +-----------------------------+
+     |
+     +-- VERIFIED FINISH --> typed Executor SUCCEEDED/evidence + readback
+                               |
+                       Controller phase verifies final outcome/next gate
+                               |
+                             IDLE
 ```
 
-The goal text is an execution aid, **not** authorization or dispatch. Do not spawn subagents, create child run identifiers, or synthesize child result/provenance in Standalone mode. Do not use `/goal draft` to invent scope. Optionally add a safe deterministic `/goal gate add <test command>` when permitted; a quality gate cannot override canonical validation.
-- Continue implementation → test → in-scope repair → regression under the same **valid** EXECUTE boundary, without repetitive Controller turns.
-- Re-check time-bound authority before protected effects and at material checkpoints. `/goal resume` also requires a fresh PRECHECK.
-- Do not let a goal's continuation budget drive an expired attempt.
+For first mission bootstrap, an admitted Controller phase can prepare the **initial** Controller event before any Executor effect, but only if this session is already bound as an authorized Controller host; no implicit bootstrap from an expired GPT Controller run.
 
-### 4 — VERIFY (actual evidence)
-- Verify exact branch/head, approved diff, commands/results, tests and required acceptance criteria.
-- Treat `/goal` judge `done`, turn-budget stop, `last_stop_reason`, or desktop session exit as UI state only.
+### A — BOOT / PRECHECK
 
-### 5 — REPORT (typed mailbox/v2)
-- Emit contracted typed progress, completion or one of the canonical blockers using the runtime-owned MailboxRepository/materializer, not handwritten GitHub JSON or a Markdown E-report.
-- Exact-readback the Executor event/cursor and evidence; Controller resumes **on the new Executor event**, never by periodic polling.
-- Controller owns `CONTINUE | WAIT_CONTROLLER | TERMINAL` and Human approval. Slack remains a human-plane projection.
+Exact-read bound Controller/Executor mailbox events and cursors, immutable continuation, run/node/attempt identity, source/base/head, scope, approval, **current** lease and fence, idempotency and user pause. Reject stale seq, duplicate/conflicting digest, missing actor permission or any unavailable canonical materializer. The initial state is **PAUSED** whenever the user has paused the Desktop; no self-resume.
 
-### 6 — STOP (bounded)
-- Stop on verified completion or a real authority, scope, material-plan or external-dependency boundary.
-- Preserve continuation; return to paused/idle. Never self-mint authority, restart the prior event, resume a user pause, or schedule `/loop`.
+### B — EXECUTOR (main session)
 
-## SCRUM-781 historical guard (not an executable command)
+Only after valid `EXECUTE` authority, run one native `/goal` to cover the ordered work packages and continue-until criteria. Recheck lease/fence before protected effects and on a resume. In-scope RED/GREEN, lint, tests, refactoring and repairs **stay inside** the goal. Never stop just to ask the Controller for an ordinary coding choice. `/goal` completion and `last_stop_reason` are UI state, not task evidence.
 
-E9 Controller event `#6058394365`, cursor `#6058397162`, continuation record 23 (`WAIT_EXECUTOR / AWAIT_EXECUTOR_EVENT`), and E5 Executor seq 1 **do not prove Desktop delivery**. The G2 lease expired **2026-10-08T14:24:04Z**; the reported Loop was user-paused at tick 645. **Do not replay the event or resume a goal**. Require canonical Controller authority recovery, new valid successor event/cursor/continuation, qualified Desktop delivery and an explicit release of the pause.
+### C — CONTROLLER (serialized internal phase, as needed)
 
-## Acceptance checks
+Stop Executor effects first. Publish/read back a typed Executor status/blocker or final result when contracted. Enter Controller logic **only** through a validated Controller actor binding. Exact-read the newer Executor event, classify the decision, and ground specialist prompts with exact repo/SHA/task/evidence. Use **Pattern E fanout → optional /moa synthesis** for advisory inputs when the Controller decision warrants it; the synthesis never grants rights or replaces source verification.
 
-- [ ] Root and Hermes host routing resolve Standalone and Coordinator to two separate runbooks, and this mode forbids child dispatch.
-- [ ] Exact event, cursor, continuation, source, lease/fence, scope, actor and user-pause prechecks precede `/goal`.
-- [ ] No polling/Slack machine fallback; no assumed `hermes-cloud`→Desktop wakeup.
-- [ ] In-scope test/fix work remains one bounded mission; duplicates never execute twice.
-- [ ] Exact-head evidence, not `/goal` judge, determines completion.
-- [ ] Typed Executor result/readback is available and Controller resumes from event.
-- [ ] Desktop unattended mode remains *unqualified* until live delivery + consumption succeeds.
+For the chosen decision, apply the canonical gate and Human authority rules. A decision requiring new Human approval **must pause**; no self-approval, fabricated signature, lease extension, scope widening, role impersonation or approval inferred from MoA consensus. If permitted, materialize exactly one typed **Controller** successor through runtime-owned APIs, persist continuation and cursor, and exact-readback.
 
-## Upstream host references
+### D — RETURN TO EXECUTOR
 
-[Hermes persistent goals](https://github.com/NousResearch/hermes-agent/blob/main/website/docs/user-guide/features/goals.md) · [Hermes Desktop](https://github.com/NousResearch/hermes-agent/blob/main/website/docs/user-guide/desktop.md). Check command support against the **installed** Hermes version before using it.
+Change *operating phase*, not history. The main Executor exact-consumes the newer Controller event through its bound mailbox and reruns PRECHECK. Resume `/goal` under the updated valid contract only; dedupe by canonical event identity/sequence so a repeated signal never repeats effects.
+
+### E — TERMINAL
+
+Write exact test, diff, head/CI and acceptance evidence to a typed Executor result (or one canonical blocker). Controller verifies the semantic end condition and transition. Do not report complete solely because the session/goal stopped. No PR/merge/deploy/production or other separately governed effect without its actual authority.
+
+## 4. Loop state, liveness and stop conditions
+
+| State | Action | Continuity invariant |
+| --- | --- | --- |
+| `PAUSED` | No effects or automatic resume | An old Loop tick or expired Controller event cannot wake work |
+| `EXECUTOR_ACTIVE` | Continue bounded goal | No repeated Controller turn for ordinary test/fix |
+| `CONTROLLER_REQUIRED` | Report exact Executor event and switch phase | Never silently invent authority |
+| `CONTROLLER_ANALYSIS` | Pattern E → MoA advisory + verified decision | No machine mutations by specialist advice |
+| `AUTHORITY_REQUIRED` | Materialize real actionable Human request; stop | No self-approval or fake next lease |
+| `CONTROLLER_PUBLISHED` | Exact readback of new Controller event/cursor | Only canonical materializer may write |
+| `EXECUTOR_RESUME` | Consume newer event; fresh precheck | No replay of old work |
+| `TERMINAL` | Verified result and next action | Session can idle; no polling |
+
+The main session can continue *without GPT Web*, but it cannot guarantee infinite progress: missing authority, missing Pattern E/provider capability, material plan drift, user pause and unresolvable dependency produce truthful STOP/BLOCKED outcomes. A read-only advisory limitation must not be silently converted into effect authority.
+
+## 5. SCRUM-781 guard
+
+The recorded GPT Controller E9 event `#6058394365` and continuation record 23 are **not** an in-session Controller binding. The Executor E5 was at logical seq 1, the lease expired `2026-10-08T14:24:04Z`, and the historical Hermes Loop was user-paused at tick 645. **Do not resume the old event, create a replacement Controller identity or turn on Standalone execution from this runbook.** Controller transfer/recovery, fresh exact authority and removal of user pause are separately required.
+
+## 6. Acceptance criteria
+
+- [ ] Exactly one persistent main Hermes Desktop Executor session; no GPT Web/browser/Drive Preview path.
+- [ ] Any in-session Controller phase uses an explicit *canonical* Controller actor binding and separate writer; never self-approves.
+- [ ] Pattern E and MoA are advisory, grounded to exact current sources, with no child effect authority.
+- [ ] `max_children=0` prohibits governed Executor child runs but does not automatically prohibit separately authorized read-only Controller analysis.
+- [ ] Every Controller/Executor switch persists an exact typed mailbox event/cursor and continuation; event sequences are monotonic and idempotent.
+- [ ] Native `/goal` starts only after current PRECHECK; routine RED/GREEN/fix remains continuous.
+- [ ] Hard blocker/Human gate yields a durable actionable stop, never fake progress.
+- [ ] Paused/expired SCRUM-781 state is unchanged; live Desktop Pattern E/Controller-role switching not claimed as tested.
