@@ -6,7 +6,7 @@ const SCREENSHOTS: ReadonlyArray<{
   name: string;
   url: string;
   semanticLabel: string; // human-readable description of the semantic assertion
-  check: (page: import("@playwright/test").Page) => Promise<boolean>;
+  check: (page: import("@playwright/test").Page) => Promise<void>;
 }> = [
   {
     name: "Dashboard",
@@ -14,7 +14,6 @@ const SCREENSHOTS: ReadonlyArray<{
     semanticLabel: "dashboard population model visible",
     check: async (page) => {
       await expect(page.locator("[data-testid='dashboard']")).toBeVisible();
-      return true;
     },
   },
   {
@@ -25,7 +24,6 @@ const SCREENSHOTS: ReadonlyArray<{
       // Page renders a visible heading in all states (list, empty, or 404).
       const heading = page.locator("h1").first();
       await expect(heading).toBeVisible();
-      return true;
     },
   },
   {
@@ -37,7 +35,6 @@ const SCREENSHOTS: ReadonlyArray<{
       // WorkspaceHeader renders data-mode={mode} — verify the badge is present
       const modeBadge = page.locator("[data-mode]");
       await expect(modeBadge.first()).toBeVisible();
-      return true;
     },
   },
   {
@@ -49,7 +46,6 @@ const SCREENSHOTS: ReadonlyArray<{
       // WorkspaceHeader renders data-mode={mode} — verify the badge is present
       const modeBadge = page.locator("[data-mode]");
       await expect(modeBadge.first()).toBeVisible();
-      return true;
     },
   },
   {
@@ -58,7 +54,6 @@ const SCREENSHOTS: ReadonlyArray<{
     semanticLabel: "fixture catalog with 30 runs",
     check: async (page) => {
       await expect(page.locator("[data-testid='fixture-catalog']")).toBeVisible();
-      return true;
     },
   },
   {
@@ -70,7 +65,6 @@ const SCREENSHOTS: ReadonlyArray<{
       await btn.click();
       await page.waitForLoadState("networkidle");
       await expect(page.locator("[data-testid='conflict-banner']")).toBeVisible();
-      return true;
     },
   },
 ] as const;
@@ -88,8 +82,9 @@ test.describe("DWO visual regression — screenshots + semantic assertions", () 
       });
 
       // Semantic check: the expected fail-closed/mode/status text must be present
-      const ok = await shot.check(page);
-      expect(ok).toBe(true);
+      await test.step(shot.semanticLabel, async () => {
+        await shot.check(page);
+      });
 
       // Screenshot comparison against baseline
       await expect(page).toHaveScreenshot(`${shot.name}.png`, {
