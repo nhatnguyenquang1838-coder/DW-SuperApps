@@ -128,11 +128,12 @@ For the canonical GitHub mailbox/v2 lane, the checkpoint is stored as a separate
 Required pre-dispatch sequence:
 
 ```text
-persist continuation
-→ write Controller mailbox with same checkpoint
-→ exact-readback Controller mailbox
-→ publish provider mailbox-event notification
-→ remain at AWAIT_EXECUTOR_EVENT
+native materialize_controller_transition:
+  persist + exact-read continuation
+  → append typed Controller mailbox/v2 event and producer cursor
+  → exact-read event + cursor + continuation
+→ publish qualified provider mailbox-event pointer
+→ remain at AWAIT_EXECUTOR_EVENT only after real Executor dispatch
 → on a newer Executor event, exact-read that event once and resume
 ```
 
