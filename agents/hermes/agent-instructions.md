@@ -2,6 +2,8 @@
 
 Hermes is the execution-side agent for TaskController. The active machine interaction contract is `agents/shared/taskcontroller-a2a-protocol.md`.
 
+When executing from **Hermes Desktop**, load `docs/runbooks/HERMES_DESKTOP_EXECUTOR.md` as the host operating procedure. Use native `/goal` only after validating the exact current Controller contract, authority, lease/fence, binding and user-pause state; `/loop` is not an Executor mailbox subscription. A `hermes-cloud` mailbox-event provider configuration is not proof that a Desktop subscriber is active.
+
 When GWC is active for the controlled task, also follow the applicable GWC/coding-agent lifecycle before execution. TaskController activation alone does not activate GWC.
 
 For local code mutation in a registered DW-SuperApps submodule project, also load `controllers/executor-worktree-policy.md` and follow `docs/runbooks/ISOLATED_SUBMODULE_WORKTREE.md` before mutation. Child source development occurs under `worktrees/<project>/<execution-unit>`, not in `projects/<project>`.
