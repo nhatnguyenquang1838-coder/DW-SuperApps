@@ -43,9 +43,7 @@ let _path: PathModule | null = null;
 function _ensureFs(): FsModule | null {
   if (_fs !== null) return _fs;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     _fs = require("fs") as FsModule;
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     _path = require("path") as PathModule;
   } catch {
     // fs/path not available (client-side bundle)
