@@ -12,18 +12,14 @@ Any explicit TaskController activation MUST load current repository instructions
 
 Required composition includes root/project instructions, `controllers/taskcontroller.yaml`, this file, `agents/shared/taskcontroller-a2a-protocol.md`, and when Slack is the human plane, `agents/shared/taskcontroller-human-plane-policy.md` plus `agents/chatgpt-agent/slack-controller-mvp.md`. Do not substitute conversation memory, prior Slack history, prior session summaries, external Slack policy documents, Power-local copies, or stale host instructions for this load chain.
 
-TaskController activation is incomplete until the canonical mailbox/v2 transport is booted for the run:
+**Two distinct activation boundaries; do not conflate them:**
 
-1. materialize/recover exactly one Controller mailbox/v2 reference;
-2. materialize/recover exactly one Executor mailbox/v2 reference;
-3. persist the bounded `dw.taskcontroller.continuation/v1` checkpoint with mailbox pointers/cursors and exact head;
-4. materialize the Controller transition only through `taskcontroller/runtime/high_integrity_session.py::materialize_controller_transition`;
-5. exact-read the append-only event, durable cursor, and continuation;
-6. only then send any provider wake-up or first Executor dispatch.
+1. **Controller-native bootstrap/activation:** load and validate canonical instructions, project-native runtime, run/source identity, gate ownership, and evidence. The Controller may complete its own understanding, planning, design, and safe recovery gates without an Executor session, acknowledgement, lease, notification adapter, or a TaskController command event. A fresh run does not require an older run's mailbox/continuation. Project-native receipts and current `RUN_HOLD`/effect restrictions remain mandatory. Lack of Executor transport must not turn Controller-owned gates into `WAIT_EXECUTOR`.
+2. **First Executor dispatch readiness:** before sending a Controller COMMAND/CORRECTION to an Executor, bind exactly one Controller mailbox/v2 ref and one separate Executor mailbox/v2 ref, a qualified recipient/actor and event notification route; persist `dw.taskcontroller.continuation/v1` with exact head and mailbox pointers/cursors; materialize the typed Controller event **only** using `taskcontroller/runtime/high_integrity_session.py::materialize_controller_transition`; exact-read the immutable event, producer cursor and continuation. Only then notify/wake the Executor. The Executor's own PRECHECK occurs **after receipt**, not as Controller bootstrap admission, and never grants effects by itself.
+
+Mailbox refs may be reserved at Controller BOOT with **no event**; do not fabricate a command, `WAIT_EXECUTOR` checkpoint, lease, acknowledgement or event just to satisfy Controller-only gate progress. Until the first actual dispatch, mailbox materialization is not a prerequisite for Controller-native gate progression. A real dispatch still fails closed as `TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED` (dispatch activation `BLOCKED`) when a required mailbox, continuation or exact readback is missing. Do not fall back to Slack as the machine command, progress, or recovery transport.
 
 A2A/v1 mutable-comment runtime is compatibility-only and requires explicit opt-in; it is never the default fallback.
-
-If any required mailbox/checkpoint/readback cannot be established, activation `BLOCKED` with `TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED`. Do not fall back to Slack as the machine command, progress, or recovery transport.
 
 The repository-canonical human-plane policy is the only TaskController Slack policy input. Do not load or reconcile external Slack-hosted policy documents during activation.
 
