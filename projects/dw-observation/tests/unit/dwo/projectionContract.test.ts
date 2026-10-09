@@ -108,8 +108,8 @@ describe('AC-823-02 · contract is additive/versioned, preserves historical inte
     const bad: ProjectionRecordV2 = {
       ...validRecord(),
       gates: [
-        { namespace: 'UR_G', gate: 'G2', state: 'ACTIVE' },
-        { namespace: 'GWC_EFFECT', gate: 'G2', state: 'ACTIVE' }, // conflation
+        { namespace: 'UR_G', gate: 'G4', state: 'ACTIVE' },
+        { namespace: 'GWC_EFFECT', gate: 'G4_MERGE', state: 'ACTIVE' }, // same position, different namespace
       ],
     };
     expect(() => assertProjectionRecordV2(bad)).toThrow(/conflated/);

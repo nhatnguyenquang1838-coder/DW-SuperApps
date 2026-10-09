@@ -113,13 +113,20 @@ export function assertProjectionRecordV2(record: ProjectionRecordV2): void {
   }
   if (!record.recordId) throw new Error('recordId is required');
   if (!record.runIdentity.runId) throw new Error('runId is required');
-  // UR-G* and GWC-* gates must not be conflated: a record cannot carry both a
-  // UR-G* gate and a GWC-* gate for the same position number.
-  const urGates = new Set(record.gates.filter((g) => g.namespace === 'UR_G').map((g) => g.gate));
-  const gwcGates = new Set(record.gates.filter((g) => g.namespace === 'GWC_EFFECT').map((g) => g.gate));
-  for (const g of gwcGates) {
-    if (urGates.has(g as UrGate)) {
-      throw new Error(`gate ${g} conflated across UR-G* and GWC-* namespaces`);
+  // UR-G* and GWC-* gates are distinct values but share numeric positions.
+  // Compare those positions; comparing the gate strings themselves can never
+  // detect cross-namespace conflation because the two vocabularies are disjoint.
+  const urPositions = new Set(
+    record.gates
+      .filter((g) => g.namespace === 'UR_G')
+      .map((g) => Number(g.gate.slice(1, 2))),
+  );
+  const gwcGates = record.gates
+    .filter((g) => g.namespace === 'GWC_EFFECT')
+    .map((g) => g.gate);
+  for (const gate of gwcGates) {
+    if (urPositions.has(Number(gate.slice(1, 2)))) {
+      throw new Error(`gate ${gate} conflated across UR-G* and GWC-* namespaces`);
     }
   }
 }
