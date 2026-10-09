@@ -101,7 +101,7 @@ def test_native_controller_phase_precedes_a2a_executor_boot_not_old_mutable_comm
     assert "## Session boot — Controller-owned gates before Executor dispatch" in bootstrap
     assert "native materialize_controller_transition (persist continuation first)" in bootstrap
     assert "Executor performs its own PRECHECK on received command" in bootstrap
-    assert "Missing Executor session" in bootstrap
+    assert "A missing Executor session" in bootstrap
     assert "updated in place" not in bootstrap
     assert "poll exact Executor mailbox comment only" not in bootstrap
     assert "Do not issue a placeholder execution request" in bootstrap
