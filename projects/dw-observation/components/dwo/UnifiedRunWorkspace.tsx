@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import type {
   UnifiedRunWorkspaceModel,
@@ -51,24 +51,33 @@ export default function UnifiedRunWorkspace({
     return `${selectedNode.gateId ?? ""} · ${selectedNode.title}`;
   }, [selectedNode, model.runId]);
 
-  // Auto-advance for LIVE_SIM mode
-  const timerRef = useState<ReturnType<typeof setInterval> | null>(null);
+  // Auto-advance for LIVE_SIM mode.
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const stopPlay = useCallback(() => {
-    if (timerRef[0]) {
-      clearInterval(timerRef[0]);
-      timerRef[0] = null;
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
     }
     setPlaying(false);
-  }, [timerRef]);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, []);
 
   const play = useCallback(() => {
-    if (timerRef[0]) {
+    if (timerRef.current) {
       stopPlay();
       return;
     }
     setPlaying(true);
-    timerRef[0] = setInterval(() => {
+    timerRef.current = setInterval(() => {
       setCursor((c) => {
         if (c >= len - 1) {
           stopPlay();
@@ -77,7 +86,7 @@ export default function UnifiedRunWorkspace({
         return c + 1;
       });
     }, playerSpeed);
-  }, [len, playerSpeed, stopPlay, timerRef]);
+  }, [len, playerSpeed, stopPlay]);
 
   const goTo = useCallback(
     (c: number) => {

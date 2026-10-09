@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 import UnifiedRunWorkspace from "@/components/dwo/UnifiedRunWorkspace";
 import WorkspaceHeader from "@/components/dwo/WorkspaceHeader";
 import ScenarioRunRail from "@/components/dwo/ScenarioRunRail";
@@ -279,6 +279,23 @@ describe("UnifiedRunWorkspace", () => {
     expect(screen.getByTestId("node-inspector")).toBeInTheDocument();
     expect(screen.getByTestId("nextflow-panel")).toBeInTheDocument();
     expect(screen.getByTestId("runtime-player")).toBeInTheDocument();
+  });
+
+  it("clears the playback interval when the workspace unmounts", () => {
+    vi.useFakeTimers();
+    try {
+      const { unmount } = render(
+        <ReactFlowProvider>
+          <UnifiedRunWorkspace model={makeModel()} />
+        </ReactFlowProvider>,
+      );
+      fireEvent.click(screen.getByTestId("player-play"));
+      expect(vi.getTimerCount()).toBe(1);
+      unmount();
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("hierarchy and dependency graph are distinct regions", () => {
