@@ -64,7 +64,7 @@ export async function getReplaySnapshot(
   const maxSequence = Math.max(...sequences);
 
   // Invalid sequence → REPLAY_POSITION_UNAVAILABLE (fail closed)
-  if (selectedSequence < 0 || selectedSequence > maxSequence) {
+  if (!Number.isFinite(selectedSequence) || selectedSequence < 0 || selectedSequence > maxSequence) {
     return { status: REPLAY_POSITION_UNAVAILABLE, projection: null, selectedSequence, totalEvents: canonicalEvents.length };
   }
 

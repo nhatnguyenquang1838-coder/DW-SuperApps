@@ -171,6 +171,14 @@ describe("T06 · Replay isolation", () => {
       expect(result.status).toBe(mod.PROJECTION_UNAVAILABLE);
     });
 
+    it("rejects a NaN sequence and fails closed", async () => {
+      const mod = await loadReplayMod();
+      const mockClient = mockSupabaseClient(canonicalStream());
+      const result = await mod.getReplaySnapshot("RUN-T06", Number.NaN, mockClient);
+      expect(result.status).toBe(mod.REPLAY_POSITION_UNAVAILABLE);
+      expect(result.projection).toBeNull();
+    });
+
     it("invalid sequence fails closed: REPLAY_POSITION_UNAVAILABLE", async () => {
       const mod = await loadReplayMod();
       const events = canonicalStream();
