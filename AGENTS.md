@@ -142,7 +142,7 @@ The active Agent interaction contract is canonical mailbox/v2:
 - semantic Agent events are recorded to the TaskController audit ledger when audit is configured;
 - binding IDs never become canonical TaskController IDs.
 
-When **Hermes Desktop** is the Executor, also load `docs/runbooks/HERMES_DESKTOP_EXECUTOR.md` after `agents/hermes/agent-instructions.md`. The runbook only maps the canonical mailbox/v2 contract to Desktop native `/goal`; it does not activate TaskController or GWC, authorize effects, provide a mailbox-event adapter, or override user pause. Do not use `/loop` as periodic mailbox polling.
+When **Hermes Desktop** is the Executor, load exactly one mode-specific host runbook **after** `agents/hermes/agent-instructions.md`: `docs/runbooks/HERMES_DESKTOP_STANDALONE.md` for a single/atomic bounded mission (required when `max_children=0`), or `docs/runbooks/HERMES_DESKTOP_COORDINATOR.md` only when the exact Controller-owned parent contract explicitly permits child delegation/fanout and provider capability is qualified. Mode selection does not activate GWC, transfer Controller/Human authority to Hermes, create an event subscription, override a user pause or grant effects. Native `/goal` is a work aid after validation; `/loop` must never poll the mailbox.
 
 TaskController human-plane behavior is canonical in `agents/shared/taskcontroller-human-plane-policy.md`.
 
