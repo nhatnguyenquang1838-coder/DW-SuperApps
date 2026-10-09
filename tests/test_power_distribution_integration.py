@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import subprocess
 import unittest
 from pathlib import Path
@@ -29,24 +30,36 @@ class PowerDistributionIntegrationTests(unittest.TestCase):
                 )
 
     def test_provider_evidence_is_explicit(self) -> None:
-        states = {
-            power_id: manifest["spec"]["distribution"]["providerState"]
-            for power_id, manifest in dw_cli.manifests().items()
-        }
-        for power_id, state in states.items():
+        manifests = dw_cli.manifests()
+        lock = json.loads(
+            (ROOT / "manifests/power-compatibility-lock.json").read_text(
+                encoding="utf-8"
+            )
+        )["powers"]
+        for power_id, manifest in manifests.items():
             with self.subTest(power_id=power_id):
-                # Provenance is owned by the root gitlink.  A CI checkout may
-                # intentionally omit or shallow-update nested source repos, so
-                # reading their working-tree HEAD is not reliable evidence of
-                # the source revision pinned by this distribution.
-                path = dw_cli.manifests()[power_id]["spec"]["path"]
+                state = manifest["spec"]["distribution"]["providerState"]
+                # Published distribution provenance and the workspace's source
+                # integration gitlink are independently pinned. New source
+                # integration commits do not silently republish old packages.
+                self.assertEqual(
+                    lock[power_id]["publishedSourceSha"], state["sourceCommit"]
+                )
+                self.assertRegex(state["sourceCommit"], r"^[0-9a-f]{40}$")
+                self.assertTrue(state["sourceLock"])
+                self.assertTrue(state["status"])
+
+                # CI must still pin each source submodule via the root tree;
+                # a nested checkout's HEAD is not integration evidence.
                 gitlink = subprocess.check_output(
-                    ["git", "ls-tree", "HEAD", path], cwd=ROOT, text=True
+                    ["git", "ls-tree", "HEAD", manifest["spec"]["path"]],
+                    cwd=ROOT,
+                    text=True,
                 ).strip().split()
                 self.assertGreaterEqual(len(gitlink), 3)
                 self.assertEqual("160000", gitlink[0])
-                source_commit = gitlink[2]
-                self.assertEqual(source_commit, state["sourceCommit"])
+                self.assertEqual("commit", gitlink[1])
+                self.assertRegex(gitlink[2], r"^[0-9a-f]{40}$")
 
     def test_submodule_source_contract_remains_available_as_fallback(self) -> None:
         for power_id, manifest in dw_cli.manifests().items():
