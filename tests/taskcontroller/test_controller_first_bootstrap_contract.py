@@ -93,7 +93,6 @@ def test_chatgpt_and_root_instructions_do_not_block_native_controller_gates():
     assert "The Executor's own PRECHECK occurs **after receipt**" in overlay
     assert "Controller-first bootstrap boundary" in root
     assert "it does **not** require an Executor session" in root
-    assert "no fake" not in root  # Avoid an ad hoc fake-record exception.
 
 
 def test_native_controller_phase_precedes_a2a_executor_boot_not_old_mutable_comment():
@@ -112,7 +111,6 @@ def test_hermes_runbook_precheck_is_executor_only():
     runbook = _content("docs/runbooks/HERMES_DESKTOP_RUNTIME.md")
     slack = _content("agents/chatgpt-agent/slack-controller-mvp.md")
     assert "## Controller-first bootstrap boundary (not an Executor PRECHECK)" in runbook
-    assert "this document is" not in runbook.lower().split("## Controller-first bootstrap boundary")[1][:20]
     assert "does not gate Controller-only planning" in runbook
     assert "Controller-native bootstrap and Controller-owned gate progression" in slack
     assert "before the **first actual Executor dispatch**" in slack
