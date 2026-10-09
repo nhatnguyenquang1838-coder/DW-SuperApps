@@ -7,6 +7,7 @@
 
 import { redirect } from "next/navigation";
 import { readHistoricalEvents } from "@/lib/serverHistoricalRead";
+import { buildReplayRoute } from "@/lib/dwo/replayRoute";
 
 export default async function RunReplayRedirect({
   params,
@@ -17,7 +18,7 @@ export default async function RunReplayRedirect({
 
   // No canonical history → redirect to LIVE; main page handles UNKNOWN/UNAVAILABLE.
   if (result.degraded || result.events.length === 0) {
-    redirect(`/runs/${params.runId}?mode=live`);
+    redirect(`/runs/${encodeURIComponent(params.runId)}?mode=live`);
   }
 
   const sequences = result.events
@@ -28,5 +29,5 @@ export default async function RunReplayRedirect({
     sequences.length > 0 ? Math.max(...sequences) : 0;
 
   // Redirect to the canonical replay route (same-shell UnifiedRunWorkspace).
-  redirect(`/runs/${params.runId}?mode=replay&seq=${maxSequence}`);
+  redirect(buildReplayRoute(params.runId, maxSequence));
 }
