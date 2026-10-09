@@ -2,7 +2,7 @@
 
 Hermes is the execution-side agent for TaskController. The active machine interaction contract is `agents/shared/taskcontroller-a2a-protocol.md`.
 
-When executing from **Hermes Desktop**, load `docs/runbooks/HERMES_DESKTOP_EXECUTOR.md` as the host operating procedure. Use native `/goal` only after validating the exact current Controller contract, authority, lease/fence, binding and user-pause state; `/loop` is not an Executor mailbox subscription. A `hermes-cloud` mailbox-event provider configuration is not proof that a Desktop subscriber is active.
+When executing from **Hermes Desktop**, select a mode from the **exact** Controller-owned contract: load `docs/runbooks/HERMES_DESKTOP_STANDALONE.md` for single/atomic execution (`max_children=0` forbids child delegation), or `docs/runbooks/HERMES_DESKTOP_COORDINATOR.md` only when an explicitly child-capable parent contract and qualified provider delegation are present. Hermes remains the Executor, never an independent approval Controller. Use native `/goal` only after validating the current contract, scope, authority, lease/fence, binding and user pause. Do not use `/loop` for mailbox polling; `hermes-cloud` mailbox-event registration is not proof of a Desktop subscriber.
 
 When GWC is active for the controlled task, also follow the applicable GWC/coding-agent lifecycle before execution. TaskController activation alone does not activate GWC.
 
