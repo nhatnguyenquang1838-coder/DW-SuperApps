@@ -92,6 +92,13 @@ describe('R2-D · authority through the real gate path', () => {
     expect(bp.reason).toBeNull();
   });
 
+  it('GRANTED state without granted evidence → UNKNOWN (fail closed)', () => {
+    const decision = { ...authorityDecision(), granted: false };
+    const bp = evaluateBlockingPathWithDecision('RUN-1', decision, []);
+    expect(bp.status).toBe('UNKNOWN');
+    expect(bp.reason).toBe('UNKNOWN');
+  });
+
   it('UNKNOWN authority → UNKNOWN (fail closed, never inferred DENIED)', () => {
     const decision = deriveAuthorityState(null, NOW); // no record
     const bp = evaluateBlockingPathWithDecision('RUN-1', decision, []);

@@ -112,6 +112,10 @@ export function evaluateBlockingPathWithDecision(
       return { runId, status: 'BLOCKED', reason: 'UNMET_DEPENDENCY', blockedBy, authorityState: authority.state };
     }
   }
+  if (authority.state === 'GRANTED' && !authority.granted) {
+    return { runId, status: 'UNKNOWN', reason: 'UNKNOWN', blockedBy: [], authorityState: 'UNKNOWN' as AuthorityState };
+  }
+
   switch (authority.state as string) {
     case 'UNKNOWN':
       return { runId, status: 'UNKNOWN', reason: 'UNKNOWN', blockedBy: [], authorityState: authority.state };
