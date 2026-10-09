@@ -76,6 +76,9 @@ class TaskControllerActivationPlan:
     full_e2e_runtime_active: bool = False
     runtime_session: str | None = None
     mailbox_boot_required: bool = False
+    # This boolean applies to actual Executor dispatch, not native Controller BOOT.
+    mailbox_boot_boundary: str | None = None
+    controller_only_progress_allowed_without_executor: bool = False
     mailbox_boot_fail_closed: bool = False
     machine_progress_transport: str | None = None
     slack_machine_progress_allowed: bool = False
@@ -117,7 +120,9 @@ def resolve_taskcontroller_activation(
 
     mailbox/v2 is the default canonical machine protocol.  Passing
     requires_v2_semantics=False is an explicit compatibility opt-in to the
-    demoted A2A/v1 mutable-mailbox runtime.
+    demoted A2A/v1 mutable-mailbox runtime. Source/Controller activation is
+    distinct from first Executor dispatch readiness; Controller-native
+    understanding/planning gates never require an Executor acknowledgement.
     """
 
     host_id = (host or "").strip().lower()
@@ -165,6 +170,8 @@ def resolve_taskcontroller_activation(
             "github-mailbox-v2" if resolved_v2 else "github-reference-mailbox-v1"
         ),
         mailbox_boot_required=True,
+        mailbox_boot_boundary="first_executor_dispatch",
+        controller_only_progress_allowed_without_executor=True,
         mailbox_boot_fail_closed=True,
         machine_progress_transport=(
             "github-mailbox-v2" if resolved_v2 else "github-reference-mailbox-v1"

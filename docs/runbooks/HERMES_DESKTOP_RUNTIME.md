@@ -19,6 +19,12 @@ Choose `controller_strategy` **from the admitted Controller identity and communi
 
 **Controller strategy is bound at BOOT.** Moving between strategies or transferring a GPT-bound Controller to an internal Controller requires a new canonical authority/actor/continuation/notification binding transition. Never auto-fallback after preview or fanout failure.
 
+## Controller-first bootstrap boundary (not an Executor PRECHECK)
+
+This document is the **Executor-side** procedure, beginning when an admitted Executor consumes a real Controller command. A fresh run's Controller-owned `UR.G0` / `UR.G1` (or other native understanding/planning stages) may start, complete with native gate evidence and advance **without** a Hermes session, notification adapter, Executor acknowledgement or mailbox dispatch. The Controller decides the native gate owner first; it MUST NOT enter `WAIT_EXECUTOR`, mint a placeholder lease or send a command merely to initialize a new run.
+
+`BOOT / PRECHECK` below applies to **Hermes when it receives an actual Executor-bound request**, and before every protected effect; it does not gate Controller-only planning. At the first real Executor dispatch boundary, the Controller must bind recipient/adapter, use the canonical mailbox/v2 materializer, persist continuation and exact-read event/cursor/continuation before wake-up. The Executor subsequently performs PRECHECK. Missing Desktop Preview or Executor admission blocks **dispatch**, not lawful Controller-only work; `RUN_HOLD` and native gate receipts are never bypassed.
+
 ## 2. Shared state machine (both modes)
 
 ```mermaid

@@ -99,8 +99,18 @@ interaction:
   v1_one_actor_one_mutable_mailbox: compatibility-only
   v1_default_activation: forbidden
   context_by_reference: true
+  controller_first_bootstrap:
+    native_controller_owned_gates_allowed_without_executor: true
+    native_receipt_validation_required: true
+    executor_session_required_before_native_controller_gates: false
+    executor_acknowledgement_required_before_native_controller_gates: false
+    controller_only_gate_requires_mailbox_event: false
+    run_hold_remains_binding: true
+    no_effect_authority_granted: true
   mailbox_boot:
-    required_when_active: true
+    required_when_active: true  # active EXECUTOR DISPATCH; not Controller-native BOOT
+    applies_to: first-executor-dispatch
+    controller_only_progress_requires_mailbox_boot: false
     before_first_dispatch: true
     controller_mailbox_required: true
     executor_mailbox_required: true
