@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 import argparse
 import importlib.util
 import json
@@ -21,6 +22,7 @@ SPEC.loader.exec_module(power_dist)
 import sys
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
+from dw_power_store.common import ConsumerError  # noqa: E402
 from dw_power_store.compatibility import compatibility_lock, validate_lock  # noqa: E402
 
 
@@ -40,9 +42,12 @@ class PowerCompatibilityTests(unittest.TestCase):
                         encoding="utf-8"
                     )
                 )
-                # The root gitlink is the immutable integration pin. The
-                # nested provider checkout may be intentionally ahead or
-                # dirty during workspace maintenance.
+                # A published package SHA is an immutable *distribution* pin.
+                # The root gitlink is a separate source integration pin and may
+                # advance independently without republishing that package.
+                published = manifest["spec"]["distribution"]["providerState"]["sourceCommit"]
+                self.assertEqual(published, powers[power_id]["publishedSourceSha"])
+                self.assertRegex(published, r"^[0-9a-f]{40}$")
                 gitlink = subprocess.check_output(
                     ["git", "ls-tree", "HEAD", manifest["spec"]["path"]],
                     cwd=ROOT,
@@ -50,8 +55,31 @@ class PowerCompatibilityTests(unittest.TestCase):
                 ).strip().split()
                 self.assertGreaterEqual(len(gitlink), 3)
                 self.assertEqual("160000", gitlink[0])
-                expected = gitlink[2]
-                self.assertEqual(expected, powers[power_id]["publishedSourceSha"])
+                self.assertEqual("commit", gitlink[1])
+                self.assertRegex(gitlink[2], r"^[0-9a-f]{40}$")
+
+    def test_modified_published_source_is_rejected_by_compatibility_lock(self) -> None:
+        # Never fix integration drift by rewriting a released sourceCommit.
+        # validate_lock must reject unauthorized publication changes even when
+        # the root gitlink has advanced.
+        published_manifests = {
+            power_id: yaml.safe_load(
+                (ROOT / "manifests" / "powers" / f"{power_id}.yaml").read_text(
+                    encoding="utf-8"
+                )
+            )
+            for power_id in ("gwc", "ua", "task-me", "bmad")
+        }
+        for power_id in ("gwc", "ua"):
+            with self.subTest(power_id=power_id):
+                tampered = deepcopy(published_manifests)
+                tampered[power_id]["spec"]["distribution"]["providerState"][
+                    "sourceCommit"
+                ] = "0" * 40
+                with self.assertRaisesRegex(
+                    ConsumerError, f"{power_id} compatibility publishedSourceSha mismatch"
+                ):
+                    validate_lock(tampered)
 
     def test_new_package_contains_static_agent_guidance(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
