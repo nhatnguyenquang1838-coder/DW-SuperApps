@@ -123,7 +123,7 @@ A TaskController run is **not** the lifetime of one GPT response.
 
 Before dispatching or waking an Executor, the Controller MUST persist a `dw.taskcontroller.continuation/v1` checkpoint. The checkpoint contains only bounded continuation metadata: run/epoch/phase/next action, Controller/Executor mailbox pointers and cursors, exact head SHA, wake-up binding, and optional Human RootCard ref.
 
-For the GitHub pilot, the same checkpoint is embedded in the Controller mailbox envelope state so a fresh Controller execution can recover it through a durable shared binding. When audit persistence is configured, the checkpoint is also mirrored into the Run Ledger manifest table.
+For the canonical GitHub mailbox/v2 lane, the checkpoint is stored as a separate **append-only** `dw.taskcontroller.continuation/v1` manifest through `GitHubContinuationStore`, then referenced by checkpoint identity from the deterministic Controller envelope. It is not a mutable Controller mailbox comment. When audit persistence is configured, the checkpoint is also mirrored into the Run Ledger manifest table.
 
 Required pre-dispatch sequence:
 
