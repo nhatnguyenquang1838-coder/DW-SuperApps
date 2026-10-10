@@ -148,23 +148,43 @@ def prepare_v2_dispatch(
     return envelope
 
 
-def recover_v2_dispatch(
-    store: ContinuationStore,
+def validate_v2_dispatch_binding(
     envelope: V2MailboxEnvelope,
+    checkpoint: ControllerContinuation,
+    *,
+    require_checkpoint_id: bool,
 ) -> ControllerContinuation:
-    """Recover a v2 dispatch from durable continuation plus mailbox evidence.
+    """Validate one immutable Controller request against the current continuation.
 
-    The caller supplies the exact mailbox envelope readback. No chat transcript
-    or Slack projection is consulted or accepted as recovery input.
+    The execution_request checkpoint ID identifies the pre-dispatch durable
+    checkpoint. After valid Executor progress, the current continuation may
+    advance its Executor cursor/timestamp and therefore has a different
+    deterministic checkpoint ID while still being bound to the same immutable
+    Controller event. High-integrity restart recovery validates that evolved
+    state by run/sequence/mailbox-event/recipient binding instead of pretending
+    the original checkpoint is still the latest continuation.
+
+    Direct dispatch recovery keeps require_checkpoint_id=True and therefore
+    remains fail-closed on an incorrect or substituted dispatch checkpoint ID.
     """
 
     if not isinstance(envelope, V2MailboxEnvelope):
         _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "v2 mailbox envelope is required")
+    if not isinstance(checkpoint, ControllerContinuation):
+        _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "continuation checkpoint is required")
+    if not isinstance(require_checkpoint_id, bool):
+        _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "require_checkpoint_id must be boolean")
+
     payload = envelope.to_dict()
     if payload.get("message_type") != "execution_request":
         _fail(
             MailboxV2ErrorCode.CONTRACT_MISMATCH,
             "recovery requires an execution_request envelope",
+        )
+    if payload.get("direction") != "controller_to_executor":
+        _fail(
+            MailboxV2ErrorCode.CONTRACT_MISMATCH,
+            "recovery requires a controller_to_executor request",
         )
     request_payload = payload.get("payload")
     if not isinstance(request_payload, Mapping):
@@ -176,14 +196,13 @@ def recover_v2_dispatch(
             "execution request is missing checkpoint ID",
         )
 
-    checkpoint = recover_continuation(store, envelope.run_id)
-    if checkpoint is None:
+    checkpoint.executor_wait_target()
+    if envelope.run_id != checkpoint.run_id:
         _fail(
             MailboxV2ErrorCode.CONTRACT_MISMATCH,
-            "durable continuation checkpoint is missing",
+            "mailbox request run_id does not match continuation checkpoint",
         )
-    checkpoint.executor_wait_target()
-    if checkpoint.checkpoint_id != checkpoint_id:
+    if require_checkpoint_id and checkpoint.checkpoint_id != checkpoint_id:
         _fail(
             MailboxV2ErrorCode.DIGEST_MISMATCH,
             "checkpoint ID does not match durable continuation",
@@ -196,6 +215,11 @@ def recover_v2_dispatch(
     recipient = payload.get("recipient")
     if not isinstance(recipient, Mapping):
         _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "execution request recipient is not an object")
+    if recipient.get("capability") != "taskcontroller.executor":
+        _fail(
+            MailboxV2ErrorCode.CONTRACT_MISMATCH,
+            "execution request recipient capability must be taskcontroller.executor",
+        )
     if recipient.get("agent_instance") != checkpoint.executor_actor:
         _fail(
             MailboxV2ErrorCode.CONTRACT_MISMATCH,
@@ -204,4 +228,31 @@ def recover_v2_dispatch(
     return checkpoint
 
 
-__all__ = ["prepare_v2_dispatch", "recover_v2_dispatch"]
+def recover_v2_dispatch(
+    store: ContinuationStore,
+    envelope: V2MailboxEnvelope,
+) -> ControllerContinuation:
+    """Recover the original v2 dispatch from its exact durable checkpoint.
+
+    This strict API intentionally requires the current durable checkpoint ID to
+    equal the checkpoint ID embedded in the immutable execution_request. It is
+    for pre-progress dispatch recovery. Runtime restart after Executor progress
+    must validate the evolved continuation with validate_v2_dispatch_binding.
+    """
+
+    if not isinstance(envelope, V2MailboxEnvelope):
+        _fail(MailboxV2ErrorCode.SCHEMA_INVALID, "v2 mailbox envelope is required")
+    checkpoint = recover_continuation(store, envelope.run_id)
+    if checkpoint is None:
+        _fail(
+            MailboxV2ErrorCode.CONTRACT_MISMATCH,
+            "durable continuation checkpoint is missing",
+        )
+    return validate_v2_dispatch_binding(
+        envelope,
+        checkpoint,
+        require_checkpoint_id=True,
+    )
+
+
+__all__ = ["prepare_v2_dispatch", "recover_v2_dispatch", "validate_v2_dispatch_binding"]
