@@ -21,6 +21,7 @@ from typing import Any, Mapping, NoReturn, Sequence
 
 from taskcontroller.controlplane.continuation_dispatch import (
     prepare_v2_dispatch,
+    recover_v2_dispatch,
     validate_v2_dispatch_binding,
 )
 from taskcontroller.controlplane.mailbox_dispatch import (
