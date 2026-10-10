@@ -343,12 +343,13 @@ def decide_executor_loop_continuity(
         return outcome("AWAIT_EXPLICIT_UNPAUSE", "CONTROLLER", "RESOLVE_USER_PAUSE")
     if hold_type == HOLD_RUN:
         return outcome("STOP_NEW_RUN_ACTIONS", "CONTROLLER", "RESOLVE_RUN_HOLD")
-    if terminal_verified:
-        return outcome("TERMINAL", "CONTROLLER", "ACCEPT_VERIFIED_TERMINAL")
 
-    # A prior host Loop bound to another run can never release this run.
+    # Check the run binding BEFORE accepting terminal evidence: a terminal
+    # event on a prior Loop cannot terminate the distinct active run.
     if stale_binding:
         return outcome("PRESERVE_EXECUTOR_SESSION", "CONTROLLER", "RESOLVE_RUN_BINDING")
+    if terminal_verified:
+        return outcome("TERMINAL", "CONTROLLER", "ACCEPT_VERIFIED_TERMINAL")
     if hold_type == HOLD_EFFECT:
         return outcome("PRESERVE_EXECUTOR_SESSION", "CONTROLLER", "RESOLVE_EFFECT_AUTHORITY")
     if not execute_contract_current:
