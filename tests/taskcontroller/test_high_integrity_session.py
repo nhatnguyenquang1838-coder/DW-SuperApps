@@ -171,7 +171,13 @@ def _runtime(tmp_path: Path, transport: FakeGitHubComments | None = None):
     return transport, repository, continuation, ledger
 
 
-def _progress(request: V2MailboxEnvelope, *, seq: int = 1) -> V2MailboxEnvelope:
+def _progress(
+    request: V2MailboxEnvelope,
+    *,
+    seq: int = 1,
+    status: str = "SUCCEEDED",
+    typed_next: str = "COMPLETE",
+) -> V2MailboxEnvelope:
     payload = request.to_dict()
     payload["message_id"] = "progress-839"
     payload["seq"] = seq
@@ -187,9 +193,9 @@ def _progress(request: V2MailboxEnvelope, *, seq: int = 1) -> V2MailboxEnvelope:
         "agent_instance": "controller",
     }
     payload["payload"] = {
-        "status": "SUCCEEDED",
+        "status": status,
         "report_type": "mission_status",
-        "typed_next": "COMPLETE",
+        "typed_next": typed_next,
     }
     payload["provenance"] = {
         "origin": "executor",
@@ -197,7 +203,7 @@ def _progress(request: V2MailboxEnvelope, *, seq: int = 1) -> V2MailboxEnvelope:
         "child_id": None,
         "lens": "execution",
         "agent_instance": request.attempt["agent_instance"],
-        "status": "SUCCEEDED",
+        "status": status,
         "source_refs": [],
         "evidence_refs": [],
         "result_digest": None,
@@ -484,6 +490,66 @@ def test_event_driven_materialization_and_one_shot_resume_without_polling(tmp_pa
 
     assert resumed.checkpoint.phase == ContinuationPhase.REVIEW_EXECUTOR.value
     assert resumed.checkpoint.last_seen_executor_seq == 1
+
+
+def test_restart_after_nonterminal_event_progress_recovers_evolved_wait_executor_checkpoint(
+    tmp_path: Path,
+) -> None:
+    transport, repository, continuation, ledger = _runtime(tmp_path)
+    checkpoint = replace(_checkpoint(), next_action=WAIT_EXECUTOR_EVENT_ACTION)
+    try:
+        materialized = materialize_controller_transition(
+            continuation_store=continuation,
+            repository=repository,
+            ledger=ledger,
+            checkpoint=checkpoint,
+            request=_request(),
+            state_version=0,
+            prepared_at="2026-10-07T05:01:34Z",
+            committed_at="2026-10-07T05:01:35Z",
+        )
+        progress = _progress(
+            materialized.envelope,
+            status="RUNNING",
+            typed_next="CONTINUE_EXECUTION",
+        )
+        repository.write(EXECUTOR_MAILBOX, -1, progress)
+        cursor = MailboxActorCursor.initial(
+            EXECUTOR_MAILBOX,
+            run_id=progress.run_id,
+            node_id=progress.node_id,
+            actor_namespace="hermes-executor",
+        )
+        resumed = resume_controller_event_v2(
+            continuation_store=continuation,
+            repository=repository,
+            checkpoint=checkpoint,
+            cursor=cursor,
+            correlation_id=progress.to_dict()["correlation_id"],
+            expected_identity=progress.execution_identity,
+            observed_at="2026-10-07T05:01:36Z",
+        )
+        assert resumed.checkpoint.phase == ContinuationPhase.WAIT_EXECUTOR.value
+        assert resumed.checkpoint.next_action == WAIT_EXECUTOR_EVENT_ACTION
+        assert resumed.checkpoint.last_seen_executor_seq == 1
+        assert resumed.checkpoint.checkpoint_id != checkpoint.checkpoint_id
+    finally:
+        ledger.close()
+
+    restarted_repository = GitHubMailboxRepository(transport)
+    restarted_continuation = GitHubContinuationStore(
+        transport,
+        repository=REPOSITORY,
+        issue_number=ISSUE,
+    )
+    recovered = recover_high_integrity_session(
+        continuation_store=restarted_continuation,
+        repository=restarted_repository,
+        run_id=checkpoint.run_id,
+        observed_at="2026-10-07T05:01:37Z",
+    )
+    assert recovered.checkpoint == resumed.checkpoint
+    assert recovered.controller_envelope == materialized.envelope
 
 
 def test_event_driven_resume_fails_closed_without_new_executor_event(tmp_path: Path) -> None:

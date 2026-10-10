@@ -22,6 +22,7 @@ from typing import Any, Mapping, NoReturn, Sequence
 from taskcontroller.controlplane.continuation_dispatch import (
     prepare_v2_dispatch,
     recover_v2_dispatch,
+    validate_v2_dispatch_current_binding,
 )
 from taskcontroller.controlplane.mailbox_dispatch import (
     MailboxDispatchOutcome,
@@ -724,9 +725,16 @@ def recover_high_integrity_session(
         _fail("RECOVERY_CONTINUATION_MISSING", "durable Controller continuation is missing")
     event = _controller_event_for_checkpoint(repository, checkpoint)
     if checkpoint.phase == ContinuationPhase.WAIT_EXECUTOR.value:
-        recovered = recover_v2_dispatch(continuation_store, event.envelope)
-        if recovered != checkpoint:
-            _fail("RECOVERY_CONTINUATION_MISMATCH", "request checkpoint differs from durable state")
+        # The immutable Controller request keeps the original pre-dispatch
+        # checkpoint ID. Valid Executor progress advances the durable
+        # continuation cursor/timestamp and therefore changes checkpoint_id.
+        # Restart recovery validates the evolved current continuation against
+        # the exact append-only Controller event binding rather than requiring
+        # equality with the historical pre-dispatch checkpoint digest.
+        validate_v2_dispatch_current_binding(
+            event.envelope,
+            checkpoint,
+        )
         if observed_at is None:
             _fail(
                 "RECOVERY_TIME_REQUIRED",
