@@ -244,6 +244,103 @@ def validate_hold_semantics(payload: Mapping[str, Any]) -> HoldSemantics | None:
 # Native Hermes LoopManager rows are *host schedulers*, never TaskController
 # continuation state. In particular, pausing a polling Loop MUST NOT be used
 # as a proxy for terminating the Executor session or the Controller run.
+
+# This is a Controller *resolution* decision, not an authority grant.  A
+# historical event/approval can never be rebound to a fresh run by this API.
+AUTHORITY_REQUEST_ROUTES = frozenset({"HUMAN", "DELEGATE", "NONE"})
+
+
+@dataclass(frozen=True, slots=True)
+class AuthorityRecoveryDecision:
+    next_action: str
+    next_owner: str
+    protected_effects_allowed: bool
+    approval_request_required: bool
+    actionable_request_required: bool
+    current_run_id: str
+    rejected_historical_run_id: str | None = None
+
+
+def decide_stale_authority_recovery(
+    *,
+    current_run_id: str,
+    observed_event_run_id: str,
+    approval_current: bool,
+    execution_lease_current: bool,
+    renewal_route: str,
+    user_paused: bool = False,
+    run_hold: bool = False,
+) -> AuthorityRecoveryDecision:
+    """Resolve expired authority without replay, forging approval or dispatch.
+
+    The Controller calls this on an exact-read current run.  A request route
+    is a capability to ASK only; it never authorizes an Executor effect.
+    A valid approval with an expired attempt lease must not needlessly be
+    re-approved. The caller must validate lease issuance capabilities before
+    generating any new attempt/lease and must materialize/route requests
+    through the existing canonical approval machinery.
+    """
+    current = _text(current_run_id, "current_run_id")
+    observed = _text(observed_event_run_id, "observed_event_run_id")
+    route = _text(renewal_route, "renewal_route").upper()
+    if route not in AUTHORITY_REQUEST_ROUTES:
+        _fail("AUTHORITY_ROUTE_INVALID", "renewal_route must be HUMAN, DELEGATE, or NONE")
+    for name, value in (
+        ("approval_current", approval_current),
+        ("execution_lease_current", execution_lease_current),
+        ("user_paused", user_paused),
+        ("run_hold", run_hold),
+    ):
+        if not isinstance(value, bool):
+            _fail("AUTHORITY_RECOVERY_INVALID", f"{name} must be boolean")
+    if run_hold or user_paused:
+        return AuthorityRecoveryDecision(
+            next_action="RESOLVE_RUN_HOLD" if run_hold else "RESOLVE_USER_PAUSE",
+            next_owner="CONTROLLER",
+            protected_effects_allowed=False,
+            approval_request_required=False,
+            actionable_request_required=False,
+            current_run_id=current,
+            rejected_historical_run_id=observed if observed != current else None,
+        )
+    if observed != current:
+        return AuthorityRecoveryDecision(
+            next_action="RECOVER_CURRENT_RUN_BINDING",
+            next_owner="CONTROLLER",
+            protected_effects_allowed=False,
+            approval_request_required=False,
+            actionable_request_required=False,
+            current_run_id=current,
+            rejected_historical_run_id=observed,
+        )
+    if approval_current:
+        return AuthorityRecoveryDecision(
+            next_action="CONTINUE_WITH_CURRENT_FENCE" if execution_lease_current else "ISSUE_FRESH_ATTEMPT_LEASE",
+            next_owner="CONTROLLER",
+            protected_effects_allowed=False,
+            approval_request_required=False,
+            actionable_request_required=False,
+            current_run_id=current,
+        )
+    if route == "NONE":
+        return AuthorityRecoveryDecision(
+            next_action="AUTHORITY_REQUEST_UNROUTED",
+            next_owner="CONTROLLER",
+            protected_effects_allowed=False,
+            approval_request_required=True,
+            actionable_request_required=True,
+            current_run_id=current,
+        )
+    return AuthorityRecoveryDecision(
+        next_action="MATERIALIZE_HUMAN_APPROVAL_REQUEST" if route == "HUMAN" else "DISPATCH_DELEGATED_AUTHORITY_REQUEST",
+        next_owner="CONTROLLER",
+        protected_effects_allowed=False,
+        approval_request_required=True,
+        actionable_request_required=True,
+        current_run_id=current,
+    )
+
+
 HOST_LOOP_ROLES = frozenset({"MAILBOX_POLL", "CONTROLLER_WAKEUP_POLL", "ENGINEERING_WORK", "UNRELATED"})
 POLLING_LOOP_ROLES = frozenset({"MAILBOX_POLL", "CONTROLLER_WAKEUP_POLL"})
 
@@ -368,6 +465,9 @@ def decide_executor_loop_continuity(
 
 
 __all__ = [
+    "AUTHORITY_REQUEST_ROUTES",
+    "AuthorityRecoveryDecision",
+    "decide_stale_authority_recovery",
     "BLOCKER_AUTHORITY_BOUNDARY",
     "BLOCKER_EXTERNAL_DEPENDENCY",
     "BLOCKER_MATERIAL_PLAN_INVALIDATION",

@@ -11,6 +11,7 @@ import pytest
 from taskcontroller.controlplane.orchestration_policy import (
     BLOCKER_AUTHORITY_BOUNDARY,
     decide_executor_loop_continuity,
+    decide_stale_authority_recovery,
     HOLD_EFFECT,
     HOLD_RUN,
     OrchestrationPolicyError,
@@ -349,3 +350,64 @@ def test_loop_continuity_rejects_invalid_guards(extra: dict, code: str) -> None:
     with pytest.raises(OrchestrationPolicyError) as exc:
         decide_executor_loop_continuity(**arguments)
     assert exc.value.code == code
+
+
+@pytest.mark.parametrize(
+    ("approval_current", "lease_current", "route", "expected", "needs_request"),
+    [
+        (True, False, "HUMAN", "ISSUE_FRESH_ATTEMPT_LEASE", False),
+        (True, True, "HUMAN", "CONTINUE_WITH_CURRENT_FENCE", False),
+        (False, False, "HUMAN", "MATERIALIZE_HUMAN_APPROVAL_REQUEST", True),
+        (False, False, "DELEGATE", "DISPATCH_DELEGATED_AUTHORITY_REQUEST", True),
+        (False, False, "NONE", "AUTHORITY_REQUEST_UNROUTED", True),
+    ],
+)
+def test_stale_authority_recovery_distinguishes_lease_from_approval(
+    approval_current: bool, lease_current: bool, route: str, expected: str, needs_request: bool,
+) -> None:
+    resolution = decide_stale_authority_recovery(
+        current_run_id="fresh-run", observed_event_run_id="fresh-run",
+        approval_current=approval_current, execution_lease_current=lease_current,
+        renewal_route=route,
+    )
+    assert resolution.next_action == expected
+    assert resolution.approval_request_required is needs_request
+    assert resolution.protected_effects_allowed is False
+    assert resolution.next_owner == "CONTROLLER"
+
+
+def test_historical_e9_cannot_be_replayed_as_fresh_authority() -> None:
+    decision = decide_stale_authority_recovery(
+        current_run_id="scrum781-q0-fresh-20261010-r1",
+        observed_event_run_id="scrum781-q0-20260920T074727Z",
+        approval_current=True, execution_lease_current=True, renewal_route="HUMAN",
+    )
+    assert decision.next_action == "RECOVER_CURRENT_RUN_BINDING"
+    assert decision.rejected_historical_run_id == "scrum781-q0-20260920T074727Z"
+    assert decision.protected_effects_allowed is False
+
+
+@pytest.mark.parametrize(("hold", "paused", "next_action"), [
+    (True, False, "RESOLVE_RUN_HOLD"),
+    (False, True, "RESOLVE_USER_PAUSE"),
+])
+def test_expired_authority_never_bypasses_explicit_run_hold(
+    hold: bool, paused: bool, next_action: str,
+) -> None:
+    decision = decide_stale_authority_recovery(
+        current_run_id="fresh-run", observed_event_run_id="fresh-run",
+        approval_current=False, execution_lease_current=False,
+        renewal_route="HUMAN", run_hold=hold, user_paused=paused,
+    )
+    assert decision.next_action == next_action
+    assert decision.approval_request_required is False
+
+
+def test_authority_recovery_rejects_unrecognized_route() -> None:
+    with pytest.raises(OrchestrationPolicyError) as exc:
+        decide_stale_authority_recovery(
+            current_run_id="fresh-run", observed_event_run_id="fresh-run",
+            approval_current=False, execution_lease_current=False,
+            renewal_route="AUTO_APPROVE",
+        )
+    assert exc.value.code == "AUTHORITY_ROUTE_INVALID"

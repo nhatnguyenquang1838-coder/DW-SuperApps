@@ -158,7 +158,7 @@ During active execution:
 ```text
 before poll/wakeup → exact-read current Controller request + continuation
 → validate the bound execution attempt lease/fence at caller-supplied observed_at
-→ if stale/expired/missing current fence: WAIT_CONTROLLER / RESOLVE_EXECUTION_AUTHORITY
+→ if stale/expired/missing current fence: HOLD protected effects, then Controller MUST call `decide_stale_authority_recovery()` using exact current-run binding and independently verified approval-vs-attempt-lease validity. A historical E9 or old mailbox is never a candidate for a fresh run. If the underlying approval remains valid, resolve fresh attempt/lease issuance without needlessly asking for full reapproval; do not mint any lease until separately authorized. If the approval grant itself expired, materialize a typed actionable Human approval request or delegated-authority request via a qualified route and persist evidence of its presentation/dispatch. A request is NOT an approval. If no route is qualified, fail explicitly `AUTHORITY_REQUEST_UNROUTED` and preserve allowed Controller-only recovery instead of silent WAIT_CONTROLLER.
 → otherwise sleep configured cadence
 → read only the exact Executor mailbox comment from the continuation poll target
 → reject stale/equal seq

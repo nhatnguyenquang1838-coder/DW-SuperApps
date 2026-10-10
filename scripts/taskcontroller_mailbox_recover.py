@@ -8,7 +8,7 @@ Usage:
   python scripts/taskcontroller_mailbox_recover.py \
     --repository nhatnguyenquang1838-coder/gwc --issue 575 \
     --run-id scrum781-q0-20260920T074727Z \
-    --expected-head-sha f6fd4121e492b61e8e0781614cd4b627d99ad979
+    --expected-head-sha CURRENT_EXACT_SHA40
 
 Requires a host-provided GITHUB_TOKEN; do not paste credentials into chat.
 Never invoke while canonical RUN_HOLD prohibits Controller recovery.
@@ -103,6 +103,14 @@ def recover_once(args: argparse.Namespace, *, observed_at: str | None = None) ->
         "continuation_remote_receipt": remote.to_dict(),
         "controller_cursor": recovery.controller_cursor.to_dict(),
         "next_action": "CONTROLLER_RESOLVE_EXECUTION_AUTHORITY",
+        "authority_resolution_required": True,
+        "recovery_instructions": [
+            "Exact-read current run and reject historical event/mailbox identity",
+            "Check whether approval grant expired independently from the execution-attempt lease",
+            "If approval valid: qualify fresh attempt/lease issuance without reapproval",
+            "If approval expired: materialize and route actionable human/delegate request",
+            "Never dispatch, grant, mint, wake up, or replay authority from this recovery receipt",
+        ],
         "observed_at": instant,
     }
 
