@@ -303,6 +303,20 @@ def test_unrelated_host_loop_is_never_mutated_or_quarantined() -> None:
     assert decision.auto_resume_allowed is False
 
 
+def test_terminal_event_from_obsolete_loop_cannot_close_fresh_executor() -> None:
+    result = decide_executor_loop_continuity(
+        loop_role="ENGINEERING_WORK",
+        loop_run_id="run-old",
+        canonical_run_id="run-fresh",
+        execute_contract_current=False,
+        terminal_verified=True,
+    )
+    assert result.scheduler_action == "QUARANTINE_STALE_LOOP"
+    assert result.executor_session_action == "PRESERVE_EXECUTOR_SESSION"
+    assert result.typed_next == "RESOLVE_RUN_BINDING"
+    assert result.effects_allowed is False
+
+
 def test_terminal_requires_explicit_verified_terminal_evidence() -> None:
     pending = decide_executor_loop_continuity(
         loop_role="ENGINEERING_WORK", loop_run_id="run-current",
