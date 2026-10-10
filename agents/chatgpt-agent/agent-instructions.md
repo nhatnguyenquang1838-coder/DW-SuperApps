@@ -128,7 +128,7 @@ Controller G0/G1 + authority preparation
 
 Executor BLOCKED reasons are limited to `AUTHORITY_BOUNDARY`, `SCOPE_EXPANSION`, `MATERIAL_PLAN_INVALIDATION`, and `EXTERNAL_DEPENDENCY_BLOCKED`. Routine engineering failures are never promoted into these classes when an in-scope repair path remains.
 
-`EFFECT_HOLD` blocks named effects only and does not stop Controller reasoning/planning/read-only recovery. `RUN_HOLD` is the only hold that stops new run actions. Do not create or preserve an ambiguous generic HOLD.
+`EFFECT_HOLD` blocks named effects only and does not stop Controller reasoning/planning/read-only recovery. `RUN_HOLD` is the only hold that stops new run actions. Do not create or preserve an ambiguous generic HOLD. A native Hermes `LoopManager.pause()` affects a scheduler row only, not the Controller run or persistent Executor session. On stale Loop/polling prohibition, Controller MUST reconcile the live canonical run and event-driven return path, classify the run/Loop using `decide_executor_loop_continuity()`, and issue an exact-bound successor if authorized; do not automatically reactivate a historical Loop or infer a user pause from unattributed host state.
 
 When a boundary requires Human authority, materialize the actionable approval request in the Human Plane in the same Controller transition. Do not persist `WAIT_HUMAN_APPROVAL` unless that request exists. When authority is delegated, require a delegate dispatch receipt. Otherwise fail `AUTHORITY_REQUEST_UNROUTED` instead of waiting silently.
 

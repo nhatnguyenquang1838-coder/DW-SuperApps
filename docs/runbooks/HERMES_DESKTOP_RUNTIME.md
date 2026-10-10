@@ -62,7 +62,7 @@ State meanings:
 - **`REPORTING`:** Publish a **typed Executor mailbox/v2** progress/blocker/completion event via the canonical materializer; exact-readback the event, digest/cursor and evidence. No handwritten GitHub JSON, Slack message, Preview text or MoA output substitutes for it.
 - **`INVOKING_CONTROLLER`:** **Only strategy-specific step.** Pass the exact already-persisted `executor_event_ref`. An adapter can produce a verified Controller event reference, an actionable authority wait, or an explicit blocker; external asynchronous notification may first yield `WAITING_CONTROLLER`.
 - **`CONSUMING_CONTROLLER` / `PRECHECK`:** Exact-read a **newer** Controller event and immutable continuation with correct actor/run/attempt/seq/digest, lease/fence/source/scope/pause before resuming effects. Duplicate notification is no-op; old events cannot replay effects.
-- **`AUTHORITY_WAIT` / `BLOCKED` / `PAUSED`:** No protected effects and no silent retry. Human request must be genuinely actionable and owned by the admitted Controller. Recovery requires verified new evidence/authority and an authorized trigger, never an automatic Loop.
+- **`AUTHORITY_WAIT` / `BLOCKED` / `PAUSED`:** No protected effects and no silent retry. Human request must be genuinely actionable and owned by the admitted Controller. Recovery requires verified new evidence/authority and an authorized trigger, never an automatic Loop. **Host scheduler paused ≠ TaskController RUN_HOLD ≠ terminal Executor.** Preserve the main session for exact event-driven successor delivery and identify Controller's release action; Loop tick count or `last_stop_reason` is not authority.
 - **`TERMINAL`:** Both Executor evidence **and canonical Controller terminal disposition** are verified; otherwise wait for a valid Controller outcome.
 
 ### Shared transition invariants
@@ -161,13 +161,8 @@ action: Exact-read Executor event; return Controller successor event reference.
   `recover_high_integrity_session()` with a pinned head SHA and GitHub-backed
   mailbox/continuation stores. Run only under a **separately admitted Controller**
   identity with its existing host-provided `GITHUB_TOKEN`, after validating any
-  `RUN_HOLD` restrictions. For SCRUM-781:
-  ```bash
-  python scripts/taskcontroller_mailbox_recover.py \
-    --repository nhatnguyenquang1838-coder/gwc --issue 575 \
-    --run-id scrum781-q0-20260920T074727Z \
-    --expected-head-sha f6fd4121e492b61e8e0781614cd4b627d99ad979
-  ```
+  `RUN_HOLD` restrictions. For the selected run, resolve `--repository`, `--issue`, `--run-id` and `--expected-head-sha` from the live canonical Controller mailbox/continuation. Do not boot the old hard-coded SCRUM-781 issue/run as a default.
+
   A successful run yields immutable **continuation recovery evidence only**:
   `WAIT_CONTROLLER / RESOLVE_EXECUTION_AUTHORITY`. It does **not** grant G2,
   advance Controller mailbox event/cursor, notify Hermes, or resume T1–T7.
@@ -177,7 +172,7 @@ action: Exact-read Executor event; return Controller successor event reference.
   deliver via an independently qualified Coordination notification adapter.
   Never use a legacy `APPROVE G2` token as a Universal V2 cursor release.
 
-- Existing SCRUM-781 E9 event `#6058394365`, cursor `#6058397162`, continuation 23 (`WAIT_EXECUTOR / AWAIT_EXECUTOR_EVENT`) is not proof of a live Desktop callback; Executor E5 was seq 1, lease expired `2026-10-08T14:24:04Z`, and Desktop Loop was user-paused at tick 645. **Neither strategy may replay, auto-unpause or change Controller identity for this run**. Explicit approved transfer/renewal is required.
+- Historical E9/E5, expired leases, Loop ticks and `last_stop_reason` values are audit references only. Do not attribute a pause/resume to a user without an actor-bearing event. Reconcile the *current* canonical run from exact mailbox/continuation refs rather than an older host Loop. Never replay an expired command or auto-unpause an obsolete Loop.
 - Do not conflate a local provider capability demonstration with a passed governed TaskController E2E or runtime readiness.
 
 ## 7. Acceptance criteria and test matrix
@@ -213,9 +208,10 @@ This repository runbook governs Desktop runtime/provider behavior and its TaskCo
 
 - **Host-control ownership:** `GoalManager`, `LoopManager`, and `HeartbeatManager` control only their respective native scheduler rows. They do not grant repository, mailbox, gate, or human authority.
 - **Source-owned lifecycle:** use the active project's declared lifecycle state/cursor and typed `NEXT`. This runbook does not define a universal `RunState`, `RuntimePlan`, `Task TodoList`, `DONE`/predecessor rule, or `validity_key`. Do not invent local C/E cursor or deadlock predicates; follow the exact current protocol records.
-- **Event-driven mailbox boundary:** canonical mailbox/v2 is event-driven. Never use `/loop`, `/heartbeat`, cron, Slack polling, browser scraping, or another scheduler to poll C/E or wake the Controller. Use exact live-schema field names (including `periodic_mailbox_polling` and `wakeup_binding` where defined, plus typed per-run permissions); when polling or Executor wakeup is forbidden, do not keep, re-arm, or resume a scheduler.
+- **Event-driven mailbox boundary:** canonical mailbox/v2 is event-driven. Never use `/loop`, `/heartbeat`, cron, Slack polling, browser scraping, or another scheduler to poll C/E or wake the Controller. Use exact live-schema field names (including `periodic_mailbox_polling` and `wakeup_binding` where defined, plus typed per-run permissions); when polling or Executor wakeup is forbidden, do not keep, re-arm, or resume **that forbidden polling scheduler**. Classify the Loop's exact run binding first: a paused obsolete or mailbox-polling Loop is NOT a stopped Executor session. Preserve the main Executor session and Controller's event-driven recovery. Authorized engineering work continues without timer-based C/E polling, while expired leases block effects and require a fresh Controller dispatch. Never auto-unpause a stale Loop.
 - **Expired lease/fence:** recovery remains Controller-owned. The Executor must not renew a lease/fence, invoke recovery/materialization, or create a successor event/cursor. A recovery receipt alone is not a typed execution grant.
 - **Browser transport:** only use a GPT browser route when the active strategy/registry binds a qualified adapter and exact conversation. Otherwise keep `TRANSPORT_BLOCKED`; do not use a fallback or infer delivery from UI output. The exact stage/submit/readback flow belongs to `dwa-gpt-exchange`.
 - **Optional advisory analysis:** if an active contract requests one MoA review of a source-bound deadlock fact block, it is advisory only; empty/partial/provider-failed output is `INCONCLUSIVE`. It cannot create a mailbox event, grant authority, decide a source-owned cursor predicate, or perform lease recovery.
+- **Loop continuity:** first evaluate the pure `taskcontroller.controlplane.orchestration_policy.decide_executor_loop_continuity()` guard using the live run/Loop binding, hold type, validated EXECUTE contract and event adapter. `scheduler_action` refers only to the host row; `executor_session_action` and `typed_next` separately identify persistent Executor/session status and current owner. The guard does not call `LoopManager.pause()` or `resume()`, grant authority, or create an event. A Loop bound to a different run is quarantined, not adopted/restarted.
 - **Loop settlement:** for a confirmed real firing only, exact-read the same owner/session and create/verify the required pre-settlement backup. Call `LoopManager(session_id).complete_tick(last_response)` exactly once only when that firing has `awaiting_response=true`; then use a fresh manager readback to verify the same firing and `awaiting_response=false` as the postcondition. A paused Loop or pre-settlement `false` means no current firing to settle and does not prove historical settlement. Never replay, backfill, or synthesize a tick or backup.
 - **Binding:** when a native Goal/Loop contract explicitly binds this runbook, record its exact repo commit SHA at binding time and keep that revision fixed for the run. Do not silently follow moving `main`; a document change does not mutate native manager state or rebind a live run.

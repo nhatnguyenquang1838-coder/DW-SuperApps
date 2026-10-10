@@ -81,7 +81,7 @@ Do not use Slack as the normal progress journal. Slack is not a substitute mailb
 
 ## Event-driven mailbox delivery
 
-Canonical mailbox/v2 execution does not use periodic mailbox polling and does not use Slack as an Executor wake-up path.
+Canonical mailbox/v2 execution does not use periodic mailbox polling and does not use Slack as an Executor wake-up path. **Host `LoopManager` scheduler state is separate from the persistent main Executor session and canonical TaskController continuation.** Quarantine/pause only an obsolete-run or mailbox-polling scheduler row; do not terminate the Executor session, infer `RUN_HOLD`/`TERMINAL`, or stop a still-authorized implementation mission because polling is prohibited. Use `decide_executor_loop_continuity()` from `taskcontroller/controlplane/orchestration_policy.py` to classify the exact run/Loop binding. Missing callback or expired authority holds protected effects while Controller owns event-driven recovery; never auto-resume an old Loop.
 
 When the provider's mailbox-event adapter reports a newer Controller event, fetch exactly that Controller mailbox event, validate its sequence/digest/lease/fence/bindings, then execute the bounded contract. Duplicate or stale event notifications are harmless and must not re-execute already-consumed work.
 

@@ -139,7 +139,7 @@ native materialize_controller_transition:
 
 An `ACTIVE` continuation checkpoint forbids a semantic Controller final/terminal response. The Controller may stop the current host execution only at a genuine human-authority or unrecoverable blocker while leaving the durable run state truthful and recoverable.
 
-Canonical mailbox/v2 execution is event-driven. The Controller MUST NOT run a periodic mailbox polling cadence. A `WAIT_EXECUTOR` continuation uses `AWAIT_EXECUTOR_EVENT`; the Controller resumes only after a provider/event adapter reports a newer Executor mailbox event, then exact-reads that event once.
+Canonical mailbox/v2 execution is event-driven. The Controller MUST NOT run a periodic mailbox polling cadence. **A forbidden polling scheduler is not a stopped Executor session.** Pausing/quarantining a Loop that polls mailbox/v2 or belongs to an obsolete run does not itself create `RUN_HOLD`, `TERMINAL`, an approval boundary, or permission to cancel an unrelated authorized engineering mission. While effects are held on an expired/mismatched command, Controller remains responsible for a qualified successor event rather than timer reactivation. A `WAIT_EXECUTOR` continuation uses `AWAIT_EXECUTOR_EVENT`; the Controller resumes only after a provider/event adapter reports a newer Executor mailbox event, then exact-reads that event once.
 
 For the current `hermes-cloud` binding, machine notification is a mailbox event. Slack WebSocket is not a canonical Executor wake-up path and MUST NOT be used as machine notification for event-driven runs.
 

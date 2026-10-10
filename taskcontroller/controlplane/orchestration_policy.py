@@ -241,12 +241,141 @@ def validate_hold_semantics(payload: Mapping[str, Any]) -> HoldSemantics | None:
     )
 
 
+# Native Hermes LoopManager rows are *host schedulers*, never TaskController
+# continuation state. In particular, pausing a polling Loop MUST NOT be used
+# as a proxy for terminating the Executor session or the Controller run.
+HOST_LOOP_ROLES = frozenset({"MAILBOX_POLL", "CONTROLLER_WAKEUP_POLL", "ENGINEERING_WORK", "UNRELATED"})
+POLLING_LOOP_ROLES = frozenset({"MAILBOX_POLL", "CONTROLLER_WAKEUP_POLL"})
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutorLoopContinuity:
+    """Pure, transport-neutral Loop/Executor boundary decision; no host mutation."""
+
+    scheduler_action: str
+    executor_session_action: str
+    next_owner: str
+    typed_next: str
+    effects_allowed: bool
+    auto_resume_allowed: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "scheduler_action": self.scheduler_action,
+            "executor_session_action": self.executor_session_action,
+            "next_owner": self.next_owner,
+            "typed_next": self.typed_next,
+            "effects_allowed": self.effects_allowed,
+            "auto_resume_allowed": self.auto_resume_allowed,
+        }
+
+
+def decide_executor_loop_continuity(
+    *,
+    loop_role: str,
+    loop_run_id: str,
+    canonical_run_id: str,
+    execute_contract_current: bool,
+    awaiting_controller_event: bool = False,
+    hold_type: str | None = None,
+    user_paused: bool = False,
+    terminal_verified: bool = False,
+    event_adapter_qualified: bool = True,
+) -> ExecutorLoopContinuity:
+    """Disentangle *native scheduler control* from *TaskController liveness*.
+
+    This does NOT issue a LoopManager.pause()/resume(), grant effect authority,
+    admit an actor/adapter, verify a lease, or create a mailbox event.
+    Callers supply live exact-readback booleans and use an independently
+    admitted event adapter. A waiting Executor is not a terminal run.
+
+    An old-run or mailbox-poll scheduler is quarantined/paused by its host
+    owner only. The persistent main Executor session is retained and resumes
+    only after a separately validated event. No timer-based mailbox polling.
+    """
+    if loop_role not in HOST_LOOP_ROLES:
+        _fail("LOOP_ROLE_INVALID", f"unsupported loop_role: {loop_role!r}")
+    _text(loop_run_id, "loop_run_id")
+    _text(canonical_run_id, "canonical_run_id")
+    if hold_type is not None and hold_type not in HOLD_TYPES:
+        _fail("LOOP_HOLD_INVALID", "hold_type must be EFFECT_HOLD, RUN_HOLD, or None")
+    for key, value in (
+        ("execute_contract_current", execute_contract_current),
+        ("awaiting_controller_event", awaiting_controller_event),
+        ("user_paused", user_paused),
+        ("terminal_verified", terminal_verified),
+        ("event_adapter_qualified", event_adapter_qualified),
+    ):
+        if not isinstance(value, bool):
+            _fail("LOOP_CONTRACT_INVALID", f"{key} must be boolean")
+
+    # An unrelated host scheduler is never ours to pause or quarantine, even
+    # when it belongs to a different run. Its owner controls that Loop row.
+    if loop_role == "UNRELATED":
+        return ExecutorLoopContinuity(
+            scheduler_action="NO_AUTOMATIC_LOOP_MUTATION",
+            executor_session_action="PRESERVE_EXECUTOR_SESSION",
+            next_owner="CONTROLLER",
+            typed_next="RESOLVE_LOOP_BINDING",
+            effects_allowed=False,
+        )
+
+    stale_binding = loop_run_id != canonical_run_id
+    if stale_binding:
+        scheduler_action = "QUARANTINE_STALE_LOOP"
+    elif loop_role in POLLING_LOOP_ROLES:
+        scheduler_action = "PAUSE_MAILBOX_POLL_SCHEDULER"
+    else:
+        scheduler_action = "NO_AUTOMATIC_LOOP_MUTATION"
+
+    def outcome(session: str, owner: str, next_action: str, *, effects: bool = False) -> ExecutorLoopContinuity:
+        return ExecutorLoopContinuity(
+            scheduler_action=scheduler_action,
+            executor_session_action=session,
+            next_owner=owner,
+            typed_next=next_action,
+            effects_allowed=effects,
+        )
+
+    # User pause and RUN_HOLD are explicit independent holds. No implicit
+    # unpause, even if a newer event or currently authorized action exists.
+    if user_paused:
+        return outcome("AWAIT_EXPLICIT_UNPAUSE", "CONTROLLER", "RESOLVE_USER_PAUSE")
+    if hold_type == HOLD_RUN:
+        return outcome("STOP_NEW_RUN_ACTIONS", "CONTROLLER", "RESOLVE_RUN_HOLD")
+    if terminal_verified:
+        return outcome("TERMINAL", "CONTROLLER", "ACCEPT_VERIFIED_TERMINAL")
+
+    # A prior host Loop bound to another run can never release this run.
+    if stale_binding:
+        return outcome("PRESERVE_EXECUTOR_SESSION", "CONTROLLER", "RESOLVE_RUN_BINDING")
+    if hold_type == HOLD_EFFECT:
+        return outcome("PRESERVE_EXECUTOR_SESSION", "CONTROLLER", "RESOLVE_EFFECT_AUTHORITY")
+    if not execute_contract_current:
+        return outcome("AWAIT_VALID_EXECUTE", "CONTROLLER", "RESOLVE_EXECUTION_AUTHORITY")
+    if awaiting_controller_event:
+        if not event_adapter_qualified:
+            return outcome("AWAIT_QUALIFIED_EVENT_ADAPTER", "CONTROLLER", "QUALIFY_EVENT_ADAPTER")
+        return outcome("AWAIT_EVENT_DRIVEN_SUCCESSOR", "CONTROLLER", "AWAIT_VALID_CONTROLLER_EVENT")
+    if loop_role in POLLING_LOOP_ROLES:
+        # Authorization permits work via the native goal/Executor path only;
+        # it never converts a C/E polling Loop into an execution mechanism.
+        return outcome("CONTINUE_EXECUTE_WITHOUT_MAILBOX_POLL", "EXECUTOR", "EXECUTE_NEXT_READY_WORK", effects=True)
+    if loop_role == "UNRELATED":
+        return outcome("PRESERVE_EXECUTOR_SESSION", "CONTROLLER", "RESOLVE_LOOP_BINDING")
+    return outcome("CONTINUE_EXECUTE", "EXECUTOR", "EXECUTE_NEXT_READY_WORK", effects=True)
+
+
 __all__ = [
     "BLOCKER_AUTHORITY_BOUNDARY",
     "BLOCKER_EXTERNAL_DEPENDENCY",
     "BLOCKER_MATERIAL_PLAN_INVALIDATION",
     "BLOCKER_SCOPE_EXPANSION",
     "EXECUTOR_BLOCKER_CLASSES",
+    "HOST_LOOP_ROLES",
+    "POLLING_LOOP_ROLES",
+    "ExecutorLoopContinuity",
+    "decide_executor_loop_continuity",
     "ExecutorProgressOutcome",
     "HOLD_EFFECT",
     "HOLD_RUN",
