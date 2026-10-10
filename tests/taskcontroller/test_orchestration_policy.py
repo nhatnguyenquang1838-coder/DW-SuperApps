@@ -10,6 +10,7 @@ import pytest
 
 from taskcontroller.controlplane.orchestration_policy import (
     BLOCKER_AUTHORITY_BOUNDARY,
+    decide_executor_loop_continuity,
     HOLD_EFFECT,
     HOLD_RUN,
     OrchestrationPolicyError,
@@ -182,3 +183,142 @@ def test_effect_hold_cannot_stop_the_controller_control_loop() -> None:
             }
         )
     assert error.value.code == "EFFECT_HOLD_MUST_CONTINUE_CONTROL_LOOP"
+
+
+
+@pytest.mark.parametrize(
+    ("loop_role", "loop_run_id", "current_run_id", "expected_scheduler", "expected_next"),
+    [
+        ("MAILBOX_POLL", "run-current", "run-current", "PAUSE_MAILBOX_POLL_SCHEDULER", "RESOLVE_EXECUTION_AUTHORITY"),
+        ("CONTROLLER_WAKEUP_POLL", "run-current", "run-current", "PAUSE_MAILBOX_POLL_SCHEDULER", "RESOLVE_EXECUTION_AUTHORITY"),
+        ("MAILBOX_POLL", "run-old", "run-fresh", "QUARANTINE_STALE_LOOP", "RESOLVE_RUN_BINDING"),
+        ("ENGINEERING_WORK", "run-old", "run-fresh", "QUARANTINE_STALE_LOOP", "RESOLVE_RUN_BINDING"),
+    ],
+)
+def test_loop_pause_is_scheduler_only_not_executor_session_termination(
+    loop_role: str, loop_run_id: str, current_run_id: str,
+    expected_scheduler: str, expected_next: str,
+) -> None:
+    decision = decide_executor_loop_continuity(
+        loop_role=loop_role,
+        loop_run_id=loop_run_id,
+        canonical_run_id=current_run_id,
+        execute_contract_current=False,
+    )
+    assert decision.scheduler_action == expected_scheduler
+    assert decision.executor_session_action in {"AWAIT_VALID_EXECUTE", "PRESERVE_EXECUTOR_SESSION"}
+    assert decision.executor_session_action != "TERMINAL"
+    assert decision.next_owner == "CONTROLLER"
+    assert decision.typed_next == expected_next
+    assert decision.effects_allowed is False
+    assert decision.auto_resume_allowed is False
+
+
+def test_valid_engineering_contract_continues_without_timer_or_controller_wait() -> None:
+    decision = decide_executor_loop_continuity(
+        loop_role="ENGINEERING_WORK",
+        loop_run_id="run-fresh",
+        canonical_run_id="run-fresh",
+        execute_contract_current=True,
+    )
+    assert decision.scheduler_action == "NO_AUTOMATIC_LOOP_MUTATION"
+    assert decision.executor_session_action == "CONTINUE_EXECUTE"
+    assert decision.typed_next == "EXECUTE_NEXT_READY_WORK"
+    assert decision.next_owner == "EXECUTOR"
+    assert decision.effects_allowed is True
+
+
+def test_valid_contract_does_not_authorize_mailbox_poll_scheduler() -> None:
+    decision = decide_executor_loop_continuity(
+        loop_role="MAILBOX_POLL",
+        loop_run_id="run-fresh",
+        canonical_run_id="run-fresh",
+        execute_contract_current=True,
+    )
+    assert decision.scheduler_action == "PAUSE_MAILBOX_POLL_SCHEDULER"
+    assert decision.executor_session_action == "CONTINUE_EXECUTE_WITHOUT_MAILBOX_POLL"
+    assert decision.effects_allowed is True
+
+
+def test_waiting_for_controller_event_does_not_end_executor_session() -> None:
+    decision = decide_executor_loop_continuity(
+        loop_role="ENGINEERING_WORK",
+        loop_run_id="run-fresh",
+        canonical_run_id="run-fresh",
+        execute_contract_current=True,
+        awaiting_controller_event=True,
+    )
+    assert decision.executor_session_action == "AWAIT_EVENT_DRIVEN_SUCCESSOR"
+    assert decision.next_owner == "CONTROLLER"
+    assert decision.typed_next == "AWAIT_VALID_CONTROLLER_EVENT"
+    assert decision.effects_allowed is False
+    assert decision.auto_resume_allowed is False
+
+
+def test_missing_event_adapter_requires_controller_action_not_loop_poll() -> None:
+    decision = decide_executor_loop_continuity(
+        loop_role="ENGINEERING_WORK",
+        loop_run_id="run-fresh",
+        canonical_run_id="run-fresh",
+        execute_contract_current=True,
+        awaiting_controller_event=True,
+        event_adapter_qualified=False,
+    )
+    assert decision.executor_session_action == "AWAIT_QUALIFIED_EVENT_ADAPTER"
+    assert decision.typed_next == "QUALIFY_EVENT_ADAPTER"
+    assert decision.effects_allowed is False
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "expected"),
+    [
+        ({"hold_type": HOLD_EFFECT}, "RESOLVE_EFFECT_AUTHORITY"),
+        ({"hold_type": HOLD_RUN}, "RESOLVE_RUN_HOLD"),
+        ({"user_paused": True}, "RESOLVE_USER_PAUSE"),
+    ],
+)
+def test_holds_are_distinct_from_timer_polling_suppression(kwargs: dict, expected: str) -> None:
+    decision = decide_executor_loop_continuity(
+        loop_role="ENGINEERING_WORK",
+        loop_run_id="run-current",
+        canonical_run_id="run-current",
+        execute_contract_current=True,
+        **kwargs,
+    )
+    assert decision.typed_next == expected
+    assert decision.effects_allowed is False
+    assert decision.auto_resume_allowed is False
+
+
+def test_terminal_requires_explicit_verified_terminal_evidence() -> None:
+    pending = decide_executor_loop_continuity(
+        loop_role="ENGINEERING_WORK", loop_run_id="run-current",
+        canonical_run_id="run-current", execute_contract_current=False,
+        terminal_verified=False,
+    )
+    terminal = decide_executor_loop_continuity(
+        loop_role="ENGINEERING_WORK", loop_run_id="run-current",
+        canonical_run_id="run-current", execute_contract_current=False,
+        terminal_verified=True,
+    )
+    assert pending.executor_session_action != "TERMINAL"
+    assert terminal.executor_session_action == "TERMINAL"
+
+
+@pytest.mark.parametrize(
+    ("extra", "code"),
+    [
+        ({"loop_role": "UNKNOWN"}, "LOOP_ROLE_INVALID"),
+        ({"hold_type": "HOLD"}, "LOOP_HOLD_INVALID"),
+        ({"execute_contract_current": "yes"}, "LOOP_CONTRACT_INVALID"),
+    ],
+)
+def test_loop_continuity_rejects_invalid_guards(extra: dict, code: str) -> None:
+    arguments = dict(
+        loop_role="ENGINEERING_WORK", loop_run_id="run-current",
+        canonical_run_id="run-current", execute_contract_current=False,
+    )
+    arguments.update(extra)
+    with pytest.raises(OrchestrationPolicyError) as exc:
+        decide_executor_loop_continuity(**arguments)
+    assert exc.value.code == code
