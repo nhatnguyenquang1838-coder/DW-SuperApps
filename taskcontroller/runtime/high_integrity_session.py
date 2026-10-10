@@ -22,7 +22,7 @@ from typing import Any, Mapping, NoReturn, Sequence
 from taskcontroller.controlplane.continuation_dispatch import (
     prepare_v2_dispatch,
     recover_v2_dispatch,
-    validate_v2_dispatch_binding,
+    validate_v2_dispatch_current_binding,
 )
 from taskcontroller.controlplane.mailbox_dispatch import (
     MailboxDispatchOutcome,
@@ -731,10 +731,9 @@ def recover_high_integrity_session(
         # Restart recovery validates the evolved current continuation against
         # the exact append-only Controller event binding rather than requiring
         # equality with the historical pre-dispatch checkpoint digest.
-        validate_v2_dispatch_binding(
+        validate_v2_dispatch_current_binding(
             event.envelope,
             checkpoint,
-            require_checkpoint_id=False,
         )
         if observed_at is None:
             _fail(
