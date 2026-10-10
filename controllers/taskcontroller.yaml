@@ -219,6 +219,17 @@ resilience:
     - acknowledge-controller-cursor
     - exact-continuation-readback
     - publish-mailbox-event-notification
+  hermes_host_loop_boundary:
+    pure_decision_guard: taskcontroller/controlplane/orchestration_policy.py::decide_executor_loop_continuity
+    native_scheduler_is_not_executor_session: true
+    mailbox_or_controller_wakeup_polling: forbidden
+    stale_run_scheduler_action: quarantine_without_auto_resume
+    host_pause_implies_run_hold: false
+    host_pause_implies_terminal: false
+    protected_effects_require_current_grant: true
+    missing_successor_owner: controller
+    qualified_event_return_required: true
+    policy_guard_mutates_host_scheduler: false
   wait_executor_deadlock_guard:
     observed_time_required_on_wait_executor_recovery: true
     execution_attempt_lease_must_be_current_before_event-resume: true
