@@ -189,6 +189,11 @@ action: Exact-read Executor event; return Controller successor event reference.
 - [ ] Contract binds strategy, actors, mode-specific transport and no implicit fallback; `max_children=0` is **not** a mode selector.
 - [ ] Every Executor event and Controller successor has durable typed mailbox/cursor/continuation readback; identity, digest, source, lease/fence, pause and exact-head guards remain intact.
 - [ ] No Controller approval invented from MoA or GPT response, and no uncontrolled periodic mailbox/Preview polling.
+- [ ] TaskController mailbox/v2 remains event-driven; no Loop/Heartbeat/cron/browser scheduler polls or wakes C/E, and exact wakeup fields come from the live source chain.
+- [ ] Host Goal/Loop/Heartbeat controls do not grant TaskController/GWC lifecycle authority; no local Task TodoList or generic RunState schema is invented.
+- [ ] GPT browser transport is used only through an explicitly qualified binding and the existing `dwa-gpt-exchange` procedure.
+- [ ] Settlement requires a confirmed real firing with `awaiting_response=true`, one exact-owner `complete_tick`, and fresh readback showing the expected post-state; `false` alone is not historical proof.
+- [ ] A Goal/Loop binding pins this runbook's exact commit SHA at bind time; no implicit tracking of a moving `main`.
 
 ### Live provider checks (not satisfied by documentation)
 
@@ -201,3 +206,16 @@ action: Exact-read Executor event; return Controller successor event reference.
 7. **Both — terminal:** verifiable exact-head tests/artifacts and canonical Controller terminal disposition; no optimistic success from UI/session stop reason.
 
 **Readiness:** Until provider bindings and live tests pass, report **DOCUMENTED / E2E_UNVERIFIED**, not `RUNTIME_READY`.
+
+## Hermes host Loop integration boundary (generic)
+
+This repository runbook governs Desktop runtime/provider behavior and its TaskController integration. It is not a second Hermes host-scheduler manual or TaskController/GWC contract. Use the local `hermes-loop-operations` skill for native Goal/Loop/Heartbeat mechanics and `dwa-gpt-exchange` for GPT browser transport; both are procedure aids subordinate to the live DW-SuperApps and applicable GWC source chains.
+
+- **Host-control ownership:** `GoalManager`, `LoopManager`, and `HeartbeatManager` control only their respective native scheduler rows. They do not grant repository, mailbox, gate, or human authority.
+- **Source-owned lifecycle:** use the active project's declared lifecycle state/cursor and typed `NEXT`. This runbook does not define a universal `RunState`, `RuntimePlan`, `Task TodoList`, `DONE`/predecessor rule, or `validity_key`. Do not invent local C/E cursor or deadlock predicates; follow the exact current protocol records.
+- **Event-driven mailbox boundary:** canonical mailbox/v2 is event-driven. Never use `/loop`, `/heartbeat`, cron, Slack polling, browser scraping, or another scheduler to poll C/E or wake the Controller. Use exact live-schema field names (including `periodic_mailbox_polling` and `wakeup_binding` where defined, plus typed per-run permissions); when polling or Executor wakeup is forbidden, do not keep, re-arm, or resume a scheduler.
+- **Expired lease/fence:** recovery remains Controller-owned. The Executor must not renew a lease/fence, invoke recovery/materialization, or create a successor event/cursor. A recovery receipt alone is not a typed execution grant.
+- **Browser transport:** only use a GPT browser route when the active strategy/registry binds a qualified adapter and exact conversation. Otherwise keep `TRANSPORT_BLOCKED`; do not use a fallback or infer delivery from UI output. The exact stage/submit/readback flow belongs to `dwa-gpt-exchange`.
+- **Optional advisory analysis:** if an active contract requests one MoA review of a source-bound deadlock fact block, it is advisory only; empty/partial/provider-failed output is `INCONCLUSIVE`. It cannot create a mailbox event, grant authority, decide a source-owned cursor predicate, or perform lease recovery.
+- **Loop settlement:** for a confirmed real firing only, exact-read the same owner/session and create/verify the required pre-settlement backup. Call `LoopManager(session_id).complete_tick(last_response)` exactly once only when that firing has `awaiting_response=true`; then use a fresh manager readback to verify the same firing and `awaiting_response=false` as the postcondition. A paused Loop or pre-settlement `false` means no current firing to settle and does not prove historical settlement. Never replay, backfill, or synthesize a tick or backup.
+- **Binding:** when a native Goal/Loop contract explicitly binds this runbook, record its exact repo commit SHA at binding time and keep that revision fixed for the run. Do not silently follow moving `main`; a document change does not mutate native manager state or rebind a live run.
