@@ -148,7 +148,7 @@ def prepare_v2_dispatch(
     return envelope
 
 
-def validate_v2_dispatch_binding(
+def _validate_v2_dispatch_binding(
     envelope: V2MailboxEnvelope,
     checkpoint: ControllerContinuation,
     *,
@@ -228,6 +228,26 @@ def validate_v2_dispatch_binding(
     return checkpoint
 
 
+def validate_v2_dispatch_current_binding(
+    envelope: V2MailboxEnvelope,
+    checkpoint: ControllerContinuation,
+) -> ControllerContinuation:
+    """Validate an evolved WAIT_EXECUTOR continuation against its request.
+
+    Call this only after the Controller request event has been exact-read from
+    the current continuation's bound append-only Controller mailbox. The
+    request checkpoint ID remains historical dispatch identity; current
+    continuation identity is established by the durable record plus exact
+    run/sequence/recipient binding.
+    """
+
+    return _validate_v2_dispatch_binding(
+        envelope,
+        checkpoint,
+        require_checkpoint_id=False,
+    )
+
+
 def recover_v2_dispatch(
     store: ContinuationStore,
     envelope: V2MailboxEnvelope,
@@ -248,11 +268,11 @@ def recover_v2_dispatch(
             MailboxV2ErrorCode.CONTRACT_MISMATCH,
             "durable continuation checkpoint is missing",
         )
-    return validate_v2_dispatch_binding(
+    return _validate_v2_dispatch_binding(
         envelope,
         checkpoint,
         require_checkpoint_id=True,
     )
 
 
-__all__ = ["prepare_v2_dispatch", "recover_v2_dispatch", "validate_v2_dispatch_binding"]
+__all__ = ["prepare_v2_dispatch", "recover_v2_dispatch", "validate_v2_dispatch_current_binding"]
