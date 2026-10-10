@@ -115,3 +115,31 @@ def test_hermes_runbook_precheck_is_executor_only():
     assert "Controller-native bootstrap and Controller-owned gate progression" in slack
     assert "before the **first actual Executor dispatch**" in slack
     assert "block dispatch only" in slack
+
+
+
+def test_loop_scheduler_is_not_a_terminal_executor_or_run_hold():
+    controller = _content("agents/chatgpt-agent/agent-instructions.md")
+    hermes = _content("agents/hermes/agent-instructions.md")
+    runbook = _content("docs/runbooks/HERMES_DESKTOP_RUNTIME.md")
+    shared = _content("agents/shared/taskcontroller-a2a-protocol.md")
+    root = _content("AGENTS.md")
+    registry = _content("controllers/taskcontroller.yaml")
+    assert "decide_executor_loop_continuity()" in controller
+    assert "Host `LoopManager` scheduler state is separate" in hermes
+    assert "scheduler row is not" in runbook
+    assert "forbidden polling scheduler is not a stopped Executor session" in shared
+    assert "Hermes Loop continuity" in root
+    assert "pure_decision_guard: taskcontroller/controlplane/orchestration_policy.py::decide_executor_loop_continuity" in registry
+    assert "host_pause_implies_run_hold: false" in registry
+    assert "host_pause_implies_terminal: false" in registry
+    assert "policy_guard_mutates_host_scheduler: false" in registry
+
+
+def test_hermes_runbook_has_no_default_old_run_recovery_command():
+    runbook = _content("docs/runbooks/HERMES_DESKTOP_RUNTIME.md")
+    assert "--issue 575" not in runbook
+    assert "--run-id scrum781-q0-20260920T074727Z" not in runbook
+    assert "do not keep, re-arm, or resume **that forbidden polling scheduler**" in runbook
+    assert "live canonical Controller mailbox/continuation" in runbook
+    assert "Do not attribute a pause/resume to a user without an actor-bearing event" in runbook
