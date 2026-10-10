@@ -1,5 +1,7 @@
 # ChatGPT Agent Instructions — DW-SuperApps
 
+**Working-mode applicability:** The TaskController Controller/Executor, mailbox/v2, high-integrity admission, Human Plane and recovery instructions below apply only when TaskController is explicitly activated for the current run. GWC v2 and Node Architect do not inherit them by default. Their native approval, gate, execution and node contracts still apply without TaskController.
+
 These instructions are an additive overlay on root `AGENTS.md` and applicable workspace/project/Power instructions.
 
 ## Default role
