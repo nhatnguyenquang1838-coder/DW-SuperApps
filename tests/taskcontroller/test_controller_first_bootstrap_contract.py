@@ -127,7 +127,7 @@ def test_loop_scheduler_is_not_a_terminal_executor_or_run_hold():
     registry = _content("controllers/taskcontroller.yaml")
     assert "decide_executor_loop_continuity()" in controller
     assert "Host `LoopManager` scheduler state is separate" in hermes
-    assert "scheduler row is not" in runbook
+    assert "host scheduler row actually bound to forbidden polling" in runbook or "paused obsolete or mailbox-polling Loop is NOT a stopped Executor session" in runbook
     assert "forbidden polling scheduler is not a stopped Executor session" in shared
     assert "Hermes Loop continuity" in root
     assert "pure_decision_guard: taskcontroller/controlplane/orchestration_policy.py::decide_executor_loop_continuity" in registry
