@@ -309,6 +309,17 @@ def decide_executor_loop_continuity(
         if not isinstance(value, bool):
             _fail("LOOP_CONTRACT_INVALID", f"{key} must be boolean")
 
+    # An unrelated host scheduler is never ours to pause or quarantine, even
+    # when it belongs to a different run. Its owner controls that Loop row.
+    if loop_role == "UNRELATED":
+        return ExecutorLoopContinuity(
+            scheduler_action="NO_AUTOMATIC_LOOP_MUTATION",
+            executor_session_action="PRESERVE_EXECUTOR_SESSION",
+            next_owner="CONTROLLER",
+            typed_next="RESOLVE_LOOP_BINDING",
+            effects_allowed=False,
+        )
+
     stale_binding = loop_run_id != canonical_run_id
     if stale_binding:
         scheduler_action = "QUARANTINE_STALE_LOOP"
