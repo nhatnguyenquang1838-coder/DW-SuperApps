@@ -353,7 +353,7 @@ def test_loop_continuity_rejects_invalid_guards(extra: dict, code: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ("approval_current", "lease_current", "route", "expected", "request"),
+    ("approval_current", "lease_current", "route", "expected", "needs_request"),
     [
         (True, False, "HUMAN", "ISSUE_FRESH_ATTEMPT_LEASE", False),
         (True, True, "HUMAN", "CONTINUE_WITH_CURRENT_FENCE", False),
@@ -363,7 +363,7 @@ def test_loop_continuity_rejects_invalid_guards(extra: dict, code: str) -> None:
     ],
 )
 def test_stale_authority_recovery_distinguishes_lease_from_approval(
-    approval_current: bool, lease_current: bool, route: str, expected: str, request: bool,
+    approval_current: bool, lease_current: bool, route: str, expected: str, needs_request: bool,
 ) -> None:
     resolution = decide_stale_authority_recovery(
         current_run_id="fresh-run", observed_event_run_id="fresh-run",
@@ -371,7 +371,7 @@ def test_stale_authority_recovery_distinguishes_lease_from_approval(
         renewal_route=route,
     )
     assert resolution.next_action == expected
-    assert resolution.approval_request_required is request
+    assert resolution.approval_request_required is needs_request
     assert resolution.protected_effects_allowed is False
     assert resolution.next_owner == "CONTROLLER"
 
