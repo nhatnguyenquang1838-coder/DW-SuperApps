@@ -1,0 +1,72 @@
+# G1 OPTIONS — SCRUM-821 (DWO-V2-00)
+# Immutable once committed.
+
+schema_version: gwc.g1.options/1.0
+artifact_type: G1_OPTIONS
+gate: G1_PLAN
+
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-821
+  base_sha: 2e0b0cdbf7c08ac9305acbd114aa42db749b24be
+  active_runtime_plan_ref: PLAN-821-R1
+  active_runtime_plan_revision: 1
+
+options:
+  - id: OPT-1
+    title: Typed TypeScript release-binding registry with fail-closed exact-SHA resolution
+    description: >-
+      Implement the R0 baseline as a typed module under projects/dw-observation/lib/dwo/
+      containing: an exact-SHA release-binding registry, namespace-separated native vs
+      compatibility source types, a DWO capability inventory with source_profile
+      provenance, an access-boundary inventory, an immutable R0 rebind evidence record
+      schema, and the canonical drift-classification taxonomy with a pure
+      classifyDrift(previous, current) function. A resolver accepts an injected ref
+      resolver so the fail-closed path is testable without network. YAML/JSON baseline
+      data is materialized under projects/dw-observation/dwo-v2/baseline/ and validated
+      against the types by tests.
+    benefits:
+      - Types make the compatibility/native namespace boundary a compile-time invariant, not a convention.
+      - Injected resolver makes fail-closed behaviour deterministically testable offline.
+      - Reuses the existing lib/ TypeScript surface and the existing vitest harness; no new dependency, no framework upgrade.
+      - The baseline data files are readable by SCRUM-822/823 without re-deriving source identity.
+      - Drift classification is a pure function, so SCRUM-830 qualification can replay it deterministically.
+    tradeoffs:
+      - Adds a new lib/dwo/ directory that later packages must extend rather than replace.
+      - TypeScript-only means the existing Python twin under dw_observation/ is not yet covered; that duplication is a known DWO v1 debt and is explicitly out of this package's scope.
+      - The baseline YAML is a snapshot; it must be regenerated when the Universal head moves, which is exactly what the R0 rebind record is for.
+    risks:
+      - The baseline snapshot can go stale silently if a later package reads it without re-resolving the live ref. Mitigated by making the snapshot carry its own resolution timestamp and by DEV_BINDING_ACTIVE being derived only from a live resolution.
+    constraint_fit: FIT
+
+  - id: OPT-2
+    title: Python-only implementation in the existing dw_observation package
+    description: >-
+      Implement the registry, inventories and drift taxonomy in the existing Python twin (dw_observation/), matching where the current reducer/projection/replay logic already lives.
+    benefits:
+      - Matches the existing reducer/projection/replay implementation language.
+      - pytest harness already exists and is fast.
+    tradeoffs:
+      - The Next.js app and all UI surfaces consume TypeScript; a Python-only registry would not be importable by the reducer/UI path that SCRUM-823/824 must use, forcing a bridge.
+      - Would create a second, divergent source of truth for binding state across the two language twins.
+      - Type safety for the namespace-separation invariant is weaker at runtime than at compile time.
+    risks:
+      - High probability of a Python/TypeScript binding divergence, which is precisely the class of silent-source-drift defect this package exists to prevent.
+    constraint_fit: NOT_FIT
+
+  - id: OPT-3
+    title: Documentation-only baseline with no executable registry
+    description: >-
+      Record the binding, inventories and taxonomy as markdown/YAML documentation artifacts with no executable validation.
+    benefits:
+      - Fastest to produce.
+      - Human-readable.
+    tradeoffs:
+      - Fails AC-821-07 and AC-821-08: fail-closed behaviour and a machine-derivable DEV_BINDING_ACTIVE cannot be proven without executable code.
+      - Provides no regression protection when the Universal head moves.
+      - Directly contradicts the SCRUM-820 requirement that DWO project Universal source identity and evidence rather than prose.
+    risks:
+      - Documentation drifts from reality with no signal, which is the exact failure mode DWO exists to eliminate.
+    constraint_fit: NOT_FIT
+
+selected_option_id: OPT-1

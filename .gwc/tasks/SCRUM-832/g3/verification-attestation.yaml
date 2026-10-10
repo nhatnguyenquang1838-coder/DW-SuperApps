@@ -1,0 +1,61 @@
+# G3 VERIFICATION ATTESTATION — SCRUM-832 (DWO-V2-11)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g3.verification-attestation/1.0
+artifact_type: VERIFICATION_ATTESTATION
+gate: G3_VERIFY
+trace:
+  task_id: SCRUM-832
+  parent_run_ref: SCRUM-820
+  plan_revision: 1
+  verified_at: '2026-09-30T09:54:00+07:00'
+  task_branch: task/SCRUM-832-real-run-cert
+  branch_head: 445e2c5
+
+verdict: PASS
+
+child_runs:
+  - id: CR-832-A
+    title: Real-campaign observation + live/replay equality
+    commit: 445e2c5
+    tests: covered by acceptance.test.ts
+  - id: CR-832-B
+    title: Read-only safety + evidence provenance + target/handoff + degraded-mode validation
+    commit: 445e2c5
+    tests: covered by acceptance.test.ts
+  - id: CR-832-C
+    title: Derived-state reset reconstruction + exact identity recording
+    commit: 445e2c5
+    tests: covered by acceptance.test.ts
+  - id: CR-832-D
+    title: G6 handoff dossier + DWO_V2_ACCEPTED derivation + tests
+    commit: 445e2c5
+    tests: covered by acceptance.test.ts
+
+executed_evidence:
+  - command: npx vitest run tests/unit/dwo/
+    result: 265 passed (265) — 17 dwo constraint suites
+  - command: npx vitest run
+    result: 34 files, 561 passed (296 baseline + 265 new)
+  - command: npx tsc --noEmit
+    result: exit 0
+  - command: python3 -m pytest tests/ -q
+    result: 112 passed (no Python regression)
+
+acceptance_criteria_coverage:
+  AC-832-01: VERIFIED (DWO_V2_ACCEPTED derived)
+  AC-832-02: VERIFIED (real campaign reconstructs from durable history)
+  AC-832-03: VERIFIED (final live/replay equality passes)
+  AC-832-04: VERIFIED (G6 handoff dossier identifies exact output and evidence)
+
+exit_token_derivation:
+  token: DWO_V2_ACCEPTED
+  derivable: true
+  basis: >
+    deriveDwoV2Accepted(): real campaign reconstructs, live/replay equal, read-only
+    safe, evidence provenance attributable, target/handoff identified, degraded-mode
+    handled, reconstructs after reset, identities recorded. Derived by
+    machine-readable state.
+
+deviations:
+  - none

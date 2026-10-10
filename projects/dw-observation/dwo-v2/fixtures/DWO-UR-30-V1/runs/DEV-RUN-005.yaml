@@ -1,0 +1,32 @@
+runtime_facts:
+  run_id: DEV-RUN-005
+  run_kind: ROOT
+  lifecycle_profile:
+    id: gwc.universal-run
+    version: 1
+  domain_profile_ref: CORE
+  target_contract_ref: TARGET-005-R1
+  active_runtime_plan_ref: PLAN-005-R1
+  active_runtime_plan_revision: 1
+  active_runtime_plan_digest: 1dc9104de9fd5a42b40ccecfc97928e713ab48cb0c5c91c496026854bbed7840
+  atomic: false
+  child_run_refs:
+  - DEV-RUN-006
+  - DEV-RUN-007
+  dependency_refs: []
+  parent_run_ref: null
+  lifecycle:
+    G0: PASSED
+    G1: PASSED
+    G2: PASSED
+    G3: FAILED
+    G4: NOT_STARTED
+    G5: NOT_STARTED
+    G6: NOT_STARTED
+  run_state: OPEN
+dwo_expected_projection:
+  source_profile: DEV_NATIVE
+  sync_state: LIVE
+  semantic_qualification: PENDING
+  authority_state: NOT_APPLICABLE
+  anomaly_count: 0

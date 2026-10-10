@@ -1,0 +1,73 @@
+# G1 PREFLIGHT — SCRUM-821 (DWO-V2-00)
+# Immutable once committed.
+
+schema_version: gwc.g1.preflight/1.0
+artifact_type: G1_PREFLIGHT
+gate: G1_PLAN
+
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-821
+  base_sha: 2e0b0cdbf7c08ac9305acbd114aa42db749b24be
+  base_ref: main
+  active_runtime_plan_ref: PLAN-821-R1
+  active_runtime_plan_revision: 1
+
+preflight_checks:
+  - id: PF-001
+    check: Exact DWO protected base SHA resolved and pinned
+    method: git rev-parse origin/main
+    result: 2e0b0cdbf7c08ac9305acbd114aa42db749b24be
+    outcome: PASS
+  - id: PF-002
+    check: Requested final target branch exists
+    method: gh api git/ref/heads/master
+    result: HTTP 404 Not Found
+    outcome: FAIL_RESOLVED
+    resolution: Human Principal resolved to `main`; TARGET_BRANCH_CONFLICT closed.
+  - id: PF-003
+    check: Isolated task worktree created off the exact pinned base
+    method: git worktree add -b task/SCRUM-821-release-binding-inventory <path> 2e0b0cdb
+    result: HEAD == 2e0b0cdbf7c08ac9305acbd114aa42db749b24be, working tree clean
+    outcome: PASS
+  - id: PF-004
+    check: Universal Runtime release-development ref + exact SHA resolvable
+    method: gh api repos/nhatnguyenquang1838-coder/gwc/commits/fix/SCRUM-818-migrate-582-into-scrum781-m2
+    result: 6a8c35fb38982773b06b3c49ed40ddea6c53f89a @ 2026-09-28T16:46:19Z
+    outcome: PASS
+  - id: PF-005
+    check: Universal released main SHA resolvable
+    method: gh api repos/nhatnguyenquang1838-coder/gwc/commits/main
+    result: 414002f92d48083e7133236346b26e3a2a047e33 @ 2026-09-28T14:10:41Z
+    outcome: PASS
+  - id: PF-006
+    check: DWO v1 baseline green before mutation
+    method: npx tsc --noEmit; npx vitest run; python3 -m pytest tests/ -q
+    result: typecheck exit 0; 17 files / 296 vitest tests passed; 112 pytest passed
+    outcome: PASS
+  - id: PF-007
+    check: DWO v2 fixture materialization absent (confirms R0 gap)
+    method: exact tree scan of origin/main for fixture-set.yaml / runs/DEV-RUN-*.yaml / events/projection-events.jsonl / expected/*.json / DWO-SCALE-GEN-V1
+    result: zero matches
+    outcome: PASS
+  - id: PF-008
+    check: No double-claim risk on SCRUM-821
+    method: jira_get_issue fields=customfield_10046,customfield_10047
+    result: both null before claim
+    outcome: PASS
+  - id: PF-009
+    check: Workspace worktree policy validator
+    method: python scripts/validate_workspace_worktree_policy.py
+    result: see g3 evidence
+    outcome: PENDING_G3
+  - id: PF-010
+    check: Canonical DWO-UR-30-V1 design baseline read
+    method: notion_fetch 3ea07c1c65b681c28de7c076abdfbdb2
+    result: OFFICIAL_DESIGN_BASELINE / semantic ACCEPTED / materialization PENDING_IMPLEMENTATION
+    outcome: PASS
+
+preflight_outcome: PASS_WITH_RESOLVED_CONFLICT
+blocking_findings: []
+notes:
+  - The three open Universal release PRs are all Draft; no merged release line exists yet. Recorded as Q-001, non-blocking for this package.
+  - The Universal Recursive Governed Run Model remains DRAFT FOR HUMAN REVIEW. Recorded as Q-002, blocking for SCRUM-823 only.

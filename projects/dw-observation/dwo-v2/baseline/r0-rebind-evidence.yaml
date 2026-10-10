@@ -1,0 +1,51 @@
+# R0 REBIND EVIDENCE — SCRUM-821 / DWO-V2-00 / CR-821-D
+# Immutable per revision. Corrections create a new revision, never in-place edits.
+
+schema_id: gwc.dwo.r0-rebind-evidence
+schema_version: 1
+artifact_type: R0_REBIND_EVIDENCE
+gate: G2_EXECUTE
+trace:
+  task_id: SCRUM-821
+  plan_revision: 2
+  generated_at: '2026-09-30T03:47:00+07:00'
+
+record:
+  revision: 1
+  run_id: SCRUM-821
+  previous_sha: null # first binding of the DWO v2 release train — no prior native binding
+  new_sha: 5c4e4a53fe6ceaceac05f233409c3dd20f17f4f3
+  lifecycle_profile_id: gwc.universal-run
+  lifecycle_profile_version: 1
+  contract_digest: 5ae7f38a4efe374966b497004dbe18ea30c24e3b
+  drift_classification: ADAPTER_CHANGE
+  affected_surfaces: [ADAPTER, PROJECTION_CONTRACT_V2]
+  recorded_at: '2026-09-30T03:47:00+07:00'
+  provenance_ref: plan:PLAN-821-R2
+
+binding_state:
+  native_universal:
+    repository: nhatnguyenquang1838-coder/gwc
+    logical_release_development_ref: fix/SCRUM-781-m1-runtime-contract-convergence
+    exact_consumed_sha: 5c4e4a53fe6ceaceac05f233409c3dd20f17f4f3
+    pr: 578
+    pr_state: OPEN
+    pr_draft: true
+    lifecycle_profile: gwc.universal-run/1
+    contract_digest: 5ae7f38a4efe374966b497004dbe18ea30c24e3b
+    bound_at: '2026-09-30T03:31:00+07:00'
+  compatibility:
+    repository: nhatnguyenquang1838-coder/gwc
+    ref: main
+    exact_sha: 414002f92d48083e7133236346b26e3a2a047e33
+    role: COMPATIBILITY_AND_EFFECT_GOVERNANCE_ONLY
+  drift_classification: ADAPTER_CHANGE
+  drift_evidence_ref: dwo-v2/baseline/kernel-contract-diff.json
+
+exit_token:
+  name: DEV_BINDING_ACTIVE
+  derivable: true
+  derivation: >-
+    deriveDevBindingActive(): native binding present with exact 40-hex consumed SHA
+    and contract digest; drift = ADAPTER_CHANGE (non-blocking). Token derived from
+    machine-readable state, not asserted by intent.

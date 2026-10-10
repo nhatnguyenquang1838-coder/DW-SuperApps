@@ -1,0 +1,105 @@
+# G1 INTAKE — SCRUM-827 (DWO-V2-06)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g1.intake/1.0
+artifact_type: G1_INTAKE
+gate: G1_PLAN
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-827
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 980df7e7c7752b7dd384a60cdd3e0e9c6a1e2784
+  active_runtime_plan_ref: PLAN-827-R1
+  active_runtime_plan_revision: 1
+  target_contract_ref: TARGET-EVIDENCE-827-R1
+
+problem:
+  statement: >-
+    DWO v2 has no evidence-first inspection, recovery lineage or deterministic replay
+    UX. SCRUM-830 (qualification) depends on replay reconstructing expected frames
+    from both fixtures and durable history under the accepted ordering/rebuild
+    contract, with deterministic comparison evidence under FNR-02.
+  why_now: >-
+    SCRUM-827 is the evidence-first surface. The reducer (SCRUM-824), durable history
+    (SCRUM-825, a completion blocker) and run UX (SCRUM-826) are now available as
+    inputs. Replay UX and realtime transport converge at SCRUM-830 qualification.
+
+stakeholders:
+  requester: human://nhat-nguyen-quang
+  affected:
+    - team://dw-superapps-dwo
+    - consumer://scrUM-830-qualification
+
+risks:
+  - id: RISK-001
+    description: Durable replay does not use the accepted ordering/rebuild contract from SCRUM-825.
+    impact: high
+    mitigation: durable-history replay integrates DurableLog + rebuild parity (SCRUM-825).
+  - id: RISK-002
+    description: Recovery generations are mutated instead of remaining immutable.
+    impact: high
+    mitigation: recovery lineage is append-only; generations immutable and navigable.
+  - id: RISK-003
+    description: Evidence provenance invents missing facts.
+    impact: high
+    mitigation: provenance shown as recorded; missing facts stay UNKNOWN.
+  - id: RISK-004
+    description: Fixture and durable replay comparison not under FNR-02.
+    impact: high
+    mitigation: deterministic comparison evidence uses the FNR-02 contract (SCRUM-823).
+  - id: RISK-005
+    description: Scope creep into realtime transport (SCRUM-828) or accessibility (SCRUM-829).
+    impact: medium
+    mitigation: authorized_paths enumerated; evidence/replay/recovery only.
+
+acceptance_criteria:
+  - id: AC-827-01
+    statement: replay reconstructs expected frames for official fixtures (deterministic).
+    verifiable: true
+  - id: AC-827-02
+    statement: replay reconstructs expected frames from durable history under the accepted ordering/rebuild contract.
+    verifiable: true
+  - id: AC-827-03
+    statement: recovery generations remain immutable and navigable.
+    verifiable: true
+  - id: AC-827-04
+    statement: evidence provenance visible without inventing missing facts.
+    verifiable: true
+  - id: AC-827-05
+    statement: fixture replay and durable replay produce deterministic comparison evidence under FNR-02.
+    verifiable: true
+
+constraints:
+  - Durable replay uses the accepted ordering/rebuild contract from SCRUM-825
+  - Recovery generations immutable and navigable
+  - Evidence provenance visible without inventing missing facts
+  - FNR-02 comparison for fixture vs durable replay
+  - No production write/effect path
+  - Stage by explicit path; never git add .
+
+target_contract:
+  ref: TARGET-EVIDENCE-827-R1
+  revision: 1
+  kind: STATE
+  statement: >-
+    An evidence-first inspection, recovery lineage and deterministic replay UX exists
+    with an Evidence Inspector (source/profile/ref/digest/provenance), recovery
+    lineage (retry/rerun/replan/restart/supersession/reset-derived-state), CURRENT vs
+    REPLAY view modes, deterministic replay checkpoints from fixtures and durable
+    history under the accepted ordering/rebuild contract, and semantic anomaly
+    presentation — all covered by automated tests, with fixture and durable replay
+    producing deterministic comparison evidence under FNR-02.
+  validation:
+    - all five acceptance criteria covered by executed automated tests
+    - DWO baseline stays green (typecheck, vitest, pytest)
+  out_of_scope:
+    - realtime transport (SCRUM-828)
+    - accessibility (SCRUM-829)
+    - any merge, deploy, production, migration or secret effect
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/evidence/
+  - .gwc/tasks/SCRUM-827/

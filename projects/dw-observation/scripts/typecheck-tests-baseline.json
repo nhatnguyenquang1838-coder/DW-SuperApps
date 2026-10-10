@@ -1,0 +1,32 @@
+{
+  "count": 86,
+  "measured_at": "210b6bd",
+  "note": "Pre-existing test-code type debt. tsconfig.json excludes tests/, so `tsc --noEmit` never compiled test code. Run `npm run typecheck:tests -- --strict` to gate once this reaches 0.",
+  "by_code": {
+    "TS6133": 31,
+    "TS18047": 10,
+    "TS2554": 8,
+    "TS2352": 7,
+    "TS2304": 7,
+    "TS2341": 5,
+    "TS2322": 3,
+    "TS6196": 3,
+    "TS2741": 2,
+    "TS2345": 2,
+    "TS2305": 2,
+    "TS2339": 2,
+    "TS2353": 1,
+    "TS2459": 1,
+    "TS7022": 1,
+    "TS2349": 1
+  },
+  "top_files": {
+    "tests/unit/dwo/r2-runtime-integration.test.ts": 24,
+    "tests/unit/live.test.ts": 21,
+    "tests/unit/dwo/t04-unified-runtime.test.ts": 8,
+    "tests/unit/dwo/evidenceReplay.test.ts": 5,
+    "tests/unit/dwo/t09-fixture-materialization.test.ts": 4,
+    "tests/unit/dwo/t05-replay.test.ts": 4,
+    "tests/unit/dwo/r2-a-dependency-satisfaction.test.ts": 4
+  }
+}

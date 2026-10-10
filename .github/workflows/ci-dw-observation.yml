@@ -1,0 +1,44 @@
+name: DW-Observation TypeCheck
+
+on:
+  push:
+    branches: [integration/SCRUM-820-dwo-v2, main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.15.1 --activate
+          pnpm --version
+
+      - name: Install dependencies
+        working-directory: projects/dw-observation
+        run: pnpm install --frozen-lockfile
+
+      - name: typecheck:tests (non-blocking)
+        working-directory: projects/dw-observation
+        run: pnpm run typecheck:tests
+
+      - name: typecheck:tests:strict (regression gate)
+        working-directory: projects/dw-observation
+        run: pnpm run typecheck:tests:strict

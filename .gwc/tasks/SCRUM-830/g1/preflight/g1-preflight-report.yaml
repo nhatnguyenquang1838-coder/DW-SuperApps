@@ -1,0 +1,60 @@
+# G1 PREFLIGHT — SCRUM-830 (DWO-V2-09)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-preflight-report
+generated_at: '2026-09-30T06:10:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-830
+parent_run_ref: SCRUM-820
+base_ref: integration/SCRUM-820-dwo-v2
+base_sha: 0e96764512d603b041b9dceaadf7a5db3a93afb4
+task_branch: task/SCRUM-830-semantic-qualification
+
+baseline_verified:
+  status: PASS
+  evidence:
+    - integration/SCRUM-820-dwo-v2 @ 0e96764 is the current integration head
+    - PR #130 head == 0e96764, mergeable CLEAN, validate + validate-worktree-policy SUCCESS
+    - full vitest 505 passed, tsc exit 0, pytest 112 passed at head
+    - all 8 predecessor tasks Done (822..829)
+
+dependencies_verified:
+  - SCRUM-822 (DWO-V2-01) DONE — fixtures
+  - SCRUM-823 (DWO-V2-02) DONE — projection contract + FNR-02
+  - SCRUM-824 (DWO-V2-03) DONE — reducer (R2 PASS)
+  - SCRUM-825 (DWO-V2-04) DONE — durable history
+  - SCRUM-826/827 (DWO-V2-05/06) DONE — run UX + evidence replay
+  - SCRUM-828 (DWO-V2-07) DONE — realtime LIVE
+  - SCRUM-829 (DWO-V2-08) DONE — accessibility + scale
+
+kernel_surface_verified:
+  - reducer.reduceEventPrefix + reduceEvent — present
+  - comparisonContract.compareStates + FNR02_CONTRACT — present
+  - durableOrder.DurableLog — present
+  - idempotency.applyEvent — present
+  - eventPosition.detectGaps + assertCorrelationIsEvidenceOnly — present
+  - recoveryLineage.appendGeneration/navigateLineage — present
+  - recursiveTopology.buildRunTree/evaluateParentComposition — present
+  - blockingPath.evaluateBlockingPath/reconcileGateState — present
+  - compatibility.upcastV1Event/backfillV1 — present
+  - replay.replayFromFixture/replayFromDurable/compareReplayEvidence — present
+  - liveState.determineLiveState/isCertifiedLive — present
+  - realtimeBootstrap.initialBootstrap/completeBootstrap/completeCatchUp — present
+  - accessibility.assertNonColorOnlyStatus/keyboardNavOrder/assertGraphTreeSelectionSynchronized — present
+  - runViewModel.buildRunViewModel — present
+  - fixtureSpec.FIXTURE_CATALOG/DWO_PROJECTION_DEFAULTS/DEV_RUN_020/DEV_RUN_030 — present
+  - profileRegistry.resolveProfileProjection — present
+  - drift.classifyDrift — present
+  - releaseBinding.resolveNativeBinding/resolveCompatibilityBinding — present
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - .gwc/tasks/SCRUM-830/
+
+preflight_outcome: READY
+notes:
+  - Qualification harness MUST call the real kernel modules above; no duplicated projection/reducer logic.
+  - SCRUM-833 (P1) never enters this path.

@@ -1,0 +1,37 @@
+# G1 PREFLIGHT — SCRUM-823 (DWO-V2-02)
+schema_version: gwc.g1.preflight/1.0
+artifact_type: G1_PREFLIGHT
+gate: G1_PLAN
+trace:
+  task_id: SCRUM-823
+  plan_revision: 1
+  checked_at: '2026-09-30T04:07:00+07:00'
+
+refs:
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: b47781f3f15ef2663e5d9f2e22b8fe22bf1cbe56
+  task_branch: task/SCRUM-823-projection-contract-v2
+  worktree: /Users/mac/prj/DW-SuperApps.worktrees/task/SCRUM-823-projection-contract-v2
+
+baseline_present:
+  lib/dwo/releaseBinding.ts: true
+  lib/dwo/drift.ts: true
+  lib/dwo/inventory.ts: true
+  lib/dwo/rebindRecord.ts: true
+  lib/dwo/fixtureSpec.ts: true
+  lib/dwo/fixtureCertification.ts: true
+  dwo-v2/fixtures/DWO-UR-30-V1/: true
+
+fixture_vectors_available:
+  value: true
+  note: DWO-UR-30-V1 pack provides cross-runtime golden vectors for FNR-02
+
+baseline_tests:
+  note: 366 vitest + 112 pytest green on integration branch before this task branched
+  node_modules: symlinked from main checkout; not committed
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/contract/
+  - .gwc/tasks/SCRUM-823/

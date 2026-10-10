@@ -1,0 +1,64 @@
+# G0 CONTEXT SNAPSHOT — SCRUM-828 (DWO-V2-07)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g0.context-snapshot/1.0
+artifact_type: CONTEXT_SNAPSHOT
+gate: G0_UNDERSTAND
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-828
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 0f9a4dc5e4db9ab4c07f02688619dcc51e730d91
+  captured_at: '2026-09-30T04:35:00+07:00'
+
+objective: >-
+  Implement realtime delivery as an acceleration layer that never substitutes for
+  durable correctness.
+
+scope:
+  - subscribe only after durable bootstrap
+  - reconnect durable catch-up before returning to LIVE
+  - duplicate/stale/out-of-order transport handling
+  - disconnects beyond bounded transport replay retention
+  - DEGRADED and UNAVAILABLE projection states
+  - private topic/RLS authorization where applicable
+  - certified Live requires current valid semantic qualification bound to the current projection subject
+
+dependencies:
+  - SCRUM-825 (DWO-V2-04) durable history — DONE
+  - SCRUM-826 (DWO-V2-05) run UX — DONE (integrates)
+  - SCRUM-827 (DWO-V2-06) replay — DONE (integrates)
+
+constraints:
+  - transport connectivity alone cannot establish certified LIVE
+  - reconnect/gap scenarios converge from durable history
+  - no production write/effect path
+
+acceptance_criteria:
+  - id: AC-828-01
+    statement: V2_LIVE_PROJECTION_READY exit token derivable from machine-readable state
+  - id: AC-828-02
+    statement: transport connectivity alone cannot establish certified LIVE
+  - id: AC-828-03
+    statement: reconnect/gap scenarios converge from durable history
+  - id: AC-828-04
+    statement: DEGRADED and UNAVAILABLE projection states correct
+  - id: AC-828-05
+    statement: certified Live requires current valid semantic qualification bound to the current projection subject
+
+canonical_sources:
+  - DWO v2 Solution Design C4 (3ea07c1c65b6813c95d6c7acf7a61c32) — READ
+  - DWO-UR-30-V1 fixture catalog (3ea07c1c65b681c28de7c076abdfbdb2) — READ
+
+authority_boundary:
+  grants:
+    - development commits on task/SCRUM-828-realtime-live
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-828 progress/evidence updates
+  excluded:
+    - G4_MERGE, G5_DEPLOY, G6_PRODUCTION
+    - approval bypass, protected main writes
+    - production data mutation, database migration, secret change

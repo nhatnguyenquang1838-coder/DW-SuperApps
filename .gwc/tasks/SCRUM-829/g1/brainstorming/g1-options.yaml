@@ -1,0 +1,53 @@
+# G1 BRAINSTORMING — SCRUM-829 (DWO-V2-08)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-options
+generated_at: '2026-09-30T05:12:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-829
+parent_run_ref: SCRUM-820
+
+options:
+  - id: OPT-1
+    title: TypeScript accessibility + scale qualification module set
+    description: >-
+      Implement accessibility (keyboard nav, ARIA, non-color-only status,
+      graph/tree selection sync) and a deterministic DWO-SCALE-GEN-V1 generator
+      with measured depth/fanout/node-count/performance and progressive-disclosure
+      budget thresholds, as pure TypeScript modules with executable tests.
+    benefits:
+      - all seven AC satisfied with executable validation
+      - scale pack is deterministic and reproducible
+      - 30-run semantic pack untouched (guard test)
+    tradeoffs:
+      - adds new modules and tests to the dwo package
+    risks:
+      - RISK-001 (baseline regression) mitigated by guard test
+      - RISK-002 (non-determinism) mitigated by fixed-seed generator
+    constraint_fit: FIT
+  - id: OPT-2
+    title: Documentation-only accessibility/scale notes
+    description: >-
+      Write accessibility and scale guidance as documentation without executable
+      modules or a generated scale pack.
+    benefits:
+      - minimal code change
+    tradeoffs:
+      - AC-829-01/05/06 unverifiable (no machine-readable derivation or measurement)
+    risks:
+      - RISK-003 (asserted rather than measured) becomes certain
+    constraint_fit: NOT_FIT
+  - id: OPT-3
+    title: UI-only accessibility patches without scale pack
+    description: >-
+      Patch the graph component for keyboard/ARIA but skip the generated scale
+      pack and budget thresholds.
+    benefits:
+      - improves the visible graph
+    tradeoffs:
+      - AC-829-05/06 unmet (no scale pack, no measured thresholds)
+    risks:
+      - RISK-002 (no deterministic scale qualification)
+    constraint_fit: PARTIAL
