@@ -114,6 +114,10 @@ Workspace controllers are host-control capabilities owned by DW-SuperApps. They 
 
 ### TaskController
 
+**TASKCONTROLLER_IS_OPTIONAL_WORKING_MODE:** TaskController is an explicitly selected workspace working mode, not a dependency or default boot stage for GWC Universal Runtime v2 or Node Architect. The presence of a governed run, node DAG, autonomous task, Executor, connected Slack, or installed skill never implicitly activates TaskController. Unless selected for the current run by explicit user intent or an already-authorized parent/controller binding, do not load TaskController mailbox/v2, continuation, high-integrity admission, RootCard, Human Plane or Controller–Executor constraints. GWC native authority and Node Architect node-runtime contracts remain applicable independently. When selected, TaskController orchestrates but does not replace native GWC authority or Node Architect routing.
+
+
+
 `TaskController` is the canonical controller identity registered in `workspace.yaml` at `controllers[].id=taskcontroller` with registry `controllers/taskcontroller.yaml`.
 
 Any explicit user mention of `TaskController`, `task controller`, or `/dw-taskcontroller` MUST activate TaskController before the agent plans, delegates, posts a controller RootCard, or claims that TaskController is booted.

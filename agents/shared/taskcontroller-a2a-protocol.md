@@ -1,5 +1,8 @@
 # TaskController Reference-Based Agent Interaction Protocol — A2A Pilot
 
+**Applicability:** This protocol is canonical only for a run that explicitly selects the TaskController working mode. It is NOT a boot dependency, mandatory transport or authority source for GWC Universal Runtime v2, Node Architect, autonomous tasks or direct-agent execution. `mailbox/v2`, TaskController continuation, Controller–Executor actor ownership and Human Plane requirements start only at a valid TaskController activation/dispatch boundary. GWC/Node Architect continue under their own native gate, node and authorization contracts when this mode is inactive.
+
+
 Status: active canonical mailbox/v2 contract for Controller↔Executor interaction. A2A/v1 is compatibility-only.
 
 ## Purpose
