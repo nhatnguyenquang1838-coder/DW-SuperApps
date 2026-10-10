@@ -290,6 +290,19 @@ def test_holds_are_distinct_from_timer_polling_suppression(kwargs: dict, expecte
     assert decision.auto_resume_allowed is False
 
 
+def test_unrelated_host_loop_is_never_mutated_or_quarantined() -> None:
+    decision = decide_executor_loop_continuity(
+        loop_role="UNRELATED",
+        loop_run_id="someone-elses-run",
+        canonical_run_id="our-run",
+        execute_contract_current=False,
+    )
+    assert decision.scheduler_action == "NO_AUTOMATIC_LOOP_MUTATION"
+    assert decision.executor_session_action == "PRESERVE_EXECUTOR_SESSION"
+    assert decision.effects_allowed is False
+    assert decision.auto_resume_allowed is False
+
+
 def test_terminal_requires_explicit_verified_terminal_evidence() -> None:
     pending = decide_executor_loop_continuity(
         loop_role="ENGINEERING_WORK", loop_run_id="run-current",
