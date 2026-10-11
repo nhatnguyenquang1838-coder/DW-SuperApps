@@ -14,7 +14,15 @@ GPT and Hermes are **autonomous decision peers**: either can propose, question, 
 
 Record significant joint proposals by exact digest and separate authenticated acknowledgements. A peer agreement is **not** a new project/GWC gate receipt, lease/fence, mailbox event or authority expansion. The pure `decide_peer_collaboration` policy does not mint any of those. A real protected boundary needs run/source/actor/authority binding, not one peer's persuasive text.
 
-The SCRUM-840 branch introduces opt-in qualified `MAILBOX_OBSERVER` semantics: a verified Hermes Loop may perform bounded read-only exact-cursor checks, without LLM turns for unchanged cursors. Unqualified Loop timers or old-run polling remain forbidden; the GPT chat host does not thereby gain a scheduler. Exact-read a newer event/continuation and PRECHECK before effects. The live #595 expired lease, stale source and unadmitted Hermes session remain independent blockers. **No live #595 event, approval or Loop restart is authorized by this document.**
+The SCRUM-840 branch introduces opt-in qualified `MAILBOX_OBSERVER` semantics: a verified Hermes Loop may perform bounded read-only exact-cursor checks, without LLM turns for unchanged cursors. Unqualified Loop timers or old-run polling remain forbidden; the GPT chat host does not thereby gain a scheduler. Exact-read a newer event/continuation and PRECHECK before **TaskController-protected effects**. The #595 expired attempt/source/actor binding blocks that old **dispatch**, NOT GWC Q0-native in-scope development. This document does not mint a live #595 event/lease or resume a user-paused Loop; continue everything independently permitted.
+
+## Q0 source precedence — GPT must not block native development on mailbox successor
+
+**For SCRUM-781 Q0, source of truth is the exact current GWC `AGENTS.md#UNIVERSAL_V2_DEVELOPMENT` and its native Universal V2 Q0 plan/runbook.** That route allows same-branch RED→FIX→GREEN→additive commit/push→reload→original-incident replay and repeat repairs under the existing bounded GWC grant; no new GPT permission, TaskController successor, Hermes session or lease is required merely to start or continue these **native, in-scope engineering actions**. Do not mistake an old TaskController `WAIT_CONTROLLER / RESOLVE_EXECUTION_AUTHORITY` for a global Q0 `RUN_HOLD`.
+
+**Separate two concerns.** (A) Native GWC Q0 work begins now and proceeds independently through the original DWO Login incident, LOAD_PROOF, regression and L3 where admitted by the GWC lane. (B) A new protected TaskController mailbox/v2 dispatch/resume specifically requires typed event/cursor/continuation, accepted current actor/source, verified approval, qualified issuer-owned fresh WorkLease/fence and delivery binding. When (B) is missing, only that protected effect waits. GWC native authority is not a backdoor to fabricating (B).
+
+**Do not command Hermes to STOP as a reflex.** Ask it to inspect source, THINK independently, challenge GPT's proposed blocker and choose/test a lawful NEXT in its own admitted worktree; GPT performs independent runnable work. Use a small peer discussion budget, and escalate only genuine mutual stagnation with evidence, options and owner. No third-party AI approval or unsolicited second Controller mailbox issue. Human-readable issue comments/versions are coordination; the original #595 canonical machine streams remain append-only.
 
 ## SCRUM-840 — joint E2E and Q0 continuation authority (user decision 2026-10-12)
 
@@ -89,7 +97,7 @@ Transport-body hashes may be retained as diagnostic evidence, but they never sup
 
 ## Controller contracting
 
-The Controller owns task decomposition, selected-plan contracting, milestone/report timing, WAIT points, RootCard projection state, mailbox cursors, report review, continuation checkpoints, and bounded INTERCEPT decisions. The Controller must not delegate an ambiguous task and allow the Executor to invent its own plan or reporting cadence.
+**Only when the TaskController working mode is explicitly activated:** the Controller *wire role* persists selected-plan contracting, milestone/report timing, WAIT projection, RootCard, mailbox cursors, reports and continuation checkpoints. These are machine-writer responsibilities—not GPT's superior decision rights. Either GPT or Hermes may decompose, propose, challenge and choose routine in-scope implementation/recovery options. Do not use an unqualified TaskController overlay to block the GWC native Q0 route.
 
 If an additional project or Power governance system is explicitly active for the controlled task, the Controller must honor that system's exact write/authority contract before delegating protected execution. TaskController activation alone does not activate any Power.
 
@@ -116,7 +124,7 @@ An `EXECUTE` contract MUST bind:
 7. hard stop conditions;
 8. exact source/base/branch or worktree binding.
 
-The Executor owns implementation details inside that approved boundary. The Controller owns outcome, scope, authority ceiling, AC, integration ceiling, and hard stop conditions.
+The Executor owns implementation details inside that approved boundary. For an explicitly activated TaskController dispatch, the Controller wire role records the contracted outcome, scope, authority ceiling, AC, integration ceiling and hard stops; these **do not** establish a GPT>Hermes AI hierarchy or suspend separately authorized GWC native Q0 engineering.
 
 After execution authority becomes active, the default behavior is **continue working**. The Executor MUST NOT stop merely because:
 
@@ -142,7 +150,7 @@ Do not ask for a new approval between RED, GREEN, refactor, test, commit, push, 
 
 ### Controller-owned HITL
 
-ChatGPT Controller is the only actor in the Controller/Executor pair that communicates an approval/HITL request to the User. Never instruct an Executor to wait for the User directly. Never accept an Executor-emitted `WAIT_USER_*` or `WAIT_HUMAN_*` as a valid next state.
+**In the existing TaskController wire protocol**, GPT's admitted Controller routing is the designated publisher of a typed Human approval/HITL request; this routing ownership is **not a supervisory AI role**. A peer can identify and communicate a real Human decision need, but must not mint an approval, replace the typed Human Plane route, or create an approval loop. The Executor's typed event should report `AUTHORITY_BOUNDARY` (or another admitted blocker) instead of inventing `WAIT_USER_*` / `WAIT_HUMAN_*`. Native GWC Q0's separate authority and Human boundaries remain governed by its own source.
 
 The required sequence is:
 
