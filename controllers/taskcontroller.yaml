@@ -128,7 +128,17 @@ interaction:
   delivery:
     mode: event-driven
     controller_wait_action: AWAIT_EXECUTOR_EVENT
-    periodic_mailbox_polling: forbidden
+    periodic_mailbox_polling: qualified-read-only-observer
+    mailbox_observer:
+      default_enabled: false  # Host and provider must be independently qualified
+      qualifying_role: MAILBOX_OBSERVER
+      legacy_mailbox_poll_role: forbidden
+      controller_mailbox_poll_role: forbidden
+      canonical_cursor_only: true
+      exact_event_readback_required: true
+      bounded_interval_and_rate_budget_required: true
+      taskcontroller_effect_authority_from_poll: false
+      forbid_unbound_hermes_loop_resume: true
     executor_event_subscription_required: true
     slack_machine_notification: forbidden
   notification:
@@ -222,7 +232,21 @@ resilience:
   hermes_host_loop_boundary:
     pure_decision_guard: taskcontroller/controlplane/orchestration_policy.py::decide_executor_loop_continuity
     native_scheduler_is_not_executor_session: true
-    mailbox_or_controller_wakeup_polling: forbidden
+    unqualified_mailbox_or_controller_wakeup_polling: forbidden
+    qualified_read_only_mailbox_observation:
+      policy_guard: taskcontroller/controlplane/orchestration_policy.py::decide_executor_loop_continuity
+      enabled_by_default: false
+      no_new_event_no_llm_turn: true
+      observed_event_requires_precheck_before_effect: true
+      host_impl_and_exact_session_binding_required: true
+    peer_collaboration:
+      participants: [gpt-agent, hermes-agent]
+      relationship: equal-decision-rights
+      approval_model: existing-bounded-grant
+      decision_guard: taskcontroller/controlplane/orchestration_policy.py::decide_peer_collaboration
+      peer_agreement_grants_authority: false
+      existing_mailbox_wire_roles_unchanged: true
+      runtime_qualified: false
     stale_run_scheduler_action: quarantine_without_auto_resume
     host_pause_implies_run_hold: false
     host_pause_implies_terminal: false
