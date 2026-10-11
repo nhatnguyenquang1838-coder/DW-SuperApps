@@ -39,6 +39,7 @@ from taskcontroller.controlplane.result_resume import (
     POLL_RESULT_AVAILABLE,
     poll_controller_terminal_result,
 )
+from taskcontroller.domain.models import WorkLease
 from taskcontroller.errors import TaskControllerValidationError
 from taskcontroller.interaction.continuation import (
     CONTINUATION_MANIFEST_KIND,
@@ -133,6 +134,87 @@ def _instant(value: Any, field: str) -> datetime:
         _fail("WAIT_EXECUTOR_TIME_INVALID", f"{field} must include a timezone")
     return parsed.astimezone(timezone.utc)
 
+
+
+def qualify_wait_controller_successor(
+    *,
+    checkpoint: ControllerContinuation,
+    controller_tail_logical_seq: int,
+    executor_tail_logical_seq: int,
+    predecessor_attempt: Mapping[str, Any],
+    active_work_lease: WorkLease,
+    source_head_sha: str,
+    approval_receipt_ref: str,
+    approval_verified: bool,
+    lease_issuer_receipt_ref: str,
+    source_replan_receipt_ref: str | None,
+    observed_at: str,
+) -> ControllerContinuation:
+    """Qualify, but never issue, an expired WAIT_CONTROLLER successor.
+
+    All state and evidence must have been exact-read by the caller. This pure
+    function does not verify external receipt contents, grant authority, issue
+    a lease, persist a continuation, or dispatch a mailbox command.
+    """
+    if not isinstance(checkpoint, ControllerContinuation):
+        _fail("SUCCESSOR_CHECKPOINT_REQUIRED", "canonical ControllerContinuation required")
+    if (checkpoint.status != ContinuationStatus.ACTIVE.value
+        or checkpoint.phase != ContinuationPhase.WAIT_CONTROLLER.value
+        or checkpoint.next_action != WAIT_EXECUTOR_AUTHORITY_ACTION):
+        _fail("SUCCESSOR_STATE_INVALID", "requires WAIT_CONTROLLER / RESOLVE_EXECUTION_AUTHORITY")
+    if (type(controller_tail_logical_seq) is not int
+        or controller_tail_logical_seq != checkpoint.controller_seq):
+        _fail("SUCCESSOR_CONTROLLER_CURSOR_DRIFT", "Controller tail/continuation mismatch")
+    if (type(executor_tail_logical_seq) is not int
+        or executor_tail_logical_seq != checkpoint.last_seen_executor_seq):
+        _fail("SUCCESSOR_EXECUTOR_CURSOR_DRIFT", "Executor tail/continuation mismatch")
+    if not isinstance(predecessor_attempt, Mapping):
+        _fail("SUCCESSOR_PREDECESSOR_REQUIRED", "exact predecessor required")
+    old_attempt = predecessor_attempt.get("attempt_id")
+    old_fence = predecessor_attempt.get("fencing_token")
+    old_generation = predecessor_attempt.get("lease_generation")
+    old_expiry = predecessor_attempt.get("lease_expires_at")
+    if (not isinstance(old_attempt, str) or not old_attempt
+        or not isinstance(old_fence, str) or not old_fence
+        or type(old_generation) is not int or old_generation < 0):
+        _fail("SUCCESSOR_PREDECESSOR_INVALID", "predecessor attempt invalid")
+    now = _instant(observed_at, "observed_at")
+    if _instant(old_expiry, "predecessor.lease_expires_at") >= now:
+        _fail("SUCCESSOR_PREDECESSOR_ACTIVE", "existing lease has not expired")
+    if approval_verified is not True or not isinstance(approval_receipt_ref, str) or not approval_receipt_ref.strip():
+        _fail("SUCCESSOR_APPROVAL_MISSING", "caller must verify current scope-bound approval")
+    if not isinstance(lease_issuer_receipt_ref, str) or not lease_issuer_receipt_ref.strip():
+        _fail("SUCCESSOR_ISSUER_MISSING", "qualified lease issuer receipt required")
+    if (not isinstance(source_head_sha, str) or len(source_head_sha) != 40
+        or any(c not in "0123456789abcdef" for c in source_head_sha)):
+        _fail("SUCCESSOR_SOURCE_INVALID", "exact lowercase 40-character SHA required")
+    if (source_head_sha != checkpoint.exact_head_sha
+        and (not isinstance(source_replan_receipt_ref, str) or not source_replan_receipt_ref.strip())):
+        _fail("SUCCESSOR_REPLAN_MISSING", "source drift requires an immutable replan")
+    if not isinstance(active_work_lease, WorkLease):
+        _fail("SUCCESSOR_LEASE_REQUIRED", "issuer-owned WorkLease required")
+    lease = active_work_lease
+    if (lease.run_id != checkpoint.run_id
+        or lease.holder.provider_id != checkpoint.executor_actor
+        or lease.status != "ACTIVE"
+        or lease.attempt_id == old_attempt or lease.fencing_token == old_fence
+        or type(lease.lease_generation) is not int
+        or lease.lease_generation <= old_generation):
+        _fail("SUCCESSOR_LEASE_STALE", "lease must be fresh and bound to same run/actor")
+    if (_instant(lease.granted_at, "work_lease.granted_at") > now
+        or _instant(lease.expires_at, "work_lease.expires_at") <= now):
+        _fail("SUCCESSOR_LEASE_EXPIRED", "issuer-owned lease must be current")
+    return replace(
+        checkpoint,
+        controller_epoch=checkpoint.controller_epoch + 1,
+        phase=ContinuationPhase.WAIT_EXECUTOR.value,
+        next_action=WAIT_EXECUTOR_EVENT_ACTION,
+        controller_seq=controller_tail_logical_seq + 1,
+        expected_executor_seq=executor_tail_logical_seq + 1,
+        last_seen_executor_seq=executor_tail_logical_seq,
+        exact_head_sha=source_head_sha,
+        updated_at=observed_at,
+    )
 
 def _controller_event_for_checkpoint(
     repository: MailboxRepository,
