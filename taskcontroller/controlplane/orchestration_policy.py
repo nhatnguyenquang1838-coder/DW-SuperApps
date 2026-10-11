@@ -513,8 +513,15 @@ def decide_executor_loop_continuity(
         scheduler_action = "NO_AUTOMATIC_LOOP_MUTATION"
 
     def outcome(session: str, owner: str, next_action: str, *, effects: bool = False) -> ExecutorLoopContinuity:
+        # A qualified observer must not keep its poll cadence armed when an
+        # explicit user pause or RUN_HOLD applies, even for read-only checks.
+        effective_scheduler_action = (
+            "PAUSE_OBSERVER_DURING_HOLD"
+            if loop_role == "MAILBOX_OBSERVER" and (user_paused or hold_type == HOLD_RUN)
+            else scheduler_action
+        )
         return ExecutorLoopContinuity(
-            scheduler_action=scheduler_action,
+            scheduler_action=effective_scheduler_action,
             executor_session_action=session,
             next_owner=owner,
             typed_next=next_action,
