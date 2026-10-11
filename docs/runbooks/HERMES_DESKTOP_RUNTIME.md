@@ -86,6 +86,12 @@ State meanings:
 
 ## 3. Common Executor lifecycle and single branching point
 
+### GWC v2 testing: frequent code drift is routine, not an automatic hold
+
+When GWC Universal V2 is in active E2E/TDD qualification, frequent defect findings, source updates and evolving PR heads are **expected**. An additive in-scope commit is **not** by itself a new Human approval requirement, run-level `RUN_HOLD`, reason to cancel the Executor mission, or instruction to wait for GPT. The active peer should exact-read changed refs and ancestry, review diffs, update or merge back isolated branches, rerun affected validation, and continue autonomous RED→FIX→GREEN→reload→replay. A **rebase is suitable for an unpublished disposable local branch only**; for published Q0 branches or evidence-bearing commits preserve immutable SHAs and reconcile with an additive merge (no force-push, amend or silent history rewrite). Respect single-writer worktree ownership.
+
+The **specific** exact-SHA-sensitive TaskController effects still require a current source/plan/approval/lease binding, immutable replan when needed, and load-proof regeneration when runtime binaries/modules/instructions changed. This binds the protected action only, not unrelated Q0-native development already granted by the current GWC branch authority. Use peer reasoning to resolve routine conflicts and retest, not a blanket STOP/WAIT cycle. Escalate only a genuine unsatisfied authority/scope boundary or shared deadlock after bounded recovery attempts.
+
 ### Loop observation versus LLM-led execution
 
 The Loop has **two independently authorized concerns**: `MAILBOX_OBSERVER` may perform a bounded, read-only cursor check; `ENGINEERING_WORK` may advance an already-authorized mission with LLM reasoning. Neither is equivalent to calling `LoopManager.resume()` or unconditionally firing native ticks.
