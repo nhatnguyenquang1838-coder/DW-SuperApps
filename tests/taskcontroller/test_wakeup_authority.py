@@ -60,5 +60,5 @@ def test_hermes_uses_event_driven_mailbox_delivery_without_polling() -> None:
     assert "## Event-driven mailbox delivery" in overlay
     assert "MAILBOX_OBSERVER" in overlay
     assert "unqualified" in overlay
-    assert "does not use Slack as an Executor wake-up path" in overlay
+    assert "Slack as an Executor machine wake-up path remain forbidden" in overlay
     assert "append a new typed event through `GitHubMailboxRepository`" in overlay
