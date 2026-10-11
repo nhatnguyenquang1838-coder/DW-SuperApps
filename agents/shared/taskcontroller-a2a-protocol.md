@@ -43,6 +43,12 @@ Executor fetches canonical payload from mailbox
 
 The communication binding may later be GitHub, A2A HTTP, local IPC, NATS, Kafka/MSK or another provider without changing the semantic contract.
 
+## Peer liveness and source-sync invariant (SCRUM-840 R2)
+
+GPT and Hermes have equal analysis/decision standing; Controller/Executor remain **machine-writer roles**. A transport WAIT or protected-effect lease failure does not prohibit unrelated in-scope work. During GWC v2 test/fix cycles, source drift is normal: exchange exact `RUN / REPO / BRANCH / REMOTE_HEAD / LOCAL_HEAD / CHANGED_PATHS / TEST_EVIDENCE / WORKTREE_OWNER / NEXT`, fetch before using another peer's code, publish commits before claiming sharing, compare ancestry and reconcile with additive merge-back for published or evidence-bearing refs; rebase only disposable unpublished local commits. Do not force-push or silently alter a sealed authority receipt. Re-run changed-area validation and runtime load proof when affected.
+
+At every failed delivery or blocker both peers independently select a legal recovery NEXT. After bounded no-progress attempts, exchange concrete findings, execute the best authorized option and escalate a shared blocker only if neither can move, specifying the smallest missing capability or Human decision and its owner. Legacy `WAIT_CONTROLLER` is not an artificial global stop. Keep single writer per effect/worktree, preserve exact mailbox/cursor/lease/fence semantics and never mint approval from discussion.
+
 ## Two autonomous peers, one protected machine-state contract (SCRUM-840 non-main extension)
 
 GPT and Hermes have **equal semantic rights** to analyze, initiate proposals, challenge a proposal, request information and agree on the next in-scope action. Neither is the other's reviewer/line manager. A task-specific **Controller/Executor** label here denotes legacy mailbox/v2 **routing and producer namespace**, not AI seniority. The existing envelope directions and single-writer-per-mailbox invariant remain intact until a separate typed bidirectional peer protocol has been implemented, tested and admitted; do not handwrite new machine message types.
