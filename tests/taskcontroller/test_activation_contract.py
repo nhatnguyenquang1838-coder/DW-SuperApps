@@ -180,7 +180,8 @@ def test_chatgpt_overlay_blocks_boot_claim_before_repo_load_and_external_policy(
     assert "activation `BLOCKED`" in overlay
     assert "agents/shared/taskcontroller-human-plane-policy.md" in overlay
     assert "only TaskController Slack policy input" in overlay
-    assert "GWC" not in overlay
+    assert "GWC v2 and Node Architect do not inherit them by default" in overlay
+    assert "A peer agreement is **not** a new project/GWC gate receipt" in overlay
 
 
 def test_agent_protocol_is_reference_based_and_transport_neutral():
@@ -316,7 +317,13 @@ def test_active_taskcontroller_chain_has_no_gwc_or_slack_canvas_policy_dependenc
 
     for path in active_paths[1:5]:
         text = path.read_text(encoding="utf-8")
-        assert "GWC" not in text, f"GWC-specific TaskController coupling leaked into {path}"
+        if path.name == "agent-instructions.md":
+            # Mentioning GWC to make optional activation explicit is not a
+            # TaskController dependency; mandatory GWC boot would be.
+            assert "GWC v2 and Node Architect do not inherit them by default" in text
+            assert "A peer agreement is **not** a new project/GWC gate receipt" in text
+        else:
+            assert "GWC" not in text, f"GWC-specific TaskController coupling leaked into {path}"
 
 
 
