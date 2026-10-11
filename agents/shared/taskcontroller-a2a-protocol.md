@@ -43,6 +43,14 @@ Executor fetches canonical payload from mailbox
 
 The communication binding may later be GitHub, A2A HTTP, local IPC, NATS, Kafka/MSK or another provider without changing the semantic contract.
 
+## Two autonomous peers, one protected machine-state contract (SCRUM-840 non-main extension)
+
+GPT and Hermes have **equal semantic rights** to analyze, initiate proposals, challenge a proposal, request information and agree on the next in-scope action. Neither is the other's reviewer/line manager. A task-specific **Controller/Executor** label here denotes legacy mailbox/v2 **routing and producer namespace**, not AI seniority. The existing envelope directions and single-writer-per-mailbox invariant remain intact until a separate typed bidirectional peer protocol has been implemented, tested and admitted; do not handwrite new machine message types.
+
+A shared decision consists of an exact, externally inspectable proposal digest and two independently actor-bearing acknowledgements of that **same** digest. `decide_peer_collaboration` evaluates agreement, disagreement and discussion budget, but issues **no execution authorization**. In-scope implement/test/fix/commit/push actions already delegated to either peer need no second-agent permission or per-step release. An authority-boundary or out-of-scope decision goes to the configured human decision path only when genuinely needed. No third-party AI reviewer/approver is introduced.
+
+**Observe ≠ consume ≠ execute:** under a separately qualified host capability an AI's Loop can **read-only inspect the exact cursor** at bounded intervals, then verify a newer typed event before doing anything. Do not use a generic prompt timer as authority, update consumed cursor merely on observation, or infer a lease/fence or approval from a cursor. The default legacy `MAILBOX_POLL` remains forbidden; proposed `MAILBOX_OBSERVER` is disabled until host/session/identity and read rate are qualified. Controller-host polling, if later implemented, needs separate qualification; do not invent it for the GPT chat surface. Push+pull notices dedupe by canonical event identity.
+
 ## Session boot — Controller-owned gates before Executor dispatch
 
 The canonical mailbox/v2 boot requirement applies **before the first Executor dispatch**. TaskController **source/Controller activation** and **Executor dispatch readiness** are distinct states. A fresh Controller may validate its native run context, assign itself understanding/planning/recovery actions and persist the native gate receipts without a live Executor session, Executor acknowledgement, lease, notification adapter, or a mailbox event. Do not issue a placeholder execution request to boot Controller-only work. Native gate/receipt checks and `RUN_HOLD` still govern.
@@ -69,7 +77,7 @@ resolve current repository/run identity + native gate owner
 → Controller resumes only on a newer valid Executor event, without polling
 ```
 
-A missing Executor session or notification route is a **dispatch blocker only**; it MUST NOT block an otherwise legal Controller-owned native gate. If a required mailbox/continuation/readback is missing **at dispatch**, fail closed with `TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED`. Never update the canonical v2 actor mailbox comment in place; never hand-author records, poll periodically, use Slack as machine fallback, or replay old session events.
+A missing Executor session or notification route is a **dispatch blocker only**; it MUST NOT block an otherwise legal Controller-owned native gate. If a required mailbox/continuation/readback is missing **at dispatch**, fail closed with `TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED`. Never update the canonical v2 actor mailbox comment in place; never hand-author records, use **unqualified** polling, use Slack as machine fallback, or replay old session events. Only independently qualified read-only cursor observation is eligible for the SCRUM-840 branch opt-in.
 
 Activating TaskController does not activate GWC. GWC is loaded only when the current controlled task requires its governance model.
 
@@ -142,13 +150,13 @@ native materialize_controller_transition:
 
 An `ACTIVE` continuation checkpoint forbids a semantic Controller final/terminal response. The Controller may stop the current host execution only at a genuine human-authority or unrecoverable blocker while leaving the durable run state truthful and recoverable.
 
-Canonical mailbox/v2 execution is event-driven. The Controller MUST NOT run a periodic mailbox polling cadence. **A forbidden polling scheduler is not a stopped Executor session.** Pausing/quarantining a Loop that polls mailbox/v2 or belongs to an obsolete run does not itself create `RUN_HOLD`, `TERMINAL`, an approval boundary, or permission to cancel an unrelated authorized engineering mission. While effects are held on an expired/mismatched command, Controller remains responsible for a qualified successor event rather than timer reactivation. A `WAIT_EXECUTOR` continuation uses `AWAIT_EXECUTOR_EVENT`; the Controller resumes only after a provider/event adapter reports a newer Executor mailbox event, then exact-reads that event once.
+Canonical mailbox/v2 commands remain typed and event-bound. The Controller MUST NOT run a periodic mailbox polling cadence under the current GPT-host binding; a separately qualified Hermes read-only cursor observer is permitted in the SCRUM-840 proposal and cannot grant authority. **A forbidden polling scheduler is not a stopped Executor session.** Pausing/quarantining a Loop that polls mailbox/v2 or belongs to an obsolete run does not itself create `RUN_HOLD`, `TERMINAL`, an approval boundary, or permission to cancel an unrelated authorized engineering mission. While effects are held on an expired/mismatched command, Controller remains responsible for a qualified successor event rather than timer reactivation. A `WAIT_EXECUTOR` continuation uses `AWAIT_EXECUTOR_EVENT`; the Controller resumes only after a provider/event adapter reports a newer Executor mailbox event, then exact-reads that event once.
 
 For the current `hermes-cloud` binding, machine notification is a mailbox event. Slack WebSocket is not a canonical Executor wake-up path and MUST NOT be used as machine notification for event-driven runs.
 
 ## Wake-up notification
 
-Use `dw.taskcontroller.wakeup/v1` and typed `WakeupSignal` only as a transport-neutral pointer when a provider event adapter needs an external signal to notice unseen mailbox work. Canonical event-driven runs do not use periodic polling.
+Use `dw.taskcontroller.wakeup/v1` and typed `WakeupSignal` only as a transport-neutral pointer when a provider event adapter needs an external signal to notice unseen mailbox work. Legacy unqualified timer-driven mailbox polling remains prohibited; a qualified read-only cursor observation adapter may supplement push delivery, with canonical exact-read and PRECHECK before effects.
 
 The signal is **pointer-only**:
 
