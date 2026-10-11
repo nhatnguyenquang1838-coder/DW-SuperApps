@@ -86,6 +86,12 @@ State meanings:
 
 ## 3. Common Executor lifecycle and single branching point
 
+### GPT ↔ Hermes Local forward-progress and source-sync handshake
+
+Both autonomous peers must keep making testable progress without supervisor/subordinate gating. Every meaningful exchange includes `RUN / REPO / BRANCH / REMOTE_HEAD / LOCAL_BASE+HEAD / PATHS / TESTS / WRITER / NEXT`. Hermes Local must **fetch + reconcile** remote GPT changes before relying on them and **commit/push** its changes for GPT to consume; chat acknowledgement or local unpushed commits cannot count as code synchronization. Before overlapping edits, agree on one writer and worktree; when source moves, compare ancestry, diff and tests, then merge back published/evidence-bearing branches additively or rebase only unpublished disposable local work. Never force-push immutable evidence.
+
+A blocked TaskController successor/expired lease pauses only the protected effect; native GWC Q0 testing and fixes continue in existing allowed scope. Qualified push and observer polling deliver deduped pointers; observed cursor is not consumed cursor and an unchanged cursor does not invoke an LLM turn. For mutual stagnation, each peer challenges assumptions, tries a safe bounded recovery option and escalates only a concrete remaining shared blocker with evidence, owner and executable NEXT. Do not issue repeated WAIT messages with no material state change.
+
 ### GWC v2 testing: frequent code drift is routine, not an automatic hold
 
 When GWC Universal V2 is in active E2E/TDD qualification, frequent defect findings, source updates and evolving PR heads are **expected**. An additive in-scope commit is **not** by itself a new Human approval requirement, run-level `RUN_HOLD`, reason to cancel the Executor mission, or instruction to wait for GPT. The active peer should exact-read changed refs and ancestry, review diffs, update or merge back isolated branches, rerun affected validation, and continue autonomous RED→FIX→GREEN→reload→replay. A **rebase is suitable for an unpublished disposable local branch only**; for published Q0 branches or evidence-bearing commits preserve immutable SHAs and reconcile with an additive merge (no force-push, amend or silent history rewrite). Respect single-writer worktree ownership.
@@ -156,7 +162,7 @@ action: Exact-read Executor event; return Controller successor event reference.
 
 2. **GPT Web Controller** exact-reads Executor event/evidence with its authorized GitHub access, evaluates the decision and any required Human approval, persists canonical continuation, publishes typed Controller event/cursor via the approved runtime and exact-readbacks it. GPT prose `APPROVED` is **not** authority.
 3. The **admitted** Preview response/delivery mechanism signals the successor pointer back to Hermes (or a separately approved event adapter delivers it). Hermes must distinguish transport notification from actual GPT mailbox **consumption**. Do not assume reply delivery, automatic wakeup, or an installed `drive_preview` API without evidence.
-4. Main Executor exact-reads the successor Controller event and returns to PRECHECK. If Preview is missing/unbound, GPT cannot consume, or no approved mailbox-v2 notification adapter exists, enter `BLOCKED/TRANSPORT_BLOCKED`; do **not** poll or substitute another browser/Slack.
+4. Main Executor exact-reads the successor Controller event and returns to PRECHECK. If Preview is missing/unbound or GPT cannot consume, mark the affected protected delivery `TRANSPORT_BLOCKED`; use an independently qualified push adapter or bounded read-only `MAILBOX_OBSERVER` for discovery if admitted. Do not use unqualified browser/Slack substitutions or infer effect authority from observing a cursor. Continue independently authorized engineering, test, code sync and peer discussion.
 5. `WAITING_CONTROLLER` is allowed only with a durable pending correlation, real owner and approved return signal. No busy-loop, duplicate send or unbounded repeated GPT calls.
 
 **Contract caveat:** Current [Controller registry](../../controllers/taskcontroller.yaml) requires event-driven mailbox/v2; `hermes-cloud` declares `mailbox-event`. Neither this registry nor this runbook qualifies Hermes **Desktop** Preview as a live notification binding. A separate approved binding/adapter validation is required before real execution in this mode.
