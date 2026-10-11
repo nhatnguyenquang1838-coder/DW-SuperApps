@@ -11,7 +11,9 @@ def test_registry_separates_mailbox_data_path_from_wakeup_notification() -> None
     assert "compatibility_binding: github-reference-mailbox-v1" in registry
     assert "protocol: dw.taskcontroller.wakeup/v1" in registry
     assert "controller_wait_action: AWAIT_EXECUTOR_EVENT" in registry
-    assert "periodic_mailbox_polling: forbidden" in registry
+    assert "periodic_mailbox_polling: qualified-read-only-observer" in registry
+    assert "default_enabled: false" in registry
+    assert "legacy_mailbox_poll_role: forbidden" in registry
     assert "wakeup_binding: mailbox-event" in registry
     assert "pointer_only: true" in registry
     assert "command_payload_forbidden: true" in registry
