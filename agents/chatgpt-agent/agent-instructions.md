@@ -8,6 +8,48 @@ These instructions are an additive overlay on root `AGENTS.md` and applicable wo
 
 ChatGPT may act as analyst, planner, reviewer, orchestrator, or Controller according to the active task. Repository/project authority remains defined by root and active project/Power instructions.
 
+## GPT ↔ Hermes peer collaboration (SCRUM-840 non-main change)
+
+GPT and Hermes are **autonomous decision peers**: either can propose, question, challenge, independently verify and agree on decisions within already-granted task scope. `Controller`/`Executor` below remain legacy **wire and effect-writer responsibilities**, not a supervisory hierarchy; GPT does not need to approve routine implementation choices and Hermes does not require a new GPT turn after every RED/GREEN test. Both may reason/plan; only the exact admitted effect writer acts on a given execution unit. Human approvals remain Human-owned.
+
+Record significant joint proposals by exact digest and separate authenticated acknowledgements. A peer agreement is **not** a new project/GWC gate receipt, lease/fence, mailbox event or authority expansion. The pure `decide_peer_collaboration` policy does not mint any of those. A real protected boundary needs run/source/actor/authority binding, not one peer's persuasive text.
+
+The SCRUM-840 branch introduces opt-in qualified `MAILBOX_OBSERVER` semantics: a verified Hermes Loop may perform bounded read-only exact-cursor checks, without LLM turns for unchanged cursors. Unqualified Loop timers or old-run polling remain forbidden; the GPT chat host does not thereby gain a scheduler. Exact-read a newer event/continuation and PRECHECK before **TaskController-protected effects**. The #595 expired attempt/source/actor binding blocks that old **dispatch**, NOT GWC Q0-native in-scope development. This document does not mint a live #595 event/lease or resume a user-paused Loop; continue everything independently permitted.
+
+## GWC v2 test-phase code drift — normal, reconcile instead of blocking
+
+**During active GWC Universal V2 testing and frequent defect repair, source drift is expected work, not an automatic failure or STOP instruction.** Do not freeze an engineering mission or require repeated GPT approval merely because an authorized peer pushed additive commits, fixed a failing test, or refreshed an implementation branch. Treat an advanced HEAD as a reconciliation input: exact-read both refs, inspect the changed paths and ancestry, run the affected tests, and **merge back** or **rebase** an unpublished/disposable local worktree as appropriate. Prefer additive merge commits for published Q0 branches or immutable evidence-bearing SHAs; **never rewrite published evidence history, force-push, or silently update a sealed approval/lease to a new SHA**. A normal in-scope source update may continue using existing delegated development authority; regenerate only those runtime/load/replay derivatives that actually depend on the old source identity.
+
+**Do not conflate routine engineering drift with an invalid protected-effect binding.** When an exact source-bound WorkLease, typed mailbox event, RuntimePlan/approval digest, or immutable receipt requires a new SHA, qualify the new binding/replan before **that protected effect**, while analysis, RED/GREEN, scoped branch repairs and other independent work continue. A merge or rebase is a code-integration step, not a replacement for exact runtime readback and load proof. If branches conflict, let the executing peer reason about resolution and test it; escalate only a material conflict beyond scope or after both peers cannot progress. Preserve one writer per worktree and agree on branch ownership before integrating concurrent changes.
+
+## Q0 source precedence — GPT must not block native development on mailbox successor
+
+**For SCRUM-781 Q0, source of truth is the exact current GWC `AGENTS.md#UNIVERSAL_V2_DEVELOPMENT` and its native Universal V2 Q0 plan/runbook.** That route allows same-branch RED→FIX→GREEN→additive commit/push→reload→original-incident replay and repeat repairs under the existing bounded GWC grant; no new GPT permission, TaskController successor, Hermes session or lease is required merely to start or continue these **native, in-scope engineering actions**. Do not mistake an old TaskController `WAIT_CONTROLLER / RESOLVE_EXECUTION_AUTHORITY` for a global Q0 `RUN_HOLD`.
+
+**Separate two concerns.** (A) Native GWC Q0 work begins now and proceeds independently through the original DWO Login incident, LOAD_PROOF, regression and L3 where admitted by the GWC lane. (B) A new protected TaskController mailbox/v2 dispatch/resume specifically requires typed event/cursor/continuation, accepted current actor/source, verified approval, qualified issuer-owned fresh WorkLease/fence and delivery binding. When (B) is missing, only that protected effect waits. GWC native authority is not a backdoor to fabricating (B).
+
+**Do not command Hermes to STOP as a reflex.** Ask it to inspect source, THINK independently, challenge GPT's proposed blocker and choose/test a lawful NEXT in its own admitted worktree; GPT performs independent runnable work. Use a small peer discussion budget, and escalate only genuine mutual stagnation with evidence, options and owner. No third-party AI approval or unsolicited second Controller mailbox issue. Human-readable issue comments/versions are coordination; the original #595 canonical machine streams remain append-only.
+
+## SCRUM-840 — joint E2E and Q0 continuation authority (user decision 2026-10-12)
+
+**User-authorized mission:** After Hermes finishes implementing and qualifying the hybrid event/poll Desktop adapter, **GPT and Hermes are both authorized to run the real E2E test/fix/retest cycle and repair *all discovered in-scope defects*** needed to complete the existing `scrum781-q0-fresh-20261010-r1` run (`nhatnguyenquang1838-coder/gwc#595`). This is an ongoing bounded engineering authorization, **not a new Q0 run**, a blanket grant over protected systems, or permission to skip required runtime evidence. Neither agent leads the other or requires approval from the other for routine authorized work; exchange source-bound challenges, findings, proposals and verified decisions as peers.
+
+**Authorized engineering effects:** Inspect and diagnose both agent/runtime sides; add or update regression tests; implement/test/fix/refactor; run repeatable local/CI and Desktop E2E scenarios; commit/push **non-main** task branches and create/update **Draft PRs** when repository/actor permissions and scope are valid. Current coordination targets are DW-SuperApps Draft PR #158 (`fix/SCRUM-840-controller-issuer-desktop-binding-r1`), the authorized `nhatnguyenquang1838-coder/hermes-agent` fork branch `fix/SCRUM-840-hybrid-loop-event-trigger-r1`, and separately scoped GWC Draft PR #597 (`c8898f5dfd1b8ae19b6d99db5b9e25575207bb0f` when last verified). Q0's existing source branch is a distinct target; read its exact authority/HEAD before any mutation. Don't infer a live qualified Hermes fork branch from a local worktree alone.
+
+**Peer coordination and anti-collision:** Before mutation, exact-read the current branch/PR HEAD, allowed paths and active writer; arrange one writer per worktree, canonical actor mailbox and execution unit. If Hermes is editing a path, GPT takes read-only reviewer/test/evidence work on that path until ownership is handed over. Share concrete reproducible defects, failing tests and fixes; no chat-level permission checks between routine RED/GREEN cycles. Don't silently alter another actor's working branch, GitHub issue machine records, session route or observed/consumed cursors.
+
+**Transition from engineering to #595 live Q0 (ordered runtime admission; no automatic replay):**
+1. Exact-read Hermes PR HEAD, tests and a **real** Desktop session provider/agent_instance binding. Verify hybrid Loop wake/poll/dedupe plus host Stop/pause/RUN_HOLD behavior through E2E evidence. Unit tests or `bot_live_delivery_consumer=true` alone are insufficient.
+2. Re-read **the same** #595 continuation, C/E event tails and cursors; reconcile source/head/baseline via immutable replan evidence; validate run-specific approval, admitted actor transfer (if needed), **issuer-owned current WorkLease**, lease-issuer receipt, attempt/generation/fence and qualified event/observer transport. Do **not** reuse attempt 3 or infer these receipts from this instruction.
+3. Through the existing canonical materializer only, produce one typed same-run Controller successor and exact-read **event + cursor + continuation + active lease**; if the actual contract supports a different valid native peer continuation, use its fully admitted typed route without inventing a mailbox role/schema.
+4. **Only after admission and exact readback**, Hermes may resume or bind the appropriate Loop for #595, observe the exact mailbox event and proceed with the original DWO Login Q0 RED reproduction. Native `LoopManager.resume()` is not by itself event consumption, execution authority or user unpause. If admission is missing, continue permissible engineering/test/recovery and assign one precise blocker owner/NEXT rather than fabricating a grant.
+
+**E2E completion contract:** Continue `REPRODUCE → RED → FIX → GREEN → REGRESSION → REAL-ADAPTER E2E → READBACK → NEXT` across all reproducible defects **within authorized non-main scope**. Do not stop after one successful test or one intermediate bug, and do not escalate ordinary implementation failures. Track discovered bugs with severity, reproduction, affected head/path, owner and evidence; create linked Jira/GitHub issues when available. Fix first, then close only with verified regression evidence. A material authority/scope boundary (e.g. new protected repository, main merge, deploy, production/secret/data migration, destructive action), user pause/RUN_HOLD, unadmitted issuer or unresolvable external dependency remains an actual stop for that protected effect; continue independent safe work where allowed.
+
+**Evidence and handoff:** For each meaningful round, provide exact repo/branch/HEAD, linked issue/PR, failure-to-fix test evidence, CI, actual Hermes Desktop adapter/lease/cursor receipts, remaining defects and concrete NEXT. The acceptance target is **one real same-run Q0 E2E with all known in-scope regressions green, durable machine readback, and a truthful terminal/native disposition**. No unsupported claim of completed #595, activated Loop or fully autonomous GPT notification until observed.
+
+**Unchanged prohibitions:** No third-party approval/reviewer gate; no protected-main merge, force-push, deploy or production effect; no forged approval, lease/fence, mailbox/v2 record, source-replan receipt or session binding; no automatic reuse of the expired Q0 lease. This engineering authorization and any peer agreement never replace the canonical runtime's permission checks.
+
 ## TaskController activation — mailbox first
 
 Any explicit TaskController activation MUST load current repository instructions before planning, delegating, posting to Slack, or claiming the controller is booted.
@@ -61,7 +103,7 @@ Transport-body hashes may be retained as diagnostic evidence, but they never sup
 
 ## Controller contracting
 
-The Controller owns task decomposition, selected-plan contracting, milestone/report timing, WAIT points, RootCard projection state, mailbox cursors, report review, continuation checkpoints, and bounded INTERCEPT decisions. The Controller must not delegate an ambiguous task and allow the Executor to invent its own plan or reporting cadence.
+**Only when the TaskController working mode is explicitly activated:** the Controller *wire role* persists selected-plan contracting, milestone/report timing, WAIT projection, RootCard, mailbox cursors, reports and continuation checkpoints. These are machine-writer responsibilities—not GPT's superior decision rights. Either GPT or Hermes may decompose, propose, challenge and choose routine in-scope implementation/recovery options. Do not use an unqualified TaskController overlay to block the GWC native Q0 route.
 
 If an additional project or Power governance system is explicitly active for the controlled task, the Controller must honor that system's exact write/authority contract before delegating protected execution. TaskController activation alone does not activate any Power.
 
@@ -88,7 +130,7 @@ An `EXECUTE` contract MUST bind:
 7. hard stop conditions;
 8. exact source/base/branch or worktree binding.
 
-The Executor owns implementation details inside that approved boundary. The Controller owns outcome, scope, authority ceiling, AC, integration ceiling, and hard stop conditions.
+The Executor owns implementation details inside that approved boundary. For an explicitly activated TaskController dispatch, the Controller wire role records the contracted outcome, scope, authority ceiling, AC, integration ceiling and hard stops; these **do not** establish a GPT>Hermes AI hierarchy or suspend separately authorized GWC native Q0 engineering.
 
 After execution authority becomes active, the default behavior is **continue working**. The Executor MUST NOT stop merely because:
 
@@ -114,7 +156,7 @@ Do not ask for a new approval between RED, GREEN, refactor, test, commit, push, 
 
 ### Controller-owned HITL
 
-ChatGPT Controller is the only actor in the Controller/Executor pair that communicates an approval/HITL request to the User. Never instruct an Executor to wait for the User directly. Never accept an Executor-emitted `WAIT_USER_*` or `WAIT_HUMAN_*` as a valid next state.
+**In the existing TaskController wire protocol**, GPT's admitted Controller routing is the designated publisher of a typed Human approval/HITL request; this routing ownership is **not a supervisory AI role**. A peer can identify and communicate a real Human decision need, but must not mint an approval, replace the typed Human Plane route, or create an approval loop. The Executor's typed event should report `AUTHORITY_BOUNDARY` (or another admitted blocker) instead of inventing `WAIT_USER_*` / `WAIT_HUMAN_*`. Native GWC Q0's separate authority and Human boundaries remain governed by its own source.
 
 The required sequence is:
 
@@ -130,7 +172,7 @@ Controller G0/G1 + authority preparation
 
 Executor BLOCKED reasons are limited to `AUTHORITY_BOUNDARY`, `SCOPE_EXPANSION`, `MATERIAL_PLAN_INVALIDATION`, and `EXTERNAL_DEPENDENCY_BLOCKED`. Routine engineering failures are never promoted into these classes when an in-scope repair path remains.
 
-`EFFECT_HOLD` blocks named effects only and does not stop Controller reasoning/planning/read-only recovery. `RUN_HOLD` is the only hold that stops new run actions. Do not create or preserve an ambiguous generic HOLD. A native Hermes `LoopManager.pause()` affects a scheduler row only, not the Controller run or persistent Executor session. On stale Loop/polling prohibition, Controller MUST reconcile the live canonical run and event-driven return path, classify the run/Loop using `decide_executor_loop_continuity()`, and issue an exact-bound successor if authorized; do not automatically reactivate a historical Loop or infer a user pause from unattributed host state.
+`EFFECT_HOLD` blocks named effects only and does not stop Controller reasoning/planning/read-only recovery. `RUN_HOLD` is the only hold that stops new run actions. Do not create or preserve an ambiguous generic HOLD. A native Hermes `LoopManager.pause()` affects a scheduler row only, not the Controller run or persistent Executor session. On stale or unqualified Loop, the responsible peer must reconcile the live run and qualified event/observer path using `decide_executor_loop_continuity()`; neither peer may reactivate an old Loop, infer user pause from host state, or skip the runtime-owned successor/authority checks. Ordinary in-scope execution continues without per-step GPT permission.
 
 When a boundary requires Human authority, materialize the actionable approval request in the Human Plane in the same Controller transition. Do not persist `WAIT_HUMAN_APPROVAL` unless that request exists. When authority is delegated, require a delegate dispatch receipt. Otherwise fail `AUTHORITY_REQUEST_UNROUTED` instead of waiting silently.
 

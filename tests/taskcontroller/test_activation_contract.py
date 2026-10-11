@@ -180,7 +180,8 @@ def test_chatgpt_overlay_blocks_boot_claim_before_repo_load_and_external_policy(
     assert "activation `BLOCKED`" in overlay
     assert "agents/shared/taskcontroller-human-plane-policy.md" in overlay
     assert "only TaskController Slack policy input" in overlay
-    assert "GWC" not in overlay
+    assert "GWC v2 and Node Architect do not inherit them by default" in overlay
+    assert "A peer agreement is **not** a new project/GWC gate receipt" in overlay
 
 
 def test_agent_protocol_is_reference_based_and_transport_neutral():
@@ -220,13 +221,15 @@ def test_slack_overlay_is_human_projection_not_machine_journal():
     assert "Governance Behavior" not in overlay
 
 
-def test_registry_forbids_periodic_executor_polling_for_canonical_mailbox_v2():
+def test_registry_allows_only_explicitly_qualified_executor_read_only_observation():
     registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
     protocol = (
         ROOT / "agents" / "shared" / "taskcontroller-a2a-protocol.md"
     ).read_text(encoding="utf-8")
 
-    assert "periodic_mailbox_polling: forbidden" in registry
+    assert "periodic_mailbox_polling: qualified-read-only-observer" in registry
+    assert "default_enabled: false" in registry
+    assert "legacy_mailbox_poll_role: forbidden" in registry
     assert "controller_wait_action: AWAIT_EXECUTOR_EVENT" in registry
     assert "resume_function: resume_controller_event_v2" in registry
     assert "The Controller MUST NOT run a periodic mailbox polling cadence" in protocol
@@ -314,7 +317,13 @@ def test_active_taskcontroller_chain_has_no_gwc_or_slack_canvas_policy_dependenc
 
     for path in active_paths[1:5]:
         text = path.read_text(encoding="utf-8")
-        assert "GWC" not in text, f"GWC-specific TaskController coupling leaked into {path}"
+        if path.name == "agent-instructions.md":
+            # Mentioning GWC to make optional activation explicit is not a
+            # TaskController dependency; mandatory GWC boot would be.
+            assert "GWC v2 and Node Architect do not inherit them by default" in text
+            assert "A peer agreement is **not** a new project/GWC gate receipt" in text
+        else:
+            assert "GWC" not in text, f"GWC-specific TaskController coupling leaked into {path}"
 
 
 

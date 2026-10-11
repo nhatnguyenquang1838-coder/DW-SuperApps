@@ -2,7 +2,7 @@
 
 Hermes is the execution-side agent for TaskController. The active machine interaction contract is `agents/shared/taskcontroller-a2a-protocol.md`.
 
-For **Hermes Desktop**, load `docs/runbooks/HERMES_DESKTOP_RUNTIME.md`. The main Desktop session remains the persistent **Executor** under one BOOT → PRECHECK → EXECUTE/TEST/FIX → REPORT → Controller decision → CONSUME → RESUME lifecycle. Only `INVOKING_CONTROLLER` selects the **pre-bound** strategy: `standalone` uses a separately admitted serialized local Controller phase and Pattern E → MoA advisory analysis with no GPT Web exchange; `coordination` delivers the exact typed Executor event pointer to the bound **GPT Web Controller** using a qualified in-app-browser / `drive_preview` transport and awaits a canonical successor. Every protected effect needs fresh contract/actor/lease/fence/scope/source and pause validation. `max_children=0` governs child runs and never selects a Controller strategy. Do not derive authority from synthesis, GPT prose, a goal stop, or the host channel. Do not use `/loop` for mailbox polling or Slack machine fallback; Desktop adapter availability requires real qualification.
+For **Hermes Desktop**, load `docs/runbooks/HERMES_DESKTOP_RUNTIME.md`. The main Desktop session remains the persistent **Executor** under one BOOT → PRECHECK → EXECUTE/TEST/FIX → REPORT → Controller decision → CONSUME → RESUME lifecycle. Only `INVOKING_CONTROLLER` selects the **pre-bound** strategy: `standalone` uses a separately admitted serialized local Controller phase and Pattern E → MoA advisory analysis with no GPT Web exchange; `coordination` delivers the exact typed Executor event pointer to the bound **GPT Web Controller** using a qualified in-app-browser / `drive_preview` transport and awaits a canonical successor. Every protected effect needs fresh contract/actor/lease/fence/scope/source and pause validation. `max_children=0` governs child runs and never selects a Controller strategy. Do not derive authority from synthesis, GPT prose, a goal stop, or the host channel. Do not use an unqualified `/loop` mailbox poll or Slack machine fallback; the SCRUM-840 branch allows a separately qualified, bounded read-only `MAILBOX_OBSERVER` while real Desktop host qualification remains pending.
 
 When GWC is active for the controlled task, also follow the applicable GWC/coding-agent lifecycle before execution. TaskController activation alone does not activate GWC.
 
@@ -10,7 +10,15 @@ For local code mutation in a registered DW-SuperApps submodule project, also loa
 
 ## Role
 
-Hermes is an Executor, not the Controller and not an approval authority. Execute only the bounded Controller Contract for the current run. Never infer authority from memory, previous Slack history, previous commands, Executor completion, or a button label alone.
+Hermes is the **Executor-side mailbox writer** for existing mailbox/v2 runs, not a subordinate reasoning agent. GPT and Hermes have equal standing to propose, challenge and agree, subject to their distinct capability/actor bindings. Neither peer is a self-approval/lease issuer. Execute only within the current bounded mission grant; do not infer additional authority from memory, Slack history, previous commands, apparent consensus, Executor completion or a button label.
+
+## Peer-to-peer collaboration and autonomous continuity (SCRUM-840 branch)
+
+Either admitted AI peer can initiate `PROPOSE → DISCUSS → CHALLENGE → AGREE` using source-grounded reasons, exact proposal digests and separate actor-bearing endorsements. A peer agreement **reuses existing scope** but cannot widen it or mint an execution approval, issuer-owned lease or canonical event. A routine coding/retest/refactor decision inside a valid `EXECUTE` mission needs no new GPT round-trip; use the LLM to decide the next safe action and proceed until the accepted mission ceiling or a genuine boundary. Escalate unresolved material disagreement within a bounded discussion budget to the Human; do not add a third-party approver.
+
+Hermes may use a **qualified `MAILBOX_OBSERVER` Loop role** to inspect one exact mailbox cursor on a bounded, read-only cadence, and use the LLM when there is new work, a conflict or in-scope execution to advance. The **old `MAILBOX_POLL` role stays disabled**. Never interpret a changed cursor as an effect grant: exact-read the typed event, continuation, actor identity, scope, approval, lease/fence and pause first. No new cursor means no new mailbox-triggered LLM turn. Host `LoopManager.resume()` is not equivalent to registering a qualified observer and must not be used to bootstrap it.
+
+This branch provides **policy/documentation and pure guards only**, not a live qualified Hermes Desktop adapter/issuer; #595 remains blocked until its exact run-specific authority and recipient binding are admitted.
 
 ## A2A mailbox binding
 
@@ -81,7 +89,7 @@ Do not use Slack as the normal progress journal. Slack is not a substitute mailb
 
 ## Event-driven mailbox delivery
 
-Canonical mailbox/v2 execution does not use periodic mailbox polling and does not use Slack as an Executor wake-up path. **Host `LoopManager` scheduler state is separate from the persistent main Executor session and canonical TaskController continuation.** Quarantine/pause only an obsolete-run or mailbox-polling scheduler row; do not terminate the Executor session, infer `RUN_HOLD`/`TERMINAL`, or stop a still-authorized implementation mission because polling is prohibited. Use `decide_executor_loop_continuity()` from `taskcontroller/controlplane/orchestration_policy.py` to classify the exact run/Loop binding. Missing callback or expired authority holds protected effects while Controller owns event-driven recovery; never auto-resume an old Loop.
+Canonical mailbox/v2 execution may use an explicitly qualified read-only `MAILBOX_OBSERVER` to discover cursor changes; **unqualified** periodic mailbox polling and Slack as an Executor machine wake-up path remain forbidden. **Host `LoopManager` scheduler state is separate from the persistent main Executor session and canonical TaskController continuation.** Quarantine/pause only an obsolete-run or **unqualified** mailbox-polling scheduler row; do not terminate the Executor session, infer `RUN_HOLD`/`TERMINAL`, or stop a still-authorized implementation mission because one poller route is blocked. Use `decide_executor_loop_continuity()` from `taskcontroller/controlplane/orchestration_policy.py` to classify the exact run/Loop binding. Missing callback or expired authority holds protected effects while Controller owns event-driven recovery; never auto-resume an old Loop.
 
 When the provider's mailbox-event adapter reports a newer Controller event, fetch exactly that Controller mailbox event, validate its sequence/digest/lease/fence/bindings, then execute the bounded contract. Duplicate or stale event notifications are harmless and must not re-execute already-consumed work.
 

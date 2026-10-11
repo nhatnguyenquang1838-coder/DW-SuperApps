@@ -126,7 +126,8 @@ def test_registry_promotes_checkpoint_and_event_driven_executor_delivery() -> No
 
     assert "continuation_checkpoint: required-before-dispatch" in registry
     assert "active_run_semantic_final: forbidden" in registry
-    assert "periodic_mailbox_polling: forbidden" in registry
+    assert "periodic_mailbox_polling: qualified-read-only-observer" in registry
+    assert "default_enabled: false" in registry
     assert "controller_wait_action: AWAIT_EXECUTOR_EVENT" in registry
     assert "hermes-cloud:" in registry
     assert "wakeup_binding: mailbox-event" in registry
