@@ -1,7 +1,7 @@
 # Hermes Desktop — Unified Runtime Runbook
 
 **Status:** Desktop operating procedure (documentation); implementation and provider transport readiness must be verified separately.
-**Scope:** One persistent Hermes Desktop **main session** performs the Executor work. It has **one shared execution lifecycle** and selects **one Controller invocation adapter** for the current run.
+**Scope:** Two autonomous AI peers (GPT and Hermes) share proposal/decision rights; the active execution-unit owner runs in one persistent Hermes Desktop session. Legacy Controller/Executor labels describe mailbox producer/writer responsibilities, **not** an AI seniority hierarchy. Controller strategy selects a transport at the existing invocation boundary.
 **Authority:** This runbook does **not** implement or amend TaskController, grant approval, activate GWC, authorize writes, register a provider adapter, or make either mode immediately executable.
 
 ## 1. Canonical sources and mode selection
@@ -18,6 +18,15 @@ Choose `controller_strategy` **from the admitted Controller identity and communi
 `max_children=0` prohibits **governed Executor child runs** but does not choose Standalone/Coordination. In Standalone, Pattern E specialist Bot Chat calls are **advisory under separately approved Controller-analysis scope**, not Executor child contracts or a new main session. “No outside calls” means **no GPT Web** in Standalone, not network-offline: GitHub mailbox, model and specialist calls may be remote.
 
 **Controller strategy is bound at BOOT.** Moving between strategies or transferring a GPT-bound Controller to an internal Controller requires a new canonical authority/actor/continuation/notification binding transition. Never auto-fallback after preview or fanout failure.
+
+### Peer collaboration and bounded autonomy (SCRUM-840 R3 — branch proposal)
+
+- GPT and Hermes are **equal AI decision participants**. Either may initiate `PROPOSE → CHALLENGE → DISCUSS → CONVERGE → AGREE`; neither agent must obtain the other's permission for routine actions already covered by its admitted mission scope. "Controller" and "Executor" remain the *legacy wire-protocol roles* for the existing `controller_to_executor` / `executor_to_controller` mailbox/v2 envelopes. Do not silently swap their event namespaces or claim live symmetric transport support until qualified.
+- A shared decision references one exact proposal digest plus **two separate actor-bearing endorsements**. `taskcontroller.controlplane.orchestration_policy.decide_peer_collaboration()` is a **pure advisory policy**; it does not persist endorsements, create an event, replace a run-specific approval, or grant authority. The existing canonical materializer/repository continues to own machine events and receipts.
+- Each peer may reason, plan, challenge, review evidence, and implement **within its own valid delegated scope**. A bounded `EXECUTE` mission permits implement/test/fix/refactor/commit/push/Draft PR when these were granted; code failures and internal milestones do not require a new round-trip.
+- Disagreements use a small finite discussion budget and one durable disputed-decision reference; only unresolved material scope/authority questions escalate to the Human. No third-party AI approver, no automatic self-grant or silent scope expansion.
+- Keep **one active effect writer per execution unit** and independent identity/lease/fencing records per actor. Peer equality is not permission to act concurrently on the same worktree/branch or mutate another peer's mailbox.
+- This is a **non-main engineering change**. Do not interpret it as a retroactive amendment to active #595, as an admitted Hermes Desktop session or as permission to resume its expired attempt 3.
 
 ## Controller-first bootstrap boundary (not an Executor PRECHECK)
 
@@ -71,11 +80,22 @@ State meanings:
 2. **Evidence before notification.** Executor `event+cursor+continuation` is persisted and exact-read back **before** `INVOKING_CONTROLLER`; Controller successor is materialized/read back **before** the Executor resumes.
 3. **Effects only while authorized.** Current `EXECUTE` grant, scope, lease/fence, actor/source/head and unpaused state are required. Read-only `PLAN` or advisory fanout never authorizes writes. Merge, separately governed Ready-for-Review, deploy, production, secrets, migration and destructive actions require distinct authority.
 4. **Bounded loops.** Self-repair continues under valid `continue_until`, budget and checkpoints; semantic results trigger Controller only when a real boundary/terminal decision occurs. Avoid gratuitous chat churn.
-5. **No polling or hidden fallback.** No periodic mailbox polling, Slack machine notifications, browser scraping substitution, `/loop` wakeup, repeated Preview messages or automatic strategy switch.
+5. **Qualified observation, no covert effects.** A deliberately registered, rate-limited **read-only** Loop mailbox observer may inspect the exact mailbox cursor for newer events. Timer-driven `/loop` prompting an LLM is not automatically a qualified cursor poller; legacy `MAILBOX_POLL` and `CONTROLLER_WAKEUP_POLL` remain forbidden. Push-first or qualified read-only pull are delivery options. No Slack machine fallback, browser scraping, hidden execution, repeated Preview messages or automatic strategy switch. Cursor discovery never grants permission to resume effects.
 6. **No infinite unowned wait.** Every Controller invocation either produces a validated successor, remains explicitly pending with a durable owner/correlation/approved transport, resolves to an actionable Human wait, or fails with a recorded blocker. Pending state is not a success claim.
-7. **No self-issued authority.** Neither Pattern E/MoA nor a GPT chat reply nor an Executor role-switch can mint Controller identity, approval, lease, fencing or a valid canonical event.
+7. **No self-issued authority.** Neither peer consensus, Pattern E/MoA, a GPT chat reply, nor an Executor role-switch can mint approval, lease, fencing, Controller identity or a valid canonical event. Existing delegated scope is reusable without a new AI permission request.
 
 ## 3. Common Executor lifecycle and single branching point
+
+### Loop observation versus LLM-led execution
+
+The Loop has **two independently authorized concerns**: `MAILBOX_OBSERVER` may perform a bounded, read-only cursor check; `ENGINEERING_WORK` may advance an already-authorized mission with LLM reasoning. Neither is equivalent to calling `LoopManager.resume()` or unconditionally firing native ticks.
+
+- **READ:** qualify `loop_run_id == canonical_run_id`, single session owner, exact mailbox ref, bounded interval, minimum cursor, GitHub read scope/rate budget, absence of user pause or RUN_HOLD. Detect a newer cursor, then exact-read the typed event, immutable continuation and source; never scan all issue comments as authority.
+- **DECIDE:** use LLM reasoning for material new events and engineering choices, **not necessarily for each unchanged cursor**. Duplicate/stale cursors are silent no-ops; store an observation high-water mark separately from consumed command cursors.
+- **EXECUTE:** every effect still requires a current mission grant, source/scope/boundary, recipient identity, current issuer-owned lease/fence and PRECHECK. `EFFECT_HOLD` may permit the qualified read-only observer but forbids denied effects. `RUN_HOLD` and explicit user pause stop this run's observer/turn.
+- **CONTINUE:** while a valid delegated mission is active, Hermes may reason, implement, test and fix autonomously; GPT may independently propose/challenge through the bound communication plane. Escalate *real* scope/authority changes, not a routine red test.
+- **DELIVER:** event-push and qualified read-only polling may converge to one deduplicated pointer/turn. There must be no two active effect writers or duplicate turn execution. The adapter must prove the session's authenticated `agent_instance`; the Desktop `Bot Chat` capability flag alone does not.
+- **NOT YET LIVE:** the current Hermes `LoopManager` is timer-driven, and the DW registry has no qualified Desktop mailbox poller/issuer for #595. This document and the pure policy opt-in do **not** install an actual observer, grant a Loop route, resume a paused Loop or modify #595.
 
 ```text
 Recover exact run + selected controller_strategy
@@ -183,8 +203,8 @@ action: Exact-read Executor event; return Controller successor event reference.
 - [ ] One shared state machine and Executor execution lifecycle; strategy selection occurs only at `INVOKING_CONTROLLER`.
 - [ ] Contract binds strategy, actors, mode-specific transport and no implicit fallback; `max_children=0` is **not** a mode selector.
 - [ ] Every Executor event and Controller successor has durable typed mailbox/cursor/continuation readback; identity, digest, source, lease/fence, pause and exact-head guards remain intact.
-- [ ] No Controller approval invented from MoA or GPT response, and no uncontrolled periodic mailbox/Preview polling.
-- [ ] TaskController mailbox/v2 remains event-driven; no Loop/Heartbeat/cron/browser scheduler polls or wakes C/E, and exact wakeup fields come from the live source chain.
+- [ ] No approval/lease invented from peer consensus, MoA or GPT response, and no **unqualified** periodic mailbox/Preview polling.
+- [ ] TaskController mailbox/v2 remains the canonical machine state; legacy unqualified polling and wakeups are forbidden; an explicitly qualified read-only Loop observer may inspect a bounded exact cursor (no effect authority), and exact wakeup fields come from the live source chain.
 - [ ] Host Goal/Loop/Heartbeat controls do not grant TaskController/GWC lifecycle authority; no local Task TodoList or generic RunState schema is invented.
 - [ ] GPT browser transport is used only through an explicitly qualified binding and the existing `dwa-gpt-exchange` procedure.
 - [ ] Settlement requires a confirmed real firing with `awaiting_response=true`, one exact-owner `complete_tick`, and fresh readback showing the expected post-state; `false` alone is not historical proof.
@@ -197,8 +217,10 @@ action: Exact-read Executor event; return Controller successor event reference.
 3. **Coordination — full round trip:** typed Executor result → readback → verified bound `drive_preview` → GPT **exact** consume → valid typed Controller successor → observed return pointer → Hermes re-PRECHECK.
 4. **Coordination — missing preview/tool:** deterministic `TRANSPORT_BLOCKED` with persisted evidence and no fallback.
 5. **Both — TDD liveness:** multiple in-scope failures repaired without Controller chat turn or `/loop`.
-6. **Both — retries:** duplicate/late notifications, expired lease, stale fence and user pause cause **zero repeated effects**.
+6. **Both — retries:** duplicate/late notifications, repeated cursor observations, expired lease, stale fence and user pause cause **zero repeated effects**.
 7. **Both — terminal:** verifiable exact-head tests/artifacts and canonical Controller terminal disposition; no optimistic success from UI/session stop reason.
+
+**Additional SCRUM-840 checks:** (i) both peer-order permutations give the same decision; (ii) consensus without effect authority does not issue a grant; (iii) legacy polling remains paused; (iv) qualified read-only observation on unchanged cursor emits no turn; (v) wrong run, user pause, RUN_HOLD and duplicate event block execution; (vi) a Desktop loop/observer E2E proves the real recipient binding before delivery.
 
 **Readiness:** Until provider bindings and live tests pass, report **DOCUMENTED / E2E_UNVERIFIED**, not `RUNTIME_READY`.
 
@@ -208,7 +230,7 @@ This repository runbook governs Desktop runtime/provider behavior and its TaskCo
 
 - **Host-control ownership:** `GoalManager`, `LoopManager`, and `HeartbeatManager` control only their respective native scheduler rows. They do not grant repository, mailbox, gate, or human authority.
 - **Source-owned lifecycle:** use the active project's declared lifecycle state/cursor and typed `NEXT`. This runbook does not define a universal `RunState`, `RuntimePlan`, `Task TodoList`, `DONE`/predecessor rule, or `validity_key`. Do not invent local C/E cursor or deadlock predicates; follow the exact current protocol records.
-- **Event-driven mailbox boundary:** canonical mailbox/v2 is event-driven. Never use `/loop`, `/heartbeat`, cron, Slack polling, browser scraping, or another scheduler to poll C/E or wake the Controller. Use exact live-schema field names (including `periodic_mailbox_polling` and `wakeup_binding` where defined, plus typed per-run permissions); when polling or Executor wakeup is forbidden, do not keep, re-arm, or resume **that forbidden polling scheduler**. Classify the Loop's exact run binding first: a paused obsolete or mailbox-polling Loop is NOT a stopped Executor session. Preserve the main Executor session and Controller's event-driven recovery. Authorized engineering work continues without timer-based C/E polling, while expired leases block effects and require a fresh Controller dispatch. Never auto-unpause a stale Loop.
+- **Mailbox observation boundary:** mailbox/v2 stays canonical and append-only. A separate, verified `MAILBOX_OBSERVER` may read a bounded exact cursor without changing canonical command state. A legacy `MAILBOX_POLL`, `CONTROLLER_WAKEUP_POLL`, browser scraper, or arbitrary timer-based LLM prompt is **not** thereby qualified; do not keep, re-arm, or resume **that forbidden polling scheduler**. Classify each Loop's actual bound run, host/session and policy first: a paused obsolete or mailbox-polling Loop is NOT a stopped Executor session. No auto-unpause, no polling-based approval, no replay of old attempt or unadmitted Hermes Desktop route. Human Plane/Slack remains noncanonical. Source contract `periodic_mailbox_polling` now admits only the explicit `qualified-read-only-observer` mode in the **proposed branch**, never unrestricted polling. Expired leases hold effects regardless of observation.
 - **Expired lease/fence:** recovery remains Controller-owned. The Executor must not renew a lease/fence, invoke recovery/materialization, or create a successor event/cursor. A recovery receipt alone is not a typed execution grant.
 - **Browser transport:** only use a GPT browser route when the active strategy/registry binds a qualified adapter and exact conversation. Otherwise keep `TRANSPORT_BLOCKED`; do not use a fallback or infer delivery from UI output. The exact stage/submit/readback flow belongs to `dwa-gpt-exchange`.
 - **Optional advisory analysis:** if an active contract requests one MoA review of a source-bound deadlock fact block, it is advisory only; empty/partial/provider-failed output is `INCONCLUSIVE`. It cannot create a mailbox event, grant authority, decide a source-owned cursor predicate, or perform lease recovery.
