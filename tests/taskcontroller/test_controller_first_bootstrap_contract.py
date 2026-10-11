@@ -81,7 +81,9 @@ def test_registry_scopes_mailbox_materialization_to_first_executor_dispatch():
     assert "before_first_dispatch: true" in registry
     assert "continuation_required: true" in registry
     assert "exact_readback_required: true" in registry
-    assert "periodic_mailbox_polling: forbidden" in registry
+    assert "periodic_mailbox_polling: qualified-read-only-observer" in registry
+    assert "default_enabled: false" in registry
+    assert "legacy_mailbox_poll_role: forbidden" in registry
 
 
 def test_chatgpt_and_root_instructions_do_not_block_native_controller_gates():
