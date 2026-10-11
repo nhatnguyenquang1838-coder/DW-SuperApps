@@ -8,6 +8,14 @@ These instructions are an additive overlay on root `AGENTS.md` and applicable wo
 
 ChatGPT may act as analyst, planner, reviewer, orchestrator, or Controller according to the active task. Repository/project authority remains defined by root and active project/Power instructions.
 
+## GPT ↔ Hermes peer collaboration (SCRUM-840 non-main change)
+
+GPT and Hermes are **autonomous decision peers**: either can propose, question, challenge, independently verify and agree on decisions within already-granted task scope. `Controller`/`Executor` below remain legacy **wire and effect-writer responsibilities**, not a supervisory hierarchy; GPT does not need to approve routine implementation choices and Hermes does not require a new GPT turn after every RED/GREEN test. Both may reason/plan; only the exact admitted effect writer acts on a given execution unit. Human approvals remain Human-owned.
+
+Record significant joint proposals by exact digest and separate authenticated acknowledgements. A peer agreement is **not** a new project/GWC gate receipt, lease/fence, mailbox event or authority expansion. The pure `decide_peer_collaboration` policy does not mint any of those. A real protected boundary needs run/source/actor/authority binding, not one peer's persuasive text.
+
+The SCRUM-840 branch introduces opt-in qualified `MAILBOX_OBSERVER` semantics: a verified Hermes Loop may perform bounded read-only exact-cursor checks, without LLM turns for unchanged cursors. Unqualified Loop timers or old-run polling remain forbidden; the GPT chat host does not thereby gain a scheduler. Exact-read a newer event/continuation and PRECHECK before effects. The live #595 expired lease, stale source and unadmitted Hermes session remain independent blockers. **No live #595 event, approval or Loop restart is authorized by this document.**
+
 ## TaskController activation — mailbox first
 
 Any explicit TaskController activation MUST load current repository instructions before planning, delegating, posting to Slack, or claiming the controller is booted.
@@ -130,7 +138,7 @@ Controller G0/G1 + authority preparation
 
 Executor BLOCKED reasons are limited to `AUTHORITY_BOUNDARY`, `SCOPE_EXPANSION`, `MATERIAL_PLAN_INVALIDATION`, and `EXTERNAL_DEPENDENCY_BLOCKED`. Routine engineering failures are never promoted into these classes when an in-scope repair path remains.
 
-`EFFECT_HOLD` blocks named effects only and does not stop Controller reasoning/planning/read-only recovery. `RUN_HOLD` is the only hold that stops new run actions. Do not create or preserve an ambiguous generic HOLD. A native Hermes `LoopManager.pause()` affects a scheduler row only, not the Controller run or persistent Executor session. On stale Loop/polling prohibition, Controller MUST reconcile the live canonical run and event-driven return path, classify the run/Loop using `decide_executor_loop_continuity()`, and issue an exact-bound successor if authorized; do not automatically reactivate a historical Loop or infer a user pause from unattributed host state.
+`EFFECT_HOLD` blocks named effects only and does not stop Controller reasoning/planning/read-only recovery. `RUN_HOLD` is the only hold that stops new run actions. Do not create or preserve an ambiguous generic HOLD. A native Hermes `LoopManager.pause()` affects a scheduler row only, not the Controller run or persistent Executor session. On stale or unqualified Loop, the responsible peer must reconcile the live run and qualified event/observer path using `decide_executor_loop_continuity()`; neither peer may reactivate an old Loop, infer user pause from host state, or skip the runtime-owned successor/authority checks. Ordinary in-scope execution continues without per-step GPT permission.
 
 When a boundary requires Human authority, materialize the actionable approval request in the Human Plane in the same Controller transition. Do not persist `WAIT_HUMAN_APPROVAL` unless that request exists. When authority is delegated, require a delegate dispatch receipt. Otherwise fail `AUTHORITY_REQUEST_UNROUTED` instead of waiting silently.
 
