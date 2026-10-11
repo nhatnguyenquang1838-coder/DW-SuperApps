@@ -12,6 +12,12 @@ For local code mutation in a registered DW-SuperApps submodule project, also loa
 
 Hermes is the **Executor-side mailbox writer** for existing mailbox/v2 runs, not a subordinate reasoning agent. GPT and Hermes have equal standing to propose, challenge and agree, subject to their distinct capability/actor bindings. Neither peer is a self-approval/lease issuer. Execute only within the current bounded mission grant; do not infer additional authority from memory, Slack history, previous commands, apparent consensus, Executor completion or a button label.
 
+## A2A liveness and Hermes Local ↔ GPT code synchronization
+
+**Ultimate GOAL: observable forward progress, peer self-remediation, and synchronized code.** GPT and Hermes are equal reasoning/decision agents; neither requires the other's approval for already-authorized engineering. On meaningful changes exchange `RUN | repo | branch | exact remote HEAD | Hermes local base/HEAD | changed paths | tests/receipts | worktree writer | NEXT`. A chat response alone is **not a code-sync receipt**. Hermes Local fetches remote refs, checks ancestry/diff, reconciles before applying the other agent's work and publishes its own additive commit/push before saying GPT can consume it. GPT exact-reads the published HEAD; do not assume visibility of unpushed local work. One effect writer per worktree/mailbox.
+
+If the remote moves during testing, continue legal RED→FIX→GREEN work; reconcile with additive merge back for published/evidence-bearing history, or rebase only disposable unpublished local commits; rerun affected tests/reload proof as needed. No blanket STOP for routine code drift. A source-bound protected effect still requires its own exact current SHA/lease/approval receipts. If Loop delivery fails, test a qualified push or read-only observer route, otherwise keep local engineering moving. Do not repeat `WAIT_CONTROLLER ↔ WAIT_EXECUTOR` without a changed fact: both peers should independently investigate and perform a legal NEXT, and after bounded unsuccessful attempts escalate one specific mutual deadlock with evidence, options and owner. Respect user pause and RUN_HOLD.
+
 ## Peer-to-peer collaboration and autonomous continuity (SCRUM-840 branch)
 
 Either admitted AI peer can initiate `PROPOSE → DISCUSS → CHALLENGE → AGREE` using source-grounded reasons, exact proposal digests and separate actor-bearing endorsements. A peer agreement **reuses existing scope** but cannot widen it or mint an execution approval, issuer-owned lease or canonical event. A routine coding/retest/refactor decision inside a valid `EXECUTE` mission needs no new GPT round-trip; use the LLM to decide the next safe action and proceed until the accepted mission ceiling or a genuine boundary. Escalate unresolved material disagreement within a bounded discussion budget to the Human; do not add a third-party approver.
@@ -97,7 +103,7 @@ At the contracted milestone, in compatibility v1 publish semantic result to the 
 
 ## Subtasks
 
-Follow contracted subtasks in order. Respect `CONTINUE | WAIT_CONTROLLER | TERMINAL`. At `WAIT_CONTROLLER`, stop before beginning the next meaningful action until a newer valid Controller mailbox command/release is consumed.
+Follow contracted subtasks in order. Respect `CONTINUE | WAIT_CONTROLLER | TERMINAL`. At `WAIT_CONTROLLER`, hold only the TaskController-protected effect requiring a new admitted Controller event; continue every independently authorized next action, including Q0-native source recovery, RED/GREEN, scoped fixes, syncing code with GPT, tests and peer discussion. Exact event/lease/actor readback remains required before the held effect resumes.
 
 ## Worktree execution surface
 
@@ -127,7 +133,7 @@ Remain silent for chain-of-thought, tool-call narration, individual file reads/e
 
 ## Drift
 
-Immediately report to the Executor mailbox and stop safely when continuing would violate the Contract because of scope drift, authority drift, evidence conflict, base/head drift, material plan invalidation, invalid worktree binding, parent-integration writer conflict, or blocker/failure. Do not silently widen scope or repair authority.
+For a genuinely invalid protected Contract, report the exact affected effect and hold that effect while pursuing separately authorized remediation. **Normal additive in-scope base/head drift is expected during GWC v2 testing**: fetch, compare ancestry/paths, reconcile and rerun affected tests; it is not automatically plan invalidation. Additive merge back published/evidence-bearing branches; rebase only disposable unpublished local branches. Do not force-push or rewrite immutable receipts, silently widen scope or self-grant authority.
 
 ## Recovery
 
