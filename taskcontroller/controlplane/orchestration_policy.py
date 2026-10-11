@@ -1,9 +1,9 @@
-"""Fail-closed orchestration policy for Controller-owned HITL and Executor outcomes.
+"""Fail-closed orchestration policies for mailbox/v2 and peer collaboration.
 
-This module closes the gap between an outcome-oriented EXECUTE contract and
-mailbox/v2 runtime results. The Controller owns planning, human authority, and
-next-gate decisions. The Executor reports progress/completion/blockers only to
-the Controller and never creates a User-facing approval loop.
+Legacy Controller/Executor mailbox roles remain valid transport/writer
+namespaces, not an agent hierarchy. Two separately admitted AI peers may
+propose, challenge and agree within existing delegated authority. Agreements,
+Loop wake-ups and cursor observation never issue lease/approval/effect authority.
 
 The policy is deliberately transport-neutral and grants no authority.
 """
@@ -341,7 +341,83 @@ def decide_stale_authority_recovery(
     )
 
 
-HOST_LOOP_ROLES = frozenset({"MAILBOX_POLL", "CONTROLLER_WAKEUP_POLL", "ENGINEERING_WORK", "UNRELATED"})
+@dataclass(frozen=True, slots=True)
+class PeerCollaborationDecision:
+    """A shared semantic decision, not a new execution or approval grant."""
+
+    status: str
+    typed_next: str
+    requires_human: bool
+    authority_granted: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "status": self.status,
+            "typed_next": self.typed_next,
+            "requires_human": self.requires_human,
+            "authority_granted": self.authority_granted,
+        }
+
+
+def decide_peer_collaboration(
+    *,
+    actor_a: str,
+    actor_b: str,
+    proposal_digest_a: str | None,
+    proposal_digest_b: str | None,
+    scope_current: bool,
+    existing_effect_authority: bool,
+    discussion_round: int,
+    max_rounds: int,
+    user_paused: bool = False,
+    run_hold: bool = False,
+) -> PeerCollaborationDecision:
+    """Symmetric, bounded peer decision over pre-existing delegated authority.
+
+    Both digests refer to an independently persisted/signed common proposal;
+    caller is responsible for validating artifact, actor credentials and scope.
+    The result does NOT issue a lease, append a mailbox event, authorize a
+    protected effect, or substitute for either actor's immutable receipt.
+    It is safe for either peer to initiate the discussion.
+    """
+    first, second = _text(actor_a, "actor_a"), _text(actor_b, "actor_b")
+    if first == second:
+        _fail("PEER_IDENTITY_COLLISION", "peer actors must be distinct")
+    for name, val in (
+        ("scope_current", scope_current),
+        ("existing_effect_authority", existing_effect_authority),
+        ("user_paused", user_paused),
+        ("run_hold", run_hold),
+    ):
+        if not isinstance(val, bool):
+            _fail("PEER_BINDING_INVALID", f"{name} must be boolean")
+    if (type(max_rounds) is not int or type(discussion_round) is not int
+        or max_rounds < 1 or not 1 <= discussion_round <= max_rounds):
+        _fail("PEER_ROUND_INVALID", "discussion budget/round is invalid")
+    for name, digest in (("proposal_digest_a", proposal_digest_a), ("proposal_digest_b", proposal_digest_b)):
+        if digest is None:
+            continue
+        if (not isinstance(digest, str) or not digest.startswith("sha256:")
+            or len(digest) != 71 or any(c not in "0123456789abcdef" for c in digest[7:])):
+            _fail("PEER_DIGEST_INVALID", f"{name} must be a canonical sha256 digest")
+
+    def result(status: str, next_action: str, *, human: bool = False) -> PeerCollaborationDecision:
+        return PeerCollaborationDecision(status, next_action, human)
+
+    if user_paused:
+        return result("PAUSED", "RESOLVE_USER_PAUSE")
+    if run_hold:
+        return result("PAUSED", "RESOLVE_RUN_HOLD")
+    if proposal_digest_a and proposal_digest_a == proposal_digest_b:
+        if not scope_current or not existing_effect_authority:
+            return result("AUTHORITY_BOUNDARY", "REQUEST_BOUNDED_AUTHORITY")
+        return result("AGREED", "CONTINUE_WITH_EXISTING_AUTHORITY")
+    if discussion_round >= max_rounds:
+        return result("NEEDS_HUMAN_DECISION", "RESOLVE_PEER_DISAGREEMENT", human=True)
+    return result("DISCUSS", "CONTINUE_PEER_DISCUSSION")
+
+
+HOST_LOOP_ROLES = frozenset({"MAILBOX_POLL", "CONTROLLER_WAKEUP_POLL", "MAILBOX_OBSERVER", "ENGINEERING_WORK", "UNRELATED"})
 POLLING_LOOP_ROLES = frozenset({"MAILBOX_POLL", "CONTROLLER_WAKEUP_POLL"})
 
 
@@ -378,6 +454,8 @@ def decide_executor_loop_continuity(
     user_paused: bool = False,
     terminal_verified: bool = False,
     event_adapter_qualified: bool = True,
+    mailbox_observer_qualified: bool = False,
+    newer_event_observed: bool = False,
 ) -> ExecutorLoopContinuity:
     """Disentangle *native scheduler control* from *TaskController liveness*.
 
@@ -386,9 +464,11 @@ def decide_executor_loop_continuity(
     Callers supply live exact-readback booleans and use an independently
     admitted event adapter. A waiting Executor is not a terminal run.
 
-    An old-run or mailbox-poll scheduler is quarantined/paused by its host
-    owner only. The persistent main Executor session is retained and resumes
-    only after a separately validated event. No timer-based mailbox polling.
+    Old unqualified mailbox-poll schedulers stay quarantined/paused.
+    A separately qualified MAILBOX_OBSERVER may inspect the exact cursor with
+    a bounded read-only cadence, independent of effect/lease authority. Even a
+    new event requires exact readback and fresh PRECHECK before effect writes.
+    This pure decision never starts, resumes or fires native Hermes LoopManager.
     """
     if loop_role not in HOST_LOOP_ROLES:
         _fail("LOOP_ROLE_INVALID", f"unsupported loop_role: {loop_role!r}")
@@ -402,6 +482,8 @@ def decide_executor_loop_continuity(
         ("user_paused", user_paused),
         ("terminal_verified", terminal_verified),
         ("event_adapter_qualified", event_adapter_qualified),
+        ("mailbox_observer_qualified", mailbox_observer_qualified),
+        ("newer_event_observed", newer_event_observed),
     ):
         if not isinstance(value, bool):
             _fail("LOOP_CONTRACT_INVALID", f"{key} must be boolean")
@@ -420,6 +502,11 @@ def decide_executor_loop_continuity(
     stale_binding = loop_run_id != canonical_run_id
     if stale_binding:
         scheduler_action = "QUARANTINE_STALE_LOOP"
+    elif loop_role == "MAILBOX_OBSERVER":
+        scheduler_action = (
+            "ALLOW_READ_ONLY_MAILBOX_OBSERVATION"
+            if mailbox_observer_qualified else "PAUSE_UNQUALIFIED_MAILBOX_OBSERVER"
+        )
     elif loop_role in POLLING_LOOP_ROLES:
         scheduler_action = "PAUSE_MAILBOX_POLL_SCHEDULER"
     else:
@@ -447,6 +534,14 @@ def decide_executor_loop_continuity(
         return outcome("PRESERVE_EXECUTOR_SESSION", "CONTROLLER", "RESOLVE_RUN_BINDING")
     if terminal_verified:
         return outcome("TERMINAL", "CONTROLLER", "ACCEPT_VERIFIED_TERMINAL")
+    if loop_role == "MAILBOX_OBSERVER":
+        if not mailbox_observer_qualified:
+            return outcome("AWAIT_QUALIFIED_MAILBOX_OBSERVER", "AGENT", "QUALIFY_MAILBOX_OBSERVER")
+        # EFFECT_HOLD and missing EXECUTE authority block mutations but do not
+        # prohibit this separately scoped, read-only discovery path.
+        if newer_event_observed:
+            return outcome("PRESERVE_EXECUTOR_SESSION", "AGENT", "EXACT_READ_NEW_CONTROLLER_EVENT")
+        return outcome("AWAIT_NEW_MAILBOX_EVENT", "AGENT", "OBSERVE_MAILBOX_CURSOR")
     if hold_type == HOLD_EFFECT:
         return outcome("PRESERVE_EXECUTOR_SESSION", "CONTROLLER", "RESOLVE_EFFECT_AUTHORITY")
     if not execute_contract_current:
@@ -473,6 +568,8 @@ __all__ = [
     "BLOCKER_MATERIAL_PLAN_INVALIDATION",
     "BLOCKER_SCOPE_EXPANSION",
     "EXECUTOR_BLOCKER_CLASSES",
+    "PeerCollaborationDecision",
+    "decide_peer_collaboration",
     "HOST_LOOP_ROLES",
     "POLLING_LOOP_ROLES",
     "ExecutorLoopContinuity",
