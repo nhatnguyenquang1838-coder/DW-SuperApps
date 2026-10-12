@@ -216,6 +216,159 @@ def qualify_wait_controller_successor(
         updated_at=observed_at,
     )
 
+
+def qualify_same_run_executor_transfer(
+    *,
+    predecessor_checkpoint: ControllerContinuation,
+    successor_checkpoint: ControllerContinuation,
+    controller_event: MailboxEvent,
+    predecessor_attempt: Mapping[str, Any],
+    active_work_lease: WorkLease,
+    expected_agent_instance: str,
+    expected_executor_actor: str,
+    expected_wakeup_binding: str,
+    expected_branch: str,
+    observed_branch: str,
+    expected_worktree: str,
+    observed_worktree: str,
+    observed_head_sha: str,
+    approval_verified: bool,
+    approval_receipt_ref: str,
+    lease_issuer_receipt_ref: str,
+    source_replan_receipt_ref: str | None,
+    observed_at: str,
+) -> ControllerContinuation:
+    """Purely qualify an exact same-run transfer to the bound Hermes Desktop actor.
+
+    The caller must exact-read the approval, event, issuer receipt, active lease,
+    branch/worktree and source identities. This helper validates those supplied
+    facts; it does not issue a lease, write a continuation, or dispatch an event.
+    """
+    if not isinstance(predecessor_checkpoint, ControllerContinuation) or not isinstance(successor_checkpoint, ControllerContinuation):
+        _fail("TRANSFER_CHECKPOINT_INVALID", "predecessor and successor continuations are required")
+    if predecessor_checkpoint.run_id != successor_checkpoint.run_id:
+        _fail("TRANSFER_RUN_MISMATCH", "successor must remain in the predecessor run")
+    predecessor = predecessor_checkpoint
+    successor = successor_checkpoint
+    if (
+        predecessor.status != ContinuationStatus.ACTIVE.value
+        or predecessor.phase != ContinuationPhase.WAIT_CONTROLLER.value
+        or predecessor.next_action != WAIT_EXECUTOR_AUTHORITY_ACTION
+    ):
+        _fail("TRANSFER_PREDECESSOR_INVALID", "predecessor is not at the authority-recovery boundary")
+    if (
+        successor.status != ContinuationStatus.ACTIVE.value
+        or successor.phase != ContinuationPhase.WAIT_EXECUTOR.value
+        or successor.next_action != WAIT_EXECUTOR_EVENT_ACTION
+        or successor.controller_epoch != predecessor.controller_epoch + 1
+        or successor.controller_seq != predecessor.controller_seq + 1
+        or successor.last_seen_executor_seq != predecessor.last_seen_executor_seq
+        or successor.expected_executor_seq != predecessor.expected_executor_seq
+        or successor.controller_mailbox_ref != predecessor.controller_mailbox_ref
+        or successor.executor_mailbox_ref != predecessor.executor_mailbox_ref
+    ):
+        _fail("TRANSFER_SUCCESSOR_INVALID", "successor is not an exact same-run continuation")
+    if not isinstance(expected_executor_actor, str) or not expected_executor_actor.strip():
+        _fail("TRANSFER_ACTOR_MISMATCH", "exact expected executor actor is required")
+    if successor.executor_actor != expected_executor_actor:
+        _fail("TRANSFER_ACTOR_MISMATCH", "successor executor actor differs from the admitted Desktop actor")
+    if not isinstance(expected_agent_instance, str) or not expected_agent_instance.strip():
+        _fail("TRANSFER_RECIPIENT_MISMATCH", "exact expected Desktop agent_instance is required")
+    expected_actor = expected_executor_actor
+    if successor.wakeup_binding != expected_wakeup_binding or not expected_wakeup_binding:
+        _fail("TRANSFER_WAKEUP_MISMATCH", "successor wakeup binding differs from the admitted adapter")
+    if not isinstance(controller_event, MailboxEvent):
+        _fail("TRANSFER_EVENT_BINDING_MISMATCH", "exact Controller mailbox event is required")
+    envelope = controller_event.envelope.to_dict()
+    recipient = envelope.get("recipient")
+    attempt = envelope.get("attempt")
+    if (
+        controller_event.mailbox_ref != successor.controller_mailbox_ref
+        or controller_event.producer_namespace != "controller"
+        or controller_event.logical_seq != successor.controller_seq
+        or envelope.get("seq") != successor.controller_seq
+        or envelope.get("run_id") != successor.run_id
+        or envelope.get("direction") != "controller_to_executor"
+        or envelope.get("message_type") != "execution_request"
+    ):
+        _fail("TRANSFER_EVENT_BINDING_MISMATCH", "Controller event does not bind the successor")
+    if (
+        not isinstance(recipient, Mapping)
+        or recipient.get("capability") != "taskcontroller.executor"
+        or recipient.get("agent_instance") != expected_agent_instance
+        or not isinstance(attempt, Mapping)
+        or attempt.get("agent_instance") != expected_agent_instance
+    ):
+        _fail("TRANSFER_RECIPIENT_MISMATCH", "Controller event recipient is not the admitted Desktop instance")
+    if not isinstance(expected_branch, str) or not expected_branch or observed_branch != expected_branch:
+        _fail("TRANSFER_BRANCH_MISMATCH", "observed branch differs from the bound branch")
+    if not isinstance(expected_worktree, str) or not expected_worktree or observed_worktree != expected_worktree:
+        _fail("TRANSFER_WORKTREE_MISMATCH", "observed worktree differs from the bound worktree")
+    if (
+        not isinstance(observed_head_sha, str)
+        or len(observed_head_sha) != 40
+        or any(c not in "0123456789abcdef" for c in observed_head_sha)
+        or observed_head_sha != successor.exact_head_sha
+    ):
+        _fail("TRANSFER_HEAD_MISMATCH", "observed HEAD differs from the exact successor HEAD")
+    if successor.exact_head_sha != predecessor.exact_head_sha and not source_replan_receipt_ref:
+        _fail("TRANSFER_SOURCE_REPLAN_MISSING", "source drift requires an exact replan receipt")
+    if approval_verified is not True or not isinstance(approval_receipt_ref, str) or not approval_receipt_ref.strip():
+        _fail("TRANSFER_APPROVAL_MISSING", "current scope-bound approval receipt is required")
+    if not isinstance(lease_issuer_receipt_ref, str) or not lease_issuer_receipt_ref.strip():
+        _fail("TRANSFER_ISSUER_MISSING", "issuer-owned lease receipt is required")
+    if not isinstance(predecessor_attempt, Mapping):
+        _fail("TRANSFER_LEASE_STALE", "exact predecessor attempt is required")
+    old_attempt = predecessor_attempt.get("attempt_id")
+    old_fence = predecessor_attempt.get("fencing_token")
+    old_generation = predecessor_attempt.get("lease_generation")
+    try:
+        now = _instant(observed_at, "observed_at")
+        old_expiry = _instant(predecessor_attempt.get("lease_expires_at"), "predecessor.lease_expires_at")
+    except HighIntegrityMaterializationError as exc:
+        _fail("TRANSFER_LEASE_STALE", str(exc))
+    if not isinstance(old_attempt, str) or not old_attempt or not isinstance(old_fence, str) or not old_fence or type(old_generation) is not int:
+        _fail("TRANSFER_LEASE_STALE", "predecessor attempt identity is incomplete")
+    if old_expiry >= now:
+        _fail("TRANSFER_LEASE_STALE", "predecessor lease has not expired")
+    if not isinstance(active_work_lease, WorkLease):
+        _fail("TRANSFER_LEASE_STALE", "issuer-owned active WorkLease is required")
+    lease = active_work_lease
+    if (
+        lease.run_id != successor.run_id
+        or lease.node_id != controller_event.envelope.node_id
+        or lease.holder is None
+        or lease.holder.provider_id != expected_actor
+        or lease.status != "ACTIVE"
+        or lease.attempt_id == old_attempt
+        or lease.fencing_token == old_fence
+        or type(lease.lease_generation) is not int
+        or lease.lease_generation <= old_generation
+    ):
+        _fail("TRANSFER_LEASE_STALE", "active lease is not fresh and bound to the same run/actor")
+    event_attempt = envelope.get("attempt")
+    execution_identity = envelope.get("execution_identity")
+    if (
+        not isinstance(event_attempt, Mapping)
+        or not isinstance(execution_identity, Mapping)
+        or event_attempt.get("attempt_id") != lease.attempt_id
+        or event_attempt.get("fencing_token") != lease.fencing_token
+        or event_attempt.get("lease_generation") != lease.lease_generation
+        or execution_identity.get("attempt_id") != lease.attempt_id
+        or execution_identity.get("fencing_token") != lease.fencing_token
+        or execution_identity.get("lease_generation") != lease.lease_generation
+    ):
+        _fail("TRANSFER_LEASE_STALE", "event execution identity does not match the issuer-owned lease")
+    try:
+        granted = _instant(lease.granted_at, "work_lease.granted_at")
+        expires = _instant(lease.expires_at, "work_lease.expires_at")
+    except HighIntegrityMaterializationError as exc:
+        _fail("TRANSFER_LEASE_EXPIRED", str(exc))
+    if granted > now or expires <= now:
+        _fail("TRANSFER_LEASE_EXPIRED", "issuer-owned lease is not current")
+    return successor
+
+
 def _controller_event_for_checkpoint(
     repository: MailboxRepository,
     checkpoint: ControllerContinuation,

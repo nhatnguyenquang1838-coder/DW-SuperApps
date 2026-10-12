@@ -99,9 +99,20 @@ def _controller_event(*, agent_instance="hermes-desktop-instance-1", run_id=RUN,
         producer={"namespace": "controller", "actor_id": "controller-1", "role": "controller"},
         recipient={"agent_instance": agent_instance, "capability": "taskcontroller.executor"},
     )
-    payload["attempt"]["agent_instance"] = agent_instance
-    payload["attempt"]["attempt_id"] = f"transfer-attempt-{seq}"
-    payload["execution_identity"].update(run_id=run_id, node_id="node-1", attempt_id=f"transfer-attempt-{seq}")
+    attempt_id = "test-run-attempt-4"
+    payload["attempt"].update(
+        agent_instance=agent_instance,
+        attempt_id=attempt_id,
+        fencing_token="test-fence-4",
+        lease_generation=4,
+    )
+    payload["execution_identity"].update(
+        run_id=run_id,
+        node_id="node-1",
+        attempt_id=attempt_id,
+        fencing_token="test-fence-4",
+        lease_generation=4,
+    )
     payload["provenance"]["agent_instance"] = "controller-1"
     payload["digest"] = canonical_digest(payload)
     envelope = V2MailboxEnvelope.from_dict(payload)
@@ -127,6 +138,7 @@ def _qualify(**overrides):
         },
         "active_work_lease": _lease(),
         "expected_agent_instance": "hermes-desktop-instance-1",
+        "expected_executor_actor": "hermes-desktop",
         "expected_wakeup_binding": "hermes-desktop-local-ipc",
         "expected_branch": BRANCH,
         "observed_branch": BRANCH,
@@ -162,6 +174,9 @@ def test_transfer_is_qualified_from_existing_continuation_event_and_fresh_lease(
         ({"controller_event": _controller_event(run_id="other-run")}, "TRANSFER_EVENT_BINDING_MISMATCH"),
         ({"active_work_lease": _lease(lease_generation=3)}, "TRANSFER_LEASE_STALE"),
         ({"active_work_lease": _lease(holder=ProviderRef("q0-actions-engineering"))}, "TRANSFER_LEASE_STALE"),
+        ({"active_work_lease": _lease(attempt_id="other-attempt")}, "TRANSFER_LEASE_STALE"),
+        ({"active_work_lease": _lease(fencing_token="other-fence")}, "TRANSFER_LEASE_STALE"),
+        ({"active_work_lease": _lease(lease_generation=5)}, "TRANSFER_LEASE_STALE"),
         ({"active_work_lease": _lease(expires_at=_iso(timedelta(seconds=-1)))}, "TRANSFER_LEASE_EXPIRED"),
         ({"approval_verified": False}, "TRANSFER_APPROVAL_MISSING"),
         ({"lease_issuer_receipt_ref": ""}, "TRANSFER_ISSUER_MISSING"),

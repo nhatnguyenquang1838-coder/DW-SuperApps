@@ -24,7 +24,7 @@ Either admitted AI peer can initiate `PROPOSE → DISCUSS → CHALLENGE → AGRE
 
 Hermes may use a **qualified `MAILBOX_OBSERVER` Loop role** to inspect one exact mailbox cursor on a bounded, read-only cadence, and use the LLM when there is new work, a conflict or in-scope execution to advance. The **old `MAILBOX_POLL` role stays disabled**. Never interpret a changed cursor as an effect grant: exact-read the typed event, continuation, actor identity, scope, approval, lease/fence and pause first. No new cursor means no new mailbox-triggered LLM turn. Host `LoopManager.resume()` is not equivalent to registering a qualified observer and must not be used to bootstrap it.
 
-This branch provides **policy/documentation and pure guards only**, not a live qualified Hermes Desktop adapter/issuer; #595 remains blocked until its exact run-specific authority and recipient binding are admitted.
+This branch adds the pure `observe_controller_mailbox` read-only observer and `qualify_same_run_executor_transfer` guard. Neither writes/acknowledges a canonical cursor or continuation, issues a lease, dispatches an event, nor qualifies a live Desktop provider; #595 remains blocked until exact run-specific authority and recipient binding are admitted.
 
 ## A2A mailbox binding
 
