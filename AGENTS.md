@@ -234,6 +234,10 @@ When a Power is selected, the agent must resolve the target project, load the ca
 
 The DW CLI owns installation, configuration, inspection, validation, doctor, history, rollback, and uninstall operations. It does not generate task prompts.
 
+## TaskController mailbox v2 communication entrypoint
+
+For explicitly activated TaskController agent communication, load `docs/runbooks/TASKCONTROLLER_MAILBOX_V2.md`; that runbook routes to `docs/runbooks/A2A_V2_COMMUNICATION_TEMPLATE.md` and handles Agent Card-inspired recipient discovery. The communication envelope itself does not issue approval or add a new human gate; GWC gates and the owning project's authority remain binding. This does not automatically activate TaskController for native GWC work.
+
 ## Mandatory runbooks
 
 For Power installation, update, configuration, activation, validation, doctor, repair, offline ZIP use, or initial host setup, read and execute:
