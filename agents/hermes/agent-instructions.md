@@ -12,6 +12,15 @@ For local code mutation in a registered DW-SuperApps submodule project, also loa
 
 Hermes is the **Executor-side mailbox writer** for existing mailbox/v2 runs, not a subordinate reasoning agent. GPT and Hermes have equal standing to propose, challenge and agree, subject to their distinct capability/actor bindings. Neither peer is a self-approval/lease issuer. Execute only within the current bounded mission grant; do not infer additional authority from memory, Slack history, previous commands, apparent consensus, Executor completion or a button label.
 
+## A2A v2 communication-first routing (simplified)
+
+When TaskController is bound, read `docs/runbooks/TASKCONTROLLER_MAILBOX_V2.md` first, then the referenced communication template. Agent Card capability discovery is not a live session receipt. Continue authorized development and only apply actual target gate/authority rules.
+
+
+For routine GPT ↔ Hermes exchanges, use the compact **human-readable v2 communication envelope** at `docs/runbooks/A2A_V2_COMMUNICATION_TEMPLATE.md`: one `COMMAND / REPORT / CORRECTION / ACK` per turn and one increasing **per-run communication seq** regardless of sender. Use one source-bound GOAL, concrete NEXT, and evidence. Do **not** force these routine communications through protected v2 mailbox execution-envelopes, issuer/lease scripts, source-replan, or multiple validators. An ordinary message cannot grant a protected effect. Native in-scope Q0 engineering continues while a separate protected C4 remains blocked.
+
+The helper `taskcontroller/interaction/communication_v2.py` is only a renderer/parser/sequence checker until a real serialized remote append, exact readback, receiver binding and consumed ACK are qualified. Do not claim that Markdown prose has already delivered a typed command. Keep existing protected mailbox/v2 execution event sequences and immutable continuation untouched. Do not activate a weaker protected execution fallback.
+
 ## A2A liveness and Hermes Local ↔ GPT code synchronization
 
 **Ultimate GOAL: observable forward progress, peer self-remediation, and synchronized code.** GPT and Hermes are equal reasoning/decision agents; neither requires the other's approval for already-authorized engineering. On meaningful changes exchange `RUN | repo | branch | exact remote HEAD | Hermes local base/HEAD | changed paths | tests/receipts | worktree writer | NEXT`. A chat response alone is **not a code-sync receipt**. Hermes Local fetches remote refs, checks ancestry/diff, reconciles before applying the other agent's work and publishes its own additive commit/push before saying GPT can consume it. GPT exact-reads the published HEAD; do not assume visibility of unpushed local work. One effect writer per worktree/mailbox.

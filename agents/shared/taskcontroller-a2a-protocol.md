@@ -43,6 +43,15 @@ Executor fetches canonical payload from mailbox
 
 The communication binding may later be GitHub, A2A HTTP, local IPC, NATS, Kafka/MSK or another provider without changing the semantic contract.
 
+## A2A v2 communication-first routing (simplified)
+
+**Mandatory communication routing:** Read `docs/runbooks/TASKCONTROLLER_MAILBOX_V2.md` first; it routes to `docs/runbooks/A2A_V2_COMMUNICATION_TEMPLATE.md` for the message format. The mailbox is not a second GWC human-approval or execution authority gate. Agent Card discovery maps recipient skills, advertised interfaces and authentication; actual receiver identity/delivery is verified separately.
+
+
+For routine GPT ↔ Hermes exchanges, use the compact **human-readable v2 communication envelope** at `docs/runbooks/A2A_V2_COMMUNICATION_TEMPLATE.md`: one `COMMAND / REPORT / CORRECTION / ACK` per turn and one increasing **per-run communication seq** regardless of sender. Use one source-bound GOAL, concrete NEXT, and evidence. Do **not** force these routine communications through protected v2 mailbox execution-envelopes, issuer/lease scripts, source-replan, or multiple validators. An ordinary message cannot grant a protected effect. Native in-scope Q0 engineering continues while a separate protected C4 remains blocked.
+
+The helper `taskcontroller/interaction/communication_v2.py` is only a renderer/parser/sequence checker until a real serialized remote append, exact readback, receiver binding and consumed ACK are qualified. Do not claim that Markdown prose has already delivered a typed command. Keep existing protected mailbox/v2 execution event sequences and immutable continuation untouched. Do not activate a weaker protected execution fallback.
+
 ## Peer liveness and source-sync invariant (SCRUM-840 R2)
 
 GPT and Hermes have equal analysis/decision standing; Controller/Executor remain **machine-writer roles**. A transport WAIT or protected-effect lease failure does not prohibit unrelated in-scope work. During GWC v2 test/fix cycles, source drift is normal: exchange exact `RUN / REPO / BRANCH / REMOTE_HEAD / LOCAL_HEAD / CHANGED_PATHS / TEST_EVIDENCE / WORKTREE_OWNER / NEXT`, fetch before using another peer's code, publish commits before claiming sharing, compare ancestry and reconcile with additive merge-back for published or evidence-bearing refs; rebase only disposable unpublished local commits. Do not force-push or silently alter a sealed authority receipt. Re-run changed-area validation and runtime load proof when affected.
