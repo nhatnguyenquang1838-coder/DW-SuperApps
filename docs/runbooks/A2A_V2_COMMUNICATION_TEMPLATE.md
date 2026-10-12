@@ -1,5 +1,8 @@
 # A2A v2 — simple human-readable communication contract
 
+**Routing:** [TaskController Mailbox v2 Runbook](TASKCONTROLLER_MAILBOX_V2.md) is the canonical entrypoint. This file is only its format reference; it does not define a second authority gate.
+
+
 **Goal:** GPT and Hermes keep moving. Every meaningful turn is **one** lightweight COMMAND, REPORT, CORRECTION or ACK and advances a single per-run **communication sequence**. Do not route source recovery, code sync, questions or ordinary regression findings through protected mailbox/v2 lease/issuer scripts.
 
 ## Exact communication template
