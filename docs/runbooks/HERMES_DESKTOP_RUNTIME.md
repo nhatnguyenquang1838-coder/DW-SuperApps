@@ -103,11 +103,11 @@ The **specific** exact-SHA-sensitive TaskController effects still require a curr
 The Loop has **two independently authorized concerns**: `MAILBOX_OBSERVER` may perform a bounded, read-only cursor check; `ENGINEERING_WORK` may advance an already-authorized mission with LLM reasoning. Neither is equivalent to calling `LoopManager.resume()` or unconditionally firing native ticks.
 
 - **READ:** qualify `loop_run_id == canonical_run_id`, single session owner, exact mailbox ref, bounded interval, minimum cursor, GitHub read scope/rate budget, absence of user pause or RUN_HOLD. Detect a newer cursor, then exact-read the typed event, immutable continuation and source; never scan all issue comments as authority.
-- **DECIDE:** use LLM reasoning for material new events and engineering choices, **not necessarily for each unchanged cursor**. Duplicate/stale cursors are silent no-ops; store an observation high-water mark separately from consumed command cursors.
+- **DECIDE:** use LLM reasoning for material new events and independently executable engineering choices, **never for a raw unchanged observer cursor alone**. Duplicate/stale observations are silent no-ops and do not count as failed work cycles. Keep observation high-water mark separate from consumed command sequence and confirmed delivery ACK.
 - **EXECUTE:** every effect still requires a current mission grant, source/scope/boundary, recipient identity, current issuer-owned lease/fence and PRECHECK. `EFFECT_HOLD` may permit the qualified read-only observer but forbids denied effects. `RUN_HOLD` and explicit user pause stop this run's observer/turn.
 - **CONTINUE:** while a valid delegated mission is active, Hermes may reason, implement, test and fix autonomously; GPT may independently propose/challenge through the bound communication plane. Escalate *real* scope/authority changes, not a routine red test.
 - **DELIVER:** event-push and qualified read-only polling may converge to one deduplicated pointer/turn. There must be no two active effect writers or duplicate turn execution. The adapter must prove the session's authenticated `agent_instance`; the Desktop `Bot Chat` capability flag alone does not.
-- **NOT YET LIVE:** the current Hermes `LoopManager` is timer-driven, and the DW registry has no qualified Desktop mailbox poller/issuer for #595. This document and the pure policy opt-in do **not** install an actual observer, grant a Loop route, resume a paused Loop or modify #595.
+- **QUALIFY HOST, DO NOT ASSUME:** Hermes fork branches may implement hybrid event/observer behavior, but a pushed commit does not prove the active Desktop process loaded that build, bound the current session, registered the observer, or can deliver a command. Verify host source SHA and live adapter before claiming E2E. This runbook alone never installs an observer, changes Loop.route, resumes a paused Loop or mutates #595.
 
 ```text
 Recover exact run + selected controller_strategy
@@ -147,6 +147,42 @@ The returned `CONTROLLER_EVENT_REF` is **only a pointer**. The main Executor nev
 
 **Source caveat:** The external Pattern E skill includes historic v1 mutable mailbox and Slack/polling instructions; current DW-SuperApps mailbox/v2 + event-driven contracts **take precedence**. Specialist Bot Chat calls are not TaskController child runs under `max_children=0`. The separate Controller-advisory permission must be established; this runbook does not supply it.
 
+### GPT liveness / bounded no-progress decision (GPT_BUSY vs GPT_IDLE)
+
+**Scope:** This table applies when an existing communication/executor work cycle needs the GPT peer, not to every raw read-only mailbox observation. Treat independently authorized engineering as runnable even when a legacy machine-effect binding is stale. Resolve GPT state from a **qualified host/session signal**; a delayed comment, missing preview, unchanged seq or an assumption that GPT is reading is not evidence of `GPT_BUSY` or `GPT_IDLE`.
+
+| Evidence / current state | Action now | Next wake or escalation |
+| --- | --- | --- |
+| **`GPT_BUSY` verified** (an active GPT turn or transport-in-flight with exact correlation) | **Fail-fast the *new GPT invocation***: do not open another GPT turn, resend the same ask, or busy-poll. Persist one pending correlation once, then continue legal local source recovery/tests or yield. | On genuine completion/event/timeout evidence, inspect correlation and consume once. An unchanged observer cursor is a silent no-op. |
+| **`GPT_IDLE` verified + valid local NEXT exists** | Execute the independently authorized NEXT, test/fix/reconcile, publish evidence. | Report on meaningful change; no idle escalation yet. |
+| **`GPT_IDLE` verified + no legal NEXT + *completed bounded work cycle* without progress** | Perform one bounded reality check: latest v2 communication seq, current remote/source, pending correlation, attempted recovery and whether a peer already owns the blocker. | **Escalate exactly once per unchanged stall key** (`run + relevant last consumed communication seq + blocker fingerprint`) via v2 `REPORT` with evidence, last progress, owner, 2–3 legal alternatives and smallest release trigger. Do not create another identical report on each tick; re-evaluate only on a changed command, evidence, owner or release trigger. |
+| **`GPT_STATE_UNVERIFIED` / unavailable transport** | Do not infer busy or idle. Keep available native work moving; perform bounded recipient/adapter diagnostics. | If no lawful progress after bounded attempts, emit one actionable transport blocker, not repeated generic WAIT. |
+| **Observer cursor unchanged** (raw cheap read) | Silent no-op; **no LLM turn, no retry and no escalation merely due to polling**. | A real work-cycle completion or an event/qualified wake may separately trigger liveness evaluation. |
+| **User pause / `RUN_HOLD`** | Respect the pause according to its verified scope. | No automatic rearm or resume from a timer or a communication comment. |
+
+**What counts as a completed no-progress work cycle:** a qualified work invocation was actually admitted, examined current evidence and attempted bounded lawful NEXT/recovery, but produced no changed artifact, test/evidence receipt, actionable decision or valid next action. A timer tick, raw cursor inspection, silent no-op, or a GPT busy signal alone does **not** qualify. Persist a concise stall fingerprint and prior escalation pointer to dedupe across Loop restarts. `GPT_BUSY` is fail-fast for repeated *GPT calls*, **not** an instruction to cancel the engineering mission.
+
+**Obsolete Loop route:** `ROUTE_BINDING_MISMATCH` quarantines only the mismatched scheduler row and any effect dependent on it. Do not rewrite an obsolete run's stored route to the current run. A fresh/current native engineering session can continue within source-authorized scope while the host registers a separately verified current-run observer/Loop. Do not resume the old row solely to deliver a v2 communication. The current [Mailbox v2 Runbook](TASKCONTROLLER_MAILBOX_V2.md) owns envelope format and communication seq; do not require old machine C/E successor or lease merely to report a finding.
+
+#### Clean host Loop instruction (reference; replace obsolete 652-run prompt only after host readback)
+
+```text
+Hermes continuous Q0 peer. On a qualified wake, read DW-SuperApps AGENTS.md,
+docs/runbooks/TASKCONTROLLER_MAILBOX_V2.md and HERMES_DESKTOP_RUNTIME.md.
+Resolve the exact current Q0 run and last v2 communication COMMAND/REPORT.
+Read source/branch HEAD, keep local and remote code in sync, then THINK,
+reproduce RED, fix, test GREEN, reload/replay within existing delegated scope.
+Use human-readable v2 communication seq+1 for material REPORT/ACK.
+Cheap observer read with unchanged cursor: silent no-op, no LLM turn.
+Verified GPT_BUSY: fail-fast duplicate GPT invocation, keep one pending
+correlation; continue other legal work. Verified GPT_IDLE and one genuine
+bounded no-progress work cycle with no local NEXT: escalate once with exact
+evidence, blocker owner, recovery choices and release trigger.
+Do not mistake an obsolete ROUTE_BINDING_MISMATCH Loop for a run-level hold,
+and do not auto-resume, rebind or replay that obsolete scheduler row.
+Respect explicit user pause and GWC/project effect authority.
+```
+
 ### B. `coordination`: GPT Web Controller via in-app-browser / Drive Preview
 
 1. Main Executor first writes and **exact-readbacks** typed Executor mailbox event/cursor, then uses the **qualified and bound** Hermes in-app-browser / `drive_preview` to send a **pointer-only** message to the exact GPT Web Controller thread:
@@ -163,7 +199,7 @@ action: Exact-read Executor event; return Controller successor event reference.
 2. **GPT Web Controller** exact-reads Executor event/evidence with its authorized GitHub access, evaluates the decision and any required Human approval, persists canonical continuation, publishes typed Controller event/cursor via the approved runtime and exact-readbacks it. GPT prose `APPROVED` is **not** authority.
 3. The **admitted** Preview response/delivery mechanism signals the successor pointer back to Hermes (or a separately approved event adapter delivers it). Hermes must distinguish transport notification from actual GPT mailbox **consumption**. Do not assume reply delivery, automatic wakeup, or an installed `drive_preview` API without evidence.
 4. Main Executor exact-reads the successor Controller event and returns to PRECHECK. If Preview is missing/unbound or GPT cannot consume, mark the affected protected delivery `TRANSPORT_BLOCKED`; use an independently qualified push adapter or bounded read-only `MAILBOX_OBSERVER` for discovery if admitted. Do not use unqualified browser/Slack substitutions or infer effect authority from observing a cursor. Continue independently authorized engineering, test, code sync and peer discussion.
-5. `WAITING_CONTROLLER` is allowed only with a durable pending correlation, real owner and approved return signal. No busy-loop, duplicate send or unbounded repeated GPT calls.
+5. `WAITING_CONTROLLER` is allowed only with a durable pending correlation, real owner and approved return signal. Apply the **GPT_BUSY versus GPT_IDLE** liveness decision table below; no busy-loop, duplicate send or unbounded repeated GPT calls.
 
 **Contract caveat:** Current [Controller registry](../../controllers/taskcontroller.yaml) requires event-driven mailbox/v2; `hermes-cloud` declares `mailbox-event`. Neither this registry nor this runbook qualifies Hermes **Desktop** Preview as a live notification binding. A separate approved binding/adapter validation is required before real execution in this mode.
 
@@ -176,7 +212,9 @@ action: Exact-read Executor event; return Controller successor event reference.
 | No specialist advice needed | Reuse same reporting/consume path | Controller can decide from evidence without fanout | GPT can decide from evidence |
 | Human approval required | `AUTHORITY_WAIT` with actionable request, no effects | Internal Controller asks Human legitimately | GPT Controller asks Human legitimately |
 | Adapter unavailable | `BLOCKED`, preserve exact evidence | No impersonated Controller or fake fanout | No browser/Slack/polling fallback |
-| Controller busy / no reply | `WAITING_CONTROLLER` only if owned and correlated | No concurrent in-session Controller/Executor active turns | Preview delivery receipt ≠ GPT consumed; no spam |
+| Verified `GPT_BUSY` | Fail-fast this invocation without repeated sends; retain one pending correlation and continue other work | No overlapping in-session turns | Preview ACK does not imply GPT consumed; never spam |
+| Verified `GPT_IDLE` + no local NEXT after bounded work cycle | One evidence-backed escalation per unchanged stall key, not a poll-triggered LLM turn | Escalate shared no-progress once | Report exact last-seq, attempted recovery, owner, release trigger and options |
+| Observer mailbox unchanged (raw poll) | Silent no-op; do not count a work cycle or trigger escalation | Same | Same |
 | Duplicate/stale notification | Dedupe by bound event identity; no re-execution | Reject stale Controller actor/seq | Reject stale GPT reply/event |
 | New valid Controller event | `CONSUMING_CONTROLLER` → full PRECHECK | Same Desktop main Executor resumes | Desktop Executor resumes |
 | Expired lease / user pause | `PAUSED/BLOCKED`; do not resume | No local self-renewal | No GPT prose bypass |
@@ -242,7 +280,7 @@ This repository runbook governs Desktop runtime/provider behavior and its TaskCo
 
 - **Host-control ownership:** `GoalManager`, `LoopManager`, and `HeartbeatManager` control only their respective native scheduler rows. They do not grant repository, mailbox, gate, or human authority.
 - **Source-owned lifecycle:** use the active project's declared lifecycle state/cursor and typed `NEXT`. This runbook does not define a universal `RunState`, `RuntimePlan`, `Task TodoList`, `DONE`/predecessor rule, or `validity_key`. Do not invent local C/E cursor or deadlock predicates; follow the exact current protocol records.
-- **Mailbox observation boundary:** mailbox/v2 stays canonical and append-only. A separate, verified `MAILBOX_OBSERVER` may read a bounded exact cursor without changing canonical command state. A legacy `MAILBOX_POLL`, `CONTROLLER_WAKEUP_POLL`, browser scraper, or arbitrary timer-based LLM prompt is **not** thereby qualified; do not keep, re-arm, or resume **that forbidden polling scheduler**. Classify each Loop's actual bound run, host/session and policy first: a paused obsolete or mailbox-polling Loop is NOT a stopped Executor session. No auto-unpause, no polling-based approval, no replay of old attempt or unadmitted Hermes Desktop route. Human Plane/Slack remains noncanonical. Source contract `periodic_mailbox_polling` now admits only the explicit `qualified-read-only-observer` mode in the **proposed branch**, never unrestricted polling. Expired leases hold effects regardless of observation.
+- **Mailbox observation boundary:** task communication follows `docs/runbooks/TASKCONTROLLER_MAILBOX_V2.md`; existing typed machine records remain immutable. A verified `MAILBOX_OBSERVER` may perform bounded read-only observation without issuing a command, advancing consumed seq or turning every unchanged poll into an LLM turn. Legacy unqualified `MAILBOX_POLL`, browser scraping, or arbitrary timer-driven GPT prompt is not automatically admitted. Classify each Loop's actual bound run, host/session and adapter first; an obsolete paused scheduler row does NOT stop the current Executor session or separately authorized Q0 engineering. Do not relabel old `ROUTE_BINDING_MISMATCH` as a global Q0 hold, silently rebind old routes, auto-unpause or replay expired attempts. The live host's observer support must be verified on its exact loaded build; no unrestricted polling or inferred permission.
 - **Expired lease/fence:** recovery remains Controller-owned. The Executor must not renew a lease/fence, invoke recovery/materialization, or create a successor event/cursor. A recovery receipt alone is not a typed execution grant.
 - **Browser transport:** only use a GPT browser route when the active strategy/registry binds a qualified adapter and exact conversation. Otherwise keep `TRANSPORT_BLOCKED`; do not use a fallback or infer delivery from UI output. The exact stage/submit/readback flow belongs to `dwa-gpt-exchange`.
 - **Optional advisory analysis:** if an active contract requests one MoA review of a source-bound deadlock fact block, it is advisory only; empty/partial/provider-failed output is `INCONCLUSIVE`. It cannot create a mailbox event, grant authority, decide a source-owned cursor predicate, or perform lease recovery.
