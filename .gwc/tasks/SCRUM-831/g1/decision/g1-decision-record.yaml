@@ -1,0 +1,133 @@
+# G1 DECISION RECORD — SCRUM-831 (DWO-V2-10)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-decision-record
+generated_at: '2026-09-30T06:13:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-831
+parent_run_ref: SCRUM-820
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: integration/SCRUM-820-dwo-v2
+base_sha: 9f46c8500923d94a0e8344e978bb3064f5e288d6
+task_branch: task/SCRUM-831-release-rebind
+active_runtime_plan_ref: PLAN-831-R1
+active_runtime_plan_revision: 1
+target_contract_ref: TARGET-REBIND-831-R1
+
+options_ref: ../brainstorming/g1-options.yaml
+preflight_ref: ../preflight/g1-preflight-report.yaml
+intake_ref: ../intake/g1-intake.yaml
+g0_ref: ../../g0/context-snapshot.yaml
+
+status: ACCEPTED
+selected_option_id: OPT-1
+
+user_decision:
+  actor: human://nhat-nguyen-quang
+  decided_at: '2026-09-30T06:11:00+07:00'
+  source: >-
+    Direct user instruction: "không cần chờ, loại bỏ dependency chờ, warning chỉ đc
+    merge main DWO khi Universal được merge là đủ. Tiếp tục"
+  explicit: true
+  scope_of_decision: >-
+    The external Universal release merge is NOT a hard blocker for SCRUM-831
+    development. Remove the wait dependency; enforce a warning guard that DWO main
+    may only be merged once the Universal release is merged. Proceed with the
+    rebind mechanism development now.
+
+rationale: >-
+  OPT-1 implements the release-rebind mechanism as a TypeScript module set:
+  release-merge detection, MAIN_REBIND_PENDING entry from durable evidence, drift
+  classification (frozen taxonomy), affected-surface recording, native-source
+  rebind, affected-scope requalification, prior-qualification invalidation on
+  material subject drift, and a warning guard gating DWO main merge on the
+  Universal release merge. This satisfies all eight AC with executable validation.
+  OPT-2 (hard-block on Universal merge) recreates the wait dependency the human
+  removed. OPT-3 (documentation-only) makes RELEASE_MAIN_BOUND unverifiable.
+
+rejected_option_ids:
+  - OPT-2
+  - OPT-3
+
+decomposition:
+  atomic: false
+  rationale: >-
+    SCRUM-831 carries separable deliverables (release-merge detection, drift
+    classification, affected-surface recording, rebind, requalification scope,
+    warning guard, certification). Executed as ordered child runs on one task
+    branch, one G3 pass.
+  child_runs:
+    - id: CR-831-A
+      order: 1
+      title: Release-merge detection + MAIN_REBIND_PENDING entry from durable evidence
+      produces: [lib/dwo/releaseMerge.ts]
+    - id: CR-831-B
+      order: 2
+      title: Drift classification (frozen taxonomy) + affected-surface recording
+      produces: [lib/dwo/driftClassification.ts]
+    - id: CR-831-C
+      order: 3
+      title: Native-source rebind + affected-scope requalification + prior-qualification invalidation
+      produces: [lib/dwo/rebind.ts]
+    - id: CR-831-D
+      order: 4
+      title: Warning guard (DWO main merge gated on Universal merge) + RELEASE_MAIN_BOUND derivation + tests
+      produces: [lib/dwo/rebindCertification.ts, tests/unit/dwo/rebind*.test.ts]
+  execution_order: [CR-831-A, CR-831-B, CR-831-C, CR-831-D]
+  integration: all child runs land on the task branch, then G4 integrates into integration/SCRUM-820-dwo-v2
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/rebind/
+  - .gwc/tasks/SCRUM-831/
+
+excluded_actions:
+  - g4_merge
+  - g5_deploy
+  - g6_production
+  - database_migration
+  - secret_change
+  - force_push
+  - branch_deletion
+
+authority_boundaries:
+  grants:
+    - development commits on task/SCRUM-831-release-rebind
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-831 progress and evidence updates
+  excluded:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION
+    - approval bypass
+    - protected main writes
+    - merging DWO main before the Universal release merge (warning guard)
+
+required_gate: G2_HUMAN_DIRECTION
+g1_gate_outcome: PASS
+
+verification_plan:
+  - command: npx tsc --noEmit
+    expectation: exit 0
+  - command: npx vitest run --reporter=dot
+    expectation: existing suites still pass, plus new rebind suites
+  - command: python3 -m pytest tests/ -q
+    expectation: 112 tests still pass (no Python regression)
+  - command: npx next lint
+    expectation: no new lint errors
+  - coverage_mapping:
+      AC-831-01: tests/unit/dwo/rebindCertification.test.ts
+      AC-831-02: tests/unit/dwo/rebind.test.ts (SHA recording)
+      AC-831-03: tests/unit/dwo/releaseMerge.test.ts (durable receipt)
+      AC-831-04: tests/unit/dwo/driftClassification.test.ts
+      AC-831-05: tests/unit/dwo/rebind.test.ts (requalification scope)
+      AC-831-06: tests/unit/dwo/rebind.test.ts (provenance preserved)
+      AC-831-07: tests/unit/dwo/rebind.test.ts (invalidation on drift)
+      AC-831-08: tests/unit/dwo/rebindCertification.test.ts (warning guard)
+
+next_gate: G2_EXECUTION

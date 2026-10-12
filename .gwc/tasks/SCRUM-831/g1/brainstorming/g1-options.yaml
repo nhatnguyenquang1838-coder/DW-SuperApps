@@ -1,0 +1,30 @@
+# G1 OPTIONS — SCRUM-831 (DWO-V2-10)
+schema_version: gwc.g1.options/1.0
+artifact_type: G1_OPTIONS
+gate: G1_PLAN
+trace:
+  task_id: SCRUM-831
+  plan_revision: 1
+
+options:
+  - id: OPT-1
+    title: TypeScript release-rebind mechanism module set
+    description: >-
+      Implement release-merge detection, MAIN_REBIND_PENDING entry from durable
+      evidence, drift classification (frozen taxonomy), affected-surface recording,
+      native-source rebind, affected-scope requalification, prior-qualification
+      invalidation, and a warning guard gating DWO main merge on the Universal
+      release merge. Executable validation of all 8 AC.
+    satisfies: [AC-831-01, AC-831-02, AC-831-03, AC-831-04, AC-831-05, AC-831-06, AC-831-07, AC-831-08]
+  - id: OPT-2
+    title: Hard-block on Universal merge
+    description: Wait for the external Universal release merge before any development.
+    risk: recreates the wait dependency the human removed
+    satisfies: [AC-831-01]
+  - id: OPT-3
+    title: Documentation-only rebind
+    description: Write the rebind spec as docs without executable validation.
+    risk: RELEASE_MAIN_BOUND unverifiable
+    satisfies: []
+
+selected: OPT-1

@@ -1,0 +1,36 @@
+# G1 PREFLIGHT REPORT — SCRUM-820-T13 (86 Test-Type Errors)
+# Immutable once committed.
+
+schema_version: '1.0'
+artifact_type: g1-preflight-report
+generated_at: '2026-10-05T06:07:00+07:00'
+
+task_id: SCRUM-820-T13
+parent_run_ref: SCRUM-820
+
+environment_checks:
+  - check: "working tree on integration/SCRUM-820-dwo-v2"
+    result: PASS
+    evidence: "git rev-parse --short HEAD = 3e55c58"
+  - check: "typecheck-tests baseline exists"
+    result: PASS
+    evidence: "scripts/typecheck-tests-baseline.json count=86, measured_at=210b6bd"
+  - check: "gate script present and runnable"
+    result: PASS
+    evidence: "scripts/typecheck-tests.mjs (5,653 chars, verified exit 0 + strict exit 0)"
+  - check: "CI wiring live"
+    result: PASS
+    evidence: "root .github/workflows/ci-dw-observation.yml; typecheck-tests SUCCESS x2 on PR #130"
+  - check: "foreign dirty state isolated"
+    result: PASS
+    evidence: "AGENTS.md, controllers/taskcontroller.yaml, projects/gwc, projects/ua, .gwc/tasks/SCRUM-746 NOT staged"
+
+risk_assessment:
+  - risk: "TS18047 null-guard fixes may alter runtime path if guard short-circuits"
+    mitigation: "Guard must preserve the assertion: use ?. or narrow before the same expression; verify with vitest per story"
+  - risk: "TS2554 arity fixes may pass wrong argument"
+    mitigation: "Read function signature from source before adding args; argument must come from existing fixture/context"
+  - risk: "Shared worktree carries other agents' dirt"
+    mitigation: "Stage explicit paths only; never git add -A"
+
+g1_gate_outcome: PASS

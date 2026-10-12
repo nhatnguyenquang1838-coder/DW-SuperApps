@@ -1,0 +1,64 @@
+# PROJECTION CONTRACT v2 — SCRUM-823 (DWO-V2-02)
+# Immutable once committed. Corrections create a new revision.
+
+schema_id: gwc.dwo.projection-contract-v2
+schema_version: 2
+artifact_type: PROJECTION_CONTRACT_V2
+gate: G2_EXECUTE
+trace:
+  task_id: SCRUM-823
+  plan_revision: 1
+  generated_at: '2026-09-30T04:10:00+07:00'
+
+lifecycle_namespaces:
+  - id: UR_G
+    description: Universal lifecycle gates G0..G6
+    gates: [G0, G1, G2, G3, G4, G5, G6]
+  - id: GWC_EFFECT
+    description: GWC effect/governance gates
+    gates: [G3_PR, G4_MERGE, G5_DEPLOY, G6_PRODUCTION_DATA]
+namespace_rule: UR-G* and GWC-* gates are never conflated; a gate is namespace-qualified.
+
+run_identity:
+  run_id: immutable
+  run_kind: [ROOT, CHILD, ATOMIC]
+  parent_run_ref: nullable
+  child_run_refs: []
+  superseded_by: optional
+  rerun_of: optional
+
+profile_registry:
+  - profile: DEV_NATIVE
+    supports_universal_semantics: true
+  - profile: COMPATIBILITY
+    supports_universal_semantics: true
+  - profile: COMPATIBILITY_LEGACY
+    supports_universal_semantics: false
+  - profile: UNKNOWN
+    supports_universal_semantics: false
+fail_closed_rule: UNKNOWN/unsupported profiles project INCOMPATIBLE, never heuristic G0..G6
+
+event_position:
+  ordinal: global durable order
+  source_sequence: per-source high-water
+  gap_identity: stable gap_id from source + missing range
+  correlation: evidence metadata only, never Run identity or authority
+
+fnr02_comparison_contract:
+  contract_id: gwc.dwo.fnr02-comparison
+  contract_version: 1
+  mode: STRUCTURED_STATE_EQUALITY
+  included_fields: [runId, runState, gates, sourceProfile, syncState, semanticQualification, authorityState, anomalyCount]
+  excluded_fields: [uiDigest, uiLayout, traceId, spanId]
+  ordering_rule: SORTED_KEYS
+  null_unknown_handling: FAIL_CLOSED
+  normalization: JCS_SORTED_KEYS
+  cross_runtime_vectors: 4
+  note: certification equality is structured-state equality, NOT a lightweight UI digest
+
+exit_token:
+  name: V2_CONTRACT_FROZEN
+  derivable: true
+  basis: >
+    deriveV2ContractFrozen(): contract id/version correct, mode STRUCTURED_STATE_EQUALITY,
+    cross-runtime vectors present and passing. Derived from machine-readable state.

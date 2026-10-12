@@ -1,0 +1,42 @@
+# G1 PREFLIGHT — SCRUM-831 (DWO-V2-10)
+schema_version: gwc.g1.preflight/1.0
+artifact_type: G1_PREFLIGHT
+gate: G1_PLAN
+trace:
+  task_id: SCRUM-831
+  plan_revision: 1
+  checked_at: '2026-09-30T06:13:00+07:00'
+
+refs:
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 9f46c8500923d94a0e8344e978bb3064f5e288d6
+  task_branch: task/SCRUM-831-release-rebind
+  worktree: /Users/mac/prj/DW-SuperApps.worktrees/task/SCRUM-831-release-rebind
+
+baseline_present:
+  lib/dwo/qualification.ts: true
+  lib/dwo/qualificationSubject.ts: true
+  lib/dwo/releaseBinding.ts: true
+  lib/dwo/drift.ts: true
+  lib/dwo/rebindRecord.ts: true
+  dwo-v2/fixtures/DWO-UR-30-V1/: true
+
+qualification_and_binding_inputs:
+  value: true
+  note: qualification (SCRUM-830) + release binding (SCRUM-821) available as inputs
+
+universal_release_state:
+  value: NOT_MERGED
+  note: >-
+    Q-001 active — Universal release PRs #582/#578/#574 all Draft; gwc/main at
+    414002f9. Per human decision this is NOT a hard blocker; warning guard enforced.
+
+baseline_tests:
+  note: 485 vitest + 112 pytest green on integration branch before this task branched
+  node_modules: symlinked from main checkout; not committed
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/rebind/
+  - .gwc/tasks/SCRUM-831/

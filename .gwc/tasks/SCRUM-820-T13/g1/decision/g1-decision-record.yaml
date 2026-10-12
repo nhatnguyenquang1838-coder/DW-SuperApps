@@ -1,0 +1,128 @@
+# G1 DECISION RECORD — SCRUM-820-T13 (86 Test-Type Errors)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-decision-record
+generated_at: '2026-10-05T06:05:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-820-T13
+parent_run_ref: SCRUM-820
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: integration/SCRUM-820-dwo-v2
+base_sha: 3e55c586a1e6b1b6043e60a7b3e6c0a2e6b9a68f
+task_branch: integration/SCRUM-820-dwo-v2
+active_runtime_plan_ref: PLAN-820-T13
+
+status: ACCEPTED
+selected_option_id: OPT-1
+
+user_decision:
+  actor: human://nhat-nguyen-quang
+  decided_at: '2026-10-05T06:00:00+07:00'
+  source: "Room message: 'tiến hành lên plan sửa 86 lỗi này, đảm bảo không phá logic'"
+  explicit: true
+  scope_of_decision: >-
+    Proceed with planning (G0/G1) for fixing the 86 pre-existing test-type errors.
+    Hard constraint: no test logic change (assertions/expected values); type-level
+    fixes only. PR #130 merge remains separate and pending.
+
+rationale: >-
+  OPT-1 (fix all 86 errors story-by-story, per-file batches) is the only option that
+  eliminates the debt monotonically while each story stays independently verifiable
+  via the typecheck:tests gate (86 errors to fewer, checked per commit). OPT-2
+  (keep debt, rely on strict gate) leaves tests un-typechecked forever, which is the
+  exact F1 defect PR #130 already fixed for the CI side. All 9 stories are
+  independent (zero cross-test imports, verified), so parallel-safe.
+
+rejected_option_ids: [OPT-2]
+
+authority_boundaries:
+  grants:
+    - "type-level edits to tests/unit/** (imports, null guards, type annotations, call arity fixes)"
+    - development commits on integration/SCRUM-820-dwo-v2
+    - push of that branch
+    - Draft PR update (PR #130)
+  excluded:
+    - g4_merge
+    - g5_deploy
+    - g6_production
+    - "assertion/logic changes in any test"
+    - "any change to lib/ or app/ source files"
+    - force_push
+    - branch_deletion
+
+fix_strategy_per_code:
+  TS6133: "remove unused/dead imports and variables. ZERO logic risk."
+  TS18047: "add null-guard / optional-chaining / type narrowing before the use. Assertions unchanged."
+  TS2554: "align call arity to the function's real signature (add required arg from existing fixture/context, or mark optional if signature allows)."
+  TS2352: "replace unsafe `as` cast with a checked narrowing or the correct literal type from the fixture."
+  TS2304: "add the missing import from the source module (name exists in lib/, import was dropped/renamed)."
+  TS2341: "access private via the existing public accessor/helper the test already uses elsewhere."
+  TS2322: "widen the annotation to the actual fixture type (e.g. const x: T = ... )."
+  TS6196: "remove the duplicate import declaration."
+  TS2741: "add the missing required property to the object literal from the fixture's known shape."
+  TS2345: "cast/annotate the argument to the parameter type the API declares."
+  TS2305: "import the symbol from its real module (export exists on main tsc; test imported wrong path)."
+  TS2339: "reference the property that exists on the declared type (test typo vs lib API)."
+  TS2353: "annotate the object type explicitly per lib contract."
+  TS2459: "export the symbol from the source module or import the correct type."
+  TS7022: "annotate the implicit-any function parameter with the lib contract type."
+  TS2349: "call the value via its actual callable type (fix the import binding)."
+
+decomposition:
+  atomic: false
+  rationale: >-
+    9 stories = 7 single-file (top count) + 2 batches (low-count files). Zero
+    predecessors; execution order free. Each story lands as one commit so the
+    typecheck:tests count drops monotonically per commit (verifiable per increment).
+  child_runs:
+    - id: T13-E1
+      title: "r2-runtime-integration.test.ts — 24 errors (TS6133x14 dominant)"
+      target: tests/unit/dwo/r2-runtime-integration.test.ts
+    - id: T13-E2
+      title: "live.test.ts — 21 errors (TS18047x11 dominant)"
+      target: tests/unit/live.test.ts
+    - id: T13-E3
+      title: "t04-unified-runtime.test.ts — 8 errors (TS2554x3)"
+      target: tests/unit/dwo/t04-unified-runtime.test.ts
+    - id: T13-E4
+      title: "evidenceReplay.test.ts — 5 errors (TS6133x3, TS2741x2)"
+      target: tests/unit/dwo/evidenceReplay.test.ts
+    - id: T13-E5
+      title: "t09-fixture-materialization.test.ts — 4 errors (TS2304, TS2345)"
+      target: tests/unit/dwo/t09-fixture-materialization.test.ts
+    - id: T13-E6
+      title: "t05-replay.test.ts — 4 errors (TS6133, TS2345)"
+      target: tests/unit/dwo/t05-replay.test.ts
+    - id: T13-E7
+      title: "r2-a-dependency-satisfaction.test.ts — 4 errors (TS2322x2, TS2554x2)"
+      target: tests/unit/dwo/r2-a-dependency-satisfaction.test.ts
+    - id: T13-E8
+      title: "3-file batch — 6 errors (2+2+2)"
+      target: t09b-fixture-lab.test.tsx + t05-unified-workspace.test.tsx + qualification.test.ts
+    - id: T13-E9
+      title: "10-file batch — 10 errors (1 each)"
+      target: loginEpicRuntimeGraph, t08-replay, t07-next-flow, t06-replay-isolation, t03-task-run-hydration, rebind, r2-c1-c5-contract-gaps, r2-c-depth-fixture, inventory, fixtureSet
+  execution_order: [T13-E1, T13-E2, T13-E3, T13-E4, T13-E5, T13-E6, T13-E7, T13-E8, T13-E9]
+
+authorized_paths:
+  - projects/dw-observation/tests/unit/
+  - .gwc/tasks/SCRUM-820-T13/
+
+verification_plan:
+  - command: "node scripts/typecheck-tests.mjs (in projects/dw-observation)"
+    expectation: "error count < previous story's count (decreasing, ends at 0)"
+  - command: "node scripts/typecheck-tests.mjs --strict"
+    expectation: 'exit 0, "N <= baseline 86"'
+  - command: "npx tsc --noEmit"
+    expectation: "exit 0 (main source untouched)"
+  - command: "npx vitest run --reporter=dot"
+    expectation: "all existing tests still pass (assertions untouched)"
+  - coverage_mapping:
+      AC-T13-01: typecheck-tests.mjs count
+      AC-T13-02: typecheck-tests.mjs --strict exit code
+      AC-T13-03: vitest suite green
+      AC-T13-04: main tsc --noEmit exit 0
+
+next_gate: G2_EXECUTION

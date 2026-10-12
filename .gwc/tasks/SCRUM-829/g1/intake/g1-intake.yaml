@@ -1,0 +1,71 @@
+# G1 INTAKE — SCRUM-829 (DWO-V2-08)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-intake
+generated_at: '2026-09-30T05:12:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-829
+parent_run_ref: SCRUM-820
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: integration/SCRUM-820-dwo-v2
+base_sha: 2cdcb171519b05c0916397d58723179f889e19bb
+task_branch: task/SCRUM-829-accessibility-scale
+
+problem:
+  statement: >-
+    DWO v2 recursive-run UX must be accessible (keyboard-operable, ARIA-labeled,
+    non-color-only status) and must behave predictably on large graphs via a
+    generated scale pack and progressive-disclosure budget thresholds, without
+    altering the hand-authored 30-run semantic fixture baseline.
+  why_now: >-
+    Accessibility and large-graph behavior are explicit DWO v2 qualification
+    requirements (WS8). Without a generated scale pack and measured budget
+    thresholds, large-graph performance and accessibility acceptance cannot be
+    verified.
+
+stakeholders:
+  requester: human://nhat-nguyen-quang
+  affected:
+    - DWO v2 end users (screen-reader and keyboard users)
+    - DWO v2 maintainers (scale qualification)
+
+risks:
+  - id: RISK-001
+    description: Accessibility changes regress the existing 30-run semantic fixture baseline
+    impact: HIGH
+    mitigation: keep the hand-authored pack byte-identical; add a guard test asserting the 30-run catalog is unchanged
+  - id: RISK-002
+    description: Scale pack generation is non-deterministic, breaking qualification
+    impact: MEDIUM
+    mitigation: deterministic generator with fixed seed; assert reproducible output
+  - id: RISK-003
+    description: Budget thresholds are asserted rather than measured
+    impact: MEDIUM
+    mitigation: record measured values in the certification evidence, not hardcoded claims
+
+acceptance_criteria:
+  - id: AC-829-01
+    statement: V2_ACCESSIBILITY_READY exit token derivable from machine-readable state
+    verifiable: deriveAccessibilityReady() returns token when all accessibility invariants hold
+  - id: AC-829-02
+    statement: keyboard-operable graph navigation with visible focus and ARIA labels
+    verifiable: accessibility model exposes keyboard nav + ARIA label + focus contract
+  - id: AC-829-03
+    statement: graph and structured tree/list selection stay synchronized
+    verifiable: shared selection state asserted across graph and tree/list
+  - id: AC-829-04
+    statement: status semantics are not color-only
+    verifiable: every status carries text/icon/aria conveyance, not color alone
+  - id: AC-829-05
+    statement: DWO-SCALE-GEN-V1 generated scale pack measures depth/fanout/node-count/performance
+    verifiable: generator emits scale fixtures with measured depth/fanout/node-count/performance
+  - id: AC-829-06
+    statement: progressive disclosure and graph budget thresholds explicitly measured and recorded
+    verifiable: budget thresholds derived from measured scale metrics
+  - id: AC-829-07
+    statement: the hand-authored 30-run semantic pack remains unchanged
+    verifiable: guard test asserts FIXTURE_CATALOG length 30 and byte-identical catalog
+
+unresolved_questions: []

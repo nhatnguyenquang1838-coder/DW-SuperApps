@@ -1,0 +1,125 @@
+# G1 DECISION RECORD — SCRUM-823 (DWO-V2-02)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-decision-record
+generated_at: '2026-09-30T04:07:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-823
+parent_run_ref: SCRUM-820
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: integration/SCRUM-820-dwo-v2
+base_sha: b47781f3f15ef2663e5d9f2e22b8fe22bf1cbe56
+task_branch: task/SCRUM-823-projection-contract-v2
+active_runtime_plan_ref: PLAN-823-R1
+active_runtime_plan_revision: 1
+target_contract_ref: TARGET-PROJECTION-823-R1
+
+options_ref: ../brainstorming/g1-options.yaml
+preflight_ref: ../preflight/g1-preflight-report.yaml
+intake_ref: ../intake/g1-intake.yaml
+g0_ref: ../../g0/context-snapshot.yaml
+
+status: ACCEPTED
+selected_option_id: OPT-1
+
+user_decision:
+  actor: human://nhat-nguyen-quang
+  decided_at: '2026-09-30T04:07:00+07:00'
+  source: standing autonomous execution authorization for planning, decomposition, coding, tests and development commits
+  explicit: true
+  scope_of_decision: >-
+    OPT-1 selected by the agent as the only option satisfying the acceptance
+    criteria. Human Principal authorized autonomous execution of the approved
+    development plan. No Human decision required to select among options that all
+    met policy.
+
+rationale: >-
+  OPT-1 implements the Projection Contract v2 as a versioned TypeScript contract
+  module with a source/profile registry, explicit event position/order + gap
+  identity, correlation/causation-as-evidence-metadata, fail-closed
+  UNKNOWN/INCOMPATIBLE, and a frozen FNR-02 comparison contract with cross-runtime
+  vectors. This satisfies all five AC with executable validation. OPT-2
+  (documentation-only) makes V2_CONTRACT_FROZEN unverifiable. OPT-3 (split across
+  Python/TS twin) recreates the source-divergence defect class.
+
+rejected_option_ids:
+  - OPT-2
+  - OPT-3
+
+decomposition:
+  atomic: false
+  rationale: >-
+    SCRUM-823 carries separable deliverables (contract schema, profile registry,
+    event position/order + gap, correlation metadata, FNR-02 comparison contract).
+    Executed as ordered child runs on one task branch, one G3 pass.
+  child_runs:
+    - id: CR-823-A
+      order: 1
+      title: Projection Contract v2 schema + versioning/upcast
+      produces: [lib/dwo/projectionContract.ts, dwo-v2/contract/projection-contract-v2.yaml]
+    - id: CR-823-B
+      order: 2
+      title: Source/profile registry (native/compat/legacy) + fail-closed UNKNOWN/INCOMPATIBLE
+      produces: [lib/dwo/profileRegistry.ts]
+    - id: CR-823-C
+      order: 3
+      title: Event position/order + gap identity + correlation/causation metadata
+      produces: [lib/dwo/eventPosition.ts]
+    - id: CR-823-D
+      order: 4
+      title: FNR-02 deterministic comparison contract + cross-runtime vectors + V2_CONTRACT_FROZEN
+      produces: [lib/dwo/comparisonContract.ts, tests/unit/dwo/comparisonContract.test.ts]
+  execution_order: [CR-823-A, CR-823-B, CR-823-C, CR-823-D]
+  integration: all child runs land on the task branch, then G4 integrates into integration/SCRUM-820-dwo-v2
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/contract/
+  - .gwc/tasks/SCRUM-823/
+
+excluded_actions:
+  - g4_merge
+  - g5_deploy
+  - g6_production
+  - database_migration
+  - secret_change
+  - force_push
+  - branch_deletion
+
+authority_boundaries:
+  grants:
+    - development commits on task/SCRUM-823-projection-contract-v2
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-823 progress and evidence updates
+  excluded:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION
+    - approval bypass
+    - protected main writes
+
+required_gate: G2_HUMAN_DIRECTION
+g1_gate_outcome: PASS
+
+verification_plan:
+  - command: npx tsc --noEmit
+    expectation: exit 0
+  - command: npx vitest run --reporter=dot
+    expectation: existing suites still pass, plus new projection-contract suites
+  - command: python3 -m pytest tests/ -q
+    expectation: 112 tests still pass (no Python regression)
+  - command: npx next lint
+    expectation: no new lint errors
+  - coverage_mapping:
+      AC-823-01: tests/unit/dwo/comparisonContract.test.ts (V2_CONTRACT_FROZEN)
+      AC-823-02: tests/unit/dwo/projectionContract.test.ts (versioning/upcast)
+      AC-823-03: tests/unit/dwo/profileRegistry.test.ts (fail-closed)
+      AC-823-04: tests/unit/dwo/eventPosition.test.ts (order/gap/correlation)
+      AC-823-05: tests/unit/dwo/comparisonContract.test.ts (FNR-02 vectors)
+
+next_gate: G2_EXECUTION

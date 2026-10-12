@@ -1,0 +1,63 @@
+# G0 CONTEXT SNAPSHOT — SCRUM-826 (DWO-V2-05)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g0.context-snapshot/1.0
+artifact_type: CONTEXT_SNAPSHOT
+gate: G0_UNDERSTAND
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-826
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 39ac0dd39d74d0150d3966e6dda941507c50ab9a
+  captured_at: '2026-09-30T04:21:00+07:00'
+
+objective: >-
+  Implement the primary run-centric DWO v2 product UX using the official 30-run
+  fixture set.
+
+scope:
+  - Run List and Run Detail
+  - recursive graph plus accessible structured tree/list
+  - UR lifecycle strip and explicit UR-G* vs GWC-* namespace separation
+  - authority/effect rail as evidence-only UX
+  - parent context retention, dependency/blocking path and source profile visibility
+  - target/handoff and sync/qualification status presentation
+  - render all 30 DEV FIXTURE runs through the real reducer/view model
+
+dependencies:
+  - SCRUM-824 (DWO-V2-03) reducer — DONE
+  - SCRUM-822 (DWO-V2-01) fixture stream — DONE (consumed)
+
+constraints:
+  - graph and tree/list selection stay synchronized
+  - no action affordance grants or consumes runtime authority
+  - no production write/effect path
+
+acceptance_criteria:
+  - id: AC-826-01
+    statement: V2_PRODUCT_ALPHA exit token derivable from machine-readable state
+  - id: AC-826-02
+    statement: run exploration UX usable against all 30 fixtures
+  - id: AC-826-03
+    statement: graph and tree/list selection stay synchronized
+  - id: AC-826-04
+    statement: no action affordance grants or consumes runtime authority
+  - id: AC-826-05
+    statement: UR-G* vs GWC-* namespace separation visible in lifecycle strip
+
+canonical_sources:
+  - DWO v2 Solution Design C4 (3ea07c1c65b6813c95d6c7acf7a61c32) — READ
+  - DWO-UR-30-V1 fixture catalog (3ea07c1c65b681c28de7c076abdfbdb2) — READ
+
+authority_boundary:
+  grants:
+    - development commits on task/SCRUM-826-run-ux
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-826 progress/evidence updates
+  excluded:
+    - G4_MERGE, G5_DEPLOY, G6_PRODUCTION
+    - approval bypass, protected main writes
+    - production data mutation, database migration, secret change

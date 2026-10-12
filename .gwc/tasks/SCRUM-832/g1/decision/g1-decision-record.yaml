@@ -1,0 +1,123 @@
+# G1 DECISION RECORD — SCRUM-832 (DWO-V2-11)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-decision-record
+generated_at: '2026-09-30T09:53:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-832
+parent_run_ref: SCRUM-820
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: integration/SCRUM-820-dwo-v2
+base_sha: 2a25b5515def0977fcfa8a4d15e9f3aa181ccb45
+task_branch: task/SCRUM-832-real-run-cert
+active_runtime_plan_ref: PLAN-832-R1
+active_runtime_plan_revision: 1
+target_contract_ref: TARGET-ACCEPT-832-R1
+
+options_ref: ../brainstorming/g1-options.yaml
+preflight_ref: ../preflight/g1-preflight-report.yaml
+intake_ref: ../intake/g1-intake.yaml
+g0_ref: ../../g0/context-snapshot.yaml
+
+status: ACCEPTED
+selected_option_id: OPT-1
+
+user_decision:
+  actor: human://nhat-nguyen-quang
+  decided_at: '2026-09-30T09:53:00+07:00'
+  source: standing autonomous execution authorization for planning, decomposition, coding, tests and development commits
+  explicit: true
+  scope_of_decision: >-
+    OPT-1 selected by the agent as the only option satisfying the acceptance
+    criteria. Human Principal authorized autonomous execution of the approved
+    development plan. No Human decision required to select among options that all
+    met policy.
+
+rationale: >-
+  OPT-1 implements the real-run certification as a TypeScript module set:
+  real-campaign observation, live/replay equality, read-only safety + evidence
+  provenance + target/handoff + degraded-mode validation, derived-state reset
+  reconstruction, exact identity recording, and the G6 handoff dossier. This
+  satisfies all four AC with executable validation. OPT-2 (documentation-only) makes
+  DWO_V2_ACCEPTED unverifiable.
+
+rejected_option_ids:
+  - OPT-2
+
+decomposition:
+  atomic: false
+  rationale: >-
+    SCRUM-832 carries separable deliverables (real-campaign observation, live/replay
+    equality, safety/provenance/handoff/degraded validation, reset reconstruction,
+    identity recording, handoff dossier, certification). Executed as ordered child
+    runs on one task branch, one G3 pass.
+  child_runs:
+    - id: CR-832-A
+      order: 1
+      title: Real-campaign observation + live/replay equality
+      produces: [lib/dwo/realCampaign.ts]
+    - id: CR-832-B
+      order: 2
+      title: Read-only safety + evidence provenance + target/handoff + degraded-mode validation
+      produces: [lib/dwo/acceptanceValidation.ts]
+    - id: CR-832-C
+      order: 3
+      title: Derived-state reset reconstruction + exact identity recording
+      produces: [lib/dwo/acceptanceRecord.ts]
+    - id: CR-832-D
+      order: 4
+      title: G6 handoff dossier + DWO_V2_ACCEPTED derivation + tests
+      produces: [lib/dwo/acceptanceCertification.ts, tests/unit/dwo/acceptance*.test.ts]
+  execution_order: [CR-832-A, CR-832-B, CR-832-C, CR-832-D]
+  integration: all child runs land on the task branch, then G4 integrates into integration/SCRUM-820-dwo-v2
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/acceptance/
+  - .gwc/tasks/SCRUM-832/
+
+excluded_actions:
+  - g4_merge
+  - g5_deploy
+  - g6_production
+  - database_migration
+  - secret_change
+  - force_push
+  - branch_deletion
+
+authority_boundaries:
+  grants:
+    - development commits on task/SCRUM-832-real-run-cert
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-832 progress and evidence updates
+  excluded:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION
+    - approval bypass
+    - protected main writes
+
+required_gate: G2_HUMAN_DIRECTION
+g1_gate_outcome: PASS
+
+verification_plan:
+  - command: npx tsc --noEmit
+    expectation: exit 0
+  - command: npx vitest run --reporter=dot
+    expectation: existing suites still pass, plus new acceptance suites
+  - command: python3 -m pytest tests/ -q
+    expectation: 112 tests still pass (no Python regression)
+  - command: npx next lint
+    expectation: no new lint errors
+  - coverage_mapping:
+      AC-832-01: tests/unit/dwo/acceptanceCertification.test.ts
+      AC-832-02: tests/unit/dwo/realCampaign.test.ts (deterministic reconstruction)
+      AC-832-03: tests/unit/dwo/realCampaign.test.ts (live/replay equality)
+      AC-832-04: tests/unit/dwo/acceptanceCertification.test.ts (handoff dossier)
+
+next_gate: G2_EXECUTION

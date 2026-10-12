@@ -1,0 +1,24 @@
+# G1 OPTIONS — SCRUM-832 (DWO-V2-11)
+schema_version: gwc.g1.options/1.0
+artifact_type: G1_OPTIONS
+gate: G1_PLAN
+trace:
+  task_id: SCRUM-832
+  plan_revision: 1
+
+options:
+  - id: OPT-1
+    title: TypeScript real-run certification module set
+    description: >-
+      Implement real-campaign observation, live/replay equality, read-only safety +
+      evidence provenance + target/handoff + degraded-mode validation, derived-state
+      reset reconstruction, exact identity recording, and the G6 handoff dossier.
+      Executable validation of all 4 AC.
+    satisfies: [AC-832-01, AC-832-02, AC-832-03, AC-832-04]
+  - id: OPT-2
+    title: Documentation-only certification
+    description: Write the acceptance spec as docs without executable validation.
+    risk: DWO_V2_ACCEPTED unverifiable
+    satisfies: []
+
+selected: OPT-1

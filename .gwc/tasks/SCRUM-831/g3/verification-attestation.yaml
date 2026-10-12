@@ -1,0 +1,73 @@
+# G3 VERIFICATION ATTESTATION — SCRUM-831 (DWO-V2-10)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g3.verification-attestation/1.0
+artifact_type: VERIFICATION_ATTESTATION
+gate: G3_VERIFY
+trace:
+  task_id: SCRUM-831
+  parent_run_ref: SCRUM-820
+  plan_revision: 1
+  verified_at: '2026-09-30T06:15:00+07:00'
+  task_branch: task/SCRUM-831-release-rebind
+  branch_head: 80b23eb
+
+verdict: PASS
+
+child_runs:
+  - id: CR-831-A
+    title: Release-merge detection + MAIN_REBIND_PENDING entry from durable evidence
+    commit: 80b23eb
+    tests: covered by rebind.test.ts
+  - id: CR-831-B
+    title: Drift classification (frozen taxonomy) + affected-surface recording
+    commit: 80b23eb
+    tests: covered by rebind.test.ts
+  - id: CR-831-C
+    title: Native-source rebind + affected-scope requalification + prior-qualification invalidation
+    commit: 80b23eb
+    tests: covered by rebind.test.ts
+  - id: CR-831-D
+    title: Warning guard + RELEASE_MAIN_BOUND derivation + tests
+    commit: 80b23eb
+    tests: covered by rebind.test.ts
+
+executed_evidence:
+  - command: npx vitest run tests/unit/dwo/
+    result: 248 passed (248) — 16 dwo constraint suites
+  - command: npx vitest run
+    result: 33 files, 544 passed (296 baseline + 248 new)
+  - command: npx tsc --noEmit
+    result: exit 0
+  - command: python3 -m pytest tests/ -q
+    result: 112 passed (no Python regression)
+
+acceptance_criteria_coverage:
+  AC-831-01: VERIFIED (RELEASE_MAIN_BOUND derived)
+  AC-831-02: VERIFIED (exact prior UR-DEV SHA + released gwc/main SHA recorded)
+  AC-831-03: VERIFIED (durable attributable release/merge receipt)
+  AC-831-04: VERIFIED (drift classification + affected surfaces, frozen taxonomy)
+  AC-831-05: VERIFIED (affected requalification scope)
+  AC-831-06: VERIFIED (provenance preserved)
+  AC-831-07: VERIFIED (prior qualification invalidated on material drift)
+  AC-831-08: VERIFIED (warning guard — DWO main merge gated on Universal release merge)
+
+exit_token_derivation:
+  token: RELEASE_MAIN_BOUND
+  derivable: true
+  basis: >
+    deriveReleaseMainBound(): release merge detected from durable evidence, drift
+    classified, affected surfaces recorded, native source rebound, requalification
+    passed, provenance preserved, prior qualification invalidated on drift, warning
+    guard enforced. Derived by machine-readable state.
+
+human_decision_recorded:
+  actor: human://nhat-nguyen-quang
+  decided_at: '2026-09-30T06:11:00+07:00'
+  decision: >-
+    External Universal release merge is NOT a hard blocker for SCRUM-831
+    development; warning guard enforced (DWO main merge gated on Universal release
+    merge). Proceed with rebind mechanism development now.
+
+deviations:
+  - none

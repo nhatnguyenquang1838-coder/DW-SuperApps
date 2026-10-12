@@ -1,0 +1,70 @@
+# G0 CONTEXT SNAPSHOT — SCRUM-820-T13
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g0.context-snapshot/1.0
+artifact_type: G0_CONTEXT
+gate: G0_UNDERSTAND
+status: PASSED
+
+trace:
+  run_id: SCRUM-820-T13
+  run_kind: CHILD
+  parent_run_ref: SCRUM-820
+  root_goal_id: DWO-V2-SCRUM-820-P0
+  release_profile: P0_SEMANTIC_RELEASE
+  fixture_contract: DWO-UR-30-V1
+  lifecycle_profile: gwc.universal-run/1
+  active_runtime_plan_ref: PLAN-820-T13
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 3e55c586a1e6b1b6043e60a7b3e6c0a2e6b9a68f
+  captured_at: "2026-10-05T06:00:00+07:00"
+  actor_ref: agent://bmad/default
+  human_principal_ref: user://nhat-nguyen-quang
+
+project:
+  id: dw-superapps
+  name: DW SuperApps
+  repository: nhatnguyenquang1838-coder/DW-SuperApps
+  target_project_path: projects/dw-observation
+
+scope:
+  in_scope:
+    - Fix 86 pre-existing TypeScript type errors across 20 test files in projects/dw-observation/tests/unit/
+    - Preserve all test assertions, expected values, and test logic exactly
+    - Reduce typecheck:tests error count below baseline (86) without regression
+  out_of_scope:
+    - Changing any source file in lib/ or app/ (main tsc --noEmit stays green)
+    - Changing any test assertion, expected value, or test flow
+    - Merging PR #130 (still pending @user approval)
+    - Any production-deploy, migration, or secret effect
+
+constraints:
+  - "NoDeadChanges: every edit must be purely type-level (remove unused imports, add null guards, fix call arity, correct type annotations)"
+  - "NoAssertionChanges: test assertions (expect, toBe, toHaveCount, etc.) remain byte-identical"
+  - "NoSourceChanges: lib/ and app/ source files must not be modified"
+  - "StageExplicitPaths: never git add -A — shared worktree has foreign dirty state"
+  - "VerifyBeforeEachFile: read tsc error lines for a file, understand the type issue, confirm fix is type-only before applying"
+
+dependencies:
+  jira_predecessors: []
+  jira_successors: []
+  external:
+    - "projects/dw-observation/scripts/typecheck-tests.mjs (gate script, do not modify)"
+    - "projects/dw-observation/scripts/typecheck-tests-baseline.json (baseline, do not modify)"
+    - "projects/dw-observation/tsconfig.json (excludes tests/, unchanged)"
+
+acceptance_criteria:
+  - id: AC-T13-01
+    statement: typecheck:tests reports 0 errors (below baseline of 86)
+    verifiable: true
+  - id: AC-T13-02
+    statement: typecheck:tests:strict exits 0 (count <= baseline)
+    verifiable: true
+  - id: AC-T13-03
+    statement: vitest run passes all existing tests (no assertion changes)
+    verifiable: true
+  - id: AC-T13-04
+    statement: main tsc --noEmit stays exit 0 (no source file changes)
+    verifiable: true
+
+g0_gate_outcome: PASS
