@@ -113,6 +113,12 @@ The **specific** exact-SHA-sensitive TaskController effects still require a curr
 
 **Required verification matrix:** (1) qualified tick observes C/E, unchanged cursor → no turn; (2) new Controller command → Executor consumes; (3) intermediate Executor progress → no GPT wake; (4) lawful alternate remains → recover locally; (5) one bounded no-progress work cycle + Controller-owned blocker → one early unlock request; (6) same deadlock across multiple ticks/restarts and push+observer → one correlated wake; (7) GPT_BUSY → pending only; (8) successful Controller unlock → same task resumes; (9) terminal result → one final wake; (10) invalid run/digest/actor and actual RUN_HOLD → fail closed. Tests and a live adapter receipt, not this prose alone, are required for E2E PASS.
 
+### GWC Node Architect / LangGraph self-repair POC binding (proposal)
+
+The **host** owns only qualified tick/session binding, exact C/E event observation, authorized task invocation, checkpoint reconciliation and deduplicated terminal/deadlock pointer delivery. It does **not** own the Node Architect DAG, GWC gate authority, RED→FIX→GREEN semantics or source-bound original replay. Those are GWC-owned and proposed in [GWC Draft PR #599](https://github.com/nhatnguyenquang1838-coder/gwc/pull/599), especially `core/node-architect/hermes-loop-a2a-base-workflow-r1.json` and `core/node-architect/hermes-loop-self-repair-workflow-r1.json`.
+
+**Execution admission:** Do not start Hermes Local POC merely because this document or either draft PR exists. First verify the accepted base graph revision and live bound adapter, then Base B1–B9 E2E; only afterward enable self-repair SR1–SR12. Pin exact GWC plan/source digests and DW host implementation SHA, avoid importing moving branch policy or treating GitHub comments as durable workflow contracts. This cross-repo pointer does not grant a write, wake, or Q0 gate transition.
+
 ### Loop observation versus LLM-led execution
 
 The Loop has **two independently authorized concerns**: `MAILBOX_OBSERVER` may perform a bounded, read-only cursor check; `ENGINEERING_WORK` may advance an already-authorized mission with LLM reasoning. Neither is equivalent to calling `LoopManager.resume()` or unconditionally firing native ticks.
