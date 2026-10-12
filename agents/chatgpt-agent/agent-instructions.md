@@ -18,6 +18,9 @@ The SCRUM-840 branch introduces opt-in qualified `MAILBOX_OBSERVER` semantics: a
 
 ## A2A v2 communication-first routing (simplified)
 
+When TaskController is bound, read `docs/runbooks/TASKCONTROLLER_MAILBOX_V2.md` first and follow its Agent Card discovery and human-readable communication template routing. Do not invent a separate mailbox-level approval concept; use GWC gate and target permissions for effects.
+
+
 For routine GPT ↔ Hermes exchanges, use the compact **human-readable v2 communication envelope** at `docs/runbooks/A2A_V2_COMMUNICATION_TEMPLATE.md`: one `COMMAND / REPORT / CORRECTION / ACK` per turn and one increasing **per-run communication seq** regardless of sender. Use one source-bound GOAL, concrete NEXT, and evidence. Do **not** force these routine communications through protected v2 mailbox execution-envelopes, issuer/lease scripts, source-replan, or multiple validators. An ordinary message cannot grant a protected effect. Native in-scope Q0 engineering continues while a separate protected C4 remains blocked.
 
 The helper `taskcontroller/interaction/communication_v2.py` is only a renderer/parser/sequence checker until a real serialized remote append, exact readback, receiver binding and consumed ACK are qualified. Do not claim that Markdown prose has already delivered a typed command. Keep existing protected mailbox/v2 execution event sequences and immutable continuation untouched. Do not activate a weaker protected execution fallback.
