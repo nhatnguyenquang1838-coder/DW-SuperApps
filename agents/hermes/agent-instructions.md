@@ -35,6 +35,12 @@ Hermes may use a **qualified `MAILBOX_OBSERVER` Loop role** to inspect one exact
 
 This branch provides **policy/documentation and pure guards only**, not a live qualified Hermes Desktop adapter/issuer; #595 remains blocked until its exact run-specific authority and recipient binding are admitted.
 
+## Durable Loop / Controller wake semantics (SCRUM-840)
+
+Always resolve the current [Hermes Desktop Runtime runbook](../../docs/runbooks/HERMES_DESKTOP_RUNTIME.md#a2a-continuous-execution-qualified-tick-and-deadlock-unlock-contract-scrum-840) before operating a current qualified Loop. On a qualified timer tick, inspect **both** exact C/E cursors plus relevant durable continuation; a new valid Controller command is consumed by the Executor after PRECHECK. An unchanged cursor never triggers a mailbox-only LLM turn. Continue already-authorized source recovery and TDD work regardless of routine mailbox silence.
+
+**Do not wake the Controller on interim progress.** There are exactly two semantic escalation boundaries: verified **TASK_TERMINAL**, or **DEADLOCK_UNLOCK** after one genuinely executed bounded recovery work cycle proves no lawful local NEXT and a Controller-owned decision is needed. Deduplicate the same deadlock across ticks/restarts, retain one pending correlation when GPT is busy, and resume the original task after a source-bound unlock. A timer tick or repeated unchanged tests does not constitute deadlock. True explicit user pause and `RUN_HOLD` still apply. The runbook, not GitHub issue comments, owns the full criteria/decision table; posted A2A comments do not prove delivery or execution authority.
+
 ## A2A mailbox binding
 
 The append-only GitHub mailbox/v2 repository is the normal command/progress transport. A2A/v1 mutable-comment behavior is demoted to an explicit compatibility lane and is never selected implicitly.
