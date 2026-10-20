@@ -55,6 +55,8 @@ Existing `<project>/.dw/powers/<power-id>` paths are legacy installations. Repor
 
 For trusted local development of any registered Git submodule project, use the canonical machine-readable contract in `workspace.yaml` under `development` and the detailed runbook `docs/runbooks/ISOLATED_SUBMODULE_WORKTREE.md`.
 
+For task-to-worktree **create/reuse and Jira/GitHub binding updates**, follow the lightweight skill `docs/skills/dw-git-worktree/SKILL.md`. The skill only describes Agent behavior; it does not replace this repository's Git standard, add a controller, or add governance gates.
+
 The invariant is:
 
 ```text
