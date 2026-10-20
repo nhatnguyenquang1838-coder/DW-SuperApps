@@ -4,7 +4,6 @@ import path from "path";
 import { loadLoginEpicFixture } from "@/lib/loginEpicFixture";
 import { validateLoginEpicFixture } from "@/lib/loginEpicRuntimeValidation";
 import {
-  type LoginEpicRuntimeFixture,
   getRun,
   getGate,
   getRuntimeNode,

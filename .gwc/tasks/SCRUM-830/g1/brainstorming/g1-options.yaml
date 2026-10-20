@@ -1,0 +1,58 @@
+# G1 BRAINSTORMING — SCRUM-830 (DWO-V2-09)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-options
+generated_at: '2026-09-30T06:10:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-830
+parent_run_ref: SCRUM-820
+
+options:
+  - id: OPT-1
+    title: Deterministic TypeScript qualification harness over the real kernel modules
+    description: >-
+      Implement lib/dwo/qualificationSubject.ts (subject binding), a qualification
+      suite (lib/dwo/qualification.ts) that exercises the actual reducer/comparison/
+      durability/replay/live/accessibility modules for AC-RS-01..11 and the 10
+      Universal adversarial cases, plus V2_SEMANTIC_QUALIFIED derivation with
+      separate DEV-NATIVE and COMPATIBILITY result vectors. Executable tests prove
+      each scenario end-to-end.
+    benefits:
+      - AC-830-01..06 all satisfiable with machine-checkable evidence
+      - harness calls the REAL kernel — no fixture bypass (AC-830-06)
+      - subject binding prevents stale evidence (AC-830-04)
+      - adversarial cases are executable, not prose
+    tradeoffs:
+      - adds 2 new lib modules + a qualification test suite to the dwo package
+    risks:
+      - RISK-001 mitigated: harness imports production modules
+      - RISK-004 mitigated: adversarial cases return structured results
+    constraint_fit: FIT
+  - id: OPT-2
+    title: Documentation-only qualification report
+    description: >-
+      Write a markdown report mapping AC-RS-01..11 to existing test names without
+      a new executable harness or token derivation.
+    benefits:
+      - minimal code change
+    tradeoffs:
+      - AC-830-01 (token derivation) and AC-830-03 (adversarial evidence) unverifiable
+      - no subject binding; stale evidence risk (AC-830-04 unmet)
+    risks:
+      - RISK-003 becomes certain
+    constraint_fit: NOT_FIT
+  - id: OPT-3
+    title: Boilerplate token derivation with hand-set booleans
+    description: >-
+      Derive V2_SEMANTIC_QUALIFIED from caller-supplied booleans without executing
+      scenarios against the kernel.
+    benefits:
+      - quick token
+    tradeoffs:
+      - AC-830-02/03/06 unmet (no scenario evidence against the real modules)
+      - RISK-001 realized (asserts instead of exercising)
+    risks:
+      - RISK-001 (fake evidence)
+    constraint_fit: NOT_FIT

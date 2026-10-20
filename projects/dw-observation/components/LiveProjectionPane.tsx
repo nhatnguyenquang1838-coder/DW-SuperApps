@@ -23,16 +23,6 @@ import { SupabaseRealtimeTransport, realtimeTopic, readBrowserConfig } from "@/l
 import { useLiveProjection } from "@/lib/useLiveProjection";
 import LiveBadge from "@/components/LiveBadge";
 
-// Read-only in-memory store over the server-provided snapshot. This is the
-// durable snapshot; it is passed in from the server component, never fetched
-// here with a credential.
-class SnapshotEventStore implements EventStore {
-  constructor(private readonly events: ProjectionEvent[]) {}
-  async loadAll(): Promise<ProjectionEvent[]> {
-    return this.events.slice();
-  }
-}
-
 function buildStore(initialEvents: ProjectionEvent[]): EventStore {
   // Real adapter over the server snapshot. If empty (degraded), the observer
   // will surface PROJECTION_UNAVAILABLE — no fixture substitution.

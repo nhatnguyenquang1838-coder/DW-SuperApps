@@ -1,0 +1,36 @@
+# G1 PREFLIGHT — SCRUM-826 (DWO-V2-05)
+schema_version: gwc.g1.preflight/1.0
+artifact_type: G1_PREFLIGHT
+gate: G1_PLAN
+trace:
+  task_id: SCRUM-826
+  plan_revision: 1
+  checked_at: '2026-09-30T04:22:00+07:00'
+
+refs:
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 39ac0dd39d74d0150d3966e6dda941507c50ab9a
+  task_branch: task/SCRUM-826-run-ux
+  worktree: /Users/mac/prj/DW-SuperApps.worktrees/task/SCRUM-826-run-ux
+
+baseline_present:
+  lib/dwo/reducer.ts: true
+  lib/dwo/recursiveTopology.ts: true
+  lib/dwo/blockingPath.ts: true
+  lib/dwo/fixtureSpec.ts: true
+  lib/dwo/projectionContract.ts: true
+  dwo-v2/fixtures/DWO-UR-30-V1/: true
+
+fixture_stream_available:
+  value: true
+  note: DWO-UR-30-V1 projection-events.jsonl consumed for 30-fixture rendering
+
+baseline_tests:
+  note: 433 vitest + 112 pytest green on integration branch before this task branched
+  node_modules: symlinked from main checkout; not committed
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/ux/
+  - .gwc/tasks/SCRUM-826/

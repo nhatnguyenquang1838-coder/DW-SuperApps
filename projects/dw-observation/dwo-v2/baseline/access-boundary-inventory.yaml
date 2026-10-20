@@ -1,0 +1,40 @@
+# ACCESS-BOUNDARY INVENTORY — SCRUM-821 / DWO-V2-00 / CR-821-C
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.dwo.access-boundary-inventory/1.0
+artifact_type: ACCESS_BOUNDARY_INVENTORY
+gate: G2_EXECUTE
+trace:
+  task_id: SCRUM-821
+  plan_revision: 2
+  generated_at: '2026-09-30T03:46:00+07:00'
+
+access_boundary_kinds:
+  - BROWSER_READ
+  - SERVER_READ
+  - WRITE_EFFECT # FORBIDDEN for DWO — enumerated so the invariant assertion can prove absence
+  - RLS_POLICY
+  - REALTIME_TOPIC
+
+boundaries:
+  - id: client-hooks
+    kind: BROWSER_READ
+    description: client hooks read durable projections via server-read APIs only
+  - id: server-read-durable
+    kind: SERVER_READ
+    description: server components + route handlers read projection_events / history
+  - id: rls-projection-events
+    kind: RLS_POLICY
+    description: RLS on projection_events — authenticated read, no public write
+  - id: rls-history
+    kind: RLS_POLICY
+    description: RLS on observatory history view
+  - id: realtime-projections
+    kind: REALTIME_TOPIC
+    description: realtime topic for projection broadcasts
+
+invariant:
+  write_effect_paths: 0
+  assertion: >-
+    assertNoEffectBoundary() throws if any WRITE_EFFECT boundary is added to this
+    inventory. DWO stays read-only by type, not by convention.

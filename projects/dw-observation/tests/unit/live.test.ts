@@ -1,18 +1,17 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import {
   EventStore,
   LiveProjectionClient,
   ProjectionEvent,
   RealtimeTransport,
-  ReceiveResult,
   globalDurableOrder,
+  type LiveState,
 } from "@/lib/live";
 import { PostgresEventStore, SqlQuery, mapRowToProjectionEvent } from "@/lib/postgresEventStore";
 import {
   SupabaseRealtimeTransport,
   realtimeTopic,
   readBrowserConfig,
-  createBrowserClient,
 } from "@/lib/supabaseRealtime";
 import { readHistoricalEvents, readServerConfig, createServerClient } from "@/lib/serverHistoricalRead";
 import { toBroadcastEnvelope, isValidProducerEnvelope } from "@/lib/broadcastContract";
@@ -82,7 +81,7 @@ describe("M2 live projection client", () => {
     // New durable events land between reconnects.
     store as unknown as { events: ProjectionEvent[] };
     const extended = new MemStore([ev(0, "e0"), ev(1, "e1"), ev(2, "e2"), ev(3, "e3"), ev(4, "e4")]);
-    client.store = extended as unknown as EventStore;
+    (client as unknown as { store: EventStore }).store = extended as unknown as EventStore;
     const ok = await client.resync();
     expect(ok).toBe(true);
     expect(client.highWater["taskcontroller"]).toBe(4);
@@ -98,7 +97,7 @@ describe("M2 live projection client", () => {
     const client = new LiveProjectionClient(new MemStore([ev(0, "e0")]), transport, "R-1");
     await client.bootstrap();
     // Simulate the durable store now being empty at reconnect time.
-    client.store = new MemStore([]) as unknown as EventStore;
+    (client as unknown as { store: EventStore }).store = new MemStore([]) as unknown as EventStore;
     const ok = await client.resync();
     expect(ok).toBe(true);
     expect(client.events.length).toBe(0);
@@ -154,7 +153,7 @@ describe("M2 live projection client", () => {
     await client.bootstrap();
     client.receiveLive({ event: ev(1, "e1") });
     // Store still holds only the original durable event (observer never wrote).
-    expect((await store.loadAll("R-1")).length).toBe(1);
+    expect((await store.loadAll()).length).toBe(1);
   });
 
   it("rejects out-of-run and malformed frames", async () => {
@@ -204,7 +203,7 @@ describe("M2 production bindings (no remote mutation)", () => {
       },
     };
     const store = PostgresEventStore.fromSql(sql, "R-1");
-    const rows = await store.loadAll("R-1");
+    const rows = await store.loadAll();
     // Read-only SELECT issued with the run_id param; never an INSERT/UPDATE.
     expect(captured[0].text.trim().startsWith("SELECT")).toBe(true);
     expect(captured[0].params).toEqual(["R-1"]);
@@ -240,7 +239,7 @@ describe("M2 production bindings (no remote mutation)", () => {
       },
     };
     const store = PostgresEventStore.fromSql(sql, "R-1");
-    const rows = await store.loadAll("R-1");
+    const rows = await store.loadAll();
     expect(captured[0].text.trim().startsWith("SELECT")).toBe(true);
     expect(captured[0].params).toEqual(["R-1"]);
     expect(rows.length).toBe(2);
@@ -267,8 +266,7 @@ describe("M2 production bindings (no remote mutation)", () => {
     // Inject a fake browser client directly (no NEXT_PUBLIC_* needed).
     const fakeClient = { channel: () => channel } as never;
     const transport = new SupabaseRealtimeTransport(topic, fakeClient);
-    let got: unknown = null;
-    transport.subscribe(topic, (p) => (got = p));
+    transport.subscribe(topic, () => {});
     expect(onType).toBe("broadcast");
     expect(subscribed).toBe(true);
     transport.close();
@@ -281,7 +279,7 @@ describe("M2 production bindings (no remote mutation)", () => {
     expect(cfg).toHaveProperty("url");
     expect(cfg).toHaveProperty("anonKey");
     // It must not expose a server service key under the browser contract.
-    expect((cfg as Record<string, unknown>).serviceRoleKey).toBeUndefined();
+    expect((cfg as unknown as Record<string, unknown>).serviceRoleKey).toBeUndefined();
   });
 });
 
@@ -377,7 +375,7 @@ describe("M2 R2 real Supabase connection + credential boundary", () => {
       { run_id: "R-1", source_system: "taskcontroller", source_event_id: "e0", sequence: 0 },
     ];
     const store = new PostgresEventStore(async () => rows as never, "R-1");
-    const loaded = await store.loadAll("R-1");
+    const loaded = await store.loadAll();
     expect(loaded.length).toBe(1);
     expect(loaded[0].source_event_id).toBe("e0");
     expect(loaded[0].sequence).toBe(0);
@@ -423,7 +421,6 @@ describe("M2 sequence integrity (no fabrication)", () => {
 describe("M2 React view updates on transport frame", () => {
   function makeTransport() {
     let handler: ((p: unknown) => void) | null = null;
-    let statusCb: ((s: string, st: LiveState) => void) | null = null;
     const transport: RealtimeTransport = {
       subscribe: (_t: string, onMessage: (p: unknown) => void) => {
         handler = onMessage;
@@ -431,7 +428,7 @@ describe("M2 React view updates on transport frame", () => {
       close: () => {
         handler = null;
       },
-      onStatus: (s: string, st: LiveState) => statusCb?.(s, st),
+      onStatus: () => {},
     };
     return {
       transport,
@@ -618,7 +615,7 @@ describe("G3 R3 blockers (RED->GREEN)", () => {
     const client = new LiveProjectionClient(store, new InertTransport(), "R-1");
     client.setStatusListener(() => {});
     await client.bootstrap();
-    client.transport.fire("SUBSCRIBED");
+    (client as unknown as { transport: InertTransport }).transport.fire("SUBSCRIBED");
     expect(client.state).toBe("LIVE");
     // A live frame at seq=5 (gap after 1) -> GAP, CATCHING_UP, triggers resync.
     const r = client.receiveLive({ event: ev(5, "e5") });
@@ -626,7 +623,7 @@ describe("G3 R3 blockers (RED->GREEN)", () => {
     expect(client.state).toBe("CATCHING_UP");
     // The missing intermediate event (2..4) is reconciled from the DURABLE store
     // (not fabricated): extend the durable store and re-run resync explicitly.
-    client.store = new MemStore([ev(0, "e0"), ev(1, "e1"), ev(2, "e2"), ev(3, "e3"), ev(4, "e4"), ev(5, "e5")]) as unknown as EventStore;
+    (client as unknown as { store: EventStore }).store = new MemStore([ev(0, "e0"), ev(1, "e1"), ev(2, "e2"), ev(3, "e3"), ev(4, "e4"), ev(5, "e5")]) as unknown as EventStore;
     const ok = await client.resync();
     expect(ok).toBe(true);
     expect(client.events.map((e) => e.sequence)).toEqual([0, 1, 2, 3, 4, 5]);
@@ -638,7 +635,7 @@ describe("G3 R3 blockers (RED->GREEN)", () => {
     client.setStatusListener(() => {});
     await client.bootstrap();
     expect(client.state).toBe("PROJECTION_UNAVAILABLE"); // empty durable -> unavailable
-    client.transport.fire("SUBSCRIBED");
+    (client as unknown as { transport: InertTransport }).transport.fire("SUBSCRIBED");
     // Even with transport ready, no data -> still not LIVE.
     expect(client.state).toBe("PROJECTION_UNAVAILABLE");
   });

@@ -1,0 +1,128 @@
+# G1 DECISION RECORD — SCRUM-830 (DWO-V2-09)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-decision-record
+generated_at: '2026-09-30T06:10:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-830
+parent_run_ref: SCRUM-820
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: integration/SCRUM-820-dwo-v2
+base_sha: 0e96764512d603b041b9dceaadf7a5db3a93afb4
+task_branch: task/SCRUM-830-semantic-qualification
+active_runtime_plan_ref: PLAN-830-R1
+active_runtime_plan_revision: 1
+target_contract_ref: TARGET-QUAL-830-R1
+
+options_ref: ../brainstorming/g1-options.yaml
+preflight_ref: ../preflight/g1-preflight-report.yaml
+intake_ref: ../intake/g1-intake.yaml
+g0_ref: ../../g0/context-snapshot.yaml
+
+status: ACCEPTED
+selected_option_id: OPT-1
+
+user_decision:
+  actor: human://nhat-nguyen-quang
+  decided_at: '2026-09-30T06:10:00+07:00'
+  source: standing autonomous execution authorization for planning, decomposition, coding, tests and development commits
+  explicit: true
+  scope_of_decision: >-
+    OPT-1 selected by the agent as the only option satisfying all seven
+    acceptance criteria (V2_SEMANTIC_QUALIFIED derivation, AC-RS-01..11
+    evidence, adversarial suite evidence, subject binding, DEV-NATIVE/
+    COMPATIBILITY separation, no fixture bypass, regression-free). Human
+    Principal authorized autonomous execution of the approved development plan.
+
+rationale: >-
+  OPT-1 implements the full machine-checkable qualification layer: a subject
+  binding module, an AC-RS-01..11 scenario suite and a 10-case Universal
+  adversarial suite that call the REAL kernel modules (reducer, compareStates,
+  DurableLog, applyEvent, detectGaps, replay, liveState, accessibility, etc.),
+  and a V2_SEMANTIC_QUALIFIED derivation that fails closed with separate
+  DEV-NATIVE and COMPATIBILITY result vectors. OPT-2 (documentation-only) makes
+  AC-830-01/03/04 unverifiable. OPT-3 (hand-set booleans) violates AC-830-06 —
+  it would assert rather than exercise the kernel.
+
+rejected_option_ids:
+  - OPT-2
+  - OPT-3
+
+decomposition:
+  atomic: false
+  rationale: >-
+    SCRUM-830 carries separable deliverables (subject binding, AC-RS scenarios,
+    adversarial suite, token derivation, tests). Executed as ordered child runs
+    on one task branch, one G3 pass.
+  child_runs:
+    - id: CR-830-A
+      order: 1
+      title: Qualification subject binding module (qualificationSubject.ts)
+      produces: [lib/dwo/qualificationSubject.ts]
+    - id: CR-830-B
+      order: 2
+      title: AC-RS-01..11 scenario suite calling real kernel modules
+      produces: [lib/dwo/qualification.ts]
+    - id: CR-830-C
+      order: 3
+      title: Universal adversarial suite (10 cases with fail-closed expectations)
+      produces: [lib/dwo/qualification.ts]
+    - id: CR-830-D
+      order: 4
+      title: V2_SEMANTIC_QUALIFIED derivation + tests + regression run
+      produces: [lib/dwo/qualification.ts, tests/unit/dwo/qualification.test.ts]
+  execution_order: [CR-830-A, CR-830-B, CR-830-C, CR-830-D]
+  integration: all child runs land on the task branch, then G4 integrates into integration/SCRUM-820-dwo-v2
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - .gwc/tasks/SCRUM-830/
+
+excluded_actions:
+  - g4_merge
+  - g5_deploy
+  - g6_production
+  - database_migration
+  - secret_change
+  - force_push
+  - branch_deletion
+
+authority_boundaries:
+  grants:
+    - development commits on task/SCRUM-830-semantic-qualification
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-830 progress and evidence updates
+  excluded:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION
+    - approval bypass
+    - protected main writes
+
+required_gate: G2_HUMAN_DIRECTION
+g1_gate_outcome: PASS
+
+verification_plan:
+  - command: npx tsc --noEmit
+    expectation: exit 0
+  - command: npx vitest run --reporter=dot
+    expectation: existing suites still pass, plus new qualification suite
+  - command: npx vitest run tests/unit/dwo/qualification.test.ts
+    expectation: AC-RS-01..11 + adversarial + token derivation all pass
+  - command: python3 -m pytest tests/ -q
+    expectation: 112 tests still pass (no Python regression)
+  - coverage_mapping:
+      AC-830-01: tests/unit/dwo/qualification.test.ts (V2_SEMANTIC_QUALIFIED derivation)
+      AC-830-02: tests/unit/dwo/qualification.test.ts (AC-RS-01..11 evidence)
+      AC-830-03: tests/unit/dwo/qualification.test.ts (adversarial fail-closed)
+      AC-830-04: tests/unit/dwo/qualification.test.ts (subject binding digest)
+      AC-830-05: tests/unit/dwo/qualification.test.ts (DEV-NATIVE/COMPATIBILITY separation)
+      AC-830-06: tests/unit/dwo/qualification.test.ts (real kernel imports asserted)
+      AC-830-07: full vitest + tsc + pytest (no regression)
+
+next_gate: G2_EXECUTION

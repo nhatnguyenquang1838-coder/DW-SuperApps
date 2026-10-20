@@ -1,0 +1,109 @@
+# G1 INTAKE — SCRUM-823 (DWO-V2-02)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g1.intake/1.0
+artifact_type: G1_INTAKE
+gate: G1_PLAN
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-823
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: b47781f3f15ef2663e5d9f2e22b8fe22bf1cbe56
+  active_runtime_plan_ref: PLAN-823-R1
+  active_runtime_plan_revision: 1
+  target_contract_ref: TARGET-PROJECTION-823-R1
+
+problem:
+  statement: >-
+    DWO v2 has no versioned Projection Contract v2, no source/profile registry, and
+    no frozen deterministic certification comparison contract (FNR-02). SCRUM-824
+    (reducer), SCRUM-825 (durable history), SCRUM-830 (qualification) and SCRUM-832
+    (real-run certification) all depend on a frozen contract for event position/order,
+    gap identity, correlation/causation semantics and deterministic comparison.
+  why_now: >-
+    SCRUM-823 is the canonical owner of FNR-02. It must freeze the comparison
+    contract BEFORE the first consuming certification suite, and definitely before
+    SCRUM-832. The fixture pack (SCRUM-822) provides the cross-runtime vectors.
+
+stakeholders:
+  requester: human://nhat-nguyen-quang
+  affected:
+    - team://dw-superapps-dwo
+    - consumer://scrUM-824-reducer
+    - consumer://scrUM-825-durable-history
+    - consumer://scrUM-830-qualification
+    - consumer://scrUM-832-real-run-certification
+
+risks:
+  - id: RISK-001
+    description: FNR-02 comparison contract conflates lightweight UI digests with certification equality.
+    impact: high
+    mitigation: explicit separation; certification uses canonical structured-state equality, UI digest is separate.
+  - id: RISK-002
+    description: Unsupported profile receives heuristic Universal semantics.
+    impact: high
+    mitigation: fail-closed UNKNOWN/INCOMPATIBLE; no heuristic G0..G6 for unsupported profiles.
+  - id: RISK-003
+    description: Event position/order not frozen before reducer/durable consumers finalize.
+    impact: high
+    mitigation: explicit durable event position/order + gap identity frozen in this package.
+  - id: RISK-004
+    description: Correlation/causation metadata treated as Run identity or authority.
+    impact: high
+    mitigation: correlation/causation/trace is evidence metadata only, never identity/authority.
+  - id: RISK-005
+    description: Contract not additive/versioned, breaking historical semantic integrity.
+    impact: high
+    mitigation: versioned contract with upcast rules; historical revisions preserved.
+
+acceptance_criteria:
+  - id: AC-823-01
+    statement: V2_CONTRACT_FROZEN derivable from machine-readable state.
+    verifiable: true
+  - id: AC-823-02
+    statement: Contract is additive/versioned and preserves historical semantic integrity.
+    verifiable: true
+  - id: AC-823-03
+    statement: Unsupported profiles never receive heuristic Universal semantics (fail-closed UNKNOWN/INCOMPATIBLE).
+    verifiable: true
+  - id: AC-823-04
+    statement: Event position/order, gap identity and correlation/causation semantics frozen.
+    verifiable: true
+  - id: AC-823-05
+    statement: FNR-02 deterministic comparison contract versioned with cross-runtime vectors.
+    verifiable: true
+
+constraints:
+  - Contract additive/versioned, preserves historical semantic integrity
+  - Unsupported profiles fail closed (UNKNOWN/INCOMPATIBLE), no heuristic semantics
+  - FNR-02 comparison contract separate from UI digest
+  - Event position/order, gap identity, correlation/causation frozen
+  - No production write/effect path
+  - Stage by explicit path; never git add .
+
+target_contract:
+  ref: TARGET-PROJECTION-823-R1
+  revision: 1
+  kind: STATE
+  statement: >-
+    A versioned DWO Projection Contract v2 exists with a source/profile registry,
+    recursive Run identity, UR-G* vs GWC-* namespace separation, explicit durable
+    event position/order + gap identity, correlation/causation-as-evidence-metadata,
+    fail-closed UNKNOWN/INCOMPATIBLE behavior, and a frozen FNR-02 deterministic
+    certification comparison contract with cross-runtime vectors — all covered by
+    automated tests, with V2_CONTRACT_FROZEN derivable.
+  validation:
+    - all five acceptance criteria covered by executed automated tests
+    - DWO baseline stays green (typecheck, vitest, pytest)
+    - V2_CONTRACT_FROZEN derivable from materialized state
+  out_of_scope:
+    - reducer semantics (SCRUM-824)
+    - durable history implementation (SCRUM-825)
+    - any merge, deploy, production, migration or secret effect
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/contract/
+  - .gwc/tasks/SCRUM-823/

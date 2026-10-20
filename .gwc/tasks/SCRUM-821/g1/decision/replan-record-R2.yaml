@@ -1,0 +1,183 @@
+# G1 REPLAN RECORD — SCRUM-821 (DWO-V2-00)
+# This is PLAN REVISION 2. It does NOT mutate revision 1.
+# Revision 1 remains valid historical evidence at commit ff74ffc32bf22d907ccb59b2d0ce217ef230a258.
+
+schema_version: '1.0'
+artifact_type: replan-record
+replan_operation: REPLAN_RUN
+replan_reason_code: REPLAN_REQUIRED
+replan_reason: >-
+  The G1 plan bound the Universal Runtime release-development line by picking the
+  most-recently-advanced Universal-contract branch. Canonical C4 solution design
+  (3ea07c1c65b6813c95d6c7acf7a61c32 §0) explicitly designates a DIFFERENT line as the
+  native semantic source. The R1 binding was therefore not the designated line, and
+  continuing on it would have bound every downstream DWO v2 package to a source the
+  canonical design does not designate.
+
+supersedes:
+  plan_ref: PLAN-821-R1
+  plan_revision: 1
+  plan_commit: ff74ffc32bf22d907ccb59b2d0ce217ef230a258
+  historical_status: IMMUTABLE_HISTORY_RETAINED
+  note: Revision 1 is retained, never deleted and never edited in place, per Universal
+        Run Model §5.2 (run_id immutable; replan keeps the same run_id and creates a
+        NEW immutable plan revision).
+
+same_run_id_preserved: SCRUM-821
+new_run_id_intentionally_not_created: true
+new_run_id_rationale: >-
+  REPLAN_RUN (not RESTART_AS_NEW_RUN) because the objective, target contract, scope
+  boundary and acceptance criteria are unchanged. Only the source-binding identity
+  changed. Creating a new run_id would discard valid G0/G1 evidence for no reason.
+
+drift_classification: ADAPTER_CHANGE
+drift_classification_justification: >-
+  The change is a re-pointing of the native semantic source binding. It changes which
+  adapter/profile the projection registry must key on, and it invalidates the R1
+  exact_consumed_sha. It is NOT REDUCER_CHANGE or BLOCKING_CONTRACT_DRIFT because the
+  Universal Run Kernel Contract Freeze (gwc.universal-run/1) is unchanged between the
+  two heads, and the reducer contract is defined against the frozen kernel, not the
+  moving branch. Confirming that claim requires the kernel-contract diff captured below
+  as CR-821-A0 before G2 implementation is accepted.
+
+binding_correction:
+  wrong_binding_revision_1:
+    logical_release_development_ref: fix/SCRUM-818-migrate-582-into-scrum781-m2
+    exact_consumed_sha: 6a8c35fb38982773b06b3c49ed40ddea6c53f89a
+    sha_date: "2026-09-28T16:46:19Z"
+    selection_method: most-recently-advanced Universal-contract branch
+    why_wrong: >-
+      This branch is on no open PR in nhatnguyenquang1838-coder/gwc. It is not a
+      designated release-development line, so it is not a valid native semantic source.
+    evidence:
+      - "gh api repos/.../commits/6a8c35fb.../pulls -> empty (no PR)"
+      - "gh pr list --state open -> #582 auto/SCRUM-808-na81-20260923-v2, #578 fix/SCRUM-781-m1-runtime-contract-convergence, #574 auto/SCRUM-780-na81-20260810"
+  correct_binding_revision_2:
+    logical_release_development_ref: fix/SCRUM-781-m1-runtime-contract-convergence
+    exact_consumed_sha: 5c4e4a53fe6ceaceac05f233409c3dd20f17f4f3
+    sha_date: "2026-09-13T12:03:01Z"
+    designation_source: "C4 §0 UR-DEV native semantic source; C4 §21.5 confirms PR #578 is the current concrete dev reference"
+    designation_evidence:
+      - "gh pr view 578 -> headRefName=fix/SCRUM-781-m1-runtime-contract-convergence, headRefOid=5c4e4a53fe6ceaceac05f233409c3dd20f17f4f3, isDraft=true, base=main"
+    relation_to_revision_1: >-
+      5c4e4a53 is an ANCESTOR of 6a8c35fb. Compare reports
+      5c4e4a53...6a8c35fb = ahead_by 6, behind_by 0, status ahead,
+      merge_base 5c4e4a53fe6ceaceac05f233409c3dd20f17f4f3. The 6 superseded commits are:
+      87a2cef94424 converge G2 action schema and validator;
+      a776368a2531 version G2 envelope contract;
+      2004559989aa close G2 renderer and legacy compatibility gaps;
+      260f43453514 G2-RED legacy profile and envelope identity gaps;
+      a70f318d39cd enforce observed legacy profiles and identity shape;
+      6a8c35fb3898 migrate SCRUM-808 source lineage into current M2.
+    interpretation: >-
+      DWO must bind the designated line, not the newest commit. A moving branch head is
+      never certification evidence (BRD NFR-014). The superseded commits remain
+      reachable history but are NOT the native semantic source for DWO v2.
+
+  compatibility_binding_unchanged:
+    repository: nhatnguyenquang1838-coder/gwc
+    ref: main
+    exact_sha: 414002f92d48083e7133236346b26e3a2a047e33
+    sha_date: "2026-09-28T14:10:41Z"
+    role: >-
+      GWC-MAIN compatibility and effect-governance source only. Per ADR-11 a missing or
+      incompatible UR-DEV source fails closed and MUST NOT fall back to gwc/main.
+
+  dwo_implementation_binding_unchanged:
+    repository: nhatnguyenquang1838-coder/DW-SuperApps
+    ref: main
+    exact_sha: 2e0b0cdbf7c08ac9305acbd114aa42db749b24be
+    role: DWO implementation baseline
+
+kernel_contract_check_required:
+  reason: >-
+    The C4 digest reports an unresolved tension: the designated UR-DEV head 5c4e4a53 is a
+    Draft M1 PR that defers executable runtime seams, while the Run Model page claims the
+    20 design sections and 12 universal_run modules are IMPLEMENTED and ACCEPTED on
+    gwc/main@d16d587e. Which kernel surfaces actually exist in the designated head must be
+    proven, not assumed.
+  method: >-
+    Extract the kernel contract identity (gwc.universal-run/1, record envelope, receipt
+    set, 35 failure codes) from 5c4e4a53 and from gwc/main, and diff them. The digest is
+    machine-produced evidence attached to G3.
+  blocking: true
+  blocking_for: [G2_ACCEPTANCE]
+  owner: "CR-821-A0 (new child run, ordered before CR-821-A)"
+
+decomposition_revision_2:
+  atomic: false
+  child_runs:
+    - id: CR-821-A0
+      order: 0
+      title: Kernel contract identity diff between designated UR-DEV head and gwc/main
+      produces: [dwo-v2/baseline/kernel-contract-diff.json]
+      blocking: true
+      purpose: >-
+        Prove which Universal Run Kernel surfaces exist in the bound head, so downstream
+        projection/reducer packages do not target a surface that is not implemented.
+    - id: CR-821-A
+      order: 1
+      title: Release-binding registry with fail-closed exact-SHA resolution
+      produces: [lib/dwo/releaseBinding.ts, tests/unit/dwo/releaseBinding.test.ts]
+      revised_requirement: >-
+        The registry MUST encode the dual-source binding explicitly: UR-DEV native
+        semantic source and GWC-MAIN compatibility source are separate fields and
+        separate namespaces. A resolution failure of the UR-DEV source must fail closed
+        and must never substitute gwc/main (ADR-11, AC-RB-02).
+    - id: CR-821-B
+      order: 2
+      title: Drift classification taxonomy
+      produces: [lib/dwo/drift.ts, tests/unit/dwo/drift.test.ts]
+      revised_requirement: >-
+        Canonical FNR-03 enum is exactly COMPATIBLE | ADAPTER_CHANGE | REDUCER_CHANGE |
+        UI_CHANGE | QUALIFICATION_CHANGE | BLOCKING_CONTRACT_DRIFT. No numeric threshold.
+    - id: CR-821-C
+      order: 3
+      title: Capability, compatibility and access-boundary inventories
+      produces: [lib/dwo/inventory.ts, dwo-v2/baseline/capability-inventory.yaml, dwo-v2/baseline/access-boundary-inventory.yaml, tests/unit/dwo/inventory.test.ts]
+      revised_requirement: >-
+        The access-boundary inventory MUST use the five canonical trust boundaries from
+        C4 §6, and MUST record that the write plane is not reachable from the DWO UI and
+        that no browser-publishable credential exists for writes.
+    - id: CR-821-D
+      order: 4
+      title: R0 rebind evidence record schema and DEV_BINDING_ACTIVE derivation
+      produces: [lib/dwo/rebindRecord.ts, dwo-v2/baseline/r0-rebind-evidence.yaml, tests/unit/dwo/rebindRecord.test.ts]
+      revised_requirement: >-
+        binding_stage MUST use exactly RELEASE_DEV_TRACKING | MAIN_REBIND_PENDING |
+        RELEASE_MAIN_BOUND (Roadmap §14.1 / C4 §21.2). The R0 exit token is
+        DEV_BINDING_ACTIVE, which is the WS0 canonical token. V2_BASELINE_FROZEN and
+        V2_RELEASE_REBOUND are legacy R0 table tokens and are NOT emitted.
+  execution_order: [CR-821-A0, CR-821-A, CR-821-B, CR-821-C, CR-821-D]
+
+authorized_paths_revision_2:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/baseline/
+  - .gwc/tasks/SCRUM-821/
+
+exit_token_resolution:
+  r0_dev_exit: DEV_BINDING_ACTIVE
+  rejected_tokens:
+    - token: V2_BASELINE_FROZEN
+      reason: legacy R0 table token; WS0 and SCRUM-821 both name DEV_BINDING_ACTIVE
+    - token: V2_RELEASE_REBOUND
+      reason: legacy post-merge token; RELEASE_MAIN_BOUND is canonical
+  post_merge_token: RELEASE_MAIN_BOUND
+  unresolved: >-
+    The pages do not state which token is authoritative for the EPIC as a whole. This
+    package emits DEV_BINDING_ACTIVE because SCRUM-821/WS0 name it explicitly, and
+    records the divergence rather than blending tokens. Escalated as Q-003.
+
+authority_boundaries_unchanged:
+  grants:
+    - development commits on task/SCRUM-821-release-binding-inventory
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR creation and update
+    - Jira SCRUM-821 progress and evidence updates
+  excluded: [G4_MERGE, G5_DEPLOY, G6_PRODUCTION, approval_bypass, protected_main_writes]
+
+next_gate: G2_EXECUTION
+plan_revision: 2
+g1_gate_outcome: PASS

@@ -1,0 +1,68 @@
+# G3 VERIFICATION ATTESTATION — SCRUM-821 (DWO-V2-00)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g3.verification-attestation/1.0
+artifact_type: VERIFICATION_ATTESTATION
+gate: G3_VERIFY
+trace:
+  task_id: SCRUM-821
+  parent_run_ref: SCRUM-820
+  plan_revision: 2
+  verified_at: '2026-09-30T03:48:00+07:00'
+  task_branch: task/SCRUM-821-release-binding-inventory
+  branch_head: 5f11c6c
+
+verdict: PASS
+
+child_runs:
+  - id: CR-821-A
+    title: Release-binding registry with fail-closed exact-SHA resolution
+    commit: 64b2b167c95c3f5d35edf1b352d8fa8e627f6168
+    tests: 16 passed
+  - id: CR-821-B
+    title: Drift classification taxonomy
+    commit: aaa95c5
+    tests: 15 passed
+  - id: CR-821-C
+    title: Capability, compatibility and access-boundary inventories
+    commit: b09124d
+    tests: 9 passed
+  - id: CR-821-D
+    title: R0 rebind evidence record schema and DEV_BINDING_ACTIVE derivation
+    commit: 5f11c6c
+    tests: 10 passed
+
+executed_evidence:
+  - command: npx vitest run tests/unit/dwo/
+    result: 50 passed (50) — 4 dwo constraint suites
+  - command: npx vitest run
+    result: 21 files, 346 passed (296 baseline + 50 new)
+  - command: npx tsc --noEmit
+    result: exit 0
+  - command: python3 -m pytest tests/ -q
+    result: 112 passed (no Python regression)
+  - command: npx next lint
+    result: no new lint errors (1 pre-existing warning in RuntimeGraphCanvas.tsx, unrelated)
+  - command: python3 scripts/validate_workspace_worktree_policy.py
+    result: 'WORKTREE_POLICY_VALID: static'
+
+acceptance_criteria_coverage:
+  AC-821-01: VERIFIED (releaseBinding.test.ts)
+  AC-821-02: VERIFIED (inventory.test.ts)
+  AC-821-03: VERIFIED (inventory.test.ts)
+  AC-821-04: VERIFIED (inventory.test.ts)
+  AC-821-05: VERIFIED (rebindRecord.test.ts)
+  AC-821-06: VERIFIED (drift.test.ts)
+  AC-821-07: VERIFIED (releaseBinding.test.ts)
+  AC-821-08: VERIFIED (rebindRecord.test.ts, derived token DEV_BINDING_ACTIVE = true)
+
+exit_token_derivation:
+  token: DEV_BINDING_ACTIVE
+  derivable: true
+  basis: >
+    native Universal binding 5c4e4a53 (PR #578) present with exact SHA + contract
+    digest; drift = ADAPTER_CHANGE (non-blocking); all 8 AC covered by executed
+    automated tests. Token derived by deriveDevBindingActive(), machine-readable.
+
+deviations:
+  - none

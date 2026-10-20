@@ -1,0 +1,126 @@
+# G1 DECISION RECORD — SCRUM-824 (DWO-V2-03)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-decision-record
+generated_at: '2026-09-30T04:14:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-824
+parent_run_ref: SCRUM-820
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: integration/SCRUM-820-dwo-v2
+base_sha: d7714337954cb966c07e4bb3060a87e345e7878e
+task_branch: task/SCRUM-824-reducer
+active_runtime_plan_ref: PLAN-824-R1
+active_runtime_plan_revision: 1
+target_contract_ref: TARGET-REDUCER-824-R1
+
+options_ref: ../brainstorming/g1-options.yaml
+preflight_ref: ../preflight/g1-preflight-report.yaml
+intake_ref: ../intake/g1-intake.yaml
+g0_ref: ../../g0/context-snapshot.yaml
+
+status: ACCEPTED
+selected_option_id: OPT-1
+
+user_decision:
+  actor: human://nhat-nguyen-quang
+  decided_at: '2026-09-30T04:14:00+07:00'
+  source: standing autonomous execution authorization for planning, decomposition, coding, tests and development commits
+  explicit: true
+  scope_of_decision: >-
+    OPT-1 selected by the agent as the only option satisfying the acceptance
+    criteria. Human Principal authorized autonomous execution of the approved
+    development plan. No Human decision required to select among options that all
+    met policy.
+
+rationale: >-
+  OPT-1 implements the reducer as a pure TypeScript function over ordered event
+  prefixes, with recursive Root/Child/Atomic reduction, parent composition
+  independent from child-local PASS, dependency blocking path, fail-closed
+  UNKNOWN/PARTIAL, and orthogonal sync/view/semantic-qualification state. This
+  satisfies all five AC with executable validation and consumes the fixture stream
+  for conformance. OPT-2 (split across Python/TS twin) recreates the
+  source-divergence defect class. OPT-3 (documentation-only) makes
+  V2_REDUCER_CERTIFIED unverifiable.
+
+rejected_option_ids:
+  - OPT-2
+  - OPT-3
+
+decomposition:
+  atomic: false
+  rationale: >-
+    SCRUM-824 carries separable deliverables (reducer core, recursive topology,
+    dependency blocking, state model, certification). Executed as ordered child
+    runs on one task branch, one G3 pass.
+  child_runs:
+    - id: CR-824-A
+      order: 1
+      title: Reducer core — deterministic state reconstruction from ordered event prefixes
+      produces: [lib/dwo/reducer.ts]
+    - id: CR-824-B
+      order: 2
+      title: Recursive Root/Child/Atomic reduction + parent composition independence
+      produces: [lib/dwo/recursiveTopology.ts]
+    - id: CR-824-C
+      order: 3
+      title: Dependency eligibility + blocking path + fail-closed UNKNOWN/PARTIAL
+      produces: [lib/dwo/blockingPath.ts]
+    - id: CR-824-D
+      order: 4
+      title: V2_REDUCER_CERTIFIED derivation + fixture conformance tests
+      produces: [lib/dwo/reducerCertification.ts, tests/unit/dwo/reducer*.test.ts]
+  execution_order: [CR-824-A, CR-824-B, CR-824-C, CR-824-D]
+  integration: all child runs land on the task branch, then G4 integrates into integration/SCRUM-820-dwo-v2
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/reducer/
+  - .gwc/tasks/SCRUM-824/
+
+excluded_actions:
+  - g4_merge
+  - g5_deploy
+  - g6_production
+  - database_migration
+  - secret_change
+  - force_push
+  - branch_deletion
+
+authority_boundaries:
+  grants:
+    - development commits on task/SCRUM-824-reducer
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-824 progress and evidence updates
+  excluded:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION
+    - approval bypass
+    - protected main writes
+
+required_gate: G2_HUMAN_DIRECTION
+g1_gate_outcome: PASS
+
+verification_plan:
+  - command: npx tsc --noEmit
+    expectation: exit 0
+  - command: npx vitest run --reporter=dot
+    expectation: existing suites still pass, plus new reducer suites
+  - command: python3 -m pytest tests/ -q
+    expectation: 112 tests still pass (no Python regression)
+  - command: npx next lint
+    expectation: no new lint errors
+  - coverage_mapping:
+      AC-824-01: tests/unit/dwo/reducerCertification.test.ts
+      AC-824-02: tests/unit/dwo/reducer.test.ts (determinism)
+      AC-824-03: tests/unit/dwo/blockingPath.test.ts (UNKNOWN/PARTIAL)
+      AC-824-04: tests/unit/dwo/recursiveTopology.test.ts (parent composition)
+      AC-824-05: tests/unit/dwo/recursiveTopology.test.ts + blockingPath.test.ts
+
+next_gate: G2_EXECUTION

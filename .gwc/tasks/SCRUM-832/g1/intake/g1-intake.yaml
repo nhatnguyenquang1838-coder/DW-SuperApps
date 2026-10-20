@@ -1,0 +1,95 @@
+# G1 INTAKE — SCRUM-832 (DWO-V2-11)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g1.intake/1.0
+artifact_type: G1_INTAKE
+gate: G1_PLAN
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-832
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 2a25b5515def0977fcfa8a4d15e9f3aa181ccb45
+  active_runtime_plan_ref: PLAN-832-R1
+  active_runtime_plan_revision: 1
+  target_contract_ref: TARGET-ACCEPT-832-R1
+
+problem:
+  statement: >-
+    DWO v2 must be certified against one real qualified Universal Runtime campaign
+    after release-main rebinding, and the final acceptance/handoff evidence bundle
+    produced. This is the terminal task of the P0_SEMANTIC_RELEASE profile.
+  why_now: >-
+    SCRUM-830 (qualification) and SCRUM-831 (release main rebind) are Done. The
+    product UX/live lanes are accepted. SCRUM-832 certifies the whole against a real
+    campaign and produces the DWO_V2_ACCEPTED handoff dossier.
+
+stakeholders:
+  requester: human://nhat-nguyen-quang
+  affected:
+    - team://dw-superapps-dwo
+    - consumer://epic-scrum-820
+
+risks:
+  - id: RISK-001
+    description: Real campaign does not deterministically reconstruct from durable history.
+    impact: high
+    mitigation: reconstruction from durable history is a hard exit criterion.
+  - id: RISK-002
+    description: Final live/replay equality fails.
+    impact: high
+    mitigation: live/replay equality is a hard exit criterion.
+  - id: RISK-003
+    description: Handoff dossier does not identify exact output and evidence.
+    impact: high
+    mitigation: accepted G6 handoff identifies exact output and evidence.
+  - id: RISK-004
+    description: Scope creep into production/merge/deploy.
+    impact: high
+    mitigation: this task grants no merge/deploy/production authority.
+
+acceptance_criteria:
+  - id: AC-832-01
+    statement: DWO_V2_ACCEPTED derivable from machine-readable state.
+    verifiable: true
+  - id: AC-832-02
+    statement: real campaign deterministically reconstructs from durable history.
+    verifiable: true
+  - id: AC-832-03
+    statement: final live/replay equality passes.
+    verifiable: true
+  - id: AC-832-04
+    statement: accepted G6 handoff identifies exact output and evidence.
+    verifiable: true
+
+constraints:
+  - real campaign deterministically reconstructs from durable history
+  - final live/replay equality passes
+  - this task grants no merge/deploy/production authority
+  - stage by explicit path; never git add .
+
+target_contract:
+  ref: TARGET-ACCEPT-832-R1
+  revision: 1
+  kind: STATE
+  statement: >-
+    A real-run certification mechanism exists that: observes one real qualified
+    Universal campaign; verifies final LIVE tip equals durable replay tip at the
+    same boundary; validates read-only safety, evidence provenance, target/handoff
+    and degraded-mode behavior; reconstructs accepted state after derived-state
+    reset; records exact Universal released-main SHA, DWO implementation SHA,
+    source/profile/reducer/projection identities and qualification records; and
+    produces the final G6 handoff dossier. DWO_V2_ACCEPTED is derivable from
+    machine-readable state.
+  validation:
+    - all four acceptance criteria covered by executed automated tests
+    - DWO baseline stays green (typecheck, vitest, pytest)
+    - DWO_V2_ACCEPTED derivable from materialized state
+  out_of_scope:
+    - any merge, deploy, production, migration or secret effect
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/acceptance/
+  - .gwc/tasks/SCRUM-832/

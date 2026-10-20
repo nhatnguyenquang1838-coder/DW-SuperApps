@@ -1,0 +1,95 @@
+{
+  "artifact_type": "kernel-contract-diff",
+  "schema_version": "1.0",
+  "run_id": "SCRUM-821",
+  "child_run": "CR-821-A0",
+  "purpose": "Prove which Universal Run Kernel surfaces exist in the designated UR-DEV head before G2 acceptance, so no downstream DWO v2 package targets an unimplemented surface.",
+  "generated_at": "2026-09-30T03:31:00+07:00",
+  "method": "git tree-diff and per-ref blob digest comparison against an exact local gwc checkout; read-only, no mutation.",
+  "refs_compared": {
+    "ur_dev_native_semantic_source": {
+      "repository": "nhatnguyenquang1838-coder/gwc",
+      "ref": "fix/SCRUM-781-m1-runtime-contract-convergence",
+      "exact_sha": "5c4e4a53fe6ceaceac05f233409c3dd20f17f4f3",
+      "sha_date": "2026-09-13T12:03:01Z",
+      "pr": 578,
+      "pr_state": "OPEN",
+      "pr_draft": true
+    },
+    "gwc_main_compatibility_source": {
+      "repository": "nhatnguyenquang1838-coder/gwc",
+      "ref": "main",
+      "exact_sha": "414002f92d48083e7133236346b26e3a2a047e33",
+      "sha_date": "2026-09-28T14:10:41Z"
+    },
+    "relation": "compare 5c4e4a53...414002f9 reports gwc/main is 6 commits ahead of the UR-DEV head; the merge base is the UR-DEV head, therefore the UR-DEV head is an ancestor of gwc/main."
+  },
+  "kernel_surface_inventory": {
+    "universal_run_path_count_ur_dev": 24,
+    "universal_run_path_count_gwc_main": 24,
+    "kernel_module_count": 12,
+    "kernel_test_files": [
+      "tests/test_universal_run_authority_v1.py",
+      "tests/test_universal_run_certification_v1.py",
+      "tests/test_universal_run_context_v1.py",
+      "tests/test_universal_run_dossier_v1.py",
+      "tests/test_universal_run_kernel_v1.py",
+      "tests/test_universal_run_legacy_v1.py",
+      "tests/test_universal_run_lifecycle_v1.py",
+      "tests/test_universal_run_node_v1.py",
+      "tests/test_universal_run_plan_v1.py",
+      "tests/test_universal_run_r1_interop_v1.py",
+      "tests/test_universal_run_state_v1.py",
+      "tests/test_universal_run_topology_v1.py"
+    ],
+    "modules_manifest": ".gwc/tasks/SCRUM-668/universal_run_modules_manifest.yaml"
+  },
+  "diff_result": {
+    "kernel_surface_byte_identical": true,
+    "command": "git diff --stat <ur_dev_sha> <gwc_main_sha> -- tools/node_architect/ tests/test_universal_run_ .gwc/tasks/SCRUM-668/universal_run_modules_manifest.yaml",
+    "output": "empty (no differences)",
+    "modules_manifest_blob_ur_dev": "5ae7f38a4efe374966b497004dbe18ea30c24e3b",
+    "modules_manifest_blob_gwc_main": "5ae7f38a4efe374966b497004dbe18ea30c24e3b",
+    "manifest_digests_match": true
+  },
+  "whole_tree_delta": {
+    "files_changed": 19,
+    "insertions": 1114,
+    "deletions": 265,
+    "note": "The kernel surface is identical, but the two refs differ elsewhere (tests/test_m1_instruction_convergence.py removed, tests/test_q0_live_qualification_contract.py added). Those differences are outside the kernel contract and do not affect DWO v2 projection semantics."
+  },
+  "contract_document_findings": {
+    "core/UNIVERSAL_RUN_KERNEL_CONTRACT_v1.0.md": "ABSENT at both refs",
+    "core/UNIVERSAL_RECURSIVE_GOVERNED_RUN_MODEL_v1.0.md": "ABSENT at both refs",
+    "core/GATE_LIFECYCLE_CONTRACT_v1.0.md": "PRESENT at both refs",
+    "interpretation": "The Universal Run Kernel Contract Freeze v1.1 is published as a Notion design artifact, not as a versioned core contract document in the repository. The authoritative machine-readable kernel identity available in-repository is therefore the executable module set plus the SCRUM-668 modules manifest, together with the JCS+SHA-256 content_digest envelope defined by the contract. DWO v2 must treat the Notion contract freeze as the normative specification and the repository modules as its executable realization, and must NOT assume a repository contract document exists to parse."
+  },
+  "conclusions": [
+    {
+      "id": "CONC-01",
+      "statement": "The designated UR-DEV head 5c4e4a53 contains the full Universal Run Kernel executable surface (12 kernel test modules, 24 universal_run paths, SCRUM-668 modules manifest) and that surface is byte-identical to gwc/main.",
+      "consequence": "DWO v2 may bind the designated UR-DEV head as the native semantic source and target the kernel contract. No unimplemented-surface risk from this direction."
+    },
+    {
+      "id": "CONC-02",
+      "statement": "The Notion-reported tension that the designated head defers executable runtime seams while implementation lives on gwc/main is NOT reproduced by the repository tree. Both refs carry an identical, complete kernel surface.",
+      "consequence": "The tension is a documentation-status conflict, not a code-state conflict. It does not block G2 and must not be treated as BLOCKING_CONTRACT_DRIFT.",
+      "residual_risk": "Documentation status remains contradictory: the Run Model page shows both WAITING_FOR_HUMAN_ACCEPTANCE and IMPLEMENTED/ACCEPTED. Recorded as Q-002, non-blocking for this package."
+    },
+    {
+      "id": "CONC-03",
+      "statement": "The R1 to R2 binding correction is ADAPTER_CHANGE, confirmed by evidence. The kernel contract is unchanged between the wrong and correct UR-DEV refs, so no reducer, projection, qualification or UI change is implied by the correction itself.",
+      "consequence": "Drift classification ADAPTER_CHANGE stands, verified rather than asserted."
+    },
+    {
+      "id": "CONC-04",
+      "statement": "The Universal Run Kernel Contract is not materialized as a versioned repository document at any ref.",
+      "consequence": "DWO v2 must not attempt to parse a repository contract document for kernel identity; it must use the Notion contract freeze plus the executable module manifest identity."
+    }
+  ],
+  "drift_classification_confirmed": "ADAPTER_CHANGE",
+  "blocking_for_g2_acceptance": false,
+  "blocking_cleared": true,
+  "outcome": "PASS",
+  "grants_no_authority": "This artifact is read-only evidence. It grants no G2, G4, merge, deploy, production, data, secret or migration authority."
+}

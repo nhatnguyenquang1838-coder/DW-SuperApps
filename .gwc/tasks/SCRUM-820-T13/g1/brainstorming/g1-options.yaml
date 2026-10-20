@@ -1,0 +1,41 @@
+# G1 OPTIONS — SCRUM-820-T13 (86 Test-Type Errors)
+# Immutable once committed.
+
+schema_version: '1.0'
+artifact_type: g1-options
+generated_at: '2026-10-05T06:08:00+07:00'
+
+task_id: SCRUM-820-T13
+
+options:
+  - id: OPT-1
+    title: "Fix all 86 errors story-by-story (9 stories, per-file batches)"
+    description: >-
+      7 single-file stories (top-count files) + 2 batch stories (13 low-count
+      files). Each story = one commit; typecheck:tests count decreases per commit,
+      ending at 0. Type-level fixes only: remove unused imports, add null guards,
+      fix arity, correct annotations. Assertions/expected values byte-identical.
+    pros:
+      - "Monotonic, verifiable debt reduction per commit"
+      - "Each story independently testable (vitest + typecheck gates)"
+      - "Zero cross-test imports -> 9 stories parallel-safe"
+      - "Directly satisfies 'đảm bảo không phá logic' (type-only edits)"
+    cons:
+      - "Larger total effort than minimal-debt options"
+
+  - id: OPT-2
+    title: "Keep debt; rely on typecheck:tests:strict as gate"
+    description: >-
+      Do not fix; keep strict gate at baseline (86 <= 86). Tests remain
+      type-unsound indefinitely.
+    pros: ["Zero effort"]
+    cons:
+      - "Leaves F1 defect unresolved: test code never type-checked"
+      - "Gate provides no signal until debt is fixed (floor at 86)"
+      - "Soft risk: an edit that raises count to 87 fails; but no one fixes the 86"
+
+selected: OPT-1
+selection_rationale: >-
+  User directive explicitly asks to plan the fix ('tiến hành lên plan sửa 86
+  lỗi này') with the logic-preservation constraint. OPT-1 is the only option that
+  executes the directive; OPT-2 contradicts it.
