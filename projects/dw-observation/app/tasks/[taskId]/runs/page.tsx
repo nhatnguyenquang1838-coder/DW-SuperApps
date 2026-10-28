@@ -6,11 +6,9 @@
 //
 // Read-only. Grants no effect capability.
 
-import { notFound } from "next/navigation";
 import Link from "next/link";
 import { resolveTask } from "@/lib/taskRead";
-import { TASK_RELATION_RECORDS } from "@/lib/taskFixtures";
-import { listRuns } from "@/lib/observatory";
+import { readServerRunList } from "@/lib/serverRunRead";
 
 type TaskRunSummary = {
   runId: string;
@@ -26,25 +24,30 @@ type TaskRunSummary = {
 export default async function TaskRunsPage({ params }: { params: { taskId: string } }) {
   const taskRef = decodeURIComponent(params.taskId);
 
-  // Resolve task through the canonical gateway — real source only.
-  // Fail-closed: UNAVAILABLE → 404 (unknown task, not a silent fallback).
-  const task = await resolveTask(taskRef, "real", TASK_RELATION_RECORDS);
+  // Resolve task only through the canonical real relation source. This source
+  // is currently not configured, so the resolver returns UNAVAILABLE rather
+  // than consuming development fixtures or guessing membership.
+  const task = await resolveTask(taskRef, "real", []);
 
-  if (task.status === "UNAVAILABLE") notFound();
-
-  // Hydrate runs from the observatory (same source family as the gateway).
-  const runsById = new Map(listRuns("real").map((r) => [r.runId, r]));
+  // Hydrate matching runs from the same real server read boundary. If the
+  // canonical relation source is unavailable, do not query fixture-backed views.
+  const runList = task.status === "RESOLVED" ? await readServerRunList() : null;
+  const runsById = new Map(
+    (runList?.runs ?? [])
+      .map((run) => [String(run.run_id ?? ""), run] as const)
+      .filter(([runId]) => runId.length > 0),
+  );
 
   const items: TaskRunSummary[] = task.rootRunIds.map((runId) => {
     const run = runsById.get(runId);
     return {
       runId,
-      status: run?.next ?? "—",
-      sourceSystem: run?.sourceSystem && run.sourceSystem !== "—" ? run.sourceSystem : null,
-      lane: run?.lane && run.lane !== "—" ? run.lane : null,
-      startedAt: run?.startedAt ?? null,
+      status: "UNKNOWN",
+      sourceSystem: typeof run?.source_system === "string" ? run.source_system : null,
+      lane: null,
+      startedAt: typeof run?.started_at === "string" ? run.started_at : null,
       lifecycleProgress: null,
-      anomalyCount: run?.anomalyCount ?? null,
+      anomalyCount: null,
       relationRevision: task.relationRevision,
     };
   });
@@ -81,7 +84,41 @@ export default async function TaskRunsPage({ params }: { params: { taskId: strin
           {task.relationRevision != null && ` · relationRevision: ${task.relationRevision}`}
         </p>
 
-        {items.length === 0 ? (
+        {task.status !== "RESOLVED" ? (
+          <div
+            role="status"
+            className="rounded-md border px-4 py-3 text-sm"
+            style={{
+              borderColor:
+                task.status === "CONFLICT"
+                  ? "var(--dwo-color-state-red)"
+                  : "var(--dwo-color-state-amber)",
+              background: "var(--dwo-color-bg-subtle)",
+              color:
+                task.status === "CONFLICT"
+                  ? "var(--dwo-color-state-red)"
+                  : "var(--dwo-color-state-amber)",
+            }}
+          >
+            {task.status === "UNAVAILABLE"
+              ? "Task relation unavailable — canonical source is not connected."
+              : task.status === "CONFLICT"
+                ? "Task relation conflict — no run links were selected."
+                : "Task relation unresolved — no run ids are inferred."}
+          </div>
+        ) : runList?.degraded ? (
+          <div
+            role="status"
+            className="rounded-md border px-4 py-3 text-sm"
+            style={{
+              borderColor: "var(--dwo-color-state-amber)",
+              background: "var(--dwo-color-bg-subtle)",
+              color: "var(--dwo-color-state-amber)",
+            }}
+          >
+            Run source unavailable — no fixture fallback is used.
+          </div>
+        ) : items.length === 0 ? (
           <div
             className="rounded-md border px-4 py-3 text-sm"
             style={{

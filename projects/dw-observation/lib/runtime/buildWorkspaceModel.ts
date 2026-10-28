@@ -76,6 +76,8 @@ export async function buildWorkspaceModel(
         snapshot.status === REPLAY_POSITION_UNAVAILABLE
           ? "REPLAY_POSITION_UNAVAILABLE"
           : "PROJECTION_UNAVAILABLE",
+      projectionSyncState:
+        snapshot.status === REPLAY_POSITION_UNAVAILABLE ? "GAP" : "DEGRADED",
       sourceDigest: null,
     };
     return { model: unknownModel, mode: "REPLAY" };
@@ -136,7 +138,7 @@ export async function buildWorkspaceModel(
     };
 
     const model = loginAuthScenarioAdapter(fixture as any, run.runId);
-    return { model: { ...model, mode: "SIMULATED" } as UnifiedRunWorkspaceModel, mode: "SIMULATED" };
+    return { model: { ...model, mode: "SIMULATED", projectionSyncState: "GAP" } as UnifiedRunWorkspaceModel, mode: "SIMULATED" };
   }
 
   // ---------------- fixture mode ----------------
@@ -144,7 +146,7 @@ export async function buildWorkspaceModel(
     const entry = FIXTURE_CATALOG.find((c) => c.id === runId);
     if (!entry) return onMissing();
     const model = fixtureScenarioAdapter(entry);
-    return { model: { ...model, mode: "SIMULATED" } as UnifiedRunWorkspaceModel, mode: "SIMULATED" };
+    return { model: { ...model, mode: "SIMULATED", projectionSyncState: "GAP" } as UnifiedRunWorkspaceModel, mode: "SIMULATED" };
   }
 
   // ---------------- real mode ----------------
@@ -162,6 +164,7 @@ export async function buildWorkspaceModel(
       currentSequence: null,
       canonicalHistoryAvailable: false,
       projectionStatus: "PROJECTION_UNAVAILABLE",
+      projectionSyncState: "DEGRADED",
       sourceDigest: null,
     };
     return { model, mode: "LIVE" };

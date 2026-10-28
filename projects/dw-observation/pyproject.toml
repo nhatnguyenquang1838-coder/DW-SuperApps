@@ -9,8 +9,16 @@ description = "DW Run Observatory — read-only deterministic projection of DW-S
 requires-python = ">=3.9"
 dependencies = []
 
-[tool.setuptools]
-py-modules = ["dw_observation"]
+[project.optional-dependencies]
+qualification = [
+  "langgraph==1.2.18; python_version >= '3.10'",
+  "langgraph-checkpoint-sqlite==3.1.2; python_version >= '3.10'",
+]
+test = ["pytest>=8,<10"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["dw_observation*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

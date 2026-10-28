@@ -110,6 +110,21 @@ function unavailable(taskRef: string): TaskSummary {
   };
 }
 
+function conflicted(taskRef: string): TaskSummary {
+  // Do not leak either source's relation or counts through a conflict result.
+  return {
+    taskRef,
+    title: null,
+    domain: null,
+    rootRunIds: [],
+    rootRunCount: null,
+    latestRunId: null,
+    latestState: null,
+    relationRevision: null,
+    status: "CONFLICT",
+  };
+}
+
 /**
  * Resolve a single task through the gateway.
  *
@@ -139,7 +154,7 @@ export async function resolveTask(
 
   // Conflict detection: two sources disagree at the same revision
   if (fixture && real && summariesDisagree(fixture, real)) {
-    return { ...fixture, status: "CONFLICT" };
+    return conflicted(taskRef);
   }
 
   // Return the selected source — no fallback to the other

@@ -63,9 +63,13 @@ function writeTempTsconfig() {
 }
 
 const tmpConfig = writeTempTsconfig();
+// Launch the repository-pinned TypeScript compiler through the current Node
+// runtime. Spawning `npx.cmd` directly returns EINVAL on Windows and can also
+// resolve a network/global compiler rather than the lockfile-pinned one.
+const tscEntry = join(ROOT, "node_modules", "typescript", "bin", "tsc");
 const proc = spawnSync(
-  process.platform === "win32" ? "npx.cmd" : "npx",
-  ["tsc", "--noEmit", "-p", tmpConfig],
+  process.execPath,
+  [tscEntry, "--noEmit", "-p", tmpConfig],
   { cwd: ROOT, encoding: "utf8" },
 );
 

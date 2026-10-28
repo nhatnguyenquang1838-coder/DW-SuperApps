@@ -71,6 +71,7 @@ export async function realRuntimeAdapter(
       currentSequence: null,
       canonicalHistoryAvailable: false,
       projectionStatus: "PROJECTION_UNAVAILABLE",
+      projectionSyncState: "DEGRADED",
       sourceDigest: null,
     };
   }
@@ -164,6 +165,12 @@ export async function realRuntimeAdapter(
     currentSequence: null,
     canonicalHistoryAvailable: detail.canonicalHistoryAvailable,
     projectionStatus: detail.projectionStatus,
+    projectionSyncState:
+      history.degraded
+        ? "DEGRADED"
+        : detail.canonicalHistoryAvailable && history.events.length > 0
+          ? "LIVE"
+          : "GAP",
     sourceDigest: null,
   };
 }

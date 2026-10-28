@@ -5,6 +5,8 @@
  * Pure TypeScript — no React import, no DOM access.
  */
 
+import type { ProjectionSyncStatus } from "../dwo/qualificationProjection";
+
 export type WorkspaceMode = "LIVE" | "REPLAY" | "SIMULATED";
 
 export type RuntimeNodeState =
@@ -55,5 +57,6 @@ export interface UnifiedRunWorkspaceModel {
   currentSequence: number | null;
   canonicalHistoryAvailable: boolean;
   projectionStatus: string;
+  projectionSyncState?: ProjectionSyncStatus;
   sourceDigest: string | null;
 }

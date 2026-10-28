@@ -18,6 +18,7 @@
 
 import UnifiedRunWorkspace from "@/components/dwo/UnifiedRunWorkspace";
 import { buildWorkspaceModel } from "@/lib/runtime/buildWorkspaceModel";
+import { readQualificationProjection } from "@/lib/dwo/qualificationRead";
 
 export default async function RunDetailPage({
   params,
@@ -44,10 +45,18 @@ export default async function RunDetailPage({
     replaySeq
   );
 
+  // Read the semantic-qualification projection from the internal GET-only
+  // service. Missing/unavailable service stays UNKNOWN — never fabricates
+  // QUALIFIED from a LIVE projection sync state.
+  const qualificationProjection = await readQualificationProjection(params.runId);
+
   // ---------------- unified workspace — single render, both modes ----------------
   return (
     <section className="space-y-8">
-      <UnifiedRunWorkspace model={model} />
+      <UnifiedRunWorkspace
+        model={model}
+        qualificationProjection={qualificationProjection}
+      />
     </section>
   );
 }

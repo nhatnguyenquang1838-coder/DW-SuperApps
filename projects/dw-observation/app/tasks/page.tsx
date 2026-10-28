@@ -10,7 +10,6 @@
 // never an empty list masquerading as healthy.
 
 import { readRealSummaries } from "@/lib/taskRead";
-import { TASK_RELATION_RECORDS } from "@/lib/taskFixtures";
 import type { TaskResolutionStatus } from "@/lib/taskTypes";
 
 const statusStyle: Record<
@@ -40,10 +39,11 @@ const statusStyle: Record<
 };
 
 export default async function TasksPage() {
-  // Real source — fixture-backed seed records feed the real adapter until an
-  // external connector wires the live task-relation source. Empty records
-  // still mean source unavailable (fail-closed stays intact).
-  const summaries = await readRealSummaries(TASK_RELATION_RECORDS);
+  // No canonical TaskRunRelationRecord provider is configured in this source
+  // tree. Keep real mode explicitly unavailable rather than seeding it with
+  // development fixture records; a live provider can be injected here without
+  // changing the fixture-only simulation route.
+  const summaries = await readRealSummaries([]);
   const sourceAvailable = summaries.length > 0;
 
   return (

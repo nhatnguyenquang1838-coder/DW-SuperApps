@@ -6,8 +6,13 @@ import type {
   UnifiedRunWorkspaceModel,
   WorkspaceMode,
 } from "@/lib/runtime/unifiedRuntime";
+import {
+  unknownQualificationProjection,
+  type QualificationProjection,
+} from "@/lib/dwo/qualificationProjection";
 
 import WorkspaceHeader from "./WorkspaceHeader";
+import RunStatusAxes from "./RunStatusAxes";
 import ScenarioRunRail from "./ScenarioRunRail";
 import RunHierarchy from "./RunHierarchy";
 import RuntimeGraphCanvas from "./RuntimeGraphCanvas";
@@ -26,10 +31,24 @@ type InspectorTab =
 
 export default function UnifiedRunWorkspace({
   model,
+  qualificationProjection,
 }: {
   model: UnifiedRunWorkspaceModel;
+  qualificationProjection?: QualificationProjection;
 }) {
   const [mode, setMode] = useState<WorkspaceMode>(model.mode);
+  const qualification =
+    qualificationProjection ??
+    unknownQualificationProjection(model.runId, "QUALIFICATION_READ_UNCONFIGURED");
+  const projectionSync = model.projectionSyncState ?? (
+    model.mode === "SIMULATED"
+      ? "GAP"
+      : model.canonicalHistoryAvailable
+        ? "LIVE"
+        : model.projectionStatus === "PROJECTION_UNAVAILABLE"
+          ? "DEGRADED"
+          : "GAP"
+  );
   const [cursor, setCursor] = useState(0);
   const [followCursor, setFollowCursor] = useState(true);
   const [selection, setSelection] = useState<{
@@ -129,6 +148,11 @@ export default function UnifiedRunWorkspace({
   return (
     <div className="dwo-workspace" data-testid="unified-run-workspace">
       <WorkspaceHeader model={model} mode={mode} onModeChange={handleModeChange} />
+      <RunStatusAxes
+        projectionSync={projectionSync}
+        view={mode === "REPLAY" ? "REPLAY" : "CURRENT"}
+        qualification={qualification}
+      />
       <ScenarioRunRail model={model} selectedRunId={model.runId} onSelectRun={() => {}} />
 
       <div className="dwo-workspace-body">
