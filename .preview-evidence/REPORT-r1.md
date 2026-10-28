@@ -9,7 +9,7 @@
 
 ## F0 — inventory
 
-`projects/dw-observation/dwo-v2/fixtures/DWO-UR-30-V1` contains **161 files**, not the expected 132:
+`projects/dw-observation/dwo-v2/fixtures/DWO-UR-30-V1` contains **132 base-pack files** plus **29 qualification receipts**, for **161 total files** in the current tree. This reconciles the requested 132 count with the additive F3 qualification evidence; no parallel fixture pack was created.
 
 | Pack component | Files / records |
 |---|---:|
@@ -71,4 +71,4 @@ Source changes and the eight canonical screenshot artifacts are intended for the
 1. The source pack has one projection snapshot per run (30 rows / 30 runs). Individual run replay is therefore shallow; progressive replay is meaningful only when the scenario contains multiple explicitly materialized self/child snapshots. A richer multi-event fixture is needed to demonstrate a full lifecycle within one run.
 2. Qualification receipts preserve their recorded immutable subject (`task_ref` is null in the current pack); the separate Task relation view does not rewrite or requalify that subject.
 3. `next build` reports pre-existing warnings: invalid `next.config.mjs` key `devIndicator` and a missing `onOpenArtifact` dependency in `components/login-epic/RuntimeGraphCanvas.tsx:138`. Both are outside this fixture-preview scope; build succeeded.
-4. Fixture pack inventory differs from the requested count: 161 tracked pack files were found, not 132. No parallel pack was created.
+4. Inventory reconciled: 132 base-pack files plus 29 qualification receipts = 161 total files; no parallel pack was created.
