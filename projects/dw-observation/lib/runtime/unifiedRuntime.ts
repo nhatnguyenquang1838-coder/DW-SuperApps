@@ -20,6 +20,12 @@ export type RuntimeNodeState =
 export interface UnifiedRuntimeNode {
   id: string;
   gateId: string | null;
+  /**
+   * Declared gate state for this node (e.g. ACTIVE, WAITING, BLOCKED, PASSED,
+   * FAILED, CANCELLED, SUPERSEDED). Fixture-sourced; `null` when the source
+   * declares no gate. Absent (undefined) means "not carried by this source".
+   */
+  gateState?: string | null;
   title: string;
   family: string | null;
   nodeType: string | null;

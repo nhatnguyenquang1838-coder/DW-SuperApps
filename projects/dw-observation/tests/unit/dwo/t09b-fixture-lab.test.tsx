@@ -96,9 +96,7 @@ describe("RED 1+3: page UI", () => {
     fireEvent.click(btn);
 
     // Conflict reason must be visible
-    expect(
-      screen.getByText(/incompatible-source negative|fail-closed/i)
-    ).toBeInTheDocument();
+    expect(screen.getByTestId("conflict-banner").textContent).toMatch(/fail-closed/i);
 
     // The workspace must show CONFLICT status
     expect(
@@ -120,6 +118,25 @@ describe("RED 1+3: page UI", () => {
     expect(
       screen.getByText(/fixture data|development only|dev fixture/i)
     ).toBeInTheDocument();
+  });
+
+  it("Fixture Lab wires an explicit subtree event stream into progressive replay", () => {
+    render(<DevFixturesPage />);
+
+    const replay = screen.getByTestId("fixture-replay-controls");
+    expect(replay.getAttribute("data-run-id")).toBe("DEV-RUN-001");
+    expect(screen.getByTestId("fixture-replay-cursor").textContent).toBe("0/0");
+
+    // DEV-RUN-001's explicitly materialized self + direct children have four
+    // durable events in the fixture pack. Catch-up must load those exact events.
+    fireEvent.click(screen.getByTestId("fixture-catch-up"));
+    expect(screen.getByTestId("fixture-replay-cursor").textContent).toBe("4/4");
+    expect(screen.getByTestId("fixture-replay-events").textContent).toContain("EVT-DEV-RUN-004");
+
+    fireEvent.click(screen.getByTestId("fixture-mode-replay"));
+    fireEvent.click(screen.getByTestId("fixture-replay-start"));
+    expect(screen.getByTestId("fixture-replay-mode").textContent).toBe("REPLAY");
+    expect(screen.getByTestId("fixture-replay-cursor").textContent).toBe("0/4");
   });
 });
 

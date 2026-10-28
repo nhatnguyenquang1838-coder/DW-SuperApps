@@ -14,9 +14,11 @@
 
 import Link from 'next/link';
 import { FIXTURE_TASK_RELATIONS_PATH, listFixtureTaskRelations } from '@/lib/dwo/fixtureTaskRead';
+import { isLocalFixturePreview } from '@/lib/dwo/fixturePreviewMode';
 import type { TaskSummary } from '@/lib/taskTypes';
 
 export default async function DevTasksPage() {
+  const basePath = isLocalFixturePreview() ? '/tasks' : '/dev/tasks';
   const tasks: TaskSummary[] = await listFixtureTaskRelations();
 
   return (
@@ -33,6 +35,14 @@ export default async function DevTasksPage() {
         <nav className="mb-6 text-xs" style={{ color: 'var(--dwo-color-text-faint)' }}>
           <span style={{ color: 'var(--dwo-color-text-muted)' }}>Dev</span> / Tasks
         </nav>
+        <div
+          className="mb-5 inline-flex items-center gap-2 rounded border px-3 py-1.5"
+          style={{ borderColor: 'var(--dwo-color-state-amber)', background: 'var(--dwo-color-bg-subtle)' }}
+          data-testid="dev-fixture-indicator"
+        >
+          <strong className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--dwo-color-state-amber)' }}>DEV FIXTURE</strong>
+          <span className="text-xs" style={{ color: 'var(--dwo-color-text-muted)' }}>read-only local preview</span>
+        </div>
         <h1
           className="mb-1 text-2xl font-bold tracking-tight"
           style={{ color: 'var(--dwo-color-text-primary)' }}
@@ -59,7 +69,7 @@ export default async function DevTasksPage() {
             {tasks.map((t) => (
               <Link
                 key={t.taskRef}
-                href={`/dev/tasks/${encodeURIComponent(t.taskRef)}/runs`}
+                href={`${basePath}/${encodeURIComponent(t.taskRef)}/runs`}
                 className="notion-task-card block rounded-lg border p-4 transition-colors"
                 style={{ color: 'inherit' }}
               >

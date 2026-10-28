@@ -18,7 +18,12 @@
 
 import UnifiedRunWorkspace from "@/components/dwo/UnifiedRunWorkspace";
 import { buildWorkspaceModel } from "@/lib/runtime/buildWorkspaceModel";
+import { isLocalFixturePreview } from "@/lib/dwo/fixturePreviewMode";
 import { readQualificationProjection } from "@/lib/dwo/qualificationRead";
+import { loadFixtureQualificationReceipt, fixtureReceiptToProjection } from "@/lib/dwo/fixtureQualification";
+import { createFixtureReplaySession } from "@/lib/dwo/fixtureReplaySession";
+import type { QualificationProjection } from "@/lib/dwo/qualificationProjection";
+import Link from "next/link";
 
 export default async function RunDetailPage({
   params,
@@ -27,9 +32,10 @@ export default async function RunDetailPage({
   params: { runId: string };
   searchParams: { mode?: string; seq?: string };
 }) {
+  const fixtureMode = isLocalFixturePreview();
   const dataSource =
-    process.env.OBSERVATORY_DATA_SOURCE === "mock" ? "mock"
-    : process.env.OBSERVATORY_DATA_SOURCE === "fixture" ? "fixture"
+    fixtureMode ? "fixture"
+    : process.env.OBSERVATORY_DATA_SOURCE === "mock" ? "mock"
     : "real";
 
   // Parse replay query params (Next.js 14.2.5 — synchronous searchParams).
@@ -45,18 +51,52 @@ export default async function RunDetailPage({
     replaySeq
   );
 
-  // Read the semantic-qualification projection from the internal GET-only
-  // service. Missing/unavailable service stays UNKNOWN — never fabricates
-  // QUALIFIED from a LIVE projection sync state.
-  const qualificationProjection = await readQualificationProjection(params.runId);
+  const qualificationProjection: QualificationProjection = fixtureMode
+    ? fixtureReceiptToProjection(
+        params.runId,
+        loadFixtureQualificationReceipt(params.runId),
+      )
+    : await readQualificationProjection(params.runId);
+  const fixtureReplay = fixtureMode ? createFixtureReplaySession(params.runId) : null;
 
   // ---------------- unified workspace — single render, both modes ----------------
   return (
     <section className="space-y-8">
+      {fixtureMode && (
+        <div
+          className="flex items-center gap-3 rounded-md border px-4 py-2"
+          style={{ borderColor: 'var(--dwo-color-state-amber)', background: 'var(--dwo-color-bg-subtle)' }}
+          data-testid="dev-fixture-indicator"
+        >
+          <strong className="rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest" style={{ background: 'var(--dwo-color-state-amber)', color: 'var(--dwo-color-bg-canvas)' }}>DEV FIXTURE</strong>
+          <span className="text-xs" style={{ color: 'var(--dwo-color-text-muted)' }}>DWO-UR-30-V1 · read-only local preview · production remains real/fail-closed</span>
+          <span className="ml-auto text-xs" style={{ color: 'var(--dwo-color-text-muted)' }} data-testid="dev-fixture-taskref">
+            task: <strong>{model.taskRef ?? '—'}</strong>
+          </span>
+        </div>
+      )}
       <UnifiedRunWorkspace
         model={model}
         qualificationProjection={qualificationProjection}
       />
+      {fixtureMode && (
+        <div>
+          {fixtureReplay ? (
+            <Link
+              href={`/runs/${encodeURIComponent(params.runId)}/replay`}
+              className="inline-block rounded border px-3 py-1.5 text-sm"
+              style={{ borderColor: 'var(--dwo-color-border-default)', background: 'var(--dwo-color-bg-subtle)', color: 'var(--dwo-color-text-primary)' }}
+              data-testid="fixture-open-replay"
+            >
+              Open fixture replay → ({fixtureReplay.total} events)
+            </Link>
+          ) : (
+            <span data-testid="fixture-replay-unavailable" className="text-xs" style={{ color: 'var(--dwo-color-text-muted)' }}>
+              Replay UNAVAILABLE — incompatible or no canonical fixture history.
+            </span>
+          )}
+        </div>
+      )}
     </section>
   );
 }

@@ -12,6 +12,8 @@
 
 import { FIXTURE_CATALOG } from "@/lib/dwo/fixtureSpec";
 import { materializeFixtureScenario } from "@/lib/dwo/materializeFixtureScenario";
+import { createFixtureReplaySession } from "@/lib/dwo/fixtureReplaySession";
+import type { ProjectionEvent } from "@/lib/live";
 import type { UnifiedRunWorkspaceModel } from "@/lib/runtime/unifiedRuntime";
 
 import FixtureLabClient from "./FixtureLabClient";
@@ -20,11 +22,34 @@ const DEFAULT_ID = "DEV-RUN-001";
 
 export default function DevFixturesPage() {
   const models: Record<string, UnifiedRunWorkspaceModel> = {};
+  const replayEvents: Record<string, ProjectionEvent[]> = {};
   const failed: string[] = [];
+  const eventCache = new Map<string, ProjectionEvent[]>();
 
   for (const entry of FIXTURE_CATALOG) {
     try {
-      models[entry.id] = materializeFixtureScenario(entry);
+      const model = materializeFixtureScenario(entry);
+      models[entry.id] = model;
+
+      // The fixture event pack has one event per run; a scenario's replay stream
+      // is the ordinal-ordered union for its explicit self/child nodes. This
+      // gives root scenarios a meaningful progressive replay without inventing
+      // events or inferring hierarchy beyond the materialized model.
+      const stream: ProjectionEvent[] = [];
+      for (const node of model.nodes) {
+        let events = eventCache.get(node.id);
+        if (!events) {
+          const session = createFixtureReplaySession(node.id);
+          events = session ? [...session.events] : [];
+          eventCache.set(node.id, events);
+        }
+        stream.push(...events);
+      }
+      replayEvents[entry.id] = stream.sort((a, b) => {
+        const ao = typeof a.ordinal === "number" ? a.ordinal : 0;
+        const bo = typeof b.ordinal === "number" ? b.ordinal : 0;
+        return ao - bo;
+      });
     } catch {
       // Fail closed: an unreadable scenario is reported, never faked. The client
       // renders the UNAVAILABLE notice for any id missing from `models`.
@@ -51,6 +76,7 @@ export default function DevFixturesPage() {
       <FixtureLabClient
         catalog={FIXTURE_CATALOG}
         models={models}
+        replayEvents={replayEvents}
         defaultId={defaultId}
       />
     </>

@@ -15,6 +15,7 @@
 
 import { ReplaySession, type ReplayFrame, type SurfaceSnapshot } from '@/lib/replay';
 import type { ProjectionEvent } from '@/lib/live';
+import { DEV_RUN_020 } from '@/lib/dwo/fixtureSpec';
 
 export const FIXTURE_EVENTS_PATH =
   'dwo-v2/fixtures/DWO-UR-30-V1/events/projection-events.jsonl';
@@ -137,6 +138,10 @@ export function createFixtureReplaySession(
   runId: string,
   config: { path?: string; readText?: (path: string) => string } = {},
 ): FixtureReplaySession | null {
+  // DEV-RUN-020 is an incompatible-source negative. Its pack row is evidence
+  // for the negative case, not replayable canonical history. Do not manufacture
+  // a session from that row; callers surface UNAVAILABLE/INCOMPATIBLE.
+  if (runId === DEV_RUN_020) return null;
   const events = loadEventsForRun(runId, config);
   if (events.length === 0) return null;
 

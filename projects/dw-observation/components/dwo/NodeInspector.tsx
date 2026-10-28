@@ -131,6 +131,7 @@ export default function NodeInspector({ node, activeTab, onTabChange }: NodeInsp
       {activeTab === "overview" && (
         <div className="dwo-inspector-pane" data-pane="overview">
           <Field label="Gate" value={node.gateId ?? "UNKNOWN"} />
+          <Field label="Gate state" value={node.gateState ?? "UNKNOWN"} />
           <Field label="Family / Node type" value={`${node.family ?? "—"} / ${node.nodeType ?? "—"}`} />
           <Field label="Authority boundary" value={node.authorityBoundary ?? "UNKNOWN"} />
           <Field label="Source status / maturity" value={`${node.sourceStatus ?? "—"} / ${node.maturity ?? "—"}`} />

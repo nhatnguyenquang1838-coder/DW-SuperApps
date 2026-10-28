@@ -7,6 +7,7 @@
 
 import { redirect } from "next/navigation";
 import { readHistoricalEvents } from "@/lib/serverHistoricalRead";
+import { isLocalFixturePreview } from "@/lib/dwo/fixturePreviewMode";
 import { buildReplayRoute } from "@/lib/dwo/replayRoute";
 
 export default async function RunReplayRedirect({
@@ -14,6 +15,11 @@ export default async function RunReplayRedirect({
 }: {
   params: { runId: string };
 }) {
+  if (isLocalFixturePreview()) {
+    const { default: DevRunReplayPage } = await import('@/app/dev/runs/[runId]/replay/page');
+    return DevRunReplayPage({ params });
+  }
+
   const result = await readHistoricalEvents(params.runId);
 
   // No canonical history → redirect to LIVE; main page handles UNKNOWN/UNAVAILABLE.

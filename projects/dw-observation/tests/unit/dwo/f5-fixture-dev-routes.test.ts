@@ -43,11 +43,15 @@ describe('F5-2 dev task-first preview routes', () => {
     expect(missing).toBeNull();
   });
 
-  it('createFixtureReplaySession loads events for every root run', async () => {
+  it('createFixtureReplaySession loads events for every compatible root run', async () => {
     const tasks = await listFixtureTaskRelations();
     for (const t of tasks) {
       for (const runId of t.rootRunIds) {
         const session = createFixtureReplaySession(runId);
+        if (runId === 'DEV-RUN-020') {
+          expect(session, 'incompatible negative must not receive a replay session').toBeNull();
+          continue;
+        }
         expect(session, `replay session for ${runId}`).not.toBeNull();
         expect(session!.total).toBeGreaterThan(0);
         expect(session!.synchronized).toBe(true);
@@ -94,6 +98,19 @@ describe('F5-2 dev task-first preview routes', () => {
     // TASK-CORE owns DEV-RUN-001..020; DEV-RUN-020 has no receipt (INCOMPATIBLE).
     expect(screen.getAllByText('DEV-RUN-001').length).toBeGreaterThan(0);
     expect(screen.getAllByText('DEV-RUN-020').length).toBeGreaterThan(0);
+  });
+
+  it('DEV-RUN-020 remains unavailable and has no replay link in Task-first navigation', async () => {
+    const { container } = render(
+      await DevTaskRunsPage({ params: { taskId: 'TASK-CORE' } }),
+    );
+    const negative = [...container.querySelectorAll('.notion-run-card')]
+      .find((card) => card.textContent?.includes('DEV-RUN-020'));
+    expect(negative).toBeTruthy();
+    expect(negative?.textContent).toContain('UNAVAILABLE');
+    expect(negative?.textContent).toContain('Projection SyncDEGRADED');
+    expect(negative?.textContent).not.toContain('Projection SyncLIVE');
+    expect(negative?.querySelector('a[href*="DEV-RUN-020"]')).toBeNull();
   });
 
   it('production /tasks routes do not import the fixture adapter', () => {

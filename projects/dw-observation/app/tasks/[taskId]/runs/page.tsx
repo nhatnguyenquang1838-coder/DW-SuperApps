@@ -8,6 +8,7 @@
 
 import Link from "next/link";
 import { resolveTask } from "@/lib/taskRead";
+import { isLocalFixturePreview } from "@/lib/dwo/fixturePreviewMode";
 import { readServerRunList } from "@/lib/serverRunRead";
 
 type TaskRunSummary = {
@@ -22,6 +23,11 @@ type TaskRunSummary = {
 };
 
 export default async function TaskRunsPage({ params }: { params: { taskId: string } }) {
+  if (isLocalFixturePreview()) {
+    const { default: DevTaskRunsPage } = await import('@/app/dev/tasks/[taskId]/runs/page');
+    return DevTaskRunsPage({ params });
+  }
+
   const taskRef = decodeURIComponent(params.taskId);
 
   // Resolve task only through the canonical real relation source. This source

@@ -10,6 +10,7 @@
 // never an empty list masquerading as healthy.
 
 import { readRealSummaries } from "@/lib/taskRead";
+import { isLocalFixturePreview } from "@/lib/dwo/fixturePreviewMode";
 import type { TaskResolutionStatus } from "@/lib/taskTypes";
 
 const statusStyle: Record<
@@ -39,6 +40,13 @@ const statusStyle: Record<
 };
 
 export default async function TasksPage() {
+  // Explicit local fixture mode is a preview only. Production and default mode
+  // remain on the real adapter and fail closed when no live source exists.
+  if (isLocalFixturePreview()) {
+    const { default: DevTasksPage } = await import('@/app/dev/tasks/page');
+    return DevTasksPage();
+  }
+
   // No canonical TaskRunRelationRecord provider is configured in this source
   // tree. Keep real mode explicitly unavailable rather than seeding it with
   // development fixture records; a live provider can be injected here without

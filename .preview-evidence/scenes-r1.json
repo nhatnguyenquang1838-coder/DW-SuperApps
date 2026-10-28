@@ -1,0 +1,10 @@
+[
+  {"n":1,"name":"01-tasks-fixture-list","path":"/tasks","criterion":"F4","expect":"DEV FIXTURE badge, 5 explicit Task relations, canonical /tasks/... links"},
+  {"n":2,"name":"02-task-core-root-runs","path":"/tasks/TASK-CORE/runs","criterion":"F4/F1","expect":"8 roots, qualification axes, DEV-RUN-020 unavailable/no replay link"},
+  {"n":3,"name":"03-run-detail-task-first","path":"/runs/DEV-RUN-001","criterion":"F4/F3","expect":"DEV FIXTURE badge, taskRef TASK-CORE, fixture workspace + receipt axis"},
+  {"n":4,"name":"04-run-replay-synchronized","path":"/runs/DEV-RUN-001/replay","criterion":"F2/F4","expect":"ReplayPane, cursor/digest, synchronized 5 surfaces"},
+  {"n":5,"name":"05-fixture-lab-progressive-replay","path":"/dev/fixtures","criterion":"F0/F2","expect":"30-run catalog, DEV FIXTURE badge, progressive controls; click Catch-up then REPLAY"},
+  {"n":6,"name":"06-fixture-lab-negative-020","path":"/dev/fixtures (select DEV-RUN-020)","criterion":"F1","expect":"INCOMPATIBLE/UNKNOWN/UNAVAILABLE, zero nodes, replay unavailable"},
+  {"n":7,"name":"07-run-022-g5-waiting","path":"/runs/DEV-RUN-022","criterion":"F1/F4","expect":"DEV FIXTURE badge; Inspector shows G5 / WAITING"},
+  {"n":8,"name":"08-run-020-fail-closed","path":"/runs/DEV-RUN-020","criterion":"F1/F4","expect":"CONFLICT/INCOMPATIBLE, no fabricated projection; replay unavailable"}
+]

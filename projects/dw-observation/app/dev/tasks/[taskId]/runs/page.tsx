@@ -17,6 +17,7 @@ import { createFixtureReplaySession } from '@/lib/dwo/fixtureReplaySession';
 import { loadFixtureQualificationReceipt, fixtureReceiptToProjection } from '@/lib/dwo/fixtureQualification';
 import type { QualificationProjection } from '@/lib/dwo/qualificationProjection';
 import RunStatusAxes from '@/components/dwo/RunStatusAxes';
+import { isLocalFixturePreview } from '@/lib/dwo/fixturePreviewMode';
 
 type RunRow = {
   runId: string;
@@ -29,10 +30,16 @@ type RunRow = {
   qualification: QualificationProjection;
 };
 
-function FixtureStatusAxes({ qualification }: { qualification: QualificationProjection }) {
+function FixtureStatusAxes({
+  qualification,
+  replayAvailable,
+}: {
+  qualification: QualificationProjection;
+  replayAvailable: boolean;
+}) {
   return (
     <RunStatusAxes
-      projectionSync="LIVE"
+      projectionSync={replayAvailable ? 'LIVE' : 'DEGRADED'}
       view="CURRENT"
       qualification={qualification}
     />
@@ -40,6 +47,8 @@ function FixtureStatusAxes({ qualification }: { qualification: QualificationProj
 }
 
 export default async function DevTaskRunsPage({ params }: { params: { taskId: string } }) {
+  const taskBasePath = isLocalFixturePreview() ? '/tasks' : '/dev/tasks';
+  const runBasePath = isLocalFixturePreview() ? '/runs' : '/dev/runs';
   const taskRef = decodeURIComponent(params.taskId);
   const rel = await getFixtureTaskRelation(taskRef);
 
@@ -76,11 +85,19 @@ sourceSystem: 'fixture',
     >
       <div className="mx-auto max-w-5xl px-6 py-10">
         <nav className="mb-6 text-xs" style={{ color: 'var(--dwo-color-text-faint)' }}>
-          <Link href="/dev/tasks" style={{ color: 'var(--dwo-color-text-muted)' }}>
+          <Link href={taskBasePath} style={{ color: 'var(--dwo-color-text-muted)' }}>
             Dev Tasks
           </Link>{' '}
           / <span style={{ color: 'var(--dwo-color-text-primary)' }}>{taskRef}</span> / Runs
         </nav>
+        <div
+          className="mb-5 inline-flex items-center gap-2 rounded border px-3 py-1.5"
+          style={{ borderColor: 'var(--dwo-color-state-amber)', background: 'var(--dwo-color-bg-subtle)' }}
+          data-testid="dev-fixture-indicator"
+        >
+          <strong className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--dwo-color-state-amber)' }}>DEV FIXTURE</strong>
+          <span className="text-xs" style={{ color: 'var(--dwo-color-text-muted)' }}>read-only local preview</span>
+        </div>
 
         <h1
           className="mb-1 text-2xl font-bold tracking-tight"
@@ -151,16 +168,27 @@ sourceSystem: 'fixture',
                 </dl>
 
                 <div className="mt-3">
-                  <FixtureStatusAxes qualification={r.qualification} />
+                  <FixtureStatusAxes qualification={r.qualification} replayAvailable={r.replayAvailable} />
                 </div>
 
                 <div className="mt-3">
-                  <a
-                    href={`/dev/runs/${encodeURIComponent(r.runId)}`}
-                    className="notion-link-btn inline-block rounded border px-3 py-1.5 text-sm transition-colors"
-                  >
-                    Open replay →
-                  </a>
+                  {r.replayAvailable ? (
+                    <a
+                      href={`${runBasePath}/${encodeURIComponent(r.runId)}`}
+                      className="notion-link-btn inline-block rounded border px-3 py-1.5 text-sm transition-colors"
+                      data-testid={`open-replay-${r.runId}`}
+                    >
+                      Open replay →
+                    </a>
+                  ) : (
+                    <span
+                      className="text-xs"
+                      style={{ color: 'var(--dwo-color-text-muted)' }}
+                      data-testid={`replay-unavailable-${r.runId}`}
+                    >
+                      Replay UNAVAILABLE — incompatible or no canonical fixture history.
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
@@ -168,7 +196,7 @@ sourceSystem: 'fixture',
         )}
 
         <a
-          href="/dev/tasks"
+          href={taskBasePath}
           className="notion-link-btn mt-8 inline-block rounded border px-3 py-1.5 text-sm transition-colors"
         >
           ← Back to tasks

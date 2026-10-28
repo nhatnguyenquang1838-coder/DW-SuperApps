@@ -112,6 +112,60 @@ function loadEvidenceRecords(runId: string): unknown[] {
   return records;
 }
 
+/**
+ * Reverse index: root run id -> task ref, derived from the materialized
+ * TaskRunIndexV2 relation records (tasks/task-relations.jsonl).
+ *
+ * Deterministic and fail-closed: a run that no relation record claims gets NO
+ * taskRef (null) — the model never infers a Task from a run id.
+ */
+function loadTaskRefByRootRun(): Map<string, string> {
+  const fs = _ensureFs();
+  if (!fs) return new Map();
+  const map = new Map<string, string>();
+  let raw: string;
+  try {
+    raw = fs.readFileSync(_join(FIXTURE_PACK, "tasks", "task-relations.jsonl"), "utf-8");
+  } catch {
+    return map;
+  }
+  const records: Array<{ taskRef?: unknown; rootRunIds?: unknown }> = [];
+  for (const line of raw.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    try {
+      records.push(JSON.parse(trimmed));
+    } catch {
+      continue; // malformed line: skip, never guess
+    }
+  }
+  // Later durable positions supersede earlier ones for the same run.
+  records.sort((a, b) => {
+    const ap = (a as Record<string, unknown>).durablePosition;
+    const bp = (b as Record<string, unknown>).durablePosition;
+    const an = typeof ap === "number" ? ap : 0;
+    const bn = typeof bp === "number" ? bp : 0;
+    return an - bn;
+  });
+  for (const rec of records) {
+    const taskRef = rec.taskRef;
+    const rootRunIds = rec.rootRunIds;
+    if (typeof taskRef !== "string" || taskRef.length === 0) continue;
+    if (!Array.isArray(rootRunIds)) continue;
+    for (const runId of rootRunIds) {
+      if (typeof runId === "string" && runId.length > 0) map.set(runId, taskRef);
+    }
+  }
+  return map;
+}
+
+let _taskRefCache: Map<string, string> | null = null;
+
+function taskRefByRootRun(): Map<string, string> {
+  if (_taskRefCache === null) _taskRefCache = loadTaskRefByRootRun();
+  return _taskRefCache;
+}
+
 // ---------------------------------------------------------------------------
 // Validation — reject incomplete scenario definitions (T09-5 invariant)
 // ---------------------------------------------------------------------------
@@ -154,6 +208,7 @@ function buildRuntimeNode(
   return {
     id: entry.id,
     gateId: entry.gate ?? null,
+    gateState: entry.gateState ?? null,
     title: `${entry.domain} / ${entry.purpose}`,
     family: entry.kind,
     nodeType: null,
@@ -187,7 +242,11 @@ export function materializeFixtureScenario(
   if (catalogEntry.kind === "NEGATIVE" || catalogEntry.id === DEV_RUN_020) {
     const model: UnifiedRunWorkspaceModel = {
       runId: catalogEntry.id,
-      taskRef: null,
+      // Task membership is a relation-record fact, independent of whether the
+      // run's projection is readable. Keeping it here prevents the Task-first
+      // surface (/dev/tasks/[taskId]/runs) and the run model from disagreeing.
+      // The PROJECTION still fails closed: no nodes, edges, steps, or history.
+      taskRef: taskRefByRootRun().get(catalogEntry.id) ?? null,
       mode: "SIMULATED" as WorkspaceMode,
       status: "CONFLICT",
       hierarchy: null,
@@ -278,7 +337,7 @@ export function materializeFixtureScenario(
 
   const model: UnifiedRunWorkspaceModel = {
     runId: catalogEntry.id,
-    taskRef: null,
+    taskRef: taskRefByRootRun().get(catalogEntry.id) ?? null,
     mode: "SIMULATED" as WorkspaceMode,
     status: catalogEntry.runState,
     hierarchy,

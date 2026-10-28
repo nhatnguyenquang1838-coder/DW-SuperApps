@@ -69,6 +69,30 @@ describe('F5-1 fixture qualification receipts', () => {
     }
   });
 
+  it('rejects a receipt whose subject changes without recomputing its binding digest', () => {
+    const runId = 'DEV-RUN-006';
+    const raw = JSON.parse(readFileSync(join(FIXTURE_DIR, `${runId}-qualification.json`), 'utf-8'));
+    const tampered = {
+      ...raw,
+      subject: { ...raw.subject, durable_position: 'projection_ordinal=999' },
+    };
+    expect(parseReceipt(tampered, runId)).toBeNull();
+  });
+
+  it('rejects receipt/qualification ids not bound to canonical receipt content', () => {
+    const runId = 'DEV-RUN-006';
+    const raw = JSON.parse(readFileSync(join(FIXTURE_DIR, `${runId}-qualification.json`), 'utf-8'));
+    expect(parseReceipt({ ...raw, receipt_id: 'receipt:forged' }, runId)).toBeNull();
+    expect(parseReceipt({ ...raw, qualification_id: 'qualification:forged' }, runId)).toBeNull();
+  });
+
+  it('QUALIFIED receipts require all checks PASS and evidence refs', () => {
+    const runId = 'DEV-RUN-006';
+    const raw = JSON.parse(readFileSync(join(FIXTURE_DIR, `${runId}-qualification.json`), 'utf-8'));
+    const noEvidence = { ...raw, evidence_refs: [] };
+    expect(parseReceipt(noEvidence, runId)).toBeNull();
+  });
+
   it('QUALIFIED runs are exactly the expected set', () => {
     for (let i = 1; i <= 30; i++) {
       const runId = `DEV-RUN-${String(i).padStart(3, '0')}`;
