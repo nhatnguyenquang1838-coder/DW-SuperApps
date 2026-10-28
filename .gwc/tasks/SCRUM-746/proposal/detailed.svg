@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="650" viewBox="0 0 900 650">
+  <rect width="900" height="650" fill="#0f0f1a"/>
+  <text x="450" y="40" text-anchor="middle" fill="#ffffff" font-size="22" font-weight="bold">SCRUM-746: Pre-plan Materialization</text>
+  <text x="450" y="62" text-anchor="middle" fill="#888899" font-size="13">Intent/G0-G1 Context to GovernedExecution</text>
+
+  <!-- G0 Context Snapshot -->
+  <rect x="50" y="100" width="260" height="140" rx="8" fill="#1a2a3a" stroke="#4fc3f7" stroke-width="2"/>
+  <text x="180" y="120" text-anchor="middle" fill="#4fc3f7" font-size="14" font-weight="bold">G0_CONTEXT</text>
+  <text x="180" y="142" text-anchor="middle" fill="#ffffff" font-size="11">Context Snapshot</text>
+  <text x="180" y="162" text-anchor="middle" fill="#cccccc" font-size="9">Repository identity</text>
+  <text x="180" y="178" text-anchor="middle" fill="#cccccc" font-size="9">Base SHA: eb6d611b</text>
+  <text x="180" y="194" text-anchor="middle" fill="#cccccc" font-size="9">Sources (AGENTS.md, etc.)</text>
+  <text x="180" y="214" text-anchor="middle" fill="#cccccc" font-size="9">Constraints (no repo write)</text>
+
+  <!-- G1 Alignment -->
+  <rect x="320" y="100" width="260" height="140" rx="8" fill="#2a1a3a" stroke="#ba68c8" stroke-width="2"/>
+  <text x="450" y="120" text-anchor="middle" fill="#ba68c8" font-size="14" font-weight="bold">G1_ALIGNMENT</text>
+  <text x="450" y="142" text-anchor="middle" fill="#ffffff" font-size="11">Intake Brief</text>
+  <text x="450" y="158" text-anchor="middle" fill="#cccccc" font-size="9">Problem, scope, risks</text>
+  <text x="450" y="174" text-anchor="middle" fill="#cccccc" font-size="9">Acceptance criteria</text>
+  <text x="450" y="200" text-anchor="middle" fill="#ffffff" font-size="11">Preflight Report</text>
+  <text x="450" y="216" text-anchor="middle" fill="#cccccc" font-size="9">5 checks: ALL PASS</text>
+  <text x="450" y="232" text-anchor="middle" fill="#cccccc" font-size="9">Outcome: PASS</text>
+
+  <!-- G2 Execution Envelope -->
+  <rect x="590" y="100" width="260" height="140" rx="8" fill="#2a2a1a" stroke="#ffd54f" stroke-width="2"/>
+  <text x="720" y="120" text-anchor="middle" fill="#ffd54f" font-size="14" font-weight="bold">G2_EXECUTION</text>
+  <text x="720" y="142" text-anchor="middle" fill="#ffffff" font-size="11">Execution Envelope</text>
+  <text x="720" y="158" text-anchor="middle" fill="#cccccc" font-size="9">Approval ID bound</text>
+  <text x="720" y="174" text-anchor="middle" fill="#cccccc" font-size="9">Authorized: 3 actions</text>
+  <text x="720" y="190" text-anchor="middle" fill="#cccccc" font-size="9">Excluded: merge/deploy/G6</text>
+  <text x="720" y="210" text-anchor="middle" fill="#cccccc" font-size="9">Scope Hash: sha256:...</text>
+  <text x="720" y="230" text-anchor="middle" fill="#cccccc" font-size="9">scope_inputs.json</text>
+
+  <!-- Arrows -->
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,3 L0,6 Z" fill="#888899"/>
+    </marker>
+  </defs>
+  <line x1="210" y1="170" x2="320" y2="170" stroke="#888899" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="580" y1="170" x2="680" y2="170" stroke="#888899" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- GovernedExecution Blueprint -> RuntimePlan (W4) -->
+  <rect x="320" y="280" width="260" height="100" rx="8" fill="#1a2a2a" stroke="#4caf50" stroke-width="2"/>
+  <text x="450" y="298" text-anchor="middle" fill="#4caf50" font-size="12" font-weight="bold">W4: Blueprint Compiler</text>
+  <text x="450" y="316" text-anchor="middle" fill="#88cc88" font-size="10">GovernedExecutionBlueprint</text>
+  <text x="450" y="334" text-anchor="middle" fill="#88cc88" font-size="10">to RuntimePlan</text>
+  <text x="450" y="352" text-anchor="middle" fill="#cc8888" font-size="10">fail-closed on drift</text>
+
+  <!-- Proposal Artifacts -->
+  <rect x="50" y="400" width="800" height="200" rx="8" fill="#1a1a2e" stroke="#ff6b6b" stroke-width="2"/>
+  <text x="450" y="420" text-anchor="middle" fill="#ff6b6b" font-size="14" font-weight="bold">Proposal Artifacts (LOCAL_AGENT_RULE.md §2)</text>
+
+  <text x="180" y="445" text-anchor="middle" fill="#cccccc" font-size="10">written-proposal.md</text>
+  <text x="450" y="445" text-anchor="middle" fill="#cccccc" font-size="10">change-plan.yaml</text>
+  <text x="720" y="445" text-anchor="middle" fill="#cccccc" font-size="10">overview.mmd</text>
+
+  <text x="180" y="465" text-anchor="middle" fill="#cccccc" font-size="10">detailed.svg</text>
+  <text x="450" y="465" text-anchor="middle" fill="#cccccc" font-size="10">detailed.png</text>
+  <text x="720" y="465" text-anchor="middle" fill="#cccccc" font-size="10">artifact-hashes.txt</text>
+
+  <text x="450" y="485" text-anchor="middle" fill="#cccccc" font-size="10">approval-envelope.yaml</text>
+
+  <!-- Footer note -->
+  <text x="450" y="620" text-anchor="middle" fill="#555566" font-size="10">No repository source mutation | No branch/commit/push | GWC read-only at this gate</text>
+</svg>

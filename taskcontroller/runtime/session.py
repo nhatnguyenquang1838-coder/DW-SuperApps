@@ -1,6 +1,10 @@
-"""Executable TaskController A2A mailbox session boundary.
+"""Legacy TaskController A2A/v1 mutable-mailbox compatibility session.
 
-This is the canonical active machine-runtime path for TaskController. It binds
+This module is compatibility-only.  The canonical active machine-runtime path
+is taskcontroller/runtime/high_integrity_session.py using mailbox/v2.  Every
+public entrypoint here requires an explicit compatibility_v1=True opt-in.
+
+Historically this was the canonical active machine-runtime path for TaskController. It binds
 transport-neutral A2A envelopes, crash-safe continuation checkpoints, and a
 host-provided mailbox backend. Slack is deliberately absent from machine
 transport: hosts may emit pointer-only wakeups only after a successful mailbox
@@ -42,8 +46,17 @@ from taskcontroller.interaction.github_mailbox import (
 )
 
 MAILBOX_BOOT_ERROR = "TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED"
+V1_COMPATIBILITY_REQUIRED = "TASKCONTROLLER_V1_COMPATIBILITY_OPT_IN_REQUIRED"
 POLL_OBSERVED = "OBSERVED"
 POLL_STALE = "STALE"
+
+
+def _require_v1_compatibility_opt_in(enabled: bool) -> None:
+    if enabled is not True:
+        raise TaskControllerValidationError(
+            f"{V1_COMPATIBILITY_REQUIRED}: A2A/v1 mutable-mailbox runtime is demoted; "
+            "use mailbox/v2 or pass compatibility_v1=True explicitly"
+        )
 
 
 class MailboxBackend(Protocol):
@@ -256,9 +269,11 @@ def boot_taskcontroller_session(
     request: str,
     updated_at: str,
     human_root_ref: str | None = None,
+    compatibility_v1: bool = False,
 ) -> TaskControllerRuntimeSession:
-    """Materialize both mailboxes and exact-readback before first wake-up."""
+    """Materialize the legacy v1 mailbox only after explicit compatibility opt-in."""
 
+    _require_v1_compatibility_opt_in(compatibility_v1)
     controller_mailbox_ref = _required_mailbox_ref(mailbox_backend, controller_actor)
     executor_mailbox_ref = _required_mailbox_ref(mailbox_backend, executor_actor)
     checkpoint = ControllerContinuation(
@@ -308,9 +323,11 @@ def dispatch_taskcontroller_command(
     request: str,
     updated_at: str,
     kind: str = EnvelopeKind.COMMAND.value,
+    compatibility_v1: bool = False,
 ) -> TaskControllerRuntimeSession:
-    """Dispatch the next bounded command/correction through the same mailbox."""
+    """Dispatch one legacy v1 command after explicit compatibility opt-in."""
 
+    _require_v1_compatibility_opt_in(compatibility_v1)
     if not isinstance(session, TaskControllerRuntimeSession):
         raise TaskControllerValidationError("session must be TaskControllerRuntimeSession")
     if kind not in {EnvelopeKind.COMMAND.value, EnvelopeKind.CORRECTION.value}:
@@ -371,9 +388,12 @@ def poll_executor_mailbox(
     continuation_store: ContinuationStore,
     mailbox_backend: MailboxBackend,
     session: TaskControllerRuntimeSession,
+    *,
+    compatibility_v1: bool = False,
 ) -> ExecutorMailboxObservation:
-    """Read only the exact Executor mailbox and advance only exact expected seq."""
+    """Read a legacy v1 Executor mailbox after explicit compatibility opt-in."""
 
+    _require_v1_compatibility_opt_in(compatibility_v1)
     if not isinstance(session, TaskControllerRuntimeSession):
         raise TaskControllerValidationError("session must be TaskControllerRuntimeSession")
     checkpoint = session.checkpoint
@@ -439,9 +459,11 @@ def recover_taskcontroller_session(
     mailbox_backend: MailboxBackend,
     run_id: str,
     controller_actor: str,
+    compatibility_v1: bool = False,
 ) -> TaskControllerRuntimeSession:
-    """Recover ACTIVE state and reconcile only known monotonic crash windows."""
+    """Recover legacy v1 state only after explicit compatibility opt-in."""
 
+    _require_v1_compatibility_opt_in(compatibility_v1)
     checkpoint = recover_continuation(continuation_store, run_id)
     if checkpoint is None:
         raise _mailbox_boot_failure("continuation checkpoint missing during recovery")
@@ -511,6 +533,7 @@ __all__ = [
     "A2AEnvelope",
     "ExecutorMailboxObservation",
     "MAILBOX_BOOT_ERROR",
+    "V1_COMPATIBILITY_REQUIRED",
     "MailboxBackend",
     "POLL_OBSERVED",
     "POLL_STALE",

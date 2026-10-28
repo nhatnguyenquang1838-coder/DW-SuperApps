@@ -52,18 +52,71 @@ host_overlays:
         - agents/hermes/agent-instructions.md
 
 interaction:
-  protocol: dw.taskcontroller.a2a/v1
-  pilot_binding: github-reference-mailbox
-  one_actor_one_mutable_mailbox: true
+  protocol: dw.taskcontroller.mailbox/v2
+  compatibility_protocol: dw.taskcontroller.a2a/v1
+  compatibility_status: explicit-opt-in-only
+  high_integrity_protocol: dw.taskcontroller.mailbox/v2
+  high_integrity_admission:
+    required_when:
+      - external-governance-or-gate-contract-active
+      - human-approval-or-effect-authority-required
+      - digest-bound-execution-identity-required
+    admission_guard: taskcontroller/controlplane/controller_admission.py
+    repository_adapter: taskcontroller/interaction/github_mailbox_v2.py
+    repository_adapter_class: GitHubMailboxRepository
+    remote_record_protocol: dw.taskcontroller.github-mailbox-record/v1
+    continuation_store: taskcontroller/interaction/github_continuation_store.py
+    continuation_store_class: GitHubContinuationStore
+    continuation_record_protocol: dw.taskcontroller.github-continuation-record/v1
+    mailbox_record_model: append-only-github-issue-comments
+    one_writer_per_actor_mailbox: true
+    cross_process_multi_writer_cas: unsupported
+    mailbox_read_scope: exact-mailbox-ref
+    machine_state_integrity: canonical-envelope-digest
+    raw_mutable_comment_body_sha: forbidden-as-authority
+    issue_wide_machine_state_scan: forbidden
+    schema_resolution: descriptor-bound
+    expected_digest_source: observed-or-canonical-recompute
+    target_gate_bootstrap_before_authority: forbidden
+    approval_presentation_binding: typed-artifact-command-digest
+    authority_granted: false
+    missing_behavior: TASKCONTROLLER_HIGH_INTEGRITY_ADMISSION_BLOCKED
+    runtime_session: taskcontroller/runtime/high_integrity_session.py
+    lifecycle_functions:
+      controller_materialize: materialize_controller_transition
+      executor_bootstrap: bootstrap_executor_v2
+      controller_resume_compat_poll: resume_controller_v2
+      controller_event_resume: resume_controller_event_v2
+      controller_recovery: recover_high_integrity_session
+    producer_cursor_semantics: dispatch-commit-evidence
+    executor_consumption_freshness: validation-policy-last-seen-event-seq
+    hand_authored_machine_records: forbidden
+    runtime_owned_record_types:
+      - event
+      - cursor
+  canonical_binding: github-mailbox-v2
+  compatibility_binding: github-reference-mailbox-v1
+  v1_one_actor_one_mutable_mailbox: compatibility-only
+  v1_default_activation: forbidden
   context_by_reference: true
+  controller_first_bootstrap:
+    native_controller_owned_gates_allowed_without_executor: true
+    native_receipt_validation_required: true
+    executor_session_required_before_native_controller_gates: false
+    executor_acknowledgement_required_before_native_controller_gates: false
+    controller_only_gate_requires_mailbox_event: false
+    run_hold_remains_binding: true
+    no_effect_authority_granted: true
   mailbox_boot:
-    required_when_active: true
+    required_when_active: true  # active EXECUTOR DISPATCH; not Controller-native BOOT
+    applies_to: first-executor-dispatch
+    controller_only_progress_requires_mailbox_boot: false
     before_first_dispatch: true
     controller_mailbox_required: true
     executor_mailbox_required: true
     continuation_required: true
     exact_readback_required: true
-    machine_progress_transport: github-reference-mailbox
+    machine_progress_transport: github-mailbox-v2
     slack_machine_transport_fallback: forbidden
     missing_behavior: TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED
   bounded_context:
@@ -72,17 +125,31 @@ interaction:
     input_refs_max: 16
     artifact_refs_max: 16
   canonical_ids_from_binding_ids: forbidden
+  delivery:
+    mode: event-driven
+    controller_wait_action: AWAIT_EXECUTOR_EVENT
+    periodic_mailbox_polling: qualified-read-only-observer
+    mailbox_observer:
+      default_enabled: false  # Host and provider must be independently qualified
+      qualifying_role: MAILBOX_OBSERVER
+      legacy_mailbox_poll_role: forbidden
+      controller_mailbox_poll_role: forbidden
+      canonical_cursor_only: true
+      exact_event_readback_required: true
+      bounded_interval_and_rate_budget_required: true
+      taskcontroller_effect_authority_from_poll: false
+      forbid_unbound_hermes_loop_resume: true
+    executor_event_subscription_required: true
+    slack_machine_notification: forbidden
   notification:
     protocol: dw.taskcontroller.wakeup/v1
-    optional_when_executor_does_not_poll: true
-    pilot_binding: slack-wakeup
     pointer_only: true
     command_payload_forbidden: true
     progress_payload_forbidden: true
     canonical_ids_from_notification_ids: forbidden
     provider_requirements:
       hermes-cloud:
-        wakeup_binding: slack-websocket
+        wakeup_binding: mailbox-event
         required: true
   future_bindings:
     - a2a-http
@@ -110,19 +177,11 @@ human_plane:
     plain_text_fallback_required: true
     thread_reply_only: true
     duplicate_progress_suppressed: true
-  polling:
-    mailbox_mode: in-session-incremental
-    cadence_seconds: 60
-    cadence_policy: progressive-backoff-on-unchanged-mailbox-seq
-    adaptive_cadence_seconds:
-      - 60
-      - 120
-      - 180
-    cadence_reset_on_new_seq: true
-    cadence_max_seconds: 180
-    in_session_sleep_required: true
-    silent: true
-    exact_mailbox_comment_only: true
+  event_resume:
+    mailbox_mode: event-driven
+    periodic_polling: forbidden
+    exact_mailbox_event_only: true
+    resume_function: resume_controller_event_v2
     detached_scheduler_allowed: false
   verdicts:
     - CONTINUE
@@ -142,17 +201,67 @@ resilience:
   continuation_checkpoint: required-before-dispatch
   active_run_semantic_final: forbidden
   continuation_module: taskcontroller/interaction/continuation.py
-  runtime_session: taskcontroller/runtime/session.py
+  runtime_session: taskcontroller/runtime/high_integrity_session.py
+  compatibility_runtime_session: taskcontroller/runtime/session.py
+  v1_runtime_status: compatibility-only
+  v2_materializer_required: true
+  v2_full_lifecycle_required: true
+  v2_lifecycle_functions:
+    - materialize_controller_transition
+    - bootstrap_executor_v2
+    - resume_controller_v2
+    - resume_controller_event_v2
+    - recover_high_integrity_session
+  manual_machine_json: forbidden
   durable_pilot_copy:
     controller_mailbox_state: required
+    high_integrity_remote_continuation: required
     audit_manifest: required-when-audit-configured
   pre_dispatch_order:
     - materialize-controller-mailbox
     - materialize-executor-mailbox
+    - validate-semantic-transition
     - persist-continuation
-    - write-controller-mailbox-with-checkpoint
+    - compile-mailbox-v2-envelope
+    - prepare-dispatch-ledger
+    - append-controller-mailbox-event
     - exact-mailbox-readback
-    - wake-executor-pointer-only
+    - acknowledge-controller-cursor
+    - exact-continuation-readback
+    - publish-mailbox-event-notification
+  hermes_host_loop_boundary:
+    pure_decision_guard: taskcontroller/controlplane/orchestration_policy.py::decide_executor_loop_continuity
+    native_scheduler_is_not_executor_session: true
+    unqualified_mailbox_or_controller_wakeup_polling: forbidden
+    qualified_read_only_mailbox_observation:
+      policy_guard: taskcontroller/controlplane/orchestration_policy.py::decide_executor_loop_continuity
+      enabled_by_default: false
+      no_new_event_no_llm_turn: true
+      observed_event_requires_precheck_before_effect: true
+      host_impl_and_exact_session_binding_required: true
+    peer_collaboration:
+      participants: [gpt-agent, hermes-agent]
+      relationship: equal-decision-rights
+      approval_model: existing-bounded-grant
+      decision_guard: taskcontroller/controlplane/orchestration_policy.py::decide_peer_collaboration
+      peer_agreement_grants_authority: false
+      existing_mailbox_wire_roles_unchanged: true
+      runtime_qualified: false
+    stale_run_scheduler_action: quarantine_without_auto_resume
+    host_pause_implies_run_hold: false
+    host_pause_implies_terminal: false
+    protected_effects_require_current_grant: true
+    missing_successor_owner: controller
+    qualified_event_return_required: true
+    policy_guard_mutates_host_scheduler: false
+  wait_executor_deadlock_guard:
+    observed_time_required_on_wait_executor_recovery: true
+    execution_attempt_lease_must_be_current_before_event-resume: true
+    stale_expired_or_missing_fence_transition:
+      phase: WAIT_CONTROLLER
+      next_action: RESOLVE_EXECUTION_AUTHORITY
+    poll_after_guard_trip: forbidden
+    event_resume_after_guard_trip: forbidden
   recovery_inputs:
     - current-repository-and-run-identity
     - controller-mailbox-checkpoint
@@ -162,6 +271,7 @@ resilience:
     - slack-rootcard-binding-for-human-continuity
   conversation_history_required: false
   slack_thread_history_required: false
+
 
 mvp:
   protocol_bridge: taskcontroller/mvp/protocol_bridge.py
@@ -177,7 +287,93 @@ mvp:
     - EventRouter
     - multi-executor-routing
 
+execution_classification:
+  read_only_analysis:
+    effect_authority_required: false
+    repository_write: false
+    wait_controller_invalid_when_runnable: true
+    gate_prefix: GWC-G*
+    ur_gate_prefix: UR-G*
+
 execution_contract:
+  contracting_guard: taskcontroller/controlplane/execution_contracting.py
+  required_mode_for_new_high_integrity_requests: true
+  modes:
+    PLAN:
+      writable_scope: forbidden
+      execution_authority_active: false
+      purpose: research-design-decompose-validate
+    TRANSPORT_REPAIR:
+      writable_scope: mailbox-transport-only
+      execution_authority_active: false
+      purpose: protocol-or-transport-correction
+    EXECUTE:
+      execution_authority_active: required
+      execution_plan_ref: required
+      approval_ref: required
+      approval_digest: required
+      writable_targets: required
+      real_engineering_action: required
+      work_packages: required
+      continue_until: required
+      stop_conditions: hard-boundaries-only
+      executor_owns_implementation_details_inside_scope: true
+      routine_engineering_wait_points: forbidden
+      allowed_package_actions_when_approved:
+        - create_guarded_branch_or_worktree
+        - modify_approved_files
+        - run_sandboxed_validation
+        - stage
+        - create_commit
+        - push_working_branch
+        - open_or_update_draft_pr
+      separate_authority_required:
+        - mark_pr_ready_for_review
+        - merge_approved_pr
+        - deploy_approved_release
+        - production_config_change
+        - production_data_write
+        - migration
+        - credential_rotation
+        - branch_deletion
+        - force_push
+  routine_engineering_conditions_not_wait_boundaries:
+    - RED_COMPLETE
+    - GREEN_COMPLETE
+    - TEST_FAILURE
+    - LINT_FAILURE
+    - REFACTOR_NEEDED
+    - ROUTINE_IMPLEMENTATION_DECISION
+  default_after_execution_authority: continue-working-within-approved-boundary
+  controller_owned_hitl:
+    user_to_executor_direct_approval: forbidden
+    executor_wait_user_semantics: forbidden
+    authority_boundary_report_target: controller-only
+    controller_materializes_human_request: required
+    wait_without_actionable_human_or_delegate_request: forbidden
+    unrouted_authority_failure: AUTHORITY_REQUEST_UNROUTED
+  executor_boundary_policy:
+    canonical_blocker_classes:
+      - AUTHORITY_BOUNDARY
+      - SCOPE_EXPANSION
+      - MATERIAL_PLAN_INVALIDATION
+      - EXTERNAL_DEPENDENCY_BLOCKED
+    routine_progress_requires_release: false
+    execution_progress_resume: first-class
+    atomic_max_children_zero_terminal: supported
+  hold_semantics:
+    ambiguous_hold: forbidden
+    EFFECT_HOLD:
+      control_loop_continues: true
+      effect_scope_must_be_explicit: true
+    RUN_HOLD:
+      control_loop_continues: false
+      fresh_user_release_required: true
+  mission_semantics:
+    work_packages_are_internal_execution_stages: true
+    work_package_completion_is_authority_boundary: false
+    one_approved_execute_contract_runs_to_ceiling: true
+    executor_reports_completion_or_one_canonical_blocker: true
   subtask_count_min: 3
   subtask_count_max: 5
   local_repository_mutation_policy: controllers/executor-worktree-policy.md

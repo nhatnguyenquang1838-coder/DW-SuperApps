@@ -45,6 +45,7 @@ def _boot(tmp_path: Path, backend: FaultMailboxBackend):
         wakeup_binding="slack-websocket",
         request="Execute bounded work.",
         updated_at="2026-08-25T00:40:00+07:00",
+        compatibility_v1=True,
     )
     return audit, session
 
@@ -69,7 +70,7 @@ def test_recovery_repairs_stale_controller_mailbox_after_observation_sync_interr
     backend.fail_next_controller_write = True
 
     with pytest.raises(TaskControllerValidationError, match="TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED"):
-        runtime.poll_executor_mailbox(audit, backend, session)
+        runtime.poll_executor_mailbox(audit, backend, session, compatibility_v1=True)
 
     # The ledger advanced after observing the Executor, but the process died
     # before the Controller mailbox copy could be rewritten. Recovery must use
@@ -79,6 +80,7 @@ def test_recovery_repairs_stale_controller_mailbox_after_observation_sync_interr
         mailbox_backend=backend,
         run_id=session.checkpoint.run_id,
         controller_actor="controller",
+        compatibility_v1=True,
     )
     assert recovered.checkpoint.phase == "REVIEW_EXECUTOR"
     assert recovered.checkpoint.last_seen_executor_seq == 1
@@ -93,7 +95,7 @@ def test_recovery_rolls_back_unmaterialized_dispatch_checkpoint(tmp_path: Path) 
     backend = FaultMailboxBackend()
     audit, session = _boot(tmp_path, backend)
     backend.bodies[backend.refs["hermes-cloud"]] = render_mailbox_comment(_executor_report(session))
-    observed = runtime.poll_executor_mailbox(audit, backend, session).session
+    observed = runtime.poll_executor_mailbox(audit, backend, session, compatibility_v1=True).session
     assert observed.checkpoint.phase == "REVIEW_EXECUTOR"
 
     backend.fail_next_controller_write = True
@@ -104,6 +106,7 @@ def test_recovery_rolls_back_unmaterialized_dispatch_checkpoint(tmp_path: Path) 
             session=observed,
             request="Continue bounded work.",
             updated_at="2026-08-25T00:42:00+07:00",
+            compatibility_v1=True,
         )
 
     # Persist-before-dispatch may have recorded WAIT_EXECUTOR/seq+1, but because
@@ -115,6 +118,7 @@ def test_recovery_rolls_back_unmaterialized_dispatch_checkpoint(tmp_path: Path) 
         mailbox_backend=backend,
         run_id=observed.checkpoint.run_id,
         controller_actor="controller",
+        compatibility_v1=True,
     )
     assert recovered == observed
 
@@ -125,6 +129,7 @@ def test_recovery_rolls_back_unmaterialized_dispatch_checkpoint(tmp_path: Path) 
         mailbox_backend=backend,
         run_id=observed.checkpoint.run_id,
         controller_actor="controller",
+        compatibility_v1=True,
     )
     assert recovered_again == observed
     audit.close()

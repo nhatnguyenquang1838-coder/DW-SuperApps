@@ -2,6 +2,50 @@
 
 All notable changes to the DW SuperApps workspace control plane are documented here.
 
+## 2026-10-08 — TaskController event-driven mailbox execution
+
+### Changed
+
+- Canonical mailbox/v2 `WAIT_EXECUTOR` now supports `AWAIT_EXECUTOR_EVENT` instead of requiring periodic `POLL_EXECUTOR`.
+- Added `resume_controller_event_v2` for one-shot exact consumption after an external mailbox event signal.
+- Periodic Controller mailbox polling is forbidden for event-driven runs.
+- Slack is removed as the canonical Executor machine wake-up path; human-plane projection remains separate.
+- Legacy `POLL_EXECUTOR` remains compatibility-only for existing durable checkpoints.
+
+### Safety
+
+- Event resume fails closed when invoked without a newer Executor event.
+- Existing lease/fence expiry guard remains active before event consumption.
+- No execution, merge, deploy, or production authority is created by event delivery.
+
+## 2026-10-08 — TaskController mailbox epoch isolation
+
+### Fixed
+
+- GitHub mailbox/v2 reads now isolate strict validation to the selected mailbox when an issue contains explicitly attributed legacy records for other mailbox epochs.
+- A malformed tagged record with a different valid `mailbox_ref` no longer poisons reads of a clean current mailbox.
+- Malformed tagged records for the selected mailbox, or tagged records that cannot be safely attributed, still fail closed.
+
+### Safety
+
+- No legacy record is rewritten or deleted.
+- Mailbox-local corruption remains blocking; only cross-mailbox contamination is isolated.
+
+## 2026-10-08 — TaskController WAIT_EXECUTOR deadlock guard
+
+### Fixed
+
+- High-integrity Controller resume checks the bound execution-attempt lease before polling an unchanged Executor mailbox.
+- Restart recovery for `WAIT_EXECUTOR` requires caller-supplied `observed_at` and applies the same expiry/fence guard.
+- Stale, expired, or explicitly missing current fences transition to `WAIT_CONTROLLER / RESOLVE_EXECUTION_AUTHORITY` instead of remaining in `POLL_EXECUTOR`.
+- Controller resume rejects polling from non-`WAIT_EXECUTOR` phases, preventing callers from bypassing a tripped authority boundary.
+- ChatGPT Controller instructions forbid pointer wake-ups after the guard trips.
+
+### Safety
+
+- The guard does not revoke historical approval evidence; it only prevents a stale execution attempt from remaining runnable.
+- No merge, deploy, production, secret, or cross-repository authority is inferred by the guard.
+
 ## 2026-07-27 — G1 user-facing report generator
 
 ### Added

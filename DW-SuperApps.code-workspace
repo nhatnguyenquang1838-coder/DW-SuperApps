@@ -2,6 +2,27 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "projects/gwc"
+		},
+		{
+			"path": "projects/ua"
+		},
+		{
+			"path": "projects/task-me"
+		},
+		{
+			"path": "projects/rental-home"
+		},
+		{
+			"path": "projects/bmad"
+		},
+		{
+			"path": "projects/dw-chatgpt-app"
+		},
+		{
+			"path": "worktrees/gwc/SCRUM-781-q0-fresh-20261010-r1"
 		}
 	],
 	"settings": {}

@@ -11,6 +11,13 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Any, Mapping, NoReturn
 
+from taskcontroller.controlplane.controller_admission import (
+    ControllerAdmissionInput,
+    validate_controller_admission,
+)
+from taskcontroller.controlplane.execution_contracting import (
+    validate_execution_contracting,
+)
 from taskcontroller.controlplane.request_compiler import (
     BoundedMailboxRequest,
     compile_bounded_mailbox_request,
@@ -19,6 +26,7 @@ from taskcontroller.interaction.mailbox_v2 import (
     MailboxV2ErrorCode,
     MailboxV2ValidationError,
     V2MailboxEnvelope,
+    V2_PROTOCOL,
 )
 from taskcontroller.interaction.continuation import (
     ContinuationStore,
@@ -106,6 +114,29 @@ def prepare_v2_dispatch(
     _assert_request_binding(bound, checkpoint)
     bound = _bind_checkpoint(bound, checkpoint)
 
+    admission = validate_controller_admission(
+        ControllerAdmissionInput(
+            requires_v2_semantics=True,
+            protocol=V2_PROTOCOL,
+            mailbox_ref=checkpoint.controller_mailbox_ref,
+        )
+    )
+    if admission.authority_granted:
+        _fail(
+            MailboxV2ErrorCode.CONTRACT_MISMATCH,
+            "Controller admission guard must never grant authority",
+        )
+
+    execution_contract = validate_execution_contracting(
+        payload=bound.payload,
+        scope=bound.scope,
+    )
+    if execution_contract.authority_granted:
+        _fail(
+            MailboxV2ErrorCode.CONTRACT_MISMATCH,
+            "execution contracting guard must never grant authority",
+        )
+
     persisted = persist_before_dispatch(store, checkpoint)
     envelope = compile_bounded_mailbox_request(bound)
     payload = envelope.to_dict()
@@ -151,7 +182,7 @@ def recover_v2_dispatch(
             MailboxV2ErrorCode.CONTRACT_MISMATCH,
             "durable continuation checkpoint is missing",
         )
-    checkpoint.poll_target()
+    checkpoint.executor_wait_target()
     if checkpoint.checkpoint_id != checkpoint_id:
         _fail(
             MailboxV2ErrorCode.DIGEST_MISMATCH,

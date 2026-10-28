@@ -58,11 +58,12 @@ For TaskController human-plane replies:
 
 ## A2A mailbox boot before Slack delegation
 
-Before the first Executor dispatch in a TaskController session, ChatGPT MUST have:
-- one durable Controller mailbox ref;
-- one durable Executor mailbox ref;
-- a persisted continuation checkpoint with both refs and mailbox cursor/expected seq;
-- exact readback of the Controller mailbox carrying the same checkpoint.
+**Controller-native bootstrap and Controller-owned gate progression are independent of Executor readiness.** A missing Executor session, adapter or mailbox event must not block an otherwise authorized Controller-owned understanding/planning gate, and Slack is not a replacement native receipt. Only before the **first actual Executor dispatch** in a TaskController session, ChatGPT MUST have:
+- one durable Controller mailbox/v2 ref and one separate Executor mailbox/v2 ref;
+- an admitted Executor actor and qualified notification binding;
+- a persisted continuation checkpoint with both refs and mailbox cursors/expected seq;
+- a typed Controller event produced by the canonical v2 materializer, not a manually edited actor comment;
+- exact readback of the immutable Controller event, producer cursor and continuation before notification. If unavailable, block dispatch only; do not create a fake `WAIT_EXECUTOR` command.
 
 If this cannot be established, stop delegation with `TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED`. Do not put the command body into Slack as a fallback.
 

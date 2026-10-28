@@ -213,3 +213,131 @@ def test_compiler_rejects_payload_checkpoint_override() -> None:
 
     with pytest.raises(TaskControllerValidationError, match="compiler-owned"):
         compile_bounded_mailbox_request(request)
+
+
+
+def test_prepare_v2_dispatch_runs_controller_admission_before_persistence(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    import taskcontroller.controlplane.continuation_dispatch as dispatch_module
+
+    audit = AuditFacade(tmp_path / "run-ledger.sqlite3")
+    store = _RecordingContinuationStore(audit)
+    checkpoint = _checkpoint()
+    observed: list[object] = []
+    real_validate = dispatch_module.validate_controller_admission
+
+    def recording_validate(value):
+        observed.append(value)
+        return real_validate(value)
+
+    monkeypatch.setattr(dispatch_module, "validate_controller_admission", recording_validate)
+
+    envelope = dispatch_module.prepare_v2_dispatch(store, checkpoint, _request())
+
+    assert len(observed) == 1
+    admission = observed[0]
+    assert admission.requires_v2_semantics is True
+    assert admission.protocol == "dw.taskcontroller.mailbox/v2"
+    assert admission.mailbox_ref == checkpoint.controller_mailbox_ref
+    assert envelope.protocol == "dw.taskcontroller.mailbox/v2"
+    audit.close()
+
+
+
+def test_prepare_v2_dispatch_rejects_authority_grant_from_admission_guard(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    import taskcontroller.controlplane.continuation_dispatch as dispatch_module
+    from taskcontroller.controlplane.controller_admission import ControllerAdmissionReceipt
+
+    audit = AuditFacade(tmp_path / "run-ledger.sqlite3")
+    store = _RecordingContinuationStore(audit)
+    checkpoint = _checkpoint()
+
+    monkeypatch.setattr(
+        dispatch_module,
+        "validate_controller_admission",
+        lambda value: ControllerAdmissionReceipt(
+            protocol=value.protocol,
+            mailbox_ref=value.mailbox_ref,
+            mode="HIGH_INTEGRITY",
+            reason_codes=("TEST_INVALID_AUTHORITY_GRANT",),
+            authority_granted=True,
+        ),
+    )
+
+    with pytest.raises(TaskControllerValidationError, match="must never grant authority"):
+        dispatch_module.prepare_v2_dispatch(store, checkpoint, _request())
+
+    assert audit.load_manifest(checkpoint.run_id, "dw.taskcontroller.continuation/v1") is None
+    audit.close()
+
+
+
+def test_prepare_v2_dispatch_runs_execution_contract_guard_before_persistence(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    import taskcontroller.controlplane.continuation_dispatch as dispatch_module
+
+    audit = AuditFacade(tmp_path / "run-ledger.sqlite3")
+    store = _RecordingContinuationStore(audit)
+    checkpoint = _checkpoint()
+    observed: list[tuple[dict[str, Any], object]] = []
+    real_validate = dispatch_module.validate_execution_contracting
+
+    def recording_validate(*, payload, scope):
+        assert store.calls == []
+        observed.append((dict(payload), scope))
+        return real_validate(payload=payload, scope=scope)
+
+    monkeypatch.setattr(
+        dispatch_module,
+        "validate_execution_contracting",
+        recording_validate,
+    )
+
+    envelope = dispatch_module.prepare_v2_dispatch(store, checkpoint, _request())
+
+    assert len(observed) == 1
+    assert envelope.protocol == "dw.taskcontroller.mailbox/v2"
+    assert store.calls == ["load_manifest", "save_manifest", "load_manifest"]
+    audit.close()
+
+
+def test_prepare_v2_dispatch_rejects_readonly_execute_contract_before_persistence(
+    tmp_path: Path,
+) -> None:
+    audit = AuditFacade(tmp_path / "run-ledger.sqlite3")
+    checkpoint = _checkpoint()
+    request = _request(
+        payload={
+            "controller_contract_mode": "EXECUTE",
+            "execution_authority_active": True,
+            "execution_plan_ref": "artifact://plan/302",
+            "approval_ref": "approval://G2/302",
+            "approval_digest": "sha256:" + "a" * 64,
+            "work_packages": [{"id": "T1", "objective": "Implement."}],
+            "continue_until": ["ALL_AC_PASS"],
+            "stop_conditions": ["SOURCE_OR_BASE_DRIFT"],
+        },
+        scope={
+            "allowed_actions": ["read_repo", "run_tests"],
+            "denied_actions": ["merge", "deploy"],
+            "writable_targets": [],
+            "source_roots": ["taskcontroller", "tests/taskcontroller"],
+            "max_children": 0,
+            "max_parallel": 1,
+            "max_depth": 0,
+        },
+        authority_constraints={
+            "denied_actions": ["merge", "deploy"],
+            "writable_targets": [],
+        },
+    )
+
+    with pytest.raises(TaskControllerValidationError, match="writable target"):
+        prepare_v2_dispatch(audit, checkpoint, request)
+
+    assert audit.load_manifest(checkpoint.run_id, "dw.taskcontroller.continuation/v1") is None
+    audit.close()

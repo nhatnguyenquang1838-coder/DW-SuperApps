@@ -1,10 +1,13 @@
 # TaskController Reference-Based Agent Interaction Protocol — A2A Pilot
 
-Status: active pilot contract for Controller↔Executor interaction.
+**Applicability:** This protocol is canonical only for a run that explicitly selects the TaskController working mode. It is NOT a boot dependency, mandatory transport or authority source for GWC Universal Runtime v2, Node Architect, autonomous tasks or direct-agent execution. `mailbox/v2`, TaskController continuation, Controller–Executor actor ownership and Human Plane requirements start only at a valid TaskController activation/dispatch boundary. GWC/Node Architect continue under their own native gate, node and authorization contracts when this mode is inactive.
+
+
+Status: active canonical mailbox/v2 contract for Controller↔Executor interaction. A2A/v1 is compatibility-only.
 
 ## Purpose
 
-This protocol defines **Agent interaction semantics**, independent of transport. The first pilot binding is a GitHub reference mailbox because ChatGPT and heterogeneous Executors can already exchange durable GitHub references without introducing new infrastructure.
+This protocol defines **Agent interaction semantics**, independent of transport. The canonical GitHub binding is append-only `dw.taskcontroller.mailbox/v2`; the older mutable-comment `dw.taskcontroller.a2a/v1` binding is retained only for explicit compatibility runs.
 
 **Slack is not the Executor progress transport.** Slack is the Human Control Plane and receives only semantic human projections. When an idle Executor cannot poll/push-subscribe to its mailbox, Slack may also carry a separate **pointer-only wake-up notification**.
 
@@ -40,38 +43,64 @@ Executor fetches canonical payload from mailbox
 
 The communication binding may later be GitHub, A2A HTTP, local IPC, NATS, Kafka/MSK or another provider without changing the semantic contract.
 
-## Session boot — A2A and mailboxes first
+## A2A v2 communication-first routing (simplified)
 
-TaskController activation MUST boot the A2A interaction state before the first Executor dispatch. Boot is not complete merely because the instruction files were read or a Slack RootCard exists.
+**Mandatory communication routing:** Read `docs/runbooks/TASKCONTROLLER_MAILBOX_V2.md` first; it routes to `docs/runbooks/A2A_V2_COMMUNICATION_TEMPLATE.md` for the message format. The mailbox is not a second GWC human-approval or execution authority gate. Agent Card discovery maps recipient skills, advertised interfaces and authentication; actual receiver identity/delivery is verified separately.
 
-Required boot state:
 
-- exactly one Controller mailbox reference for the run;
-- exactly one Executor mailbox reference for the run;
-- Controller and Executor mailbox cursors/expected sequence;
-- an ACTIVE `dw.taskcontroller.continuation/v1` checkpoint bound to the current exact head and both mailbox refs;
-- the Controller mailbox updated in place with that same checkpoint and exact-read back successfully.
+For routine GPT ↔ Hermes exchanges, use the compact **human-readable v2 communication envelope** at `docs/runbooks/A2A_V2_COMMUNICATION_TEMPLATE.md`: one `COMMAND / REPORT / CORRECTION / ACK` per turn and one increasing **per-run communication seq** regardless of sender. Use one source-bound GOAL, concrete NEXT, and evidence. Do **not** force these routine communications through protected v2 mailbox execution-envelopes, issuer/lease scripts, source-replan, or multiple validators. An ordinary message cannot grant a protected effect. Native in-scope Q0 engineering continues while a separate protected C4 remains blocked.
 
-Required order:
+The helper `taskcontroller/interaction/communication_v2.py` is only a renderer/parser/sequence checker until a real serialized remote append, exact readback, receiver binding and consumed ACK are qualified. Do not claim that Markdown prose has already delivered a typed command. Keep existing protected mailbox/v2 execution event sequences and immutable continuation untouched. Do not activate a weaker protected execution fallback.
+
+## Peer liveness and source-sync invariant (SCRUM-840 R2)
+
+GPT and Hermes have equal analysis/decision standing; Controller/Executor remain **machine-writer roles**. A transport WAIT or protected-effect lease failure does not prohibit unrelated in-scope work. During GWC v2 test/fix cycles, source drift is normal: exchange exact `RUN / REPO / BRANCH / REMOTE_HEAD / LOCAL_HEAD / CHANGED_PATHS / TEST_EVIDENCE / WORKTREE_OWNER / NEXT`, fetch before using another peer's code, publish commits before claiming sharing, compare ancestry and reconcile with additive merge-back for published or evidence-bearing refs; rebase only disposable unpublished local commits. Do not force-push or silently alter a sealed authority receipt. Re-run changed-area validation and runtime load proof when affected.
+
+At every failed delivery or blocker both peers independently select a legal recovery NEXT. After bounded no-progress attempts, exchange concrete findings, execute the best authorized option and escalate a shared blocker only if neither can move, specifying the smallest missing capability or Human decision and its owner. Legacy `WAIT_CONTROLLER` is not an artificial global stop. Keep single writer per effect/worktree, preserve exact mailbox/cursor/lease/fence semantics and never mint approval from discussion.
+
+## Two autonomous peers, one protected machine-state contract (SCRUM-840 non-main extension)
+
+GPT and Hermes have **equal semantic rights** to analyze, initiate proposals, challenge a proposal, request information and agree on the next in-scope action. Neither is the other's reviewer/line manager. A task-specific **Controller/Executor** label here denotes legacy mailbox/v2 **routing and producer namespace**, not AI seniority. The existing envelope directions and single-writer-per-mailbox invariant remain intact until a separate typed bidirectional peer protocol has been implemented, tested and admitted; do not handwrite new machine message types.
+
+A shared decision consists of an exact, externally inspectable proposal digest and two independently actor-bearing acknowledgements of that **same** digest. `decide_peer_collaboration` evaluates agreement, disagreement and discussion budget, but issues **no execution authorization**. In-scope implement/test/fix/commit/push actions already delegated to either peer need no second-agent permission or per-step release. An authority-boundary or out-of-scope decision goes to the configured human decision path only when genuinely needed. No third-party AI reviewer/approver is introduced.
+
+**Observe ≠ consume ≠ execute:** under a separately qualified host capability an AI's Loop can **read-only inspect the exact cursor** at bounded intervals, then verify a newer typed event before doing anything. Do not use a generic prompt timer as authority, update consumed cursor merely on observation, or infer a lease/fence or approval from a cursor. The default legacy `MAILBOX_POLL` remains forbidden; proposed `MAILBOX_OBSERVER` is disabled until host/session/identity and read rate are qualified. Controller-host polling, if later implemented, needs separate qualification; do not invent it for the GPT chat surface. Push+pull notices dedupe by canonical event identity.
+
+## Session boot — Controller-owned gates before Executor dispatch
+
+The canonical mailbox/v2 boot requirement applies **before the first Executor dispatch**. TaskController **source/Controller activation** and **Executor dispatch readiness** are distinct states. A fresh Controller may validate its native run context, assign itself understanding/planning/recovery actions and persist the native gate receipts without a live Executor session, Executor acknowledgement, lease, notification adapter, or a mailbox event. Do not issue a placeholder execution request to boot Controller-only work. Native gate/receipt checks and `RUN_HOLD` still govern.
+
+For a real **Controller → Executor** dispatch, the prerequisites are:
+
+- exactly one Controller mailbox/v2 reference and one separate Executor mailbox/v2 reference for the new run (fresh refs may be empty beforehand);
+- bound recipient/Executor actor identity and a qualified event-driven delivery route;
+- the required exact source, contract/scope/authority checks;
+- a durable `dw.taskcontroller.continuation/v1` checkpoint bound to the current exact head, the two mailbox refs and cursor/expected sequences;
+- a canonical typed Controller event and producer cursor, plus exact-readback of event, cursor and continuation, **before** notification.
+
+Required order at the **first dispatch**, not before Controller-native gate work:
 
 ```text
-resolve current repository/run identity
-→ materialize or recover Controller mailbox
-→ materialize or recover Executor mailbox
-→ persist continuation checkpoint
-→ write Controller mailbox with same checkpoint
-→ exact-readback Controller mailbox/seq
-→ send pointer-only wake-up when the provider requires it
-→ poll exact Executor mailbox comment only
+resolve current repository/run identity + native gate owner
+→ if CONTROLLER-owned: perform native action and validate native receipt; do not dispatch
+→ if EXECUTOR-owned: validate actor/route/scope/authority and prepare dispatch
+→ bind the Controller and Executor mailbox/v2 refs
+→ native materialize_controller_transition (persist continuation first)
+→ append-only canonical Controller event + producer cursor; exact-readback all three
+→ signal pointer-only notification to the qualified Executor adapter
+→ Executor performs its own PRECHECK on received command
+→ Controller resumes only on a newer valid Executor event, without polling
 ```
 
-If any required mailbox/checkpoint/readback cannot be established, fail closed with `TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED`. Do not copy the command into Slack, use Slack thread progress as substitute state, or recover by replaying Slack/GPT history.
+A missing Executor session or notification route is a **dispatch blocker only**; it MUST NOT block an otherwise legal Controller-owned native gate. If a required mailbox/continuation/readback is missing **at dispatch**, fail closed with `TASKCONTROLLER_MAILBOX_NOT_MATERIALIZED`. Never update the canonical v2 actor mailbox comment in place; never hand-author records, use **unqualified** polling, use Slack as machine fallback, or replay old session events. Only independently qualified read-only cursor observation is eligible for the SCRUM-840 branch opt-in.
 
 Activating TaskController does not activate GWC. GWC is loaded only when the current controlled task requires its governance model.
 
-## Pilot mailbox model
+## Legacy v1 compatibility mailbox model
 
-For the GitHub pilot:
+This section applies only when activation explicitly opts into A2A/v1 compatibility. It is not the default TaskController runtime.
+
+For legacy v1 compatibility:
 
 - one Controller identity per run;
 - one main Executor in the first vertical slice;
@@ -83,9 +112,9 @@ For the GitHub pilot:
 
 Normal progress does not append a new comment for every event.
 
-## Envelope
+## Legacy v1 envelope
 
-Use `dw.taskcontroller.a2a/v1` and the typed `taskcontroller.interaction.A2AEnvelope`.
+Only an explicit compatibility run uses `dw.taskcontroller.a2a/v1` and the typed `taskcontroller.interaction.A2AEnvelope`. Canonical runs use the mailbox/v2 envelope/event contract below.
 
 Required semantics:
 
@@ -120,27 +149,29 @@ A TaskController run is **not** the lifetime of one GPT response.
 
 Before dispatching or waking an Executor, the Controller MUST persist a `dw.taskcontroller.continuation/v1` checkpoint. The checkpoint contains only bounded continuation metadata: run/epoch/phase/next action, Controller/Executor mailbox pointers and cursors, exact head SHA, wake-up binding, and optional Human RootCard ref.
 
-For the GitHub pilot, the same checkpoint is embedded in the Controller mailbox envelope state so a fresh Controller execution can recover it through a durable shared binding. When audit persistence is configured, the checkpoint is also mirrored into the Run Ledger manifest table.
+For the canonical GitHub mailbox/v2 lane, the checkpoint is stored as a separate **append-only** `dw.taskcontroller.continuation/v1` manifest through `GitHubContinuationStore`, then referenced by checkpoint identity from the deterministic Controller envelope. It is not a mutable Controller mailbox comment. When audit persistence is configured, the checkpoint is also mirrored into the Run Ledger manifest table.
 
 Required pre-dispatch sequence:
 
 ```text
-persist continuation
-→ write Controller mailbox with same checkpoint
-→ exact-readback Controller mailbox
-→ send provider wake-up
-→ poll exact Executor mailbox comment only
+native materialize_controller_transition:
+  persist + exact-read continuation
+  → append typed Controller mailbox/v2 event and producer cursor
+  → exact-read event + cursor + continuation
+→ publish qualified provider mailbox-event pointer
+→ remain at AWAIT_EXECUTOR_EVENT only after real Executor dispatch
+→ on a newer Executor event, exact-read that event once and resume
 ```
 
 An `ACTIVE` continuation checkpoint forbids a semantic Controller final/terminal response. The Controller may stop the current host execution only at a genuine human-authority or unrecoverable blocker while leaving the durable run state truthful and recoverable.
 
-While the host execution remains alive, polling is synchronous/in-session at the configured cadence. Polling MUST fetch only the exact Executor mailbox comment referenced by the checkpoint; it MUST NOT repeatedly load the whole GitHub issue, Slack thread, or GPT conversation.
+Canonical mailbox/v2 commands remain typed and event-bound. The Controller MUST NOT run a periodic mailbox polling cadence under the current GPT-host binding; a separately qualified Hermes read-only cursor observer is permitted in the SCRUM-840 proposal and cannot grant authority. **A forbidden polling scheduler is not a stopped Executor session.** Pausing/quarantining a Loop that polls mailbox/v2 or belongs to an obsolete run does not itself create `RUN_HOLD`, `TERMINAL`, an approval boundary, or permission to cancel an unrelated authorized engineering mission. While effects are held on an expired/mismatched command, Controller remains responsible for a qualified successor event rather than timer reactivation. A `WAIT_EXECUTOR` continuation uses `AWAIT_EXECUTOR_EVENT`; the Controller resumes only after a provider/event adapter reports a newer Executor mailbox event, then exact-reads that event once.
 
-For the current `hermes-cloud` provider, `slack-websocket` is a REQUIRED wake-up binding because Slack WebSocket is Hermes's trigger point. This requirement does not make Slack the command/data bus.
+For the current `hermes-cloud` binding, machine notification is a mailbox event. Slack WebSocket is not a canonical Executor wake-up path and MUST NOT be used as machine notification for event-driven runs.
 
 ## Wake-up notification
 
-Use `dw.taskcontroller.wakeup/v1` and typed `WakeupSignal` only when an Executor needs an external signal to notice unseen mailbox work.
+Use `dw.taskcontroller.wakeup/v1` and typed `WakeupSignal` only as a transport-neutral pointer when a provider event adapter needs an external signal to notice unseen mailbox work. Legacy unqualified timer-driven mailbox polling remains prohibited; a qualified read-only cursor observation adapter may supplement push delivery, with canonical exact-read and PRECHECK before effects.
 
 The signal is **pointer-only**:
 
@@ -157,7 +188,7 @@ It MUST NOT carry `request`, `inputs`, `artifact_refs`, `state`, code, context b
 
 Wake-up delivery is safe to duplicate. Stale/equal sequence does not announce new work. Notification message IDs are transport metadata only.
 
-In the Slack pilot, a wake-up mention is allowed only as `SlackWakeupBinding`; it does not turn Slack into the command/progress bus. After wake-up the Executor reads GitHub and reports to its mailbox. Tool/progress narration on the wake-up channel is forbidden.
+Slack MUST NOT be used as the machine wake-up path for canonical event-driven mailbox/v2 execution. Human-plane projection remains separate from Executor notification.
 
 ## Context contract
 
@@ -192,6 +223,108 @@ Audit evidence must preserve at minimum:
 
 The configured Run Ledger also stores the latest continuation manifest. Wake-up delivery may be audited as pointer metadata and delivery outcome; it does not duplicate the canonical command payload. Slack is not audit storage.
 
+## High-integrity admission boundary
+
+The v1 mutable-comment lane is demoted to explicit compatibility only. New TaskController activations default to mailbox/v2. A controlled task MUST NOT silently select or fall back to v1; compatibility requires an explicit activation choice.
+
+High-integrity admission requires:
+
+- protocol `dw.taskcontroller.mailbox/v2`;
+- `taskcontroller/controlplane/controller_admission.py` PASS;
+- exact mailbox reference/event cursor reads only;
+- canonical typed envelope/artifact digest for semantic identity;
+- descriptor-bound schema resolution;
+- observed or canonically recomputed digests only;
+- current verified gate/boundary as the input to preapproval;
+- typed approval-request + verified approval-command digest for human approval presentation.
+
+The following are transport/debug evidence only and MUST NOT become semantic authority:
+
+- raw mutable GitHub comment-body SHA;
+- issue-wide comment history;
+- a Controller-predicted digest/hash;
+- a guessed legacy schema path;
+- a target-gate state synthesized before the target gate's authority artifact exists.
+
+If a host cannot satisfy the high-integrity admission contract, it must stop with a Controller admission blocker. It must not downgrade to v1 to continue an authority-sensitive run.
+
+This boundary does not grant effect, merge, deploy, release, migration, secret, or production authority.
+
+## High-integrity GitHub mailbox/v2 binding
+
+The canonical remote adapter is `taskcontroller.interaction.github_mailbox_v2.GitHubMailboxRepository`, composed by `taskcontroller.runtime.high_integrity_session.materialize_controller_transition`. Controller hosts MUST NOT render or post mailbox event/cursor/continuation JSON directly.
+
+The mailbox reference has the form:
+
+`github://<owner>/<repo>/issues/<issue>#<actor-mailbox>`
+
+Transport rules:
+
+- each accepted mailbox event is appended as a new immutable GitHub issue comment using `dw.taskcontroller.github-mailbox-record/v1`;
+- each durable actor-cursor acknowledgement is also appended as a new immutable GitHub issue comment;
+- unrelated issue comments are not mailbox records and are ignored;
+- a tagged malformed mailbox record fails closed;
+- exact readback validates canonical envelope/event/cursor identity, not full comment-body SHA;
+- the current topology requires one writer per actor mailbox; the adapter does not claim cross-process multi-writer atomic CAS;
+- Controller and Executor use separate actor mailbox refs when both can write concurrently;
+- high-integrity runs MUST NOT update one mutable actor comment in place.
+
+This transport binding does not grant execution authority. Gate/effect authority remains separately validated.
+
+For high-integrity remote recovery, persist the bounded `dw.taskcontroller.continuation/v1` manifest through `taskcontroller.interaction.github_continuation_store.GitHubContinuationStore` before the first mailbox/v2 dispatch and before every later Controller dispatch checkpoint. Continuation records are append-only GitHub issue comments using `dw.taskcontroller.github-continuation-record/v1`, exact-read back after append, and filtered by exact `run_id + manifest_kind`. The same Controller writer owns continuation updates for the run.
+
+A high-integrity mailbox event without a durable remote continuation checkpoint is invalid boot state and MUST NOT be emitted.
+
+The materializer owns `record_type`, event/cursor sequence values, previous-event digests, event/envelope digests, and continuation-chain sequencing. Callers supply only the bounded semantic transition. Raw secret/token/credential values are not valid mailbox payload state; durable references/digests must be used instead.
+
+## Controller execution-contract modes
+
+Mailbox/v2 requests may declare one Controller contract mode:
+
+- `PLAN`: source recovery, research, design, decomposition, validation; no implementation effects.
+- `TRANSPORT_REPAIR`: mailbox/protocol/continuation repair only.
+- `EXECUTE`: bounded real engineering work after applicable execution authority is validated.
+
+`EXECUTE` is outcome-oriented. It must include a real writable scope, at least one engineering mutation action, ordered work packages, continue-until conditions, and hard stop conditions. A read/validate/report-only package is not a valid EXECUTE contract.
+
+Within an EXECUTE boundary, implementation details belong to the Executor. Normal RED/GREEN/test/fix/refactor cycles are not separate mailbox authority boundaries and must not create repetitive WAIT_CONTROLLER turns.
+
+One bounded execution package may include branch/worktree creation, approved file edits, tests, staging, commit, push, and Draft PR when explicitly authorized. Merge, Ready-for-Review when separately governed, deploy, production/data/secret/migration/destructive actions remain separate authority.
+
+The transport does not grant authority. `taskcontroller/controlplane/execution_contracting.py` validates the declared mode before dispatch persistence and must return `authority_granted=false`.
+
+### Controller-owned HITL and anti-stuck invariant
+
+For high-integrity mailbox/v2 runs, the authority topology is always:
+
+```text
+Human/User <-> Controller <-> Executor
+```
+
+The Executor MUST NOT address an approval request to the Human/User, emit `WAIT_USER_*` / `WAIT_HUMAN_*`, mint an approval command/token, or create a direct Human wait loop. When execution reaches a boundary, the Executor reports it to the Controller. The Controller alone resolves whether the next action is automatic, delegated, or Human HITL and materializes the exact actionable request.
+
+Executor blocker reports are limited to four canonical classes:
+
+- `AUTHORITY_BOUNDARY`;
+- `SCOPE_EXPANSION`;
+- `MATERIAL_PLAN_INVALIDATION`;
+- `EXTERNAL_DEPENDENCY_BLOCKED`.
+
+Source/base/identity drift is reported as material-plan invalidation with an exact subreason/evidence reference; a required write outside scope is scope expansion; a later separately governed gate is an authority boundary.
+
+`execution_progress` is a first-class Controller resume input. RUNNING progress is observational and MUST NOT require a release command. SUCCEEDED progress may close the delegated mission at its declared ceiling. BLOCKED / NEEDS_CLARIFICATION progress requires one canonical blocker class and Controller ownership of the next decision. Atomic missions with `max_children=0` may emit a canonical terminal result with empty child provenance; child evidence MUST NOT be fabricated.
+
+A mission-level `EXECUTE` contract remains active across its internal work packages until `continue_until` is satisfied or one canonical blocker occurs. Work-package completion is not an authority boundary by itself.
+
+HOLD is typed:
+
+- `EFFECT_HOLD`: blocks only explicitly named effects and keeps the Controller control loop running for allowed read/plan/recovery/remediation work;
+- `RUN_HOLD`: stops new run actions until a fresh release.
+
+An untyped/generic HOLD is invalid. An effect authority wait MUST NOT strand bounded runnable read-only work.
+
+A Human-required state is invalid unless the Controller has materialized an actionable Human request. A delegated-authority state is invalid unless a delegate dispatch receipt exists. If no resolver is actually routed, fail closed with `AUTHORITY_REQUEST_UNROUTED`; do not persist a silent wait.
+
 ## Controller contract
 
 Controller owns:
@@ -222,6 +355,18 @@ Executor updates its own mailbox at contracted milestones and material exception
 - material finding invalidating the next contracted action.
 
 Tool chatter, individual file reads/edits, raw test output, repeated CI polling and recovered transient retries remain silent. The same silence rule applies after a wake-up notification.
+
+
+
+## Read-only Analyzer Child Run invariants (SCRUM-808)
+
+These invariants prevent read-only Analyzer Child Run deadlock behind effect authority:
+
+1. **READ_ONLY_ANALYSIS Child Run ≠ Repository G2 effect.** A child run whose only work is read-only analysis (inspection, evidence gathering, projection, recommendation) does not constitute a Repository G2 effect. It must not be treated as requiring G2 execution authority, repository write capability, or a gated effect graph. The Controller must not require a G2 effect packet for read-only analysis child steps.
+
+2. **WAIT_CONTROLLER invalid if runnable read-only work exists.** When the only remaining delegated work is runnable read-only analysis, the Controller MUST NOT emit `WAIT_CONTROLLER` as a blocking verdict. `WAIT_CONTROLLER` is valid only when the next actionable step requires human/gate authority or a capability the Executor lacks. Read-only analysis that the Executor can perform is `CONTINUE`-eligible.
+
+3. **UR-G* vs GWC-G* naming separation.** UR-G* references the Ultimate Responsibility gate authority chain (human approval boundaries). GWC-G* references the GWC gate lifecycle (G0–G6). These are distinct naming spaces and must not be conflated in controller verdicts, envelope decisions, or audit records. A GWC gate decision is never a UR authority delegation, and a UR approval is never a GWC gate transition.
 
 ## Recovery
 

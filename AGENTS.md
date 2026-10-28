@@ -55,6 +55,8 @@ Existing `<project>/.dw/powers/<power-id>` paths are legacy installations. Repor
 
 For trusted local development of any registered Git submodule project, use the canonical machine-readable contract in `workspace.yaml` under `development` and the detailed runbook `docs/runbooks/ISOLATED_SUBMODULE_WORKTREE.md`.
 
+For task-to-worktree **create/reuse and Jira/GitHub binding updates**, follow the lightweight skill `docs/skills/dw-git-worktree/SKILL.md`. The skill only describes Agent behavior; it does not replace this repository's Git standard, add a controller, or add governance gates.
+
 The invariant is:
 
 ```text
@@ -114,6 +116,10 @@ Workspace controllers are host-control capabilities owned by DW-SuperApps. They 
 
 ### TaskController
 
+**TASKCONTROLLER_IS_OPTIONAL_WORKING_MODE:** TaskController is an explicitly selected workspace working mode, not a dependency or default boot stage for GWC Universal Runtime v2 or Node Architect. The presence of a governed run, node DAG, autonomous task, Executor, connected Slack, or installed skill never implicitly activates TaskController. Unless selected for the current run by explicit user intent or an already-authorized parent/controller binding, do not load TaskController mailbox/v2, continuation, high-integrity admission, RootCard, Human Plane or Controller–Executor constraints. GWC native authority and Node Architect node-runtime contracts remain applicable independently. When selected, TaskController orchestrates but does not replace native GWC authority or Node Architect routing.
+
+
+
 `TaskController` is the canonical controller identity registered in `workspace.yaml` at `controllers[].id=taskcontroller` with registry `controllers/taskcontroller.yaml`.
 
 Any explicit user mention of `TaskController`, `task controller`, or `/dw-taskcontroller` MUST activate TaskController before the agent plans, delegates, posts a controller RootCard, or claims that TaskController is booted.
@@ -132,14 +138,23 @@ Hosts may use `taskcontroller.mvp.resolve_taskcontroller_activation(...)` as the
 
 If a mandatory **repository TaskController entrypoint** is missing or unreadable, activation is `BLOCKED`. Do not fabricate a controller contract or silently fall back to remembered instructions. The active TaskController load chain has no external Slack policy source.
 
-The active Agent interaction contract is reference-based A2A:
+The active Agent interaction contract is canonical mailbox/v2:
 
 - `agents/shared/taskcontroller-a2a-protocol.md` defines transport-neutral Controller↔Executor semantics;
-- GitHub reference mailbox is the current Agent interaction pilot binding;
-- one actor owns one mutable mailbox comment and advances a monotonic sequence;
+- `dw.taskcontroller.mailbox/v2` with append-only GitHub event/cursor records is the default machine binding;
+- `dw.taskcontroller.a2a/v1` mutable-comment semantics are compatibility-only and require explicit opt-in;
+- one actor owns one append-only mailbox stream and advances a monotonic sequence;
 - exact repo/SHA/PR/file/artifact references carry context and evidence;
 - semantic Agent events are recorded to the TaskController audit ledger when audit is configured;
 - binding IDs never become canonical TaskController IDs.
+
+**Controller-first bootstrap boundary:** Activating TaskController loads and binds the current Controller runtime; it does **not** require an Executor session, Executor acknowledgement, or a dispatched mailbox event before Controller-owned understanding/planning/recovery. For an active project-native lifecycle (including Universal V2 when explicitly loaded), gate ownership and completion are determined by that native Controller and its evidence contracts. `EFFECT_HOLD` or missing Executor transport blocks only the named effects/dispatch, not otherwise authorized Controller-only work; `RUN_HOLD` remains binding. The **first Executor dispatch**, not Controller-native bootstrap, is the mandatory mailbox/v2 event + durable continuation + cursor/exact-readback boundary. See `agents/chatgpt-agent/agent-instructions.md` and `agents/shared/taskcontroller-a2a-protocol.md`; see `docs/runbooks/HERMES_DESKTOP_RUNTIME.md` only for the Executor-side procedure. This rule never grants effect authority or waives native gate receipts.
+
+**Peer AI collaboration (SCRUM-840 non-main):** GPT and Hermes are **equal decision participants**, not supervisor/subordinate. Either may propose, challenge, reach agreement on exact evidence and work autonomously within its own existing delegated scope. Legacy `controller_to_executor`/`executor_to_controller` are **wire roles**, not agent rank. Independent proposal/endorsement evidence never grants a new lease, approval, protected effect or typed event. Decision guard: `taskcontroller/controlplane/orchestration_policy.py::decide_peer_collaboration`. The current mailbox schemas and actor producer namespaces are unchanged; host/session/issuer bindings still require separate qualification. See the canonical Hermes Runbook for the work-in-progress policy; no retroactive #595 authority.
+
+**Hermes Loop continuity:** a `LoopManager` timer row is not the persistent TaskController Executor session or Controller continuation. Disabling an obsolete/polling Loop must not be projected as `RUN_HOLD`, a terminal result, or permission to abandon event-driven recovery. Do not re-arm an obsolete Loop to discover newer mailbox commands. A separately qualified read-only `MAILBOX_OBSERVER` may observe the exact cursor at a bounded cadence, but old `MAILBOX_POLL` and unqualified Loop timers remain forbidden; read-only observation does not consume an event or grant execution. The canonical guard is `taskcontroller/controlplane/orchestration_policy.py::decide_executor_loop_continuity`; the detailed procedure is in `docs/runbooks/HERMES_DESKTOP_RUNTIME.md` and `agents/hermes/agent-instructions.md`. This guard grants neither host scheduler effects nor execution authority.
+
+When **Hermes Desktop** is the main Executor, load **one** host procedure: `docs/runbooks/HERMES_DESKTOP_RUNTIME.md`, after `agents/hermes/agent-instructions.md`. It defines one common continuous Executor lifecycle and invokes one **pre-bound Controller strategy only at a semantic decision boundary**: `standalone` = same-session serialized internal Controller phase with separately admitted actor identity and Pattern E → MoA advisory synthesis; `coordination` = GPT Web Controller notified using an approved bound in-app-browser / `drive_preview` pointer after typed Executor mailbox readback. Both require separate Controller/Executor actor ownership, exact event/cursor/continuation, current authority/lease/fence and user-pause guards. `max_children=0` governs child-run authority, **not** Desktop mode. Never infer rights from MoA/GPT prose; no **unqualified** `/loop` mailbox polling or Slack machine fallback. A qualified cursor observer is an independent, disabled-by-default host capability. The runbook is host guidance, not an adapter implementation or approval source.
 
 TaskController human-plane behavior is canonical in `agents/shared/taskcontroller-human-plane-policy.md`.
 
@@ -159,6 +174,43 @@ A fresh Controller recovers from current repository/task/run identity, mailbox e
 The current MVP uses `taskcontroller/mvp/activation.py` for activation resolution, `taskcontroller/mvp/protocol_bridge.py` for verdict translation, `taskcontroller/interaction/*` for reference-based Agent interaction, and `taskcontroller/audit/*` for durable run evidence. Full-E2E surfaces including `SlackTaskControllerPack`, leases, recovery/checkpoint orchestration, and multi-executor routing remain deferred unless current repository policy explicitly activates them.
 
 Activating TaskController does not automatically activate any Power. Load only the Power explicitly required by the controlled task.
+
+### TaskController high-integrity admission
+
+When TaskController controls a task whose active project/Power contract introduces a gate, human approval, protected effect, or digest-bound execution identity, the Controller MUST use the high-integrity interaction lane before dispatch, correction, approval presentation, or semantic resume.
+
+High-integrity runs MUST:
+
+1. resolve TaskController with mailbox/v2 semantics;
+2. materialize every Controller machine transition through `taskcontroller/runtime/high_integrity_session.py::materialize_controller_transition`;
+3. pass `taskcontroller/controlplane/controller_admission.py`;
+4. bind machine state to the exact mailbox reference/event cursor and canonical typed envelope/artifact digest;
+5. resolve schemas from canonical descriptor/source bindings;
+6. use only observed or canonically recomputed expected digests;
+7. start preapproval from the current verified boundary rather than synthesizing the target gate before its authority artifact exists;
+8. bind human approval presentation to the typed approval-request artifact and verified command digest.
+
+A mutable GitHub comment body, its full-body SHA, issue-wide comment history, a Controller-predicted hash, or a guessed legacy schema path is never semantic authority. Transport-level body hashes may be diagnostic evidence only.
+
+The Controller MUST NOT hand-author GitHub mailbox JSON, event/cursor records, continuation sequence/digests, or any alternate record type. Runtime-owned fields such as `record_type`, `event_seq`, `previous_event_digest`, `event_digest`, cursor state, and continuation record sequencing are emitted only by the canonical v2 materializer/repository/store. Raw token/secret/credential values are forbidden in machine payloads; use durable references/digests instead.
+
+If high-integrity admission cannot be satisfied, stop with `TASKCONTROLLER_HIGH_INTEGRITY_ADMISSION_BLOCKED`. Do not downgrade the run to the v1 compatibility lane to bypass the blocker.
+
+For new high-integrity requests, the Controller must also declare a TaskController execution-contract mode and pass `taskcontroller/controlplane/execution_contracting.py` before dispatch:
+
+- `PLAN` is read/design/validate only;
+- `TRANSPORT_REPAIR` is mailbox/protocol repair only;
+- `EXECUTE` is bounded real implementation after applicable authority validation.
+
+Once `EXECUTE` is active, readonly is no longer the default. The approved package must contain real writable engineering scope and the Executor continues through routine implementation/test/fix/refactor cycles until AC/continue-until is reached or a real hard boundary occurs. Routine RED/GREEN completion, test failure, lint failure, scoped refactor, or ordinary implementation decisions are not WAIT_CONTROLLER boundaries.
+
+For high-integrity TaskController runs, Human/User authority is Controller-owned: `Human/User <-> Controller <-> Executor`. The Executor reports only to the Controller and MUST NOT emit `WAIT_USER_*` / `WAIT_HUMAN_*`, approval commands, or direct Human approval loops. Executor blockers are normalized to `AUTHORITY_BOUNDARY`, `SCOPE_EXPANSION`, `MATERIAL_PLAN_INVALIDATION`, or `EXTERNAL_DEPENDENCY_BLOCKED`; the Controller resolves the next gate/HITL. A Human wait without an actionable Human request, or a delegated wait without a delegate dispatch receipt, is invalid and fails `AUTHORITY_REQUEST_UNROUTED`.
+
+`execution_progress` is a first-class mailbox/v2 Controller resume input. Internal work-package milestones are progress, not release boundaries; one approved EXECUTE mission remains active until its declared ceiling or a canonical blocker. Atomic `max_children=0` missions may terminate with empty child provenance and MUST NOT fabricate child evidence.
+
+HOLD semantics are typed: `EFFECT_HOLD` blocks explicitly named effects while the Controller control loop continues safe read/plan/recovery work; `RUN_HOLD` stops new run actions. Untyped generic HOLD is invalid.
+
+A single approved EXECUTE package may cover isolated worktree/branch creation, approved edits, validation, stage, commit, push, and Draft PR when explicitly bound. Merge, separately governed Ready-for-Review, deploy, production/data/secret/migration/destructive operations require separate authority.
 
 For the RuntimePlan W7→W9 proving campaign, the durable design and execution plan are:
 
@@ -183,6 +235,10 @@ Power aliases such as `/dw-gwc`, `/dw-ua`, `/dw-task-me`, and `/dw-bmad` select 
 When a Power is selected, the agent must resolve the target project, load the canonical installed entrypoint, and apply the skill directly to the remainder of the user's request. It must not tell the user to execute an activation command, generate a copy-and-paste prompt, or merely explain the Power instead of using it.
 
 The DW CLI owns installation, configuration, inspection, validation, doctor, history, rollback, and uninstall operations. It does not generate task prompts.
+
+## TaskController mailbox v2 communication entrypoint
+
+For explicitly activated TaskController agent communication, load `docs/runbooks/TASKCONTROLLER_MAILBOX_V2.md`; that runbook routes to `docs/runbooks/A2A_V2_COMMUNICATION_TEMPLATE.md` and handles Agent Card-inspired recipient discovery. The communication envelope itself does not issue approval or add a new human gate; GWC gates and the owning project's authority remain binding. This does not automatically activate TaskController for native GWC work.
 
 ## Mandatory runbooks
 
@@ -296,6 +352,16 @@ BMAD bootstrap must not place package code or host skills in the project.
 - Preserve runtime by default. Destructive runtime cleanup requires explicit authorization and confirmation flags.
 - Shared package uninstall must not break another bound project. Detach the selected project and remove a shared package only when no bindings remain.
 - Use `READY`, `PARTIAL`, `BLOCKED`, and `FAILED` exactly as defined by the onboarding runbook.
+## Read-only Analyzer Child Run invariants (SCRUM-808)
+
+These invariants prevent read-only Analyzer Child Run deadlock behind effect authority:
+
+1. **READ_ONLY_ANALYSIS Child Run ≠ Repository G2 effect.** A child run whose only work is read-only analysis (inspection, evidence gathering, projection, recommendation) does not constitute a Repository G2 effect. It must not be treated as requiring G2 execution authority, repository write capability, or a gated effect graph.
+
+2. **WAIT_CONTROLLER invalid if runnable read-only work exists.** When the only remaining delegated work is runnable read-only analysis, the Controller MUST NOT emit `WAIT_CONTROLLER` as a blocking verdict. `WAIT_CONTROLLER` is valid only when the next actionable step requires human/gate authority or a capability the Executor lacks. Read-only analysis that the Executor can perform is `CONTINUE`-eligible.
+
+3. **UR-G* vs GWC-G* naming separation.** UR-G* references the Ultimate Responsibility gate authority chain (human approval boundaries). GWC-G* references the GWC gate lifecycle (G0–G6). These are distinct naming spaces and must not be conflated in controller verdicts, envelope decisions, or audit records. A GWC gate decision is never a UR authority delegation, and a UR approval is never a GWC gate transition.
+
 
 ## Model providers
 

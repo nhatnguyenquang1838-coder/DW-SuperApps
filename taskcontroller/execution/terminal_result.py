@@ -165,9 +165,17 @@ def _normalize_findings(value: Any) -> list[dict[str, Any]]:
     return sorted(normalized, key=lambda item: (item["finding_id"], _canonical_bytes(item)))
 
 
-def _normalize_child_provenance(value: Any) -> list[dict[str, Any]]:
-    if value is None or not isinstance(value, Sequence) or isinstance(value, (str, bytes, bytearray)):
+def _normalize_child_provenance(
+    value: Any,
+    *,
+    allow_empty: bool = False,
+) -> list[dict[str, Any]]:
+    if value is None:
+        if allow_empty:
+            return []
         _fail("TERMINAL_CHILD_PROVENANCE_REQUIRED", "child provenance must be a non-empty array")
+    if not isinstance(value, Sequence) or isinstance(value, (str, bytes, bytearray)):
+        _fail("TERMINAL_CHILD_PROVENANCE_REQUIRED", "child provenance must be an array")
     normalized: list[dict[str, Any]] = []
     seen: set[str] = set()
     for index, item in enumerate(value):
@@ -190,17 +198,24 @@ def _normalize_child_provenance(value: Any) -> list[dict[str, Any]]:
         if status is not None:
             child["status"] = _text(status, f"child_provenance[{index}].status")
         normalized.append(child)
-    if not normalized:
+    if not normalized and not allow_empty:
         _fail("TERMINAL_CHILD_PROVENANCE_REQUIRED", "child provenance must not be empty")
     return sorted(normalized, key=lambda item: item["child_id"])
 
 
-def _normalize_parent_result(value: Any) -> dict[str, Any]:
+def _normalize_parent_result(
+    value: Any,
+    *,
+    allow_empty_child_provenance: bool = False,
+) -> dict[str, Any]:
     candidate = _mapping(value, "normalized_parent_result")
     _reject_raw_context(candidate)
     findings = _normalize_findings(candidate.get("findings"))
     child_value = candidate.get("child_refs", candidate.get("child_provenance"))
-    child_provenance = _normalize_child_provenance(child_value)
+    child_provenance = _normalize_child_provenance(
+        child_value,
+        allow_empty=allow_empty_child_provenance,
+    )
     candidate["findings"] = findings
     candidate["child_refs"] = child_provenance
     candidate["child_provenance"] = copy.deepcopy(child_provenance)
@@ -312,8 +327,14 @@ class TerminalParentResult:
     def __post_init__(self) -> None:
         if not isinstance(self.envelope, V2MailboxEnvelope):
             _fail("TERMINAL_RESULT_INVALID", "envelope must be a V2MailboxEnvelope")
-        normalized = _normalize_parent_result(self.normalized_result)
         payload = self.envelope.to_dict()
+        logical_contract = payload.get("logical_contract", {})
+        scope = logical_contract.get("scope", {}) if isinstance(logical_contract, Mapping) else {}
+        allow_empty_children = isinstance(scope, Mapping) and scope.get("max_children") == 0
+        normalized = _normalize_parent_result(
+            self.normalized_result,
+            allow_empty_child_provenance=allow_empty_children,
+        )
         if payload.get("message_type") != _TERMINAL_MESSAGE_TYPE:
             _fail("TERMINAL_RESULT_INVALID", "envelope is not a terminal_result")
         if payload.get("direction") != _EXECUTOR_TO_CONTROLLER:
@@ -383,8 +404,14 @@ def build_terminal_parent_result(
 
     if not isinstance(request, V2MailboxEnvelope):
         _fail("TERMINAL_RESULT_INVALID", "request must be a V2MailboxEnvelope")
-    normalized = _normalize_parent_result(normalized_parent_result)
     request_payload = request.to_dict()
+    logical_contract = request_payload.get("logical_contract", {})
+    scope = logical_contract.get("scope", {}) if isinstance(logical_contract, Mapping) else {}
+    allow_empty_children = isinstance(scope, Mapping) and scope.get("max_children") == 0
+    normalized = _normalize_parent_result(
+        normalized_parent_result,
+        allow_empty_child_provenance=allow_empty_children,
+    )
     identity = request.execution_identity
     _validate_expected_identity(identity, expected_identity)
     recipient_payload = _mapping(recipient, "recipient")

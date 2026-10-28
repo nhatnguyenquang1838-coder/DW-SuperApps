@@ -68,8 +68,8 @@ def test_chatgpt_slack_hermes_loads_reference_a2a_and_repo_human_plane_policy():
     assert plan.active is True
     assert plan.memory_fallback_allowed is False
     assert plan.full_e2e_runtime_active is True
-    assert plan.runtime_session == "taskcontroller/runtime/session.py"
-    assert plan.interaction_binding == "github-reference-mailbox"
+    assert plan.runtime_session == "taskcontroller/runtime/high_integrity_session.py"
+    assert plan.interaction_binding == "github-mailbox-v2"
     assert plan.load_order == (
         "AGENTS.md",
         "workspace.yaml",
@@ -92,7 +92,8 @@ def test_chatgpt_non_slack_does_not_invent_slack_or_human_plane_overlay():
     )
     assert plan.active is True
     assert plan.full_e2e_runtime_active is True
-    assert plan.runtime_session == "taskcontroller/runtime/session.py"
+    assert plan.runtime_session == "taskcontroller/runtime/high_integrity_session.py"
+    assert plan.interaction_protocol == "dw.taskcontroller.mailbox/v2"
     assert "agents/chatgpt-agent/agent-instructions.md" in plan.load_order
     assert "agents/chatgpt-agent/slack-controller-mvp.md" not in plan.load_order
     assert "agents/shared/taskcontroller-human-plane-policy.md" not in plan.load_order
@@ -112,7 +113,15 @@ def test_registry_forbids_memory_fallback_and_activates_a2a_runtime():
     registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
     assert "memory_fallback_allowed: false" in registry
     assert "missing_required_entrypoint: BLOCKED" in registry
-    assert "runtime_session: taskcontroller/runtime/session.py" in registry
+    assert "runtime_session: taskcontroller/runtime/high_integrity_session.py" in registry
+    assert "compatibility_runtime_session: taskcontroller/runtime/session.py" in registry
+    assert "v1_runtime_status: compatibility-only" in registry
+    assert "v2_full_lifecycle_required: true" in registry
+    assert "controller_materialize: materialize_controller_transition" in registry
+    assert "executor_bootstrap: bootstrap_executor_v2" in registry
+    assert "controller_resume_compat_poll: resume_controller_v2" in registry
+    assert "controller_event_resume: resume_controller_event_v2" in registry
+    assert "controller_recovery: recover_high_integrity_session" in registry
     assert "full_e2e_runtime: active" in registry
     assert "full_e2e_runtime: deferred" not in registry
     assert "legacy_slack_pilot: compatibility-only" in registry
@@ -122,10 +131,11 @@ def test_registry_forbids_memory_fallback_and_activates_a2a_runtime():
 
 def test_registry_separates_agent_binding_from_slack_human_plane():
     registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
-    assert "pilot_binding: github-reference-mailbox" in registry
+    assert "canonical_binding: github-mailbox-v2" in registry
+    assert "compatibility_binding: github-reference-mailbox-v1" in registry
     assert "human_control_plane: slack" in registry
     assert "agents/shared/taskcontroller-a2a-protocol.md" in registry
-    assert "one_actor_one_mutable_mailbox: true" in registry
+    assert "v1_one_actor_one_mutable_mailbox: compatibility-only" in registry
     assert "thread_semantics: controller-command-executor-report-evidence" not in registry
 
 
@@ -152,7 +162,9 @@ def test_root_agents_contains_hard_activation_guard():
 def test_root_agents_declares_slack_human_plane_and_reference_agent_binding():
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     assert "Slack is the Human Control Plane" in agents
-    assert "GitHub reference mailbox is the current Agent interaction pilot binding" in agents
+    assert "dw.taskcontroller.mailbox/v2" in agents
+    assert "dw.taskcontroller.a2a/v1" in agents
+    assert "compatibility-only" in agents
     assert "Slack thread history MUST NOT be the canonical Agent execution journal" in agents
     assert "agents/shared/taskcontroller-human-plane-policy.md" in agents
     assert "Slack Communication Policy" not in agents
@@ -168,7 +180,8 @@ def test_chatgpt_overlay_blocks_boot_claim_before_repo_load_and_external_policy(
     assert "activation `BLOCKED`" in overlay
     assert "agents/shared/taskcontroller-human-plane-policy.md" in overlay
     assert "only TaskController Slack policy input" in overlay
-    assert "GWC" not in overlay
+    assert "GWC v2 and Node Architect do not inherit them by default" in overlay
+    assert "A peer agreement is **not** a new project/GWC gate receipt" in overlay
 
 
 def test_agent_protocol_is_reference_based_and_transport_neutral():
@@ -208,11 +221,27 @@ def test_slack_overlay_is_human_projection_not_machine_journal():
     assert "Governance Behavior" not in overlay
 
 
+def test_registry_allows_only_explicitly_qualified_executor_read_only_observation():
+    registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
+    protocol = (
+        ROOT / "agents" / "shared" / "taskcontroller-a2a-protocol.md"
+    ).read_text(encoding="utf-8")
+
+    assert "periodic_mailbox_polling: qualified-read-only-observer" in registry
+    assert "default_enabled: false" in registry
+    assert "legacy_mailbox_poll_role: forbidden" in registry
+    assert "controller_wait_action: AWAIT_EXECUTOR_EVENT" in registry
+    assert "resume_function: resume_controller_event_v2" in registry
+    assert "The Controller MUST NOT run a periodic mailbox polling cadence" in protocol
+    assert "Slack WebSocket is not a canonical Executor wake-up path" in protocol
+
+
 def test_hermes_reports_to_mailbox_not_slack_journal():
     overlay = (ROOT / "agents" / "hermes" / "agent-instructions.md").read_text(
         encoding="utf-8"
     )
-    assert "GitHub reference mailbox" in overlay
+    assert "GitHub mailbox/v2" in overlay
+    assert "explicit compatibility lane" in overlay
     assert "update its own mailbox comment in place" in overlay
     assert "Do not use Slack as the normal progress journal" in overlay
 
@@ -227,10 +256,14 @@ def test_active_taskcontroller_requires_mailbox_boot_before_first_dispatch():
 
     assert plan.active is True
     assert plan.full_e2e_runtime_active is True
-    assert plan.runtime_session == "taskcontroller/runtime/session.py"
+    assert plan.runtime_session == "taskcontroller/runtime/high_integrity_session.py"
     assert plan.mailbox_boot_required is True
     assert plan.mailbox_boot_fail_closed is True
-    assert plan.machine_progress_transport == "github-reference-mailbox"
+    assert plan.machine_progress_transport == "github-mailbox-v2"
+    assert plan.interaction_binding == "github-mailbox-v2"
+    assert plan.interaction_protocol == "dw.taskcontroller.mailbox/v2"
+    assert plan.requires_v2_semantics is True
+    assert plan.controller_admission_required is True
     assert plan.slack_machine_progress_allowed is False
     assert plan.pointer_only_wakeup is True
 
@@ -284,4 +317,214 @@ def test_active_taskcontroller_chain_has_no_gwc_or_slack_canvas_policy_dependenc
 
     for path in active_paths[1:5]:
         text = path.read_text(encoding="utf-8")
-        assert "GWC" not in text, f"GWC-specific TaskController coupling leaked into {path}"
+        if path.name == "agent-instructions.md":
+            # Mentioning GWC to make optional activation explicit is not a
+            # TaskController dependency; mandatory GWC boot would be.
+            assert "GWC v2 and Node Architect do not inherit them by default" in text
+            assert "A peer agreement is **not** a new project/GWC gate receipt" in text
+        else:
+            assert "GWC" not in text, f"GWC-specific TaskController coupling leaked into {path}"
+
+
+
+def test_high_integrity_activation_requires_v2_and_controller_admission_guard():
+    plan = resolve_taskcontroller_activation(
+        "TaskController: control a gated execution",
+        host="chatgpt",
+        executor="hermes cloud",
+        requires_v2_semantics=True,
+    )
+
+    assert plan.active is True
+    assert plan.requires_v2_semantics is True
+    assert plan.interaction_protocol == "dw.taskcontroller.mailbox/v2"
+    assert plan.controller_admission_required is True
+    assert plan.controller_admission_guard == "taskcontroller/controlplane/controller_admission.py"
+    assert plan.raw_comment_body_sha_authoritative is False
+    assert plan.whole_issue_machine_state_allowed is False
+    assert plan.schema_resolution_mode == "descriptor-bound"
+
+
+def test_default_activation_promotes_mailbox_v2_runtime():
+    plan = resolve_taskcontroller_activation(
+        "TaskController inspect this plan",
+        host="chatgpt",
+    )
+
+    assert plan.interaction_protocol == "dw.taskcontroller.mailbox/v2"
+    assert plan.requires_v2_semantics is True
+    assert plan.runtime_session == "taskcontroller/runtime/high_integrity_session.py"
+    assert plan.controller_admission_required is True
+    assert plan.controller_admission_guard == "taskcontroller/controlplane/controller_admission.py"
+
+
+def test_v1_activation_requires_explicit_compatibility_opt_in():
+    plan = resolve_taskcontroller_activation(
+        "TaskController inspect a legacy compatibility run",
+        host="chatgpt",
+        requires_v2_semantics=False,
+    )
+
+    assert plan.interaction_protocol == "dw.taskcontroller.a2a/v1"
+    assert plan.requires_v2_semantics is False
+    assert plan.runtime_session == "taskcontroller/runtime/session.py"
+    assert plan.machine_progress_transport == "github-reference-mailbox-v1"
+    assert plan.interaction_binding == "github-reference-mailbox-v1"
+    assert plan.controller_admission_required is False
+    assert plan.controller_admission_guard is None
+
+
+def test_registry_declares_high_integrity_controller_admission_contract():
+    registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
+
+    assert "high_integrity_protocol: dw.taskcontroller.mailbox/v2" in registry
+    assert "admission_guard: taskcontroller/controlplane/controller_admission.py" in registry
+    assert "raw_mutable_comment_body_sha: forbidden-as-authority" in registry
+    assert "issue_wide_machine_state_scan: forbidden" in registry
+    assert "schema_resolution: descriptor-bound" in registry
+    assert "expected_digest_source: observed-or-canonical-recompute" in registry
+    assert "target_gate_bootstrap_before_authority: forbidden" in registry
+    assert "approval_presentation_binding: typed-artifact-command-digest" in registry
+
+
+
+def test_root_agents_requires_high_integrity_admission_for_governed_effects():
+    agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+
+    assert "TaskController high-integrity admission" in agents
+    assert "taskcontroller/controlplane/controller_admission.py" in agents
+    assert "TASKCONTROLLER_HIGH_INTEGRITY_ADMISSION_BLOCKED" in agents
+    assert "full-body SHA" in agents
+    assert "issue-wide comment history" in agents
+    assert "Do not downgrade the run to the v1 compatibility lane" in agents
+
+
+
+def test_hermes_high_integrity_lane_uses_typed_v2_not_markdown_reports():
+    overlay = (ROOT / "agents" / "hermes" / "agent-instructions.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "High-integrity mailbox/v2" in overlay
+    assert "dw.taskcontroller.mailbox/v2" in overlay
+    assert "MailboxRepository" in overlay
+    assert "full-comment SHA" in overlay
+    assert "never scan the whole issue/comment history" in overlay
+    assert "do not hand-author GitHub machine JSON" in overlay
+    assert "Markdown E-report" in overlay
+    assert "MUST NOT silently downgrade a high-integrity run" in overlay
+
+
+
+def test_registry_binds_high_integrity_github_mailbox_v2_adapter():
+    registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
+
+    assert "repository_adapter: taskcontroller/interaction/github_mailbox_v2.py" in registry
+    assert "repository_adapter_class: GitHubMailboxRepository" in registry
+    assert "remote_record_protocol: dw.taskcontroller.github-mailbox-record/v1" in registry
+    assert "mailbox_record_model: append-only-github-issue-comments" in registry
+    assert "one_writer_per_actor_mailbox: true" in registry
+    assert "cross_process_multi_writer_cas: unsupported" in registry
+
+
+def test_high_integrity_a2a_protocol_defines_append_only_github_binding():
+    protocol = (
+        ROOT / "agents" / "shared" / "taskcontroller-a2a-protocol.md"
+    ).read_text(encoding="utf-8")
+
+    assert "High-integrity GitHub mailbox/v2 binding" in protocol
+    assert "GitHubMailboxRepository" in protocol
+    assert "dw.taskcontroller.github-mailbox-record/v1" in protocol
+    assert "new immutable GitHub issue comment" in protocol
+    assert "MUST NOT update one mutable actor comment in place" in protocol
+
+
+def test_chatgpt_and_hermes_route_high_integrity_events_through_github_adapter():
+    chatgpt = (
+        ROOT / "agents" / "chatgpt-agent" / "agent-instructions.md"
+    ).read_text(encoding="utf-8")
+    hermes = (
+        ROOT / "agents" / "hermes" / "agent-instructions.md"
+    ).read_text(encoding="utf-8")
+
+    assert "GitHubMailboxRepository" in chatgpt
+    assert "append typed event/cursor records as new issue comments" in chatgpt
+    assert "GitHubMailboxRepository" in hermes
+    assert "in high-integrity mailbox/v2 append a new typed event" in hermes
+
+
+
+def test_registry_binds_remote_high_integrity_continuation_store():
+    registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
+
+    assert "continuation_store: taskcontroller/interaction/github_continuation_store.py" in registry
+    assert "continuation_store_class: GitHubContinuationStore" in registry
+    assert "continuation_record_protocol: dw.taskcontroller.github-continuation-record/v1" in registry
+    assert "high_integrity_remote_continuation: required" in registry
+
+
+def test_high_integrity_protocol_requires_remote_continuation_before_mailbox_event():
+    protocol = (
+        ROOT / "agents" / "shared" / "taskcontroller-a2a-protocol.md"
+    ).read_text(encoding="utf-8")
+
+    assert "GitHubContinuationStore" in protocol
+    assert "dw.taskcontroller.github-continuation-record/v1" in protocol
+    assert "before the first mailbox/v2 dispatch" in protocol
+    assert "mailbox event without a durable remote continuation checkpoint is invalid boot state" in protocol
+
+
+def test_chatgpt_and_hermes_require_remote_continuation_binding():
+    chatgpt = (
+        ROOT / "agents" / "chatgpt-agent" / "agent-instructions.md"
+    ).read_text(encoding="utf-8")
+    hermes = (
+        ROOT / "agents" / "hermes" / "agent-instructions.md"
+    ).read_text(encoding="utf-8")
+
+    assert "GitHubContinuationStore" in chatgpt
+    assert "persist/exact-read the bounded continuation before dispatch" in chatgpt
+    assert "GitHubContinuationStore" in hermes
+    assert "mailbox/v2 event without that checkpoint is invalid boot state" in hermes
+
+
+
+def test_registry_requires_real_work_execute_contracts():
+    registry = (ROOT / "controllers" / "taskcontroller.yaml").read_text(encoding="utf-8")
+
+    assert "contracting_guard: taskcontroller/controlplane/execution_contracting.py" in registry
+    assert "required_mode_for_new_high_integrity_requests: true" in registry
+    assert "executor_owns_implementation_details_inside_scope: true" in registry
+    assert "routine_engineering_wait_points: forbidden" in registry
+    assert "default_after_execution_authority: continue-working-within-approved-boundary" in registry
+
+
+def test_chatgpt_controller_plan_once_execute_end_to_end_policy():
+    instructions = (
+        ROOT / "agents" / "chatgpt-agent" / "agent-instructions.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Plan-once / execute-end-to-end contracting" in instructions
+    assert "controller_contract_mode" in instructions
+    assert "The Executor owns implementation details inside that approved boundary" in instructions
+    assert "A routine engineering failure is work to resolve, not a WAIT_CONTROLLER boundary" in instructions
+
+
+def test_hermes_real_work_policy_continues_routine_engineering():
+    instructions = (
+        ROOT / "agents" / "hermes" / "agent-instructions.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Real-work Executor behavior" in instructions
+    assert "controller_contract_mode=EXECUTE" in instructions
+    assert "continue through implementation, TDD/test/fix" in instructions
+
+
+def test_a2a_protocol_defines_plan_and_execute_modes():
+    protocol = (
+        ROOT / "agents" / "shared" / "taskcontroller-a2a-protocol.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Controller execution-contract modes" in protocol
+    assert "read/validate/report-only package is not a valid EXECUTE contract" in protocol
+    assert "Normal RED/GREEN/test/fix/refactor cycles are not separate mailbox authority boundaries" in protocol
