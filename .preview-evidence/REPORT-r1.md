@@ -60,6 +60,7 @@ The `/dev/*` routes remain directly available for Fixture Lab and negative-fixtu
 - `npm run typecheck:tests:strict`: **0 errors** (baseline 86).
 - `npx next build`: passed; all canonical and `/dev/*` routes registered.
 - Browser capture: **8 required scenes** in this directory; individual SHA-256 values are in `MANIFEST-r1.sha256` and the scene index is `scenes-r1.json`.
+- Playwright: `npx playwright test e2e/fixture-preview-r1.spec.ts --project=chromium` → **4 passed**; captures for Task-first screen, replay controls, G5 WAITING, and DEV-RUN-020 fail-closed are under `.preview-evidence/playwright-r1/`.
 - Production-mode smoke: `/tasks`, `/tasks/TASK-CORE/runs`, `/runs/DEV-RUN-001`, and `/runs/DEV-RUN-001/replay` served without fixture badge/data. `/tasks` showed the real-source unavailable/fail-closed message.
 
 ## F6 — delivery
