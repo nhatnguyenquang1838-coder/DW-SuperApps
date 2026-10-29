@@ -1,0 +1,10 @@
+[
+  {"n":1,"name":"01-fixture-lab-catalog","path":"/dev/fixtures","criterion":"F0/F4","expect":"fixture catalog 30 runs + DEV FIXTURE label"},
+  {"n":2,"name":"02-dev-run-020-fail-closed","path":"/dev/fixtures","criterion":"F1","expect":"DEV-RUN-020 INCOMPATIBLE/UNAVAILABLE/UNKNOWN fail-closed, no fabricated nodes"},
+  {"n":3,"name":"03-dev-tasks-list","path":"/dev/tasks","criterion":"F4","expect":"5 fixture task relations (TASK-CORE/EVENT/PARTY/RESEARCH/WEDDING)"},
+  {"n":4,"name":"04-dev-task-core-runs","path":"/dev/tasks/TASK-CORE/runs","criterion":"F4","expect":"8 root runs, qualification axes per run"},
+  {"n":5,"name":"05-dev-run-detail-fixture","path":"/dev/runs/DEV-RUN-001","criterion":"F4","expect":"DEV FIXTURE indicator prominent + workspace"},
+  {"n":6,"name":"06-dev-run-replay","path":"/dev/runs/DEV-RUN-001/replay","criterion":"F2/F4","expect":"synchronized ReplayPane, cursor, digest, 5 surfaces"},
+  {"n":7,"name":"07-dev-run-022-g5-waiting","path":"/dev/runs/DEV-RUN-022/replay","criterion":"F1","expect":"G5 WAITING preserved, not fabricated"},
+  {"n":8,"name":"08-production-run-route-fail-closed","path":"/runs/DEV-RUN-001","criterion":"F0/F4","expect":"production route does NOT serve fixture data (fail-closed)"}
+]
