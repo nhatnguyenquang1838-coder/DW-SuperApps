@@ -7,8 +7,18 @@
  */
 import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import FixtureReplayControls from "@/components/dwo/FixtureReplayControls";
+import ControlledFixtureReplayControls from "@/components/dwo/FixtureReplayControls";
+import { useState } from "react";
+import { ReplaySession } from "@/lib/replay";
 import type { ProjectionEvent } from "@/lib/live";
+
+// The application now owns the session; this harness is the unit-test parent.
+function FixtureReplayControls({runId, events}: {runId: string; events: ProjectionEvent[]}) {
+  const [session, setSession] = useState(() => new ReplaySession([]));
+  const [, refresh] = useState(0);
+  return <ControlledFixtureReplayControls runId={runId} events={events} session={session}
+    onChange={() => refresh(value => value + 1)} onReset={() => setSession(new ReplaySession([]))} />;
+}
 
 const events: ProjectionEvent[] = [
   { run_id: "DEV-RUN-001", source_system: "DWO-FIXTURE", source_event_id: "event-1", sequence: 1, ordinal: 1, event_type: "run_started", occurred_at: "2026-09-01T00:00:00Z" },

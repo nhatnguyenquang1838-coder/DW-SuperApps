@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 
-const evidenceDir = resolve(process.cwd(), "../../.preview-evidence/playwright-r1");
+const evidenceDir = resolve(process.env.PLAYWRIGHT_EVIDENCE_DIR ?? resolve(process.cwd(), '../../.preview-evidence/playwright-r1'));
 mkdirSync(evidenceDir, { recursive: true });
 
 test.describe("DWO Fixture Preview R1 — Playwright evidence", () => {
@@ -38,6 +38,43 @@ test.describe("DWO Fixture Preview R1 — Playwright evidence", () => {
     await page.getByTestId("fixture-replay-controls").screenshot({
       path: resolve(evidenceDir, "fixture-lab-replay-controls.png"),
     });
+  });
+
+  test("Shared workspace player, recursive tree and inspector follow one prefix", async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.goto('/dev/fixtures');
+    await page.waitForLoadState('networkidle');
+    await page.getByTestId('fixture-catalog').getByRole('button', { name: /DEV-RUN-017/ }).click();
+    await expect(page.getByTestId('node-inspector')).toContainText('No node selected');
+    await page.getByTestId('fixture-catch-up').click();
+    await expect(page.getByTestId('fixture-replay-cursor')).toHaveText('3/3');
+    await expect(page.locator('[data-testid="runtime-node-card"][data-node-id="DEV-RUN-019"]')).toHaveAttribute('data-gate-state', 'PASSED');
+    await page.getByTestId('hierarchy-select-DEV-RUN-019').click();
+    await expect(page.getByTestId('inspector-node-id')).toHaveText('DEV-RUN-019');
+    await expect(page.locator('[data-pane="overview"]')).toContainText('PASSED');
+    await expect(page.getByRole('treeitem', { name: 'DEV-RUN-019, atomic', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await page.getByRole('button', { name: 'Collapse DEV-RUN-018', exact: true }).click();
+    await expect(page.getByTestId('hierarchy-select-DEV-RUN-019')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Expand DEV-RUN-018', exact: true }).click();
+    await page.getByTestId('runtime-fit').click();
+    await page.getByTestId('unified-run-workspace').screenshot({ path: resolve(evidenceDir, 'shared-prefix-tree.png') });
+    await page.getByTestId('player-first').click();
+    await expect(page.getByTestId('fixture-replay-cursor')).toHaveText('0/3');
+    await expect(page.getByTestId('node-inspector')).toContainText('No node selected');
+    await expect(page.getByTestId('workspace-header')).toContainText('UNKNOWN');
+    await expect(page.locator('[data-testid="runtime-node-card"][data-node-id="DEV-RUN-019"]')).toHaveAttribute('data-gate-state', 'UNKNOWN');
+    await page.getByTestId('unified-run-workspace').screenshot({ path: resolve(evidenceDir, 'shared-prefix-empty.png') });
+    await page.getByTestId('player-next').click();
+    await expect(page.getByTestId('fixture-replay-cursor')).toHaveText('1/3');
+    await page.getByTestId('fixture-mode-current').click();
+    await expect(page.getByTestId('node-inspector')).toContainText('PASSED');
+    await page.getByTestId('fixture-catalog').getByRole('button', { name: /DEV-RUN-022/ }).click();
+    await expect(page.getByTestId('fixture-replay-cursor')).toHaveText('0/0');
+    await page.getByTestId('fixture-event-arrive').click();
+    await expect(page.getByTestId('fixture-replay-cursor')).toHaveText('1/1');
+    await expect(page.locator('[data-pane="overview"]')).toContainText('WAITING');
+    expect(errors).toEqual([]);
   });
 
   test("Run detail preserves G5 WAITING and DEV FIXTURE labeling", async ({ page }) => {

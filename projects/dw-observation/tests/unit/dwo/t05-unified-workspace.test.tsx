@@ -115,9 +115,40 @@ describe("RunHierarchy", () => {
   });
 
   it("renders hierarchy when provided", () => {
-    const hierarchy = { root: { child: "leaf" } };
-    render(<RunHierarchy model={makeModel({ hierarchy })} />);
+    const hierarchy = { id: "root", parent: null, atomic: false, children: [{ id: "child", parent: "root", atomic: false, children: [{ id: "leaf", parent: "child", atomic: true, children: [] }] }] };
+    const onSelect = vi.fn();
+    render(<RunHierarchy model={makeModel({ hierarchy })} onSelect={onSelect} />);
     expect(screen.getByTestId("hierarchy-tree")).toBeInTheDocument();
+    expect(screen.getByTestId("hierarchy-select-leaf")).toBeInTheDocument();
+    expect(screen.getByText("· Atomic")).toBeInTheDocument();
+    expect(screen.getByRole("treeitem", { name: "leaf, atomic" })).toHaveAttribute("aria-selected", "false");
+    fireEvent.click(screen.getByTestId("hierarchy-select-leaf"));
+    expect(onSelect).toHaveBeenCalledWith("leaf");
+  });
+
+  it("supports arrow-key tree navigation and collapsing descendants", () => {
+    const hierarchy = { id: "root", parent: null, atomic: false, children: [{ id: "child", parent: "root", atomic: true, children: [] }] };
+    render(<RunHierarchy model={makeModel({ hierarchy })} />);
+    const root = screen.getByTestId("hierarchy-select-root");
+    const child = screen.getByTestId("hierarchy-select-child");
+    root.focus();
+    fireEvent.keyDown(root, { key: "ArrowDown" });
+    expect(child).toHaveFocus();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse root" }));
+    expect(screen.queryByTestId("hierarchy-select-child")).not.toBeInTheDocument();
+  });
+
+  it("renders UNAVAILABLE for a cyclic hierarchy value", () => {
+    const root: { id: string; parent: string | null; children: unknown[] } = { id: "root", parent: null, children: [] };
+    root.children.push({ id: "child", parent: "root", children: [root] });
+    render(<RunHierarchy model={makeModel({ hierarchy: root })} />);
+    expect(screen.getByTestId("run-hierarchy")).toHaveAttribute("data-state", "unavailable");
+  });
+
+  it("renders UNAVAILABLE when a child parent reference is inconsistent", () => {
+    const hierarchy = { id: "root", parent: null, children: [{ id: "child", parent: "other", children: [] }] };
+    render(<RunHierarchy model={makeModel({ hierarchy })} />);
+    expect(screen.getByTestId("run-hierarchy")).toHaveAttribute("data-state", "unavailable");
   });
 });
 

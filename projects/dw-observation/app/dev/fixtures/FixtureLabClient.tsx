@@ -17,6 +17,8 @@ import FixtureReplayControls from "@/components/dwo/FixtureReplayControls";
 import { DEV_RUN_020, FIXTURE_CATALOG } from "@/lib/dwo/fixtureSpec";
 import type { ProjectionEvent } from "@/lib/live";
 import type { UnifiedRunWorkspaceModel } from "@/lib/runtime/unifiedRuntime";
+import { ReplaySession } from "@/lib/replay";
+import { projectFixtureReplayView } from "@/lib/dwo/fixtureReplayView";
 
 export interface FixtureLabProps {
   catalog: typeof FIXTURE_CATALOG;
@@ -34,8 +36,14 @@ export default function FixtureLabClient({
   defaultId,
 }: FixtureLabProps) {
   const [selectedId, setSelectedId] = useState(defaultId);
+  const [session, setSession] = useState(() => new ReplaySession([]));
+  const [resetEpoch, setResetEpoch] = useState(0);
+  const [, refresh] = useState(0);
 
   const model = models[selectedId];
+  const events = replayEvents[selectedId] ?? [];
+  const frame = session.frame();
+  const viewModel = model ? projectFixtureReplayView(model, frame.projection.events) : undefined;
   const isConflict = selectedId === DEV_RUN_020;
 
   // Fail-closed: a missing pre-materialized model must never render as an
@@ -73,7 +81,7 @@ export default function FixtureLabClient({
             key={f.id}
             type="button"
             className={`dwo-fixture-btn ${selectedId === f.id ? "dwo-fixture-btn-selected" : ""}`}
-            onClick={() => setSelectedId(f.id)}
+            onClick={() => { setSelectedId(f.id); setSession(new ReplaySession([])); }}
           >
             <span>{f.id}</span>
             <span className="dwo-fixture-kind">{f.kind}</span>
@@ -88,11 +96,16 @@ export default function FixtureLabClient({
       </div>
       )}
 
-      <UnifiedRunWorkspace model={model} />
+      <UnifiedRunWorkspace key={`workspace-${selectedId}-${resetEpoch}`} model={viewModel!} replayCursor={frame.cursor} replayTotal={frame.total} replayMode={session.mode}
+        onReplayCursorChange={(cursor) => { session.rewindTo(cursor); refresh((value) => value + 1); }}
+        onReplayModeChange={(mode) => { if (mode === "LIVE") session.resumeLive(); else session.enterReplay(); refresh((value) => value + 1); }} />
       <FixtureReplayControls
-        key={selectedId}
+        key={`controls-${selectedId}`}
         runId={selectedId}
-        events={replayEvents[selectedId] ?? []}
+        events={events}
+        session={session}
+        onChange={() => refresh((value) => value + 1)}
+        onReset={() => { setSession(new ReplaySession([])); setResetEpoch(value => value + 1); }}
       />
     </div>
   );

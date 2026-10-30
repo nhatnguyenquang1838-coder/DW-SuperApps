@@ -948,7 +948,8 @@ a {
 .dwo-rail-taskref { color: var(--dwo-color-text-muted); }
 .dwo-rail-source { color: var(--dwo-color-text-faint); font-family: monospace; }
 
-.dwo-canvas-wrap { flex: 1; min-height: 400px; }
+.dwo-canvas-wrap { flex: 1; min-height: 400px; display: flex; flex-direction: column; position: relative; overflow: hidden; isolation: isolate; }
+.dwo-canvas-wrap > .react-flow { flex: 1 1 400px; min-height: 0; height: auto; }
 .dwo-layout-bar { display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--dwo-color-bg-subtle); border-bottom: 1px solid var(--dwo-color-border-default); }
 .dwo-layout-label { font-size: 10px; color: var(--dwo-color-text-muted); text-transform: uppercase; }
 .dwo-layout-bar button { font-size: 10px; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--dwo-color-border-default); background: var(--dwo-color-bg-surface); color: var(--dwo-color-text-primary); cursor: pointer; }

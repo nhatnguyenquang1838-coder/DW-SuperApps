@@ -56,6 +56,15 @@ export interface UnifiedRunWorkspaceModel {
   taskRef: string | null;
   mode: WorkspaceMode;
   status: string;
+  /** Reducer-derived facts; catalog values never populate observed state. */
+  gate?: string | null;
+  gateState?: string | null;
+  sourceTerminalMarker?: "CANCELLED" | "SUPERSEDED" | null;
+  sourceProfile?: string;
+  syncState?: string;
+  semanticQualification?: string;
+  authorityState?: string;
+  anomalyCount?: number | "UNKNOWN";
   hierarchy: unknown;
   nodes: UnifiedRuntimeNode[];
   edges: UnifiedRuntimeEdge[];

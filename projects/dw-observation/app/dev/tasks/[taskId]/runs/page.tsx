@@ -15,6 +15,7 @@ import { notFound } from 'next/navigation';
 import { getFixtureTaskRelation } from '@/lib/dwo/fixtureTaskRead';
 import { createFixtureReplaySession } from '@/lib/dwo/fixtureReplaySession';
 import { loadFixtureQualificationReceipt, fixtureReceiptToProjection } from '@/lib/dwo/fixtureQualification';
+import { deriveCurrentFixtureSubjectDigest } from '@/lib/dwo/currentFixtureSubject';
 import type { QualificationProjection } from '@/lib/dwo/qualificationProjection';
 import RunStatusAxes from '@/components/dwo/RunStatusAxes';
 import { isLocalFixturePreview } from '@/lib/dwo/fixturePreviewMode';
@@ -60,7 +61,11 @@ export default async function DevTaskRunsPage({ params }: { params: { taskId: st
   for (const runId of rel.rootRunIds) {
     const session = createFixtureReplaySession(runId);
     const receipt = loadFixtureQualificationReceipt(runId);
-    const qualification = fixtureReceiptToProjection(runId, receipt);
+    const qualification = fixtureReceiptToProjection(
+      runId,
+      receipt,
+      deriveCurrentFixtureSubjectDigest(runId),
+    );
     rows.push({
       runId,
       status: session ? 'LIVE' : 'UNAVAILABLE',

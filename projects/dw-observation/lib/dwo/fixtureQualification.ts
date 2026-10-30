@@ -213,7 +213,24 @@ export function fixtureReceiptToProjection(
   if (!receipt) {
     return unknownQualificationProjection(runId, runId === 'DEV-RUN-020' ? 'INCOMPATIBLE_SOURCE' : 'NO_IMMUTABLE_RECEIPT');
   }
-  const digest = currentSubjectDigest ?? receipt.subjectDigest;
+  if (currentSubjectDigest === undefined || currentSubjectDigest === null) {
+    return {
+      runId,
+      status: 'UNKNOWN',
+      subjectDigest: null,
+      receiptSubjectDigest: receipt.subjectDigest,
+      receiptId: receipt.receiptId,
+      graphVersion: receipt.graphVersion,
+      sourceRepository: receipt.sourceRepository,
+      sourceSha: receipt.sourceSha,
+      durablePosition: receipt.durablePosition,
+      evidenceRefs: [...receipt.evidenceRefs],
+      authorityGranted: false,
+      projectionEventsMutated: false,
+      reasonCode: 'CURRENT_SUBJECT_UNAVAILABLE',
+    };
+  }
+  const digest = currentSubjectDigest;
   if (digest !== receipt.subjectDigest) {
     // Drift must surface as DRIFTED, not silently UNKNOWN — the projection
     // contract distinguishes "no receipt" (UNKNOWN) from "receipt exists but

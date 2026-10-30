@@ -29,7 +29,7 @@ export interface ReducerEvent {
   readonly sourceProfile?: string;
   readonly syncState?: string;
   readonly semanticQualification?: string;
-  readonly authorityState?: AuthorityState;
+  readonly authorityState?: AuthorityState | 'NOT_APPLICABLE';
   readonly anomalyCount?: number;
 }
 

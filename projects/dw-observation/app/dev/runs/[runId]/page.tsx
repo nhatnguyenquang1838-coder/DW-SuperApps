@@ -14,6 +14,7 @@ import UnifiedRunWorkspace from '@/components/dwo/UnifiedRunWorkspace';
 import { buildWorkspaceModel } from '@/lib/runtime/buildWorkspaceModel';
 import { readQualificationProjection } from '@/lib/dwo/qualificationRead';
 import { loadFixtureQualificationReceipt, fixtureReceiptToProjection } from '@/lib/dwo/fixtureQualification';
+import { deriveCurrentFixtureSubjectDigest } from '@/lib/dwo/currentFixtureSubject';
 import { createFixtureReplaySession } from '@/lib/dwo/fixtureReplaySession';
 import type { QualificationProjection } from '@/lib/dwo/qualificationProjection';
 import Link from 'next/link';
@@ -40,7 +41,8 @@ export default async function DevRunDetailPage({
   const receipt = loadFixtureQualificationReceipt(runId);
   const fixtureQualification: QualificationProjection = fixtureReceiptToProjection(
     runId,
-    receipt
+    receipt,
+    deriveCurrentFixtureSubjectDigest(runId),
   );
 
   // The production route reads from the internal GET-only qualification service.

@@ -9,20 +9,25 @@
  * CURRENT/REPLAY only move the local cursor/mode. There is no write capability.
  */
 import { useRef, useState } from "react";
-import { ReplaySession, isSynchronized } from "@/lib/replay";
+import { isSynchronized, type ReplaySession } from "@/lib/replay";
 import type { ProjectionEvent } from "@/lib/live";
 
 export default function FixtureReplayControls({
   runId,
   events,
+  session,
+  onChange,
+  onReset,
 }: {
   runId: string;
   events: readonly ProjectionEvent[];
+  session: ReplaySession;
+  onChange: () => void;
+  onReset: () => void;
 }) {
-  const sessionRef = useRef(new ReplaySession([]));
   const arrivedRef = useRef(0);
   const [, setRevision] = useState(0);
-  const refresh = () => setRevision((n) => n + 1);
+  const refresh = () => { setRevision((n) => n + 1); onChange(); };
 
   if (events.length === 0) {
     return (
@@ -33,7 +38,6 @@ export default function FixtureReplayControls({
     );
   }
 
-  const session = sessionRef.current;
   const frame = session.frame();
   const applied = session.timeline().events.slice(0, frame.cursor);
   const mode = session.mode === "LIVE" ? "CURRENT" : "REPLAY";
@@ -48,7 +52,7 @@ export default function FixtureReplayControls({
   };
 
   const reset = () => {
-    sessionRef.current = new ReplaySession([]);
+    onReset();
     arrivedRef.current = 0;
     refresh();
   };

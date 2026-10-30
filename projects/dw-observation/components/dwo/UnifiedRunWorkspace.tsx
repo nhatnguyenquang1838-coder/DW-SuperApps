@@ -32,9 +32,19 @@ type InspectorTab =
 export default function UnifiedRunWorkspace({
   model,
   qualificationProjection,
+  replayCursor,
+  replayMode,
+  replayTotal,
+  onReplayCursorChange,
+  onReplayModeChange,
 }: {
   model: UnifiedRunWorkspaceModel;
   qualificationProjection?: QualificationProjection;
+  replayCursor?: number;
+  replayMode?: "LIVE" | "REPLAY";
+  replayTotal?: number;
+  onReplayCursorChange?: (cursor: number) => void;
+  onReplayModeChange?: (mode: "LIVE" | "REPLAY") => void;
 }) {
   const [mode, setMode] = useState<WorkspaceMode>(model.mode);
   const qualification =
@@ -49,21 +59,30 @@ export default function UnifiedRunWorkspace({
           ? "DEGRADED"
           : "GAP"
   );
-  const [cursor, setCursor] = useState(0);
+  const [cursor, setCursor] = useState(replayCursor ?? 0);
   const [followCursor, setFollowCursor] = useState(true);
   const [selection, setSelection] = useState<{
     kind: "run" | "gate" | "node";
     id: string;
-  }>({ kind: "run", id: model.runId });
+  }>({ kind: "node", id: model.orderedSteps[0]?.nodeId ?? model.nodes[0]?.id ?? model.runId });
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>("overview");
   const [playerSpeed, setPlayerSpeed] = useState(750);
   const [playing, setPlaying] = useState(false);
 
-  const len = model.orderedSteps.length;
-  const currentStep = model.orderedSteps[cursor];
+  const controlled = replayCursor !== undefined;
+  const len = replayTotal ?? model.orderedSteps.length;
+  const effectiveCursor = replayCursor ?? cursor;
+  const replayPosition = useRef(effectiveCursor);
+  const replayMove = useRef(onReplayCursorChange);
+  replayPosition.current = effectiveCursor;
+  replayMove.current = onReplayCursorChange;
+  const currentStep = model.orderedSteps[Math.max(0, effectiveCursor - 1)];
   const currentNodeId = currentStep?.nodeId ?? null;
 
-  const selectedNode = model.nodes.find((n) => n.id === currentNodeId) ?? null;
+  const observedNodeIds = new Set(model.orderedSteps.map((step) => step.nodeId));
+  const selectedNode = controlled
+    ? model.nodes.find((n) => n.id === selection.id && observedNodeIds.has(n.id)) ?? null
+    : model.nodes.find((n) => n.id === selection.id) ?? model.nodes.find((n) => n.id === currentNodeId) ?? null;
 
   const label = useMemo(() => {
     if (!selectedNode) return model.runId;
@@ -97,6 +116,11 @@ export default function UnifiedRunWorkspace({
     }
     setPlaying(true);
     timerRef.current = setInterval(() => {
+      if (controlled) {
+        if (replayPosition.current >= len) { stopPlay(); return; }
+        replayMove.current?.(Math.min(len, replayPosition.current + 1));
+        return;
+      }
       setCursor((c) => {
         if (c >= len - 1) {
           stopPlay();
@@ -105,26 +129,27 @@ export default function UnifiedRunWorkspace({
         return c + 1;
       });
     }, playerSpeed);
-  }, [len, playerSpeed, stopPlay]);
+  }, [len, playerSpeed, stopPlay, controlled]);
 
   const goTo = useCallback(
     (c: number) => {
       stopPlay();
-      const clamped = Math.max(0, Math.min(len - 1, c));
+      const clamped = Math.max(0, Math.min(controlled ? len : len - 1, c));
+      if (controlled) { onReplayCursorChange?.(clamped); return; }
       setCursor(clamped);
       const step = model.orderedSteps[clamped];
       if (step) {
         setSelection({ kind: "node", id: step.nodeId });
       }
     },
-    [len, model.orderedSteps, stopPlay],
+    [len, model.orderedSteps, stopPlay, controlled, onReplayCursorChange],
   );
 
   const handleSelectNode = useCallback((nodeId: string) => {
     setSelection({ kind: "node", id: nodeId });
     const ix = model.orderedSteps.findIndex((s) => s.nodeId === nodeId);
-    if (ix >= 0) setCursor(ix);
-  }, [model.orderedSteps]);
+    if (!controlled && ix >= 0) setCursor(ix);
+  }, [model.orderedSteps, controlled]);
 
   const handleOpenArtifact = useCallback((path: string, kind: string) => {
     // Open artifact — delegate to inspector's click handler or modal
@@ -136,6 +161,7 @@ export default function UnifiedRunWorkspace({
   }, []);
 
   const handleModeChange = useCallback((m: WorkspaceMode) => {
+    if (controlled) { stopPlay(); onReplayModeChange?.(m === "LIVE" ? "LIVE" : "REPLAY"); return; }
     setMode(m);
     setCursor(0);
     if (m === "LIVE") {
@@ -143,21 +169,21 @@ export default function UnifiedRunWorkspace({
     } else {
       stopPlay();
     }
-  }, [stopPlay]);
+  }, [stopPlay, controlled, onReplayModeChange]);
 
   return (
     <div className="dwo-workspace" data-testid="unified-run-workspace">
-      <WorkspaceHeader model={model} mode={mode} onModeChange={handleModeChange} />
+      <WorkspaceHeader model={model} mode={replayMode ?? mode} onModeChange={handleModeChange} />
       <RunStatusAxes
         projectionSync={projectionSync}
-        view={mode === "REPLAY" ? "REPLAY" : "CURRENT"}
+        view={(replayMode ?? mode) === "REPLAY" ? "REPLAY" : "CURRENT"}
         qualification={qualification}
       />
       <ScenarioRunRail model={model} selectedRunId={model.runId} onSelectRun={() => {}} />
 
       <div className="dwo-workspace-body">
         <aside className="dwo-workspace-left" data-testid="workspace-left">
-          <RunHierarchy model={model} />
+          <RunHierarchy model={model} selectedId={selection.id} onSelect={handleSelectNode} />
           <NextFlowPanel model={model} />
         </aside>
 
@@ -165,7 +191,7 @@ export default function UnifiedRunWorkspace({
           <ReactFlowProvider>
             <RuntimeGraphCanvas
               model={model}
-              cursor={cursor}
+              cursor={effectiveCursor}
               selection={selection}
               followCursor={followCursor}
               onSelectNode={handleSelectNode}
@@ -174,17 +200,18 @@ export default function UnifiedRunWorkspace({
             />
           </ReactFlowProvider>
           <RuntimePlayer
-            cursor={cursor}
+            cursorIsPrefix={controlled}
+            cursor={effectiveCursor}
             len={len}
-            mode={mode}
+            mode={replayMode ?? mode}
             speed={playerSpeed}
             playing={playing}
             label={label}
             onFirst={() => goTo(0)}
-            onPrev={() => goTo(cursor - 1)}
+            onPrev={() => goTo(effectiveCursor - 1)}
             onToggle={play}
-            onNext={() => goTo(cursor + 1)}
-            onLast={() => goTo(len - 1)}
+            onNext={() => goTo(effectiveCursor + 1)}
+            onLast={() => goTo(controlled ? len : len - 1)}
             onScrub={goTo}
             onMode={handleModeChange}
             onSpeed={setPlayerSpeed}

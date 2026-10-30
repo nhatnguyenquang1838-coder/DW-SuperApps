@@ -36,7 +36,7 @@ describe("F1-1: gateState is materialized (not dropped)", () => {
     expect(self!.gateState).toBe("WAITING");
   });
 
-  it("every conforming node's gateId/gateState matches the catalog exactly", () => {
+  it("keeps canonical gate states separate from source terminal markers", () => {
     const models = materializeAllFixtures();
     for (const m of models) {
       if (m.runId === DEV_RUN_020) continue;
@@ -44,7 +44,9 @@ describe("F1-1: gateState is materialized (not dropped)", () => {
         const entry = FIXTURE_CATALOG.find((c) => c.id === node.id);
         expect(entry, `catalog entry for ${node.id}`).toBeDefined();
         expect(node.gateId, `${node.id} gateId`).toBe(entry!.gate ?? null);
-        expect(node.gateState, `${node.id} gateState`).toBe(entry!.gateState ?? null);
+        const terminal = entry!.gateState === "CANCELLED" || entry!.gateState === "SUPERSEDED";
+        expect(node.gateState, `${node.id} gateState`).toBe(terminal ? null : entry!.gateState ?? null);
+        if (m.runId === node.id) expect(m.sourceTerminalMarker).toBe(terminal ? entry!.gateState : null);
       }
     }
   });
@@ -140,7 +142,7 @@ describe("F1-2: taskRef comes from TaskRunIndexV2 relation records", () => {
     expect(model.edges).toEqual([]);
     expect(model.orderedSteps).toEqual([]);
     expect(model.canonicalHistoryAvailable).toBe(false);
-    expect(model.status).toBe("CONFLICT");
-    expect(model.projectionStatus).toBe("CONFLICT");
+    expect(model.status).toBe("INCOMPATIBLE");
+    expect(model.projectionStatus).toBe("INCOMPATIBLE");
   });
 });

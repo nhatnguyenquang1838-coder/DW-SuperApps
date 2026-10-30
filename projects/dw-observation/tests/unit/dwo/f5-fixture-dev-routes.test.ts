@@ -20,11 +20,50 @@ import { join } from 'node:path';
 
 import DevTasksPage from '@/app/dev/tasks/page';
 import DevTaskRunsPage from '@/app/dev/tasks/[taskId]/runs/page';
+import DevRunDetailPage from '@/app/dev/runs/[runId]/page';
 import { listFixtureTaskRelations, getFixtureTaskRelation, FIXTURE_TASK_CAPABILITIES } from '@/lib/dwo/fixtureTaskRead';
 import { createFixtureReplaySession } from '@/lib/dwo/fixtureReplaySession';
 import { loadFixtureQualificationReceipt } from '@/lib/dwo/fixtureQualification';
+import { NextRequest } from 'next/server';
+import { createDevRouteMiddleware, middleware } from '@/middleware';
+import * as workspaceModelModule from '@/lib/runtime/buildWorkspaceModel';
+import * as replaySessionModule from '@/lib/dwo/fixtureReplaySession';
+import { isValidElement } from 'react';
+import { vi } from 'vitest';
 
 describe('F5-2 dev task-first preview routes', () => {
+  it('returns 404 for every /dev route in production even when fixture mode is selected', async () => {
+    const middleware = createDevRouteMiddleware({ NODE_ENV: 'production', OBSERVATORY_DATA_SOURCE: 'fixture' });
+    const response = await middleware(new NextRequest('http://localhost/dev/runs/DEV-RUN-006'));
+    expect(response?.status).toBe(404);
+  });
+
+  it('production middleware denies /dev routes even when fixture mode is selected', async () => {
+    const previousSource = process.env.OBSERVATORY_DATA_SOURCE;
+    vi.stubEnv('NODE_ENV', 'production');
+    process.env.OBSERVATORY_DATA_SOURCE = 'fixture';
+    try {
+      for (const url of [
+        'http://localhost/dev',
+        'http://localhost/dev/tasks',
+        'http://localhost/dev/runs/DEV-RUN-006?mode=replay',
+      ]) {
+        const response = middleware(new NextRequest(url));
+        expect(response?.status).toBe(404);
+      }
+    } finally {
+      vi.unstubAllEnvs();
+      if (previousSource === undefined) delete process.env.OBSERVATORY_DATA_SOURCE;
+      else process.env.OBSERVATORY_DATA_SOURCE = previousSource;
+    }
+  });
+
+  it('allows non-production /dev fixture routes and leaves canonical paths alone', async () => {
+    const middleware = createDevRouteMiddleware({ NODE_ENV: 'development', OBSERVATORY_DATA_SOURCE: 'fixture' });
+    expect(await middleware(new NextRequest('http://localhost/dev/fixtures'))).toBeNull();
+    expect(await middleware(new NextRequest('http://localhost/runs/DEV-RUN-006'))).toBeNull();
+  });
+
   it('listFixtureTaskRelations returns all 5 fixture task relations', async () => {
     const tasks = await listFixtureTaskRelations();
     expect(tasks.length).toBe(5);
@@ -111,6 +150,41 @@ describe('F5-2 dev task-first preview routes', () => {
     expect(negative?.textContent).toContain('Projection SyncDEGRADED');
     expect(negative?.textContent).not.toContain('Projection SyncLIVE');
     expect(negative?.querySelector('a[href*="DEV-RUN-020"]')).toBeNull();
+  });
+
+  it('DevRunDetailPage passes unavailable current-source state into its workspace when version metadata is absent', async () => {
+    const buildSpy = vi.spyOn(workspaceModelModule, 'buildWorkspaceModel')
+      .mockResolvedValue({ model: { taskRef: 'TASK-CORE' } } as never);
+    const replaySpy = vi.spyOn(replaySessionModule, 'createFixtureReplaySession').mockReturnValue(null);
+    try {
+      const tree = await DevRunDetailPage({
+        params: { runId: 'DEV-RUN-006' },
+        searchParams: {},
+      });
+      const findProjection = (node: unknown): Record<string, unknown> | null => {
+        if (Array.isArray(node)) {
+          for (const child of node) {
+            const found = findProjection(child);
+            if (found) return found;
+          }
+        } else if (isValidElement(node)) {
+          const props = node.props as Record<string, unknown>;
+          if (props.qualificationProjection && typeof props.qualificationProjection === 'object') {
+            return props.qualificationProjection as Record<string, unknown>;
+          }
+          return findProjection(props.children);
+        }
+        return null;
+      };
+      const projection = findProjection(tree);
+      expect(projection?.status).toBe('UNKNOWN');
+      expect(projection?.reasonCode).toBe('CURRENT_SUBJECT_UNAVAILABLE');
+      expect(projection?.subjectDigest).toBeNull();
+      expect(projection?.receiptSubjectDigest).toBeTruthy();
+    } finally {
+      buildSpy.mockRestore();
+      replaySpy.mockRestore();
+    }
   });
 
   it('production /tasks routes do not import the fixture adapter', () => {

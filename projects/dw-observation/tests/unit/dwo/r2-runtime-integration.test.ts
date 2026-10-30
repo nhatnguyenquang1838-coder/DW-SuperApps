@@ -48,7 +48,7 @@ import {
   type TraceabilityDecision,
 } from '@/lib/dwo/traceabilityChain';
 import { FIXTURE_CATALOG } from '@/lib/dwo/fixtureSpec';
-import type { ReducedRunState } from '@/lib/dwo/reducer';
+import { initialRunState, reduceEvent, type ReducedRunState, type ReducerEvent } from '@/lib/dwo/reducer';
 import { recordAcceptance } from '@/lib/dwo/acceptanceRecord';
 
 const NOW = '2026-10-01T12:00:00.000Z';
@@ -259,18 +259,36 @@ describe('R2-E · parent composition through reducer certification', () => {
     const path = ['DEV-RUN-005', 'DEV-RUN-006', 'DEV-RUN-007'];
     const byId = new Map(FIXTURE_CATALOG.map((f) => [f.id, f]));
     const nodes: RunNode[] = path.map((id) => {
-      const f = byId.get(id)!;
+      const fixture = byId.get(id);
+      if (!fixture) throw new Error(`unknown fixture ${id}`);
+      const runKind = fixture.kind === 'NEGATIVE' ? 'ATOMIC' : fixture.kind;
+      if (runKind !== 'ROOT' && runKind !== 'CHILD' && runKind !== 'ATOMIC') {
+        throw new Error(`invalid fixture run kind ${runKind}`);
+      }
+      const authorityState = fixture.authorityState;
+      if (!(authorityState === 'PENDING' || authorityState === 'GRANTED' || authorityState === 'DENIED' || authorityState === 'EXPIRED' || authorityState === 'REVOKED' || authorityState === 'NOT_REQUIRED' || authorityState === 'UNKNOWN' || authorityState === 'NOT_APPLICABLE')) {
+        throw new Error(`invalid fixture authority state ${authorityState}`);
+      }
+      const event: ReducerEvent = {
+        eventId: `fixture-${fixture.id}`,
+        runId: fixture.id,
+        ordinal: 1,
+        gate: fixture.gate,
+        gateState: fixture.gateState === 'CANCELLED' || fixture.gateState === 'SUPERSEDED' ? null : fixture.gateState,
+        runState: fixture.runState,
+        sourceProfile: fixture.sourceProfile,
+        syncState: fixture.syncState,
+        semanticQualification: fixture.semanticQualification,
+        authorityState,
+        anomalyCount: fixture.anomalyCount,
+      };
+      const state: ReducedRunState = reduceEvent(initialRunState(fixture.id), event);
       return {
-        runId: f.id,
-        runKind: (f.kind === 'NEGATIVE' ? 'ATOMIC' : f.kind) as RunNode['runKind'],
-        parentRunRef: f.parent,
-        childRunRefs: f.children.filter((c) => path.includes(c)),
-        state: {
-          runId: f.id, gate: f.gate ?? 'G0', gateState: f.gateState ?? 'ACTIVE',
-          runState: f.runState, sourceProfile: f.sourceProfile, syncState: f.syncState,
-          semanticQualification: f.semanticQualification, authorityState: f.authorityState,
-          anomalyCount: f.anomalyCount, partial: false,
-        } as ReducedRunState,
+        runId: fixture.id,
+        runKind,
+        parentRunRef: fixture.parent,
+        childRunRefs: fixture.children.filter((child) => path.includes(child)),
+        state,
       };
     });
     const tree = buildRunTree(nodes);

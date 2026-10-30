@@ -38,18 +38,13 @@ from .qualification_sources import (
     ReadOnlyProjectionSource,
     validate_prefix_binding,
 )
+from .qualification_semantics import REQUIRED_SEMANTIC_CHECKS, verify_semantic_evidence
 from .qualification_store import SQLiteQualificationReceiptStore, assert_storage_isolation
 from .reducer import reduce as reduce_events
 from .replay import ReplayTimeline
 
 
 GRAPH_VERSION = "dwo.langgraph-qualification/1"
-REQUIRED_SEMANTIC_CHECKS = (
-    "hierarchy",
-    "lifecycle",
-    "dependency-blocking",
-    "authority-orthogonality",
-)
 
 try:
     _langgraph_graph = import_module("langgraph.graph")
@@ -381,16 +376,9 @@ def build_qualification_graph(
                 "error_code": drift or "PROJECTION_SOURCE_UNAVAILABLE",
                 **_append_check(state, check),
             }
-        supplied = {check.check_id: check for check in prefix.semantic_checks}
+        verified = verify_semantic_evidence(prefix.semantic_evidence, subject, prefix)
         new_state: dict[str, Any] = dict(state)
-        for check_id in REQUIRED_SEMANTIC_CHECKS:
-            check = supplied.get(check_id)
-            if check is None:
-                check = QualificationCheck(
-                    check_id,
-                    CheckStatus.UNKNOWN,
-                    (_evidence_ref(f"missing/{check_id}", prefix.history_digest),),
-                )
+        for check in verified:
             new_state.update(_append_check(new_state, check))
         return new_state
 

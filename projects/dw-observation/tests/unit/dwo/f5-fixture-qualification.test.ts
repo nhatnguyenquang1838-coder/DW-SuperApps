@@ -145,6 +145,15 @@ describe('F5-1 fixture qualification receipts', () => {
     expect(missing.reasonCode).toBe('NO_IMMUTABLE_RECEIPT');
   });
 
+  it('missing independent current subject is UNKNOWN, never echoed from the receipt', () => {
+    const q = readReceipt('DEV-RUN-006')!;
+    const unavailable = fixtureReceiptToProjection('DEV-RUN-006', q);
+    expect(unavailable.status).toBe('UNKNOWN');
+    expect(unavailable.reasonCode).toBe('CURRENT_SUBJECT_UNAVAILABLE');
+    expect(unavailable.subjectDigest).toBeNull();
+    expect(unavailable.receiptSubjectDigest).toBe(q.subjectDigest);
+  });
+
   it('subject digest drift is surfaced as DRIFTED, never QUALIFIED', () => {
     const q = readReceipt('DEV-RUN-006')!;
     const drifted = fixtureReceiptToProjection('DEV-RUN-006', q, `sha256:${'f'.repeat(64)}`);

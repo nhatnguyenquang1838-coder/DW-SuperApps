@@ -26,16 +26,17 @@ export default function RuntimeNodeCard({
   const { node, state, active, selected, boundary } = data;
   return (
     <div
-      className={`leg-node leg-node-${state}${selected ? " selected" : ""}`}
+      className={`leg-node leg-node-${state.toLowerCase()}${selected ? " selected" : ""}`}
       data-testid="runtime-node-card"
       data-node-id={node.id}
+      data-gate-state={node.gateState ?? "UNKNOWN"}
       data-boundary={boundary}
       data-active={active ? "true" : "false"}
     >
       <Handle type="target" position={Position.Left} />
       <div className="leg-node-top">
         <span>{node.family ?? "—"}</span>
-        <span className="leg-state">{state.toUpperCase()}</span>
+        <span className="leg-state">{node.gateState ?? state.toUpperCase()}</span>
       </div>
       <div className="leg-node-title">{node.title}</div>
       <div className="leg-node-id">{node.id}</div>

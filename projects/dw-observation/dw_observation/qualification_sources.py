@@ -37,6 +37,7 @@ class ProjectionPrefix:
     durable_position: str
     events: tuple[RunProjectionEvent, ...]
     semantic_checks: tuple[QualificationCheck, ...] = ()
+    semantic_evidence: Any | None = None
     schema_version: str = PREFIX_SCHEMA_VERSION
 
     def __post_init__(self) -> None:
@@ -86,7 +87,15 @@ class ProjectionPrefix:
 
     @property
     def semantic_facts_digest(self) -> str:
-        payload = [check.to_dict() for check in self.semantic_checks]
+        evidence = self.semantic_evidence
+        if evidence is not None:
+            to_dict = getattr(evidence, "to_dict", None)
+            if callable(to_dict):
+                evidence = to_dict()
+        payload = {
+            "checks": [check.to_dict() for check in self.semantic_checks],
+            "evidence": evidence,
+        }
         return "sha256:" + hashlib.sha256(_canonical_json(payload).encode("utf-8")).hexdigest()
 
 

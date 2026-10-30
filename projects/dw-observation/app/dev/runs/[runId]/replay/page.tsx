@@ -20,6 +20,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createFixtureReplaySession } from '@/lib/dwo/fixtureReplaySession';
 import { loadFixtureQualificationReceipt, fixtureReceiptToProjection } from '@/lib/dwo/fixtureQualification';
+import { deriveCurrentFixtureSubjectDigest } from '@/lib/dwo/currentFixtureSubject';
 import ReplayPane from '@/components/ReplayPane';
 import type { ProjectionEvent } from '@/lib/live';
 import type { QualificationProjection } from '@/lib/dwo/qualificationProjection';
@@ -40,7 +41,8 @@ export default async function DevRunReplayPage({ params }: { params: { runId: st
   const receipt = loadFixtureQualificationReceipt(runId);
   const qualification: QualificationProjection = fixtureReceiptToProjection(
     runId,
-    receipt
+    receipt,
+    deriveCurrentFixtureSubjectDigest(runId),
   );
 
   return (

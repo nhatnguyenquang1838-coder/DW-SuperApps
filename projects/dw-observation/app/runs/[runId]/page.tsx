@@ -21,6 +21,7 @@ import { buildWorkspaceModel } from "@/lib/runtime/buildWorkspaceModel";
 import { isLocalFixturePreview } from "@/lib/dwo/fixturePreviewMode";
 import { readQualificationProjection } from "@/lib/dwo/qualificationRead";
 import { loadFixtureQualificationReceipt, fixtureReceiptToProjection } from "@/lib/dwo/fixtureQualification";
+import { deriveCurrentFixtureSubjectDigest } from "@/lib/dwo/currentFixtureSubject";
 import { createFixtureReplaySession } from "@/lib/dwo/fixtureReplaySession";
 import type { QualificationProjection } from "@/lib/dwo/qualificationProjection";
 import Link from "next/link";
@@ -55,6 +56,7 @@ export default async function RunDetailPage({
     ? fixtureReceiptToProjection(
         params.runId,
         loadFixtureQualificationReceipt(params.runId),
+        deriveCurrentFixtureSubjectDigest(params.runId),
       )
     : await readQualificationProjection(params.runId);
   const fixtureReplay = fixtureMode ? createFixtureReplaySession(params.runId) : null;

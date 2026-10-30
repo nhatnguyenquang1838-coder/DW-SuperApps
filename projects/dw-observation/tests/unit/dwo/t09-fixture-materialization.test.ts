@@ -18,6 +18,7 @@ import {
 import { FIXTURE_CATALOG, DEV_RUN_020 } from "@/lib/dwo/fixtureSpec";
 import { readFileSync, statSync } from "fs";
 import { join } from "path";
+import { reduceEventPrefix } from "../../../lib/dwo/reducer";
 
 // ---------------------------------------------------------------------------
 // Test 1: 30/30 ids materialize a model (exact id set)
@@ -175,18 +176,18 @@ describe("T09-3: timeline / replay history", () => {
 // ---------------------------------------------------------------------------
 
 describe("T09-4: DEV-RUN-020 fail-closed", () => {
-  it("DEV-RUN-020 status is CONFLICT", () => {
+  it("DEV-RUN-020 status is INCOMPATIBLE", () => {
     const model = materializeFixtureScenario(
       FIXTURE_CATALOG.find((c) => c.id === DEV_RUN_020)!
     );
-    expect(model.status).toBe("CONFLICT");
+    expect(model.status).toBe("INCOMPATIBLE");
   });
 
-  it("DEV-RUN-020 projectionStatus is CONFLICT", () => {
+  it("DEV-RUN-020 projectionStatus is INCOMPATIBLE", () => {
     const model = materializeFixtureScenario(
       FIXTURE_CATALOG.find((c) => c.id === DEV_RUN_020)!
     );
-    expect(model.projectionStatus).toBe("CONFLICT");
+    expect(model.projectionStatus).toBe("INCOMPATIBLE");
   });
 
   it("DEV-RUN-020 has no nodes or edges (no fabricated data)", () => {
@@ -203,7 +204,7 @@ describe("T09-4: DEV-RUN-020 fail-closed", () => {
     );
     // Next flow must not fabricate a path through a conflicted run
     expect(model.nodes).toEqual([]);
-    expect(model.status).toBe("CONFLICT");
+    expect(model.status).toBe("INCOMPATIBLE");
   });
 });
 
@@ -257,6 +258,11 @@ function loadEvents(): Array<{
   run_state: string;
   gate: string | null;
   gate_state: string | null;
+  source_profile: string;
+  sync_state: string;
+  semantic_qualification: string;
+  authority_state: "PENDING" | "GRANTED" | "DENIED" | "EXPIRED" | "REVOKED" | "NOT_REQUIRED" | "UNKNOWN" | "NOT_APPLICABLE";
+  anomaly_count: number;
 }> {
   const raw = readFileSync(join(FIXTURE_PACK, "events", "projection-events.jsonl"), "utf-8");
   return raw
@@ -366,6 +372,124 @@ describe("T09-6: evidence from fixture pack", () => {
 // ---------------------------------------------------------------------------
 // T09-7: dependency edges — UNKNOWN unless evidence supports SATISFIED
 // ---------------------------------------------------------------------------
+
+describe("PR130 fixture hierarchy and incompatibility regressions", () => {
+  it("materializes the complete 017 → 018 → 019 descendant chain", () => {
+    const root = materializeFixtureScenario(FIXTURE_CATALOG.find((c) => c.id === "DEV-RUN-017")!);
+    expect(root.nodes.map((node) => node.id)).toEqual(expect.arrayContaining(["DEV-RUN-017", "DEV-RUN-018", "DEV-RUN-019"]));
+    expect(root.edges.filter((edge) => edge.kind === "FANOUT").map(({ source, target }) => [source, target])).toEqual([
+      ["DEV-RUN-017", "DEV-RUN-018"],
+      ["DEV-RUN-018", "DEV-RUN-019"],
+    ]);
+  });
+
+  it("derives complete run and gate facts from validated reducer events for every golden fixture", () => {
+    const events = loadEvents();
+    const models = materializeAllFixtures();
+    for (const fixture of FIXTURE_CATALOG) {
+      const model = models.find((candidate) => candidate.runId === fixture.id)!;
+      if (fixture.id === DEV_RUN_020) continue;
+      const source = events.filter((event) => event.run_id === fixture.id).at(-1)!;
+      expect(model.status).toBe(source.run_state);
+      expect(model.gate).toBe(source.gate);
+      const legacyTerminal = source.gate_state === "CANCELLED" || source.gate_state === "SUPERSEDED";
+      expect(model.gateState).toBe(legacyTerminal ? null : source.gate_state);
+      if (legacyTerminal) expect(model.sourceTerminalMarker).toBe(source.gate_state);
+    }
+    expect(models.find((candidate) => candidate.runId === "DEV-RUN-022")?.gateState).toBe("WAITING");
+    expect(models.find((candidate) => candidate.runId === "DEV-RUN-030")?.authorityState).toBe("NOT_APPLICABLE");
+  });
+
+  it("preserves legacy CANCELLED/SUPERSEDED gate observations explicitly", () => {
+    const cancelled = materializeFixtureScenario(FIXTURE_CATALOG.find((fixture) => fixture.id === "DEV-RUN-013")!);
+    const superseded = materializeFixtureScenario(FIXTURE_CATALOG.find((fixture) => fixture.id === "DEV-RUN-015")!);
+    expect(cancelled.status).toBe("CANCELLED");
+    expect(cancelled.sourceTerminalMarker).toBe("CANCELLED");
+    expect(cancelled.gateState).toBeNull();
+    expect(superseded.status).toBe("SUPERSEDED");
+    expect(superseded.sourceTerminalMarker).toBe("SUPERSEDED");
+    expect(superseded.gateState).toBeNull();
+  });
+
+  it("does not populate observed node gate state from catalog when the prefix is empty", () => {
+    const model = materializeFixtureScenario(FIXTURE_CATALOG.find((fixture) => fixture.id === "DEV-RUN-030")!, { events: [] });
+    expect(model.nodes).toHaveLength(1);
+    expect(model.nodes[0]?.gateState).toBeNull();
+    expect(model.nodes[0]?.gateId).toBeNull();
+    expect(model.nodes[0]?.sourceStatus).toBe("UNKNOWN");
+    expect(model.status).toBe("UNKNOWN");
+    expect(model.gateState).toBeNull();
+    expect(model.sourceProfile).toBe("UNKNOWN");
+    expect(model.syncState).toBe("UNKNOWN");
+    expect(model.semanticQualification).toBe("UNKNOWN");
+    expect(model.authorityState).toBe("UNKNOWN");
+    expect(model.anomalyCount).toBe("UNKNOWN");
+    expect(model.projectionStatus).toBe("UNKNOWN");
+    expect(model.canonicalHistoryAvailable).toBe(false);
+    expect(model.orderedSteps).toEqual([]);
+  });
+
+  it("matches canonical reducer state for every valid run prefix", () => {
+    const events = loadEvents();
+    const models = materializeAllFixtures();
+    for (const fixture of FIXTURE_CATALOG) {
+      if (fixture.id === DEV_RUN_020) continue;
+      const prefix = events.filter((event) => event.run_id === fixture.id);
+      const model = models.find((candidate) => candidate.runId === fixture.id)!;
+      const reduced = reduceEventPrefix(fixture.id, prefix.map((event) => ({
+        eventId: event.event_id,
+        runId: event.run_id,
+        ordinal: event.ordinal,
+        gate: event.gate,
+        gateState: event.gate_state === "CANCELLED" || event.gate_state === "SUPERSEDED" ? null : event.gate_state,
+        runState: event.run_state,
+        sourceProfile: event.source_profile,
+        syncState: event.sync_state,
+        semanticQualification: event.semantic_qualification,
+        authorityState: event.authority_state as "PENDING" | "GRANTED" | "DENIED" | "EXPIRED" | "REVOKED" | "NOT_REQUIRED" | "UNKNOWN" | "NOT_APPLICABLE",
+        anomalyCount: event.anomaly_count,
+      })));
+      expect(model.status).toBe(reduced.runState);
+      expect(model.gate).toBe(reduced.gate);
+      expect(model.gateState).toBe(reduced.gateState);
+      expect(model.sourceProfile).toBe(reduced.sourceProfile);
+      expect(model.syncState).toBe(reduced.syncState);
+      expect(model.semanticQualification).toBe(reduced.semanticQualification);
+      expect(model.authorityState).toBe(reduced.authorityState);
+      expect(model.anomalyCount).toBe(reduced.anomalyCount);
+      expect(model.nodes.find((node) => node.id === fixture.id)?.gateId).toBe(reduced.gate);
+      expect(model.nodes.find((node) => node.id === fixture.id)?.gateState).toBe(reduced.gateState);
+    }
+  });
+
+  it("keeps dependencies declared by every descendant separate from fanout", () => {
+    const model = materializeFixtureScenario(FIXTURE_CATALOG.find((fixture) => fixture.id === "DEV-RUN-024")!);
+    expect(model.edges).toContainEqual(expect.objectContaining({ kind: "DEPENDENCY", source: "DEV-RUN-025", target: "DEV-RUN-026", state: "UNKNOWN" }));
+    expect(model.edges).toContainEqual(expect.objectContaining({ kind: "FANOUT", source: "DEV-RUN-024", target: "DEV-RUN-026" }));
+  });
+
+  it("rejects ancestor cycles before hierarchy traversal", () => {
+    const entry = { ...FIXTURE_CATALOG.find((fixture) => fixture.id === "DEV-RUN-017")!, parent: "DEV-RUN-017" } as typeof FIXTURE_CATALOG[number];
+    expect(() => materializeFixtureScenario(entry, { events: [] })).toThrow(/cycle/i);
+  });
+
+  it("rejects duplicate event identities and per-run ordinals", () => {
+    const source = loadEvents().find((event) => event.run_id === "DEV-RUN-030")!;
+    const fixture = FIXTURE_CATALOG.find((entry) => entry.id === "DEV-RUN-030")!;
+    expect(() => materializeFixtureScenario(fixture, { events: [{ ...source, event_id: "  " }] })).toThrow(/invalid fixture projection event schema/i);
+    expect(() => materializeFixtureScenario(fixture, { events: [source, { ...source, event_id: "other-id" }] })).toThrow(/duplicate.*ordinal/i);
+    expect(() => materializeFixtureScenario(fixture, { events: [source, { ...source, ordinal: source.ordinal + 1 }] })).toThrow(/duplicate.*event id/i);
+  });
+
+  it("preserves source incompatibility separately from relation conflict", () => {
+    const model = materializeFixtureScenario(FIXTURE_CATALOG.find((c) => c.id === DEV_RUN_020)!);
+    expect(model.status).toBe("INCOMPATIBLE");
+    expect(model.projectionStatus).toBe("INCOMPATIBLE");
+    expect(model.nodes).toEqual([]);
+    expect(model.edges).toEqual([]);
+    expect(model.orderedSteps).toEqual([]);
+  });
+});
 
 describe("T09-7: dependency edges are UNKNOWN without evidence", () => {
   it("no dependency edge is SATISFIED unless evidence explicitly supports it", () => {

@@ -1,0 +1,13 @@
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.0.5 D:/Projects/DW-SuperApps.worktrees/dwo-langgraph-e2e-r1/projects/dw-observation
+
+ ✓ tests/unit/dwo/t05-unified-workspace.test.tsx  (27 tests) 771ms
+ ✓ tests/unit/dwo/shared-fixture-prefix-integration.test.tsx  (6 tests) 1109ms
+ ✓ tests/unit/dwo/f2-fixture-replay-controls.test.tsx  (4 tests) 184ms
+ ✓ tests/unit/dwo/shared-fixture-replay.test.tsx  (2 tests) 500ms
+
+ Test Files  4 passed (4)
+      Tests  39 passed (39)
+   Start at  00:24:41
+   Duration  15.15s (transform 1.28s, setup 1.23s, collect 3.82s, tests 2.56s, environment 5.41s, prepare 990ms)

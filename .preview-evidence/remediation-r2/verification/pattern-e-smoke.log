@@ -1,0 +1,1 @@
+Error: Resume retains gateway session policy; creation overrides are unsupported on resume. -m/--model, --provider, --reasoning, --max-turns differ from this session's launch: resume without them and use /model or /reasoning after resuming to switch.

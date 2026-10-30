@@ -49,7 +49,7 @@ function computeLayout(
   gateNodes: Map<string, UnifiedRuntimeNode[]>,
 ) {
   const GATE_W = 320;
-  const GATE_H = 200;
+  const GATE_H = 64 + Math.max(1, ...Array.from(gateNodes.values(), nodes => nodes.length)) * 184;
   const GAP_X = 20;
   const GAP_Y = 20;
   const gates = Array.from(gateNodes.entries());
@@ -84,6 +84,7 @@ export default function RuntimeGraphCanvas({
   onUserViewportInteract: () => void;
 }) {
   const rf = useReactFlow();
+  const activeIndex = model.currentSequence ?? cursor;
   const [dir, setDir] = useState<"LR" | "TD">(
     typeof window !== "undefined" && new URLSearchParams(window.location.search).get("dir") === "TD" ? "TD" : "LR",
   );
@@ -117,14 +118,15 @@ export default function RuntimeGraphCanvas({
           headerH: 48,
           nodeCount: nodes.length,
           artifactCount: nodes.reduce((a, n) => a + n.artifacts.length, 0),
-          state: "future" as const,
+          // A layout group is not itself an observed canonical gate instance.
+          state: "UNKNOWN",
         },
         draggable: false,
         selectable: false,
         zIndex: 0,
         style: {
           width: 320,
-          height: 200,
+          height: 64 + nodes.length * 184,
           background: "rgba(255,255,255,0.03)",
           border: "1px solid rgba(255,255,255,0.12)",
           borderRadius: 12,
@@ -132,33 +134,14 @@ export default function RuntimeGraphCanvas({
       });
 
       nodes.forEach((n) => {
-        const isActive = cursor >= 0 && model.orderedSteps[cursor]?.nodeId === n.id;
+        const isActive = activeIndex >= 0 && model.orderedSteps[activeIndex]?.nodeId === n.id;
         out.push({
           id: n.id,
           type: "runtimeNode",
-          position: { x: p.x + 16, y: p.y + 56 + (nodes.indexOf(n) % 5) * 28 },
+          position: { x: p.x + 16, y: p.y + 56 + nodes.indexOf(n) * 184 },
           data: {
-            node: {
-              id: n.id,
-              gate_id: n.gateId as "G0_CONTEXT" | "G1_ALIGNMENT" | "G2_EXECUTION" | "G3_PR" | "G4_MERGE" | "G5_DEPLOY" | "G6_PRODUCTION" | null,
-              title: n.title,
-              family: n.family ?? undefined,
-              type: n.nodeType ?? undefined,
-              boundary: n.authorityBoundary ?? undefined,
-              purpose: n.purpose ?? undefined,
-              fileReads: n.fileReads,
-              fileWrites: n.fileWrites,
-              artifacts: n.artifacts,
-              runbook: n.runbook,
-              taskControllerHistory: n.taskControllerHistory as string[],
-              executorHistory: n.executorHistory as string[],
-              checkpoints: n.checkpoints as string[],
-              x: 0,
-              y: 0,
-              w: 0,
-              h: 0,
-            },
-            state: isActive ? ("active" as const) : ("future" as const),
+            node: n,
+            state: n.gateState === "PASSED" ? "DONE" : n.gateState === "ACTIVE" ? "ACTIVE" : n.gateState === "WAITING" ? "WAITING" : n.gateState === "BLOCKED" ? "BLOCKED" : "UNKNOWN",
             active: isActive,
             selected: selection.kind === "node" && selection.id === n.id,
             boundary: n.authorityBoundary ?? "",
@@ -171,15 +154,15 @@ export default function RuntimeGraphCanvas({
       });
     }
     return out;
-  }, [layout, cursor, selection, model.orderedSteps, onOpenArtifact]);
+  }, [layout, activeIndex, selection, model.orderedSteps, onOpenArtifact]);
 
   // Build edges from unified model edges.
   const rfEdges: RFEdge[] = useMemo(() => {
     return model.edges.map((e): RFEdge => {
       const isActive =
         e.kind === "ROUTE" &&
-        cursor >= 0 &&
-        model.orderedSteps[cursor]?.nodeId === e.source;
+        activeIndex >= 0 &&
+        model.orderedSteps[activeIndex]?.nodeId === e.source;
       return {
         id: e.id,
         source: e.source,
@@ -202,10 +185,10 @@ export default function RuntimeGraphCanvas({
         className: isActive ? "runtime-active-edge" : "",
       } as RFEdge;
     });
-  }, [model.edges, cursor, model.orderedSteps]);
+  }, [model.edges, activeIndex, model.orderedSteps]);
 
   const activeNodeId =
-    cursor >= 0 ? model.orderedSteps[cursor]?.nodeId ?? null : null;
+    activeIndex >= 0 ? model.orderedSteps[activeIndex]?.nodeId ?? null : null;
 
   // Follow cursor: center viewport on the active node.
   const programmaticMove = useRef(false);

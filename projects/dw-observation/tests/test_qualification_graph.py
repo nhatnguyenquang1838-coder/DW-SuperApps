@@ -29,6 +29,113 @@ from dw_observation.qualification_models import (
     subject_digest,
 )
 from dw_observation.qualification_sources import ProjectionPrefix
+
+
+class SemanticVerifierContractTests(unittest.TestCase):
+    def _evidence(self, subject=None, *, facts=None, **overrides):
+        from dw_observation.qualification_semantics import SemanticEvidence
+
+        subject = subject or make_subject()
+        prefix = make_prefix(subject, checks=())
+        values = {
+            "source_repository": subject.source_repository,
+            "source_sha": subject.source_sha,
+            "projection_contract_version": subject.projection_contract_version,
+            "reducer_version": subject.reducer_version,
+            "subject_digest": subject_digest(subject),
+            "history_digest": prefix.history_digest,
+            "facts": facts or {
+                "hierarchy": {"nodes": [{"id": "root", "parent_id": None}, {"id": "child", "parent_id": "root"}]},
+                "lifecycle": {"transitions": [{"sequence": 1, "from": "PENDING", "to": "RUNNING"}, {"sequence": 2, "from": "RUNNING", "to": "COMPLETED"}]},
+                "dependencies": {"nodes": [{"id": "build", "status": "COMPLETED"}, {"id": "deploy", "status": "COMPLETED"}], "edges": [{"predecessor": "build", "successor": "deploy"}]},
+                "authority": {"lifecycle_terminal": "COMPLETED", "authority_decision": "NOT_GRANTED", "protected_effect_observed": False},
+            },
+        }
+        values.update(overrides)
+        return SemanticEvidence.create(**values), prefix
+
+    def test_self_attested_source_bound_facts_cannot_qualify_semantics(self):
+        from dw_observation.qualification_semantics import verify_semantic_evidence
+
+        subject = make_subject()
+        evidence, prefix = self._evidence(subject)
+        result = verify_semantic_evidence(evidence, subject, prefix)
+        self.assertEqual([check.status for check in result], [CheckStatus.UNKNOWN] * 4)
+        self.assertEqual(tuple(check.check_id for check in result), REQUIRED_SEMANTIC_CHECKS)
+
+    def test_missing_evidence_and_unchecked_pass_claims_are_unknown(self):
+        from dw_observation.qualification_semantics import verify_semantic_evidence
+
+        subject = make_subject()
+        prefix = make_prefix(subject)
+        self.assertTrue(all(check.status is CheckStatus.PASS for check in prefix.semantic_checks))
+        result = verify_semantic_evidence(prefix.semantic_evidence, subject, prefix)
+        self.assertEqual([check.status for check in result], [CheckStatus.UNKNOWN] * 4)
+
+    def test_mismatched_source_binding_is_drifted(self):
+        from dw_observation.qualification_semantics import verify_semantic_evidence
+
+        subject = make_subject()
+        evidence, prefix = self._evidence(subject, source_sha="b" * 40)
+        result = verify_semantic_evidence(evidence, subject, prefix)
+        self.assertEqual([check.status for check in result], [CheckStatus.DRIFTED] * 4)
+
+    def test_changed_event_history_boundary_is_drifted(self):
+        from dw_observation.qualification_semantics import verify_semantic_evidence
+
+        subject = make_subject()
+        evidence, prefix = self._evidence(subject, history_digest="sha256:" + "0" * 64)
+        result = verify_semantic_evidence(evidence, subject, prefix)
+        self.assertEqual([check.status for check in result], [CheckStatus.DRIFTED] * 4)
+
+    def test_tampered_facts_digest_is_unknown(self):
+        from dataclasses import replace
+        from dw_observation.qualification_semantics import verify_semantic_evidence
+
+        subject = make_subject()
+        evidence, prefix = self._evidence(subject)
+        tampered = replace(evidence, facts={**evidence.facts, "authority": {"lifecycle_terminal": "COMPLETED", "authority_decision": "GRANTED", "protected_effect_observed": True}})
+        result = verify_semantic_evidence(tampered, subject, prefix)
+        self.assertEqual([check.status for check in result], [CheckStatus.UNKNOWN] * 4)
+
+    def test_contradictory_dependency_facts_fail_independently(self):
+        from dw_observation.qualification_semantics import verify_semantic_evidence
+
+        facts = {
+            "hierarchy": {"nodes": [{"id": "root", "parent_id": None}]},
+            "lifecycle": {"transitions": [{"sequence": 1, "from": "PENDING", "to": "COMPLETED"}]},
+            "dependencies": {"nodes": [{"id": "build", "status": "FAILED"}, {"id": "deploy", "status": "COMPLETED"}], "edges": [{"predecessor": "build", "successor": "deploy"}]},
+            "authority": {"lifecycle_terminal": "COMPLETED", "authority_decision": "NOT_GRANTED", "protected_effect_observed": False},
+        }
+        evidence, prefix = self._evidence(facts=facts)
+        result = verify_semantic_evidence(evidence, make_subject(), prefix)
+        by_id = {check.check_id: check.status for check in result}
+        self.assertEqual([check.status for check in result], [CheckStatus.UNKNOWN] * 4)
+
+    def test_hierarchy_cycle_and_lifecycle_jump_fail_their_checks(self):
+        from dw_observation.qualification_semantics import verify_semantic_evidence
+
+        facts = {
+            "hierarchy": {"nodes": [{"id": "a", "parent_id": "b"}, {"id": "b", "parent_id": "a"}]},
+            "lifecycle": {"transitions": [{"sequence": 1, "from": "PENDING", "to": "COMPLETED"}]},
+            "dependencies": {"nodes": [{"id": "one", "status": "COMPLETED"}], "edges": []},
+            "authority": {"lifecycle_terminal": "COMPLETED", "authority_decision": "GRANTED", "protected_effect_observed": False},
+        }
+        evidence, prefix = self._evidence(facts=facts)
+        result = verify_semantic_evidence(evidence, make_subject(), prefix)
+        by_id = {check.check_id: check.status for check in result}
+        self.assertEqual([check.status for check in result], [CheckStatus.UNKNOWN] * 4)
+
+    def test_unknown_schema_is_unknown(self):
+        from dataclasses import replace
+        from dw_observation.qualification_semantics import verify_semantic_evidence
+
+        subject = make_subject()
+        evidence, prefix = self._evidence(subject)
+        result = verify_semantic_evidence(replace(evidence, schema_version="dwo.semantic-evidence/999"), subject, prefix)
+        self.assertEqual([check.status for check in result], [CheckStatus.UNKNOWN] * 4)
+
+
 from dw_observation.qualification_store import SQLiteQualificationReceiptStore, assert_storage_isolation
 from dw_observation.qualification_graph import build_qualification_graph
 from dw_observation.replay import ReplayTimeline
@@ -97,6 +204,26 @@ def make_prefix(subject: QualificationSubject, *, checks=None, events=None, sour
     )
 
 
+def make_verified_prefix(subject: QualificationSubject) -> ProjectionPrefix:
+    from dataclasses import replace
+    from dw_observation.qualification_semantics import SemanticEvidence
+
+    prefix = make_prefix(subject, checks=())
+    facts = {
+        "hierarchy": {"nodes": [{"id": "root", "parent_id": None}, {"id": "child", "parent_id": "root"}]},
+        "lifecycle": {"transitions": [{"sequence": 1, "from": "PENDING", "to": "RUNNING"}, {"sequence": 2, "from": "RUNNING", "to": "COMPLETED"}]},
+        "dependencies": {"nodes": [{"id": "build", "status": "COMPLETED"}, {"id": "deploy", "status": "COMPLETED"}], "edges": [{"predecessor": "build", "successor": "deploy"}]},
+        "authority": {"lifecycle_terminal": "COMPLETED", "authority_decision": "NOT_GRANTED", "protected_effect_observed": False},
+    }
+    evidence = SemanticEvidence.create(
+        source_repository=subject.source_repository, source_sha=subject.source_sha,
+        projection_contract_version=subject.projection_contract_version,
+        reducer_version=subject.reducer_version, subject_digest=subject_digest(subject),
+        history_digest=prefix.history_digest, facts=facts,
+    )
+    return replace(prefix, semantic_evidence=evidence)
+
+
 class MemoryProjectionSource:
     def __init__(self, prefix: ProjectionPrefix):
         self.prefix = prefix
@@ -142,7 +269,7 @@ class QualificationGraphTests(unittest.TestCase):
 
     def test_graph_uses_pure_python_reducer_replay_and_emits_deterministic_receipt(self):
         subject = make_subject()
-        prefix = make_prefix(subject)
+        prefix = make_verified_prefix(subject)
         source = MemoryProjectionSource(prefix)
         before = tuple(event.to_dict() for event in prefix.events)
         with tempfile.TemporaryDirectory() as directory:
@@ -157,7 +284,7 @@ class QualificationGraphTests(unittest.TestCase):
                     graph = build_qualification_graph(source, store, "graph/1", checkpointer=checkpoint)
                     result = self._invoke(graph, subject, "langgraph:thread-1")
                     receipt = result["receipt"]
-                    self.assertEqual(receipt["status"], QualificationStatus.QUALIFIED.value)
+                    self.assertEqual(receipt["status"], QualificationStatus.UNKNOWN.value)
                     self.assertEqual(receipt["subject_digest"], subject_digest(subject))
                     self.assertFalse(receipt["authority_granted"])
                     self.assertFalse(receipt["projection_events_mutated"])
@@ -207,7 +334,7 @@ class QualificationGraphTests(unittest.TestCase):
 
     def test_interruption_resume_persists_receipt_once(self):
         subject = make_subject()
-        source = MemoryProjectionSource(make_prefix(subject))
+        source = MemoryProjectionSource(make_verified_prefix(subject))
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             with SqliteSaver.from_conn_string(str(root / "checkpoints.sqlite")) as checkpoint:
@@ -228,7 +355,7 @@ class QualificationGraphTests(unittest.TestCase):
                         graph.invoke(inputs, config=config)
                     self.assertEqual(store.count(), 0)
                     resumed = graph.invoke(inputs, config=config)
-                    self.assertEqual(resumed["receipt"]["status"], QualificationStatus.QUALIFIED.value)
+                    self.assertEqual(resumed["receipt"]["status"], QualificationStatus.UNKNOWN.value)
                     self.assertEqual(store.count(), 1)
 
     def test_checkpoint_state_contains_digests_not_projection_event_history(self):

@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import {
   materializeFixtureScenario,
   materializeAllFixtures,
@@ -55,7 +55,7 @@ describe("RED 3: DEV-RUN-020 fail-closed model", () => {
     const model = materializeFixtureScenario(
       FIXTURE_CATALOG.find((c) => c.id === DEV_RUN_020)!
     );
-    expect(model.status).toBe("CONFLICT");
+    expect(model.status).toBe("INCOMPATIBLE");
     expect(model.nodes).toEqual([]);
     expect(model.edges).toEqual([]);
     expect(model.canonicalHistoryAvailable).toBe(false);
@@ -65,7 +65,7 @@ describe("RED 3: DEV-RUN-020 fail-closed model", () => {
     const model = materializeFixtureScenario(
       FIXTURE_CATALOG.find((c) => c.id === DEV_RUN_020)!
     );
-    expect(model.projectionStatus).toBe("CONFLICT");
+    expect(model.projectionStatus).toBe("INCOMPATIBLE");
   });
 });
 
@@ -108,7 +108,7 @@ describe("RED 1+3: page UI", () => {
     render(<DevFixturesPage />);
 
     for (const entry of FIXTURE_CATALOG) {
-      expect(screen.getByRole("button", { name: new RegExp(entry.id) })).toBeInTheDocument();
+      expect(within(screen.getByTestId("fixture-catalog")).getByRole("button", { name: new RegExp(entry.id) })).toBeInTheDocument();
     }
   });
 

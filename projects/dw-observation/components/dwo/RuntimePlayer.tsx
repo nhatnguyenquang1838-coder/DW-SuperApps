@@ -21,6 +21,7 @@ export default function RuntimePlayer({
   onScrub,
   onMode,
   onSpeed,
+  cursorIsPrefix = false,
 }: {
   cursor: number;
   len: number;
@@ -36,6 +37,7 @@ export default function RuntimePlayer({
   onScrub: (c: number) => void;
   onMode: (m: WorkspaceMode) => void;
   onSpeed: (ms: number) => void;
+  cursorIsPrefix?: boolean;
 }) {
   return (
     <div className="dwo-player" data-testid="runtime-player">
@@ -59,13 +61,13 @@ export default function RuntimePlayer({
         <div className="dwo-player-scrub-info">
           <span>{label}</span>
           <span>
-            {cursor + 1} / {len}
+            {cursorIsPrefix ? cursor : cursor + 1} / {len}
           </span>
         </div>
         <input
           type="range"
           min={0}
-          max={Math.max(0, len - 1)}
+          max={Math.max(0, cursorIsPrefix ? len : len - 1)}
           value={cursor}
           data-testid="player-scrubber"
           onChange={(e) => onScrub(Number(e.target.value))}

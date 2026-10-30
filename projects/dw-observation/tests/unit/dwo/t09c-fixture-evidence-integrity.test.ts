@@ -62,12 +62,16 @@ describe("Fixture Lab evidence is read from the real pack (never fail-open)", ()
     expect(all.length).toBe(FIXTURE_CATALOG.length);
 
     const empties = all.filter(
-      (m) => m.status !== "CONFLICT" && m.nodes.length === 0
+      (m) => m.runId !== "DEV-RUN-020" && m.nodes.length === 0
     );
     expect(
       empties.map((m) => m.runId),
       "these scenarios rendered an empty projection — that is fail-open"
     ).toEqual([]);
+    const negative = all.find((model) => model.runId === "DEV-RUN-020")!;
+    expect(negative.status).toBe("INCOMPATIBLE");
+    expect(negative.nodes).toEqual([]);
+    expect(negative.canonicalHistoryAvailable).toBe(false);
   });
 
   it("the fixture events file actually has events (the loaders are not vacuous)", () => {
