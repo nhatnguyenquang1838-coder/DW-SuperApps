@@ -1,5 +1,7 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 
 const workflow = readFileSync(
@@ -25,6 +27,32 @@ describe('DW Observation CI delivery contract', () => {
     expect(workflow).toContain('>> "$GITHUB_ENV"');
     expect(workflow).toContain('TMPDIR=%s\\nDWO_R3_SCRATCH_ROOT=%s\\n');
   });
+
+  it('compiles the production middleware on a clean checkout without generated Next ambient types', () => {
+    const app = process.cwd();
+    const scratch = mkdtempSync(join(process.env.DWO_R3_SCRATCH_ROOT || tmpdir(), 'dwo-cold-types-'));
+    try {
+      const config = join(scratch, 'tsconfig.json');
+      writeFileSync(config, JSON.stringify({
+        extends: resolve(app, 'tsconfig.json'),
+        compilerOptions: {
+          incremental: false,
+          noEmit: true,
+          types: ['node'],
+          typeRoots: [resolve(app, 'node_modules/@types')],
+        },
+        include: [resolve(app, 'middleware.ts')],
+        exclude: [resolve(app, 'node_modules'), resolve(app, '.next'), resolve(app, 'next-env.d.ts')],
+      }));
+      const checked = spawnSync(process.execPath, [resolve(app, 'node_modules/typescript/bin/tsc'), '--noEmit', '-p', config], {
+        cwd: app, encoding: 'utf8', timeout: 60_000,
+      });
+      expect(checked.error).toBeUndefined();
+      expect({ status: checked.status, diagnostics: `${checked.stdout ?? ''}${checked.stderr ?? ''}` }).toEqual({ status: 0, diagnostics: '' });
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  }, 65_000);
 
   it('runs full Vitest and both production and test typechecks', () => {
     expect(workflow).toMatch(/pnpm\s+run\s+test(?:\s|$)/);

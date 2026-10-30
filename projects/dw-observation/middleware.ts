@@ -17,7 +17,10 @@ export function createDevRouteMiddleware(env: DevRouteEnvironment) {
 }
 
 export function middleware(request: NextRequest): NextResponse {
-  const response = createDevRouteMiddleware(process.env)(request);
+  const response = createDevRouteMiddleware({
+    NODE_ENV: process.env.NODE_ENV,
+    OBSERVATORY_DATA_SOURCE: process.env.OBSERVATORY_DATA_SOURCE,
+  })(request);
   return response ?? NextResponse.next();
 }
 
