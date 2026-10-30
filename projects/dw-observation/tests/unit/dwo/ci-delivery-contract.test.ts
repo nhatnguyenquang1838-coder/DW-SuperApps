@@ -18,6 +18,14 @@ describe('DW Observation CI delivery contract', () => {
     expect(workflow).toMatch(/jobs:\s*\n\s+typecheck-tests:/);
   });
 
+  it('exports runner scratch paths at step runtime, never from unavailable job-env context', () => {
+    const jobEnvelope = workflow.split(/^    steps:\s*$/m)[0];
+    expect(jobEnvelope).not.toContain('${{ runner.');
+    expect(workflow).toContain('"$RUNNER_TEMP"');
+    expect(workflow).toContain('>> "$GITHUB_ENV"');
+    expect(workflow).toContain('TMPDIR=%s\\nDWO_R3_SCRATCH_ROOT=%s\\n');
+  });
+
   it('runs full Vitest and both production and test typechecks', () => {
     expect(workflow).toMatch(/pnpm\s+run\s+test(?:\s|$)/);
     expect(workflow).toMatch(/pnpm\s+run\s+typecheck(?:\s|$)/);

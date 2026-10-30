@@ -14,10 +14,13 @@ jobs:
   typecheck-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    env:
-      TMPDIR: ${{ runner.temp }}
-      DWO_R3_SCRATCH_ROOT: ${{ runner.temp }}
     steps:
+      - name: Initialize runner scratch paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'TMPDIR=%s\nDWO_R3_SCRATCH_ROOT=%s\n' "$RUNNER_TEMP" "$RUNNER_TEMP" >> "$GITHUB_ENV"
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
