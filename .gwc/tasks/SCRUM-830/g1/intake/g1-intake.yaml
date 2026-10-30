@@ -1,0 +1,77 @@
+# G1 INTAKE — SCRUM-830 (DWO-V2-09)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-intake
+generated_at: '2026-09-30T06:10:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-830
+parent_run_ref: SCRUM-820
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: integration/SCRUM-820-dwo-v2
+base_sha: 0e96764512d603b041b9dceaadf7a5db3a93afb4
+task_branch: task/SCRUM-830-semantic-qualification
+
+problem:
+  statement: >-
+    DWO v2 has built the reducer, projection contract, durable history, replay,
+    realtime LIVE and accessibility layers, but has no single machine-checkable
+    qualification layer that proves semantic correctness and resilience against
+    the official 30-run fixture suite, the exact BRD AC-RS-01..11 scenarios and
+    the Universal adversarial cases — with subject binding and separate
+    DEV-NATIVE / COMPATIBILITY outcomes.
+  why_now: >-
+    SCRUM-830 is the qualification gate (V2_SEMANTIC_QUALIFIED) required before
+    SCRUM-831 main rebind and SCRUM-832 real-run certification. Without a
+    deterministic, evidence-producing harness over the REAL kernel modules, the
+    exit token cannot be derived and the release train stalls.
+
+stakeholders:
+  requester: human://nhat-nguyen-quang
+  affected:
+    - DWO v2 maintainers (release qualification)
+    - SCRUM-831/832 downstream consumers (rebind + real-run certification)
+
+risks:
+  - id: RISK-001
+    description: The qualification harness asserts booleans instead of exercising the real kernel modules
+    impact: HIGH
+    mitigation: every AC-RS and adversarial scenario invokes the production modules (reducer, compareStates, DurableLog, etc.), never a fake
+  - id: RISK-002
+    description: DEV-NATIVE and COMPATIBILITY outcomes get conflated or incompatible inputs normalized to pass
+    impact: HIGH
+    mitigation: separate result vectors; INCOMPATIBLE inputs must fail closed and never be normalized into a passing profile
+  - id: RISK-003
+    description: Qualification subject not bound to exact SHA/version identity, so stale evidence could pass
+    impact: MEDIUM
+    mitigation: subject digest includes source repo/ref/SHA + profiles + all contract versions + evidence bundle id
+  - id: RISK-004
+    description: Adversarial cases hand-waved instead of machine-checkable
+    impact: MEDIUM
+    mitigation: each adversarial case returns a structured verification result with fail-closed expectation asserted
+
+acceptance_criteria:
+  - id: AC-830-01
+    statement: V2_SEMANTIC_QUALIFIED exit token derivable from machine-readable state
+    verifiable: deriveV2SemanticQualified() returns token when subject bound + all AC-RS + adversarial suites pass
+  - id: AC-830-02
+    statement: AC-RS-01..11 each has machine-checkable evidence and disposition
+    verifiable: runAcRsSuite() returns 11 results, each with id/outcome/evidence
+  - id: AC-830-03
+    statement: Universal adversarial suite has machine-checkable evidence and fail-closed expectations
+    verifiable: runAdversarialSuite() returns 10 verified results with failClosed expectation asserted
+  - id: AC-830-04
+    statement: qualification subject bound to exact source/profile/reducer/projection/comparison identity
+    verifiable: qualificationSubject digest binds repo/ref/SHA + profiles + contract versions + bundle id
+  - id: AC-830-05
+    statement: DEV-NATIVE and COMPATIBILITY results separate; incompatible inputs fail closed
+    verifiable: qualification record keeps devNative and compatibility vectors separate; INCOMPATIBLE never normalized
+  - id: AC-830-06
+    statement: no fixture bypasses production projection/reducer path
+    verifiable: harness imports and calls real kernel modules (asserted by test); no duplicate projection logic
+  - id: AC-830-07
+    statement: all existing DWO suites + Python regression continue to pass
+    verifiable: full vitest + tsc + pytest green at head
+
+unresolved_questions: []

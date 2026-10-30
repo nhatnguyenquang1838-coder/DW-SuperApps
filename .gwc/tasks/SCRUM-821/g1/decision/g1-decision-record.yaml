@@ -1,0 +1,133 @@
+# G1 DECISION RECORD — SCRUM-821 (DWO-V2-00)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-decision-record
+generated_at: '2026-09-30T03:22:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-821
+parent_run_ref: SCRUM-820
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: main
+base_sha: 2e0b0cdbf7c08ac9305acbd114aa42db749b24be
+task_branch: task/SCRUM-821-release-binding-inventory
+active_runtime_plan_ref: PLAN-821-R1
+active_runtime_plan_revision: 1
+target_contract_ref: TARGET-RELEASE-BINDING-821-R1
+
+options_ref: ../brainstorming/g1-options.yaml
+preflight_ref: ../preflight/g1-preflight-report.yaml
+intake_ref: ../intake/g1-intake.yaml
+g0_ref: ../../g0/context-snapshot.yaml
+
+status: ACCEPTED
+selected_option_id: OPT-1
+
+user_decision:
+  actor: human://nhat-nguyen-quang
+  decided_at: '2026-09-30T03:12:00+07:00'
+  source: explicit clarify decision during BOOT (target branch resolution) + standing autonomous execution authorization for planning, decomposition, coding, tests and development commits
+  explicit: true
+  scope_of_decision: >-
+    OPT-1 was selected by the agent as the only option satisfying the stated acceptance
+    criteria. The Human Principal explicitly authorized autonomous execution of the
+    approved development plan (planning, decomposition, coding, tests, task branches,
+    development commits, pushes, integration-branch updates, PR creation/update). No
+    Human decision was required to select among options that all met policy.
+
+rationale: >-
+  OPT-1 is the only option that can satisfy AC-821-07 (fail-closed on unresolvable ref)
+  and AC-821-08 (machine-derivable DEV_BINDING_ACTIVE), which require executable
+  validation. OPT-2 would split binding state across the existing Python/TypeScript twin
+  and recreate exactly the silent source-divergence class of defect this package exists
+  to eliminate. OPT-3 is documentation-only and would make the exit token unverifiable.
+  OPT-1 places the namespace boundary in the type system and reuses the existing vitest
+  harness with no new dependency and no framework upgrade.
+
+rejected_option_ids:
+  - OPT-2
+  - OPT-3
+
+decomposition:
+  atomic: false
+  rationale: >-
+    SCRUM-821 carries five separable deliverables (binding registry, capability
+    inventory, access-boundary inventory, rebind evidence record, drift taxonomy). The
+    parent G1 materializes them as ordered Child Runs so each can be verified
+    independently, but they are small enough to execute within one task branch and one
+    G3 verification pass, so no nested branch topology is created.
+  child_runs:
+    - id: CR-821-A
+      order: 1
+      title: Release-binding registry with fail-closed exact-SHA resolution
+      produces: [lib/dwo/releaseBinding.ts, tests/unit/dwo/releaseBinding.test.ts]
+    - id: CR-821-B
+      order: 2
+      title: Drift classification taxonomy
+      produces: [lib/dwo/drift.ts, tests/unit/dwo/drift.test.ts]
+    - id: CR-821-C
+      order: 3
+      title: Capability, compatibility and access-boundary inventories
+      produces: [lib/dwo/inventory.ts, dwo-v2/baseline/capability-inventory.yaml, dwo-v2/baseline/access-boundary-inventory.yaml, tests/unit/dwo/inventory.test.ts]
+    - id: CR-821-D
+      order: 4
+      title: R0 rebind evidence record schema and DEV_BINDING_ACTIVE derivation
+      produces: [lib/dwo/rebindRecord.ts, dwo-v2/baseline/r0-rebind-evidence.yaml, tests/unit/dwo/rebindRecord.test.ts]
+  execution_order: [CR-821-A, CR-821-B, CR-821-C, CR-821-D]
+  integration: all child runs land on the single task branch, then G4 integrates that branch into integration/SCRUM-820-dwo-v2
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/baseline/
+  - .gwc/tasks/SCRUM-821/
+
+excluded_actions:
+  - g4_merge
+  - g5_deploy
+  - g6_production
+  - database_migration
+  - secret_change
+  - force_push
+  - branch_deletion
+
+authority_boundaries:
+  grants:
+    - development commits on task/SCRUM-821-release-binding-inventory
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR creation and update
+    - Jira SCRUM-821 progress and evidence updates
+  excluded:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION
+    - approval bypass
+    - protected main writes
+
+required_gate: G2_HUMAN_DIRECTION
+g1_gate_outcome: PASS
+
+verification_plan:
+  - command: npx tsc --noEmit
+    expectation: exit 0
+  - command: npx vitest run --reporter=dot
+    expectation: existing 17 files / 296 tests still pass, plus the new dwo/ suites
+  - command: python3 -m pytest tests/ -q
+    expectation: 112 tests still pass (no Python regression)
+  - command: npx next lint
+    expectation: no new lint errors
+  - command: python scripts/validate_workspace_worktree_policy.py
+    expectation: PASS
+  - coverage_mapping:
+      AC-821-01: tests/unit/dwo/releaseBinding.test.ts
+      AC-821-02: tests/unit/dwo/inventory.test.ts
+      AC-821-03: tests/unit/dwo/inventory.test.ts (namespace separation assertions)
+      AC-821-04: tests/unit/dwo/inventory.test.ts (access-boundary assertions)
+      AC-821-05: tests/unit/dwo/rebindRecord.test.ts
+      AC-821-06: tests/unit/dwo/drift.test.ts
+      AC-821-07: tests/unit/dwo/releaseBinding.test.ts (fail-closed negative cases)
+      AC-821-08: tests/unit/dwo/rebindRecord.test.ts (DEV_BINDING_ACTIVE derivation)
+
+next_gate: G2_EXECUTION

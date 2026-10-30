@@ -1,0 +1,58 @@
+{
+  "authority_granted": false,
+  "checks": [
+    {
+      "check_id": "authority-orthogonality",
+      "evidence_refs": [
+        "evidence://dwo-qualification/authority/DEV-RUN-028"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "history-parity",
+      "evidence_refs": [
+        "evidence://dwo-qualification/history/DEV-RUN-028"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "reducer-replay-parity",
+      "evidence_refs": [
+        "evidence://dwo-qualification/replay/DEV-RUN-028"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "semantic-evidence",
+      "evidence_refs": [
+        "evidence://dwo-qualification/semantic/DEV-RUN-028"
+      ],
+      "status": "PASS"
+    }
+  ],
+  "evidence_refs": [
+    "evidence://dwo-qualification/authority/DEV-RUN-028",
+    "evidence://dwo-qualification/history/DEV-RUN-028",
+    "evidence://dwo-qualification/replay/DEV-RUN-028",
+    "evidence://dwo-qualification/semantic/DEV-RUN-028"
+  ],
+  "graph_version": "dwo.langgraph-qualification/1",
+  "projection_events_mutated": false,
+  "qualification_id": "qualification:54361789db1aeb82cf92880b72fc6806e9245550889af95a779d4ceb641e86df",
+  "receipt_digest": "sha256:24d4caaa79f7b929f03f3a3076fc8552cd7749325a114b547af2f2b06449c1b9",
+  "receipt_id": "receipt:24d4caaa79f7b929f03f3a3076fc8552cd7749325a114b547af2f2b06449c1b9",
+  "schema_version": "dwo.qualification-receipt/1",
+  "status": "QUALIFIED",
+  "subject": {
+    "durable_position": "projection_ordinal=28",
+    "dwo_run_id": "DEV-RUN-028",
+    "lifecycle_profile": "gwc.universal-run/1",
+    "projection_contract_version": "dwo.projection-contract/2",
+    "reducer_version": "dwo.reducer/1",
+    "schema_version": "dwo.qualification-subject/1",
+    "source_repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+    "source_sha": "c7c34cb6769075350969132610c0ee6398631038",
+    "task_ref": null
+  },
+  "subject_digest": "sha256:85a02cfd2bb86aff32898d0c6757a5dea463465e1128cb32a6d98be6cd1c0677"
+}

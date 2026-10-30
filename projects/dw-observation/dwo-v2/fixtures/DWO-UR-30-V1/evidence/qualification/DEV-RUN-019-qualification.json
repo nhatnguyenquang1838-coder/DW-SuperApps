@@ -1,0 +1,58 @@
+{
+  "authority_granted": false,
+  "checks": [
+    {
+      "check_id": "authority-orthogonality",
+      "evidence_refs": [
+        "evidence://dwo-qualification/authority/DEV-RUN-019"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "history-parity",
+      "evidence_refs": [
+        "evidence://dwo-qualification/history/DEV-RUN-019"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "reducer-replay-parity",
+      "evidence_refs": [
+        "evidence://dwo-qualification/replay/DEV-RUN-019"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "semantic-evidence",
+      "evidence_refs": [
+        "evidence://dwo-qualification/semantic/DEV-RUN-019"
+      ],
+      "status": "PASS"
+    }
+  ],
+  "evidence_refs": [
+    "evidence://dwo-qualification/authority/DEV-RUN-019",
+    "evidence://dwo-qualification/history/DEV-RUN-019",
+    "evidence://dwo-qualification/replay/DEV-RUN-019",
+    "evidence://dwo-qualification/semantic/DEV-RUN-019"
+  ],
+  "graph_version": "dwo.langgraph-qualification/1",
+  "projection_events_mutated": false,
+  "qualification_id": "qualification:1828f60efed69b2fa23aebc3ed560971aea69718b8f250fc497f25d1da3317fb",
+  "receipt_digest": "sha256:2d9bdaf21eccd6d6c8fbaaa51fbb5c4514b5dc5469e0350f846fd54afdf31acd",
+  "receipt_id": "receipt:2d9bdaf21eccd6d6c8fbaaa51fbb5c4514b5dc5469e0350f846fd54afdf31acd",
+  "schema_version": "dwo.qualification-receipt/1",
+  "status": "QUALIFIED",
+  "subject": {
+    "durable_position": "projection_ordinal=19",
+    "dwo_run_id": "DEV-RUN-019",
+    "lifecycle_profile": "gwc.universal-run/1",
+    "projection_contract_version": "dwo.projection-contract/2",
+    "reducer_version": "dwo.reducer/1",
+    "schema_version": "dwo.qualification-subject/1",
+    "source_repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+    "source_sha": "86a440e84f59f72e8cc9ef567fe20df13b851a4d",
+    "task_ref": null
+  },
+  "subject_digest": "sha256:8f146292e1700f6228545606450ec33baf9b6bb9a89b3d1ce6362b66535664cc"
+}

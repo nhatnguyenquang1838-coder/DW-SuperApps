@@ -1,0 +1,141 @@
+# CAPABILITY INVENTORY — SCRUM-821 / DWO-V2-00 / CR-821-C
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.dwo.capability-inventory/1.0
+artifact_type: CAPABILITY_INVENTORY
+gate: G2_EXECUTE
+trace:
+  task_id: SCRUM-821
+  plan_revision: 2
+  generated_at: '2026-09-30T03:46:00+07:00'
+
+source_profiles:
+  - DEV_NATIVE
+  - COMPATIBILITY
+  - COMPATIBILITY_LEGACY
+
+capability:
+  read: true
+  write: false
+  approve: false
+  deny: false
+  merge: false
+  deploy: false
+  note: >-
+    DWO is a READ-ONLY observatory. No DWO surface gains a write/effect path via
+    this inventory; any future WRITE_EFFECT classification must fail the inventory
+    invariant assertion.
+
+surfaces:
+  - id: observatory
+    paths: [lib/observatory.ts]
+    source_profile: COMPATIBILITY_LEGACY
+    kind: TYPE
+    provenance: v1 login-epic fixture projection
+    stale: true
+  - id: replay
+    paths: [lib/replay.ts]
+    source_profile: COMPATIBILITY_LEGACY
+    kind: TYPE
+    provenance: v1 fixture replay
+    stale: true
+  - id: live
+    paths: [lib/live.ts]
+    source_profile: COMPATIBILITY_LEGACY
+    kind: TYPE
+    provenance: v1 live projection
+    stale: true
+  - id: supabase-realtime
+    paths: [lib/supabaseRealtime.ts]
+    source_profile: COMPATIBILITY_LEGACY
+    kind: TYPE
+    provenance: v1 broadcast/realtime
+    stale: true
+  - id: use-live-projection
+    paths: [lib/useLiveProjection.ts]
+    source_profile: COMPATIBILITY_LEGACY
+    kind: HOOK
+    provenance: v1 client hook
+    stale: true
+  - id: broadcast-contract
+    paths: [lib/broadcastContract.ts]
+    source_profile: COMPATIBILITY_LEGACY
+    kind: TYPE
+    provenance: v1 broadcast contract
+    stale: true
+  - id: postgres-event-store
+    paths: [lib/postgresEventStore.ts]
+    source_profile: DEV_NATIVE
+    kind: TYPE
+    provenance: durable projection event store
+  - id: server-historical-read
+    paths: [lib/serverHistoricalRead.ts]
+    source_profile: DEV_NATIVE
+    kind: TYPE
+    provenance: server-side durable read
+  - id: review-intelligence
+    paths: [lib/reviewIntelligence.ts]
+    source_profile: COMPATIBILITY_LEGACY
+    kind: TYPE
+    provenance: v1 review intelligence
+    stale: true
+  - id: py-adapters
+    paths: [dw_observation/adapters.py]
+    source_profile: COMPATIBILITY
+    kind: PY_MODULE
+    provenance: Universal adapter twin
+  - id: py-events
+    paths: [dw_observation/events.py]
+    source_profile: DEV_NATIVE
+    kind: PY_MODULE
+    provenance: event envelope
+  - id: py-fixtures
+    paths: [dw_observation/fixtures.py]
+    source_profile: COMPATIBILITY_LEGACY
+    kind: PY_MODULE
+    provenance: v1 fixture pack loader
+    stale: true
+  - id: py-projection
+    paths: [dw_observation/projection.py]
+    source_profile: COMPATIBILITY_LEGACY
+    kind: PY_MODULE
+    provenance: v1 projection
+    stale: true
+  - id: py-realtime
+    paths: [dw_observation/realtime.py]
+    source_profile: COMPATIBILITY_LEGACY
+    kind: PY_MODULE
+    provenance: v1 realtime
+    stale: true
+  - id: py-reducer
+    paths: [dw_observation/reducer.py]
+    source_profile: COMPATIBILITY_LEGACY
+    kind: PY_MODULE
+    provenance: v1 reducer
+    stale: true
+  - id: py-replay
+    paths: [dw_observation/replay.py]
+    source_profile: COMPATIBILITY_LEGACY
+    kind: PY_MODULE
+    provenance: v1 replay
+    stale: true
+  - id: migrations-security
+    paths: [supabase/migrations/20260826134000_observatory_security_hardening.sql]
+    source_profile: DEV_NATIVE
+    kind: MIGRATION
+    provenance: RLS policies
+  - id: migrations-projection-events
+    paths: [supabase/migrations/20260823100000_projection_events.sql]
+    source_profile: DEV_NATIVE
+    kind: MIGRATION
+    provenance: projection_events table
+  - id: migrations-history
+    paths: [supabase/migrations/20260823080000_observatory_history.sql, supabase/migrations/20260823090000_observatory_backfill_dml.sql]
+    source_profile: DEV_NATIVE
+    kind: MIGRATION
+    provenance: history view + backfill
+
+counts:
+  DEV_NATIVE: 6
+  COMPATIBILITY: 1
+  COMPATIBILITY_LEGACY: 12

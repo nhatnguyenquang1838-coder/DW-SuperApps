@@ -1,0 +1,29 @@
+# G1 OPTIONS — SCRUM-822 (DWO-V2-01)
+schema_version: gwc.g1.options/1.0
+artifact_type: G1_OPTIONS
+gate: G1_PLAN
+trace:
+  task_id: SCRUM-822
+  plan_revision: 1
+
+options:
+  - id: OPT-1
+    title: Deterministic generator emitting the full fixture pack
+    description: >-
+      A single canonical fixture-spec table drives a Python generator that emits
+      fixture-set.yaml, 30 DEV-RUN bundles, projection-events.jsonl, evidence and
+      golden outputs. Guarantees determinism, keeps runs/*.yaml authoring-only,
+      makes negative-case assertions testable.
+    satisfies: [AC-822-01, AC-822-02, AC-822-03, AC-822-04, AC-822-05]
+  - id: OPT-2
+    title: Hand-author 30 YAML bundles
+    description: Manually write each DEV-RUN bundle and golden output.
+    risk: non-deterministic IDs/timestamps, drift between bundles and events
+    satisfies: [AC-822-02]
+  - id: OPT-3
+    title: Documentation-only materialization
+    description: Write the fixture spec as docs without executable artifacts.
+    risk: exit token unverifiable
+    satisfies: []
+
+selected: OPT-1

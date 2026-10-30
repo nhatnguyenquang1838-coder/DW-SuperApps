@@ -1,0 +1,119 @@
+name: DW-Observation TypeCheck
+
+on:
+  push:
+    branches: [integration/SCRUM-820-dwo-v2, main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Initialize runner scratch paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'TMPDIR=%s\nDWO_R3_SCRATCH_ROOT=%s\n' "$RUNNER_TEMP" "$RUNNER_TEMP" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.15.1 --activate
+          pnpm --version
+
+      - name: Install dependencies
+        working-directory: projects/dw-observation
+        timeout-minutes: 10
+        run: pnpm install --frozen-lockfile
+
+      - name: Full Vitest suite (single worker)
+        working-directory: projects/dw-observation
+        timeout-minutes: 15
+        run: set -o pipefail && pnpm run test --pool=threads --maxWorkers=1 --minWorkers=1 2>&1 | tee ci-vitest.log
+
+      - name: typecheck:tests (non-blocking)
+        working-directory: projects/dw-observation
+        timeout-minutes: 5
+        run: set -o pipefail && pnpm run typecheck:tests 2>&1 | tee ci-typecheck-tests.log
+
+      - name: typecheck:tests:strict (regression gate)
+        working-directory: projects/dw-observation
+        timeout-minutes: 5
+        run: set -o pipefail && pnpm run typecheck:tests:strict 2>&1 | tee ci-typecheck-tests-strict.log
+
+      - name: typecheck application
+        working-directory: projects/dw-observation
+        timeout-minutes: 5
+        run: set -o pipefail && pnpm run typecheck 2>&1 | tee ci-typecheck.log
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python qualification and test extras
+        working-directory: projects/dw-observation
+        timeout-minutes: 10
+        run: python -m pip install -e '.[qualification,test]'
+
+      - name: Verify LangGraph imports and run all Python tests
+        working-directory: projects/dw-observation
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          python -c 'import langgraph; import langgraph.checkpoint.sqlite; from langgraph.graph import StateGraph; from langgraph.checkpoint.sqlite import SqliteSaver'
+          python -m pytest -q --junitxml=ci-pytest.xml 2>&1 | tee ci-pytest.log
+          python -c "import xml.etree.ElementTree as E; suites=list(E.parse('ci-pytest.xml').getroot().iter('testsuite')); assert suites and sum(int(s.get('tests','0')) for s in suites)>0, 'No Python tests collected'; assert all(int(s.get('skipped','0'))==0 for s in suites), 'Unexpected skipped Python integration tests'"
+
+      - name: Install pinned Playwright Chromium
+        working-directory: projects/dw-observation
+        timeout-minutes: 10
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Fixture semantic E2E cold start (semantic screenshots; not snapshot-baseline or OS snapshot baseline certification)
+        working-directory: projects/dw-observation
+        timeout-minutes: 10
+        env:
+          CI: "true"
+          PLAYWRIGHT_SOURCE: fixture
+          PLAYWRIGHT_OUTPUT_DIR: test-results/semantic-e2e
+          PLAYWRIGHT_EVIDENCE_DIR: test-results/semantic-e2e/evidence
+        run: |
+          set -euo pipefail
+          pnpm exec playwright test e2e/fixture-preview-r1.spec.ts --project=fixture-preview-chromium --workers=1 --retries=0 2>&1 | tee ci-semantic-e2e.log
+
+      - name: Mock-source Next production build
+        working-directory: projects/dw-observation
+        timeout-minutes: 10
+        env:
+          OBSERVATORY_DATA_SOURCE: mock
+          PLAYWRIGHT_SOURCE: mock
+        run: set -o pipefail && pnpm run build 2>&1 | tee ci-mock-source-build.log
+
+      - name: Upload CI logs and Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dw-observation-ci-diagnostics-${{ github.run_id }}
+          if-no-files-found: warn
+          path: |
+            projects/dw-observation/ci-*.log
+            projects/dw-observation/ci-pytest.xml
+            projects/dw-observation/test-results/
+            projects/dw-observation/playwright-report/
+            projects/dw-observation/test-results/semantic-e2e/

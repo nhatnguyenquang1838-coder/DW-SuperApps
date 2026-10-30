@@ -1,0 +1,63 @@
+# G3 VERIFICATION ATTESTATION — SCRUM-829 (DWO-V2-08)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g3.verification-attestation/1.0
+artifact_type: VERIFICATION_ATTESTATION
+gate: G3_VERIFY
+trace:
+  task_id: SCRUM-829
+  parent_run_ref: SCRUM-820
+  plan_revision: 1
+  verified_at: '2026-09-30T05:13:00+07:00'
+  task_branch: task/SCRUM-829-accessibility-scale
+  branch_head: e98e40d
+
+verdict: PASS
+
+child_runs:
+  - id: CR-829-A
+    title: Accessibility model — keyboard nav, ARIA, visible focus
+    commit: e98e40d
+    tests: covered by accessibility.test.ts
+  - id: CR-829-B
+    title: Graph/tree selection synchronization + non-color-only status
+    commit: e98e40d
+    tests: covered by accessibility.test.ts
+  - id: CR-829-C
+    title: DWO-SCALE-GEN-V1 deterministic scale generator
+    commit: e98e40d
+    tests: covered by scaleGen.test.ts
+  - id: CR-829-D
+    title: Progressive-disclosure budget thresholds + V2_ACCESSIBILITY_READY derivation + tests
+    commit: e98e40d
+    tests: covered by accessibility.test.ts + scaleGen.test.ts
+
+executed_evidence:
+  - command: npx vitest run tests/unit/dwo/accessibility.test.ts tests/unit/dwo/scaleGen.test.ts
+    result: 20 passed (20) — 2 new suites
+  - command: npx vitest run
+    result: 31 files, 505 passed (485 prior + 20 new)
+  - command: npx tsc --noEmit
+    result: exit 0
+  - command: python3 -m pytest tests/ -q
+    result: 112 passed (no Python regression)
+
+acceptance_criteria_coverage:
+  AC-829-01: VERIFIED (V2_ACCESSIBILITY_READY derived)
+  AC-829-02: VERIFIED (keyboard nav + ARIA + visible focus)
+  AC-829-03: VERIFIED (graph/tree selection synchronized)
+  AC-829-04: VERIFIED (non-color-only status)
+  AC-829-05: VERIFIED (DWO-SCALE-GEN-V1 measures depth/fanout/node-count/performance)
+  AC-829-06: VERIFIED (budget thresholds measured and recorded)
+  AC-829-07: VERIFIED (30-run semantic pack unchanged — guard test)
+
+exit_token_derivation:
+  token: V2_ACCESSIBILITY_READY
+  derivable: true
+  basis: >
+    deriveV2AccessibilityReady(): keyboard nav, visible focus, ARIA structure,
+    selection sync, non-color-only status, scale pack qualified, budget
+    thresholds recorded, 30-run pack unchanged. Derived by machine-readable state.
+
+deviations:
+  - none

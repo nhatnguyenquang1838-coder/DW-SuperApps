@@ -1,0 +1,57 @@
+{
+  "server_pid": 23260,
+  "base_url": "http://127.0.0.1:3199",
+  "node_env": "production",
+  "source_override": "fixture",
+  "dev_denials": 8,
+  "results": [
+    {
+      "path": "/dev",
+      "status": 404,
+      "fixture_badge_present": false
+    },
+    {
+      "path": "/dev/fixtures",
+      "status": 404,
+      "fixture_badge_present": false
+    },
+    {
+      "path": "/dev/tasks",
+      "status": 404,
+      "fixture_badge_present": false
+    },
+    {
+      "path": "/dev/tasks/TASK-CORE/runs",
+      "status": 404,
+      "fixture_badge_present": false
+    },
+    {
+      "path": "/dev/runs/DEV-RUN-022",
+      "status": 404,
+      "fixture_badge_present": false
+    },
+    {
+      "path": "/dev/runs/DEV-RUN-022/replay",
+      "status": 404,
+      "fixture_badge_present": false
+    },
+    {
+      "path": "/dev/sim/g0g6",
+      "status": 404,
+      "fixture_badge_present": false
+    },
+    {
+      "path": "/dev/sim/login-epic",
+      "status": 404,
+      "fixture_badge_present": false
+    },
+    {
+      "path": "/tasks",
+      "status": 200,
+      "unavailable": true,
+      "fixture_badge_present": false
+    }
+  ],
+  "production_data_access": false
+}
+OWNED_PRODUCTION_SERVER_STOPPED

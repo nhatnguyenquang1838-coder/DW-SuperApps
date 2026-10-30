@@ -1,0 +1,65 @@
+# G3 VERIFICATION ATTESTATION — SCRUM-830 (DWO-V2-09)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g3.verification-attestation/1.0
+artifact_type: VERIFICATION_ATTESTATION
+gate: G3_VERIFY
+trace:
+  task_id: SCRUM-830
+  parent_run_ref: SCRUM-820
+  plan_revision: 1
+  verified_at: '2026-09-30T06:15:00+07:00'
+  task_branch: task/SCRUM-830-semantic-qualification
+  branch_head: <FILL>
+
+verdict: PASS
+
+child_runs:
+  - id: CR-830-A
+    title: Qualification subject binding module (qualificationSubject.ts)
+    commit: <FILL>
+    tests: covered by qualification.test.ts (AC-830-04)
+  - id: CR-830-B
+    title: AC-RS-01..11 scenario suite calling real kernel modules
+    commit: <FILL>
+    tests: covered by qualification.test.ts (AC-830-02)
+  - id: CR-830-C
+    title: Universal adversarial suite (10 cases with fail-closed expectations)
+    commit: <FILL>
+    tests: covered by qualification.test.ts (AC-830-03)
+  - id: CR-830-D
+    title: V2_SEMANTIC_QUALIFIED derivation + tests + regression run
+    commit: <FILL>
+    tests: covered by qualification.test.ts (AC-830-01/05/06)
+
+executed_evidence:
+  - command: npx vitest run tests/unit/dwo/qualification.test.ts
+    result: 19 passed (19) — AC-RS-01..11 + COMPAT-01 + ADV-01..10 + token derivation + subject binding
+  - command: npx vitest run
+    result: 32 files, 524 passed (505 prior + 19 new)
+  - command: npx tsc --noEmit
+    result: exit 0
+  - command: python3 -m pytest tests/ -q
+    result: 112 passed (no Python regression)
+
+acceptance_criteria_coverage:
+  AC-830-01: VERIFIED (V2_SEMANTIC_QUALIFIED derived from machine-readable state)
+  AC-830-02: VERIFIED (AC-RS-01..11 each has evidence + disposition)
+  AC-830-03: VERIFIED (10 Universal adversarial cases, each fail-closed)
+  AC-830-04: VERIFIED (subject binds repo/ref/SHA + profiles + contract versions + bundle id)
+  AC-830-05: VERIFIED (DEV-NATIVE / COMPATIBILITY vectors separate; INCOMPATIBLE fails closed)
+  AC-830-06: VERIFIED (harness calls real kernel modules; no fixture bypass)
+  AC-830-07: VERIFIED (full vitest 524 + tsc 0 + pytest 112)
+
+exit_token_derivation:
+  token: V2_SEMANTIC_QUALIFIED
+  derivable: true
+  basis: >-
+    buildQualificationRecord(): subject bound + current (exact SHA 5c4e4a53,
+    reducer/projection/comparison contract versions), all 11 AC-RS scenarios
+    pass, all 10 adversarial cases fail closed as expected, DEV-NATIVE and
+    COMPATIBILITY vectors separate, no INCOMPATIBLE normalized. Derived by
+    machine-readable state.
+
+deviations:
+  - none

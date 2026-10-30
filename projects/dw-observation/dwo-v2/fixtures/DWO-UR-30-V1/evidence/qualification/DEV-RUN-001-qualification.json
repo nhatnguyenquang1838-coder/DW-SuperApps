@@ -1,0 +1,34 @@
+{
+  "authority_granted": false,
+  "checks": [
+    {
+      "check_id": "semantic-evidence",
+      "evidence_refs": [
+        "evidence://dwo-qualification/missing/semantic/DEV-RUN-001"
+      ],
+      "status": "UNKNOWN"
+    }
+  ],
+  "evidence_refs": [
+    "evidence://dwo-qualification/missing/semantic/DEV-RUN-001"
+  ],
+  "graph_version": "dwo.langgraph-qualification/1",
+  "projection_events_mutated": false,
+  "qualification_id": "qualification:05309fb798876a4147d98e9c857db0db0d32ce83445e90bed19ea4e3398795e7",
+  "receipt_digest": "sha256:57552606aac9322ecaefbbff77a757e14a102d1611d5612177372fb75f3e39af",
+  "receipt_id": "receipt:57552606aac9322ecaefbbff77a757e14a102d1611d5612177372fb75f3e39af",
+  "schema_version": "dwo.qualification-receipt/1",
+  "status": "UNKNOWN",
+  "subject": {
+    "durable_position": "projection_ordinal=1",
+    "dwo_run_id": "DEV-RUN-001",
+    "lifecycle_profile": "gwc.universal-run/1",
+    "projection_contract_version": "dwo.projection-contract/2",
+    "reducer_version": "dwo.reducer/1",
+    "schema_version": "dwo.qualification-subject/1",
+    "source_repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+    "source_sha": "9a7b2ac7669c428da8fda34bc608f79df00f40ae",
+    "task_ref": null
+  },
+  "subject_digest": "sha256:acf4de8f0ef1f321e306d0e1853d7427c4b379d97be3c22ba58ee5cc452655d9"
+}

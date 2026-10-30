@@ -1,0 +1,53 @@
+{
+  "yaml_parse": "PASS",
+  "permissions": {
+    "contents": "read"
+  },
+  "job": "typecheck-tests",
+  "run_blocks": [
+    {
+      "name": "Enable pnpm",
+      "bash_syntax": "PASS"
+    },
+    {
+      "name": "Install dependencies",
+      "bash_syntax": "PASS"
+    },
+    {
+      "name": "Full Vitest suite (single worker)",
+      "bash_syntax": "PASS"
+    },
+    {
+      "name": "typecheck:tests (non-blocking)",
+      "bash_syntax": "PASS"
+    },
+    {
+      "name": "typecheck:tests:strict (regression gate)",
+      "bash_syntax": "PASS"
+    },
+    {
+      "name": "typecheck application",
+      "bash_syntax": "PASS"
+    },
+    {
+      "name": "Install Python qualification and test extras",
+      "bash_syntax": "PASS"
+    },
+    {
+      "name": "Verify LangGraph imports and run all Python tests",
+      "bash_syntax": "PASS"
+    },
+    {
+      "name": "Install pinned Playwright Chromium",
+      "bash_syntax": "PASS"
+    },
+    {
+      "name": "Fixture semantic E2E cold start (semantic screenshots; not snapshot-baseline or OS snapshot baseline certification)",
+      "bash_syntax": "PASS"
+    },
+    {
+      "name": "Mock-source Next production build",
+      "bash_syntax": "PASS"
+    }
+  ]
+}

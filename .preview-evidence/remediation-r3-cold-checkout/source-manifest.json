@@ -1,0 +1,32 @@
+{
+  "base": "baffdb08d91a84435376248ee7e1a0ffcaf6eebf",
+  "snapshot_parent": "00759cb09b1da2ab4686f56150a9eda3b34c0b2b",
+  "scope": [
+    ".github/workflows/ci-dw-observation.yml",
+    "projects/dw-observation/lib/dwo/currentFixtureSubject.ts",
+    "projects/dw-observation/lib/dwo/reducer.ts",
+    "projects/dw-observation/lib/dwo/reducer-identity.json",
+    "projects/dw-observation/scripts/typecheck-tests-baseline.json",
+    "projects/dw-observation/tests/unit/dwo/f5-current-fixture-subject.test.ts",
+    "projects/dw-observation/tests/unit/dwo/f5-fixture-dev-routes.test.ts",
+    "projects/dw-observation/tests/unit/dwo/ci-delivery-contract.test.ts",
+    "projects/dw-observation/e2e/fixture-preview-r1.spec.ts",
+    "projects/dw-observation/middleware.ts"
+  ],
+  "source_lf_sha256": {
+    ".github/workflows/ci-dw-observation.yml": "ff33fcd4ee3b2ab29bae00cd1d3337b2f54df963b78d034ddd738a469545d412",
+    "projects/dw-observation/lib/dwo/currentFixtureSubject.ts": "f7b291487193b08f5455b8cfa989a7fbc7cab4953f0031479d32f0dad885ef8d",
+    "projects/dw-observation/lib/dwo/reducer.ts": "317286f591e26b2d250718d9c5a56b9c26980e30aa17550ee5d21423e696173f",
+    "projects/dw-observation/lib/dwo/reducer-identity.json": "ecc00bfcfa20c5b15d7fc4a9000e1c9c9423b0570b8947bfc73b6dbf91b73e3a",
+    "projects/dw-observation/scripts/typecheck-tests-baseline.json": "ba593da750f190330dd23cdb1fd38903f85e2a23ea79251c8d9997128d3fc27e",
+    "projects/dw-observation/tests/unit/dwo/f5-current-fixture-subject.test.ts": "571a0a8d8b92e8a94be63d6842e2600de0fc97ffe7a01fd530309b1b267379ab",
+    "projects/dw-observation/tests/unit/dwo/f5-fixture-dev-routes.test.ts": "81d4ad1d1d2251676ac67a6c80c1fa033ef6000dd6925fc3a042c1a6c65d4357",
+    "projects/dw-observation/tests/unit/dwo/ci-delivery-contract.test.ts": "39c0db22faea667cc8186190c485ac45a1516fcbdf9fdec25920cc480a19399b",
+    "projects/dw-observation/e2e/fixture-preview-r1.spec.ts": "a267c01b22198b98026133fccf26e315183b23bfe0b43b26cc1aed8548826651",
+    "projects/dw-observation/middleware.ts": "5f9f1a1aaf514f66a09a5cebc1d8b1e121ef9c3c39b3c78943a3a684cd13a1bf"
+  },
+  "corrected_files": [
+    "projects/dw-observation/middleware.ts",
+    "projects/dw-observation/tests/unit/dwo/ci-delivery-contract.test.ts"
+  ]
+}

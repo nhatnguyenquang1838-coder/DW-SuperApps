@@ -1,0 +1,58 @@
+{
+  "authority_granted": false,
+  "checks": [
+    {
+      "check_id": "authority-orthogonality",
+      "evidence_refs": [
+        "evidence://dwo-qualification/authority/DEV-RUN-010"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "history-parity",
+      "evidence_refs": [
+        "evidence://dwo-qualification/history/DEV-RUN-010"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "reducer-replay-parity",
+      "evidence_refs": [
+        "evidence://dwo-qualification/replay/DEV-RUN-010"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "semantic-evidence",
+      "evidence_refs": [
+        "evidence://dwo-qualification/semantic/DEV-RUN-010"
+      ],
+      "status": "PASS"
+    }
+  ],
+  "evidence_refs": [
+    "evidence://dwo-qualification/authority/DEV-RUN-010",
+    "evidence://dwo-qualification/history/DEV-RUN-010",
+    "evidence://dwo-qualification/replay/DEV-RUN-010",
+    "evidence://dwo-qualification/semantic/DEV-RUN-010"
+  ],
+  "graph_version": "dwo.langgraph-qualification/1",
+  "projection_events_mutated": false,
+  "qualification_id": "qualification:bb07f15b085a41d89f6ccadce96114e105bceb9ae1f1930a7dbacd27a03b79c7",
+  "receipt_digest": "sha256:75fc288490a7d14d578c578fbf35ef4f93967c2d92e204fd654e820e7bc055e0",
+  "receipt_id": "receipt:75fc288490a7d14d578c578fbf35ef4f93967c2d92e204fd654e820e7bc055e0",
+  "schema_version": "dwo.qualification-receipt/1",
+  "status": "QUALIFIED",
+  "subject": {
+    "durable_position": "projection_ordinal=10",
+    "dwo_run_id": "DEV-RUN-010",
+    "lifecycle_profile": "gwc.universal-run/1",
+    "projection_contract_version": "dwo.projection-contract/2",
+    "reducer_version": "dwo.reducer/1",
+    "schema_version": "dwo.qualification-subject/1",
+    "source_repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+    "source_sha": "a5923b4e237da2f6bad61e4c263d2d6eb7f1c9db",
+    "task_ref": null
+  },
+  "subject_digest": "sha256:c199aaef46316ea039fa845d78a1260c7168c3071fb0323cad739cc826f52073"
+}

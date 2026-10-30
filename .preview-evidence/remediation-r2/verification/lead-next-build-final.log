@@ -1,0 +1,51 @@
+npm notice run dw-observation@0.1.0 build
+npm notice run next build
+ ⚠ Invalid next.config.mjs options detected:
+ ⚠     Unrecognized key(s) in object: 'devIndicator'
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+  ▲ Next.js 14.2.5
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+
+./components/login-epic/RuntimeGraphCanvas.tsx
+138:6  Warning: React Hook useMemo has a missing dependency: 'onOpenArtifact'. Either include it or remove the dependency array. If 'onOpenArtifact' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/12) ...
+   Generating static pages (3/12)
+   Generating static pages (6/12)
+   Generating static pages (9/12)
+ ✓ Generating static pages (12/12)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    142 B          87.2 kB
+├ ○ /_not-found                          872 B          87.9 kB
+├ ○ /dashboard                           802 B          87.8 kB
+├ ○ /dev/fixtures                        3.92 kB         155 kB
+├ ƒ /dev/runs/[runId]                    195 B           155 kB
+├ ƒ /dev/runs/[runId]/replay             1.92 kB        98.7 kB
+├ ○ /dev/sim/g0g6                        5.15 kB        92.2 kB
+├ ○ /dev/sim/login-epic                  8.21 kB         146 kB
+├ ○ /dev/tasks                           177 B            94 kB
+├ ƒ /dev/tasks/[taskId]/runs             655 B          94.5 kB
+├ ○ /login                               950 B            88 kB
+├ ○ /runs                                142 B          87.2 kB
+├ ƒ /runs/[runId]                        195 B           155 kB
+├ ƒ /runs/[runId]/replay                 1.92 kB        98.7 kB
+├ ○ /tasks                               177 B            94 kB
+└ ƒ /tasks/[taskId]/runs                 655 B          94.5 kB
++ First Load JS shared by all            87 kB
+  ├ chunks/334-738959c9209b171f.js       31.5 kB
+  ├ chunks/e91d3a88-2bc338c8823f0568.js  53.6 kB
+  └ other shared chunks (total)          1.87 kB
+
+
+ƒ Middleware                             27 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

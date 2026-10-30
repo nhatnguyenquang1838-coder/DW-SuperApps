@@ -1,0 +1,58 @@
+{
+  "authority_granted": false,
+  "checks": [
+    {
+      "check_id": "authority-orthogonality",
+      "evidence_refs": [
+        "evidence://dwo-qualification/authority/DEV-RUN-026"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "history-parity",
+      "evidence_refs": [
+        "evidence://dwo-qualification/history/DEV-RUN-026"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "reducer-replay-parity",
+      "evidence_refs": [
+        "evidence://dwo-qualification/replay/DEV-RUN-026"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "semantic-evidence",
+      "evidence_refs": [
+        "evidence://dwo-qualification/semantic/DEV-RUN-026"
+      ],
+      "status": "PASS"
+    }
+  ],
+  "evidence_refs": [
+    "evidence://dwo-qualification/authority/DEV-RUN-026",
+    "evidence://dwo-qualification/history/DEV-RUN-026",
+    "evidence://dwo-qualification/replay/DEV-RUN-026",
+    "evidence://dwo-qualification/semantic/DEV-RUN-026"
+  ],
+  "graph_version": "dwo.langgraph-qualification/1",
+  "projection_events_mutated": false,
+  "qualification_id": "qualification:2af4d683eaaa1e59f301c9d867d4513c0dbf3c728e2f1a660234a9312721b138",
+  "receipt_digest": "sha256:cf9b1e2fdba2ce6b766b2d0308854be3924aba377dfae8fc9f8f67e01d5fcac2",
+  "receipt_id": "receipt:cf9b1e2fdba2ce6b766b2d0308854be3924aba377dfae8fc9f8f67e01d5fcac2",
+  "schema_version": "dwo.qualification-receipt/1",
+  "status": "QUALIFIED",
+  "subject": {
+    "durable_position": "projection_ordinal=26",
+    "dwo_run_id": "DEV-RUN-026",
+    "lifecycle_profile": "gwc.universal-run/1",
+    "projection_contract_version": "dwo.projection-contract/2",
+    "reducer_version": "dwo.reducer/1",
+    "schema_version": "dwo.qualification-subject/1",
+    "source_repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+    "source_sha": "d57220850f4301d007de191cfaaaaac1b4b12efd",
+    "task_ref": null
+  },
+  "subject_digest": "sha256:2964f8fd393dc80b88a909cb1700a9721736ffab476af548ddcae57006a5b0e5"
+}

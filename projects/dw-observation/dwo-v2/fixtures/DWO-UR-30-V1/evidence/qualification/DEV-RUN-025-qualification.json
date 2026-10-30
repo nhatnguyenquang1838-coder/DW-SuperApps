@@ -1,0 +1,58 @@
+{
+  "authority_granted": false,
+  "checks": [
+    {
+      "check_id": "authority-orthogonality",
+      "evidence_refs": [
+        "evidence://dwo-qualification/authority/DEV-RUN-025"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "history-parity",
+      "evidence_refs": [
+        "evidence://dwo-qualification/history/DEV-RUN-025"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "reducer-replay-parity",
+      "evidence_refs": [
+        "evidence://dwo-qualification/replay/DEV-RUN-025"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "semantic-evidence",
+      "evidence_refs": [
+        "evidence://dwo-qualification/semantic/DEV-RUN-025"
+      ],
+      "status": "PASS"
+    }
+  ],
+  "evidence_refs": [
+    "evidence://dwo-qualification/authority/DEV-RUN-025",
+    "evidence://dwo-qualification/history/DEV-RUN-025",
+    "evidence://dwo-qualification/replay/DEV-RUN-025",
+    "evidence://dwo-qualification/semantic/DEV-RUN-025"
+  ],
+  "graph_version": "dwo.langgraph-qualification/1",
+  "projection_events_mutated": false,
+  "qualification_id": "qualification:a226b7796d73fc30ddd0289326fab7449c66d8079e2c1de6d7770eb816ea94b5",
+  "receipt_digest": "sha256:ae4967289a711a54c3e6cb23bc3056ceeebd6036ec1bb8a11477ff48c9810f56",
+  "receipt_id": "receipt:ae4967289a711a54c3e6cb23bc3056ceeebd6036ec1bb8a11477ff48c9810f56",
+  "schema_version": "dwo.qualification-receipt/1",
+  "status": "QUALIFIED",
+  "subject": {
+    "durable_position": "projection_ordinal=25",
+    "dwo_run_id": "DEV-RUN-025",
+    "lifecycle_profile": "gwc.universal-run/1",
+    "projection_contract_version": "dwo.projection-contract/2",
+    "reducer_version": "dwo.reducer/1",
+    "schema_version": "dwo.qualification-subject/1",
+    "source_repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+    "source_sha": "ba85113eb800b16d0d030570d51806d342f91edb",
+    "task_ref": null
+  },
+  "subject_digest": "sha256:21ff47cd9166c393f317e205805b7df0703298fa66cff4c194b0b87691ca922d"
+}
