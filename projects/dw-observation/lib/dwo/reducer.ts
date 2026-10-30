@@ -17,6 +17,10 @@
 
 import type { RunState } from './projectionContract';
 import type { AuthorityState } from './authorityVocabulary';
+import reducerIdentity from './reducer-identity.json';
+
+/** Source-published identity shared with current fixture subject derivation. */
+export const DWO_REDUCER_VERSION: string = reducerIdentity.version;
 
 /** A projection event consumed by the reducer. */
 export interface ReducerEvent {

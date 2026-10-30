@@ -28,6 +28,7 @@ import { NextRequest } from 'next/server';
 import { createDevRouteMiddleware, middleware } from '@/middleware';
 import * as workspaceModelModule from '@/lib/runtime/buildWorkspaceModel';
 import * as replaySessionModule from '@/lib/dwo/fixtureReplaySession';
+import * as currentSubjectModule from '@/lib/dwo/currentFixtureSubject';
 import { isValidElement } from 'react';
 import { vi } from 'vitest';
 
@@ -152,9 +153,13 @@ describe('F5-2 dev task-first preview routes', () => {
     expect(negative?.querySelector('a[href*="DEV-RUN-020"]')).toBeNull();
   });
 
-  it('DevRunDetailPage passes unavailable current-source state into its workspace when version metadata is absent', async () => {
-    const buildSpy = vi.spyOn(workspaceModelModule, 'buildWorkspaceModel')
-      .mockResolvedValue({ model: { taskRef: 'TASK-CORE' } } as never);
+  it.each([
+    { digest: null, status: 'UNKNOWN', reason: 'CURRENT_SUBJECT_UNAVAILABLE' },
+    { digest: `sha256:${'e'.repeat(64)}`, status: 'DRIFTED', reason: 'SUBJECT_OR_GRAPH_VERSION_DRIFT' },
+  ])('DevRunDetailPage passes independent current-subject $status into the workspace', async ({ digest, status, reason }) => {
+    // Route wiring unit test; default committed-source integrity is tested separately.
+    const subjectSpy = vi.spyOn(currentSubjectModule, 'deriveCurrentFixtureSubjectDigest').mockReturnValue(digest);
+    const buildSpy = vi.spyOn(workspaceModelModule, 'buildWorkspaceModel');
     const replaySpy = vi.spyOn(replaySessionModule, 'createFixtureReplaySession').mockReturnValue(null);
     try {
       const tree = await DevRunDetailPage({
@@ -177,11 +182,16 @@ describe('F5-2 dev task-first preview routes', () => {
         return null;
       };
       const projection = findProjection(tree);
-      expect(projection?.status).toBe('UNKNOWN');
-      expect(projection?.reasonCode).toBe('CURRENT_SUBJECT_UNAVAILABLE');
-      expect(projection?.subjectDigest).toBeNull();
+      expect(subjectSpy).toHaveBeenCalledWith('DEV-RUN-006');
+      expect(buildSpy).toHaveBeenCalledWith('DEV-RUN-006', 'fixture', undefined);
+      expect(projection?.status).toBe(status);
+      expect(projection?.reasonCode).toBe(reason);
+      expect(projection?.subjectDigest).toBe(digest);
       expect(projection?.receiptSubjectDigest).toBeTruthy();
+      expect(projection?.authorityGranted).toBe(false);
+      expect(projection?.projectionEventsMutated).toBe(false);
     } finally {
+      subjectSpy.mockRestore();
       buildSpy.mockRestore();
       replaySpy.mockRestore();
     }

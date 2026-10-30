@@ -87,6 +87,22 @@ test.describe("DWO Fixture Preview R1 — Playwright evidence", () => {
     await page.screenshot({ path: resolve(evidenceDir, "dev-run-022-g5-waiting.png"), fullPage: true });
   });
 
+  test("Committed current source marks historical fixture receipts DRIFTED across routes", async ({ page }) => {
+    test.setTimeout(60_000);
+    // Admission requires committed/clean bound source; this is a CI/candidate-commit test.
+    for (const route of ['/runs/DEV-RUN-006', '/dev/runs/DEV-RUN-006', '/dev/runs/DEV-RUN-006/replay']) {
+      await page.goto(route);
+      await page.waitForLoadState('networkidle');
+      await expect(page.getByTestId('dev-fixture-indicator')).toContainText('DEV FIXTURE');
+      await expect(page.getByTestId('axis-qualification')).toHaveAttribute('data-value', 'DRIFTED');
+    }
+    await page.screenshot({ path: resolve(evidenceDir, 'current-subject-drift.png'), fullPage: true });
+    await page.goto('/dev/tasks/TASK-CORE/runs');
+    await page.waitForLoadState('networkidle');
+    const card = page.locator('.notion-run-card').filter({ hasText: 'DEV-RUN-005' });
+    await expect(card.getByTestId('axis-qualification')).toHaveAttribute('data-value', 'DRIFTED');
+  });
+
   test("DEV-RUN-020 is incompatible and has no replay link", async ({ page }) => {
     await page.goto("/tasks/TASK-CORE/runs");
     await page.waitForLoadState("networkidle");
