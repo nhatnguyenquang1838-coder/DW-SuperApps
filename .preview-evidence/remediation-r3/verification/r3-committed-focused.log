@@ -1,0 +1,30 @@
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.0.5 D:/Projects/DW-SuperApps.worktrees/dwo-langgraph-e2e-r1/projects/dw-observation
+
+(node:14000) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/unit/dwo/f5-fixture-dev-routes.test.ts  (15 tests) 21945ms
+hint: Using 'master' as the name for the initial branch. This default branch name
+hint: will change to "main" in Git 3.0. To configure the initial branch name
+hint: to use in all of your new repositories, which will suppress this warning,
+hint: call:
+hint:
+hint: 	git config --global init.defaultBranch <name>
+hint:
+hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+hint: 'development'. The just-created branch can be renamed via this command:
+hint:
+hint: 	git branch -m <name>
+hint:
+hint: Disable this message with "git config set advice.defaultBranchName false"
+warning: in the working copy of 'lib/dwo/currentFixtureSubject.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/dwo/reducer-identity.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/dwo/reducer-identity.json', LF will be replaced by CRLF the next time Git touches it
+ ✓ tests/unit/dwo/f5-current-fixture-subject.test.ts  (5 tests) 8409ms
+ ✓ tests/unit/dwo/ci-delivery-contract.test.ts  (9 tests) 23ms
+
+ Test Files  3 passed (3)
+      Tests  29 passed (29)
+   Start at  05:51:16
+   Duration  48.10s (transform 2.44s, setup 1.87s, collect 4.42s, tests 30.38s, environment 7.02s, prepare 1.47s)

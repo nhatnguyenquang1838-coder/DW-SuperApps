@@ -1,0 +1,22 @@
+{
+  "fresh_auto_session_without_resume": true,
+  "smokes_only_not_independent_review": true,
+  "routes": [
+    {
+      "profile": "bmad",
+      "session_id": "local-6bad8be9c2dc9d0212ace74deaeb084ec1f4cbdf36641691a409709aa4620b03",
+      "model": "gpt-6.1-sol",
+      "provider": "openai-codex",
+      "fallback_active": false,
+      "ended": true
+    },
+    {
+      "profile": "designer",
+      "session_id": "local-797d26d578488221ae9ded2919926e073a2921f4a02765caae165db336fcb28b",
+      "model": "gpt-6.1-sol",
+      "provider": "openai-codex",
+      "fallback_active": false,
+      "ended": true
+    }
+  ]
+}
