@@ -36,7 +36,11 @@ describe("F4 local fixture preview canonical routes", () => {
     expect(container.querySelector("a[href='/runs/DEV-RUN-001']")).toBeTruthy();
     const negative = [...container.querySelectorAll(".notion-run-card")]
       .find((card) => card.textContent?.includes("DEV-RUN-020"));
-    expect(negative?.querySelector("a[href*='DEV-RUN-020']")).toBeNull();
+    expect(negative?.querySelector("[data-testid='run-lifecycle-DEV-RUN-020']")?.textContent).toBe("INCOMPATIBLE");
+    expect(negative?.querySelector("[data-testid='axis-projection-sync-DEV-RUN-020']")?.getAttribute("data-value")).toBe("GAP");
+    expect(negative?.querySelector("[data-testid='replay-availability-DEV-RUN-020']")?.textContent).toBe("UNAVAILABLE");
+    expect(negative?.querySelector("a[data-testid='view-details-DEV-RUN-020']")?.getAttribute("href")).toBe("/runs/DEV-RUN-020");
+    expect(negative?.querySelector("a[href='/runs/DEV-RUN-020/replay']")).toBeNull();
   });
 
   it("/runs/[runId] materializes fixture data, receipt axis, and canonical replay link", async () => {

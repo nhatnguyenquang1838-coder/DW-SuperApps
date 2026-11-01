@@ -19,6 +19,7 @@ import RuntimeGraphCanvas from "./RuntimeGraphCanvas";
 import NodeInspector from "./NodeInspector";
 import NextFlowPanel from "./NextFlowPanel";
 import RuntimePlayer from "./RuntimePlayer";
+import ArtifactViewer from "./ArtifactViewer";
 
 type InspectorTab =
   | "overview"
@@ -68,6 +69,14 @@ export default function UnifiedRunWorkspace({
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>("overview");
   const [playerSpeed, setPlayerSpeed] = useState(750);
   const [playing, setPlaying] = useState(false);
+  const [hierarchyOpen, setHierarchyOpen] = useState(true);
+  const [inspectorOpen, setInspectorOpen] = useState(true);
+  const [artifact, setArtifact] = useState<{ runId: string; path: string; unavailableReason?: string } | null>(null);
+  const artifactTrigger = useRef<HTMLElement | null>(null);
+  const closeArtifact = useCallback(() => {
+    setArtifact(null);
+    requestAnimationFrame(() => artifactTrigger.current?.focus());
+  }, []);
 
   const controlled = replayCursor !== undefined;
   const len = replayTotal ?? model.orderedSteps.length;
@@ -109,13 +118,13 @@ export default function UnifiedRunWorkspace({
     };
   }, []);
 
-  const play = useCallback(() => {
-    if (timerRef.current) {
-      stopPlay();
+  useEffect(() => {
+    if (len <= 0) {
+      if (playing) stopPlay();
       return;
     }
-    setPlaying(true);
-    timerRef.current = setInterval(() => {
+    if (!playing) return;
+    const timer = setInterval(() => {
       if (controlled) {
         if (replayPosition.current >= len) { stopPlay(); return; }
         replayMove.current?.(Math.min(len, replayPosition.current + 1));
@@ -129,7 +138,16 @@ export default function UnifiedRunWorkspace({
         return c + 1;
       });
     }, playerSpeed);
-  }, [len, playerSpeed, stopPlay, controlled]);
+    timerRef.current = timer;
+    return () => {
+      clearInterval(timer);
+      if (timerRef.current === timer) timerRef.current = null;
+    };
+  }, [playing, playerSpeed, len, controlled, stopPlay]);
+
+  const play = useCallback(() => {
+    setPlaying((current) => !current);
+  }, []);
 
   const goTo = useCallback(
     (c: number) => {
@@ -152,9 +170,10 @@ export default function UnifiedRunWorkspace({
   }, [model.orderedSteps, controlled]);
 
   const handleOpenArtifact = useCallback((path: string, kind: string) => {
-    // Open artifact — delegate to inspector's click handler or modal
-    console.log(`[UnifiedRunWorkspace] open artifact: ${kind} ${path}`);
-  }, []);
+    if (kind !== "artifact") return;
+    artifactTrigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setArtifact({ runId: selectedNode?.id ?? model.runId, path, unavailableReason: model.mode === "SIMULATED" ? undefined : "Evidence content access is not configured for this data source." });
+  }, [model.runId, model.mode, selectedNode?.id]);
 
   const handleUserViewportInteract = useCallback(() => {
     setFollowCursor(false);
@@ -162,14 +181,15 @@ export default function UnifiedRunWorkspace({
 
   const handleModeChange = useCallback((m: WorkspaceMode) => {
     if (controlled) { stopPlay(); onReplayModeChange?.(m === "LIVE" ? "LIVE" : "REPLAY"); return; }
+    stopPlay();
     setMode(m);
-    setCursor(0);
     if (m === "LIVE") {
-      setPlaying(true);
-    } else {
-      stopPlay();
+      const tip = Math.max(0, model.orderedSteps.length - 1);
+      setCursor(tip);
+      const step = model.orderedSteps[tip];
+      if (step) setSelection({ kind: "node", id: step.nodeId });
     }
-  }, [stopPlay, controlled, onReplayModeChange]);
+  }, [stopPlay, controlled, onReplayModeChange, model.orderedSteps]);
 
   return (
     <div className="dwo-workspace" data-testid="unified-run-workspace">
@@ -182,7 +202,27 @@ export default function UnifiedRunWorkspace({
       <ScenarioRunRail model={model} selectedRunId={model.runId} onSelectRun={() => {}} />
 
       <div className="dwo-workspace-body">
-        <aside className="dwo-workspace-left" data-testid="workspace-left">
+        <div className="dwo-panel-toggles" aria-label="Workspace panels">
+          <button
+            type="button"
+            aria-controls="dwo-hierarchy-panel"
+            aria-expanded={hierarchyOpen}
+            aria-label={`${hierarchyOpen ? "Hide" : "Show"} hierarchy`}
+            onClick={() => setHierarchyOpen((open) => !open)}
+          >
+            {hierarchyOpen ? "Hide" : "Show"} hierarchy
+          </button>
+          <button
+            type="button"
+            aria-controls="dwo-inspector-panel"
+            aria-expanded={inspectorOpen}
+            aria-label={`${inspectorOpen ? "Hide" : "Show"} inspector`}
+            onClick={() => setInspectorOpen((open) => !open)}
+          >
+            {inspectorOpen ? "Hide" : "Show"} inspector
+          </button>
+        </div>
+        <aside id="dwo-hierarchy-panel" className="dwo-workspace-left" data-testid="workspace-left" hidden={!hierarchyOpen}>
           <RunHierarchy model={model} selectedId={selection.id} onSelect={handleSelectNode} />
           <NextFlowPanel model={model} />
         </aside>
@@ -200,6 +240,7 @@ export default function UnifiedRunWorkspace({
             />
           </ReactFlowProvider>
           <RuntimePlayer
+            fixturePreview={model.mode === "SIMULATED"}
             cursorIsPrefix={controlled}
             cursor={effectiveCursor}
             len={len}
@@ -218,14 +259,16 @@ export default function UnifiedRunWorkspace({
           />
         </main>
 
-        <aside className="dwo-workspace-right" data-testid="workspace-right">
+        <aside id="dwo-inspector-panel" className="dwo-workspace-right" data-testid="workspace-right" hidden={!inspectorOpen}>
           <NodeInspector
             node={selectedNode}
             activeTab={inspectorTab}
             onTabChange={setInspectorTab}
+            onOpen={handleOpenArtifact}
           />
         </aside>
       </div>
+      {artifact && <ArtifactViewer runId={artifact.runId} path={artifact.path} unavailableReason={artifact.unavailableReason} onClose={closeArtifact} />}
     </div>
   );
 }

@@ -95,7 +95,7 @@ export default async function DevRunReplayPage({ params }: { params: { runId: st
           />
         </div>
 
-        <ReplayPane runId={runId} events={events} />
+        <ReplayPane runId={runId} events={events} fixturePreview />
 
         <div className="mt-6">
           <Link

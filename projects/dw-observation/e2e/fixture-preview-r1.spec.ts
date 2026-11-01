@@ -103,13 +103,16 @@ test.describe("DWO Fixture Preview R1 — Playwright evidence", () => {
     await expect(card.getByTestId('axis-qualification')).toHaveAttribute('data-value', 'DRIFTED');
   });
 
-  test("DEV-RUN-020 is incompatible and has no replay link", async ({ page }) => {
+  test("DEV-RUN-020 keeps canonical incompatibility, safe detail link, and unavailable replay", async ({ page }) => {
     await page.goto("/tasks/TASK-CORE/runs");
     await page.waitForLoadState("networkidle");
     const card = page.locator(".notion-run-card").filter({ hasText: "DEV-RUN-020" });
-    await expect(card).toContainText("UNAVAILABLE");
-    await expect(card).toContainText("DEGRADED");
-    await expect(card.locator("a[href*='DEV-RUN-020']")).toHaveCount(0);
+    await expect(card.getByTestId("run-lifecycle-DEV-RUN-020")).toHaveText("INCOMPATIBLE");
+    await expect(card.getByTestId("axis-projection-sync-DEV-RUN-020")).toHaveAttribute("data-value", "GAP");
+    await expect(card.getByTestId("replay-availability-DEV-RUN-020")).toHaveText("UNAVAILABLE");
+    await expect(card.getByTestId("view-details-DEV-RUN-020")).toHaveAttribute("href", "/runs/DEV-RUN-020");
+    await expect(card.getByTestId("open-replay-DEV-RUN-020")).toHaveCount(0);
+    await expect(card.locator("a[href$='/replay']")).toHaveCount(0);
     await page.screenshot({ path: resolve(evidenceDir, "task-run-negative-020.png"), fullPage: true });
   });
 });

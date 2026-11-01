@@ -1,0 +1,20 @@
+.replay { display: grid; gap: 16px; color: var(--dwo-color-text-primary); }
+.header, .surface, .digest { min-width: 0; padding: 16px; border: 1px solid var(--dwo-color-border-default); border-radius: 10px; background: var(--dwo-color-bg-surface); }
+.header { display: grid; gap: 12px; }
+.header h2, .surface h3 { margin: 0; color: var(--dwo-color-text-primary); }
+.statusGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 10px; }
+.statusField { min-width: 0; min-height: 52px; display: grid; align-content: center; gap: 4px; padding: 8px 12px; border: 1px solid var(--dwo-color-border-default); border-radius: 8px; background: var(--dwo-color-bg-subtle); }
+.statusField span, .digest > span { color: var(--dwo-color-text-muted); font-size: 12px; }
+.statusField strong { overflow-wrap: anywhere; font-size: 13px; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px; border: 1px solid var(--dwo-color-border-default); border-radius: 10px; background: var(--dwo-color-bg-subtle); }
+.controlButton { min-height: 36px; padding: 6px 12px; color: var(--dwo-color-text-primary); background: var(--dwo-color-bg-surface); border: 1px solid var(--dwo-color-border-default); border-radius: 6px; cursor: pointer; }
+.controlButton:hover:not(:disabled) { background: var(--dwo-color-bg-canvas); }
+.controlButton:disabled { opacity: .55; cursor: not-allowed; }
+.controlButton:focus-visible, .scrubber:focus-visible { outline: 2px solid var(--dwo-color-accent-blue); outline-offset: 2px; }
+.scrubber { flex: 1 1 220px; min-width: 150px; min-height: 32px; accent-color: var(--dwo-color-accent-blue); }
+.digest { display: grid; gap: 8px; }
+.digest code { display: block; max-height: 8rem; overflow: auto; padding: 10px; border-radius: 6px; background: var(--dwo-color-bg-subtle); color: var(--dwo-color-text-primary); overflow-wrap: anywhere; font-size: 12px; }
+.surface { overflow-wrap: anywhere; }
+.surface ul, .surface ol { padding-inline-start: 20px; }
+.note { margin: 0; color: var(--dwo-color-text-muted); font-size: 12px; }
+@media (max-width: 600px) { .header, .surface, .digest { padding: 12px; } .controls { gap: 6px; } .controlButton { flex: 1 1 120px; } }

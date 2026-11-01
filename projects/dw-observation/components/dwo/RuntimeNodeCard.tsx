@@ -24,6 +24,9 @@ export default function RuntimeNodeCard({
   };
 }) {
   const { node, state, active, selected, boundary } = data;
+  const direction = (data as typeof data & { direction?: "LR" | "TD" }).direction ?? "LR";
+  const targetPosition = direction === "LR" ? Position.Left : Position.Top;
+  const sourcePosition = direction === "LR" ? Position.Right : Position.Bottom;
   return (
     <div
       className={`leg-node leg-node-${state.toLowerCase()}${selected ? " selected" : ""}`}
@@ -33,7 +36,7 @@ export default function RuntimeNodeCard({
       data-boundary={boundary}
       data-active={active ? "true" : "false"}
     >
-      <Handle type="target" position={Position.Left} />
+      <Handle type="target" position={targetPosition} />
       <div className="leg-node-top">
         <span>{node.family ?? "—"}</span>
         <span className="leg-state">{node.gateState ?? state.toUpperCase()}</span>
@@ -49,7 +52,7 @@ export default function RuntimeNodeCard({
         <span>{node.fileReads.length} rd</span>
         <span>{node.fileWrites.length} wr</span>
       </div>
-      <Handle type="source" position={Position.Right} />
+      <Handle type="source" position={sourcePosition} />
     </div>
   );
 }

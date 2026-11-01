@@ -7,6 +7,7 @@ import {
   Controls,
   MarkerType,
   useReactFlow,
+  useNodesInitialized,
   type Node as RFNode,
   type Edge as RFEdge,
   type NodeTypes,
@@ -16,55 +17,19 @@ import "@xyflow/react/dist/style.css";
 
 import type {
   UnifiedRunWorkspaceModel,
-  UnifiedRuntimeNode,
 } from "@/lib/runtime/unifiedRuntime";
 import { GATE_CHAIN } from "@/lib/loginEpicRuntimeGraph";
 import GateClusterNode from "./GateClusterNode";
 import RuntimeNodeCard from "./RuntimeNodeCard";
 import RuntimeEdge from "./RuntimeEdge";
 import MiniMap from "./MiniMap";
+import { computeRuntimeGraphLayout } from "./graphLayout";
 
 const nodeTypes: NodeTypes = {
   gateCluster: GateClusterNode,
   runtimeNode: RuntimeNodeCard,
 };
 const edgeTypes: EdgeTypes = { runtimeEdge: RuntimeEdge };
-
-/** Group flat nodes by gateId for canvas layout. */
-function groupByGate(
-  nodes: UnifiedRuntimeNode[],
-) {
-  const map = new Map<string, UnifiedRuntimeNode[]>();
-  for (const n of nodes) {
-    const gid = n.gateId ?? "ungated";
-    const arr = map.get(gid) ?? [];
-    arr.push(n);
-    map.set(gid, arr);
-  }
-  return map;
-}
-
-/** Compute a simple grid layout for gate clusters. */
-function computeLayout(
-  gateNodes: Map<string, UnifiedRuntimeNode[]>,
-) {
-  const GATE_W = 320;
-  const GATE_H = 64 + Math.max(1, ...Array.from(gateNodes.values(), nodes => nodes.length)) * 184;
-  const GAP_X = 20;
-  const GAP_Y = 20;
-  const gates = Array.from(gateNodes.entries());
-  const cols = Math.max(1, Math.ceil(Math.sqrt(gates.length)));
-  const positions: Record<string, { x: number; y: number }> = {};
-  gates.forEach(([gid], i) => {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    positions[gid] = {
-      x: col * (GATE_W + GAP_X),
-      y: row * (GATE_H + GAP_Y),
-    };
-  });
-  return { gates: positions, gateNodes };
-}
 
 export default function RuntimeGraphCanvas({
   model,
@@ -84,77 +49,35 @@ export default function RuntimeGraphCanvas({
   onUserViewportInteract: () => void;
 }) {
   const rf = useReactFlow();
+  const nodesInitialized = useNodesInitialized();
   const activeIndex = model.currentSequence ?? cursor;
-  const [dir, setDir] = useState<"LR" | "TD">(
-    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("dir") === "TD" ? "TD" : "LR",
-  );
-  const [form, setForm] = useState<"stack" | "grid">(
-    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("form") === "stack" ? "stack" : "grid",
-  );
+  const [dir, setDir] = useState<"LR" | "TD">("LR");
+  const [form, setForm] = useState<"stack" | "grid">("grid");
   const [group, setGroup] = useState(true);
 
-  const gateNodes = useMemo(() => groupByGate(model.nodes), [model.nodes]);
-  const layout = useMemo(() => computeLayout(gateNodes), [gateNodes]);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setDir(params.get("dir") === "TD" ? "TD" : "LR");
+    setForm(params.get("form") === "stack" ? "stack" : "grid");
+  }, []);
+
+  const layout = useMemo(() => computeRuntimeGraphLayout(model.nodes, { direction: dir, form, grouped: group }), [model.nodes, dir, form, group]);
 
   // Build React Flow nodes: gate boxes first, then node cards.
   const rfNodes: RFNode[] = useMemo(() => {
     const out: RFNode[] = [];
-    const pos = layout.gates;
-
-    for (const [gid, nodes] of layout.gateNodes) {
-      const p = pos[gid] ?? { x: 0, y: 0 };
-      const gateLabel = GATE_CHAIN.includes(gid as typeof GATE_CHAIN[number])
-        ? `${gid.replace(/_/g, " ")}`
-        : gid;
-      out.push({
-        id: `gate-${gid}`,
-        type: "gateCluster",
-        position: { x: p.x, y: p.y },
-        data: {
-          gateId: gid,
-          gateLabel,
-          gateSummary: "",
-          boundary: "",
-          headerH: 48,
-          nodeCount: nodes.length,
-          artifactCount: nodes.reduce((a, n) => a + n.artifacts.length, 0),
-          // A layout group is not itself an observed canonical gate instance.
-          state: "UNKNOWN",
-        },
-        draggable: false,
-        selectable: false,
-        zIndex: 0,
-        style: {
-          width: 320,
-          height: 64 + nodes.length * 184,
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.12)",
-          borderRadius: 12,
-        },
-      });
-
-      nodes.forEach((n) => {
-        const isActive = activeIndex >= 0 && model.orderedSteps[activeIndex]?.nodeId === n.id;
-        out.push({
-          id: n.id,
-          type: "runtimeNode",
-          position: { x: p.x + 16, y: p.y + 56 + nodes.indexOf(n) * 184 },
-          data: {
-            node: n,
-            state: n.gateState === "PASSED" ? "DONE" : n.gateState === "ACTIVE" ? "ACTIVE" : n.gateState === "WAITING" ? "WAITING" : n.gateState === "BLOCKED" ? "BLOCKED" : "UNKNOWN",
-            active: isActive,
-            selected: selection.kind === "node" && selection.id === n.id,
-            boundary: n.authorityBoundary ?? "",
-            onOpen: (path: string, kind: string) => onOpenArtifact(path, kind),
-          },
-          draggable: false,
-          selectable: true,
-          zIndex: 2,
-        });
-      });
+    if (group) for (const cluster of layout.groups) {
+      const nodes = model.nodes.filter((node) => cluster.nodeIds.includes(node.id));
+      const gateLabel = GATE_CHAIN.includes(cluster.id as typeof GATE_CHAIN[number]) ? cluster.id.replace(/_/g, " ") : cluster.id;
+      out.push({ id: `gate-${cluster.id}`, type: "gateCluster", position: { x: cluster.x, y: cluster.y }, data: { gateId: cluster.id, gateLabel, gateSummary: "", boundary: "", headerH: 48, nodeCount: nodes.length, artifactCount: nodes.reduce((a, n) => a + n.artifacts.length, 0), state: "UNKNOWN" }, draggable: false, selectable: false, zIndex: 0, style: { width: cluster.width, height: cluster.height, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12 } });
+    }
+    for (const n of model.nodes) {
+      const rect = layout.nodes[n.id];
+      const isActive = activeIndex >= 0 && model.orderedSteps[activeIndex]?.nodeId === n.id;
+      out.push({ id: n.id, type: "runtimeNode", position: { x: rect.x, y: rect.y }, data: { node: n, state: n.gateState === "PASSED" ? "DONE" : n.gateState === "ACTIVE" ? "ACTIVE" : n.gateState === "WAITING" ? "WAITING" : n.gateState === "BLOCKED" ? "BLOCKED" : "UNKNOWN", active: isActive, selected: selection.kind === "node" && selection.id === n.id, boundary: n.authorityBoundary ?? "", onOpen: (path: string, kind: string) => onOpenArtifact(path, kind), direction: dir }, draggable: false, selectable: true, zIndex: 2, style: { width: rect.width } });
     }
     return out;
-  }, [layout, activeIndex, selection, model.orderedSteps, onOpenArtifact]);
+  }, [layout, group, activeIndex, selection, model.nodes, model.orderedSteps, onOpenArtifact, dir]);
 
   // Build edges from unified model edges.
   const rfEdges: RFEdge[] = useMemo(() => {
@@ -190,67 +113,74 @@ export default function RuntimeGraphCanvas({
   const activeNodeId =
     activeIndex >= 0 ? model.orderedSteps[activeIndex]?.nodeId ?? null : null;
 
-  // Follow cursor: center viewport on the active node.
-  const programmaticMove = useRef(false);
   const prevActive = useRef<string | null>(null);
+  const previousLayout = useRef(`${dir}:${form}:${group}`);
   useEffect(() => {
-    if (!followCursor) return;
+    const nextLayout = `${dir}:${form}:${group}`;
+    if (previousLayout.current === nextLayout || !nodesInitialized) return;
+    previousLayout.current = nextLayout;
+    rf.fitView({ duration: 0, minZoom: 0.35, maxZoom: 1.1 });
+  }, [dir, form, group, nodesInitialized, rf]);
+  useEffect(() => {
+    if (!followCursor || !nodesInitialized) return;
     if (prevActive.current === activeNodeId) return;
     prevActive.current = activeNodeId;
     const node = rfNodes.find((n) => n.id === activeNodeId);
     if (node) {
-      programmaticMove.current = true;
-      rf.setCenter(node.position.x + 100, node.position.y + 60, { zoom: 0.8, duration: 400 });
-      const t = setTimeout(() => { programmaticMove.current = false; }, 480);
-      return () => clearTimeout(t);
+      rf.setCenter(node.position.x + 144, node.position.y + 80, { zoom: 0.9, duration: 0 });
     }
-  }, [followCursor, activeNodeId, rfNodes, rf]);
+  }, [followCursor, activeNodeId, rfNodes, rf, nodesInitialized]);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).closest(".dwo-layout-bar, .react-flow__node-runtimeNode")) return;
+    onUserViewportInteract();
+  };
 
   const onCenterGate = (gateId: string) => {
-    const g = layout.gates[gateId];
-    if (g) rf.setCenter(g.x + 160, g.y + 100, { zoom: 0.7, duration: 400 });
+    const g = layout.groups.find((item) => item.id === gateId);
+    if (g) rf.setCenter(g.x + g.width / 2, g.y + g.height / 2, { zoom: 0.7, duration: 400 });
   };
 
   return (
-    <div className="dwo-canvas-wrap" data-testid="runtime-graph-canvas">
+    <div className="dwo-canvas-wrap" data-testid="runtime-graph-canvas" data-follow-cursor={followCursor ? "true" : "false"} onPointerDownCapture={handlePointerDown} onWheelCapture={onUserViewportInteract}>
       <div className="dwo-layout-bar">
         <span className="dwo-layout-label">Layout</span>
         <button
           data-testid="layout-lr"
           className={dir === "LR" ? "on" : ""}
           onClick={() => setDir("LR")}
-        >LR</button>
+        aria-label="Layout left to right" aria-pressed={dir === "LR"}>LR</button>
         <button
           data-testid="layout-td"
           className={dir === "TD" ? "on" : ""}
           onClick={() => setDir("TD")}
-        >TD</button>
+        aria-label="Layout top to bottom" aria-pressed={dir === "TD"}>TD</button>
         <span className="dwo-layout-sep" />
         <button
           data-testid="layout-stack"
           className={form === "stack" ? "on" : ""}
           onClick={() => setForm("stack")}
-        >Stack</button>
+        aria-label="Stack layout" aria-pressed={form === "stack"}>Stack</button>
         <button
           data-testid="layout-grid"
           className={form === "grid" ? "on" : ""}
           onClick={() => setForm("grid")}
-        >Grid</button>
+        aria-label="Grid layout" aria-pressed={form === "grid"}>Grid</button>
         <span className="dwo-layout-sep" />
         <button
           data-testid="layout-group"
           className={group ? "on" : ""}
           onClick={() => setGroup((v) => !v)}
-        >Group</button>
+        aria-label="Group nodes by gate" aria-pressed={group}>Group</button>
       </div>
 
       <ReactFlow
+
         nodes={rfNodes}
         edges={rfEdges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        fitView
-        minZoom={0.15}
+        minZoom={0.35}
         maxZoom={2}
         nodesDraggable={false}
         nodesConnectable={false}
@@ -258,9 +188,9 @@ export default function RuntimeGraphCanvas({
         onNodeClick={(_, n) => {
           if (n.type === "runtimeNode") onSelectNode(n.id);
         }}
-        onMoveStart={(_, viewport) => {
-          if (!viewport) return;
-          if (programmaticMove.current === false) onUserViewportInteract();
+        onMoveStart={(event) => {
+          // React Flow supplies no input event for programmatic viewport moves.
+          if (event) onUserViewportInteract();
         }}
         proOptions={{ hideAttribution: true }}
       >

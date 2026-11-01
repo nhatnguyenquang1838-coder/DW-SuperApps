@@ -1,0 +1,34 @@
+.axes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--dwo-color-border-default);
+  min-width: 0;
+}
+
+.axis {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 5px 9px;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--dwo-color-border-default);
+  border-radius: 7px;
+  background: var(--dwo-color-bg-surface);
+}
+
+.label { flex: 1 0 100%; font-size: 12px; line-height: 1.4; color: var(--dwo-color-text-muted); }
+.value { display: inline-flex; width: fit-content; max-width: 100%; padding: 2px 7px; border: 1px solid var(--dwo-color-border-default); border-radius: 5px; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+.value[data-status="QUALIFIED"], .value[data-status="LIVE"] { color: var(--dwo-color-state-green); }
+.value[data-status="DRIFTED"], .value[data-status="DEGRADED"], .value[data-status="GAP"], .value[data-status="SYNCING"] { color: var(--dwo-color-state-amber); }
+.value[data-status="FAILED"] { color: var(--dwo-color-state-red); }
+.guidance { flex: 1 1 100%; min-width: 0; font-size: 12px; line-height: 1.5; color: var(--dwo-color-text-muted); overflow-wrap: anywhere; }
+.provenance { display: grid; gap: 3px; flex: 1 1 100%; min-width: 0; margin-top: 3px; padding-top: 7px; border-top: 1px solid var(--dwo-color-border-default); }
+.provenanceLabel { font-size: 11px; color: var(--dwo-color-text-muted); }
+.provenance code { display: block; min-width: 0; font: 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; color: var(--dwo-color-text-primary); overflow-wrap: anywhere; word-break: break-word; }
+
+@media (max-width: 600px) {
+  .axes { grid-template-columns: minmax(0, 1fr); padding-inline: 10px; }
+}

@@ -15,6 +15,7 @@ interface NodeInspectorProps {
   node: UnifiedRuntimeNode | null;
   activeTab: InspectorTab;
   onTabChange: (tab: InspectorTab) => void;
+  onOpen?: (path: string, kind: string) => void;
 }
 
 const TABS: { id: InspectorTab; label: string }[] = [
@@ -48,15 +49,17 @@ function FieldWithChildren({ label, children }: { label: string; children: React
 function ClickList({
   paths,
   kind,
+  onOpen,
 }: {
   paths: string[];
   kind: string;
+  onOpen?: (path: string, kind: string) => void;
 }) {
   if (!paths.length) return <div className="dwo-unknown">No entries.</div>;
   return (
     <div className="dwo-click-list">
       {paths.map((p) => (
-        <button key={p} className="dwo-open-btn" data-kind={kind}>
+        <button key={p} className="dwo-open-btn" data-kind={kind} disabled={!onOpen} title={!onOpen ? "Content viewer unavailable for this reference" : undefined} onClick={() => onOpen?.(p, kind)}>
           {p}
         </button>
       ))}
@@ -64,8 +67,8 @@ function ClickList({
   );
 }
 
-function EventList({ events }: { events: unknown[] }) {
-  if (!events.length) return <div className="dwo-unknown">No events.</div>;
+function EventList({ events, emptyText = "No events." }: { events: unknown[]; emptyText?: string }) {
+  if (!events.length) return <div className="dwo-unknown">{emptyText}</div>;
   return (
     <>
       {events.map((e, i) => (
@@ -77,7 +80,7 @@ function EventList({ events }: { events: unknown[] }) {
   );
 }
 
-export default function NodeInspector({ node, activeTab, onTabChange }: NodeInspectorProps) {
+export default function NodeInspector({ node, activeTab, onTabChange, onOpen }: NodeInspectorProps) {
   if (!node) {
     return (
       <div className="dwo-inspector" data-testid="node-inspector" data-state="empty">
@@ -99,6 +102,13 @@ export default function NodeInspector({ node, activeTab, onTabChange }: NodeInsp
       </div>
     );
   }
+
+  const hasNoCanonicalSourceContract = node.rawEvidence?.some(
+    (evidence) => evidence.classification.reason === "NO_CANONICAL_SOURCE_CONTRACT",
+  ) ?? false;
+  const unavailableContractReason = hasNoCanonicalSourceContract
+    ? " — no canonical source contract is available."
+    : ".";
 
   return (
     <div className="dwo-inspector" data-testid="node-inspector" data-state="loaded">
@@ -129,14 +139,23 @@ export default function NodeInspector({ node, activeTab, onTabChange }: NodeInsp
 
       {/* Overview */}
       {activeTab === "overview" && (
-        <div className="dwo-inspector-pane" data-pane="overview">
-          <Field label="Gate" value={node.gateId ?? "UNKNOWN"} />
-          <Field label="Gate state" value={node.gateState ?? "UNKNOWN"} />
-          <Field label="Family / Node type" value={`${node.family ?? "—"} / ${node.nodeType ?? "—"}`} />
-          <Field label="Authority boundary" value={node.authorityBoundary ?? "UNKNOWN"} />
-          <Field label="Source status / maturity" value={`${node.sourceStatus ?? "—"} / ${node.maturity ?? "—"}`} />
-          <Field label="Declared gates" value={node.declaredGates.length ? node.declaredGates.join(", ") : "—"} />
-          <Field label="Purpose" value={node.purpose ?? "—"} />
+        <div className="dwo-inspector-pane" data-pane="overview" data-testid="inspector-overview">
+          <section className="dwo-inspector-group" aria-labelledby="inspector-state-heading">
+            <h3 id="inspector-state-heading" className="dwo-inspector-group-title">State</h3>
+            <Field label="Gate" value={node.gateId ?? "UNKNOWN"} />
+            <Field label="Gate state" value={node.gateState ?? "UNKNOWN"} />
+          </section>
+          <section className="dwo-inspector-group" aria-labelledby="inspector-provenance-heading">
+            <h3 id="inspector-provenance-heading" className="dwo-inspector-group-title">Provenance</h3>
+            <Field label="Family / Node type" value={`${node.family ?? "—"} / ${node.nodeType ?? "—"}`} />
+            <Field label="Authority boundary" value={node.authorityBoundary ?? "UNKNOWN"} />
+            <Field label="Source status / maturity" value={`${node.sourceStatus ?? "—"} / ${node.maturity ?? "—"}`} />
+            <Field label="Declared gates" value={node.declaredGates.length ? node.declaredGates.join(", ") : "—"} />
+          </section>
+          <section className="dwo-inspector-group" aria-labelledby="inspector-evidence-heading">
+            <h3 id="inspector-evidence-heading" className="dwo-inspector-group-title">Evidence</h3>
+            <Field label="Purpose" value={node.purpose ?? "—"} />
+          </section>
         </div>
       )}
 
@@ -145,9 +164,11 @@ export default function NodeInspector({ node, activeTab, onTabChange }: NodeInsp
         <div className="dwo-inspector-pane" data-pane="files">
           <FieldWithChildren label="Reads">
             <ClickList paths={node.fileReads} kind="read" />
+            <span className="dwo-unknown">File reads are not fixture evidence and cannot be opened here.</span>
           </FieldWithChildren>
           <FieldWithChildren label="Writes">
             <ClickList paths={node.fileWrites} kind="write" />
+            <span className="dwo-unknown">File write references are read-only metadata; content access is unavailable.</span>
           </FieldWithChildren>
         </div>
       )}
@@ -155,7 +176,7 @@ export default function NodeInspector({ node, activeTab, onTabChange }: NodeInsp
       {/* Artifacts */}
       {activeTab === "artifacts" && (
         <div className="dwo-inspector-pane" data-pane="artifacts">
-          <ClickList paths={node.artifacts} kind="artifact" />
+          <ClickList paths={node.artifacts} kind="artifact" onOpen={onOpen} />
         </div>
       )}
 
@@ -169,7 +190,7 @@ export default function NodeInspector({ node, activeTab, onTabChange }: NodeInsp
               </div>
             ))
           ) : (
-            <div className="dwo-unknown">No runbook entries</div>
+            <div className="dwo-unknown">Runbook unavailable{unavailableContractReason}</div>
           )}
         </div>
       )}
@@ -179,8 +200,10 @@ export default function NodeInspector({ node, activeTab, onTabChange }: NodeInsp
         <div className="dwo-inspector-pane" data-pane="history">
           <h4 className="dwo-h3">TaskController History</h4>
           <EventList events={node.taskControllerHistory} />
+          {!node.taskControllerHistory.length && <div className="dwo-unknown">TaskController history unavailable{unavailableContractReason}</div>}
           <h4 className="dwo-h3">Executor History</h4>
           <EventList events={node.executorHistory} />
+          {!node.executorHistory.length && <div className="dwo-unknown">Executor history unavailable{unavailableContractReason}</div>}
         </div>
       )}
 
@@ -190,7 +213,10 @@ export default function NodeInspector({ node, activeTab, onTabChange }: NodeInsp
           {node.checkpoints.length ? (
             <EventList events={node.checkpoints} />
           ) : (
-            <div className="dwo-unknown">No checkpoints</div>
+            <>
+              <div className="dwo-unknown">No checkpoints</div>
+              <div className="dwo-unknown">Checkpoints unavailable{unavailableContractReason}</div>
+            </>
           )}
         </div>
       )}

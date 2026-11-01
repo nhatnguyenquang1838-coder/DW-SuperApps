@@ -998,3 +998,108 @@ a {
 .dwo-raw { font-size: 10px; white-space: pre-wrap; background: var(--dwo-color-bg-subtle); padding: 8px; border-radius: 6px; color: var(--dwo-color-text-muted); }
 
 .dwo-unknown { color: var(--dwo-color-text-faint); font-style: italic; }
+
+/* DWO workspace legibility and responsive investigative layout. */
+.dwo-workspace {
+  width: 100%;
+  min-width: 0;
+  container-name: dwo-workspace;
+  container-type: inline-size;
+}
+.dwo-workspace-body {
+  grid-template-columns: minmax(0, 240px) minmax(0, 1fr) minmax(0, 320px);
+  min-width: 0;
+  min-height: 0;
+}
+.dwo-panel-toggles {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--dwo-color-border-default);
+  background: var(--dwo-color-bg-subtle);
+}
+.dwo-panel-toggles button {
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid var(--dwo-color-border-default);
+  border-radius: 6px;
+  background: var(--dwo-color-bg-surface);
+  color: var(--dwo-color-text-primary);
+  font-size: 13px;
+  cursor: pointer;
+}
+.dwo-workspace-left,
+.dwo-workspace-right,
+.dwo-workspace-center { min-width: 0; }
+.dwo-workspace-center { min-height: 0; }
+.dwo-workspace-center[hidden],
+.dwo-workspace-left[hidden],
+.dwo-workspace-right[hidden] { display: none; }
+.dwo-canvas-wrap { flex: none; height: clamp(360px, 62vh, 680px); min-height: 0; }
+.dwo-canvas-wrap > .react-flow { flex: 1 1 auto; min-width: 0; }
+.dwo-layout-bar { flex-wrap: wrap; }
+.dwo-layout-label,
+.dwo-layout-bar button,
+.dwo-zoombar button,
+.dwo-inspector-tab { font-size: 13px; }
+.dwo-layout-bar button,
+.dwo-zoombar button,
+.dwo-inspector-tab,
+.dwo-open-btn,
+.dwo-player-btn { min-height: 32px; }
+.dwo-inspector-pane { font-size: 14px; line-height: 1.5; }
+.dwo-inspector-label { font-size: 12px; color: var(--dwo-color-text-muted); line-height: 1.4; }
+.dwo-inspector-value { font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.dwo-inspector-group { padding: 8px 0; border-bottom: 1px solid var(--dwo-color-border-default); }
+.dwo-inspector-group-title { margin: 0 0 8px; color: var(--dwo-color-text-primary); font-size: 13px; font-weight: 650; }
+.dwo-inspector-field { margin-bottom: 10px; }
+.dwo-inspector-id,
+.dwo-inspector-meta,
+.dwo-nextflow-reason,
+.dwo-nextflow-blocker { font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.dwo-inspector-tab { padding: 5px 9px; }
+.dwo-click-list { gap: 6px; }
+.dwo-open-btn { font-size: 13px; padding: 5px 9px; overflow-wrap: anywhere; }
+.dwo-unknown { color: var(--dwo-color-text-muted); }
+.dwo-canvas-wrap button:focus-visible,
+.dwo-panel-toggles button:focus-visible,
+.dwo-inspector button:focus-visible,
+.dwo-player button:focus-visible,
+.dwo-workspace select:focus-visible {
+  outline: 2px solid var(--dwo-color-accent-blue);
+  outline-offset: 2px;
+}
+.dwo-canvas-wrap .leg-node { width: 288px; min-height: 156px; max-height: none; height: auto; }
+.dwo-canvas-wrap .leg-node-title { font-size: 15px; line-height: 1.35; }
+.dwo-canvas-wrap .leg-node-id,
+.dwo-canvas-wrap .leg-node-top,
+.dwo-canvas-wrap .leg-node-purpose,
+.dwo-canvas-wrap .leg-node-boundary,
+.dwo-canvas-wrap .leg-node-meta { font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
+.dwo-player-controls, .dwo-player-selects { flex-wrap: wrap; min-width: 0; }
+.dwo-player-btn, .dwo-player-scrub-info, .dwo-player-selects select { font-size: 13px; }
+.dwo-player-selects select { min-height: 32px; max-width: 100%; }
+.dwo-player-scrub { min-width: min(180px, 100%); }
+.dwo-player-scrub-info { gap: 8px; overflow-wrap: anywhere; }
+.dwo-scenario-rail { flex-wrap: wrap; overflow-wrap: anywhere; }
+.dwo-canvas-wrap .react-flow__controls-button { width: 32px; height: 32px; background: var(--dwo-color-bg-subtle); border-color: var(--dwo-color-border-default); color: var(--dwo-color-text-primary); fill: currentColor; }
+.dwo-canvas-wrap .react-flow__controls-button:hover { background: var(--dwo-color-bg-surface); }
+.dwo-canvas-wrap .react-flow__controls-button:focus-visible { outline: 2px solid var(--dwo-color-accent-blue); outline-offset: 2px; }
+
+/* Width is measured at the workspace itself, not the outer app viewport. */
+@container dwo-workspace (max-width: 1024px) {
+  .dwo-workspace-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dwo-workspace-center { grid-column: 1 / -1; grid-row: 2; }
+  .dwo-workspace-left,
+  .dwo-workspace-right { grid-row: 3; }
+  .dwo-canvas-wrap { height: clamp(400px, 64vh, 720px); }
+}
+@container dwo-workspace (max-width: 620px) {
+  .dwo-workspace-body { grid-template-columns: minmax(0, 1fr); }
+  .dwo-workspace-center { grid-column: 1; }
+  .dwo-workspace-left,
+  .dwo-workspace-right { grid-column: 1; grid-row: auto; }
+  .dwo-canvas-wrap { height: clamp(360px, 58vh, 620px); }
+}

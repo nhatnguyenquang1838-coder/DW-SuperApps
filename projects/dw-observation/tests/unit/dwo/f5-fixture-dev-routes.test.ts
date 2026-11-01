@@ -148,9 +148,12 @@ describe('F5-2 dev task-first preview routes', () => {
       .find((card) => card.textContent?.includes('DEV-RUN-020'));
     expect(negative).toBeTruthy();
     expect(negative?.textContent).toContain('UNAVAILABLE');
-    expect(negative?.textContent).toContain('Projection SyncDEGRADED');
+    expect(negative?.querySelector('[data-testid="run-lifecycle-DEV-RUN-020"]')?.textContent).toBe('INCOMPATIBLE');
+    expect(negative?.querySelector('[data-testid="axis-projection-sync-DEV-RUN-020"]')?.getAttribute('data-value')).toBe('GAP');
+    expect(negative?.querySelector('[data-testid="replay-availability-DEV-RUN-020"]')?.textContent).toBe('UNAVAILABLE');
+    expect(negative?.querySelector('a[data-testid="view-details-DEV-RUN-020"]')?.getAttribute('href')).toBe('/dev/runs/DEV-RUN-020');
     expect(negative?.textContent).not.toContain('Projection SyncLIVE');
-    expect(negative?.querySelector('a[href*="DEV-RUN-020"]')).toBeNull();
+    expect(negative?.querySelector('a[href="/dev/runs/DEV-RUN-020/replay"]')).toBeNull();
   });
 
   it.each([

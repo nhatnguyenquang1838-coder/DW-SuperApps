@@ -42,7 +42,7 @@ export function projectFixtureReplayView(
     return { ...node, gateId: facts.gate, gateState: facts.gateState,
       sourceStatus: facts.sourceProfile === "UNKNOWN" ? "UNKNOWN" : "ACTIVE",
       fileReads: [], fileWrites: [], artifacts: [], runbook: [],
-      taskControllerHistory: [], executorHistory: [], checkpoints: [] };
+      taskControllerHistory: [], executorHistory: [], checkpoints: [], rawEvidence: [] };
   });
   const orderedSteps = prefix.map((event, sequence) => ({ nodeId: String(event.run_id), sequence }));
   const terminal = prefix.filter((event) => event.run_id === model.runId).map((event) => event.gate_state)

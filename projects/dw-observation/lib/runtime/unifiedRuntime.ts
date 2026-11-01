@@ -17,6 +17,13 @@ export type RuntimeNodeState =
   | "WAITING"
   | "UNKNOWN";
 
+export interface RuntimeRawEvidence {
+  sourcePath: string;
+  content: string;
+  record: unknown;
+  classification: { readonly kind: "raw"; readonly reason: "NO_CANONICAL_SOURCE_CONTRACT" };
+}
+
 export interface UnifiedRuntimeNode {
   id: string;
   gateId: string | null;
@@ -41,6 +48,8 @@ export interface UnifiedRuntimeNode {
   taskControllerHistory: unknown[];
   executorHistory: unknown[];
   checkpoints: unknown[];
+  /** Full source bytes retained without unsupported semantic classification. */
+  rawEvidence?: RuntimeRawEvidence[];
 }
 
 export interface UnifiedRuntimeEdge {

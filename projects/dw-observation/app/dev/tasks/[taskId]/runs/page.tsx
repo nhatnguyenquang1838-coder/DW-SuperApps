@@ -19,6 +19,8 @@ import { deriveCurrentFixtureSubjectDigest } from '@/lib/dwo/currentFixtureSubje
 import type { QualificationProjection } from '@/lib/dwo/qualificationProjection';
 import RunStatusAxes from '@/components/dwo/RunStatusAxes';
 import { isLocalFixturePreview } from '@/lib/dwo/fixturePreviewMode';
+import { buildWorkspaceModel } from '@/lib/runtime/buildWorkspaceModel';
+import type { ProjectionSyncStatus } from '@/lib/dwo/qualificationProjection';
 
 type RunRow = {
   runId: string;
@@ -26,21 +28,21 @@ type RunRow = {
   sourceSystem: string | null;
   startedAt: string | null;
   totalEvents: number;
-  synchronized: boolean;
   replayAvailable: boolean;
+  projectionSync: ProjectionSyncStatus;
   qualification: QualificationProjection;
 };
 
 function FixtureStatusAxes({
   qualification,
-  replayAvailable,
+  projectionSync,
 }: {
   qualification: QualificationProjection;
-  replayAvailable: boolean;
+  projectionSync: ProjectionSyncStatus;
 }) {
   return (
     <RunStatusAxes
-      projectionSync={replayAvailable ? 'LIVE' : 'DEGRADED'}
+      projectionSync={projectionSync}
       view="CURRENT"
       qualification={qualification}
     />
@@ -60,6 +62,7 @@ export default async function DevTaskRunsPage({ params }: { params: { taskId: st
   const rows: RunRow[] = [];
   for (const runId of rel.rootRunIds) {
     const session = createFixtureReplaySession(runId);
+    const { model } = await buildWorkspaceModel(runId, 'fixture');
     const receipt = loadFixtureQualificationReceipt(runId);
     const qualification = fixtureReceiptToProjection(
       runId,
@@ -68,12 +71,12 @@ export default async function DevTaskRunsPage({ params }: { params: { taskId: st
     );
     rows.push({
       runId,
-      status: session ? 'LIVE' : 'UNAVAILABLE',
-sourceSystem: 'fixture',
+      status: model.status,
+      sourceSystem: 'fixture',
       startedAt: session?.frame.projection.startedAt ?? null,
-      totalEvents: session?.total ?? 0,
-      synchronized: session?.synchronized ?? false,
-      replayAvailable: session !== null,
+      totalEvents: model.orderedSteps.length,
+      replayAvailable: model.canonicalHistoryAvailable,
+      projectionSync: model.projectionSyncState ?? 'GAP',
       qualification,
     });
   }
@@ -156,7 +159,7 @@ sourceSystem: 'fixture',
                 <dl className="mt-2 grid grid-cols-2 gap-2 text-xs">
                   <div>
                     <dt style={{ color: 'var(--dwo-color-text-faint)' }}>Status</dt>
-                    <dd style={{ color: 'var(--dwo-color-text-primary)' }}>{r.status}</dd>
+                    <dd style={{ color: 'var(--dwo-color-text-primary)' }} data-testid={`run-lifecycle-${r.runId}`}>{r.status}</dd>
                   </div>
                   <div>
                     <dt style={{ color: 'var(--dwo-color-text-faint)' }}>Started</dt>
@@ -167,20 +170,29 @@ sourceSystem: 'fixture',
                     <dd style={{ color: 'var(--dwo-color-text-primary)' }}>{r.totalEvents}</dd>
                   </div>
                   <div>
-                    <dt style={{ color: 'var(--dwo-color-text-faint)' }}>Synced</dt>
-                    <dd style={{ color: 'var(--dwo-color-text-primary)' }}>{r.synchronized ? 'yes' : 'no'}</dd>
+                    <dt style={{ color: 'var(--dwo-color-text-faint)' }}>Replay availability</dt>
+                    <dd style={{ color: 'var(--dwo-color-text-primary)' }} data-testid={`replay-availability-${r.runId}`}>{r.replayAvailable ? 'AVAILABLE' : 'UNAVAILABLE'}</dd>
                   </div>
                 </dl>
 
                 <div className="mt-3">
-                  <FixtureStatusAxes qualification={r.qualification} replayAvailable={r.replayAvailable} />
+                  <div data-testid={`axis-projection-sync-${r.runId}`} data-value={r.projectionSync}>
+                    <FixtureStatusAxes qualification={r.qualification} projectionSync={r.projectionSync} />
+                  </div>
                 </div>
 
                 <div className="mt-3">
+                  <Link
+                    href={`${runBasePath}/${encodeURIComponent(r.runId)}`}
+                    className="notion-link-btn inline-block rounded border px-3 py-1.5 text-sm transition-colors"
+                    data-testid={`view-details-${r.runId}`}
+                  >
+                    View details →
+                  </Link>
                   {r.replayAvailable ? (
                     <a
-                      href={`${runBasePath}/${encodeURIComponent(r.runId)}`}
-                      className="notion-link-btn inline-block rounded border px-3 py-1.5 text-sm transition-colors"
+                      href={`${runBasePath}/${encodeURIComponent(r.runId)}/replay`}
+                      className="notion-link-btn ml-2 inline-block rounded border px-3 py-1.5 text-sm transition-colors"
                       data-testid={`open-replay-${r.runId}`}
                     >
                       Open replay →

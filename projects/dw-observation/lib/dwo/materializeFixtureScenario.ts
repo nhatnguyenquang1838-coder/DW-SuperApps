@@ -20,6 +20,8 @@ import type {
 } from "../runtime/unifiedRuntime";
 import { reduceEventPrefix, type ReducerEvent } from "./reducer";
 import type { AuthorityState } from "./authorityVocabulary";
+import { classifyEvidenceSource } from "./evidenceClassification";
+import type { RuntimeRawEvidence } from "../runtime/unifiedRuntime";
 import {
   FIXTURE_CATALOG,
   DEV_RUN_020,
@@ -143,15 +145,17 @@ function evidenceFilesForRun(runId: string): string[] {
   return files;
 }
 
-function loadEvidenceRecords(runId: string): unknown[] {
+function loadEvidenceRecords(runId: string): RuntimeRawEvidence[] {
   const files = evidenceFilesForRun(runId);
   const fs = _ensureFs();
   if (!fs) return [];
-  const records: unknown[] = [];
+  const records: RuntimeRawEvidence[] = [];
   for (const file of files) {
     try {
       const raw = fs.readFileSync(_join(FIXTURE_PACK, "evidence", file), "utf-8");
-      records.push(JSON.parse(raw));
+      const sourcePath = file.replace(/\\/g, "/");
+      const record: unknown = JSON.parse(raw);
+      records.push({ sourcePath, content: raw, record, classification: classifyEvidenceSource({ sourcePath, content: raw, record }) });
     } catch {
       continue;
     }
@@ -248,7 +252,7 @@ function assertCompleteCatalogEntry(
 function buildRuntimeNode(
   entry: (typeof FIXTURE_CATALOG)[number],
   evidenceFiles: string[] = [],
-  evidenceRecords: unknown[] = []
+  evidenceRecords: RuntimeRawEvidence[] = []
 ): UnifiedRuntimeNode {
   const projection: FixtureProjection = resolveFixtureProjection(entry);
 
@@ -268,10 +272,11 @@ function buildRuntimeNode(
     fileReads: evidenceFiles.length > 0 ? evidenceFiles : [],
     fileWrites: [],
     artifacts: evidenceFiles,
-    runbook: evidenceRecords.map((r) => JSON.stringify(r)),
-    taskControllerHistory: evidenceRecords,
-    executorHistory: evidenceRecords,
-    checkpoints: evidenceRecords,
+    runbook: [],
+    taskControllerHistory: [],
+    executorHistory: [],
+    checkpoints: [],
+    rawEvidence: evidenceRecords,
   };
 }
 

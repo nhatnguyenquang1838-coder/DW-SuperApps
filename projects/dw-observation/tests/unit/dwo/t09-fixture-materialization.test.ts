@@ -311,10 +311,11 @@ describe("T09-6: evidence from fixture pack", () => {
           node.artifacts.length,
           `${node.id}: artifacts should be populated from fixture pack evidence`
         ).toBeGreaterThan(0);
-        expect(
-          node.executorHistory.length,
-          `${node.id}: executorHistory should be populated`
-        ).toBeGreaterThan(0);
+        expect(node.runbook, `${node.id}: no runbook source contract is available`).toEqual([]);
+        expect(node.taskControllerHistory, `${node.id}: no TaskController history source contract is available`).toEqual([]);
+        expect(node.executorHistory, `${node.id}: no Executor history source contract is available`).toEqual([]);
+        expect(node.checkpoints, `${node.id}: no checkpoint source contract is available`).toEqual([]);
+        expect(node.rawEvidence?.length, `${node.id}: raw source evidence must be preserved`).toBeGreaterThan(0);
         expect(
           node.artifacts,
           `${node.id}: artifacts should reference evidence files`
