@@ -169,19 +169,22 @@ Deno.serve(async (req: Request) => {
       typed_next: event.runtime?.typed_next ?? null,
       source_sha: event.source.sha,
     };
-    let broadcastStatus = "DEGRADED";
-    const channel = supabase.channel(`observatory:${event.run_id}`);
-    try {
-      const result = await channel.send({
-        type: "broadcast",
-        event: "projection_event",
-        payload: projectionPayload,
-      });
-      broadcastStatus = String(result).toUpperCase();
-    } catch (broadcastError) {
-      console.warn("dwo-observation-broadcast", broadcastError instanceof Error ? broadcastError.message : "UNKNOWN");
-    } finally {
-      try { await supabase.removeChannel(channel); } catch { /* best-effort cleanup */ }
+    let broadcastStatus = "IDEMPOTENT_NOOP";
+    if (!receipt.idempotent_replay) {
+      broadcastStatus = "DEGRADED";
+      const channel = supabase.channel(`observatory:${event.run_id}`);
+      try {
+        const result = await channel.send({
+          type: "broadcast",
+          event: "projection_event",
+          payload: projectionPayload,
+        });
+        broadcastStatus = String(result).toUpperCase();
+      } catch (broadcastError) {
+        console.warn("dwo-observation-broadcast", broadcastError instanceof Error ? broadcastError.message : "UNKNOWN");
+      } finally {
+        try { await supabase.removeChannel(channel); } catch { /* best-effort cleanup */ }
+      }
     }
 
     const created = Math.floor(Date.now() / 1000);
