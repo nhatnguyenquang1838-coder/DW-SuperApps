@@ -4,11 +4,18 @@ import path from "node:path";
 
 const root = path.resolve(__dirname, "..", "..", "..");
 const baseMigrationPath = path.join(root, "supabase", "migrations", "20261103150000_gwc_observation_v2_ingest.sql");
-const finalMigrationPath = path.join(root, "supabase", "migrations", "20261103160000_native_read_model_dynamic_source.sql");
+const finalMigrationPath = path.join(root, "supabase", "migrations", "20261103161000_finalize_native_observation_contract.sql");
+const cleanupMigrationPath = path.join(root, "supabase", "migrations", "20261103162000_remove_legacy_observation_rpc.sql");
+const indexMigrationPath = path.join(root, "supabase", "migrations", "20261103163000_native_read_model_indexes.sql");
+const verifyPath = path.join(root, "scripts", "verify-native-observation-db.sql");
 const edgePath = path.join(root, "supabase", "functions", "dwo-observation-ingest-v2", "index.ts");
 const profilePath = path.join(root, "project-profile.yaml");
+
 const baseSql = fs.readFileSync(baseMigrationPath, "utf8").toLowerCase();
 const finalSql = fs.readFileSync(finalMigrationPath, "utf8").toLowerCase();
+const cleanupSql = fs.readFileSync(cleanupMigrationPath, "utf8").toLowerCase();
+const indexSql = fs.readFileSync(indexMigrationPath, "utf8").toLowerCase();
+const verifySql = fs.readFileSync(verifyPath, "utf8").toLowerCase();
 const edge = fs.readFileSync(edgePath, "utf8");
 const profile = fs.readFileSync(profilePath, "utf8");
 
@@ -23,7 +30,23 @@ describe("GWC v2 native observation ingest contract", () => {
     expect(baseSql).toContain("secret_hash");
   });
 
-  it("keeps browser roles away from ingest/raw state and grants final RPC only to service_role", () => {
+  it("final migration is restart-safe, source-bound and self-healing", () => {
+    expect(finalSql).toContain("pg_advisory_xact_lock");
+    expect(finalSql).toContain("accepted_source_id");
+    expect(finalSql).toContain("p_source_id text");
+    expect(finalSql).toContain("and b.source_id = p_source_id");
+    expect(finalSql).toContain("event_source_id_conflict");
+    expect(finalSql).toContain("source_sequence_gap");
+    expect(finalSql).toContain("insert into public.run_gates");
+    expect(finalSql).toContain("insert into public.run_nodes");
+    expect(finalSql).toContain("insert into public.projection_events");
+    expect(finalSql).toContain("_materialize_gwc_observation_read_model_v2");
+    expect(finalSql).toContain("verify_raw_projection_gap");
+    expect(finalSql).toContain("verify_gate_materialization_gap");
+    expect(finalSql).toContain("verify_node_materialization_gap");
+  });
+
+  it("keeps browser roles away from ingest/raw state and final RPC is service_role-only", () => {
     for (const table of [
       "observation_source_bindings",
       "observation_machine_keys",
@@ -33,16 +56,17 @@ describe("GWC v2 native observation ingest contract", () => {
       expect(baseSql).toContain(`alter table ${table} enable row level security`);
       expect(baseSql).toContain(`revoke all on ${table} from anon, authenticated`);
     }
-    expect(finalSql).toMatch(/revoke all on function public\.ingest_observation_event_v2\(text, jsonb, text\)[\s\S]*from public, anon, authenticated/);
-    expect(finalSql).toMatch(/grant execute on function public\.ingest_observation_event_v2\(text, jsonb, text\)[\s\S]*to service_role/);
+    expect(finalSql).toMatch(/revoke all on function public\.ingest_observation_event_v2\(text,jsonb,text\)[\s\S]*from public, anon, authenticated/);
+    expect(finalSql).toMatch(/grant execute on function public\.ingest_observation_event_v2\(text,jsonb,text\)[\s\S]*to service_role/);
     expect(finalSql).toContain("security invoker");
+    expect(cleanupSql).toContain("drop function if exists public.ingest_observation_event_v2(jsonb,text)");
+    expect(verifySql).toContain("verify_browser_rpc_execute_present");
   });
 
-  it("binds authenticated machine source_id to repository/schema and supports head-independent signed provenance", () => {
-    expect(finalSql).toContain("p_source_id text");
-    expect(finalSql).toContain("and b.source_id = p_source_id");
+  it("supports head-independent signed main provenance without dropping exact SHA audit", () => {
     expect(finalSql).toContain("sha_policy");
     expect(finalSql).toContain("'any_signed'");
+    expect(finalSql).toContain("source_sha = null");
     expect(finalSql).toContain("b.source_sha = v_source_sha");
     expect(edge).toContain("p_source_id: sourceId");
     expect(profile).toContain("sha_policy: ANY_SIGNED");
@@ -50,22 +74,23 @@ describe("GWC v2 native observation ingest contract", () => {
     expect(profile).not.toContain("target_sha:");
   });
 
-  it("atomically materializes the functional runs/gates/nodes read model before projection commit", () => {
-    expect(finalSql).toContain("insert into runs");
-    expect(finalSql).toContain("insert into observation_events_raw");
-    expect(finalSql).toContain("insert into run_gates");
-    expect(finalSql).toContain("insert into run_nodes");
-    expect(finalSql).toContain("insert into projection_events");
-    expect(finalSql).toContain("update run_gates");
+  it("repairs and materializes the functional runs/gates/nodes read model", () => {
+    expect(finalSql).toContain("insert into public.runs");
+    expect(finalSql).toContain("insert into public.run_gates");
+    expect(finalSql).toContain("insert into public.run_nodes");
+    expect(finalSql).toContain("update public.run_gates");
     expect(finalSql).toContain("state = 'passed'");
     expect(finalSql).toContain("gwc_universal_v2");
     expect(finalSql).toContain("observed_runtime");
+    expect(finalSql).toContain("order by run_id, source_sequence, id");
+    expect(verifySql).toContain("verify_gate_gap");
+    expect(verifySql).toContain("verify_node_gap");
   });
 
-  it("fails closed on source drift, id conflict and sequence gaps", () => {
-    expect(finalSql).toContain("source_binding_mismatch");
-    expect(finalSql).toContain("event_id_digest_conflict");
-    expect(finalSql).toContain("source_sequence_gap");
+  it("covers native read-model query paths with FK indexes", () => {
+    expect(indexSql).toContain("idx_run_gates_run_id");
+    expect(indexSql).toContain("idx_run_nodes_run_id");
+    expect(indexSql).toContain("idx_run_nodes_gate_id");
   });
 
   it("Edge receiver authenticates with hashed machine key + HMAC and never expects a GWC Supabase credential", () => {
