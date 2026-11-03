@@ -4,7 +4,7 @@ on:
   push:
     branches: [integration/SCRUM-820-dwo-v2, main]
   pull_request:
-    branches: [main]
+    branches: [integration/SCRUM-820-dwo-v2, main]
   workflow_dispatch:
 
 permissions:
