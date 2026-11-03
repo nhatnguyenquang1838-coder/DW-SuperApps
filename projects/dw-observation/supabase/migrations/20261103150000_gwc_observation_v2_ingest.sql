@@ -279,6 +279,18 @@ SECURITY DEFINER
 SET search_path = pg_catalog, public, realtime
 AS $$
 BEGIN
+  -- Native GWC v2 ingestion owns realtime delivery in the Edge receiver,
+  -- after the durable RPC transaction has committed.
+  IF NEW.raw_event_id IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+
+  -- Historical/legacy projection writers keep database-broadcast compatibility
+  -- only where the managed Supabase realtime.send function is installed.
+  IF to_regprocedure('realtime.send(jsonb,text,text,boolean)') IS NULL THEN
+    RETURN NEW;
+  END IF;
+
   PERFORM realtime.send(
     jsonb_build_object(
       'run_id', NEW.run_id,
@@ -313,4 +325,5 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION public.notify_projection_event() SET search_path = pg_catalog, public, realtime;
+ALTER FUNCTION public.notify_projection_event()
+  SET search_path = pg_catalog, public, realtime;
