@@ -7,6 +7,7 @@ const baseMigrationPath = path.join(root, "supabase", "migrations", "20261103150
 const finalMigrationPath = path.join(root, "supabase", "migrations", "20261103161000_finalize_native_observation_contract.sql");
 const cleanupMigrationPath = path.join(root, "supabase", "migrations", "20261103162000_remove_legacy_observation_rpc.sql");
 const indexMigrationPath = path.join(root, "supabase", "migrations", "20261103163000_native_read_model_indexes.sql");
+const hardeningMigrationPath = path.join(root, "supabase", "migrations", "20261103164000_native_observation_security_hardening.sql");
 const verifyPath = path.join(root, "scripts", "verify-native-observation-db.sql");
 const edgePath = path.join(root, "supabase", "functions", "dwo-observation-ingest-v2", "index.ts");
 const profilePath = path.join(root, "project-profile.yaml");
@@ -15,6 +16,7 @@ const baseSql = fs.readFileSync(baseMigrationPath, "utf8").toLowerCase();
 const finalSql = fs.readFileSync(finalMigrationPath, "utf8").toLowerCase();
 const cleanupSql = fs.readFileSync(cleanupMigrationPath, "utf8").toLowerCase();
 const indexSql = fs.readFileSync(indexMigrationPath, "utf8").toLowerCase();
+const hardeningSql = fs.readFileSync(hardeningMigrationPath, "utf8").toLowerCase();
 const verifySql = fs.readFileSync(verifyPath, "utf8").toLowerCase();
 const edge = fs.readFileSync(edgePath, "utf8");
 const profile = fs.readFileSync(profilePath, "utf8");
@@ -61,6 +63,9 @@ describe("GWC v2 native observation ingest contract", () => {
     expect(finalSql).toContain("security invoker");
     expect(cleanupSql).toContain("drop function if exists public.ingest_observation_event_v2(jsonb,text)");
     expect(verifySql).toContain("verify_browser_rpc_execute_present");
+    expect(hardeningSql).toContain("verify_server_only_table_exposure");
+    expect(hardeningSql).toContain("observation_source_bindings_sha_policy_check");
+    expect(hardeningSql).toContain("from public, anon, authenticated");
   });
 
   it("supports head-independent signed main provenance without dropping exact SHA audit", () => {
