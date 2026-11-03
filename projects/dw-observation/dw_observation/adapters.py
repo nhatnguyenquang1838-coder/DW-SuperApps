@@ -23,8 +23,9 @@ Adapter contract (v1 envelope):
 Source bindings (per Controller exact-source contract):
   - TaskController: canonical AuditEvent
     (DW-SuperApps/main@945223f.../taskcontroller/audit/event.py).
-  - GWC: canonical DurableEvent
-    (gwc/pre-prod@10deaa4d.../schemas/runtime/durable-event.schema.json).
+  - GWC v1 compatibility: canonical DurableEvent (historical pre-prod source).
+  - GWC v2 native: gwc.observation-event/v2 emitted from verified Universal
+    RunStateRecord v2; source SHA/repository are preserved in source evidence.
 """
 
 from __future__ import annotations
@@ -218,6 +219,73 @@ class GwcAdapter:
             data = [data]
         return self.from_durable_events(data)
 
+
+
+# ---------------------------------------------------------------------------
+# GWC v2 native observation adapter — consumes gwc.observation-event/v2.
+# ---------------------------------------------------------------------------
+class GwcV2ObservationAdapter:
+    """Map native Universal v2 observation events into the existing DWO read envelope.
+
+    The adapter is deliberately loss-averse: payload is NOT mapped to before/after,
+    authority is copied only when source-backed, and exact event identity/timestamp
+    remain unchanged.
+    """
+
+    source_system = "gwc"
+
+    def from_observation_event(self, record: Dict[str, Any]) -> RunProjectionEvent:
+        if record.get("schema_id") != "gwc.observation-event/v2" or record.get("schema_version") != 2:
+            raise ValueError("unsupported GWC v2 observation schema")
+        source = record.get("source")
+        runtime = record.get("runtime")
+        if not isinstance(source, dict) or source.get("system") != "gwc":
+            raise ValueError("GWC v2 source binding is required")
+        if not isinstance(runtime, dict):
+            raise ValueError("GWC v2 runtime binding is required")
+
+        required = ("event_id", "run_id", "sequence", "occurred_at", "event_type", "outcome", "actor", "source_digest")
+        missing = [key for key in required if record.get(key) is None or record.get(key) == ""]
+        if missing:
+            raise ValueError(f"missing GWC v2 fields: {missing}")
+
+        sha = source.get("sha")
+        repository = source.get("repository")
+        if not isinstance(sha, str) or len(sha) != 40:
+            raise ValueError("GWC v2 exact source SHA is required")
+        if not repository:
+            raise ValueError("GWC v2 source repository is required")
+
+        refs = list(record.get("evidence_refs") or [])
+        source_ref = f"github:{repository}@{sha}"
+        if source_ref not in refs:
+            refs.append(source_ref)
+
+        return RunProjectionEvent(
+            run_id=str(record["run_id"]),
+            sequence=int(record["sequence"]),
+            source_system=self.source_system,
+            source_event_id=str(record["event_id"]),
+            occurred_at=record["occurred_at"],
+            gate=runtime.get("gate"),
+            node_id=runtime.get("node_id"),
+            parent_event_id=None,
+            event_type=str(record["event_type"]),
+            outcome=str(record["outcome"]),
+            actor=record["actor"],
+            summary=f"{record['event_type']} gate={runtime.get('gate')} state={runtime.get('state')}",
+            before=None,
+            after=None,
+            evidence_refs=refs,
+            authority_ref=record.get("authority_ref"),
+            source_digest=str(record["source_digest"]),
+        )
+
+    def from_json(self, text: str) -> List[RunProjectionEvent]:
+        data: Any = json.loads(text)
+        if isinstance(data, dict):
+            data = [data]
+        return [self.from_observation_event(item) for item in data]
 
 def _durable_summary(event_type: str, gate: Any, outcome: Any, node_id: Any) -> str:
     """Faithful one-line label derived only from source fields (not evidence)."""
