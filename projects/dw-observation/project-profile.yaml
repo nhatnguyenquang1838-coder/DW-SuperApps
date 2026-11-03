@@ -18,7 +18,7 @@ bindings:
   gwc:
     repository: nhatnguyenquang1838-coder/gwc
     ref: main
-    target_sha: 1381d87251f995491e8071013bcf943669fe4866
+    target_sha: ae7fef748c93cbfb147c1f3a72c968e766736526
     observation_contract: gwc.observation-event/v2
     mode: push-observation
     dwo_authority: read-only
