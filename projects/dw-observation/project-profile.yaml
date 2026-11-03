@@ -13,23 +13,21 @@ metadata:
   source_of_truth: workspace.yaml
 
 bindings:
-  # App-owned GWC binding (metadata only). The Observatory's logical
-  # governance/runtime source is nhatnguyenquang1838-coder/gwc at the pre-prod
-  # ref, pinned to SHA 10deaa4d... This is APP METADATA and is read-only; it
-  # does NOT repurpose or mutate the root projects/gwc Power integration pin
-  # (that gitlink and .gitmodules are owned by the Power manifest / compatibility
-  # lock and are out of this app's scope).
+  # Native Universal v2 release binding. Historical DurableEvent v1 remains
+  # compatibility-only and is not rewritten.
   gwc:
     repository: nhatnguyenquang1838-coder/gwc
-    ref: pre-prod
-    target_sha: 10deaa4d9b9f8cf8ef51ee6d89671fefa41e3662
-    mode: read-only
+    ref: main
+    target_sha: 1381d87251f995491e8071013bcf943669fe4866
+    observation_contract: gwc.observation-event/v2
+    mode: push-observation
+    dwo_authority: read-only
 
 runtime:
   package: dw_observation
   entrypoints:
     - dw_observation.events        # RunProjectionEvent v1 model + validation
-    - dw_observation.adapters     # TaskControllerAdapter (AuditEvent), GwcAdapter (DurableEvent); read-only
+    - dw_observation.adapters     # TC + GWC v1 compatibility + native GWC v2 observation adapters
     - dw_observation.reducer      # deterministic reduce(events) -> Projection (explicit-order + anomalies)
     - dw_observation.fixtures     # golden fixture loader (local JSON only)
 
