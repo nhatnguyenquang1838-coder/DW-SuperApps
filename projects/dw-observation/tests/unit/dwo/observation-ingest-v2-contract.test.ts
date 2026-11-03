@@ -5,7 +5,7 @@ import path from "node:path";
 const root = path.resolve(__dirname, "..", "..", "..");
 const baseMigrationPath = path.join(root, "supabase", "migrations", "20261103150000_gwc_observation_v2_ingest.sql");
 const finalMigrationPath = path.join(root, "supabase", "migrations", "20261103161000_finalize_native_observation_contract.sql");
-const cleanupMigrationPath = path.join(root, "supabase", "migrations", "20261103162000_remove_legacy_observation_rpc.sql");
+const postDeployPath = path.join(root, "scripts", "postdeploy-finalize-native-observation-rpc.sql");
 const indexMigrationPath = path.join(root, "supabase", "migrations", "20261103163000_native_read_model_indexes.sql");
 const hardeningMigrationPath = path.join(root, "supabase", "migrations", "20261103164000_native_observation_security_hardening.sql");
 const verifyPath = path.join(root, "scripts", "verify-native-observation-db.sql");
@@ -14,7 +14,7 @@ const profilePath = path.join(root, "project-profile.yaml");
 
 const baseSql = fs.readFileSync(baseMigrationPath, "utf8").toLowerCase();
 const finalSql = fs.readFileSync(finalMigrationPath, "utf8").toLowerCase();
-const cleanupSql = fs.readFileSync(cleanupMigrationPath, "utf8").toLowerCase();
+const postDeploySql = fs.readFileSync(postDeployPath, "utf8").toLowerCase();
 const indexSql = fs.readFileSync(indexMigrationPath, "utf8").toLowerCase();
 const hardeningSql = fs.readFileSync(hardeningMigrationPath, "utf8").toLowerCase();
 const verifySql = fs.readFileSync(verifyPath, "utf8").toLowerCase();
@@ -61,7 +61,8 @@ describe("GWC v2 native observation ingest contract", () => {
     expect(finalSql).toMatch(/revoke all on function public\.ingest_observation_event_v2\(text,jsonb,text\)[\s\S]*from public, anon, authenticated/);
     expect(finalSql).toMatch(/grant execute on function public\.ingest_observation_event_v2\(text,jsonb,text\)[\s\S]*to service_role/);
     expect(finalSql).toContain("security invoker");
-    expect(cleanupSql).toContain("drop function if exists public.ingest_observation_event_v2(jsonb,text)");
+    expect(postDeploySql).toContain("drop function if exists public.ingest_observation_event_v2(jsonb,text)");
+    expect(postDeploySql).toContain("postdeploy_source_bound_rpc_missing");
     expect(verifySql).toContain("verify_browser_rpc_execute_present");
     expect(verifySql).toMatch(/end\s+\$\$;/);
     expect(verifySql).not.toMatch(/end\s+\$;(?!\$)/);
