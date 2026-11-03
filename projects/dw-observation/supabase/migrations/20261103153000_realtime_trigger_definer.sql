@@ -4,7 +4,7 @@ RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = pg_catalog, public, realtime
-AS $
+AS $$
 BEGIN
   PERFORM realtime.send(
     jsonb_build_object(
