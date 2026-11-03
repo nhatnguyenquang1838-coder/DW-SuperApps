@@ -82,8 +82,23 @@ BEGIN
      OR has_function_privilege('authenticated','public.ingest_observation_event_v2(text,jsonb,text)','EXECUTE') THEN
     RAISE EXCEPTION 'VERIFY_BROWSER_RPC_EXECUTE_PRESENT';
   END IF;
+
+  IF has_table_privilege('anon','public.observation_events_raw','SELECT')
+     OR has_table_privilege('authenticated','public.observation_events_raw','SELECT')
+     OR has_table_privilege('anon','public.observation_machine_keys','SELECT')
+     OR has_table_privilege('authenticated','public.observation_machine_keys','SELECT') THEN
+    RAISE EXCEPTION 'VERIFY_SERVER_ONLY_TABLE_EXPOSURE';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM public.observation_source_bindings
+    WHERE (sha_policy='EXACT' AND source_sha IS NULL)
+       OR (sha_policy='ANY_SIGNED' AND source_sha IS NOT NULL)
+  ) THEN
+    RAISE EXCEPTION 'VERIFY_SOURCE_POLICY_INCONSISTENT';
+  END IF;
 END
-$$;
+$;
 
 SELECT 'PASS' AS status,
        (SELECT count(*) FROM public.observation_events_raw) AS raw_events,
