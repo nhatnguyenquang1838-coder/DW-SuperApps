@@ -21,6 +21,18 @@ async function sha256(value: string): Promise<string> {
   return "sha256:" + hex(await crypto.subtle.digest("SHA-256", enc.encode(value)));
 }
 
+function canonicalJson(value: unknown): string {
+  if (value === null || typeof value === "boolean" || typeof value === "number" || typeof value === "string") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) return "[" + value.map(canonicalJson).join(",") + "]";
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    return "{" + Object.keys(obj).sort().map((key) => JSON.stringify(key) + ":" + canonicalJson(obj[key])).join(",") + "}";
+  }
+  throw new Error("CANONICAL_JSON_UNSUPPORTED_VALUE");
+}
+
 async function importHmac(secret: string): Promise<CryptoKey> {
   return crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
 }
@@ -72,7 +84,14 @@ Deno.serve(async (req: Request) => {
     }
 
     const raw = await req.text();
-    const actualDigest = await sha256(raw);
+    if (raw.length > 262144) return json(413, { error: "REQUEST_TOO_LARGE" });
+    let body: Record<string, any>;
+    try {
+      body = JSON.parse(raw);
+    } catch {
+      return json(400, { error: "INVALID_JSON" });
+    }
+    const actualDigest = await sha256(canonicalJson(body));
     if (actualDigest !== requestDigest) return json(400, { error: "REQUEST_DIGEST_INVALID" });
 
     const url = Deno.env.get("SUPABASE_URL");
@@ -98,7 +117,6 @@ Deno.serve(async (req: Request) => {
       return json(401, { error: "SIGNATURE_INVALID" });
     }
 
-    const body = JSON.parse(raw);
     const event = body?.event;
     const delivery = body?.delivery;
     if (!event || event.schema_id !== "gwc.observation-event/v2" || event.schema_version !== 2) {
@@ -109,6 +127,10 @@ Deno.serve(async (req: Request) => {
     }
     if (delivery?.destination_id !== DESTINATION_ID || !Number.isInteger(delivery?.generation)) {
       return json(400, { error: "DELIVERY_BINDING_INVALID" });
+    }
+    const eventPayloadDigest = await sha256(canonicalJson(event));
+    if (eventPayloadDigest !== delivery?.payload_digest) {
+      return json(400, { error: "EVENT_PAYLOAD_DIGEST_INVALID" });
     }
 
     const { data: receipt, error: ingestError } = await supabase.rpc("ingest_observation_event_v2", {
