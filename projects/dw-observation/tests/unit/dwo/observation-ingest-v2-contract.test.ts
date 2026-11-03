@@ -63,6 +63,8 @@ describe("GWC v2 native observation ingest contract", () => {
     expect(finalSql).toContain("security invoker");
     expect(cleanupSql).toContain("drop function if exists public.ingest_observation_event_v2(jsonb,text)");
     expect(verifySql).toContain("verify_browser_rpc_execute_present");
+    expect(verifySql).toContain("end\n$;");
+    expect(verifySql).not.toContain("end\n$;");
     expect(hardeningSql).toContain("verify_server_only_table_exposure");
     expect(hardeningSql).toContain("observation_source_bindings_sha_policy_check");
     expect(hardeningSql).toContain("from public, anon, authenticated");
