@@ -327,3 +327,4 @@ $$;
 
 ALTER FUNCTION public.notify_projection_event()
   SET search_path = pg_catalog, public, realtime;
+REVOKE ALL ON FUNCTION public.notify_projection_event() FROM PUBLIC, anon, authenticated;
