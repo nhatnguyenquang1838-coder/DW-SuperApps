@@ -134,6 +134,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const { data: receipt, error: ingestError } = await supabase.rpc("ingest_observation_event_v2", {
+      p_source_id: sourceId,
       p_event: event,
       p_event_payload_digest: delivery.payload_digest,
     });
