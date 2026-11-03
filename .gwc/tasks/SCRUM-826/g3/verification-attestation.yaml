@@ -1,0 +1,60 @@
+# G3 VERIFICATION ATTESTATION — SCRUM-826 (DWO-V2-05)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g3.verification-attestation/1.0
+artifact_type: VERIFICATION_ATTESTATION
+gate: G3_VERIFY
+trace:
+  task_id: SCRUM-826
+  parent_run_ref: SCRUM-820
+  plan_revision: 1
+  verified_at: '2026-09-30T04:18:00+07:00'
+  task_branch: task/SCRUM-826-run-ux
+  branch_head: d323423
+
+verdict: PASS
+
+child_runs:
+  - id: CR-826-A
+    title: Run view model — 30 fixtures through the real reducer
+    commit: d323423
+    tests: covered by ux.test.ts
+  - id: CR-826-B
+    title: Run List + Run Detail + graph/tree selection synchronization
+    commit: d323423
+    tests: covered by ux.test.ts
+  - id: CR-826-C
+    title: UR lifecycle strip + namespace separation + authority rail
+    commit: d323423
+    tests: covered by ux.test.ts
+  - id: CR-826-D
+    title: V2_PRODUCT_ALPHA derivation + tests
+    commit: d323423
+    tests: covered by ux.test.ts
+
+executed_evidence:
+  - command: npx vitest run tests/unit/dwo/
+    result: 150 passed (150) — 10 dwo constraint suites
+  - command: npx vitest run
+    result: 27 files, 446 passed (296 baseline + 150 new)
+  - command: npx tsc --noEmit
+    result: exit 0
+  - command: python3 -m pytest tests/ -q
+    result: 112 passed (no Python regression)
+
+acceptance_criteria_coverage:
+  AC-826-01: VERIFIED (V2_PRODUCT_ALPHA derived)
+  AC-826-02: VERIFIED (30 fixtures through real reducer)
+  AC-826-03: VERIFIED (graph/tree selection synchronized)
+  AC-826-04: VERIFIED (no authority affordance)
+  AC-826-05: VERIFIED (UR-G* vs GWC-* namespace separation)
+
+exit_token_derivation:
+  token: V2_PRODUCT_ALPHA
+  derivable: true
+  basis: >
+    deriveV2ProductAlpha(): renders 30 fixtures, selection synchronized, no authority
+    affordance, namespace separation visible. Derived by machine-readable state.
+
+deviations:
+  - none

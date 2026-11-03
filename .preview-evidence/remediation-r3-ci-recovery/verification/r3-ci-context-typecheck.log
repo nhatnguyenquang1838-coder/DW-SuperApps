@@ -1,0 +1,12 @@
+npm notice run dw-observation@0.1.0 typecheck:tests:strict
+npm notice run node scripts/typecheck-tests.mjs --strict
+── test-code typecheck (NON-BLOCKING) ──
+  errors : 0
+  baseline: 0
+  delta   : +0
+
+  by code:
+
+  by file (top 12):
+
+OK: 0 <= baseline 0.

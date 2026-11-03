@@ -1,0 +1,64 @@
+# G3 VERIFICATION ATTESTATION — SCRUM-827 (DWO-V2-06)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g3.verification-attestation/1.0
+artifact_type: VERIFICATION_ATTESTATION
+gate: G3_VERIFY
+trace:
+  task_id: SCRUM-827
+  parent_run_ref: SCRUM-820
+  plan_revision: 1
+  verified_at: '2026-09-30T04:28:00+07:00'
+  task_branch: task/SCRUM-827-evidence-replay
+  branch_head: 787d1bc
+
+verdict: PASS
+
+child_runs:
+  - id: CR-827-A
+    title: Evidence Inspector (source/profile/ref/digest/provenance) + provenance without invention
+    commit: 787d1bc
+    tests: covered by evidenceReplay.test.ts
+  - id: CR-827-B
+    title: Recovery lineage (retry/rerun/replan/restart/supersession/reset-derived-state) immutable generations
+    commit: 787d1bc
+    tests: covered by evidenceReplay.test.ts
+  - id: CR-827-C
+    title: Deterministic replay checkpoints — fixture + durable history under ordering/rebuild contract
+    commit: 787d1bc
+    tests: covered by evidenceReplay.test.ts
+  - id: CR-827-D
+    title: CURRENT vs REPLAY + anomaly presentation + FNR-02 comparison + tests
+    commit: 787d1bc
+    tests: covered by evidenceReplay.test.ts
+
+executed_evidence:
+  - command: npx vitest run tests/unit/dwo/evidenceReplay.test.ts
+    result: 19 passed (19) — evidence/replay/recovery suites
+  - command: npx vitest run tests/unit/dwo/
+    result: 11 files, 169 passed (150 prior + 19 new)
+  - command: npx vitest run
+    result: 28 files, 465 passed (446 prior + 19 new)
+  - command: npx tsc --noEmit
+    result: exit 0
+  - command: python3 -m pytest tests/ -q
+    result: 112 passed (no Python regression)
+
+acceptance_criteria_coverage:
+  AC-827-01: VERIFIED (fixture replay deterministic — same prefix -> same frame/digest)
+  AC-827-02: VERIFIED (durable replay deterministic under ordering/rebuild contract)
+  AC-827-03: VERIFIED (recovery generations immutable + navigable)
+  AC-827-04: VERIFIED (evidence provenance visible, missing facts stay UNKNOWN, invented=false)
+  AC-827-05: VERIFIED (fixture vs durable replay comparison under FNR-02)
+
+exit_token_derivation:
+  token: V2_EVIDENCE_REPLAY_READY
+  derivable: true
+  basis: >
+    deriveV2EvidenceReplayReady(): fixture replay deterministic, durable replay
+    deterministic under the accepted ordering/rebuild contract, recovery generations
+    immutable + navigable, provenance visible without invention, FNR-02 comparison
+    evidence present. Derived by machine-readable state.
+
+deviations:
+  - none

@@ -1,0 +1,28 @@
+# G1 OPTIONS — SCRUM-826 (DWO-V2-05)
+schema_version: gwc.g1.options/1.0
+artifact_type: G1_OPTIONS
+gate: G1_PLAN
+trace:
+  task_id: SCRUM-826
+  plan_revision: 1
+
+options:
+  - id: OPT-1
+    title: View-model module set rendering 30 fixtures through the real reducer
+    description: >-
+      Implement run view model, run list/detail, graph/tree sync, lifecycle strip
+      with UR-G* vs GWC-* separation, evidence-only authority rail. Renders all 30
+      fixtures through the real reducer. Executable validation of all 5 AC.
+    satisfies: [AC-826-01, AC-826-02, AC-826-03, AC-826-04, AC-826-05]
+  - id: OPT-2
+    title: Direct fixture-to-UI state
+    description: Feed fixture data directly to UI components.
+    risk: recreates parallel-source defect (no real reducer path)
+    satisfies: [AC-826-02]
+  - id: OPT-3
+    title: Documentation-only UX
+    description: Write the UX spec as docs without executable validation.
+    risk: V2_PRODUCT_ALPHA unverifiable
+    satisfies: []
+
+selected: OPT-1

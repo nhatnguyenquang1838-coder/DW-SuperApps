@@ -1,0 +1,108 @@
+# G1 INTAKE — SCRUM-822 (DWO-V2-01)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g1.intake/1.0
+artifact_type: G1_INTAKE
+gate: G1_PLAN
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-822
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 6721bf928a6d2c15305c1d23a58893ab7c7d2da7
+  active_runtime_plan_ref: PLAN-822-R1
+  active_runtime_plan_revision: 1
+  target_contract_ref: TARGET-FIXTURE-822-R1
+
+problem:
+  statement: >-
+    The DWO-UR-30-V1 fixture specification is OFFICIAL_DESIGN_BASELINE with
+    repository materialization PENDING_IMPLEMENTATION. No executable fixture
+    artifacts exist: no fixture-set.yaml, no DEV-RUN-*.yaml bundles, no
+    projection-events.jsonl, no golden outputs. SCRUM-823 (projection contract v2)
+    and SCRUM-824 (reducer) both need a deterministic fixture stream to develop
+    against, and SCRUM-826 (UX) needs the 30 runs to render.
+  why_now: >-
+    SCRUM-822 is the first consumer of the SCRUM-821 baseline inventory. It must
+    materialize the fixture stream through the real projection/reducer path so
+    downstream packages have deterministic, versioned golden outputs.
+
+stakeholders:
+  requester: human://nhat-nguyen-quang
+  affected:
+    - team://dw-superapps-dwo
+    - consumer://scrUM-823-projection-contract-v2
+    - consumer://scrUM-824-reducer
+    - consumer://scrUM-826-run-ux
+
+risks:
+  - id: RISK-001
+    description: Fixture bundles become a parallel UI source of truth, bypassing the projection/reducer path.
+    impact: high
+    mitigation: projection-events.jsonl is the executable stream; runs/*.yaml is authoring/reference only and never feeds UI directly.
+  - id: RISK-002
+    description: DEV-RUN-020 (incompatible negative) receives fabricated G0..G6 state.
+    impact: high
+    mitigation: explicit fail-closed INCOMPATIBLE projection; test asserts no fabricated lifecycle.
+  - id: RISK-003
+    description: QUALIFIED projected without a deterministic qualification record bound to the exact subject.
+    impact: high
+    mitigation: QUALIFIED only with synthetic qualification record; default PENDING.
+  - id: RISK-004
+    description: Non-deterministic IDs/timestamps break replay/rebuild parity.
+    impact: high
+    mitigation: deterministic ActorRefs, timestamps, digests; golden outputs versioned.
+  - id: RISK-005
+    description: Scope creep into projection contract v2 or reducer implementation.
+    impact: medium
+    mitigation: authorized_paths enumerated; fixture materialization only.
+
+acceptance_criteria:
+  - id: AC-822-01
+    statement: FIXTURE_STREAM_CERTIFIED derivable from machine-readable state.
+    verifiable: true
+  - id: AC-822-02
+    statement: /runs renders exactly 30 DEV FIXTURE rows through the real projection path.
+    verifiable: true
+  - id: AC-822-03
+    statement: same event prefix deterministically reconstructs the same observable frame.
+    verifiable: true
+  - id: AC-822-04
+    statement: no direct fixture-to-UI state bypass.
+    verifiable: true
+  - id: AC-822-05
+    statement: projection defaults and all explicit negative-case assertions covered by automated fixture/golden-output checks.
+    verifiable: true
+
+constraints:
+  - No production write/effect path.
+  - No direct fixture-to-UI bypass.
+  - Deterministic IDs, ActorRefs, timestamps, digests.
+  - Universal runtime facts separate from DWO-derived projection fields.
+  - Stage by explicit path; never git add .
+
+target_contract:
+  ref: TARGET-FIXTURE-822-R1
+  revision: 1
+  kind: STATE
+  statement: >-
+    A machine-readable DWO-UR-30-V1 fixture pack exists under
+    projects/dw-observation/dwo-v2/fixtures/DWO-UR-30-V1/ with fixture-set.yaml,
+    30 DEV-RUN bundles, deterministic projection-events.jsonl, evidence folders,
+    and versioned golden outputs (run-list, hierarchy, states, replay-checkpoints,
+    anomalies), all traversing the real projection/reducer path, with the
+    projection defaults and negative-case assertions covered by automated tests.
+  validation:
+    - all five acceptance criteria covered by executed automated tests
+    - DWO baseline stays green (typecheck, vitest, pytest)
+    - FIXTURE_STREAM_CERTIFIED derivable from materialized state
+  out_of_scope:
+    - projection contract v2 implementation
+    - reducer semantics
+    - any merge, deploy, production, migration or secret effect
+
+authorized_paths:
+  - projects/dw-observation/dwo-v2/fixtures/
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - .gwc/tasks/SCRUM-822/

@@ -1,0 +1,58 @@
+{
+  "authority_granted": false,
+  "checks": [
+    {
+      "check_id": "authority-orthogonality",
+      "evidence_refs": [
+        "evidence://dwo-qualification/authority/DEV-RUN-006"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "history-parity",
+      "evidence_refs": [
+        "evidence://dwo-qualification/history/DEV-RUN-006"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "reducer-replay-parity",
+      "evidence_refs": [
+        "evidence://dwo-qualification/replay/DEV-RUN-006"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "semantic-evidence",
+      "evidence_refs": [
+        "evidence://dwo-qualification/semantic/DEV-RUN-006"
+      ],
+      "status": "PASS"
+    }
+  ],
+  "evidence_refs": [
+    "evidence://dwo-qualification/authority/DEV-RUN-006",
+    "evidence://dwo-qualification/history/DEV-RUN-006",
+    "evidence://dwo-qualification/replay/DEV-RUN-006",
+    "evidence://dwo-qualification/semantic/DEV-RUN-006"
+  ],
+  "graph_version": "dwo.langgraph-qualification/1",
+  "projection_events_mutated": false,
+  "qualification_id": "qualification:db18a9cd194e352e3d7196006e24b1c3da38e6219e4bf29c904c2652b9329a09",
+  "receipt_digest": "sha256:511f89a484624251baabbbd7e950955b821ab42ae306a70b3fdd258f6a627199",
+  "receipt_id": "receipt:511f89a484624251baabbbd7e950955b821ab42ae306a70b3fdd258f6a627199",
+  "schema_version": "dwo.qualification-receipt/1",
+  "status": "QUALIFIED",
+  "subject": {
+    "durable_position": "projection_ordinal=6",
+    "dwo_run_id": "DEV-RUN-006",
+    "lifecycle_profile": "gwc.universal-run/1",
+    "projection_contract_version": "dwo.projection-contract/2",
+    "reducer_version": "dwo.reducer/1",
+    "schema_version": "dwo.qualification-subject/1",
+    "source_repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+    "source_sha": "95e8905de70b52beb589c6c8c7a4fbfb2d2cb625",
+    "task_ref": null
+  },
+  "subject_digest": "sha256:4aa5abf1840bd2500622fe98b97765132042929c1df22e64efd5a008e0ff76f5"
+}

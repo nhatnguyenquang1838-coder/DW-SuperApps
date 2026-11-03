@@ -1,0 +1,153 @@
+# G1 INTAKE — SCRUM-821 (DWO-V2-00)
+# Immutable once committed. Corrections create a new revision, never in-place edits.
+
+schema_version: gwc.g1.intake/1.0
+artifact_type: G1_INTAKE
+gate: G1_PLAN
+
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-821
+  parent_run_ref: SCRUM-820
+  base_sha: 2e0b0cdbf7c08ac9305acbd114aa42db749b24be
+  base_ref: main
+  active_runtime_plan_ref: PLAN-821-R1
+  active_runtime_plan_revision: 1
+  target_contract_ref: TARGET-RELEASE-BINDING-821-R1
+
+problem:
+  statement: >-
+    DWO v2 has no release-train binding, no capability inventory, no access-boundary
+    inventory and no drift taxonomy, so no downstream DWO v2 governed run can prove which
+    exact Universal Runtime source it consumed. The existing v1 surfaces are bound to
+    legacy SCRUM-555 / SCRUM-669 / login-epic fixture data and an M0-M4 framing that is
+    not Universal G0->G6 Release-Kernel semantics, and nothing in the repository states
+    that separation.
+  why_now: >-
+    SCRUM-822 (fixtures) and SCRUM-823 (projection contract v2) are both blocked by this
+    package. They cannot bind to a source identity, classify drift, or separate
+    compatibility from native Universal semantics until the binding baseline exists.
+
+stakeholders:
+  requester: human://nhat-nguyen-quang
+  affected:
+    - team://dw-superapps-dwo
+    - team://universal-runtime-release-train
+    - consumer://scrUM-822-fixture-materialization
+    - consumer://scrUM-823-projection-contract-v2
+    - consumer://scrUM-831-release-main-rebind
+
+risks:
+  - id: RISK-001
+    description: >-
+      A moving branch name is recorded as the binding instead of an exact consumed SHA,
+      so a later run cannot prove what it actually read.
+    impact: high
+    mitigation: >-
+      The registry schema makes exact_consumed_sha mandatory and 40-hex validated; a
+      binding without it is rejected at construction time. Tests assert rejection.
+  - id: RISK-002
+    description: >-
+      Legacy v1 fixture data silently becomes the native Universal projection source,
+      collapsing the compatibility/native namespace boundary.
+    impact: high
+    mitigation: >-
+      Namespace-separated types with distinct field sets; a test asserts that a legacy
+      source_profile cannot populate a native Universal field and vice versa.
+  - id: RISK-003
+    description: >-
+      The Universal release-development ref is unresolvable (renamed/deleted/force-pushed)
+      and the code silently falls back to gwc/main.
+    impact: high
+    mitigation: >-
+      Explicit fail-closed resolution returning an UNRESOLVABLE state; there is no code
+      path that substitutes main. Covered by a negative test.
+  - id: RISK-004
+    description: >-
+      DWO v2 gains a write/effect path, violating the read-only observatory boundary.
+    impact: high
+    mitigation: >-
+      The access-boundary inventory classifies every DWO path and the binding module
+      declares no effect capability. A test asserts the binding registry surface exposes
+      no write, approve, deny or merge capability.
+  - id: RISK-005
+    description: >-
+      Scope creep into SCRUM-822/823 fixture or contract implementation inside this package.
+    impact: medium
+    mitigation: >-
+      authorized_paths are enumerated explicitly; anything outside them is a G2 scope
+      violation and is rejected at staging time.
+
+acceptance_criteria:
+  - id: AC-821-01
+    statement: Release-binding registry records universal_repository, logical_release_development_ref, exact_consumed_sha, lifecycle_profile, contract identity, binding timestamp and affected surfaces.
+    verifiable: true
+  - id: AC-821-02
+    statement: Every DWO v1 surface is inventoried with explicit source_profile classification and provenance; stale/legacy bindings are classified, not silently retained.
+    verifiable: true
+  - id: AC-821-03
+    statement: Compatibility/legacy baseline is recorded in a namespace distinct from native Universal semantics.
+    verifiable: true
+  - id: AC-821-04
+    statement: Access-boundary inventory covers browser read, server read, write/effect paths, RLS policies and Realtime topics.
+    verifiable: true
+  - id: AC-821-05
+    statement: Recurring R0 rebind evidence record schema is defined and immutable per revision.
+    verifiable: true
+  - id: AC-821-06
+    statement: Drift classification taxonomy is implemented and validated with the canonical enum set.
+    verifiable: true
+  - id: AC-821-07
+    statement: Registry fails closed when the bound exact SHA is absent or the ref is unresolvable; no fallback to main.
+    verifiable: true
+  - id: AC-821-08
+    statement: Exit token DEV_BINDING_ACTIVE is derivable from machine-readable state.
+    verifiable: true
+
+unresolved_questions:
+  - id: Q-001
+    question: >-
+      Which branch is the authoritative "Universal release-development line" once the
+      three open Draft release PRs (#582, #578, #574) converge? The current binding uses
+      the most recently advanced Universal-contract delivery branch, but no single merged
+      release line exists yet.
+    owner: human://nhat-nguyen-quang
+    blocking_for: [SCRUM-831]
+    non_blocking_for: [SCRUM-821, SCRUM-822, SCRUM-823]
+  - id: Q-002
+    question: >-
+      The Universal Recursive Governed Run Model is documented as DRAFT FOR HUMAN REVIEW
+      and not yet implemented. Do DWO v2 projection contracts target the design
+      (frozen contract) or the currently implemented legacy GWC gates?
+    owner: human://nhat-nguyen-quang
+    blocking_for: [SCRUM-823]
+    non_blocking_for: [SCRUM-821]
+
+constraints:
+  - No silent fallback from the Universal release-development source to gwc/main.
+  - Exact consumed SHA is mandatory; a branch name alone is never sufficient evidence.
+  - DWO projection state stays namespace-separated from Universal runtime facts.
+  - DWO is read-only: no approval/deny/runtime-control surface.
+  - No framework upgrades.
+  - Stage by explicit path; never `git add .`.
+
+target_contract:
+  ref: TARGET-RELEASE-BINDING-821-R1
+  revision: 1
+  kind: STATE
+  statement: >-
+    A machine-readable DWO v2 release-binding baseline exists that pins the active
+    Universal Runtime release-development line by exact SHA, inventories every existing
+    DWO surface with source_profile provenance, separates compatibility from native
+    Universal namespaces, enumerates the read-only access boundaries, and classifies
+    Universal drift using the canonical taxonomy — with no silent fallback to main and
+    no effect authority.
+  validation:
+    - all eight acceptance criteria are covered by executed automated tests
+    - the DWO v1 baseline stays green (typecheck, 296 vitest, 112 pytest)
+    - DEV_BINDING_ACTIVE is derivable from the materialized registry state
+  out_of_scope:
+    - fixture materialization
+    - projection contract v2 implementation
+    - reducer semantics
+    - any merge, deploy, production, migration or secret effect

@@ -1,0 +1,9 @@
+[WebServer]  ⚠ Invalid next.config.mjs options detected:
+[WebServer]  ⚠     Unrecognized key(s) in object: 'devIndicator'
+[WebServer]  ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+
+Running 1 test using 1 worker
+
+  ok 1 [fixture-preview-chromium] › e2e\fixture-preview-r1.spec.ts:90:7 › DWO Fixture Preview R1 — Playwright evidence › Committed current source marks historical fixture receipts DRIFTED across routes (25.2s)
+
+  1 passed (1.2m)

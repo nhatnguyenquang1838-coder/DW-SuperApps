@@ -1,0 +1,38 @@
+# G1 PREFLIGHT — SCRUM-825 (DWO-V2-04)
+schema_version: gwc.g1.preflight/1.0
+artifact_type: G1_PREFLIGHT
+gate: G1_PLAN
+trace:
+  task_id: SCRUM-825
+  plan_revision: 1
+  checked_at: '2026-09-30T04:18:00+07:00'
+
+refs:
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 0c877134da7a364e825bc055d1983029b0693656
+  task_branch: task/SCRUM-825-durable-history
+  worktree: /Users/mac/prj/DW-SuperApps.worktrees/task/SCRUM-825-durable-history
+
+baseline_present:
+  lib/dwo/projectionContract.ts: true
+  lib/dwo/reducer.ts: true
+  lib/dwo/recursiveTopology.ts: true
+  lib/dwo/blockingPath.ts: true
+  lib/dwo/eventPosition.ts: true
+  lib/dwo/fixtureSpec.ts: true
+  dwo-v2/fixtures/DWO-UR-30-V1/: true
+  dwo-v2/contract/projection-contract-v2.yaml: true
+
+golden_fixtures_available:
+  value: true
+  note: DWO-UR-30-V1 golden outputs consumed for rebuild parity
+
+baseline_tests:
+  note: 415 vitest + 112 pytest green on integration branch before this task branched
+  node_modules: symlinked from main checkout; not committed
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/durable/
+  - .gwc/tasks/SCRUM-825/

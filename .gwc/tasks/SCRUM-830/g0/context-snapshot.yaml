@@ -1,0 +1,90 @@
+# G0 CONTEXT SNAPSHOT — SCRUM-830 (DWO-V2-09)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g0.context-snapshot/1.0
+artifact_type: CONTEXT_SNAPSHOT
+gate: G0_UNDERSTAND
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-830
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 0e96764512d603b041b9dceaadf7a5db3a93afb4
+  captured_at: '2026-09-30T06:10:00+07:00'
+
+objective: >-
+  Qualify DWO v2 semantic correctness, resilience and safety against the official
+  30-run fixture suite, the exact BRD AC-RS-01..11 research scenarios, and the
+  Universal adversarial suite, binding every result to the exact qualification
+  subject (source repo/ref/SHA, profile, lifecycle profile, reducer version,
+  projection-contract version, comparison-contract version, evidence bundle) with
+  separate DEV-NATIVE and COMPATIBILITY outcomes.
+
+scope:
+  - AC-RS-01 full rebuild parity (rebuild == accepted projection under FNR-02)
+  - AC-RS-02 duplicate idempotency
+  - AC-RS-03 gap fail-closed (no certified current state while gap open)
+  - AC-RS-04 out-of-order recovery (deterministic, no silent strengthening)
+  - AC-RS-05 reconnect beyond transport retention (durable history restores)
+  - AC-RS-06 RESET_DERIVED_STATE safety
+  - AC-RS-07 read-isolation negative (no service-role/secret in browser paths)
+  - AC-RS-08 trace/correlation non-authority
+  - AC-RS-09 recursive deadlock anomaly (anomaly detected, no authority fabricated)
+  - AC-RS-10 accessibility (keyboard, focus, non-color-only, graph/tree parity)
+  - AC-RS-11 domain neutrality (party/research/wedding pass without IT semantics)
+  - Universal adversarial cases: >-
+      stale/expired/scope-mismatched authority; unknown effect readback; stale
+      writer/fencing; evidence digest/ledger tampering; fabricated ChildRun
+      handoff; concurrent child integration conflict; projection substitution;
+      illegal lifecycle transition; self-granted authority; immutable record mutation
+  - DEV-NATIVE and COMPATIBILITY results SEPARATE; incompatible inputs fail closed
+
+dependencies:
+  - SCRUM-822 (DWO-V2-01) fixtures — DONE
+  - SCRUM-823 (DWO-V2-02) projection contract + FNR-02 — DONE
+  - SCRUM-824 (DWO-V2-03) reducer — DONE (R2 PASS)
+  - SCRUM-825 (DWO-V2-04) durable history — DONE
+  - SCRUM-826/827 (DWO-V2-05/06) run UX + evidence replay — DONE
+  - SCRUM-828 (DWO-V2-07) realtime LIVE — DONE
+  - SCRUM-829 (DWO-V2-08) accessibility + scale — DONE
+
+constraints:
+  - no fixture bypasses the production projection/reducer path (harness must call the real kernel modules)
+  - AC-RS-01..11 each must carry machine-checkable evidence + disposition
+  - Universal adversarial cases must carry fail-closed expectations
+  - qualification subject bound to exact source/profile/reducer/projection/comparison identity
+  - DEV-NATIVE and COMPATIBILITY results are separate; incompatible inputs fail closed, never normalized
+  - no production write/effect path; grant no merge authority
+
+acceptance_criteria:
+  - id: AC-830-01
+    statement: V2_SEMANTIC_QUALIFIED exit token derivable from machine-readable state
+  - id: AC-830-02
+    statement: AC-RS-01..11 each has machine-checkable evidence and disposition
+  - id: AC-830-03
+    statement: Universal adversarial suite has machine-checkable evidence and fail-closed expectations
+  - id: AC-830-04
+    statement: qualification subject bound to exact source/profile/reducer/projection/comparison identity
+  - id: AC-830-05
+    statement: DEV-NATIVE and COMPATIBILITY results separate; incompatible inputs fail closed
+  - id: AC-830-06
+    statement: no fixture bypasses production projection/reducer path
+  - id: AC-830-07
+    statement: all existing DWO suites + Python regression continue to pass
+
+canonical_sources:
+  - SCRUM-830 Jira brief (BRD AC-RS-01..11 + Universal adversarial suite) — READ
+  - DWO-UR-30-V1 fixture catalog — READ
+  - Existing kernel modules (reducer, comparisonContract, idempotency, durableOrder, eventPosition, recoveryLineage, recursiveTopology, blockingPath, compatibility, replay, liveState, realtimeBootstrap, accessibility, fixtureSpec, profileRegistry, drift, releaseBinding) — READ
+
+authority_boundary:
+  grants:
+    - development commits on task/SCRUM-830-semantic-qualification
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-830 progress/evidence updates
+  excluded:
+    - G4_MERGE, G5_DEPLOY, G6_PRODUCTION
+    - approval bypass, protected main writes
+    - production data mutation, database migration, secret change

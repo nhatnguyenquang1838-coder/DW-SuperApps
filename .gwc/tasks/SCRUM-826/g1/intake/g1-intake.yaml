@@ -1,0 +1,108 @@
+# G1 INTAKE — SCRUM-826 (DWO-V2-05)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g1.intake/1.0
+artifact_type: G1_INTAKE
+gate: G1_PLAN
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-826
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 39ac0dd39d74d0150d3966e6dda941507c50ab9a
+  active_runtime_plan_ref: PLAN-826-R1
+  active_runtime_plan_revision: 1
+  target_contract_ref: TARGET-UX-826-R1
+
+problem:
+  statement: >-
+    DWO v2 has no run-centric product UX. SCRUM-827 (evidence inspector) and
+    SCRUM-829 (accessibility) both depend on a usable Run List / Run Detail with
+    recursive graph + accessible tree/list, UR lifecycle strip with UR-G* vs GWC-*
+    namespace separation, authority/effect rail as evidence-only, and all 30 DEV
+    FIXTURE runs rendered through the real reducer/view model.
+  why_now: >-
+    SCRUM-826 is the primary product surface. The reducer (SCRUM-824) and fixture
+    stream (SCRUM-822) are now available. The UX must render all 30 fixtures through
+    the real projection path, never a parallel UI source of truth.
+
+stakeholders:
+  requester: human://nhat-nguyen-quang
+  affected:
+    - team://dw-superapps-dwo
+    - consumer://scrUM-827-evidence-inspector
+    - consumer://scrUM-829-accessibility
+
+risks:
+  - id: RISK-001
+    description: Fixture-to-UI state bypass (parallel UI source of truth).
+    impact: high
+    mitigation: render all 30 fixtures through the real reducer/view model; no direct fixture-to-UI.
+  - id: RISK-002
+    description: Action affordance grants or consumes runtime authority.
+    impact: high
+    mitigation: authority/effect rail is evidence-only UX; no action grants/consumes authority.
+  - id: RISK-003
+    description: Graph and tree/list selection desynchronize.
+    impact: high
+    mitigation: single selection state shared by graph and tree/list.
+  - id: RISK-004
+    description: UR-G* vs GWC-* namespace conflation in lifecycle strip.
+    impact: high
+    mitigation: explicit namespace separation visible in the lifecycle strip.
+  - id: RISK-005
+    description: Scope creep into evidence inspector (SCRUM-827) or accessibility (SCRUM-829).
+    impact: medium
+    mitigation: authorized_paths enumerated; run-centric UX only.
+
+acceptance_criteria:
+  - id: AC-826-01
+    statement: V2_PRODUCT_ALPHA derivable from machine-readable state.
+    verifiable: true
+  - id: AC-826-02
+    statement: run exploration UX usable against all 30 fixtures.
+    verifiable: true
+  - id: AC-826-03
+    statement: graph and tree/list selection stay synchronized.
+    verifiable: true
+  - id: AC-826-04
+    statement: no action affordance grants or consumes runtime authority.
+    verifiable: true
+  - id: AC-826-05
+    statement: UR-G* vs GWC-* namespace separation visible in lifecycle strip.
+    verifiable: true
+
+constraints:
+  - Render all 30 fixtures through the real reducer/view model
+  - Graph and tree/list selection synchronized
+  - No action affordance grants/consumes runtime authority
+  - No production write/effect path
+  - Stage by explicit path; never git add .
+
+target_contract:
+  ref: TARGET-UX-826-R1
+  revision: 1
+  kind: STATE
+  statement: >-
+    A run-centric DWO v2 product UX exists with Run List and Run Detail, recursive
+    graph + accessible structured tree/list, UR lifecycle strip with UR-G* vs GWC-*
+    namespace separation, authority/effect rail as evidence-only, parent context
+    retention, dependency/blocking path and source profile visibility, target/
+    handoff and sync/qualification status — rendering all 30 DEV FIXTURE runs through
+    the real reducer/view model, with graph/tree selection synchronized and no action
+    granting/consuming authority — all covered by automated tests, with
+    V2_PRODUCT_ALPHA derivable.
+  validation:
+    - all five acceptance criteria covered by executed automated tests
+    - DWO baseline stays green (typecheck, vitest, pytest)
+    - V2_PRODUCT_ALPHA derivable from materialized state
+  out_of_scope:
+    - evidence inspector (SCRUM-827)
+    - accessibility (SCRUM-829)
+    - any merge, deploy, production, migration or secret effect
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/ux/
+  - .gwc/tasks/SCRUM-826/

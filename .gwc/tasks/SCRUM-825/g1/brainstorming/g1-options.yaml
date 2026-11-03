@@ -1,0 +1,29 @@
+# G1 OPTIONS — SCRUM-825 (DWO-V2-04)
+schema_version: gwc.g1.options/1.0
+artifact_type: G1_OPTIONS
+gate: G1_PLAN
+trace:
+  task_id: SCRUM-825
+  plan_revision: 1
+
+options:
+  - id: OPT-1
+    title: TypeScript durable foundation module set
+    description: >-
+      Implement append-only durable order/watermark, v1/v2 compatibility + backfill,
+      duplicate idempotency + out-of-order + gap fail-closed, rebuild-from-zero
+      parity + RESET_DERIVED_STATE safety, bootstrap/catch-up, and RLS allow-deny
+      tests. Executable validation of all 5 AC.
+    satisfies: [AC-825-01, AC-825-02, AC-825-03, AC-825-04, AC-825-05]
+  - id: OPT-2
+    title: Split across Python/TypeScript twin
+    description: Duplicate durable logic across both runtimes.
+    risk: recreates source-divergence defect class
+    satisfies: [AC-825-01]
+  - id: OPT-3
+    title: Documentation-only durable foundation
+    description: Write the durable spec as docs without executable validation.
+    risk: V2_DURABLE_RECONCILIATION_READY unverifiable
+    satisfies: []
+
+selected: OPT-1

@@ -140,13 +140,8 @@ export default function RuntimeGraphCanvas({
   // Build edges: route spine + fanout, with active highlight.
   const rfEdges: RFEdge[] = useMemo(() => {
     const active = getActiveRoute(run, cursor);
-    const routeIds = new Set(run.route.map((r) => r.node_id));
     return layout.edges.map((e): RFEdge => {
       const isRoute = e.kind === "route";
-      const isActive = isRoute && routeIds.has(active.node_id)
-        ? e.source === run.route[cursor]?.node_id && e.target === run.route[cursor + 1]?.node_id
-        : false;
-      // simpler active: connect cursor node to next
       const activeRoute = isRoute && e.source === active.node_id;
       return {
         id: e.id,

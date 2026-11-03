@@ -1,0 +1,31 @@
+runtime_facts:
+  run_id: DEV-RUN-017
+  run_kind: ROOT
+  lifecycle_profile:
+    id: gwc.universal-run
+    version: 1
+  domain_profile_ref: EVENT
+  target_contract_ref: TARGET-017-R1
+  active_runtime_plan_ref: PLAN-017-R1
+  active_runtime_plan_revision: 1
+  active_runtime_plan_digest: ac77825fdbb4a5355cf40c596f9cf45e918a3efab86e905d484008d3d7b94450
+  atomic: false
+  child_run_refs:
+  - DEV-RUN-018
+  dependency_refs: []
+  parent_run_ref: null
+  lifecycle:
+    G0: PASSED
+    G1: PASSED
+    G2: ACTIVE
+    G3: NOT_STARTED
+    G4: NOT_STARTED
+    G5: NOT_STARTED
+    G6: NOT_STARTED
+  run_state: OPEN
+dwo_expected_projection:
+  source_profile: DEV_NATIVE
+  sync_state: LIVE
+  semantic_qualification: PENDING
+  authority_state: NOT_APPLICABLE
+  anomaly_count: 0

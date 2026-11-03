@@ -1,0 +1,13 @@
+[WebServer]  ⚠ Invalid next.config.mjs options detected:
+[WebServer]  ⚠     Unrecognized key(s) in object: 'devIndicator'
+[WebServer]  ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+
+Running 5 tests using 1 worker
+
+  ok 1 [fixture-preview-chromium] › e2e\fixture-preview-r1.spec.ts:9:7 › DWO Fixture Preview R1 — Playwright evidence › Task-first screen is explicitly fixture-backed (1.9s)
+  ok 2 [fixture-preview-chromium] › e2e\fixture-preview-r1.spec.ts:18:7 › DWO Fixture Preview R1 — Playwright evidence › Fixture Lab replay supports arrival, catch-up, rewind and mode switch (6.8s)
+  ok 3 [fixture-preview-chromium] › e2e\fixture-preview-r1.spec.ts:43:7 › DWO Fixture Preview R1 — Playwright evidence › Shared workspace player, recursive tree and inspector follow one prefix (3.7s)
+  ok 4 [fixture-preview-chromium] › e2e\fixture-preview-r1.spec.ts:80:7 › DWO Fixture Preview R1 — Playwright evidence › Run detail preserves G5 WAITING and DEV FIXTURE labeling (4.4s)
+  ok 5 [fixture-preview-chromium] › e2e\fixture-preview-r1.spec.ts:90:7 › DWO Fixture Preview R1 — Playwright evidence › DEV-RUN-020 is incompatible and has no replay link (5.2s)
+
+  5 passed (39.1s)

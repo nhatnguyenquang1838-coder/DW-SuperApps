@@ -23,7 +23,6 @@ export default function LoginEpicRunGraph({ epic }: { epic: LoginEpicRuntimeFixt
   const [speed, setSpeed] = useState(750);
   const [playing, setPlaying] = useState(false);
   const [selection, setSelection] = useState<{ kind: "run" | "gate" | "node"; id: string }>({ kind: "run", id: epic.runs[0].id });
-  const [detailTab, setDetailTab] = useState<string>("overview");
   const [modal, setModal] = useState<{ title: string; body: string } | null>(null);
   const [followCursor, setFollowCursor] = useState(true);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -36,8 +35,6 @@ export default function LoginEpicRunGraph({ epic }: { epic: LoginEpicRuntimeFixt
     const cur = q.get("cursor");
     if (cur != null && !Number.isNaN(Number(cur))) setCursor(Number(cur));
     if (q.get("mode") === "LIVE_SIM") setMode("LIVE_SIM");
-    const tab = q.get("tab");
-    if (tab) setDetailTab(tab);
     const modalPath = q.get("modal");
     if (modalPath) {
       const r = runParam && epic.runs.some((x) => x.id === runParam) ? getRun(epic, runParam) : epic.runs[0];
@@ -93,7 +90,6 @@ export default function LoginEpicRunGraph({ epic }: { epic: LoginEpicRuntimeFixt
         if (ix >= 0) setCursor(clampCursor(run, ix));
       }
       setSelection({ kind: "node", id: nodeId });
-      setDetailTab("overview");
     },
     [mode, run],
   );

@@ -1,0 +1,18 @@
+{
+  "record_id": "DEV-RUN-021-ExecutionReceipt",
+  "schema_id": "ExecutionReceipt",
+  "schema_version": 1,
+  "run_id": "DEV-RUN-021",
+  "created_at": "2026-09-01T00:00:00Z",
+  "created_by": "fixture://dwo-ur-30-v1/generator",
+  "content_digest": {
+    "algorithm": "sha256",
+    "canonicalization": "JCS",
+    "value": "98d844ea900c08231a1f6e1e12a4aeacf82570dc71285911ff5e66c9f1bb1915"
+  },
+  "provenance": {
+    "predecessor_refs": [],
+    "source_refs": []
+  },
+  "result": "PASS"
+}

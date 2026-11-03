@@ -1,0 +1,127 @@
+# G1 DECISION RECORD — SCRUM-822 (DWO-V2-01)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-decision-record
+generated_at: '2026-09-30T03:59:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-822
+parent_run_ref: SCRUM-820
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: integration/SCRUM-820-dwo-v2
+base_sha: 6721bf928a6d2c15305c1d23a58893ab7c7d2da7
+task_branch: task/SCRUM-822-fixture-materialization
+active_runtime_plan_ref: PLAN-822-R1
+active_runtime_plan_revision: 1
+target_contract_ref: TARGET-FIXTURE-822-R1
+
+options_ref: ../brainstorming/g1-options.yaml
+preflight_ref: ../preflight/g1-preflight-report.yaml
+intake_ref: ../intake/g1-intake.yaml
+g0_ref: ../../g0/context-snapshot.yaml
+
+status: ACCEPTED
+selected_option_id: OPT-1
+
+user_decision:
+  actor: human://nhat-nguyen-quang
+  decided_at: '2026-09-30T03:59:00+07:00'
+  source: standing autonomous execution authorization for planning, decomposition, coding, tests and development commits
+  explicit: true
+  scope_of_decision: >-
+    OPT-1 selected by the agent as the only option satisfying the acceptance
+    criteria. Human Principal authorized autonomous execution of the approved
+    development plan (planning, decomposition, coding, tests, task branches,
+    development commits, pushes, integration-branch updates, PR update). No Human
+    decision required to select among options that all met policy.
+
+rationale: >-
+  OPT-1 materializes the fixture pack as a deterministic generator (Python) that
+  emits fixture-set.yaml, 30 DEV-RUN bundles, projection-events.jsonl, evidence
+  and golden outputs from a single canonical fixture-spec table. This guarantees
+  determinism (AC-822-03), keeps runs/*.yaml as authoring/reference only
+  (AC-822-04), and makes the negative-case assertions (DEV-RUN-020 INCOMPATIBLE,
+  DEV-RUN-030 authority NOT_APPLICABLE, QUALIFIED-not-implicit) testable
+  (AC-822-05). OPT-2 (hand-author 30 YAML bundles) risks non-determinism and
+  drift. OPT-3 (documentation-only) makes the exit token unverifiable.
+
+rejected_option_ids:
+  - OPT-2
+  - OPT-3
+
+decomposition:
+  atomic: false
+  rationale: >-
+    SCRUM-822 carries separable deliverables (fixture-set + bundles, event stream,
+    evidence, golden outputs, certification). Executed as ordered child runs on
+    one task branch, one G3 pass.
+  child_runs:
+    - id: CR-822-A
+      order: 1
+      title: Fixture generator + fixture-set.yaml + 30 DEV-RUN bundles
+      produces: [dwo-v2/fixtures/DWO-UR-30-V1/fixture-set.yaml, dwo-v2/fixtures/DWO-UR-30-V1/runs/DEV-RUN-*.yaml, lib/dwo/fixtureSpec.ts]
+    - id: CR-822-B
+      order: 2
+      title: Deterministic projection-events.jsonl + evidence folders
+      produces: [dwo-v2/fixtures/DWO-UR-30-V1/events/projection-events.jsonl, dwo-v2/fixtures/DWO-UR-30-V1/evidence/**]
+    - id: CR-822-C
+      order: 3
+      title: Golden outputs (run-list, hierarchy, states, replay-checkpoints, anomalies)
+      produces: [dwo-v2/fixtures/DWO-UR-30-V1/expected/*.json]
+    - id: CR-822-D
+      order: 4
+      title: FIXTURE_STREAM_CERTIFIED derivation + automated tests
+      produces: [lib/dwo/fixtureCertification.ts, tests/unit/dwo/fixture*.test.ts]
+  execution_order: [CR-822-A, CR-822-B, CR-822-C, CR-822-D]
+  integration: all child runs land on the task branch, then G4 integrates into integration/SCRUM-820-dwo-v2
+
+authorized_paths:
+  - projects/dw-observation/dwo-v2/fixtures/
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - .gwc/tasks/SCRUM-822/
+
+excluded_actions:
+  - g4_merge
+  - g5_deploy
+  - g6_production
+  - database_migration
+  - secret_change
+  - force_push
+  - branch_deletion
+
+authority_boundaries:
+  grants:
+    - development commits on task/SCRUM-822-fixture-materialization
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-822 progress and evidence updates
+  excluded:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION
+    - approval bypass
+    - protected main writes
+
+required_gate: G2_HUMAN_DIRECTION
+g1_gate_outcome: PASS
+
+verification_plan:
+  - command: npx tsc --noEmit
+    expectation: exit 0
+  - command: npx vitest run --reporter=dot
+    expectation: existing suites still pass, plus new fixture suites
+  - command: python3 -m pytest tests/ -q
+    expectation: 112 tests still pass (no Python regression)
+  - command: npx next lint
+    expectation: no new lint errors
+  - coverage_mapping:
+      AC-822-01: tests/unit/dwo/fixtureCertification.test.ts
+      AC-822-02: tests/unit/dwo/fixtureSet.test.ts (30 rows)
+      AC-822-03: tests/unit/dwo/fixtureReplay.test.ts (deterministic rebuild)
+      AC-822-04: tests/unit/dwo/fixtureSet.test.ts (no UI bypass)
+      AC-822-05: tests/unit/dwo/fixtureNegative.test.ts (DEV-RUN-020/030, QUALIFIED)
+
+next_gate: G2_EXECUTION

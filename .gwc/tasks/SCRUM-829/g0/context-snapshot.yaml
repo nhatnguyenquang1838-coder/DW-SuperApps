@@ -1,0 +1,68 @@
+# G0 CONTEXT SNAPSHOT — SCRUM-829 (DWO-V2-08)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g0.context-snapshot/1.0
+artifact_type: CONTEXT_SNAPSHOT
+gate: G0_UNDERSTAND
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-829
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 2cdcb171519b05c0916397d58723179f889e19bb
+  captured_at: '2026-09-30T05:12:00+07:00'
+
+objective: >-
+  Harden DWO v2 recursive-run UX for accessibility and large-graph behavior
+  without diluting the 30-run semantic fixture baseline.
+
+scope:
+  - keyboard-operable graph navigation and visible focus
+  - ARIA labels and screen-reader-friendly structure
+  - graph to structured tree/list synchronized selection
+  - non-color-only status semantics
+  - generated scale pack DWO-SCALE-GEN-V1 for depth/fanout/node-count/performance qualification
+  - progressive disclosure and graph budget thresholds
+
+dependencies:
+  - SCRUM-825 (DWO-V2-04) durable history — DONE
+  - SCRUM-826 (DWO-V2-05) run UX — DONE (integrates)
+  - SCRUM-828 (DWO-V2-07) realtime — DONE (may run in parallel; already complete)
+
+constraints:
+  - accessibility acceptance passes for material relationships
+  - scale thresholds and progressive-disclosure behavior explicitly measured and recorded
+  - the hand-authored 30-run semantic pack remains unchanged
+  - no production write/effect path
+
+acceptance_criteria:
+  - id: AC-829-01
+    statement: V2_ACCESSIBILITY_READY exit token derivable from machine-readable state
+  - id: AC-829-02
+    statement: keyboard-operable graph navigation with visible focus and ARIA labels
+  - id: AC-829-03
+    statement: graph and structured tree/list selection stay synchronized
+  - id: AC-829-04
+    statement: status semantics are not color-only (text/icon/aria conveyed)
+  - id: AC-829-05
+    statement: DWO-SCALE-GEN-V1 generated scale pack measures depth/fanout/node-count/performance
+  - id: AC-829-06
+    statement: progressive disclosure and graph budget thresholds explicitly measured and recorded
+  - id: AC-829-07
+    statement: the hand-authored 30-run semantic pack remains unchanged
+
+canonical_sources:
+  - DWO v2 Solution Design C4 (3ea07c1c65b6813c95d6c7acf7a61c32) — READ
+  - DWO-UR-30-V1 fixture catalog (3ea07c1c65b681c28de7c076abdfbdb2) — READ
+
+authority_boundary:
+  grants:
+    - development commits on task/SCRUM-829-accessibility-scale
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-829 progress/evidence updates
+  excluded:
+    - G4_MERGE, G5_DEPLOY, G6_PRODUCTION
+    - approval bypass, protected main writes
+    - production data mutation, database migration, secret change

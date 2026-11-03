@@ -1,0 +1,103 @@
+# G1 INTAKE — SCRUM-828 (DWO-V2-07)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g1.intake/1.0
+artifact_type: G1_INTAKE
+gate: G1_PLAN
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-828
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 0f9a4dc5e4db9ab4c07f02688619dcc51e730d91
+  active_runtime_plan_ref: PLAN-828-R1
+  active_runtime_plan_revision: 1
+  target_contract_ref: TARGET-LIVE-828-R1
+
+problem:
+  statement: >-
+    DWO v2 has no realtime delivery layer. SCRUM-830 (qualification) depends on
+    certified LIVE requiring current valid semantic qualification bound to the
+    current projection subject, with transport connectivity alone never establishing
+    certified LIVE, and reconnect/gap scenarios converging from durable history.
+  why_now: >-
+    SCRUM-828 is the realtime acceleration layer. The durable history (SCRUM-825),
+    run UX (SCRUM-826) and replay (SCRUM-827) are now available as inputs. Realtime
+    must never substitute for durable correctness.
+
+stakeholders:
+  requester: human://nhat-nguyen-quang
+  affected:
+    - team://dw-superapps-dwo
+    - consumer://scrUM-830-qualification
+
+risks:
+  - id: RISK-001
+    description: Transport connectivity alone establishes certified LIVE.
+    impact: high
+    mitigation: certified LIVE requires durable bootstrap + current valid semantic qualification.
+  - id: RISK-002
+    description: Reconnect/gap scenarios do not converge from durable history.
+    impact: high
+    mitigation: reconnect durable catch-up before returning to LIVE.
+  - id: RISK-003
+    description: Duplicate/stale/out-of-order transport not handled.
+    impact: high
+    mitigation: transport handling reuses idempotency/order/gap logic (SCRUM-825).
+  - id: RISK-004
+    description: DEGRADED/UNAVAILABLE states incorrect.
+    impact: high
+    mitigation: explicit DEGRADED and UNAVAILABLE projection states.
+  - id: RISK-005
+    description: Scope creep into qualification (SCRUM-830) or accessibility (SCRUM-829).
+    impact: medium
+    mitigation: authorized_paths enumerated; realtime layer only.
+
+acceptance_criteria:
+  - id: AC-828-01
+    statement: V2_LIVE_PROJECTION_READY derivable from machine-readable state.
+    verifiable: true
+  - id: AC-828-02
+    statement: transport connectivity alone cannot establish certified LIVE.
+    verifiable: true
+  - id: AC-828-03
+    statement: reconnect/gap scenarios converge from durable history.
+    verifiable: true
+  - id: AC-828-04
+    statement: DEGRADED and UNAVAILABLE projection states correct.
+    verifiable: true
+  - id: AC-828-05
+    statement: certified Live requires current valid semantic qualification bound to the current projection subject.
+    verifiable: true
+
+constraints:
+  - Transport connectivity alone cannot establish certified LIVE
+  - Reconnect/gap scenarios converge from durable history
+  - No production write/effect path
+  - Stage by explicit path; never git add .
+
+target_contract:
+  ref: TARGET-LIVE-828-R1
+  revision: 1
+  kind: STATE
+  statement: >-
+    A realtime delivery layer exists that subscribes only after durable bootstrap,
+    reconnects with durable catch-up before returning to LIVE, handles
+    duplicate/stale/out-of-order transport, projects DEGRADED and UNAVAILABLE states,
+    and requires current valid semantic qualification bound to the current projection
+    subject for certified LIVE — all covered by automated tests, with
+    V2_LIVE_PROJECTION_READY derivable.
+  validation:
+    - all five acceptance criteria covered by executed automated tests
+    - DWO baseline stays green (typecheck, vitest, pytest)
+    - V2_LIVE_PROJECTION_READY derivable from materialized state
+  out_of_scope:
+    - qualification (SCRUM-830)
+    - accessibility (SCRUM-829)
+    - any merge, deploy, production, migration or secret effect
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/live/
+  - .gwc/tasks/SCRUM-828/

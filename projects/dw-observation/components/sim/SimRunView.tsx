@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { ReplayMode, SimRun, Selection, NodeState } from "@/lib/simRun";
+import type { ReplayMode, SimRun, Selection } from "@/lib/simRun";
 import {
-  activeGateIdAt,
   buildTimeline,
   clampCursor,
   getGate,
@@ -11,7 +10,6 @@ import {
   isGateActiveAt,
   nodeStateAt,
   selectedNodeAt,
-  timelineLength,
 } from "@/lib/simRun";
 import GateContainer from "./GateContainer";
 import Inspector from "./Inspector";
@@ -101,8 +99,6 @@ export default function SimRunView({ run }: Props) {
   const [modal, setModal] = useState<{ title: string; body: string } | null>(
     null,
   );
-  const [activeTab, setActiveTab] = useState("overview");
-
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const worldRef = useRef<HTMLDivElement | null>(null);
   const inspectorRef = useRef<HTMLDivElement | null>(null);
@@ -184,7 +180,6 @@ export default function SimRunView({ run }: Props) {
 
   // Tab switching (delegated DOM since panes are static markup).
   const selectTab = (tab: string) => {
-    setActiveTab(tab);
     if (inspectorRef.current) {
       inspectorRef.current
         .querySelectorAll<HTMLElement>(".sr-tab")

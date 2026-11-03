@@ -1,0 +1,71 @@
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.0.5 D:/Projects/DW-SuperApps.worktrees/dwo-langgraph-e2e-r1/projects/dw-observation
+
+ ❯ tests/unit/dwo/ci-delivery-contract.test.ts  (10 tests | 1 failed) 24ms
+   × DW Observation CI delivery contract > exports runner scratch paths at step runtime, never from unavailable job-env context
+     → expected 'name: DW-Observation TypeCheck\r\n\r\…' not to contain '${{ runner.'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/dwo/ci-delivery-contract.test.ts > DW Observation CI delivery contract > exports runner scratch paths at step runtime, never from unavailable job-env context
+AssertionError: expected 'name: DW-Observation TypeCheck\r\n\r\…' not to contain '${{ runner.'
+
+- Expected
++ Received
+
+- ${{ runner.
++ name: DW-Observation TypeCheck
+
++
+
++ on:
+
++   push:
+
++     branches: [integration/SCRUM-820-dwo-v2, main]
+
++   pull_request:
+
++     branches: [main]
+
++   workflow_dispatch:
+
++
+
++ permissions:
+
++   contents: read
+
++
+
++ jobs:
+
++   typecheck-tests:
+
++     runs-on: ubuntu-latest
+
++     timeout-minutes: 60
+
++     env:
+
++       TMPDIR: ${{ runner.temp }}
+
++       DWO_R3_SCRATCH_ROOT: ${{ runner.temp }}
+
++
+
+ ❯ tests/unit/dwo/ci-delivery-contract.test.ts:23:29
+     21|   it('exports runner scratch paths at step runtime, never from unavail…
+     22|     const jobEnvelope = workflow.split(/^    steps:\s*$/m)[0];
+     23|     expect(jobEnvelope).not.toContain('${{ runner.');
+       |                             ^
+     24|     expect(workflow).toContain('"$RUNNER_TEMP"');
+     25|     expect(workflow).toContain('>> "$GITHUB_ENV"');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  06:22:43
+   Duration  3.08s (transform 79ms, setup 495ms, collect 37ms, tests 24ms, environment 1.94s, prepare 284ms)

@@ -1,0 +1,62 @@
+# G0 CONTEXT SNAPSHOT — SCRUM-832 (DWO-V2-11)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g0.context-snapshot/1.0
+artifact_type: CONTEXT_SNAPSHOT
+gate: G0_UNDERSTAND
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-832
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 2a25b5515def0977fcfa8a4d15e9f3aa181ccb45
+  captured_at: '2026-09-30T09:53:00+07:00'
+
+objective: >-
+  Certify DWO v2 against one real qualified Universal Runtime campaign after
+  release-main rebinding and produce the final acceptance/handoff evidence bundle.
+
+scope:
+  - observe one real qualified Universal campaign
+  - verify final LIVE tip equals durable replay tip at the same boundary
+  - validate read-only safety, evidence provenance, target/handoff and degraded-mode behavior
+  - reconstruct accepted state after derived-state reset
+  - record exact Universal released-main SHA, DWO implementation SHA, source/profile/reducer/projection identities and qualification records
+  - produce final G6 handoff dossier
+
+dependencies:
+  - SCRUM-830 (DWO-V2-09) qualification — DONE
+  - SCRUM-831 (DWO-V2-10) release main rebind — DONE
+  - product UX/live lanes accepted — DONE (SCRUM-826/827/828)
+
+constraints:
+  - real campaign deterministically reconstructs from durable history
+  - final live/replay equality passes
+  - this task grants no merge/deploy/production authority
+
+acceptance_criteria:
+  - id: AC-832-01
+    statement: DWO_V2_ACCEPTED exit token derivable from machine-readable state
+  - id: AC-832-02
+    statement: real campaign deterministically reconstructs from durable history
+  - id: AC-832-03
+    statement: final live/replay equality passes
+  - id: AC-832-04
+    statement: accepted G6 handoff identifies exact output and evidence
+
+canonical_sources:
+  - DWO v2 Solution Design C4 (3ea07c1c65b6813c95d6c7acf7a61c32) — READ
+  - DWO-UR-30-V1 fixture catalog (3ea07c1c65b681c28de7c076abdfbdb2) — READ
+  - Jira SCRUM-832 description — READ
+
+authority_boundary:
+  grants:
+    - development commits on task/SCRUM-832-real-run-cert
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-832 progress/evidence updates
+  excluded:
+    - G4_MERGE, G5_DEPLOY, G6_PRODUCTION
+    - approval bypass, protected main writes
+    - production data mutation, database migration, secret change

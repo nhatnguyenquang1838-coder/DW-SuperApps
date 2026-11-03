@@ -1,6 +1,6 @@
 """Tests for read-only adapters (no mutation, no Slack parsing, no fabrication)."""
 
-from dw_observation.adapters import TaskControllerAdapter, GwcAdapter
+from dw_observation.adapters import TaskControllerAdapter, GwcAdapter, GwcV2ObservationAdapter
 from dw_observation.events import RunProjectionEvent
 
 
@@ -152,3 +152,48 @@ def test_gwc_adapter_is_read_only_no_scan():
     assert evs.gate == "G2_EXECUTION"
     # no read_gate_states / yaml-scan method exists anymore
     assert not hasattr(adapter, "read_gate_states")
+
+
+
+def test_gwc_v2_observation_adapter_preserves_native_identity():
+    record = {
+        "schema_id": "gwc.observation-event/v2",
+        "schema_version": 2,
+        "event_id": "R1:state:1",
+        "run_id": "R1",
+        "sequence": 0,
+        "occurred_at": "2026-11-03T07:00:00Z",
+        "source": {
+            "system": "gwc",
+            "repository": "nhatnguyenquang1838-coder/gwc",
+            "sha": "1" * 40,
+        },
+        "runtime": {
+            "epoch": "UNIVERSAL_V2_DEVELOPMENT",
+            "profile": {"id": "gwc.universal-run.v2", "version": 2},
+            "gate": "UR.G0",
+            "state": "ACTIVE",
+            "node_id": None,
+            "typed_next": None,
+        },
+        "event_type": "RUN_CREATED",
+        "outcome": "ACTIVE",
+        "actor": {"type": "agent", "id": "unit"},
+        "authority_ref": None,
+        "evidence_refs": ["gwc://R1/state/1"],
+        "payload": {"state_revision": 1},
+        "source_digest": "sha256:" + "a" * 64,
+    }
+    event = GwcV2ObservationAdapter().from_observation_event(record)
+    assert event.source_event_id == "R1:state:1"
+    assert event.occurred_at == "2026-11-03T07:00:00Z"
+    assert event.gate == "UR.G0"
+    assert event.outcome == "ACTIVE"
+    assert event.before is None and event.after is None
+    assert "github:nhatnguyenquang1838-coder/gwc@" + "1" * 40 in event.evidence_refs
+
+
+def test_gwc_v2_adapter_rejects_legacy_or_missing_source_binding():
+    import pytest
+    with pytest.raises(ValueError):
+        GwcV2ObservationAdapter().from_observation_event({"schema_id": "legacy", "schema_version": 1})

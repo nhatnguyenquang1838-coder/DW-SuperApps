@@ -1,0 +1,71 @@
+# G3 VERIFICATION ATTESTATION — SCRUM-824 (DWO-V2-03)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g3.verification-attestation/1.0
+artifact_type: VERIFICATION_ATTESTATION
+gate: G3_VERIFY
+trace:
+  task_id: SCRUM-824
+  parent_run_ref: SCRUM-820
+  plan_revision: 1
+  verified_at: '2026-09-30T04:02:00+07:00'
+  task_branch: task/SCRUM-824-reducer
+  branch_head: fbabb31
+
+verdict: PASS
+
+child_runs:
+  - id: CR-824-A
+    title: Reducer core — deterministic state reconstruction
+    commit: fbabb31
+    tests: covered by reducer.test.ts
+  - id: CR-824-B
+    title: Recursive Root/Child/Atomic reduction + parent composition independence
+    commit: fbabb31
+    tests: covered by reducer.test.ts
+  - id: CR-824-C
+    title: Dependency eligibility + blocking path + fail-closed UNKNOWN/PARTIAL
+    commit: fbabb31
+    tests: covered by reducer.test.ts
+  - id: CR-824-D
+    title: V2_REDUCER_CERTIFIED derivation + fixture conformance tests
+    commit: fbabb31
+    tests: covered by reducer.test.ts
+
+executed_evidence:
+  - command: npx vitest run tests/unit/dwo/
+    result: 113 passed (113) — 8 dwo constraint suites
+  - command: npx vitest run
+    result: 25 files, 409 passed (296 baseline + 113 new)
+  - command: npx tsc --noEmit
+    result: exit 0
+  - command: python3 -m pytest tests/ -q
+    result: 112 passed (no Python regression)
+  - command: npx next lint
+    result: no new errors (1 pre-existing warning)
+
+acceptance_criteria_coverage:
+  AC-824-01: VERIFIED (V2_REDUCER_CERTIFIED derived)
+  AC-824-02: VERIFIED (deterministic reconstruction)
+  AC-824-03: VERIFIED (missing facts stay UNKNOWN/PARTIAL)
+  AC-824-04: VERIFIED (parent composition independent from child-local success)
+  AC-824-05: VERIFIED (recursive reduction + blocking path)
+
+exit_token_derivation:
+  token: V2_REDUCER_CERTIFIED
+  derivable: true
+  basis: >
+    deriveV2ReducerCertified(): deterministic, missing facts UNKNOWN/PARTIAL, parent
+    composition independent, recursive + blocking correct, fixture conformance.
+    Derived by machine-readable state.
+
+special_milestone:
+  id: REDUCER_CORE_CONTRACT_REVIEW
+  status: REQUIRED
+  note: >
+    Per handoff section 14, after SCRUM-824 a reducer/core-contract review is
+    required before later UX work can hide reducer semantic defects. This review is
+    dispatched as an independent fanout before G6 handoff.
+
+deviations:
+  - none

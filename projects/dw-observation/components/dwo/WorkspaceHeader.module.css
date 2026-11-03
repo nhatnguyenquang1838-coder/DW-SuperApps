@@ -1,0 +1,13 @@
+.header { align-items: flex-start; gap: 12px; min-width: 0; }
+.controls { display: grid; justify-items: end; gap: 4px; min-width: 0; }
+.modeControl { display: flex; align-items: center; gap: 8px; color: var(--dwo-color-text-muted); font-size: 12px; }
+.modeLabel { white-space: nowrap; }
+.modeControl select { min-height: 34px; max-width: 100%; padding: 5px 8px; font-size: 13px; }
+.modeExplanation { max-width: 420px; margin: 0; font-size: 12px; line-height: 1.45; text-align: right; color: var(--dwo-color-text-muted); }
+.header :global(select:focus-visible) { outline: 2px solid var(--dwo-color-accent-blue); outline-offset: 2px; }
+
+@media (max-width: 620px) {
+  .header { flex-wrap: wrap; }
+  .controls { flex: 1 1 100%; justify-items: start; }
+  .modeExplanation { text-align: left; }
+}

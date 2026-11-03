@@ -1,0 +1,109 @@
+# G1 INTAKE — SCRUM-824 (DWO-V2-03)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g1.intake/1.0
+artifact_type: G1_INTAKE
+gate: G1_PLAN
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-824
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: d7714337954cb966c07e4bb3060a87e345e7878e
+  active_runtime_plan_ref: PLAN-824-R1
+  active_runtime_plan_revision: 1
+  target_contract_ref: TARGET-REDUCER-824-R1
+
+problem:
+  statement: >-
+    DWO v2 has no deterministic UniversalRun reducer. SCRUM-825 (durable history),
+    SCRUM-826 (UX), SCRUM-827 (evidence inspector) and SCRUM-830 (qualification) all
+    depend on a reducer that deterministically reconstructs Run state from ordered
+    event prefixes, with correct recursive Root/Child/Atomic reduction, parent
+    composition independent from child-local PASS, dependency blocking path, and
+    fail-closed UNKNOWN/PARTIAL for missing facts.
+  why_now: >-
+    SCRUM-824 is the semantic core. The Projection Contract v2 (SCRUM-823) and
+    fixture stream (SCRUM-822) are now available as inputs. The reducer must be
+    certified before durable/UX consumers finalize.
+
+stakeholders:
+  requester: human://nhat-nguyen-quang
+  affected:
+    - team://dw-superapps-dwo
+    - consumer://scrUM-825-durable-history
+    - consumer://scrUM-826-run-ux
+    - consumer://scrUM-827-evidence-inspector
+    - consumer://scrUM-830-qualification
+
+risks:
+  - id: RISK-001
+    description: Parent completion inferred solely from child-local success.
+    impact: high
+    mitigation: parent composition is independent; parent G3 verifies aggregate properties not proven by children.
+  - id: RISK-002
+    description: Non-deterministic reconstruction (same prefix, different state).
+    impact: high
+    mitigation: reducer is a pure function over ordered event prefixes; tests assert determinism.
+  - id: RISK-003
+    description: Missing facts fabricated instead of staying UNKNOWN/PARTIAL.
+    impact: high
+    mitigation: fail-closed UNKNOWN/PARTIAL for missing facts; no heuristic fill.
+  - id: RISK-004
+    description: Dependency blocking path incorrect (BLOCKED vs WAITING conflation).
+    impact: high
+    mitigation: explicit dependency eligibility; BLOCKED has explicit reason, WAITING is external.
+  - id: RISK-005
+    description: Scope creep into durable history (SCRUM-825) or UX (SCRUM-826).
+    impact: medium
+    mitigation: authorized_paths enumerated; reducer semantics only.
+
+acceptance_criteria:
+  - id: AC-824-01
+    statement: V2_REDUCER_CERTIFIED derivable from machine-readable state.
+    verifiable: true
+  - id: AC-824-02
+    statement: same event prefix produces same state (deterministic reconstruction).
+    verifiable: true
+  - id: AC-824-03
+    statement: missing facts stay UNKNOWN/PARTIAL.
+    verifiable: true
+  - id: AC-824-04
+    statement: parent completion never inferred solely from child-local success.
+    verifiable: true
+  - id: AC-824-05
+    statement: recursive Root/Child/Atomic reduction + dependency blocking path correct.
+    verifiable: true
+
+constraints:
+  - Reducer is a pure function over ordered event prefixes
+  - Missing facts stay UNKNOWN/PARTIAL
+  - Parent composition independent from child-local PASS
+  - No production write/effect path
+  - Stage by explicit path; never git add .
+
+target_contract:
+  ref: TARGET-REDUCER-824-R1
+  revision: 1
+  kind: STATE
+  statement: >-
+    A deterministic UniversalRun reducer exists that reconstructs Run state from
+    ordered event prefixes with correct recursive Root/Child/Atomic reduction,
+    parent composition independent from child-local PASS, dependency blocking path,
+    fail-closed UNKNOWN/PARTIAL for missing facts, and orthogonal sync/view/
+    semantic-qualification state — all covered by automated tests, with
+    V2_REDUCER_CERTIFIED derivable.
+  validation:
+    - all five acceptance criteria covered by executed automated tests
+    - DWO baseline stays green (typecheck, vitest, pytest)
+    - V2_REDUCER_CERTIFIED derivable from materialized state
+  out_of_scope:
+    - durable history implementation (SCRUM-825)
+    - run-centric UX (SCRUM-826)
+    - any merge, deploy, production, migration or secret effect
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/reducer/
+  - .gwc/tasks/SCRUM-824/

@@ -1,0 +1,126 @@
+# G1 DECISION RECORD — SCRUM-828 (DWO-V2-07)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: '1.0'
+artifact_type: g1-decision-record
+generated_at: '2026-09-30T04:36:00+07:00'
+
+project_id: dw-superapps
+task_id: SCRUM-828
+parent_run_ref: SCRUM-820
+repository: nhatnguyenquang1838-coder/DW-SuperApps
+base_ref: integration/SCRUM-820-dwo-v2
+base_sha: 0f9a4dc5e4db9ab4c07f02688619dcc51e730d91
+task_branch: task/SCRUM-828-realtime-live
+active_runtime_plan_ref: PLAN-828-R1
+active_runtime_plan_revision: 1
+target_contract_ref: TARGET-LIVE-828-R1
+
+options_ref: ../brainstorming/g1-options.yaml
+preflight_ref: ../preflight/g1-preflight-report.yaml
+intake_ref: ../intake/g1-intake.yaml
+g0_ref: ../../g0/context-snapshot.yaml
+
+status: ACCEPTED
+selected_option_id: OPT-1
+
+user_decision:
+  actor: human://nhat-nguyen-quang
+  decided_at: '2026-09-30T04:36:00+07:00'
+  source: standing autonomous execution authorization for planning, decomposition, coding, tests and development commits
+  explicit: true
+  scope_of_decision: >-
+    OPT-1 selected by the agent as the only option satisfying the acceptance
+    criteria. Human Principal authorized autonomous execution of the approved
+    development plan. No Human decision required to select among options that all
+    met policy.
+
+rationale: >-
+  OPT-1 implements the realtime layer as a TypeScript module set: subscribe-after-
+  bootstrap, reconnect durable catch-up, duplicate/stale/out-of-order transport
+  handling (reusing SCRUM-825 idempotency), DEGRADED/UNAVAILABLE projection states,
+  and certified-LIVE requiring current valid semantic qualification. This satisfies
+  all five AC with executable validation. OPT-2 (transport-only LIVE) recreates the
+  correctness-substitution defect. OPT-3 (documentation-only) makes
+  V2_LIVE_PROJECTION_READY unverifiable.
+
+rejected_option_ids:
+  - OPT-2
+  - OPT-3
+
+decomposition:
+  atomic: false
+  rationale: >-
+    SCRUM-828 carries separable deliverables (bootstrap/subscribe, reconnect
+    catch-up, transport handling, DEGRADED/UNAVAILABLE states, certified-LIVE
+    qualification gate, certification). Executed as ordered child runs on one task
+    branch, one G3 pass.
+  child_runs:
+    - id: CR-828-A
+      order: 1
+      title: Subscribe-after-bootstrap + reconnect durable catch-up
+      produces: [lib/dwo/realtimeBootstrap.ts]
+    - id: CR-828-B
+      order: 2
+      title: Duplicate/stale/out-of-order transport handling
+      produces: [lib/dwo/realtimeTransport.ts]
+    - id: CR-828-C
+      order: 3
+      title: DEGRADED and UNAVAILABLE projection states + certified-LIVE qualification gate
+      produces: [lib/dwo/liveState.ts]
+    - id: CR-828-D
+      order: 4
+      title: V2_LIVE_PROJECTION_READY derivation + tests
+      produces: [lib/dwo/liveCertification.ts, tests/unit/dwo/live*.test.ts]
+  execution_order: [CR-828-A, CR-828-B, CR-828-C, CR-828-D]
+  integration: all child runs land on the task branch, then G4 integrates into integration/SCRUM-820-dwo-v2
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/live/
+  - .gwc/tasks/SCRUM-828/
+
+excluded_actions:
+  - g4_merge
+  - g5_deploy
+  - g6_production
+  - database_migration
+  - secret_change
+  - force_push
+  - branch_deletion
+
+authority_boundaries:
+  grants:
+    - development commits on task/SCRUM-828-realtime-live
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-828 progress and evidence updates
+  excluded:
+    - G4_MERGE
+    - G5_DEPLOY
+    - G6_PRODUCTION
+    - approval bypass
+    - protected main writes
+
+required_gate: G2_HUMAN_DIRECTION
+g1_gate_outcome: PASS
+
+verification_plan:
+  - command: npx tsc --noEmit
+    expectation: exit 0
+  - command: npx vitest run --reporter=dot
+    expectation: existing suites still pass, plus new live suites
+  - command: python3 -m pytest tests/ -q
+    expectation: 112 tests still pass (no Python regression)
+  - command: npx next lint
+    expectation: no new lint errors
+  - coverage_mapping:
+      AC-828-01: tests/unit/dwo/liveCertification.test.ts
+      AC-828-02: tests/unit/dwo/liveState.test.ts (transport-only not certified)
+      AC-828-03: tests/unit/dwo/realtimeBootstrap.test.ts (reconnect catch-up)
+      AC-828-04: tests/unit/dwo/liveState.test.ts (DEGRADED/UNAVAILABLE)
+      AC-828-05: tests/unit/dwo/liveState.test.ts (qualification gate)
+
+next_gate: G2_EXECUTION

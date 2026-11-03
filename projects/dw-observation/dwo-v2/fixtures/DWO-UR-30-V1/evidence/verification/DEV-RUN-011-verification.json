@@ -1,0 +1,18 @@
+{
+  "record_id": "DEV-RUN-011-VerificationAttestation",
+  "schema_id": "VerificationAttestation",
+  "schema_version": 1,
+  "run_id": "DEV-RUN-011",
+  "created_at": "2026-09-01T00:00:00Z",
+  "created_by": "fixture://dwo-ur-30-v1/generator",
+  "content_digest": {
+    "algorithm": "sha256",
+    "canonicalization": "JCS",
+    "value": "0ccbc9f6ff6bdc29ac5fae6bc92ac462113fa662c7ea6a10236b51fa74c4e88d"
+  },
+  "provenance": {
+    "predecessor_refs": [],
+    "source_refs": []
+  },
+  "verdict": "FAIL"
+}

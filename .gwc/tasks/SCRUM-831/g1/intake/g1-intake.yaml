@@ -1,0 +1,118 @@
+# G1 INTAKE — SCRUM-831 (DWO-V2-10)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g1.intake/1.0
+artifact_type: G1_INTAKE
+gate: G1_PLAN
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-831
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 9f46c8500923d94a0e8344e978bb3064f5e288d6
+  active_runtime_plan_ref: PLAN-831-R1
+  active_runtime_plan_revision: 1
+  target_contract_ref: TARGET-REBIND-831-R1
+
+problem:
+  statement: >-
+    DWO v2 is bound to the Universal release-development line. SCRUM-831 must cut it
+    over to the exact released gwc/main source with typed release evidence and
+    affected-scope requalification. The external Universal release merge is not yet
+    done (Q-001: PRs #582/#578/#574 all Draft). Per human decision, this is NOT a
+    hard blocker for development — a warning guard (DWO main merge gated on
+    Universal release merge) is enforced instead.
+  why_now: >-
+    SCRUM-830 (qualification) is Done. The rebind mechanism, drift classification,
+    affected-surface recording, and requalification scope can be built now so that
+    when the Universal release merges, RELEASE_MAIN_BOUND is derivable immediately.
+
+stakeholders:
+  requester: human://nhat-nguyen-quang
+  affected:
+    - team://dw-superapps-dwo
+    - consumer://scrUM-832-real-run-certification
+
+risks:
+  - id: RISK-001
+    description: Rebind entered from prose/manual inference instead of durable release evidence.
+    impact: high
+    mitigation: MAIN_REBIND_PENDING entered only from durable release evidence.
+  - id: RISK-002
+    description: Drift classification wrong or affected surfaces missed.
+    impact: high
+    mitigation: frozen taxonomy + affected-surface recording.
+  - id: RISK-003
+    description: Prior qualification reused after subject materially drifts.
+    impact: high
+    mitigation: invalidate prior qualification on material subject drift.
+  - id: RISK-004
+    description: DWO main merged before the Universal release merge.
+    impact: high
+    mitigation: warning guard — DWO main merge gated on Universal release merge.
+  - id: RISK-005
+    description: Scope creep into real-run certification (SCRUM-832).
+    impact: medium
+    mitigation: authorized_paths enumerated; rebind mechanism only.
+
+acceptance_criteria:
+  - id: AC-831-01
+    statement: RELEASE_MAIN_BOUND derivable from machine-readable state.
+    verifiable: true
+  - id: AC-831-02
+    statement: exact prior qualified UR-DEV SHA and exact released gwc/main SHA recorded.
+    verifiable: true
+  - id: AC-831-03
+    statement: release/merge receipt is durable and attributable.
+    verifiable: true
+  - id: AC-831-04
+    statement: drift classification and affected surfaces recorded using frozen taxonomy.
+    verifiable: true
+  - id: AC-831-05
+    statement: all required affected qualification suites pass against the released-main subject.
+    verifiable: true
+  - id: AC-831-06
+    statement: no silent collapse of historical development-source provenance.
+    verifiable: true
+  - id: AC-831-07
+    statement: prior qualification whose subject materially drifted is not reused as current qualification without fresh evidence.
+    verifiable: true
+  - id: AC-831-08
+    statement: warning guard enforced — DWO main merge gated on Universal release merge.
+    verifiable: true
+
+constraints:
+  - MAIN_REBIND_PENDING entered only from durable release evidence
+  - a moving branch name alone is not evidence
+  - no silent collapse of historical development-source provenance
+  - prior qualification whose subject materially drifted is not reused without fresh evidence
+  - this task grants no merge/deploy/production authority
+  - stage by explicit path; never git add .
+
+target_contract:
+  ref: TARGET-REBIND-831-R1
+  revision: 1
+  kind: STATE
+  statement: >-
+    A release-rebind mechanism exists that: detects the bound Universal release
+    merge and resolves the exact released gwc/main SHA; enters MAIN_REBIND_PENDING
+    only from durable release evidence; compares released main to the last qualified
+    development source; classifies drift using the frozen taxonomy; records affected
+    adapter/reducer/UI/qualification surfaces; rebinds the native semantic source to
+    released main; reruns only the affected DEV-NATIVE qualification scope; and
+    invalidates prior qualification on material subject drift. A warning guard
+    enforces that DWO main may only be merged once the Universal release is merged.
+    RELEASE_MAIN_BOUND is derivable from machine-readable state.
+  validation:
+    - all eight acceptance criteria covered by executed automated tests
+    - DWO baseline stays green (typecheck, vitest, pytest)
+    - RELEASE_MAIN_BOUND derivable from materialized state
+  out_of_scope:
+    - real-run certification (SCRUM-832)
+    - any merge, deploy, production, migration or secret effect
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/rebind/
+  - .gwc/tasks/SCRUM-831/

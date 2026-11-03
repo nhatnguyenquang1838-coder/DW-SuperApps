@@ -1,0 +1,31 @@
+runtime_facts:
+  run_id: DEV-RUN-026
+  run_kind: CHILD
+  lifecycle_profile:
+    id: gwc.universal-run
+    version: 1
+  domain_profile_ref: RESEARCH
+  target_contract_ref: TARGET-026-R1
+  active_runtime_plan_ref: PLAN-026-R1
+  active_runtime_plan_revision: 1
+  active_runtime_plan_digest: 41f81e8f7547160eb8052298957956f036ca024bf97e90097f7cb025f8c3927f
+  atomic: false
+  child_run_refs: []
+  dependency_refs:
+  - DEV-RUN-025
+  parent_run_ref: DEV-RUN-024
+  lifecycle:
+    G0: PASSED
+    G1: PASSED
+    G2: PASSED
+    G3: PASSED
+    G4: PASSED
+    G5: PASSED
+    G6: PASSED
+  run_state: ACCEPTED
+dwo_expected_projection:
+  source_profile: DEV_NATIVE
+  sync_state: LIVE
+  semantic_qualification: PENDING
+  authority_state: NOT_APPLICABLE
+  anomaly_count: 0

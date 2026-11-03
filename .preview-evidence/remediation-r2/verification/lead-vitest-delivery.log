@@ -1,0 +1,116 @@
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.0.5 D:/Projects/DW-SuperApps.worktrees/dwo-langgraph-e2e-r1/projects/dw-observation
+
+(node:9272) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | tests/unit/live.test.ts > M2 React view updates on transport frame > updates the rendered view when a live frame arrives (after transport subscribes)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (D:\Projects\DW-SuperApps.worktrees\dwo-langgraph-e2e-r1\projects\dw-observation\node_modules\.pnpm\@testing-library+react@16.0_174fccaebcbf8da3195ac2d6c64a6210\node_modules\@testing-library\react\dist\pure.js:307:5)
+
+ ✓ tests/unit/live.test.ts  (45 tests) 1155ms
+ ✓ tests/unit/supabaseMigrationContract.test.ts  (48 tests) 62ms
+ ✓ tests/unit/dwo/r2-runtime-integration.test.ts  (30 tests) 46ms
+ ✓ tests/unit/dwo/t09-fixture-materialization.test.ts  (32 tests) 1792ms
+ ✓ tests/unit/dwo/t04-unified-runtime.test.ts  (16 tests) 61ms
+ ✓ tests/unit/dwo/t05-unified-workspace.test.tsx  (27 tests) 1135ms
+ ✓ tests/unit/replay.test.ts  (38 tests) 139ms
+(node:9272) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/unit/serverRunRead.test.ts  (8 tests) 144ms
+ ✓ tests/unit/dwo/r2-ab-hardening.test.ts  (19 tests) 20ms
+ ✓ tests/unit/dwo/r2-c1-c5-contract-gaps.test.ts  (22 tests) 30ms
+ ✓ tests/unit/reviewIntelligence.test.ts  (35 tests) 62ms
+ ✓ tests/unit/dwo/r2-c-depth-fixture.test.ts  (23 tests) 22ms
+ ✓ tests/unit/dwo/r2-f-task-run-index.test.ts  (31 tests) 27ms
+ ✓ tests/unit/dwo/t07-next-flow.test.ts  (13 tests) 17ms
+ ✓ tests/unit/dwo/reducer.test.ts  (25 tests) 20ms
+ ✓ tests/unit/dwo/evidenceReplay.test.ts  (20 tests) 20ms
+ ✓ tests/unit/dwo/rebind.test.ts  (26 tests) 26ms
+ ✓ tests/unit/dwo/projectionContract.test.ts  (27 tests) 30ms
+ ✓ tests/unit/dwo/r2-d-authority-vocabulary.test.ts  (29 tests) 22ms
+ ✓ tests/unit/loginEpicRuntimeGraph.test.ts  (36 tests) 46ms
+(node:9272) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/unit/dwo/t06-replay-isolation.test.ts  (11 tests) 28ms
+ ✓ tests/unit/dwo/r2-e-parent-composition.test.ts  (20 tests) 20ms
+ ✓ tests/unit/LoginEpicRunGraph.test.tsx  (16 tests) 3120ms
+(node:9272) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/unit/dwo/t09c-adapter-dispatch.test.ts  (6 tests) 262ms
+(node:9272) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/unit/dwo/f5-fixture-dev-routes.test.ts  (14 tests) 4300ms
+ ✓ tests/unit/dwo/releaseBinding.test.ts  (16 tests) 19ms
+ ✓ tests/unit/dwo/r2-b-traceability-chain.test.ts  (17 tests) 24ms
+ ✓ tests/unit/dwo/qualification.test.ts  (19 tests) 51ms
+ ✓ tests/unit/dwo/durable.test.ts  (20 tests) 24ms
+ ✓ tests/unit/dwo/t08-dashboard.test.ts  (10 tests) 35ms
+ ✓ tests/unit/dwo/r2-a-dependency-satisfaction.test.ts  (15 tests) 20ms
+ ✓ tests/unit/dwo/live.test.ts  (22 tests) 25ms
+ ✓ tests/unit/ReplayPane.test.tsx  (13 tests) 584ms
+ ✓ tests/unit/dwo/f5-fixture-qualification.test.ts  (13 tests) 104ms
+ ✓ tests/unit/dwo/fixtureSet.test.ts  (13 tests) 21ms
+ ✓ tests/unit/dwo/drift.test.ts  (15 tests) 14ms
+ ✓ tests/unit/dwo/t09b-fixture-lab.test.tsx  (10 tests) 4426ms
+ ✓ tests/unit/dwo/f1-fixture-gate-task-context.test.ts  (10 tests) 643ms
+ ✓ tests/unit/dwo/rebindRecord.test.ts  (10 tests) 18ms
+ ✓ tests/unit/dwo/shared-fixture-prefix-integration.test.tsx  (6 tests) 1340ms
+ ✓ tests/unit/ReviewPane.test.tsx  (14 tests) 254ms
+ ✓ tests/unit/dwo/ux.test.ts  (13 tests) 22ms
+ ✓ tests/unit/dwo/t05-no-raw-hex-guard.test.ts  (4 tests) 11ms
+ ✓ tests/unit/dwo/t03-task-run-hydration.test.ts  (5 tests) 14ms
+ ✓ tests/unit/dwo/t09c-fixture-evidence-integrity.test.ts  (7 tests) 262ms
+ ✓ tests/unit/dwo/accessibility.test.ts  (13 tests) 25ms
+(node:9272) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/unit/dwo/t08-replay.test.ts  (4 tests) 10ms
+ ✓ tests/unit/dwo/f2-fixture-replay-controls.test.tsx  (4 tests) 213ms
+ ✓ tests/unit/dwo/acceptance.test.ts  (12 tests) 13ms
+ ✓ tests/unit/dwo/fixtureReplay.test.ts  (7 tests) 56ms
+ ✓ tests/unit/dwo/inventory.test.ts  (9 tests) 19ms
+ ✓ tests/unit/observatory.test.ts  (9 tests) 15ms
+ ✓ tests/unit/dwo/shared-fixture-replay.test.tsx  (2 tests) 516ms
+(node:9272) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/unit/dwo/t05-replay.test.ts  (4 tests) 8ms
+ ✓ tests/unit/dwo/recoveryLineage.test.ts  (9 tests) 19ms
+ ✓ tests/unit/RunGraphView.test.tsx  (7 tests) 528ms
+ ✓ tests/unit/dwo/qualification-projection.test.tsx  (6 tests) 90ms
+ ✓ tests/unit/dwo/t12-definition-of-done.test.ts  (7 tests) 17ms
+(node:9272) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/unit/dwo/f4-fixture-preview-routes.test.tsx  (4 tests) 2317ms
+ ✓ tests/unit/dwo/qualification-read.test.ts  (3 tests) 19ms
+ ✓ tests/unit/dwo/scaleGen.test.ts  (7 tests) 70ms
+ ✓ tests/unit/simRun.test.ts  (7 tests) 12ms
+ ✓ tests/unit/dwo/t02-task-gateway.test.ts  (5 tests) 20ms
+ ✓ tests/unit/dwo/f5-current-fixture-subject.test.ts  (3 tests) 185ms
+ ✓ tests/unit/login/page.test.tsx  (5 tests) 175ms
+ ✓ tests/unit/dwo/t01-penpot-tokens.test.ts  (22 tests) 15ms
+ ✓ tests/unit/mockDataSource.test.ts  (6 tests) 12ms
+ ✓ tests/unit/dwo/f5-playwright-config.test.ts  (2 tests) 16ms
+ ✓ tests/unit/DagView.test.tsx  (3 tests) 388ms
+ ✓ tests/unit/EvidenceInspector.test.tsx  (3 tests) 234ms
+(node:9272) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/unit/tasks/task-first-read-only.test.tsx  (3 tests) 101ms
+ ✓ tests/unit/RootCard.test.tsx  (3 tests) 122ms
+ ✓ tests/unit/dwo/f4-fixture-preview-mode.test.ts  (2 tests) 7ms
+ ✓ tests/unit/tasks/page.test.tsx  (2 tests) 205ms
+ ✓ tests/unit/scripts/typecheck-tests.test.ts  (1 test) 16736ms
+ ✓ tests/unit/dwo/replay-route.test.ts  (1 test) 4ms
+
+ Test Files  76 passed (76)
+      Tests  1044 passed (1044)
+   Start at  00:15:06
+   Duration  246.27s (transform 4.41s, setup 26.40s, collect 20.83s, tests 42.68s, environment 114.30s, prepare 20.72s)

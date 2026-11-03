@@ -1,0 +1,21 @@
+typecheck-tests	typecheck:tests:strict (regression gate)	﻿2026-10-30T23:26:24.3147443Z ##[group]Run set -o pipefail && pnpm run typecheck:tests:strict 2>&1 | tee ci-typecheck-tests-strict.log
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:24.3148011Z ^[[36;1mset -o pipefail && pnpm run typecheck:tests:strict 2>&1 | tee ci-typecheck-tests-strict.log^[[0m
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:24.3166026Z shell: /usr/bin/bash -e {0}
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:24.3166241Z env:
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:24.3166417Z   TMPDIR: /home/runner/work/_temp
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:24.3166680Z   DWO_R3_SCRATCH_ROOT: /home/runner/work/_temp
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:24.3166915Z ##[endgroup]
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:24.7044005Z $ node scripts/typecheck-tests.mjs --strict
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:29.3034107Z ── test-code typecheck (NON-BLOCKING) ──
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:29.3034668Z   errors : 1
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:29.3034938Z   baseline: 0
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:29.3037003Z   delta   : +1
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:29.3037290Z
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:29.3039634Z   by code:
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:29.3040294Z     TS2559    1
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:29.3040491Z
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:29.3040607Z   by file (top 12):
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:29.3040780Z
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:29.3042029Z REGRESSION: 1 test-code type errors, baseline is 0. New type errors in test code are never acceptable — fix them, do not raise the baseline.
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:29.3244488Z [ELIFECYCLE] Command failed with exit code 1.
+typecheck-tests	typecheck:tests:strict (regression gate)	2026-10-30T23:26:29.3639645Z ##[error]Process completed with exit code 1.

@@ -1,0 +1,39 @@
+# G1 PREFLIGHT — SCRUM-832 (DWO-V2-11)
+schema_version: gwc.g1.preflight/1.0
+artifact_type: G1_PREFLIGHT
+gate: G1_PLAN
+trace:
+  task_id: SCRUM-832
+  plan_revision: 1
+  checked_at: '2026-09-30T09:53:00+07:00'
+
+refs:
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 2a25b5515def0977fcfa8a4d15e9f3aa181ccb45
+  task_branch: task/SCRUM-832-real-run-cert
+  worktree: /Users/mac/prj/DW-SuperApps.worktrees/task/SCRUM-832-real-run-cert
+
+baseline_present:
+  lib/dwo/qualification.ts: true
+  lib/dwo/qualificationSubject.ts: true
+  lib/dwo/rebind.ts: true
+  lib/dwo/rebindCertification.ts: true
+  lib/dwo/realtimeBootstrap.ts: true
+  lib/dwo/liveState.ts: true
+  lib/dwo/replay.ts: true
+  lib/dwo/durableOrder.ts: true
+  dwo-v2/fixtures/DWO-UR-30-V1/: true
+
+qualification_rebind_live_replay_inputs:
+  value: true
+  note: qualification (830), rebind (831), live (828), replay (827), durable (825) all available
+
+baseline_tests:
+  note: 550 vitest + 112 pytest green on integration branch before this task branched
+  node_modules: symlinked from main checkout; not committed
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/acceptance/
+  - .gwc/tasks/SCRUM-832/

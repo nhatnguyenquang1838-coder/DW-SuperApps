@@ -1,0 +1,39 @@
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.0.5 D:/Projects/DW-SuperApps.worktrees/dwo-langgraph-e2e-r1/projects/dw-observation
+
+ ❯ tests/unit/dwo/ci-delivery-contract.test.ts  (11 tests | 1 failed) 2320ms
+   × DW Observation CI delivery contract > compiles the production middleware on a clean checkout without generated Next ambient types
+     → expected { status: 2, …(1) } to deeply equal { status: +0, diagnostics: '' }
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/dwo/ci-delivery-contract.test.ts > DW Observation CI delivery contract > compiles the production middleware on a clean checkout without generated Next ambient types
+AssertionError: expected { status: 2, …(1) } to deeply equal { status: +0, diagnostics: '' }
+
+- Expected
++ Received
+
+  Object {
+-   "diagnostics": "",
+-   "status": 0,
++   "diagnostics": "middleware.ts(20,45): error TS2559: Type 'ProcessEnv' has no properties in common with type 'DevRouteEnvironment'.
+
++ ",
++   "status": 2,
+  }
+
+ ❯ tests/unit/dwo/ci-delivery-contract.test.ts:51:105
+     49|       });
+     50|       expect(checked.error).toBeUndefined();
+     51|       expect({ status: checked.status, diagnostics: `${checked.stdout …
+       |                                                                                                         ^
+     52|     } finally {
+     53|       rmSync(scratch, { recursive: true, force: true });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 passed (11)
+   Start at  06:31:32
+   Duration  4.27s (transform 88ms, setup 283ms, collect 39ms, tests 2.32s, environment 1.14s, prepare 233ms)

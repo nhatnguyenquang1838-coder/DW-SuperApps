@@ -1,0 +1,37 @@
+# G1 PREFLIGHT — SCRUM-827 (DWO-V2-06)
+schema_version: gwc.g1.preflight/1.0
+artifact_type: G1_PREFLIGHT
+gate: G1_PLAN
+trace:
+  task_id: SCRUM-827
+  plan_revision: 1
+  checked_at: '2026-09-30T04:26:00+07:00'
+
+refs:
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 980df7e7c7752b7dd384a60cdd3e0e9c6a1e2784
+  task_branch: task/SCRUM-827-evidence-replay
+  worktree: /Users/mac/prj/DW-SuperApps.worktrees/task/SCRUM-827-evidence-replay
+
+baseline_present:
+  lib/dwo/reducer.ts: true
+  lib/dwo/durableOrder.ts: true
+  lib/dwo/durableCertification.ts: true
+  lib/dwo/comparisonContract.ts: true (FNR-02)
+  lib/dwo/fixtureSpec.ts: true
+  lib/dwo/runViewModel.ts: true
+  dwo-v2/fixtures/DWO-UR-30-V1/: true
+
+fixture_and_durable_replay_inputs:
+  value: true
+  note: fixture stream + durable order/rebuild contract both available
+
+baseline_tests:
+  note: 446 vitest + 112 pytest green on integration branch before this task branched
+  node_modules: symlinked from main checkout; not committed
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/evidence/
+  - .gwc/tasks/SCRUM-827/

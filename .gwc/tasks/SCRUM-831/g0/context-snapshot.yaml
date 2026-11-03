@@ -1,0 +1,80 @@
+# G0 CONTEXT SNAPSHOT — SCRUM-831 (DWO-V2-10)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g0.context-snapshot/1.0
+artifact_type: CONTEXT_SNAPSHOT
+gate: G0_UNDERSTAND
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-831
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 9f46c8500923d94a0e8344e978bb3064f5e288d6
+  captured_at: '2026-09-30T06:12:00+07:00'
+
+objective: >-
+  Cut DWO v2 over from the Universal release-development line to the exact released
+  gwc/main source, with typed release evidence and affected-scope requalification.
+  Per human decision (Nhật, 2026-09-30): the external Universal release merge is NOT
+  a hard blocker for this task's development; instead a warning guard is enforced —
+  DWO main may only be merged once the Universal release is merged. Development of
+  the rebind mechanism, drift classification, affected-surface recording, and
+  requalification scope proceeds now.
+
+scope:
+  - detect the bound Universal release merge and resolve exact released main SHA
+  - enter MAIN_REBIND_PENDING only from durable release evidence
+  - compare released main to the last qualified development source
+  - classify drift using the frozen taxonomy
+  - record affected adapter/reducer/UI/qualification surfaces
+  - rebind native semantic source to released main
+  - rerun only the affected DEV-NATIVE qualification scope
+  - invalidate prior qualification when its exact subject materially drifts
+  - enforce warning guard: DWO main merge gated on Universal release merge
+
+dependencies:
+  - SCRUM-830 (DWO-V2-09) qualification — DONE
+  - external Universal release merge to gwc/main — NOT a hard blocker (human decision); warning guard instead
+
+constraints:
+  - MAIN_REBIND_PENDING entered only from durable release evidence, not prose
+  - a moving branch name alone is not evidence
+  - no silent collapse of historical development-source provenance
+  - prior qualification whose subject materially drifted is not reused without fresh evidence
+  - this task grants no merge/deploy/production authority
+
+acceptance_criteria:
+  - id: AC-831-01
+    statement: RELEASE_MAIN_BOUND exit token derivable from machine-readable state
+  - id: AC-831-02
+    statement: exact prior qualified UR-DEV SHA and exact released gwc/main SHA recorded
+  - id: AC-831-03
+    statement: release/merge receipt is durable and attributable
+  - id: AC-831-04
+    statement: drift classification and affected surfaces recorded using frozen taxonomy
+  - id: AC-831-05
+    statement: all required affected qualification suites pass against the released-main subject
+  - id: AC-831-06
+    statement: no silent collapse of historical development-source provenance
+  - id: AC-831-07
+    statement: prior qualification whose subject materially drifted is not reused as current qualification without fresh evidence
+  - id: AC-831-08
+    statement: warning guard enforced — DWO main merge gated on Universal release merge
+
+canonical_sources:
+  - DWO v2 Solution Design C4 (3ea07c1c65b6813c95d6c7acf7a61c32) — READ
+  - Universal Run Kernel Contract Freeze (3d207c1c65b681b481c2f3247e10c1b2) — READ
+  - Jira SCRUM-831 description (ReleaseBindingReceipt contract) — READ
+
+authority_boundary:
+  grants:
+    - development commits on task/SCRUM-831-release-rebind
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-831 progress/evidence updates
+  excluded:
+    - G4_MERGE, G5_DEPLOY, G6_PRODUCTION
+    - approval bypass, protected main writes
+    - production data mutation, database migration, secret change
+    - merging DWO main before the Universal release merge (warning guard)

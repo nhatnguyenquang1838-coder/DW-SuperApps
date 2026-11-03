@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
 export default function Home() {
-  redirect("/runs");
+  // DWO v2: Task-first entry point.
+  redirect("/tasks");
 }

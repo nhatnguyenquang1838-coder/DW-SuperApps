@@ -1,0 +1,19 @@
+{
+  "record_id": "DEV-RUN-004-AuthorityDecisionReceipt",
+  "schema_id": "AuthorityDecisionReceipt",
+  "schema_version": 1,
+  "run_id": "DEV-RUN-004",
+  "created_at": "2026-09-01T00:00:00Z",
+  "created_by": "fixture://dwo-ur-30-v1/generator",
+  "content_digest": {
+    "algorithm": "sha256",
+    "canonicalization": "JCS",
+    "value": "69c313c13e157d259f34a9e7b88947cdd0875207886e6368cf2d3f0ce2f829a7"
+  },
+  "provenance": {
+    "predecessor_refs": [],
+    "source_refs": []
+  },
+  "decision": "DENY",
+  "reason": "fixture policy"
+}

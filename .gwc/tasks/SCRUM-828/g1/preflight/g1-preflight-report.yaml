@@ -1,0 +1,36 @@
+# G1 PREFLIGHT — SCRUM-828 (DWO-V2-07)
+schema_version: gwc.g1.preflight/1.0
+artifact_type: G1_PREFLIGHT
+gate: G1_PLAN
+trace:
+  task_id: SCRUM-828
+  plan_revision: 1
+  checked_at: '2026-09-30T04:36:00+07:00'
+
+refs:
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 0f9a4dc5e4db9ab4c07f02688619dcc51e730d91
+  task_branch: task/SCRUM-828-realtime-live
+  worktree: /Users/mac/prj/DW-SuperApps.worktrees/task/SCRUM-828-realtime-live
+
+baseline_present:
+  lib/dwo/durableOrder.ts: true
+  lib/dwo/idempotency.ts: true
+  lib/dwo/durableCertification.ts: true
+  lib/dwo/replay.ts: true
+  lib/dwo/runViewModel.ts: true
+  dwo-v2/fixtures/DWO-UR-30-V1/: true
+
+durable_and_replay_inputs:
+  value: true
+  note: durable history + replay available for reconnect catch-up and certified-LIVE
+
+baseline_tests:
+  note: 465 vitest + 112 pytest green on integration branch before this task branched
+  node_modules: symlinked from main checkout; not committed
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/live/
+  - .gwc/tasks/SCRUM-828/

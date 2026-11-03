@@ -1,0 +1,68 @@
+# G0 CONTEXT SNAPSHOT — SCRUM-827 (DWO-V2-06)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g0.context-snapshot/1.0
+artifact_type: CONTEXT_SNAPSHOT
+gate: G0_UNDERSTAND
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-827
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 980df7e7c7752b7dd384a60cdd3e0e9c6a1e2784
+  captured_at: '2026-09-30T04:25:00+07:00'
+
+objective: >-
+  Implement evidence-first inspection, recovery lineage and deterministic replay UX
+  for DWO v2.
+
+scope:
+  - Evidence Inspector with source/profile/ref/digest/provenance fields
+  - recovery lineage for retry, rerun, replan, restart, supersession and reset-derived-state
+  - CURRENT vs REPLAY view mode
+  - deterministic replay checkpoints from fixture and durable histories
+  - semantic anomaly presentation with supporting evidence refs
+  - durable-history integration under the accepted ordering/rebuild contract (SCRUM-825)
+
+dependencies:
+  - SCRUM-824 (DWO-V2-03) reducer — DONE
+  - SCRUM-825 (DWO-V2-04) durable history — DONE (completion blocker)
+  - SCRUM-826 (DWO-V2-05) run UX — DONE (integrates)
+  - SCRUM-822 (DWO-V2-01) fixtures — DONE (consumed)
+
+constraints:
+  - replay reconstructs expected frames for official fixtures
+  - replay reconstructs expected frames from durable history under the accepted ordering/rebuild contract
+  - recovery generations remain immutable and navigable
+  - evidence provenance visible without inventing missing facts
+  - fixture replay and durable replay produce deterministic comparison evidence under FNR-02
+  - no production write/effect path
+
+acceptance_criteria:
+  - id: AC-827-01
+    statement: replay reconstructs expected frames for official fixtures (deterministic)
+  - id: AC-827-02
+    statement: replay reconstructs expected frames from durable history under the accepted ordering/rebuild contract
+  - id: AC-827-03
+    statement: recovery generations remain immutable and navigable
+  - id: AC-827-04
+    statement: evidence provenance visible without inventing missing facts
+  - id: AC-827-05
+    statement: fixture replay and durable replay produce deterministic comparison evidence under FNR-02
+
+canonical_sources:
+  - DWO v2 Solution Design C4 (3ea07c1c65b6813c95d6c7acf7a61c32) — READ
+  - DWO-UR-30-V1 fixture catalog (3ea07c1c65b681c28de7c076abdfbdb2) — READ
+  - FNR-02 comparison contract (gwc.dwo.fnr02-comparison/1) — implemented SCRUM-823
+
+authority_boundary:
+  grants:
+    - development commits on task/SCRUM-827-evidence-replay
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-827 progress/evidence updates
+  excluded:
+    - G4_MERGE, G5_DEPLOY, G6_PRODUCTION
+    - approval bypass, protected main writes
+    - production data mutation, database migration, secret change

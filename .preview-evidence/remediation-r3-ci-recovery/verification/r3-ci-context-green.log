@@ -1,0 +1,10 @@
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.0.5 D:/Projects/DW-SuperApps.worktrees/dwo-langgraph-e2e-r1/projects/dw-observation
+
+ ✓ tests/unit/dwo/ci-delivery-contract.test.ts  (10 tests) 13ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  06:23:07
+   Duration  2.01s (transform 77ms, setup 273ms, collect 35ms, tests 13ms, environment 1.15s, prepare 246ms)

@@ -1,0 +1,10 @@
+.................................................................... [ 43%]
+........................................................................ [ 90%]
+...............                                                          [100%]
+============================== warnings summary ===============================
+..\..\..\..\..\HermesData\cache\scratch\pr130-test-env\Lib\site-packages\langsmith\_internal\_beta_decorator.py:92: 13 warnings
+  D:\HermesData\cache\scratch\pr130-test-env\Lib\site-packages\langsmith\_internal\_beta_decorator.py:92: DeprecationWarning: 'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16; use inspect.iscoroutinefunction() instead
+    if asyncio.iscoroutinefunction(func):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+155 passed, 13 warnings, 4 subtests passed in 3.85s

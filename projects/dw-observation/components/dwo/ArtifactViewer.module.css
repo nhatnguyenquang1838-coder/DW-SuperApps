@@ -1,0 +1,8 @@
+.backdrop { position: fixed; inset: 0; z-index: 1000; background: rgb(5 10 20 / 72%); display: grid; place-items: center; padding: 1rem; }
+.dialog { width: min(900px, 96vw); max-height: 90vh; overflow: auto; background: #111827; color: #e5e7eb; border: 1px solid #475569; border-radius: 12px; padding: 1.25rem; box-shadow: 0 20px 70px #0009; }
+.header { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.header h2 { margin: 0; font-size: 1.2rem; }
+.header p { overflow-wrap: anywhere; color: #aab6c8; }
+.header button { padding: .5rem .8rem; }
+.content { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 60vh; overflow: auto; background: #090e19; padding: 1rem; border-radius: 8px; }
+.note { color: #aab6c8; }

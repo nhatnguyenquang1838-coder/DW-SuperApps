@@ -1,0 +1,106 @@
+# G1 INTAKE — SCRUM-825 (DWO-V2-04)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g1.intake/1.0
+artifact_type: G1_INTAKE
+gate: G1_PLAN
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-825
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: 0c877134da7a364e825bc055d1983029b0693656
+  active_runtime_plan_ref: PLAN-825-R1
+  active_runtime_plan_revision: 1
+  target_contract_ref: TARGET-DURABLE-825-R1
+
+problem:
+  statement: >-
+    DWO v2 has no durable projection/reconciliation foundation. SCRUM-828 (realtime
+    LIVE) and SCRUM-827 (evidence inspector) both depend on durable history being
+    sufficient to reconstruct accepted projection state, with derived state
+    disposable/rebuildable, duplicate idempotency, out-of-order handling, gap
+    fail-closed behavior, and no browser path requiring service-role credentials.
+  why_now: >-
+    SCRUM-825 is the durable foundation. The Projection Contract v2 (SCRUM-823),
+    reducer (SCRUM-824) and golden fixtures (SCRUM-822) are now available as inputs.
+    Realtime transport cannot be correctness-bearing until this foundation exists.
+
+stakeholders:
+  requester: human://nhat-nguyen-quang
+  affected:
+    - team://dw-superapps-dwo
+    - consumer://scrUM-827-evidence-inspector
+    - consumer://scrUM-828-realtime-live
+
+risks:
+  - id: RISK-001
+    description: Derived state not disposable/rebuildable (rebuild-from-zero parity broken).
+    impact: high
+    mitigation: rebuild-from-zero parity test; derived state is a pure function of durable history.
+  - id: RISK-002
+    description: Durable history insufficient to reconstruct accepted projection state.
+    impact: high
+    mitigation: durable history is the canonical reconstruction source; tests assert reconstruction.
+  - id: RISK-003
+    description: Duplicate/out-of-order/gap handling not fail-closed.
+    impact: high
+    mitigation: duplicate idempotency, out-of-order handling, gap fail-closed behavior tested.
+  - id: RISK-004
+    description: Browser path requires service-role/secret credentials.
+    impact: high
+    mitigation: read-isolation/RLS allow-deny tests; no browser path uses service-role.
+  - id: RISK-005
+    description: Scope creep into realtime transport (SCRUM-828) or UX (SCRUM-826).
+    impact: medium
+    mitigation: authorized_paths enumerated; durable foundation only.
+
+acceptance_criteria:
+  - id: AC-825-01
+    statement: V2_DURABLE_RECONCILIATION_READY derivable from machine-readable state.
+    verifiable: true
+  - id: AC-825-02
+    statement: derived state is disposable/rebuildable (rebuild-from-zero parity).
+    verifiable: true
+  - id: AC-825-03
+    statement: durable history sufficient to reconstruct accepted projection state.
+    verifiable: true
+  - id: AC-825-04
+    statement: duplicate idempotency, out-of-order handling, gap fail-closed behavior correct.
+    verifiable: true
+  - id: AC-825-05
+    statement: no browser path requires service-role/secret credentials (read-isolation/RLS).
+    verifiable: true
+
+constraints:
+  - Derived state disposable/rebuildable
+  - Durable history sufficient to reconstruct accepted projection state
+  - No browser path requires service-role/secret credentials
+  - No production write/effect path
+  - Stage by explicit path; never git add .
+
+target_contract:
+  ref: TARGET-DURABLE-825-R1
+  revision: 1
+  kind: STATE
+  statement: >-
+    A durable projection/reconciliation foundation exists with append-only durable
+    event order + explicit position/watermark, v1/v2 compatibility + backfill,
+    duplicate idempotency + out-of-order + gap fail-closed behavior, rebuild-from-zero
+    parity + RESET_DERIVED_STATE safety, durable bootstrap/reconnect catch-up, and
+    read-isolation/RLS allow-deny tests — all covered by automated tests, with
+    V2_DURABLE_RECONCILIATION_READY derivable.
+  validation:
+    - all five acceptance criteria covered by executed automated tests
+    - DWO baseline stays green (typecheck, vitest, pytest)
+    - V2_DURABLE_RECONCILIATION_READY derivable from materialized state
+  out_of_scope:
+    - realtime transport (SCRUM-828)
+    - run-centric UX (SCRUM-826)
+    - any merge, deploy, production, migration or secret effect
+
+authorized_paths:
+  - projects/dw-observation/lib/dwo/
+  - projects/dw-observation/tests/unit/dwo/
+  - projects/dw-observation/dwo-v2/durable/
+  - .gwc/tasks/SCRUM-825/

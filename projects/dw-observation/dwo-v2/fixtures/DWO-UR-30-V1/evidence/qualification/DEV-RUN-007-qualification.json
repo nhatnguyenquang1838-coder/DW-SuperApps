@@ -1,0 +1,58 @@
+{
+  "authority_granted": false,
+  "checks": [
+    {
+      "check_id": "authority-orthogonality",
+      "evidence_refs": [
+        "evidence://dwo-qualification/authority/DEV-RUN-007"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "history-parity",
+      "evidence_refs": [
+        "evidence://dwo-qualification/history/DEV-RUN-007"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "reducer-replay-parity",
+      "evidence_refs": [
+        "evidence://dwo-qualification/replay/DEV-RUN-007"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "semantic-evidence",
+      "evidence_refs": [
+        "evidence://dwo-qualification/semantic/DEV-RUN-007"
+      ],
+      "status": "PASS"
+    }
+  ],
+  "evidence_refs": [
+    "evidence://dwo-qualification/authority/DEV-RUN-007",
+    "evidence://dwo-qualification/history/DEV-RUN-007",
+    "evidence://dwo-qualification/replay/DEV-RUN-007",
+    "evidence://dwo-qualification/semantic/DEV-RUN-007"
+  ],
+  "graph_version": "dwo.langgraph-qualification/1",
+  "projection_events_mutated": false,
+  "qualification_id": "qualification:4465d80a6653be15016fd787c60a6017f182d9f4243d07ff2146801ad8de90d6",
+  "receipt_digest": "sha256:3b65fee11d40af8e65cc46b821ea2c24702d5f1f9a058fb820120eaff27fae7b",
+  "receipt_id": "receipt:3b65fee11d40af8e65cc46b821ea2c24702d5f1f9a058fb820120eaff27fae7b",
+  "schema_version": "dwo.qualification-receipt/1",
+  "status": "QUALIFIED",
+  "subject": {
+    "durable_position": "projection_ordinal=7",
+    "dwo_run_id": "DEV-RUN-007",
+    "lifecycle_profile": "gwc.universal-run/1",
+    "projection_contract_version": "dwo.projection-contract/2",
+    "reducer_version": "dwo.reducer/1",
+    "schema_version": "dwo.qualification-subject/1",
+    "source_repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+    "source_sha": "d334e5f9bbc559a6b80fef5a88c3977e10e1150f",
+    "task_ref": null
+  },
+  "subject_digest": "sha256:4a5dde3a69ba161c51f55115344ed0a8c9c870153fff3c9da3ad182059c778c2"
+}

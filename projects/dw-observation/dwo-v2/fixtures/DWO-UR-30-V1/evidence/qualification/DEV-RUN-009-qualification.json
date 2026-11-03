@@ -1,0 +1,58 @@
+{
+  "authority_granted": false,
+  "checks": [
+    {
+      "check_id": "authority-orthogonality",
+      "evidence_refs": [
+        "evidence://dwo-qualification/authority/DEV-RUN-009"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "history-parity",
+      "evidence_refs": [
+        "evidence://dwo-qualification/history/DEV-RUN-009"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "reducer-replay-parity",
+      "evidence_refs": [
+        "evidence://dwo-qualification/replay/DEV-RUN-009"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "semantic-evidence",
+      "evidence_refs": [
+        "evidence://dwo-qualification/semantic/DEV-RUN-009"
+      ],
+      "status": "PASS"
+    }
+  ],
+  "evidence_refs": [
+    "evidence://dwo-qualification/authority/DEV-RUN-009",
+    "evidence://dwo-qualification/history/DEV-RUN-009",
+    "evidence://dwo-qualification/replay/DEV-RUN-009",
+    "evidence://dwo-qualification/semantic/DEV-RUN-009"
+  ],
+  "graph_version": "dwo.langgraph-qualification/1",
+  "projection_events_mutated": false,
+  "qualification_id": "qualification:8367f9d5f5b0bccf5e2c7ac53f0720a9e69e2a7eac101aa08bc84cadd3d90ec4",
+  "receipt_digest": "sha256:1b2f19ea845786fb6029fdc8ea965e5b044f43292407b566c2417701b29def32",
+  "receipt_id": "receipt:1b2f19ea845786fb6029fdc8ea965e5b044f43292407b566c2417701b29def32",
+  "schema_version": "dwo.qualification-receipt/1",
+  "status": "QUALIFIED",
+  "subject": {
+    "durable_position": "projection_ordinal=9",
+    "dwo_run_id": "DEV-RUN-009",
+    "lifecycle_profile": "gwc.universal-run/1",
+    "projection_contract_version": "dwo.projection-contract/2",
+    "reducer_version": "dwo.reducer/1",
+    "schema_version": "dwo.qualification-subject/1",
+    "source_repository": "nhatnguyenquang1838-coder/DW-SuperApps",
+    "source_sha": "a7801a380b08ecac6b5b446a37447cc73de39f42",
+    "task_ref": null
+  },
+  "subject_digest": "sha256:0bc33d747acc8128134045ce5e7d4d3e3d6936f878dc906175d864a1f3fad8dc"
+}

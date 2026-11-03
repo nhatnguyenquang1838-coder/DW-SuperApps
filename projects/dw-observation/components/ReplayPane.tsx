@@ -20,15 +20,18 @@ import {
   type ReplayMode,
   type SurfaceSnapshot,
 } from "@/lib/replay";
+import styles from "./ReplayPane.module.css";
 
 export interface ReplayPaneProps {
   runId: string;
   events: ProjectionEvent[];
   /** True when the durable read was denied/unconfigured (never a fake LIVE). */
   storeDegraded?: boolean;
+  /** Marks fixture-backed LIVE as a synthetic local tip. */
+  fixturePreview?: boolean;
 }
 
-export default function ReplayPane({ runId, events, storeDegraded = false }: ReplayPaneProps) {
+export default function ReplayPane({ runId, events, storeDegraded = false, fixturePreview = false }: ReplayPaneProps) {
   const session = useMemo(() => new ReplaySession(events), [events]);
   const [snapshot, setSnapshot] = useState<SurfaceSnapshot>(() => session.surfaces());
 
@@ -52,7 +55,7 @@ export default function ReplayPane({ runId, events, storeDegraded = false }: Rep
 
   if (session.total === 0) {
     return (
-      <section aria-label="Replay" data-testid="replay-pane">
+      <section className={styles.replay} aria-label="Replay" data-testid="replay-pane">
         <h2>Replay</h2>
         <p data-testid="replay-empty">
           {storeDegraded
@@ -64,22 +67,21 @@ export default function ReplayPane({ runId, events, storeDegraded = false }: Rep
   }
 
   return (
-    <section aria-label="Replay" data-testid="replay-pane">
-      <header>
+    <section className={styles.replay} aria-label="Replay" data-testid="replay-pane">
+      <header className={styles.header}>
         <h2>Replay</h2>
-        <span data-testid="replay-mode">{mode}</span>
-        <span data-testid="replay-cursor">
-          {snapshot.cursor}/{snapshot.total}
-        </span>
-        <span data-testid="replay-digest">{snapshot.stateDigest}</span>
-        <span data-testid="replay-sync">
-          {synchronized ? "SYNCHRONIZED" : "DESYNC"}
-        </span>
+        <div className={styles.statusGrid}>
+          <div className={styles.statusField} aria-label="Replay mode"><span>Mode</span><strong data-testid="replay-mode">{fixturePreview && mode === "LIVE" ? "Current fixture tip" : mode}</strong></div>
+          <div className={styles.statusField} aria-label="Replay cursor"><span>Cursor</span><strong data-testid="replay-cursor">{snapshot.cursor}/{snapshot.total}</strong></div>
+          <div className={styles.statusField} aria-label="Replay synchronization"><span>Sync</span><strong data-testid="replay-sync">{synchronized ? "SYNCHRONIZED" : "DESYNC"}</strong></div>
+        </div>
       </header>
 
-      <div role="group" aria-label="Replay controls">
+      <div className={styles.controls} role="group" aria-label="Replay controls">
         <button
+          className={styles.controlButton}
           type="button"
+          aria-label="Replay from start"
           data-testid="replay-start"
           onClick={() => rewindTo(0)}
           disabled={snapshot.cursor === 0}
@@ -89,6 +91,7 @@ export default function ReplayPane({ runId, events, storeDegraded = false }: Rep
         <button
           type="button"
           data-testid="replay-back"
+          className={styles.controlButton}
           onClick={() => rewindTo(snapshot.cursor - 1)}
           disabled={snapshot.cursor === 0}
         >
@@ -97,6 +100,7 @@ export default function ReplayPane({ runId, events, storeDegraded = false }: Rep
         <button
           type="button"
           data-testid="replay-forward"
+          className={styles.controlButton}
           onClick={() => rewindTo(snapshot.cursor + 1)}
           disabled={snapshot.cursor === snapshot.total}
         >
@@ -105,15 +109,17 @@ export default function ReplayPane({ runId, events, storeDegraded = false }: Rep
         <button
           type="button"
           data-testid="replay-tip"
+          className={styles.controlButton}
           onClick={() => rewindTo(snapshot.total)}
           disabled={snapshot.cursor === snapshot.total}
         >
           Tip
         </button>
-        <button type="button" data-testid="replay-resume" onClick={resumeLive}>
-          Resume LIVE
+        <button className={styles.controlButton} type="button" aria-label={fixturePreview ? "Resume current fixture tip" : "Resume current live tip"} data-testid="replay-resume" onClick={resumeLive}>
+          {fixturePreview ? "Resume current fixture tip" : "Resume LIVE"}
         </button>
         <input
+          className={styles.scrubber}
           type="range"
           aria-label="Replay position"
           data-testid="replay-scrub"
@@ -123,9 +129,13 @@ export default function ReplayPane({ runId, events, storeDegraded = false }: Rep
           onChange={(e) => rewindTo(Number(e.target.value))}
         />
       </div>
+      <div className={styles.digest} aria-label="Full state digest">
+        <span>Full state digest</span>
+        <code data-testid="replay-digest">{snapshot.stateDigest}</code>
+      </div>
 
       {/* Every pane below is stamped with the SAME cursor + digest. */}
-      <div data-testid="surface-root-card" data-cursor={snapshot.rootCard.cursor}>
+      <div className={styles.surface} data-testid="surface-root-card" data-cursor={snapshot.rootCard.cursor}>
         <h3>RootCard</h3>
         <dl>
           <dt>Run</dt>
@@ -141,7 +151,7 @@ export default function ReplayPane({ runId, events, storeDegraded = false }: Rep
         </dl>
       </div>
 
-      <div data-testid="surface-dag" data-cursor={snapshot.dag.cursor}>
+      <div className={styles.surface} data-testid="surface-dag" data-cursor={snapshot.dag.cursor}>
         <h3>DAG</h3>
         <ul>
           {Object.entries(
@@ -163,7 +173,7 @@ export default function ReplayPane({ runId, events, storeDegraded = false }: Rep
         </ul>
       </div>
 
-      <div data-testid="surface-timeline" data-cursor={snapshot.timeline.cursor}>
+      <div className={styles.surface} data-testid="surface-timeline" data-cursor={snapshot.timeline.cursor}>
         <h3>Timeline</h3>
         <p data-testid="timeline-pending">{String(snapshot.timeline.pendingCount)} pending</p>
         <ol>
@@ -181,7 +191,7 @@ export default function ReplayPane({ runId, events, storeDegraded = false }: Rep
         </ol>
       </div>
 
-      <div data-testid="surface-evidence" data-cursor={snapshot.evidence.cursor}>
+      <div className={styles.surface} data-testid="surface-evidence" data-cursor={snapshot.evidence.cursor}>
         <h3>CI / Evidence</h3>
         <ul>
           {(snapshot.evidence.refs as Array<{ sourceEventId: string; ref: string }>).map(
@@ -197,7 +207,7 @@ export default function ReplayPane({ runId, events, storeDegraded = false }: Rep
         </p>
       </div>
 
-      <div data-testid="surface-inspector" data-cursor={snapshot.inspector.cursor}>
+      <div className={styles.surface} data-testid="surface-inspector" data-cursor={snapshot.inspector.cursor}>
         <h3>Inspector</h3>
         <ul>
           {(
@@ -217,7 +227,7 @@ export default function ReplayPane({ runId, events, storeDegraded = false }: Rep
         </p>
       </div>
 
-      <p data-testid="replay-note">
+      <p className={styles.note} data-testid="replay-note">
         Replay is a read-only projection of immutable history for run {runId}. It
         creates no authority and mutates nothing; LIVE resumes at the canonical
         tip with sequence state intact.

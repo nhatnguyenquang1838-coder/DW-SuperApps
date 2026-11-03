@@ -1,0 +1,122 @@
+{
+  "DEV-RUN-001": {
+    "event_prefix": "EVT-DEV-RUN-001",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-002": {
+    "event_prefix": "EVT-DEV-RUN-002",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-003": {
+    "event_prefix": "EVT-DEV-RUN-003",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-004": {
+    "event_prefix": "EVT-DEV-RUN-004",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-005": {
+    "event_prefix": "EVT-DEV-RUN-005",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-006": {
+    "event_prefix": "EVT-DEV-RUN-006",
+    "replay_tip": "ACCEPTED"
+  },
+  "DEV-RUN-007": {
+    "event_prefix": "EVT-DEV-RUN-007",
+    "replay_tip": "ACCEPTED"
+  },
+  "DEV-RUN-008": {
+    "event_prefix": "EVT-DEV-RUN-008",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-009": {
+    "event_prefix": "EVT-DEV-RUN-009",
+    "replay_tip": "ACCEPTED"
+  },
+  "DEV-RUN-010": {
+    "event_prefix": "EVT-DEV-RUN-010",
+    "replay_tip": "ACCEPTED"
+  },
+  "DEV-RUN-011": {
+    "event_prefix": "EVT-DEV-RUN-011",
+    "replay_tip": "FAILED"
+  },
+  "DEV-RUN-012": {
+    "event_prefix": "EVT-DEV-RUN-012",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-013": {
+    "event_prefix": "EVT-DEV-RUN-013",
+    "replay_tip": "CANCELLED"
+  },
+  "DEV-RUN-014": {
+    "event_prefix": "EVT-DEV-RUN-014",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-015": {
+    "event_prefix": "EVT-DEV-RUN-015",
+    "replay_tip": "SUPERSEDED"
+  },
+  "DEV-RUN-016": {
+    "event_prefix": "EVT-DEV-RUN-016",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-017": {
+    "event_prefix": "EVT-DEV-RUN-017",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-018": {
+    "event_prefix": "EVT-DEV-RUN-018",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-019": {
+    "event_prefix": "EVT-DEV-RUN-019",
+    "replay_tip": "ACCEPTED"
+  },
+  "DEV-RUN-020": {
+    "event_prefix": "EVT-DEV-RUN-020",
+    "replay_tip": "INCOMPATIBLE"
+  },
+  "DEV-RUN-021": {
+    "event_prefix": "EVT-DEV-RUN-021",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-022": {
+    "event_prefix": "EVT-DEV-RUN-022",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-023": {
+    "event_prefix": "EVT-DEV-RUN-023",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-024": {
+    "event_prefix": "EVT-DEV-RUN-024",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-025": {
+    "event_prefix": "EVT-DEV-RUN-025",
+    "replay_tip": "ACCEPTED"
+  },
+  "DEV-RUN-026": {
+    "event_prefix": "EVT-DEV-RUN-026",
+    "replay_tip": "ACCEPTED"
+  },
+  "DEV-RUN-027": {
+    "event_prefix": "EVT-DEV-RUN-027",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-028": {
+    "event_prefix": "EVT-DEV-RUN-028",
+    "replay_tip": "ACCEPTED"
+  },
+  "DEV-RUN-029": {
+    "event_prefix": "EVT-DEV-RUN-029",
+    "replay_tip": "OPEN"
+  },
+  "DEV-RUN-030": {
+    "event_prefix": "EVT-DEV-RUN-030",
+    "replay_tip": "OPEN"
+  }
+}

@@ -1,0 +1,66 @@
+# G0 CONTEXT SNAPSHOT — SCRUM-824 (DWO-V2-03)
+# Immutable once committed. Corrections create a new revision.
+
+schema_version: gwc.g0.context-snapshot/1.0
+artifact_type: CONTEXT_SNAPSHOT
+gate: G0_UNDERSTAND
+trace:
+  project_id: dw-superapps
+  task_id: SCRUM-824
+  parent_run_ref: SCRUM-820
+  base_ref: integration/SCRUM-820-dwo-v2
+  base_sha: d7714337954cb966c07e4bb3060a87e345e7878e
+  captured_at: '2026-09-30T04:13:00+07:00'
+
+objective: >-
+  Implement and certify the deterministic UniversalRun reducer and core progress
+  semantics for DWO v2.
+
+scope:
+  - recursive Root/Child/Atomic Run reduction
+  - parent composition independent from child-local PASS
+  - dependency eligibility and blocking path
+  - lifecycle G0->G6 transitions and explicit pass-through/no-op phases
+  - target/handoff, authority rail and recovery lineage derivation
+  - orthogonal sync/view/semantic-qualification state model
+  - deterministic state reconstruction from ordered event prefixes
+
+dependencies:
+  - SCRUM-823 (DWO-V2-02) Projection Contract v2 — DONE
+  - SCRUM-822 (DWO-V2-01) fixture stream — DONE (consumed for conformance)
+
+constraints:
+  - same event prefix produces same state (deterministic)
+  - missing facts stay UNKNOWN/PARTIAL
+  - parent completion never inferred solely from child-local success
+  - no production write/effect path
+
+acceptance_criteria:
+  - id: AC-824-01
+    statement: V2_REDUCER_CERTIFIED exit token derivable from machine-readable state
+  - id: AC-824-02
+    statement: same event prefix produces same state (deterministic reconstruction)
+  - id: AC-824-03
+    statement: missing facts stay UNKNOWN/PARTIAL
+  - id: AC-824-04
+    statement: parent completion never inferred solely from child-local success
+  - id: AC-824-05
+    statement: recursive Root/Child/Atomic reduction + dependency blocking path correct
+
+canonical_sources:
+  - DWO v2 Solution Design C4 (3ea07c1c65b6813c95d6c7acf7a61c32) — READ
+  - Universal Run Kernel Contract Freeze v1.1 (3d207c1c65b681b481c2f3247e10c1b2) — READ
+  - Universal Recursive Governed Run Model (3d207c1c65b681f48f08d657f6e56d32) — READ
+  - DWO-UR-30-V1 fixture catalog (3ea07c1c65b681c28de7c076abdfbdb2) — READ
+
+authority_boundary:
+  grants:
+    - development commits on task/SCRUM-824-reducer
+    - push of that task branch
+    - integration into integration/SCRUM-820-dwo-v2 (task-level G4)
+    - Draft PR update
+    - Jira SCRUM-824 progress/evidence updates
+  excluded:
+    - G4_MERGE, G5_DEPLOY, G6_PRODUCTION
+    - approval bypass, protected main writes
+    - production data mutation, database migration, secret change
