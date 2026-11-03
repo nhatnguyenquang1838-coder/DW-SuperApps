@@ -275,8 +275,9 @@ GRANT EXECUTE ON FUNCTION public.ingest_observation_event_v2(JSONB, TEXT)
 CREATE OR REPLACE FUNCTION public.notify_projection_event()
 RETURNS TRIGGER
 LANGUAGE plpgsql
-SET search_path = pg_catalog, public
-AS $$
+SECURITY DEFINER
+SET search_path = pg_catalog, public, realtime
+AS $
 BEGIN
   PERFORM realtime.send(
     jsonb_build_object(
