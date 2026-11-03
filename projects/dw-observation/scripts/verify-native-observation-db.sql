@@ -98,7 +98,7 @@ BEGIN
     RAISE EXCEPTION 'VERIFY_SOURCE_POLICY_INCONSISTENT';
   END IF;
 END
-$;
+$$;
 
 SELECT 'PASS' AS status,
        (SELECT count(*) FROM public.observation_events_raw) AS raw_events,
