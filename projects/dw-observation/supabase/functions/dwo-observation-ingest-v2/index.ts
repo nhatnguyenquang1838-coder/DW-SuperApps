@@ -144,6 +144,46 @@ Deno.serve(async (req: Request) => {
       return json(typed === "INGEST_FAILED" ? 500 : 409, { error: typed });
     }
 
+    const projectionPayload = {
+      run_id: event.run_id,
+      source_system: event.source.system,
+      source_event_id: event.event_id,
+      sequence: event.sequence,
+      projection_ordinal: receipt.projection_ordinal,
+      event_type: event.event_type,
+      occurred_at: event.occurred_at,
+      gate: event.runtime?.gate ?? null,
+      node_id: event.runtime?.node_id ?? null,
+      actor: event.actor,
+      outcome: event.outcome,
+      before: null,
+      after: null,
+      evidence_refs: event.evidence_refs ?? [],
+      authority_ref: event.authority_ref ?? null,
+      source_digest: event.source_digest,
+      read_only_projection: true,
+      raw_event_id: receipt.raw_event_id,
+      runtime_epoch: event.runtime?.epoch ?? null,
+      lifecycle_profile: event.runtime?.profile ?? null,
+      runtime_state: event.runtime?.state ?? null,
+      typed_next: event.runtime?.typed_next ?? null,
+      source_sha: event.source.sha,
+    };
+    let broadcastStatus = "DEGRADED";
+    const channel = supabase.channel(`observatory:${event.run_id}`);
+    try {
+      const result = await channel.send({
+        type: "broadcast",
+        event: "projection_event",
+        payload: projectionPayload,
+      });
+      broadcastStatus = String(result).toUpperCase();
+    } catch (broadcastError) {
+      console.warn("dwo-observation-broadcast", broadcastError instanceof Error ? broadcastError.message : "UNKNOWN");
+    } finally {
+      try { await supabase.removeChannel(channel); } catch { /* best-effort cleanup */ }
+    }
+
     const created = Math.floor(Date.now() / 1000);
     const ack: Record<string, unknown> = {
       destination_id: DESTINATION_ID,
@@ -156,6 +196,7 @@ Deno.serve(async (req: Request) => {
       raw_event_id: receipt.raw_event_id,
       projection_ordinal: receipt.projection_ordinal,
       status: receipt.status,
+      broadcast_status: broadcastStatus,
     };
     const message = [
       String(ack.created), String(ack.request_digest), String(ack.payload_digest),
