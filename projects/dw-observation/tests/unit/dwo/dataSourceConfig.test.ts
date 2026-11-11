@@ -8,7 +8,6 @@ import {
   isFixtureMode,
   isRealMode,
   DATA_SOURCE_CONFIG_CAPABILITIES,
-  type DataSource,
 } from "@/lib/dwo/dataSourceConfig";
 
 function envWith(overrides: Record<string, string | undefined>): Record<string, string | undefined> {
