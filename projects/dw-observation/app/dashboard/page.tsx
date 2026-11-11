@@ -52,16 +52,6 @@ export default function DashboardPage({
             flexWrap: 'wrap',
           }}
         >
-          <h2
-            style={{
-              fontSize: '18px',
-              fontWeight: 600,
-              margin: 0,
-              color: 'var(--dwo-color-text-primary)',
-            }}
-          >
-            Dashboard
-          </h2>
           <div
             style={{
               display: 'flex',
