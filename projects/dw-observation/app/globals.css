@@ -1092,17 +1092,27 @@ a {
   border: 1px solid var(--dwo-color-border-default);
   border-radius: var(--dwo-radius-8);
   background: var(--dwo-color-bg-surface);
+  min-width: 0; /* allow flex item to shrink below content size */
+  overflow: hidden;
 }
 .dwo-dashboard-label {
   font-size: 13px;
   color: var(--dwo-color-text-muted);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 .dwo-dashboard-value {
   font-size: 16px;
   font-weight: 700;
   color: var(--dwo-color-text-primary);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex-shrink: 0;
 }
 .dwo-dashboard-card[data-state="unknown"] .dwo-dashboard-value {
   color: var(--dwo-color-text-faint);
