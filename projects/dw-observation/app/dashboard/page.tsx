@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { readDashboardProjection } from '@/lib/dashboard/readDashboardProjection';
 import Dashboard from '@/components/dwo/Dashboard';
 import {
@@ -17,7 +16,6 @@ interface DashboardPageProps {
 export default function DashboardPage({
   searchParams,
 }: DashboardPageProps) {
-  const router = useRouter();
   const [source, setSource] = useState<DataSource>(() =>
     getDataSource()
   );
@@ -25,11 +23,12 @@ export default function DashboardPage({
   const handleSourceChange = (next: DataSource) => {
     setDataSource(next);
     setSource(next);
-    router.refresh();
   };
 
   // Real source — empty records = source unavailable (fail-closed).
   const projection = readDashboardProjection(source, []);
+
+  const isFixture = source === 'fixture';
 
   return (
     <div
@@ -58,7 +57,11 @@ export default function DashboardPage({
               alignItems: 'center',
               gap: 8,
               padding: '6px 10px',
-              border: `1px solid var(--dwo-color-border-default)`,
+              border: `1px solid ${
+                isFixture
+                  ? 'var(--dwo-color-state-amber)'
+                  : 'var(--dwo-color-border-default)'
+              }`,
               borderRadius: 'var(--dwo-radius-8)',
               background: 'var(--dwo-color-bg-subtle)',
             }}
@@ -92,8 +95,45 @@ export default function DashboardPage({
               <option value="real">Real</option>
               <option value="fixture">Fixture</option>
             </select>
+            {isFixture && (
+              <span
+                style={{
+                  fontSize: '10px',
+                  color: 'var(--dwo-color-state-amber)',
+                  marginLeft: 6,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                }}
+              >
+                dev
+              </span>
+            )}
           </div>
         </div>
+
+        {isFixture && (
+          <div
+            style={{
+              marginBottom: 12,
+              padding: '8px 12px',
+              border: `1px solid var(--dwo-color-state-amber)`,
+              borderRadius: 'var(--dwo-radius-8)',
+              background: 'rgba(245, 185, 66, 0.1)',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '11px',
+                color: 'var(--dwo-color-state-amber)',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+              }}
+            >
+              Fixture mode — read-only local preview, no live source connected
+            </span>
+          </div>
+        )}
 
         <Dashboard projection={projection} />
       </div>
