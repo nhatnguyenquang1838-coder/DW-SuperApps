@@ -16,15 +16,70 @@ interface DashboardPageProps {
 
 // Fixture task relation records for local fixture mode.
 // Defined inline so the production page source-guard test keeps passing.
+// Source: dwo-v2/fixtures/DWO-UR-30-V1/tasks/task-relations.jsonl
 const FIXTURE_TASK_RECORDS: readonly TaskRunRelationRecord[] = [
   {
-    taskRef: 'SCRUM-555',
+    taskRef: 'TASK-CORE',
     relationRevisionId: 'rel-1',
-    rootRunIds: ['DW-OBS-M5-20260823-MOCK'],
-    sourceSystem: 'DWO',
-    sourceRecordId: 'scrum555-rel-1',
-    sourceDigest: 'sha256:scrum555-rel-1',
-    durablePosition: 100,
+    rootRunIds: [
+      'DEV-RUN-001',
+      'DEV-RUN-005',
+      'DEV-RUN-008',
+      'DEV-RUN-012',
+      'DEV-RUN-014',
+      'DEV-RUN-015',
+      'DEV-RUN-016',
+      'DEV-RUN-020',
+    ],
+    sourceSystem: 'DWO-FIXTURE',
+    sourceRecordId: 'fixture-record-1',
+    sourceDigest:
+      'sha256:3b2f67c4f68d5cfeb03eee35c825771ae3392827d7b2ddbdfda85e9e1a46575f',
+    durablePosition: 1,
+    supersedesRevisionId: null,
+  },
+  {
+    taskRef: 'TASK-EVENT',
+    relationRevisionId: 'rel-2',
+    rootRunIds: ['DEV-RUN-017'],
+    sourceSystem: 'DWO-FIXTURE',
+    sourceRecordId: 'fixture-record-2',
+    sourceDigest:
+      'sha256:58b6d1ad2be126ced81f5f76b2b85a591a1fa2a411a9d2ee1c09c3d072829a82',
+    durablePosition: 2,
+    supersedesRevisionId: null,
+  },
+  {
+    taskRef: 'TASK-PARTY',
+    relationRevisionId: 'rel-3',
+    rootRunIds: ['DEV-RUN-021'],
+    sourceSystem: 'DWO-FIXTURE',
+    sourceRecordId: 'fixture-record-3',
+    sourceDigest:
+      'sha256:536acf8a7d93c3aa51496a1b0472ee864e897fc180a25fb4d43dab15a527c3af',
+    durablePosition: 3,
+    supersedesRevisionId: null,
+  },
+  {
+    taskRef: 'TASK-RESEARCH',
+    relationRevisionId: 'rel-4',
+    rootRunIds: ['DEV-RUN-024'],
+    sourceSystem: 'DWO-FIXTURE',
+    sourceRecordId: 'fixture-record-4',
+    sourceDigest:
+      'sha256:9a0eaf21134dbab2d3b7d0ea89fa9f235be8847dfe717fa6f4ddc6d32fc77ea4',
+    durablePosition: 4,
+    supersedesRevisionId: null,
+  },
+  {
+    taskRef: 'TASK-WEDDING',
+    relationRevisionId: 'rel-5',
+    rootRunIds: ['DEV-RUN-027'],
+    sourceSystem: 'DWO-FIXTURE',
+    sourceRecordId: 'fixture-record-5',
+    sourceDigest:
+      'sha256:588b99341c81fa5039ac9f779e5f72a85be27a37324ae3b61de531e7a7dd279c',
+    durablePosition: 5,
     supersedesRevisionId: null,
   },
 ];
