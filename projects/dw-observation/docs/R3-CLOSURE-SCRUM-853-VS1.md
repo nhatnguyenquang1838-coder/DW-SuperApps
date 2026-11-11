@@ -25,6 +25,9 @@ execution context:
 |---|---|---|
 | Versioned GWC v2 native mapper | `projects/dw-observation/lib/dwo/gwcV2SourceMapper.ts` | 117 lines, 207-commit diff |
 | Golden/negative/compatibility tests | `projects/dw-observation/tests/unit/dwo/gwcV2SourceMapper.test.ts` | 8/8 vitest pass |
+| Datasource config (runtime switch) | `projects/dw-observation/lib/dwo/dataSourceConfig.ts` | real/fixture switch, production guard |
+| Datasource config tests | `projects/dw-observation/tests/unit/dwo/dataSourceConfig.test.ts` | 8/8 vitest pass |
+| Fixture preview mode (delegates to config) | `projects/dw-observation/lib/dwo/fixturePreviewMode.ts` | updated to use dataSourceConfig |
 | Draft PR | #165 | OPEN / DRAFT, base `integration/SCRUM-820-dwo-v2` |
 
 ## 3. Design decisions (binding)
