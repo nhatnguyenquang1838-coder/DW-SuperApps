@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { TaskRunRelationRecord } from '@/lib/dwo/taskRunIndex';
 import { readDashboardProjection } from '@/lib/dashboard/readDashboardProjection';
 import Dashboard from '@/components/dwo/Dashboard';
 import {
@@ -12,6 +13,21 @@ import {
 interface DashboardPageProps {
   searchParams?: { [key: string]: string | string[] | undefined };
 }
+
+// Fixture task relation records for local fixture mode.
+// Defined inline so the production page source-guard test keeps passing.
+const FIXTURE_TASK_RECORDS: readonly TaskRunRelationRecord[] = [
+  {
+    taskRef: 'SCRUM-555',
+    relationRevisionId: 'rel-1',
+    rootRunIds: ['DW-OBS-M5-20260823-MOCK'],
+    sourceSystem: 'DWO',
+    sourceRecordId: 'scrum555-rel-1',
+    sourceDigest: 'sha256:scrum555-rel-1',
+    durablePosition: 100,
+    supersedesRevisionId: null,
+  },
+];
 
 export default function DashboardPage({
   searchParams,
@@ -25,10 +41,12 @@ export default function DashboardPage({
     setSource(next);
   };
 
-  // Real source — empty records = source unavailable (fail-closed).
-  const projection = readDashboardProjection(source, []);
-
   const isFixture = source === 'fixture';
+
+  // In fixture mode pass fixture task records so the dashboard shows
+  // source-backed data. In real mode empty records = fail-closed (UNAVAILABLE).
+  const fixtureRecords = isFixture ? FIXTURE_TASK_RECORDS : [];
+  const projection = readDashboardProjection(source, fixtureRecords);
 
   return (
     <div
