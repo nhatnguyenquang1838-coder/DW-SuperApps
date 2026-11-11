@@ -1062,7 +1062,76 @@ a {
 .dwo-inspector-tab { padding: 5px 9px; }
 .dwo-click-list { gap: 6px; }
 .dwo-open-btn { font-size: 13px; padding: 5px 9px; overflow-wrap: anywhere; }
-.dwo-unknown { color: var(--dwo-color-text-muted); }
+.dwo-unknown { color: var(--dwo-color-muted); }
+
+/* ============================================================
+   DWO Dashboard — TECH_SPEC §4 / §10
+   ============================================================ */
+.dwo-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.dwo-h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: var(--dwo-color-text-primary);
+}
+.dwo-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+.dwo-dashboard-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--dwo-color-border-default);
+  border-radius: var(--dwo-radius-8);
+  background: var(--dwo-color-bg-surface);
+}
+.dwo-dashboard-label {
+  font-size: 13px;
+  color: var(--dwo-color-text-muted);
+  white-space: nowrap;
+}
+.dwo-dashboard-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--dwo-color-text-primary);
+  white-space: nowrap;
+}
+.dwo-dashboard-card[data-state="unknown"] .dwo-dashboard-value {
+  color: var(--dwo-color-text-faint);
+}
+.dwo-dashboard-card[data-state="degraded"] .dwo-dashboard-value {
+  color: var(--dwo-color-state-amber);
+}
+.dwo-dashboard-card[data-state="healthy"] .dwo-dashboard-value {
+  color: var(--dwo-color-state-green);
+}
+.dwo-dashboard-card[data-state="attention"] .dwo-dashboard-value {
+  color: var(--dwo-color-state-amber);
+}
+.dwo-dashboard-attention,
+.dwo-dashboard-activity {
+  margin-top: 16px;
+}
+.dwo-h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: var(--dwo-color-text-primary);
+}
+.dwo-dashboard-item {
+  font-size: 13px;
+  color: var(--dwo-color-text-muted);
+  margin: 4px 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
 .dwo-canvas-wrap button:focus-visible,
 .dwo-panel-toggles button:focus-visible,
 .dwo-inspector button:focus-visible,
