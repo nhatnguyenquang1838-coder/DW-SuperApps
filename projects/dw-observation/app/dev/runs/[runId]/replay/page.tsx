@@ -19,6 +19,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createFixtureReplaySession } from '@/lib/dwo/fixtureReplaySession';
+import { fixturePackForRun } from '@/lib/dwo/fixturePreviewCatalog';
 import { loadFixtureQualificationReceipt, fixtureReceiptToProjection } from '@/lib/dwo/fixtureQualification';
 import { deriveCurrentFixtureSubjectDigest } from '@/lib/dwo/currentFixtureSubject';
 import ReplayPane from '@/components/ReplayPane';
@@ -83,7 +84,7 @@ export default async function DevRunReplayPage({ params }: { params: { runId: st
             DEV FIXTURE
           </span>
           <span className="text-xs" style={{ color: 'var(--dwo-color-text-muted)' }}>
-            DWO-UR-30-V1 · synchronized replay · not reachable from production run routes
+            {fixturePackForRun(runId)} · synthetic synchronized replay · not real execution
           </span>
         </div>
 

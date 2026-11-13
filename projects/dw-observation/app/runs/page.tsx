@@ -26,10 +26,13 @@ type ListItem = {
 
 export default async function RunsPage() {
   if (isLocalFixturePreview()) {
-    const { FIXTURE_CATALOG } = await import('@/lib/dwo/fixtureSpec');
+    const { PREVIEW_FIXTURE_CATALOG: FIXTURE_CATALOG } = await import('@/lib/dwo/fixturePreviewCatalog');
+    const { default: FixtureWorkShowcase } = await import('@/components/dwo/FixtureWorkShowcase');
     return <section className="py-6">
       <h1 className="text-2xl font-semibold">Run Explorer</h1>
-      <p data-testid="dev-fixture-indicator" className="my-4">DEV FIXTURE · DWO-UR-30-V1 · {FIXTURE_CATALOG.length} runs</p>
+      <p data-testid="dev-fixture-indicator" className="my-4">DEV FIXTURE · 30 canonical scenarios + 9 work-demo runs · {FIXTURE_CATALOG.length} runs total</p>
+      <FixtureWorkShowcase />
+      <h2 className="my-4 text-xl font-semibold">All fixture runs</h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {FIXTURE_CATALOG.map((run) => <a key={run.id} className="notion-run-card rounded border p-4" href={`/runs/${encodeURIComponent(run.id)}`}>
           <strong>{run.id}</strong><p>{run.kind} · {run.runState}</p><p>{run.purpose}</p>

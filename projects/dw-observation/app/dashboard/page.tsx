@@ -5,15 +5,17 @@ import { getRequestDataSource } from '@/lib/dwo/requestDataSource';
 
 export default async function DashboardPage() {
   const source = getRequestDataSource();
-  // Load the canonical pack only after the non-production fixture guard.
-  const records = source === 'fixture'
-    ? (await import('@/lib/dwo/fixtureTaskRead')).loadFixtureTaskRecords()
-    : [];
-  const projection = readDashboardProjection(source, records);
+  const projection = source === 'fixture'
+    ? (await import('@/lib/dwo/previewDashboard')).readPreviewDashboardProjection()
+    : readDashboardProjection(source, []);
+  const FixtureWorkShowcase = source === 'fixture'
+    ? (await import('@/components/dwo/FixtureWorkShowcase')).default
+    : null;
   return (
     <section className="py-6" data-source={source}>
       {source === 'fixture' && <p className="mb-4 text-sm" style={{ color: 'var(--dwo-color-state-amber)' }}>DEV FIXTURE — read-only local preview</p>}
       <Dashboard projection={projection} />
+      {FixtureWorkShowcase && <FixtureWorkShowcase />}
     </section>
   );
 }

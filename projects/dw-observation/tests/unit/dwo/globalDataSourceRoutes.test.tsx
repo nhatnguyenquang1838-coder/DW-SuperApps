@@ -14,13 +14,14 @@ describe('browser datasource reaches every canonical route', () => {
     vi.stubEnv('OBSERVATORY_DATA_SOURCE', 'real');
     let view = render(await TasksPage());
     expect(screen.getByTestId('dev-fixture-indicator')).toBeTruthy();
-    expect(view.container.querySelectorAll('.notion-task-card')).toHaveLength(5);
+    expect(view.container.querySelectorAll('.notion-task-card')).toHaveLength(8);
     view.unmount();
     view = render(await TaskRunsPage({ params: { taskId: 'TASK-CORE' } }));
     expect(view.container.querySelectorAll('.notion-run-card')).toHaveLength(8);
     view.unmount();
     view = render(await RunsPage());
-    expect(view.container.querySelectorAll('.notion-run-card')).toHaveLength(30);
+    expect(view.container.querySelectorAll('.notion-run-card')).toHaveLength(39);
+    expect(view.container.querySelector("a[href='/runs/DEMO-DELIVERY-ROOT']")).toBeTruthy();
     view.unmount();
     view = render(await RunDetailPage({ params: { runId: 'DEV-RUN-006' }, searchParams: {} }));
     expect(screen.getByTestId('dev-fixture-indicator')).toBeTruthy();

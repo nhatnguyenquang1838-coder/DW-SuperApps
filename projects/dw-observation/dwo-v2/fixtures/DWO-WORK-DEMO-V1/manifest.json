@@ -1,0 +1,15 @@
+{
+  "capabilities": {
+    "approve": false,
+    "deploy": false,
+    "merge": false,
+    "read": true,
+    "write": false
+  },
+  "events": 106,
+  "fixture_set": "DWO-WORK-DEMO-V1",
+  "qualification": "NOT_CERTIFIED",
+  "runs": 9,
+  "synthetic": true,
+  "tasks": 3
+}

@@ -181,11 +181,13 @@ export default function ReplayPane({ runId, events, storeDegraded = false, fixtu
             snapshot.timeline.applied as Array<{
               sourceEventId: string;
               eventType: string;
+              summary?: string | null;
               sequence: number | null;
             }>
           ).map((e, i) => (
             <li key={`${e.sourceEventId}-${i}`} data-testid={`timeline-event-${e.sourceEventId}`}>
               {e.sequence === null ? UNKNOWN : e.sequence} · {e.eventType}
+              {e.summary && <span> — {e.summary}</span>}
             </li>
           ))}
         </ol>

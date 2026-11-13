@@ -16,6 +16,7 @@
 import { ReplaySession, type ReplayFrame, type SurfaceSnapshot } from '@/lib/replay';
 import type { ProjectionEvent } from '@/lib/live';
 import { DEV_RUN_020 } from '@/lib/dwo/fixtureSpec';
+import { fixturePackForRun } from './fixturePreviewCatalog';
 
 export const FIXTURE_EVENTS_PATH =
   'dwo-v2/fixtures/DWO-UR-30-V1/events/projection-events.jsonl';
@@ -100,7 +101,9 @@ function loadEventsForRun(
   const fs = ensureFs();
   if (!fs) return [];
   const p = _path!;
-  const filePath = config.path ?? p.join(process.cwd(), FIXTURE_EVENTS_PATH);
+  const pack = fixturePackForRun(runId);
+  if (!pack && !config.path && !config.readText) return [];
+  const filePath = config.path ?? p.join(process.cwd(), 'dwo-v2', 'fixtures', pack ?? 'DWO-UR-30-V1', 'events', 'projection-events.jsonl');
   let raw: string;
   try {
     raw = config.readText ? config.readText(filePath) : fs.readFileSync(filePath, 'utf-8');

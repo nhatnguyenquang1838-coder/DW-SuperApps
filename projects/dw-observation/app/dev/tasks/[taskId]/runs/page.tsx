@@ -12,7 +12,7 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getFixtureTaskRelation } from '@/lib/dwo/fixtureTaskRead';
+import { getPreviewTaskRelation as getFixtureTaskRelation } from '@/lib/dwo/previewTaskRead';
 import { createFixtureReplaySession } from '@/lib/dwo/fixtureReplaySession';
 import { loadFixtureQualificationReceipt, fixtureReceiptToProjection } from '@/lib/dwo/fixtureQualification';
 import { deriveCurrentFixtureSubjectDigest } from '@/lib/dwo/currentFixtureSubject';

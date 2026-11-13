@@ -19,6 +19,7 @@ import type {
   WorkspaceMode,
 } from "../runtime/unifiedRuntime";
 import { reduceEventPrefix, type ReducerEvent } from "./reducer";
+import { fixturePackForRun, catalogForFixtureRun } from "./fixturePreviewCatalog";
 import type { AuthorityState } from "./authorityVocabulary";
 import { classifyEvidenceSource } from "./evidenceClassification";
 import type { RuntimeRawEvidence } from "../runtime/unifiedRuntime";
@@ -59,7 +60,9 @@ function _join(...segments: string[]): string {
   return _path ? _path.join(...segments) : segments.join("/");
 }
 
-const FIXTURE_PACK = _join(process.cwd(), "dwo-v2/fixtures/DWO-UR-30-V1");
+function fixtureRoot(pack: string): string {
+  return _join(process.cwd(), "dwo-v2", "fixtures", pack);
+}
 
 type FixtureEventRow = {
   event_id: string; run_id: string; ordinal: number; run_state: string;
@@ -101,19 +104,19 @@ function parseFixtureEvent(value: unknown): FixtureEventRow {
   };
 }
 
-function loadEvents(): FixtureEventRow[] {
+function loadEvents(pack: string): FixtureEventRow[] {
   const fs = _ensureFs();
   if (!fs) return [];
-  const raw = fs.readFileSync(_join(FIXTURE_PACK, "events", "projection-events.jsonl"), "utf-8");
+  const raw = fs.readFileSync(_join(fixtureRoot(pack), "events", "projection-events.jsonl"), "utf-8");
   return raw.split("\n").map((line) => line.trim()).filter(Boolean)
     .map((line) => parseFixtureEvent(JSON.parse(line)))
     .sort((a, b) => a.ordinal - b.ordinal);
 }
 
-function validateEvents(events: readonly FixtureEventRow[]): void {
+function validateEvents(events: readonly FixtureEventRow[], catalog: typeof FIXTURE_CATALOG): void {
   const ids = new Set<string>();
   const ordinals = new Set<string>();
-  const runIds = new Set(FIXTURE_CATALOG.map((entry) => entry.id));
+  const runIds = new Set(catalog.map((entry) => entry.id));
   for (const event of events) {
     if (!runIds.has(event.run_id)) throw new Error(`unknown fixture event run ${event.run_id}`);
     if (ids.has(event.event_id)) throw new Error(`duplicate fixture event id ${event.event_id}`);
@@ -124,13 +127,13 @@ function validateEvents(events: readonly FixtureEventRow[]): void {
   }
 }
 
-function evidenceFilesForRun(runId: string): string[] {
+function evidenceFilesForRun(runId: string, pack: string): string[] {
   const fs = _ensureFs();
   if (!fs) return [];
   const dirs = ["execution", "target", "verification", "closure", "handoff", "authority"];
   const files: string[] = [];
   for (const dir of dirs) {
-    const dirPath = _join(FIXTURE_PACK, "evidence", dir);
+    const dirPath = _join(fixtureRoot(pack), "evidence", dir);
     try {
       const entries = fs.readdirSync(dirPath);
       for (const entry of entries) {
@@ -145,14 +148,14 @@ function evidenceFilesForRun(runId: string): string[] {
   return files;
 }
 
-function loadEvidenceRecords(runId: string): RuntimeRawEvidence[] {
-  const files = evidenceFilesForRun(runId);
+function loadEvidenceRecords(runId: string, pack: string): RuntimeRawEvidence[] {
+  const files = evidenceFilesForRun(runId, pack);
   const fs = _ensureFs();
   if (!fs) return [];
   const records: RuntimeRawEvidence[] = [];
   for (const file of files) {
     try {
-      const raw = fs.readFileSync(_join(FIXTURE_PACK, "evidence", file), "utf-8");
+      const raw = fs.readFileSync(_join(fixtureRoot(pack), "evidence", file), "utf-8");
       const sourcePath = file.replace(/\\/g, "/");
       const record: unknown = JSON.parse(raw);
       records.push({ sourcePath, content: raw, record, classification: classifyEvidenceSource({ sourcePath, content: raw, record }) });
@@ -170,13 +173,13 @@ function loadEvidenceRecords(runId: string): RuntimeRawEvidence[] {
  * Deterministic and fail-closed: a run that no relation record claims gets NO
  * taskRef (null) — the model never infers a Task from a run id.
  */
-function loadTaskRefByRootRun(): Map<string, string> {
+function loadTaskRefByRootRun(pack: string): Map<string, string> {
   const fs = _ensureFs();
   if (!fs) return new Map();
   const map = new Map<string, string>();
   let raw: string;
   try {
-    raw = fs.readFileSync(_join(FIXTURE_PACK, "tasks", "task-relations.jsonl"), "utf-8");
+    raw = fs.readFileSync(_join(fixtureRoot(pack), "tasks", "task-relations.jsonl"), "utf-8");
   } catch {
     return map;
   }
@@ -210,11 +213,12 @@ function loadTaskRefByRootRun(): Map<string, string> {
   return map;
 }
 
-let _taskRefCache: Map<string, string> | null = null;
+const _taskRefCaches = new Map<string, Map<string, string>>();
 
-function taskRefByRootRun(): Map<string, string> {
-  if (_taskRefCache === null) _taskRefCache = loadTaskRefByRootRun();
-  return _taskRefCache;
+function taskRefByRootRun(pack: string): Map<string, string> {
+  let refs = _taskRefCaches.get(pack);
+  if (!refs) { refs = loadTaskRefByRootRun(pack); _taskRefCaches.set(pack, refs); }
+  return refs;
 }
 
 // ---------------------------------------------------------------------------
@@ -280,8 +284,8 @@ function buildRuntimeNode(
   };
 }
 
-function collectDescendants(rootId: string): Array<typeof FIXTURE_CATALOG[number]> {
-  const byId = new Map(FIXTURE_CATALOG.map((entry) => [entry.id, entry]));
+function collectDescendants(rootId: string, catalog: typeof FIXTURE_CATALOG): Array<typeof FIXTURE_CATALOG[number]> {
+  const byId = new Map(catalog.map((entry) => [entry.id, entry]));
   const seen = new Set([rootId]);
   const result: Array<typeof FIXTURE_CATALOG[number]> = [];
   const visit = (id: string) => {
@@ -301,7 +305,7 @@ function collectDescendants(rootId: string): Array<typeof FIXTURE_CATALOG[number
   return result;
 }
 
-function buildCatalogTree(entry: (typeof FIXTURE_CATALOG)[number], seen = new Set<string>()): { id: string; parent: string | null; atomic: boolean; children: ReturnType<typeof buildCatalogTree>[] } {
+function buildCatalogTree(entry: (typeof FIXTURE_CATALOG)[number], catalog: typeof FIXTURE_CATALOG, seen = new Set<string>()): { id: string; parent: string | null; atomic: boolean; children: ReturnType<typeof buildCatalogTree>[] } {
   if (seen.has(entry.id)) throw new Error(`fixture hierarchy cycle at ${entry.id}`);
   seen.add(entry.id);
   return {
@@ -309,10 +313,10 @@ function buildCatalogTree(entry: (typeof FIXTURE_CATALOG)[number], seen = new Se
     parent: entry.parent,
     atomic: entry.kind === "ATOMIC",
     children: entry.children.map((id) => {
-      const child = FIXTURE_CATALOG.find((candidate) => candidate.id === id);
+      const child = catalog.find((candidate) => candidate.id === id);
       if (!child) throw new Error(`fixture hierarchy references missing run ${id}`);
       if (child.parent !== entry.id) throw new Error(`fixture hierarchy parent/child mismatch ${entry.id}->${id}`);
-      return buildCatalogTree(child, new Set(seen));
+      return buildCatalogTree(child, catalog, new Set(seen));
     }),
   };
 }
@@ -327,6 +331,8 @@ export function materializeFixtureScenario(
 ): UnifiedRunWorkspaceModel {
   // --- Validate completeness (T09-5) ---
   assertCompleteCatalogEntry(catalogEntry);
+  const pack = fixturePackForRun(catalogEntry.id) ?? "DWO-UR-30-V1";
+  const catalog = catalogForFixtureRun(catalogEntry.id);
 
   // --- DEV-RUN-020: NEGATIVE fixture — fail closed, no fabrication ---
   if (catalogEntry.id === DEV_RUN_020 || catalogEntry.runState === "INCOMPATIBLE") {
@@ -336,7 +342,7 @@ export function materializeFixtureScenario(
       // run's projection is readable. Keeping it here prevents the Task-first
       // surface (/dev/tasks/[taskId]/runs) and the run model from disagreeing.
       // The PROJECTION still fails closed: no nodes, edges, steps, or history.
-      taskRef: taskRefByRootRun().get(catalogEntry.id) ?? null,
+      taskRef: taskRefByRootRun(pack).get(catalogEntry.id) ?? null,
       mode: "SIMULATED" as WorkspaceMode,
       status: "INCOMPATIBLE",
       hierarchy: null,
@@ -360,8 +366,8 @@ export function materializeFixtureScenario(
 
 
   // Load fixture pack evidence for this scenario
-  const selfEvidenceFiles = evidenceFilesForRun(catalogEntry.id);
-  const selfEvidenceRecords = loadEvidenceRecords(catalogEntry.id);
+  const selfEvidenceFiles = evidenceFilesForRun(catalogEntry.id, pack);
+  const selfEvidenceRecords = loadEvidenceRecords(catalogEntry.id, pack);
 
   const nodes: UnifiedRuntimeNode[] = [];
   const edges: UnifiedRuntimeEdge[] = [];
@@ -375,10 +381,10 @@ export function materializeFixtureScenario(
   nodes.push(selfNode);
 
   // Complete descendant tree; parent links define the precise FANOUT edges.
-  for (const childEntry of collectDescendants(catalogEntry.id)) {
+  for (const childEntry of collectDescendants(catalogEntry.id, catalog)) {
     const childId = childEntry.id;
-    const childEvidenceFiles = evidenceFilesForRun(childId);
-    const childEvidenceRecords = loadEvidenceRecords(childId);
+    const childEvidenceFiles = evidenceFilesForRun(childId, pack);
+    const childEvidenceRecords = loadEvidenceRecords(childId, pack);
     nodes.push(buildRuntimeNode(childEntry, childEvidenceFiles, childEvidenceRecords));
     const parentId = childEntry.parent;
     if (!parentId) throw new Error(`fixture descendant ${childId} has no parent`);
@@ -393,7 +399,7 @@ export function materializeFixtureScenario(
 
   // Dependency edges (from catalog deps) — separate from hierarchy
   // Never default to SATISFIED; evidence must explicitly support it
-  for (const entry of [catalogEntry, ...collectDescendants(catalogEntry.id)]) {
+  for (const entry of [catalogEntry, ...collectDescendants(catalogEntry.id, catalog)]) {
     for (const depId of entry.deps) {
       edges.push({
         id: `dep-${entry.id}-${depId}`,
@@ -405,8 +411,8 @@ export function materializeFixtureScenario(
     }
   }
 
-  const events = (options.events ? options.events.map(parseFixtureEvent) : loadEvents()).sort((a, b) => a.ordinal - b.ordinal);
-  validateEvents(events);
+  const events = (options.events ? options.events.map(parseFixtureEvent) : loadEvents(pack)).sort((a, b) => a.ordinal - b.ordinal);
+  validateEvents(events, catalog);
   const byRun = (runId: string) => events.filter((event) => event.run_id === runId);
   const toReducerEvent = (event: FixtureEventRow): ReducerEvent => ({
     eventId: event.event_id,
@@ -446,17 +452,17 @@ export function materializeFixtureScenario(
       const overrideParent = treeRoot.parent;
       if (overrideParent === treeRoot.id) throw new Error(`fixture hierarchy ancestor cycle at ${treeRoot.id}`);
     }
-    const parent = FIXTURE_CATALOG.find((entry) => entry.id === treeRoot.parent);
+    const parent = catalog.find((entry) => entry.id === treeRoot.parent);
     if (!parent) throw new Error(`fixture hierarchy references missing parent ${treeRoot.parent}`);
     if (ancestors.has(parent.id)) throw new Error(`fixture hierarchy ancestor cycle at ${parent.id}`);
     if (!parent.children.includes(treeRoot.id)) throw new Error(`fixture hierarchy parent/child mismatch ${parent.id}->${treeRoot.id}`);
     treeRoot = parent;
   }
-  const hierarchy = catalogEntry.parent || catalogEntry.children.length > 0 ? buildCatalogTree(treeRoot) : null;
+  const hierarchy = catalogEntry.parent || catalogEntry.children.length > 0 ? buildCatalogTree(treeRoot, catalog) : null;
 
   const model: UnifiedRunWorkspaceModel = {
     runId: catalogEntry.id,
-    taskRef: taskRefByRootRun().get(catalogEntry.id) ?? null,
+    taskRef: taskRefByRootRun(pack).get(catalogEntry.id) ?? null,
     mode: "SIMULATED" as WorkspaceMode,
     status: reduced.runState,
     gate: reduced.gate,

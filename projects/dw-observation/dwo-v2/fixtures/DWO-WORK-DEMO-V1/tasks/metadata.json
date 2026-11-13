@@ -1,0 +1,20 @@
+[
+  {
+    "domain": "SOFTWARE/DEMO",
+    "runCount": 1,
+    "taskRef": "DEMO-TASK-DELIVERY",
+    "title": "Completed delivery: API and dashboard"
+  },
+  {
+    "domain": "SOFTWARE/DEMO",
+    "runCount": 1,
+    "taskRef": "DEMO-TASK-BLOCKED",
+    "title": "Blocked work: dependency and denied authority"
+  },
+  {
+    "domain": "SOFTWARE/DEMO",
+    "runCount": 1,
+    "taskRef": "DEMO-TASK-RETRY",
+    "title": "Verification failure and repair in progress"
+  }
+]

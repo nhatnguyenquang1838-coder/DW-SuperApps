@@ -3,7 +3,7 @@ import { defineConfig } from '@playwright/test';
 // Run against an already-running local development server (no deployment effects).
 export default defineConfig({
   testDir: './e2e',
-  testMatch: 'global-datasource.spec.ts',
+  testMatch: /(?:global-datasource|work-demo-fixtures)\.spec\.ts/,
   timeout: 120_000,
   expect: { timeout: 30_000 },
   workers: 1,

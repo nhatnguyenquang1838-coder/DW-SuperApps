@@ -1,0 +1,9 @@
+{
+  "fixture_set": "DWO-WORK-DEMO-V1",
+  "notice": "Fictional work story for UI review. Not real execution, approval, qualification or deployment evidence.",
+  "open_items": [],
+  "result": "ACCEPTED_IN_SYNTHETIC_STORY",
+  "run_id": "DEMO-DELIVERY-API",
+  "synthetic": true,
+  "target": "local fictional demo only"
+}

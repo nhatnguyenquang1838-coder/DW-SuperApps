@@ -16,6 +16,7 @@ import { readQualificationProjection } from '@/lib/dwo/qualificationRead';
 import { loadFixtureQualificationReceipt, fixtureReceiptToProjection } from '@/lib/dwo/fixtureQualification';
 import { deriveCurrentFixtureSubjectDigest } from '@/lib/dwo/currentFixtureSubject';
 import { createFixtureReplaySession } from '@/lib/dwo/fixtureReplaySession';
+import { fixturePackForRun } from '@/lib/dwo/fixturePreviewCatalog';
 import type { QualificationProjection } from '@/lib/dwo/qualificationProjection';
 import Link from 'next/link';
 
@@ -87,7 +88,7 @@ export default async function DevRunDetailPage({
             DEV FIXTURE
           </span>
           <span className="text-xs" style={{ color: 'var(--dwo-color-text-muted)' }}>
-            DWO-UR-30-V1 · read-only preview · not reachable from production run routes
+            {fixturePackForRun(runId)} · synthetic read-only preview · not real execution
           </span>
           <span
             className="ml-auto text-xs"

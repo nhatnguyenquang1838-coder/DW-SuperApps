@@ -1,0 +1,18 @@
+{
+  "attempts": 1,
+  "checks": [
+    {
+      "name": "task summary renders",
+      "result": "PASS"
+    },
+    {
+      "name": "empty state is explicit",
+      "result": "PASS"
+    }
+  ],
+  "fixture_set": "DWO-WORK-DEMO-V1",
+  "notice": "Fictional work story for UI review. Not real execution, approval, qualification or deployment evidence.",
+  "result": "PASSED",
+  "run_id": "DEMO-DELIVERY-UI",
+  "synthetic": true
+}

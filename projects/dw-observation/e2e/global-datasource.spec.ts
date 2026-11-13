@@ -8,10 +8,10 @@ test('datasource persists across the application and reload without leaking to a
   await expect(page.getByTestId('list-data-source-badge')).toContainText('real');
   await page.getByLabel('Datasource', { exact: true }).selectOption('fixture');
   await expect(page.getByTestId('global-data-source')).toContainText('DEV FIXTURE');
-  await expect(page.locator('.notion-run-card')).toHaveCount(30);
+  await expect(page.locator('.notion-run-card')).toHaveCount(39);
   await page.screenshot({ path: testInfo.outputPath('fixture-run-explorer.png') });
   await page.getByRole('link', { name: 'Tasks', exact: true }).first().click();
-  await expect(page.locator('.notion-task-card')).toHaveCount(5);
+  await expect(page.locator('.notion-task-card')).toHaveCount(8);
   await page.locator('.notion-task-card').filter({ hasText: 'TASK-CORE' }).click();
   await expect(page.locator('.notion-run-card')).toHaveCount(8);
   await page.getByTestId('view-details-DEV-RUN-001').click();
@@ -27,7 +27,8 @@ test('datasource persists across the application and reload without leaking to a
   await expect(page.getByTestId('replay-pane')).toBeVisible();
   await page.getByRole('link', { name: 'Dashboard', exact: true }).click();
   await expect(page.locator('main [data-source="fixture"]')).toBeVisible();
-  await expect(page.locator('.dwo-dashboard-card').filter({ hasText: 'Tasks' }).locator('.dwo-dashboard-value')).toHaveText('5');
+  await expect(page.locator('.dwo-dashboard-card').filter({ hasText: 'Tasks' }).locator('.dwo-dashboard-value')).toHaveText('8');
+  await expect(page.locator('.dwo-dashboard-card').filter({ hasText: 'Completed' }).locator('.dwo-dashboard-value')).toHaveText('1');
   const isolated = await browser.newContext();
   const separatePage = await isolated.newPage();
   await separatePage.goto('http://127.0.0.1:3001/tasks');

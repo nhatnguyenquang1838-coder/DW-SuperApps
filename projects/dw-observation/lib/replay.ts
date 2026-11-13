@@ -489,6 +489,7 @@ export function projectSurfaces(frame: ReplayFrame, mode: ReplayMode = "REPLAY")
       sourceSystem: str(e.source_system, UNKNOWN),
       sourceEventId: str(e.source_event_id, UNKNOWN),
       eventType: str((e as Record<string, unknown>).event_type, UNKNOWN),
+      summary: typeof e.summary === 'string' ? e.summary : null,
       occurredAt: typeof e.occurred_at === "string" ? e.occurred_at : UNKNOWN,
     })),
     pendingCount: frame.total - frame.cursor,
