@@ -14,7 +14,7 @@
 
 import Link from 'next/link';
 import { FIXTURE_TASK_RELATIONS_PATH, listFixtureTaskRelations } from '@/lib/dwo/fixtureTaskRead';
-import { isLocalFixturePreview } from '@/lib/dwo/fixturePreviewMode';
+import { isLocalFixturePreview } from '@/lib/dwo/requestDataSource';
 import type { TaskSummary } from '@/lib/taskTypes';
 
 export default async function DevTasksPage() {

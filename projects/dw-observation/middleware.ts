@@ -9,8 +9,14 @@ export interface DevRouteEnvironment {
 export function createDevRouteMiddleware(env: DevRouteEnvironment) {
   return (request: NextRequest): NextResponse | null => {
     const pathname = request.nextUrl.pathname;
-    if (env.NODE_ENV === 'production' && (pathname === '/dev' || pathname.startsWith('/dev/'))) {
-      return new NextResponse(null, { status: 404 });
+    if (pathname === '/dev' || pathname.startsWith('/dev/')) {
+      const selected = request.cookies.get('dwo-data-source')?.value;
+      const fixture = selected === undefined
+        ? env.OBSERVATORY_DATA_SOURCE === 'fixture'
+        : selected === 'fixture';
+      if (env.NODE_ENV === 'production' || !fixture) {
+        return new NextResponse(null, { status: 404 });
+      }
     }
     return null;
   };

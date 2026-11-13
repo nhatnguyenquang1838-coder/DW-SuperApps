@@ -7,7 +7,7 @@
 
 import { redirect } from "next/navigation";
 import { readHistoricalEvents } from "@/lib/serverHistoricalRead";
-import { isLocalFixturePreview } from "@/lib/dwo/fixturePreviewMode";
+import { isLocalFixturePreview } from "@/lib/dwo/requestDataSource";
 import { buildReplayRoute } from "@/lib/dwo/replayRoute";
 
 export default async function RunReplayRedirect({

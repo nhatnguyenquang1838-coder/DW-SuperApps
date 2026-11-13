@@ -10,7 +10,7 @@
 // never an empty list masquerading as healthy.
 
 import { readRealSummaries } from "@/lib/taskRead";
-import { isLocalFixturePreview } from "@/lib/dwo/fixturePreviewMode";
+import { isLocalFixturePreview } from "@/lib/dwo/requestDataSource";
 import type { TaskResolutionStatus } from "@/lib/taskTypes";
 
 const statusStyle: Record<

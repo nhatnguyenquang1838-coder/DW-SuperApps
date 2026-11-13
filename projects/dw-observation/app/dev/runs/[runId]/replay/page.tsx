@@ -25,7 +25,7 @@ import ReplayPane from '@/components/ReplayPane';
 import type { ProjectionEvent } from '@/lib/live';
 import type { QualificationProjection } from '@/lib/dwo/qualificationProjection';
 import RunStatusAxes from '@/components/dwo/RunStatusAxes';
-import { isLocalFixturePreview } from '@/lib/dwo/fixturePreviewMode';
+import { isLocalFixturePreview } from '@/lib/dwo/requestDataSource';
 
 export default async function DevRunReplayPage({ params }: { params: { runId: string } }) {
   const runBasePath = isLocalFixturePreview() ? '/runs' : '/dev/runs';

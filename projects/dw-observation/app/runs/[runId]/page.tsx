@@ -18,7 +18,7 @@
 
 import UnifiedRunWorkspace from "@/components/dwo/UnifiedRunWorkspace";
 import { buildWorkspaceModel } from "@/lib/runtime/buildWorkspaceModel";
-import { isLocalFixturePreview } from "@/lib/dwo/fixturePreviewMode";
+import { isLocalFixturePreview } from "@/lib/dwo/requestDataSource";
 import { readQualificationProjection } from "@/lib/dwo/qualificationRead";
 import { loadFixtureQualificationReceipt, fixtureReceiptToProjection } from "@/lib/dwo/fixtureQualification";
 import { deriveCurrentFixtureSubjectDigest } from "@/lib/dwo/currentFixtureSubject";

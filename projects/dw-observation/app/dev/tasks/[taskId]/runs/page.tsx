@@ -18,7 +18,7 @@ import { loadFixtureQualificationReceipt, fixtureReceiptToProjection } from '@/l
 import { deriveCurrentFixtureSubjectDigest } from '@/lib/dwo/currentFixtureSubject';
 import type { QualificationProjection } from '@/lib/dwo/qualificationProjection';
 import RunStatusAxes from '@/components/dwo/RunStatusAxes';
-import { isLocalFixturePreview } from '@/lib/dwo/fixturePreviewMode';
+import { isLocalFixturePreview } from '@/lib/dwo/requestDataSource';
 import { buildWorkspaceModel } from '@/lib/runtime/buildWorkspaceModel';
 import type { ProjectionSyncStatus } from '@/lib/dwo/qualificationProjection';
 
