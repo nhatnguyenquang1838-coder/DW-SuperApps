@@ -1,9 +1,8 @@
 import { constants, openSync, closeSync, readSync, fstatSync, lstatSync, realpathSync } from 'node:fs';
 import { isAbsolute, resolve, sep } from 'node:path';
-import { FIXTURE_CATALOG } from './fixtureSpec';
+import { fixturePackForRun } from './fixturePreviewCatalog';
 
-const ROOT_PARTS = ['dwo-v2', 'fixtures', 'DWO-UR-30-V1', 'evidence'] as const;
-const ALLOWED = /^(execution|target|verification|closure|handoff|authority)\/(DEV-RUN-\d{3})-(execution|target|verification|closure|handoff|authority)\.json$/;
+const ALLOWED = /^(execution|target|verification|closure|handoff|authority)\/(DEV-RUN-\d{3}|DEMO-(?:DELIVERY|BLOCKED|RETRY|RECURSIVE)-(?:ROOT|CHILD|API|UI))-(execution|target|verification|closure|handoff|authority)\.json$/;
 const MAX_BYTES = 128 * 1024;
 export type FixtureEvidenceResult =
   | { ok: true; runId: string; path: string; text: string; bytes: number }
@@ -11,7 +10,9 @@ export type FixtureEvidenceResult =
 
 export function readFixtureEvidence(runId: string, ref: string, env: Readonly<Record<string, string | undefined>> = process.env): FixtureEvidenceResult {
   if (env.NODE_ENV === 'production' || env.OBSERVATORY_DATA_SOURCE !== 'fixture') return { ok: false, status: 404, error: 'Fixture preview unavailable' };
-  if (!FIXTURE_CATALOG.some((row) => row.id === runId)) return { ok: false, status: 404, error: 'Unknown fixture run' };
+  const pack = fixturePackForRun(runId);
+  if (!pack) return { ok: false, status: 404, error: 'Unknown fixture run' };
+  const ROOT_PARTS = ['dwo-v2', 'fixtures', pack, 'evidence'];
   if (typeof ref !== 'string' || /[%\\\0]/.test(ref) || isAbsolute(ref) || /^[A-Za-z]:/.test(ref) || ref.split('/').some((s) => !s || s === '.' || s === '..')) return { ok: false, status: 400, error: 'Invalid evidence reference' };
   const match = ALLOWED.exec(ref);
   if (!match || match[2] !== runId || match[1] !== match[3]) return { ok: false, status: 403, error: 'Evidence reference is not allowlisted for this run' };

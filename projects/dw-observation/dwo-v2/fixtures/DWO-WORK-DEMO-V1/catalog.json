@@ -1,0 +1,287 @@
+[
+  {
+    "anomalyCount": 0,
+    "authorityState": "NOT_REQUIRED",
+    "children": [],
+    "deps": [],
+    "domain": "SOFTWARE/DEMO",
+    "gate": "G6",
+    "gateState": "PASSED",
+    "id": "DEMO-DELIVERY-API",
+    "kind": "ATOMIC",
+    "parent": "DEMO-DELIVERY-ROOT",
+    "purpose": "Implement the task-summary API with explicit unavailable responses",
+    "runState": "ACCEPTED",
+    "semanticQualification": "PENDING",
+    "sourceProfile": "DEV_NATIVE",
+    "syncState": "LIVE"
+  },
+  {
+    "anomalyCount": 0,
+    "authorityState": "NOT_REQUIRED",
+    "children": [],
+    "deps": [
+      "DEMO-DELIVERY-API"
+    ],
+    "domain": "SOFTWARE/DEMO",
+    "gate": "G6",
+    "gateState": "PASSED",
+    "id": "DEMO-DELIVERY-UI",
+    "kind": "ATOMIC",
+    "parent": "DEMO-DELIVERY-ROOT",
+    "purpose": "Render dashboard summary and empty states",
+    "runState": "ACCEPTED",
+    "semanticQualification": "PENDING",
+    "sourceProfile": "DEV_NATIVE",
+    "syncState": "LIVE"
+  },
+  {
+    "anomalyCount": 0,
+    "authorityState": "NOT_REQUIRED",
+    "children": [
+      "DEMO-DELIVERY-API",
+      "DEMO-DELIVERY-UI"
+    ],
+    "deps": [
+      "DEMO-DELIVERY-API"
+    ],
+    "domain": "SOFTWARE/DEMO",
+    "gate": "G6",
+    "gateState": "PASSED",
+    "id": "DEMO-DELIVERY-ROOT",
+    "kind": "ROOT",
+    "parent": null,
+    "purpose": "Completed delivery: API and dashboard",
+    "runState": "ACCEPTED",
+    "semanticQualification": "PENDING",
+    "sourceProfile": "DEV_NATIVE",
+    "syncState": "LIVE"
+  },
+  {
+    "anomalyCount": 0,
+    "authorityState": "NOT_REQUIRED",
+    "children": [],
+    "deps": [],
+    "domain": "SOFTWARE/DEMO",
+    "gate": "G6",
+    "gateState": "PASSED",
+    "id": "DEMO-BLOCKED-API",
+    "kind": "ATOMIC",
+    "parent": "DEMO-BLOCKED-ROOT",
+    "purpose": "Prepare versioned prerequisite API contract",
+    "runState": "ACCEPTED",
+    "semanticQualification": "PENDING",
+    "sourceProfile": "DEV_NATIVE",
+    "syncState": "LIVE"
+  },
+  {
+    "anomalyCount": 0,
+    "authorityState": "DENIED",
+    "children": [],
+    "deps": [
+      "DEMO-BLOCKED-API"
+    ],
+    "domain": "SOFTWARE/DEMO",
+    "gate": "G2",
+    "gateState": "BLOCKED",
+    "id": "DEMO-BLOCKED-UI",
+    "kind": "ATOMIC",
+    "parent": "DEMO-BLOCKED-ROOT",
+    "purpose": "Integrate UI only after contract and demo authorization",
+    "runState": "OPEN",
+    "semanticQualification": "PENDING",
+    "sourceProfile": "DEV_NATIVE",
+    "syncState": "LIVE"
+  },
+  {
+    "anomalyCount": 0,
+    "authorityState": "DENIED",
+    "children": [
+      "DEMO-BLOCKED-API",
+      "DEMO-BLOCKED-UI"
+    ],
+    "deps": [
+      "DEMO-BLOCKED-API"
+    ],
+    "domain": "SOFTWARE/DEMO",
+    "gate": "G2",
+    "gateState": "BLOCKED",
+    "id": "DEMO-BLOCKED-ROOT",
+    "kind": "ROOT",
+    "parent": null,
+    "purpose": "Blocked work: dependency and denied authority",
+    "runState": "OPEN",
+    "semanticQualification": "PENDING",
+    "sourceProfile": "DEV_NATIVE",
+    "syncState": "LIVE"
+  },
+  {
+    "anomalyCount": 0,
+    "authorityState": "NOT_REQUIRED",
+    "children": [],
+    "deps": [],
+    "domain": "SOFTWARE/DEMO",
+    "gate": "G6",
+    "gateState": "PASSED",
+    "id": "DEMO-RETRY-API",
+    "kind": "ATOMIC",
+    "parent": "DEMO-RETRY-ROOT",
+    "purpose": "Provide deterministic task data for verification",
+    "runState": "ACCEPTED",
+    "semanticQualification": "PENDING",
+    "sourceProfile": "DEV_NATIVE",
+    "syncState": "LIVE"
+  },
+  {
+    "anomalyCount": 0,
+    "authorityState": "NOT_REQUIRED",
+    "children": [],
+    "deps": [
+      "DEMO-RETRY-API"
+    ],
+    "domain": "SOFTWARE/DEMO",
+    "gate": "G3",
+    "gateState": "ACTIVE",
+    "id": "DEMO-RETRY-UI",
+    "kind": "ATOMIC",
+    "parent": "DEMO-RETRY-ROOT",
+    "purpose": "Repair empty-state assertion and rerun checks",
+    "runState": "OPEN",
+    "semanticQualification": "PENDING",
+    "sourceProfile": "DEV_NATIVE",
+    "syncState": "LIVE"
+  },
+  {
+    "anomalyCount": 0,
+    "authorityState": "NOT_REQUIRED",
+    "children": [
+      "DEMO-RETRY-API",
+      "DEMO-RETRY-UI"
+    ],
+    "deps": [
+      "DEMO-RETRY-API"
+    ],
+    "domain": "SOFTWARE/DEMO",
+    "gate": "G3",
+    "gateState": "ACTIVE",
+    "id": "DEMO-RETRY-ROOT",
+    "kind": "ROOT",
+    "parent": null,
+    "purpose": "Verification failure and repair in progress",
+    "runState": "OPEN",
+    "semanticQualification": "PENDING",
+    "sourceProfile": "DEV_NATIVE",
+    "syncState": "LIVE"
+  },
+  {
+    "anomalyCount": 0,
+    "authorityState": "NOT_REQUIRED",
+    "children": [
+      "DEMO-RECURSIVE-CHILD"
+    ],
+    "declaredGates": [
+      "G0",
+      "G1",
+      "G2",
+      "G3",
+      "G4",
+      "G5",
+      "G6"
+    ],
+    "deps": [],
+    "domain": "SOFTWARE/RECURSIVE_DEMO",
+    "gate": "G6",
+    "gateState": "PASSED",
+    "id": "DEMO-RECURSIVE-ROOT",
+    "kind": "ROOT",
+    "parent": null,
+    "purpose": "Deliver a task workspace through a delegated child run",
+    "runState": "ACCEPTED",
+    "semanticQualification": "PENDING",
+    "sourceProfile": "DEV_NATIVE",
+    "syncState": "LIVE"
+  },
+  {
+    "anomalyCount": 0,
+    "authorityState": "NOT_REQUIRED",
+    "children": [
+      "DEMO-RECURSIVE-API",
+      "DEMO-RECURSIVE-UI"
+    ],
+    "declaredGates": [
+      "G0",
+      "G1",
+      "G2",
+      "G3",
+      "G4",
+      "G5",
+      "G6"
+    ],
+    "deps": [],
+    "domain": "SOFTWARE/RECURSIVE_DEMO",
+    "gate": "G6",
+    "gateState": "PASSED",
+    "id": "DEMO-RECURSIVE-CHILD",
+    "kind": "CHILD",
+    "parent": "DEMO-RECURSIVE-ROOT",
+    "purpose": "Compose API and UI atomic work, verify and hand back to root",
+    "runState": "ACCEPTED",
+    "semanticQualification": "PENDING",
+    "sourceProfile": "DEV_NATIVE",
+    "syncState": "LIVE"
+  },
+  {
+    "anomalyCount": 0,
+    "authorityState": "NOT_REQUIRED",
+    "children": [],
+    "declaredGates": [
+      "G0",
+      "G1",
+      "G2",
+      "G3",
+      "G4",
+      "G5",
+      "G6"
+    ],
+    "deps": [],
+    "domain": "SOFTWARE/RECURSIVE_DEMO",
+    "gate": "G6",
+    "gateState": "PASSED",
+    "id": "DEMO-RECURSIVE-API",
+    "kind": "ATOMIC",
+    "parent": "DEMO-RECURSIVE-CHILD",
+    "purpose": "Implement the task-summary API",
+    "runState": "ACCEPTED",
+    "semanticQualification": "PENDING",
+    "sourceProfile": "DEV_NATIVE",
+    "syncState": "LIVE"
+  },
+  {
+    "anomalyCount": 0,
+    "authorityState": "NOT_REQUIRED",
+    "children": [],
+    "declaredGates": [
+      "G0",
+      "G1",
+      "G2",
+      "G3",
+      "G4",
+      "G5",
+      "G6"
+    ],
+    "deps": [
+      "DEMO-RECURSIVE-API"
+    ],
+    "domain": "SOFTWARE/RECURSIVE_DEMO",
+    "gate": "G6",
+    "gateState": "PASSED",
+    "id": "DEMO-RECURSIVE-UI",
+    "kind": "ATOMIC",
+    "parent": "DEMO-RECURSIVE-CHILD",
+    "purpose": "Implement the UI against the accepted API contract",
+    "runState": "ACCEPTED",
+    "semanticQualification": "PENDING",
+    "sourceProfile": "DEV_NATIVE",
+    "syncState": "LIVE"
+  }
+]

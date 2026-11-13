@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { isLocalFixturePreview } from '@/lib/dwo/fixturePreviewMode';
+import { isLocalFixturePreview } from '@/lib/dwo/requestDataSource';
 import { readFixtureEvidence } from '@/lib/dwo/fixtureEvidenceRead';
 
 export async function GET(request: Request, context: { params: { runId: string } | Promise<{ runId: string }> }) {
@@ -9,6 +9,6 @@ export async function GET(request: Request, context: { params: { runId: string }
   // URLSearchParams decodes once. Normal encoded slashes are expected from the
   // viewer; traversal and remaining/double encoding are denied by the reader.
   const ref = rawPath;
-  const result = readFixtureEvidence(runId, ref);
+  const result = readFixtureEvidence(runId, ref, { ...process.env, OBSERVATORY_DATA_SOURCE: 'fixture' });
   return NextResponse.json(result, { status: result.ok ? 200 : result.status, headers: { 'Cache-Control': 'no-store' } });
 }

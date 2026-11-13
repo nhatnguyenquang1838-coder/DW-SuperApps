@@ -12,13 +12,13 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getFixtureTaskRelation } from '@/lib/dwo/fixtureTaskRead';
+import { getPreviewTaskRelation as getFixtureTaskRelation } from '@/lib/dwo/previewTaskRead';
 import { createFixtureReplaySession } from '@/lib/dwo/fixtureReplaySession';
 import { loadFixtureQualificationReceipt, fixtureReceiptToProjection } from '@/lib/dwo/fixtureQualification';
 import { deriveCurrentFixtureSubjectDigest } from '@/lib/dwo/currentFixtureSubject';
 import type { QualificationProjection } from '@/lib/dwo/qualificationProjection';
 import RunStatusAxes from '@/components/dwo/RunStatusAxes';
-import { isLocalFixturePreview } from '@/lib/dwo/fixturePreviewMode';
+import { isLocalFixturePreview } from '@/lib/dwo/requestDataSource';
 import { buildWorkspaceModel } from '@/lib/runtime/buildWorkspaceModel';
 import type { ProjectionSyncStatus } from '@/lib/dwo/qualificationProjection';
 

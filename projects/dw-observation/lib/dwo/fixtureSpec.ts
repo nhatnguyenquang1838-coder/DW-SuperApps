@@ -104,6 +104,7 @@ export const FIXTURE_CATALOG: readonly {
   readonly parent: string | null;
   readonly gate: string | null;
   readonly gateState: string | null;
+  readonly declaredGates?: readonly string[];
   readonly runState: string;
   readonly sourceProfile: string;
   readonly syncState: string;

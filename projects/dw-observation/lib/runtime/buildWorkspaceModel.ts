@@ -15,7 +15,7 @@ import { getRun, UNKNOWN } from "@/lib/observatory";
 import { loginAuthScenarioAdapter } from "@/lib/runtime/adapters/loginAuthScenarioAdapter";
 import { realRuntimeAdapter } from "@/lib/runtime/adapters/realRuntimeAdapter";
 import { fixtureScenarioAdapter } from "@/lib/runtime/adapters/fixtureScenarioAdapter";
-import { FIXTURE_CATALOG } from "@/lib/dwo/fixtureSpec";
+import { PREVIEW_FIXTURE_CATALOG as FIXTURE_CATALOG } from "@/lib/dwo/fixturePreviewCatalog";
 import { readServerRunDetail } from "@/lib/serverRunRead";
 
 import {

@@ -10,7 +10,7 @@
 // empty projection while all 11 Playwright tests still passed. That is
 // fail-OPEN, which the fail-closed contract forbids.
 
-import { FIXTURE_CATALOG } from "@/lib/dwo/fixtureSpec";
+import { PREVIEW_FIXTURE_CATALOG as FIXTURE_CATALOG } from "@/lib/dwo/fixturePreviewCatalog";
 import { materializeFixtureScenario } from "@/lib/dwo/materializeFixtureScenario";
 import { createFixtureReplaySession } from "@/lib/dwo/fixtureReplaySession";
 import type { ProjectionEvent } from "@/lib/live";

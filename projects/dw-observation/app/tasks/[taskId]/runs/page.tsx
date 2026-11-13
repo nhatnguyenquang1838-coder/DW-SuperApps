@@ -8,7 +8,7 @@
 
 import Link from "next/link";
 import { resolveTask } from "@/lib/taskRead";
-import { isLocalFixturePreview } from "@/lib/dwo/fixturePreviewMode";
+import { isLocalFixturePreview } from "@/lib/dwo/requestDataSource";
 import { readServerRunList } from "@/lib/serverRunRead";
 
 type TaskRunSummary = {

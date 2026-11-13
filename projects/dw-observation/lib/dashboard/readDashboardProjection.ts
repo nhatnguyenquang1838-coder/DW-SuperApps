@@ -156,7 +156,9 @@ export function readDashboardProjection(
   // into the dashboard API. T08 originally declared a local `DataSource` union
   // with a "fixture" member and passed it straight to listRuns(), which typecheck
   // rejected: the type existed, it just was not this type.
-  const runs = listRuns(dataSource === "fixture" ? "mock" : dataSource);
+  // observatory.listRuns is an in-repo fixture reader, even with its legacy
+  // 'real' argument. Never expose those records as real backend history.
+  const runs = dataSource === "fixture" ? listRuns("mock") : [];
   const runCounts = computeRunCounts(runs);
   const recentActivity = computeRecentActivity(runs);
 

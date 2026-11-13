@@ -36,6 +36,11 @@ function record(overrides: Partial<TaskRunRelationRecord>): TaskRunRelationRecor
 // ---------------------------------------------------------------------------
 
 describe("T08 · source-backed projection", () => {
+  it('does not show fixture run history when real source has no records', () => {
+    const projection = readDashboardProjection('real', []);
+    expect(projection.recentActivity).toEqual([]);
+    expect(projection.runCounts).toEqual({});
+  });
   // --- Test 1: every aggregate null when its source is unavailable ---
   it("every aggregate is null when its source is unavailable", () => {
     // Real source with no task records → task source unavailable.

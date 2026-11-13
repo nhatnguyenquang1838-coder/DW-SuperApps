@@ -7,8 +7,9 @@
 
 import { redirect } from "next/navigation";
 import { readHistoricalEvents } from "@/lib/serverHistoricalRead";
-import { isLocalFixturePreview } from "@/lib/dwo/fixturePreviewMode";
+import { isLocalFixturePreview } from "@/lib/dwo/requestDataSource";
 import { buildReplayRoute } from "@/lib/dwo/replayRoute";
+import recursiveScenario from '@/dwo-v2/fixtures/DWO-WORK-DEMO-V1/recursive-scenario.json';
 
 export default async function RunReplayRedirect({
   params,
@@ -16,6 +17,10 @@ export default async function RunReplayRedirect({
   params: { runId: string };
 }) {
   if (isLocalFixturePreview()) {
+    if (params.runId === recursiveScenario.rootRunId) {
+      const { default: RunDetailPage } = await import('@/app/runs/[runId]/page');
+      return RunDetailPage({ params, searchParams: { mode: 'replay', seq: '1' } });
+    }
     const { default: DevRunReplayPage } = await import('@/app/dev/runs/[runId]/replay/page');
     return DevRunReplayPage({ params });
   }

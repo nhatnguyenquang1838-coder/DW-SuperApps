@@ -16,8 +16,10 @@ import { readQualificationProjection } from '@/lib/dwo/qualificationRead';
 import { loadFixtureQualificationReceipt, fixtureReceiptToProjection } from '@/lib/dwo/fixtureQualification';
 import { deriveCurrentFixtureSubjectDigest } from '@/lib/dwo/currentFixtureSubject';
 import { createFixtureReplaySession } from '@/lib/dwo/fixtureReplaySession';
+import { fixturePackForRun } from '@/lib/dwo/fixturePreviewCatalog';
 import type { QualificationProjection } from '@/lib/dwo/qualificationProjection';
 import Link from 'next/link';
+import recursiveScenario from '@/dwo-v2/fixtures/DWO-WORK-DEMO-V1/recursive-scenario.json';
 
 export default async function DevRunDetailPage({
   params,
@@ -27,6 +29,10 @@ export default async function DevRunDetailPage({
   searchParams: { mode?: string; seq?: string };
 }) {
   const runId = decodeURIComponent(params.runId);
+  if (runId === recursiveScenario.rootRunId) {
+    const { default: RunDetailPage } = await import('@/app/runs/[runId]/page');
+    return RunDetailPage({ params, searchParams });
+  }
 
   // Force fixture source — never fall through to real.
   const replaySeq =
@@ -87,7 +93,7 @@ export default async function DevRunDetailPage({
             DEV FIXTURE
           </span>
           <span className="text-xs" style={{ color: 'var(--dwo-color-text-muted)' }}>
-            DWO-UR-30-V1 · read-only preview · not reachable from production run routes
+            {fixturePackForRun(runId)} · synthetic read-only preview · not real execution
           </span>
           <span
             className="ml-auto text-xs"

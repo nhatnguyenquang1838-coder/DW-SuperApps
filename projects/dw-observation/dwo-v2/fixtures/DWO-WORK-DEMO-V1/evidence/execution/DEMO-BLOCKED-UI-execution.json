@@ -1,0 +1,60 @@
+{
+  "artifacts": [
+    {
+      "content": "Synthetic work artifact: Integrate UI only after contract and demo authorization",
+      "path": "demo/blocked/demo-blocked-ui.txt"
+    }
+  ],
+  "blocked_reason": "Prerequisite contract integration and demo authority are unresolved",
+  "fixture_set": "DWO-WORK-DEMO-V1",
+  "notice": "Fictional work story for UI review. Not real execution, approval, qualification or deployment evidence.",
+  "objective": "Integrate UI only after contract and demo authorization",
+  "result": "blocked",
+  "run_id": "DEMO-BLOCKED-UI",
+  "steps": [
+    {
+      "event_id": "DEMO-BLOCKED-UI-EVENT-000",
+      "gate": "G0",
+      "state": "ACTIVE",
+      "summary": "Understand work and constraints"
+    },
+    {
+      "event_id": "DEMO-BLOCKED-UI-EVENT-001",
+      "gate": "G0",
+      "state": "PASSED",
+      "summary": "Scope understood"
+    },
+    {
+      "event_id": "DEMO-BLOCKED-UI-EVENT-002",
+      "gate": "G1",
+      "state": "ACTIVE",
+      "summary": "Plan tasks and dependencies"
+    },
+    {
+      "event_id": "DEMO-BLOCKED-UI-EVENT-003",
+      "gate": "G1",
+      "state": "PASSED",
+      "summary": "Plan recorded"
+    },
+    {
+      "event_id": "DEMO-BLOCKED-UI-EVENT-004",
+      "gate": "G2",
+      "state": "ACTIVE",
+      "summary": "Implement: Integrate UI only after contract and demo authorization"
+    },
+    {
+      "event_id": "DEMO-BLOCKED-UI-EVENT-005",
+      "gate": "G2",
+      "state": "WAITING",
+      "summary": "Request prerequisite integration and synthetic authorization"
+    },
+    {
+      "event_id": "DEMO-BLOCKED-UI-EVENT-006",
+      "gate": "G2",
+      "state": "BLOCKED",
+      "summary": "Waiting on prerequisite API contract and denied demo authority"
+    }
+  ],
+  "synthetic": true,
+  "task_ref": "DEMO-TASK-BLOCKED"
+}

@@ -1,0 +1,102 @@
+{
+  "artifacts": [
+    {
+      "content": "Synthetic work artifact: Completed delivery: API and dashboard",
+      "path": "demo/delivery/demo-delivery-root.txt"
+    }
+  ],
+  "blocked_reason": null,
+  "fixture_set": "DWO-WORK-DEMO-V1",
+  "notice": "Fictional work story for UI review. Not real execution, approval, qualification or deployment evidence.",
+  "objective": "Completed delivery: API and dashboard",
+  "result": "accepted",
+  "run_id": "DEMO-DELIVERY-ROOT",
+  "steps": [
+    {
+      "event_id": "DEMO-DELIVERY-ROOT-EVENT-000",
+      "gate": "G0",
+      "state": "ACTIVE",
+      "summary": "Understand work and constraints"
+    },
+    {
+      "event_id": "DEMO-DELIVERY-ROOT-EVENT-001",
+      "gate": "G0",
+      "state": "PASSED",
+      "summary": "Scope understood"
+    },
+    {
+      "event_id": "DEMO-DELIVERY-ROOT-EVENT-002",
+      "gate": "G1",
+      "state": "ACTIVE",
+      "summary": "Plan tasks and dependencies"
+    },
+    {
+      "event_id": "DEMO-DELIVERY-ROOT-EVENT-003",
+      "gate": "G1",
+      "state": "PASSED",
+      "summary": "Plan recorded"
+    },
+    {
+      "event_id": "DEMO-DELIVERY-ROOT-EVENT-004",
+      "gate": "G2",
+      "state": "ACTIVE",
+      "summary": "Implement: Completed delivery: API and dashboard"
+    },
+    {
+      "event_id": "DEMO-DELIVERY-ROOT-EVENT-005",
+      "gate": "G2",
+      "state": "PASSED",
+      "summary": "Implementation artifact ready"
+    },
+    {
+      "event_id": "DEMO-DELIVERY-ROOT-EVENT-006",
+      "gate": "G3",
+      "state": "ACTIVE",
+      "summary": "Run verification checks"
+    },
+    {
+      "event_id": "DEMO-DELIVERY-ROOT-EVENT-007",
+      "gate": "G3",
+      "state": "PASSED",
+      "summary": "Verification checks passed in this fictional story"
+    },
+    {
+      "event_id": "DEMO-DELIVERY-ROOT-EVENT-008",
+      "gate": "G4",
+      "state": "ACTIVE",
+      "summary": "Integrate into local demo target"
+    },
+    {
+      "event_id": "DEMO-DELIVERY-ROOT-EVENT-009",
+      "gate": "G4",
+      "state": "PASSED",
+      "summary": "Target integration recorded"
+    },
+    {
+      "event_id": "DEMO-DELIVERY-ROOT-EVENT-010",
+      "gate": "G5",
+      "state": "ACTIVE",
+      "summary": "Validate integrated demo target"
+    },
+    {
+      "event_id": "DEMO-DELIVERY-ROOT-EVENT-011",
+      "gate": "G5",
+      "state": "PASSED",
+      "summary": "Target validation recorded"
+    },
+    {
+      "event_id": "DEMO-DELIVERY-ROOT-EVENT-012",
+      "gate": "G6",
+      "state": "ACTIVE",
+      "summary": "Prepare acceptance and handoff"
+    },
+    {
+      "event_id": "DEMO-DELIVERY-ROOT-EVENT-013",
+      "gate": "G6",
+      "state": "PASSED",
+      "summary": "Demo work accepted with handoff"
+    }
+  ],
+  "synthetic": true,
+  "task_ref": "DEMO-TASK-DELIVERY"
+}

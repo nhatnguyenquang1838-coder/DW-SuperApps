@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from 'react';
 import type { UnifiedRuntimeNode } from "@/lib/runtime/unifiedRuntime";
 
 type InspectorTab =
@@ -81,6 +82,9 @@ function EventList({ events, emptyText = "No events." }: { events: unknown[]; em
 }
 
 export default function NodeInspector({ node, activeTab, onTabChange, onOpen }: NodeInspectorProps) {
+  // SSR controls must not accept a first click before event handlers hydrate.
+  const [interactive, setInteractive] = useState(false);
+  useEffect(() => setInteractive(true), []);
   if (!node) {
     return (
       <div className="dwo-inspector" data-testid="node-inspector" data-state="empty">
@@ -130,6 +134,7 @@ export default function NodeInspector({ node, activeTab, onTabChange, onOpen }: 
             key={t.id}
             className={`dwo-inspector-tab${activeTab === t.id ? " active" : ""}`}
             data-tab={t.id}
+            disabled={!interactive}
             onClick={() => onTabChange(t.id)}
           >
             {t.label}

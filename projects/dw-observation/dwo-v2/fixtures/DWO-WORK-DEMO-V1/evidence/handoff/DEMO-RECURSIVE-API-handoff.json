@@ -1,0 +1,9 @@
+{
+  "fixture_set": "DWO-WORK-DEMO-V1",
+  "notice": "Fictional recursive workflow. Not real execution, qualification, approval, merge or deployment evidence.",
+  "open_items": [],
+  "result": "ACCEPTED_IN_SYNTHETIC_STORY",
+  "run_id": "DEMO-RECURSIVE-API",
+  "synthetic": true,
+  "target": "local fictional demo only"
+}

@@ -1,0 +1,84 @@
+{
+  "artifacts": [
+    {
+      "content": "Synthetic work artifact: Verification failure and repair in progress",
+      "path": "demo/retry/demo-retry-root.txt"
+    }
+  ],
+  "blocked_reason": null,
+  "fixture_set": "DWO-WORK-DEMO-V1",
+  "notice": "Fictional work story for UI review. Not real execution, approval, qualification or deployment evidence.",
+  "objective": "Verification failure and repair in progress",
+  "result": "retry",
+  "run_id": "DEMO-RETRY-ROOT",
+  "steps": [
+    {
+      "event_id": "DEMO-RETRY-ROOT-EVENT-000",
+      "gate": "G0",
+      "state": "ACTIVE",
+      "summary": "Understand work and constraints"
+    },
+    {
+      "event_id": "DEMO-RETRY-ROOT-EVENT-001",
+      "gate": "G0",
+      "state": "PASSED",
+      "summary": "Scope understood"
+    },
+    {
+      "event_id": "DEMO-RETRY-ROOT-EVENT-002",
+      "gate": "G1",
+      "state": "ACTIVE",
+      "summary": "Plan tasks and dependencies"
+    },
+    {
+      "event_id": "DEMO-RETRY-ROOT-EVENT-003",
+      "gate": "G1",
+      "state": "PASSED",
+      "summary": "Plan recorded"
+    },
+    {
+      "event_id": "DEMO-RETRY-ROOT-EVENT-004",
+      "gate": "G2",
+      "state": "ACTIVE",
+      "summary": "Implement: Verification failure and repair in progress"
+    },
+    {
+      "event_id": "DEMO-RETRY-ROOT-EVENT-005",
+      "gate": "G2",
+      "state": "PASSED",
+      "summary": "Implementation artifact ready"
+    },
+    {
+      "event_id": "DEMO-RETRY-ROOT-EVENT-006",
+      "gate": "G3",
+      "state": "ACTIVE",
+      "summary": "Run verification checks"
+    },
+    {
+      "event_id": "DEMO-RETRY-ROOT-EVENT-007",
+      "gate": "G3",
+      "state": "FAILED",
+      "summary": "Verification failed: empty-state assertion"
+    },
+    {
+      "event_id": "DEMO-RETRY-ROOT-EVENT-008",
+      "gate": "G2",
+      "state": "ACTIVE",
+      "summary": "Retry execution after verification failure"
+    },
+    {
+      "event_id": "DEMO-RETRY-ROOT-EVENT-009",
+      "gate": "G2",
+      "state": "PASSED",
+      "summary": "Repair empty-state rendering"
+    },
+    {
+      "event_id": "DEMO-RETRY-ROOT-EVENT-010",
+      "gate": "G3",
+      "state": "ACTIVE",
+      "summary": "Recheck repaired artifact; not yet accepted"
+    }
+  ],
+  "synthetic": true,
+  "task_ref": "DEMO-TASK-RETRY"
+}

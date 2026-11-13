@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import TopNavigation from "@/components/dwo/TopNavigation";
 import "./globals.css";
+import DataSourceSelector from "@/components/dwo/DataSourceSelector";
+import { getRequestDataSource } from "@/lib/dwo/requestDataSource";
 
 export const metadata: Metadata = {
   title: "DW Run Observatory",
@@ -25,6 +27,9 @@ export default function RootLayout({
             they are rendered by TopNavigation outside the primary product nav.
           */}
           <TopNavigation subtitle="read-only historical projection (DWO v2, fail-closed)" />
+          <div className="mx-auto max-w-5xl px-6">
+            <DataSourceSelector source={getRequestDataSource()} fixtureAllowed={process.env.NODE_ENV !== 'production'} />
+          </div>
           <main className="mx-auto max-w-5xl px-6 py-6">{children}</main>
         </div>
       </body>

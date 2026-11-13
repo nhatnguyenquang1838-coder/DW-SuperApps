@@ -1,0 +1,94 @@
+{
+  "fixture_set": "DWO-WORK-DEMO-V1",
+  "notice": "Fictional recursive workflow. Not real execution, qualification, approval, merge or deployment evidence.",
+  "objective": "Implement the UI against the accepted API contract",
+  "run_id": "DEMO-RECURSIVE-UI",
+  "steps": [
+    {
+      "event_id": "DEMO-RECURSIVE-UI-EVENT-000",
+      "gate": "G0",
+      "state": "ACTIVE",
+      "summary": "Understand work and constraints"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-UI-EVENT-001",
+      "gate": "G0",
+      "state": "PASSED",
+      "summary": "Scope understood"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-UI-EVENT-002",
+      "gate": "G1",
+      "state": "ACTIVE",
+      "summary": "Plan tasks and dependencies"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-UI-EVENT-003",
+      "gate": "G1",
+      "state": "PASSED",
+      "summary": "Plan recorded"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-UI-EVENT-004",
+      "gate": "G2",
+      "state": "ACTIVE",
+      "summary": "Implement: Implement the UI against the accepted API contract"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-UI-EVENT-005",
+      "gate": "G2",
+      "state": "PASSED",
+      "summary": "Implementation artifact ready"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-UI-EVENT-006",
+      "gate": "G3",
+      "state": "ACTIVE",
+      "summary": "Run verification checks"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-UI-EVENT-007",
+      "gate": "G3",
+      "state": "PASSED",
+      "summary": "Verification checks passed in this fictional story"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-UI-EVENT-008",
+      "gate": "G4",
+      "state": "ACTIVE",
+      "summary": "Integrate into local demo target"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-UI-EVENT-009",
+      "gate": "G4",
+      "state": "PASSED",
+      "summary": "Target integration recorded"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-UI-EVENT-010",
+      "gate": "G5",
+      "state": "ACTIVE",
+      "summary": "Validate integrated demo target"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-UI-EVENT-011",
+      "gate": "G5",
+      "state": "PASSED",
+      "summary": "Target validation recorded"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-UI-EVENT-012",
+      "gate": "G6",
+      "state": "ACTIVE",
+      "summary": "Prepare acceptance and handoff"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-UI-EVENT-013",
+      "gate": "G6",
+      "state": "PASSED",
+      "summary": "Demo work accepted with handoff"
+    }
+  ],
+  "synthetic": true,
+  "task_ref": "DEMO-TASK-RECURSIVE"
+}

@@ -13,8 +13,8 @@
  */
 
 import Link from 'next/link';
-import { FIXTURE_TASK_RELATIONS_PATH, listFixtureTaskRelations } from '@/lib/dwo/fixtureTaskRead';
-import { isLocalFixturePreview } from '@/lib/dwo/fixturePreviewMode';
+import { listPreviewTaskRelations as listFixtureTaskRelations } from '@/lib/dwo/previewTaskRead';
+import { isLocalFixturePreview } from '@/lib/dwo/requestDataSource';
 import type { TaskSummary } from '@/lib/taskTypes';
 
 export default async function DevTasksPage() {
@@ -50,7 +50,7 @@ export default async function DevTasksPage() {
           Fixture Task Relations
         </h1>
         <p className="mb-6 text-xs" style={{ color: 'var(--dwo-color-text-muted)' }}>
-          DWO-UR-30-V1 · {FIXTURE_TASK_RELATIONS_PATH} · {tasks.length} relation records
+          DWO-UR-30-V1 + DWO-WORK-DEMO-V1 · {tasks.length} tasks · demo stories are synthetic, not real execution
         </p>
 
         {tasks.length === 0 ? (

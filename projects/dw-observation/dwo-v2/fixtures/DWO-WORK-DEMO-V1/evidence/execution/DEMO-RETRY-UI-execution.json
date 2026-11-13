@@ -1,0 +1,84 @@
+{
+  "artifacts": [
+    {
+      "content": "Synthetic work artifact: Repair empty-state assertion and rerun checks",
+      "path": "demo/retry/demo-retry-ui.txt"
+    }
+  ],
+  "blocked_reason": null,
+  "fixture_set": "DWO-WORK-DEMO-V1",
+  "notice": "Fictional work story for UI review. Not real execution, approval, qualification or deployment evidence.",
+  "objective": "Repair empty-state assertion and rerun checks",
+  "result": "retry",
+  "run_id": "DEMO-RETRY-UI",
+  "steps": [
+    {
+      "event_id": "DEMO-RETRY-UI-EVENT-000",
+      "gate": "G0",
+      "state": "ACTIVE",
+      "summary": "Understand work and constraints"
+    },
+    {
+      "event_id": "DEMO-RETRY-UI-EVENT-001",
+      "gate": "G0",
+      "state": "PASSED",
+      "summary": "Scope understood"
+    },
+    {
+      "event_id": "DEMO-RETRY-UI-EVENT-002",
+      "gate": "G1",
+      "state": "ACTIVE",
+      "summary": "Plan tasks and dependencies"
+    },
+    {
+      "event_id": "DEMO-RETRY-UI-EVENT-003",
+      "gate": "G1",
+      "state": "PASSED",
+      "summary": "Plan recorded"
+    },
+    {
+      "event_id": "DEMO-RETRY-UI-EVENT-004",
+      "gate": "G2",
+      "state": "ACTIVE",
+      "summary": "Implement: Repair empty-state assertion and rerun checks"
+    },
+    {
+      "event_id": "DEMO-RETRY-UI-EVENT-005",
+      "gate": "G2",
+      "state": "PASSED",
+      "summary": "Implementation artifact ready"
+    },
+    {
+      "event_id": "DEMO-RETRY-UI-EVENT-006",
+      "gate": "G3",
+      "state": "ACTIVE",
+      "summary": "Run verification checks"
+    },
+    {
+      "event_id": "DEMO-RETRY-UI-EVENT-007",
+      "gate": "G3",
+      "state": "FAILED",
+      "summary": "Verification failed: empty-state assertion"
+    },
+    {
+      "event_id": "DEMO-RETRY-UI-EVENT-008",
+      "gate": "G2",
+      "state": "ACTIVE",
+      "summary": "Retry execution after verification failure"
+    },
+    {
+      "event_id": "DEMO-RETRY-UI-EVENT-009",
+      "gate": "G2",
+      "state": "PASSED",
+      "summary": "Repair empty-state rendering"
+    },
+    {
+      "event_id": "DEMO-RETRY-UI-EVENT-010",
+      "gate": "G3",
+      "state": "ACTIVE",
+      "summary": "Recheck repaired artifact; not yet accepted"
+    }
+  ],
+  "synthetic": true,
+  "task_ref": "DEMO-TASK-RETRY"
+}
