@@ -19,6 +19,7 @@ import { createFixtureReplaySession } from '@/lib/dwo/fixtureReplaySession';
 import { fixturePackForRun } from '@/lib/dwo/fixturePreviewCatalog';
 import type { QualificationProjection } from '@/lib/dwo/qualificationProjection';
 import Link from 'next/link';
+import recursiveScenario from '@/dwo-v2/fixtures/DWO-WORK-DEMO-V1/recursive-scenario.json';
 
 export default async function DevRunDetailPage({
   params,
@@ -28,6 +29,10 @@ export default async function DevRunDetailPage({
   searchParams: { mode?: string; seq?: string };
 }) {
   const runId = decodeURIComponent(params.runId);
+  if (runId === recursiveScenario.rootRunId) {
+    const { default: RunDetailPage } = await import('@/app/runs/[runId]/page');
+    return RunDetailPage({ params, searchParams });
+  }
 
   // Force fixture source — never fall through to real.
   const replaySeq =

@@ -24,7 +24,7 @@ describe("F4 local fixture preview canonical routes", () => {
     enableFixturePreview();
     const { container } = render(await TasksPage());
     expect(screen.getByTestId("dev-fixture-indicator").textContent).toContain("DEV FIXTURE");
-    expect(container.querySelectorAll(".notion-task-card")).toHaveLength(8);
+    expect(container.querySelectorAll(".notion-task-card")).toHaveLength(9);
     expect(container.querySelector("a[href='/tasks/TASK-CORE/runs']")).toBeTruthy();
     expect(container.querySelector("a[href='/tasks/DEMO-TASK-RETRY/runs']")).toBeTruthy();
   });

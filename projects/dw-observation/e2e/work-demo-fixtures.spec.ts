@@ -7,8 +7,8 @@ for (const story of ['DELIVERY', 'BLOCKED', 'RETRY']) {
     await page.goto('/runs');
     await page.getByLabel('Datasource', { exact: true }).selectOption('fixture');
     const showcase = page.getByTestId('work-demo-showcase');
-    await expect(showcase).toContainText('106 recorded demo events');
-    await expect(page.locator('.notion-run-card')).toHaveCount(39);
+    await expect(showcase).toContainText('166 recorded demo events');
+    await expect(page.locator('.notion-run-card')).toHaveCount(43);
     const root = `DEMO-${story}-ROOT`;
     await page.locator(`a.notion-run-card[href='/runs/${root}']`).click();
     await expect(page.getByTestId('dev-fixture-indicator')).toContainText('DWO-WORK-DEMO-V1');

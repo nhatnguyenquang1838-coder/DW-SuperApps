@@ -271,7 +271,7 @@ function buildRuntimeNode(
     sourceStatus:
       projection.sourceProfile === "UNKNOWN" ? "UNKNOWN" : "ACTIVE",
     maturity: null,
-    declaredGates: entry.gate ? [entry.gate] : [],
+    declaredGates: [...(entry.declaredGates ?? (entry.gate ? [entry.gate] : []))],
     purpose: entry.purpose,
     fileReads: evidenceFiles.length > 0 ? evidenceFiles : [],
     fileWrites: [],

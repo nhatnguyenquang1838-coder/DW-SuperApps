@@ -1,0 +1,19 @@
+{
+  "eventCount": 60,
+  "initialPrefixCursor": 1,
+  "milestones": {
+    "accepted": 60,
+    "atomicDone": 40,
+    "childDone": 50
+  },
+  "notice": "Declared topology; node/gate state follows the selected event prefix.",
+  "rootRunId": "DEMO-RECURSIVE-ROOT",
+  "runIds": [
+    "DEMO-RECURSIVE-ROOT",
+    "DEMO-RECURSIVE-CHILD",
+    "DEMO-RECURSIVE-API",
+    "DEMO-RECURSIVE-UI"
+  ],
+  "synthetic": true,
+  "taskRef": "DEMO-TASK-RECURSIVE"
+}

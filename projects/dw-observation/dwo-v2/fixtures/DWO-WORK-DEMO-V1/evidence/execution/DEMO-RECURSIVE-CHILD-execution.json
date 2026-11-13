@@ -1,0 +1,106 @@
+{
+  "fixture_set": "DWO-WORK-DEMO-V1",
+  "notice": "Fictional recursive workflow. Not real execution, qualification, approval, merge or deployment evidence.",
+  "objective": "Compose API and UI atomic work, verify and hand back to root",
+  "run_id": "DEMO-RECURSIVE-CHILD",
+  "steps": [
+    {
+      "event_id": "DEMO-RECURSIVE-CHILD-EVENT-000",
+      "gate": "G0",
+      "state": "ACTIVE",
+      "summary": "Understand work and constraints"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-CHILD-EVENT-001",
+      "gate": "G0",
+      "state": "PASSED",
+      "summary": "Scope understood"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-CHILD-EVENT-002",
+      "gate": "G1",
+      "state": "ACTIVE",
+      "summary": "Plan tasks and dependencies"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-CHILD-EVENT-003",
+      "gate": "G1",
+      "state": "PASSED",
+      "summary": "Plan recorded"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-CHILD-EVENT-004",
+      "gate": "G2",
+      "state": "ACTIVE",
+      "summary": "Implement: Compose API and UI atomic work, verify and hand back to root"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-CHILD-EVENT-005",
+      "gate": "G2",
+      "state": "WAITING",
+      "summary": "Child waits for both ATOMIC runs; no implicit completion"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-CHILD-EVENT-006",
+      "gate": "G2",
+      "state": "ACTIVE",
+      "summary": "Child resumes after both atomics; composition still needs its own G3\u2013G6"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-CHILD-EVENT-007",
+      "gate": "G2",
+      "state": "PASSED",
+      "summary": "Implementation artifact ready"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-CHILD-EVENT-008",
+      "gate": "G3",
+      "state": "ACTIVE",
+      "summary": "Run verification checks"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-CHILD-EVENT-009",
+      "gate": "G3",
+      "state": "PASSED",
+      "summary": "Verification checks passed in this fictional story"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-CHILD-EVENT-010",
+      "gate": "G4",
+      "state": "ACTIVE",
+      "summary": "Integrate into local demo target"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-CHILD-EVENT-011",
+      "gate": "G4",
+      "state": "PASSED",
+      "summary": "Target integration recorded"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-CHILD-EVENT-012",
+      "gate": "G5",
+      "state": "ACTIVE",
+      "summary": "Validate integrated demo target"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-CHILD-EVENT-013",
+      "gate": "G5",
+      "state": "PASSED",
+      "summary": "Target validation recorded"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-CHILD-EVENT-014",
+      "gate": "G6",
+      "state": "ACTIVE",
+      "summary": "Prepare acceptance and handoff"
+    },
+    {
+      "event_id": "DEMO-RECURSIVE-CHILD-EVENT-015",
+      "gate": "G6",
+      "state": "PASSED",
+      "summary": "Demo work accepted with handoff"
+    }
+  ],
+  "synthetic": true,
+  "task_ref": "DEMO-TASK-RECURSIVE"
+}

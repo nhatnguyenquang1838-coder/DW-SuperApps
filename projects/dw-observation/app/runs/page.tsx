@@ -30,7 +30,7 @@ export default async function RunsPage() {
     const { default: FixtureWorkShowcase } = await import('@/components/dwo/FixtureWorkShowcase');
     return <section className="py-6">
       <h1 className="text-2xl font-semibold">Run Explorer</h1>
-      <p data-testid="dev-fixture-indicator" className="my-4">DEV FIXTURE · 30 canonical scenarios + 9 work-demo runs · {FIXTURE_CATALOG.length} runs total</p>
+      <p data-testid="dev-fixture-indicator" className="my-4">DEV FIXTURE · canonical scenarios + work-demo runs · {FIXTURE_CATALOG.length} runs total</p>
       <FixtureWorkShowcase />
       <h2 className="my-4 text-xl font-semibold">All fixture runs</h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

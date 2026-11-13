@@ -27,8 +27,13 @@ import type { ProjectionEvent } from '@/lib/live';
 import type { QualificationProjection } from '@/lib/dwo/qualificationProjection';
 import RunStatusAxes from '@/components/dwo/RunStatusAxes';
 import { isLocalFixturePreview } from '@/lib/dwo/requestDataSource';
+import recursiveScenario from '@/dwo-v2/fixtures/DWO-WORK-DEMO-V1/recursive-scenario.json';
 
 export default async function DevRunReplayPage({ params }: { params: { runId: string } }) {
+  if (params.runId === recursiveScenario.rootRunId) {
+    const { default: RunDetailPage } = await import('@/app/runs/[runId]/page');
+    return RunDetailPage({ params, searchParams: { mode: 'replay', seq: '1' } });
+  }
   const runBasePath = isLocalFixturePreview() ? '/runs' : '/dev/runs';
   const taskBasePath = isLocalFixturePreview() ? '/tasks' : '/dev/tasks';
   const runId = decodeURIComponent(params.runId);

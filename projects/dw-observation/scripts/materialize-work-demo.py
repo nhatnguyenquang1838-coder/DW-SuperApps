@@ -109,6 +109,8 @@ def main():
         relation['sourceDigest'] = 'sha256:' + hashlib.sha256(json.dumps(relation, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
         tasks.append(relation)
         metas.append(dict(taskRef=task_ref, title=title, domain='SOFTWARE/DEMO', runCount=1))
+    from recursive_work_story import append_recursive_story
+    append_recursive_story(catalog, events, tasks, metas, history, dump)
     dump('catalog.json', catalog)
     dump('events/projection-events.jsonl', events, lines=True)
     dump('tasks/task-relations.jsonl', tasks, lines=True)

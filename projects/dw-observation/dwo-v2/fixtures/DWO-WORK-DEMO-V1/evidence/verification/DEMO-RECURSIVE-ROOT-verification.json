@@ -1,0 +1,17 @@
+{
+  "checks": [
+    {
+      "name": "explicit G0\u2013G6 history",
+      "result": "PASS_IN_SYNTHETIC_STORY"
+    },
+    {
+      "name": "parent has independent completion",
+      "result": "PASS_IN_SYNTHETIC_STORY"
+    }
+  ],
+  "fixture_set": "DWO-WORK-DEMO-V1",
+  "notice": "Fictional recursive workflow. Not real execution, qualification, approval, merge or deployment evidence.",
+  "result": "PASSED_IN_SYNTHETIC_STORY",
+  "run_id": "DEMO-RECURSIVE-ROOT",
+  "synthetic": true
+}

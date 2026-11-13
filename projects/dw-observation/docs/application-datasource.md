@@ -9,8 +9,8 @@ or client-only dashboard state is used by application routes.
   evidence share the selection. Fixture task records load from the canonical
   file, not the former duplicated inline records.
 - Run Explorer preserves the canonical 30 runs / 5 tasks and adds the separate
-  DWO-WORK-DEMO-V1 pack: 9 runs / 3 tasks / 106 events / 23 evidence files.
-  The combined preview is 39 runs / 8 tasks. Fixture Dashboard now classifies
+  DWO-WORK-DEMO-V1 pack: 13 runs / 4 tasks / 166 events / 35 evidence files.
+  The combined preview is 43 runs / 9 tasks. Fixture Dashboard now classifies
   materialized work state; resolved membership no longer means completed work.
   See `dwo-v2/fixtures/DWO-WORK-DEMO-V1/README.md` for the story walkthrough.
 - Explicit Real overrides a fixture environment default. Invalid cookie values
@@ -27,18 +27,20 @@ or client-only dashboard state is used by application routes.
 
 ## Verification
 
-- `node node_modules/vitest/vitest.mjs run tests/unit/dwo/`: 82 files,
-  848 tests passed after fuller fixture and inspector-hydration changes.
+- `node node_modules/vitest/vitest.mjs run tests/unit/dwo/`: 84 files,
+  853 tests passed after recursive G0–G6 fixture/playback changes.
 - `node scripts/typecheck-tests.mjs --strict`: 0 errors, baseline 0.
 - `node node_modules/typescript/bin/tsc --noEmit`: exit 0.
 - With local development server on `127.0.0.1:3001`, run:
   `node node_modules/@playwright/test/cli.js test --config playwright.datasource.config.ts`
-  Result: 5 end-to-end tests passed using installed Chrome. Covers native select,
-  cached Real route -> Fixture, 39 runs, 8 tasks, task detail, run detail, replay,
+  Result: 6 end-to-end tests passed using installed Chrome. Covers native select,
+  cached Real route -> Fixture, 43 runs, 9 tasks, task detail, run detail, replay,
   reload persistence, evidence 200 in Fixture/404 in Real, direct `/dev` denial
   in Real, browser-context isolation, and switching back to Real.
   All nine demo run routes, artifact viewer, meaningful replay rewind/resume,
   and the 390px showcase layout were also exercised.
+  The recursive scenario adds actual graph/matrix prefix checks at G0, atomic
+  completion, child completion and root G6 acceptance, including query-cut links.
 - Independent read-only review identified direct-dev-route mismatch and React18
   async pending-state gaps; both have explicit failing-then-passing regressions.
 

@@ -12,16 +12,16 @@ const roots = ['DEMO-DELIVERY-ROOT', 'DEMO-BLOCKED-ROOT', 'DEMO-RETRY-ROOT'];
 const env = { NODE_ENV: 'development', OBSERVATORY_DATA_SOURCE: 'fixture' };
 
 describe('additive synthetic work-demo fixture pack', () => {
-  it('retains the sealed 30 and adds nine distinct demo runs, never guessed 031+ ids', () => {
+  it('retains the sealed 30 and adds thirteen distinct demo runs, never guessed 031+ ids', () => {
     expect(FIXTURE_CATALOG).toHaveLength(30);
-    expect(PREVIEW_FIXTURE_CATALOG).toHaveLength(39);
-    expect(new Set(PREVIEW_FIXTURE_CATALOG.map(r => r.id)).size).toBe(39);
+    expect(PREVIEW_FIXTURE_CATALOG).toHaveLength(43);
+    expect(new Set(PREVIEW_FIXTURE_CATALOG.map(r => r.id)).size).toBe(43);
     expect(fixturePackForRun('DEV-RUN-031')).toBeNull();
   });
-  it('resolves three explicit demo task relations alongside the five canonical tasks', async () => {
-    expect(loadPreviewTaskRecords()).toHaveLength(8);
+  it('resolves four explicit demo task relations alongside the five canonical tasks', async () => {
+    expect(loadPreviewTaskRecords()).toHaveLength(9);
     const tasks = await listPreviewTaskRelations();
-    expect(tasks).toHaveLength(8);
+    expect(tasks).toHaveLength(9);
     for (const root of roots) expect(tasks.some(t => t.status === 'RESOLVED' && t.rootRunIds.includes(root))).toBe(true);
   });
   it.each(roots)('%s has genuine multi-event fixture history, child graph and raw evidence', runId => {
@@ -55,13 +55,13 @@ describe('additive synthetic work-demo fixture pack', () => {
   });
   it('dashboard counts work states, not resolved relations as completed work', () => {
     const projection = readPreviewDashboardProjection();
-    expect(projection.taskCount).toBe(8);
-    expect(projection.completedCount).toBe(1);
+    expect(projection.taskCount).toBe(9);
+    expect(projection.completedCount).toBe(2);
     expect(projection.activeCount).toBeGreaterThan(0);
     expect(projection.blockedCount).toBeGreaterThan(0);
     expect(projection.waitingCount).toBeGreaterThan(0);
-    expect(projection.activeCount! + projection.waitingCount! + projection.blockedCount! + projection.completedCount!).toBe(8);
-    expect(Object.values(projection.runCounts).reduce<number>((sum, n) => sum + (n ?? 0), 0)).toBe(39);
+    expect(projection.activeCount! + projection.waitingCount! + projection.blockedCount! + projection.completedCount!).toBe(9);
+    expect(Object.values(projection.runCounts).reduce<number>((sum, n) => sum + (n ?? 0), 0)).toBe(43);
   });
   it('serves bound demo evidence only in non-production Fixture; rejects cross-run and traversal', () => {
     const id = roots[0];

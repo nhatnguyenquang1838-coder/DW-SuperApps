@@ -16,5 +16,11 @@
     "runCount": 1,
     "taskRef": "DEMO-TASK-RETRY",
     "title": "Verification failure and repair in progress"
+  },
+  {
+    "domain": "SOFTWARE/RECURSIVE_DEMO",
+    "runCount": 1,
+    "taskRef": "DEMO-TASK-RECURSIVE",
+    "title": "Recursive G0\u2013G6: ROOT \u2192 CHILD \u2192 ATOMIC"
   }
 ]

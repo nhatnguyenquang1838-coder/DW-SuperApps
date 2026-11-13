@@ -2,7 +2,7 @@ import { constants, openSync, closeSync, readSync, fstatSync, lstatSync, realpat
 import { isAbsolute, resolve, sep } from 'node:path';
 import { fixturePackForRun } from './fixturePreviewCatalog';
 
-const ALLOWED = /^(execution|target|verification|closure|handoff|authority)\/(DEV-RUN-\d{3}|DEMO-(?:DELIVERY|BLOCKED|RETRY)-(?:ROOT|API|UI))-(execution|target|verification|closure|handoff|authority)\.json$/;
+const ALLOWED = /^(execution|target|verification|closure|handoff|authority)\/(DEV-RUN-\d{3}|DEMO-(?:DELIVERY|BLOCKED|RETRY|RECURSIVE)-(?:ROOT|CHILD|API|UI))-(execution|target|verification|closure|handoff|authority)\.json$/;
 const MAX_BYTES = 128 * 1024;
 export type FixtureEvidenceResult =
   | { ok: true; runId: string; path: string; text: string; bytes: number }

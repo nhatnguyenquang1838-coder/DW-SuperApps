@@ -26,6 +26,8 @@ import { createFixtureReplaySession } from "@/lib/dwo/fixtureReplaySession";
 import { fixturePackForRun } from "@/lib/dwo/fixturePreviewCatalog";
 import type { QualificationProjection } from "@/lib/dwo/qualificationProjection";
 import Link from "next/link";
+import recursiveScenario from '@/dwo-v2/fixtures/DWO-WORK-DEMO-V1/recursive-scenario.json';
+import RecursiveFixturePlayback from '@/components/dwo/RecursiveFixturePlayback';
 
 export default async function RunDetailPage({
   params,
@@ -61,6 +63,11 @@ export default async function RunDetailPage({
       )
     : await readQualificationProjection(params.runId);
   const fixtureReplay = fixtureMode ? createFixtureReplaySession(params.runId) : null;
+  const recursive = fixtureMode && params.runId === recursiveScenario.rootRunId;
+  const scenarioEvents = recursive
+    ? model.nodes.flatMap(node => [...(createFixtureReplaySession(node.id)?.events ?? [])])
+        .sort((a, b) => Number(a.ordinal) - Number(b.ordinal))
+    : [];
 
   // ---------------- unified workspace — single render, both modes ----------------
   return (
@@ -78,10 +85,11 @@ export default async function RunDetailPage({
           </span>
         </div>
       )}
-      <UnifiedRunWorkspace
+      {recursive ? <RecursiveFixturePlayback model={model} events={scenarioEvents}
+        milestones={recursiveScenario.milestones} initialCursor={replaySeq ?? recursiveScenario.initialPrefixCursor} /> : <UnifiedRunWorkspace
         model={model}
         qualificationProjection={qualificationProjection}
-      />
+      />}
       {fixtureMode && (
         <div>
           {fixtureReplay ? (
@@ -91,7 +99,7 @@ export default async function RunDetailPage({
               style={{ borderColor: 'var(--dwo-color-border-default)', background: 'var(--dwo-color-bg-subtle)', color: 'var(--dwo-color-text-primary)' }}
               data-testid="fixture-open-replay"
             >
-              Open fixture replay → ({fixtureReplay.total} events)
+              Open fixture replay → ({recursive ? scenarioEvents.length : fixtureReplay.total} events)
             </Link>
           ) : (
             <span data-testid="fixture-replay-unavailable" className="text-xs" style={{ color: 'var(--dwo-color-text-muted)' }}>

@@ -6,10 +6,10 @@
     "read": true,
     "write": false
   },
-  "events": 106,
+  "events": 166,
   "fixture_set": "DWO-WORK-DEMO-V1",
   "qualification": "NOT_CERTIFIED",
-  "runs": 9,
+  "runs": 13,
   "synthetic": true,
-  "tasks": 3
+  "tasks": 4
 }

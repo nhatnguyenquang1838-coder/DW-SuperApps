@@ -14,10 +14,12 @@ progress**. Normal task, workspace, artifact viewer and replay routes are reused
 | DEMO-TASK-DELIVERY | DEMO-DELIVERY-ROOT | API + dashboard work accepted through G0–G6 |
 | DEMO-TASK-BLOCKED | DEMO-BLOCKED-ROOT | API done; UI and parent wait, then are blocked with denied demo authority |
 | DEMO-TASK-RETRY | DEMO-RETRY-ROOT | Verification fails, execution repairs, verification remains active |
+| DEMO-TASK-RECURSIVE | DEMO-RECURSIVE-ROOT | ROOT → CHILD → two ATOMIC runs, each with G0–G6; graph replay starts at G0 |
 
-There are **9 runs, 3 explicit task relations, 106 events and 23 evidence files**.
-Each root has API/UI children and dependency edges. The combined preview shows
-**39 runs and 8 tasks**. Source namespaces, sequence, synthetic timestamps,
+There are **13 runs, 4 explicit task relations, 166 events and 35 evidence files**.
+The three original stories have atomic API/UI children; the recursive story adds
+an explicit CHILD level. The combined preview shows **43 runs and 9 tasks**.
+Source namespaces, sequence, synthetic timestamps,
 actors, event identity and human-readable summaries are materialized in the data.
 Events use distinct per-run synthetic source streams, so a scenario union does
 not create artificial gaps or duplicate identities.
@@ -32,6 +34,38 @@ not create artificial gaps or duplicate identities.
   serve these files through fixture endpoints.
 
 ## Truth and limitations
+
+### Recursive G0–G6 walkthrough
+
+Open `/runs/DEMO-RECURSIVE-ROOT` with Fixture selected. This is not another
+workspace implementation: one prefix cursor drives the existing
+`UnifiedRunWorkspace` graph, the seven-gate history matrix and source event log.
+
+```text
+DEMO-RECURSIVE-ROOT   ROOT
+└─ DEMO-RECURSIVE-CHILD   CHILD
+   ├─ DEMO-RECURSIVE-API   ATOMIC
+   └─ DEMO-RECURSIVE-UI    ATOMIC (depends on API)
+```
+
+All four runs have explicit G0–G6 declarations and history. The scenario has
+60 interleaved events; root/child each have 16, atomics each have 14.
+
+| Control / prefix cursor | Observable source-backed state |
+| --- | --- |
+| Start at G0 / 1 | Root G0 ACTIVE; future node states NOT OBSERVED |
+| Atomics complete / 40 | Both atomics ACCEPTED; child and root G2 WAITING / OPEN |
+| Child complete / 50 | Child ACCEPTED; root still G2 WAITING / OPEN |
+| Root G6 accepted / 60 | Root independently ACCEPTED; all four G0–G6 histories passed |
+
+The existing workspace step, scrubber and playback controls update the same
+cursor. Query link `/runs/DEMO-RECURSIVE-ROOT?mode=replay&seq=40` selects the
+fixture subtree prefix cursor (not a per-run source sequence). Rewinding clears
+future evidence from the workspace. Full-tip artifact inspection becomes
+available only at the complete scenario tip. These are immutable fixture replay
+events, not actual live production streaming or a publisher certification.
+
+### Synthetic evidence boundary
 
 All stories, code/artifact text, test outcomes, actors and timestamps are
 **fictional synthetic fixture content**, not records of an actual delivery.
@@ -55,8 +89,9 @@ node node_modules/typescript/bin/tsc --noEmit
 node node_modules/@playwright/test/cli.js test --config playwright.datasource.config.ts
 ```
 
-Observed local validation: **848 unit tests / 82 files passed**, both typechecks
-passed, **5 Chrome E2E tests passed**. Browser tests inspect all 9 new run routes,
+Observed local validation: **853 unit tests / 84 files passed**, both typechecks
+passed, **6 Chrome E2E tests passed**. Browser tests inspect all 9 original demo run routes,
 artifact content, history rewind/resume, source isolation and 390px showcase
-layout. Inspector tabs remain disabled until hydration to prevent lost first
+layout, plus recursive graph/matrix state changes and independent parent
+transitions at prefixes 1, 40, 50 and 60. Inspector tabs remain disabled until hydration to prevent lost first
 clicks on freshly loaded pages. These are local results, not hosted CI claims.
